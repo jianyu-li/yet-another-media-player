@@ -1,18 +1,107 @@
 # Yet Another Media Player
 
-A Home Assistant custom card for media player control.  
-See HACS instructions for installation.# Yet Another Media Player
+A modern, customizable Home Assistant Lovelace card for controlling multiple media players—advanced artwork, chip-based switching, source selection, and a truly usable action system.
 
-A modern, customizable Home Assistant Lovelace card for controlling multiple media players — with advanced artwork display, chip-based switching, and full smart home integration.
+---
 
 ## Features
 
-- Switch between multiple media players with a single card (chip UI)
-- Customizable chip names via YAML
-- Optional full-card artwork background with automatic text dimming
-- Source selection and dynamic source menu
+- Switch between multiple media players in a single card using chip-style selector
+- Custom chip/entity names via YAML
+- Optional full-card artwork background with auto-dimming and white text
+- Dynamic source selection menu
 - Shuffle, repeat, and playback controls
-- Responsive layout, works on desktop and mobile
-- Presence-aware: card auto-switches to active media player, but respects manual selection
-- All styling and logic works with both light and dark themes
-- HACS compatible (coming soon!)
+- Responsive layout—works on mobile and desktop
+- Presence-aware: auto-switches to the active media player, but respects manual selection
+- Theme-aware: works with both light and dark themes
+- Action buttons: run any Home Assistant service, not just music
+- HACS compatible (coming soon)
+
+---
+
+## Screenshot
+
+![Yet Another Media Player screenshot](assets/screenshot1.png)
+
+*Example: Multiple media players, custom chip names, action buttons, and artwork background.*
+
+---
+
+## Basic Usage
+
+Add the card to your Lovelace dashboard using YAML (recommended for custom chip/entity names):
+
+```yaml
+type: custom:custom-media-card
+entities:
+  - media_player.downstairs_2
+  - media_player.kitchen_speaker_2
+  - media_player.kitchen_homepod
+  - media_player.living_room_apple_tv
+  - media_player.bedroom
+  - media_player.entryway_speaker
+actions:
+  - name: Grunge
+    service: music_assistant.play_media
+    service_data:
+      entity_id: current
+      media_id: apple_music://playlist/pl.5feba9fd5ea441a29aeb3597c8314384
+      enqueue: replace
+  - name: Alternative
+    service: music_assistant.play_media
+    service_data:
+      entity_id: current
+      media_id: apple_music://playlist/pl.5feba9fd5ea441a29aeb3597c8314384
+      enqueue: replace
+  - name: Soul
+    service: music_assistant.play_media
+    service_data:
+      entity_id: current
+      media_id: apple_music://playlist/pl.3cb881c4590341fabc374f003afaf2b4
+      enqueue: replace
+  - name: Americana
+    service: music_assistant.play_media
+    service_data:
+      entity_id: current
+      media_id: apple_music://playlist/pl.09d2969fa441483eba00a5ec41e279eb
+      enqueue: replace
+  - name: Country
+    service: music_assistant.play_media
+    service_data:
+      entity_id: current
+      media_id: apple_music://playlist/pl.064dfb9229794de696c4376426d709ac
+      enqueue: replace
+  - name: Dinner
+    service: music_assistant.play_media
+    service_data:
+      entity_id: current
+      media_id: apple_music://playlist/pl.6a236667fbc046a49b48ea9cf4e8b639
+      enqueue: replace
+artwork_background: false
+volume_mode: slider
+visibility:
+  - condition: user
+    users:
+      - 05453214b1054a709b5408688ed36422
+
+## Action Buttons and the “current” Entity
+
+Action buttons let you trigger **any** Home Assistant service.
+
+If you use `entity_id: current` in your action’s `service_data`, it will **automatically target the currently selected media player** in the card UI.
+
+**Examples:**
+
+```yaml
+actions:
+  - name: Volume Up
+    service: media_player.volume_up
+    service_data:
+      entity_id: current
+  - name: Mute
+    service: media_player.volume_mute
+    service_data:
+      entity_id: current
+      is_volume_muted: true
+
+If you want to target a specific player, use its actual entity_id instead of current.                  
