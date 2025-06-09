@@ -79,10 +79,6 @@ actions:
       enqueue: replace
 artwork_background: false
 volume_mode: slider
-visibility:
-  - condition: user
-    users:
-      - 05453214b1054a709b5408688ed36422
 
 ## Action Buttons and the “current” Entity
 
