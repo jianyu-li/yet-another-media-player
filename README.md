@@ -71,7 +71,7 @@ volume_mode: slider
 
 ## Installation via HACS
 
-[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jianyu-li&repository=yet-another-media-player&category=dashboard)
+[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=yet-another-media-player&category=dashboard&owner=jianyu-li)
 
 You can install **Yet Another Media Player** with HACS (Home Assistant Community Store):
 
