@@ -18,9 +18,7 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 ## Screenshot
 
-
-[<img src="https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/refs/heads/main/images/screenshot1.png" width="500px" alt="Screenshot" />
-](https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/refs/heads/main/images/screenshot1.png)
+<img src="https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/images/screenshot1.png" width="500px" alt="Yet Another Media Player Screenshot" />
 *Example with multiple media players and custom actions
 
 ---
