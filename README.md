@@ -29,7 +29,7 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 Add the card to your Lovelace dashboard using YAML (recommended for custom chip/entity names):
 
 ```yaml
-type: custom:custom-media-card
+type: custom:yet-another-media-player
 entities:
   - media_player.downstairs_2
   - media_player.kitchen_speaker_2
