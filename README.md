@@ -67,9 +67,29 @@ actions:
 artwork_background: false
 volume_mode: slider
 
-## Action Buttons and the “current” Entity
+---
 
-Action buttons let you trigger **any** Home Assistant service.
+## Installation via HACS
 
-If you use `entity_id: current` in your action’s `service_data`, it will **automatically target the currently selected media player** in the card UI.
+[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository_url=https://github.com/YOURUSERNAME/yet-another-media-player&category=frontend)
+
+You can install **Yet Another Media Player** with HACS (Home Assistant Community Store):
+
+1. Go to **HACS → Frontend → Custom repositories**.
+2. Add this repository URL:  
+   `https://github.com/jianyu-li/yet-another-media-player`
+3. Set category to **"Lovelace"**.
+4. Find and install the card from the list.
+5. Refresh your browser, then add the card via the UI or YAML:
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - media_player.your_player
+  # ...
+```
+
+---
+
+
 
