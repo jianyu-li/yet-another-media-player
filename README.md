@@ -66,7 +66,7 @@ actions:
       enqueue: replace
 artwork_background: false
 volume_mode: slider
-
+```
 ---
 
 ## Installation via HACS
