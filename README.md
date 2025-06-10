@@ -71,14 +71,14 @@ volume_mode: slider
 
 ## Installation via HACS
 
-[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jianyu-li&repository=yet-another-media-player&category=frontend)
+[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jianyu-li&repository=yet-another-media-player&category=dashboard)
 
 You can install **Yet Another Media Player** with HACS (Home Assistant Community Store):
 
-1. Go to **HACS → Frontend → Custom repositories**.
+1. Go to **HACS → Custom repositories**.
 2. Add this repository URL:  
    `https://github.com/jianyu-li/yet-another-media-player`
-3. Set category to **Frontend**.
+3. Set category to **dashboard**.
 4. Find and install the card from the list.
 5. Refresh your browser, then add the card via the UI or YAML:
 
