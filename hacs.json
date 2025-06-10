@@ -1,0 +1,8 @@
+{
+  "name": "Yet Another Media Player",
+  "content_in_root": false,
+  "filename": "yet-another-media-player.js",
+  "domains": ["lovelace"],
+  "render_readme": true,
+  "description": "A multi-entity, feature-rich media card for Home Assistant."
+}
