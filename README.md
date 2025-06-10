@@ -83,18 +83,3 @@ Action buttons let you trigger **any** Home Assistant service.
 
 If you use `entity_id: current` in your action’s `service_data`, it will **automatically target the currently selected media player** in the card UI.
 
-**Examples:**
-
-```yaml
-actions:
-  - name: Volume Up
-    service: media_player.volume_up
-    service_data:
-      entity_id: current
-  - name: Mute
-    service: media_player.volume_mute
-    service_data:
-      entity_id: current
-      is_volume_muted: true
-
-If you want to target a specific player, use its actual entity_id instead of current.                  
