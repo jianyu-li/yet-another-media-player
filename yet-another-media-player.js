@@ -49,9 +49,6 @@ class CustomMediaCard extends LitElement {
     z-index: 1;
     pointer-events: none;
   }
-  :host(.artwork-bg-active),
-  :host(.artwork-bg-active) .chip,
-  :host(.artwork-bg-active) .action-chip,
   :host(.artwork-bg-active) .title,
   :host(.artwork-bg-active) .artist,
   :host(.artwork-bg-active) .source-menu-btn,
@@ -147,6 +144,20 @@ class CustomMediaCard extends LitElement {
       background: #fff;
       color: #222;
       border: 1px solid #bbb;
+    }
+    /* Force text color to white for overlayed controls/text */
+    .details,
+    .title,
+    .artist,
+    .controls-row,
+    .button,
+    .source-menu-btn,
+    .source-selected,
+    .source-dropdown,
+    .source-option,
+    .source-row,
+    .action-chip-row {
+      color: #fff !important;
     }
   }
     :host {
@@ -441,6 +452,20 @@ class CustomMediaCard extends LitElement {
       }
       .progress-bar {
         background: #eee;
+      }
+      /* Force text color to white for overlayed controls/text (override after light mode) */
+      .details,
+      .title,
+      .artist,
+      .controls-row,
+      .button,
+      .source-menu-btn,
+      .source-selected,
+      .source-dropdown,
+      .source-option,
+      .source-row,
+      .action-chip-row {
+        color: #fff !important;
       }
     }
   .card-lower-content-bg {
@@ -792,16 +817,18 @@ class CustomMediaCard extends LitElement {
               <div class="card-lower-content">
                 <div class="card-artwork-spacer"></div>
                 <div class="details">
-                  ${title ? html`<div class="title">${title}</div>` : nothing}
-                  ${artist ? html`<div class="artist">${artist}</div>` : nothing}
+                  <div class="title">${title || "\u00A0"}</div>
+                  <div class="artist">${artist || "\u00A0"}</div>
                 </div>
-                <div
-                  class="progress-bar"
-                  @click=${(e) => this._onProgressBarClick(e)}
-                  title="Seek"
-                >
-                  <div class="progress-inner" style="width: ${progress * 100}%;"></div>
-                </div>
+                ${(isPlaying && duration) ? html`
+                  <div
+                    class="progress-bar"
+                    @click=${(e) => this._onProgressBarClick(e)}
+                    title="Seek"
+                  >
+                    <div class="progress-inner" style="width: ${progress * 100}%;"></div>
+                  </div>
+                ` : html`<div class="progress-bar" style="visibility:hidden"></div>`}
                 <div class="controls-row">
                   <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
                     <ha-icon icon="mdi:skip-previous"></ha-icon>
