@@ -2,12 +2,12 @@ import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "custom-media-card",
-  name: "Custom Media Card",
+  type: "yet-another-media-player",
+  name: "Yet Another Media Player",
   description: "A multi-entity, feature-rich media card for Home Assistant."
 });
 
-class CustomMediaCard extends LitElement {
+class YetAnotherMediaPlayerCard extends LitElement {
   get sortedEntityIds() {
   return [...this.entityIds].sort((a, b) => {
     const tA = this._playTimestamps[a] || 0;
@@ -909,14 +909,14 @@ class CustomMediaCard extends LitElement {
   }
   // Card editor support (partial, expand as needed)
   static getConfigElement() {
-    return document.createElement("custom-media-card-editor");
+    return document.createElement("yet-another-media-player-editor");
   }
   static getStubConfig(hass, entities) {
     return { entities: (entities || []).filter(e => e.startsWith("media_player.")).slice(0, 2) };
   }
 }
 
-class CustomMediaCardEditor extends LitElement {
+class YetAnotherMediaPlayerEditor extends LitElement {
   static properties = {
     hass: {},
     lovelace: {},
@@ -992,6 +992,6 @@ class CustomMediaCardEditor extends LitElement {
     this.dispatchEvent(new CustomEvent("config-changed", { detail: { config } }));
   }
 }
-customElements.define("custom-media-card-editor", CustomMediaCardEditor);
+customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 
-customElements.define("custom-media-card", CustomMediaCard);
+customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
