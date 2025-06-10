@@ -24,6 +24,11 @@ class CustomMediaCard extends LitElement {
   };
 
   static styles = css`
+  .card-artwork-spacer {
+    width: 100%;
+    height: 180px; /* Adjust as needed for your old artwork area */
+    pointer-events: none;
+  }
   .media-bg-full {
     position: absolute;
     inset: 0;
@@ -304,6 +309,16 @@ class CustomMediaCard extends LitElement {
       width: 100%;
       aspect-ratio: 1.75/1;
       overflow: hidden;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: top center;
+    }
+    .artwork-dim-overlay {
+      position: absolute;
+      left: 0; right: 0; top: 0; bottom: 0;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.70) 100%);
+      z-index: 2;
     }
     .artwork {
       width: 96px;
@@ -428,6 +443,31 @@ class CustomMediaCard extends LitElement {
         background: #eee;
       }
     }
+  .card-lower-content-bg {
+    position: relative;
+    width: 100%;
+    min-height: 320px;
+    background-size: cover;
+    background-position: top center;
+    background-repeat: no-repeat;
+    border-radius: 0 0 16px 16px;
+    overflow: hidden;
+  }
+  .card-lower-fade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(
+  to bottom,
+  rgba(0,0,0,0.40) 25%,
+  rgba(0,0,0,0.92) 100%
+);
+  }
+  .card-lower-content {
+    position: relative;
+    z-index: 2;
+  }
   `;
 
   constructor() {
@@ -746,82 +786,86 @@ class CustomMediaCard extends LitElement {
                   </div>
                 `
               : nothing}
-            <div class="media-artwork-bg" style="${showBackground ? '' : (art ? `background:url('${art}') center/cover no-repeat;` : '')}">
-            </div>
-            <div class="details">
-              ${title ? html`<div class="title">${title}</div>` : nothing}
-              ${artist ? html`<div class="artist">${artist}</div>` : nothing}
-            </div>
-            <!-- source menu moved into volume-row below -->
-            <div
-              class="progress-bar"
-              @click=${(e) => this._onProgressBarClick(e)}
-              title="Seek"
-            >
-              <div class="progress-inner" style="width: ${progress * 100}%;"></div>
-            </div>
-            <div class="controls-row">
-              <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
-                <ha-icon icon="mdi:skip-previous"></ha-icon>
-              </button>
-              <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                <ha-icon icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-              </button>
-              <button class="button" @click=${() => this._onControlClick("next")} title="Next">
-                <ha-icon icon="mdi:skip-next"></ha-icon>
-              </button>
-              <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
-                <ha-icon icon="mdi:shuffle"></ha-icon>
-              </button>
-              <button class="button${repeatActive ? ' active' : ''}" @click=${() => this._onControlClick("repeat")} title="Repeat">
-                <ha-icon icon=${
-                  stateObj.attributes.repeat === "one"
-                    ? "mdi:repeat-once"
-                    : "mdi:repeat"
-                }></ha-icon>
-              </button>
-              <button class="button" @click=${() => this._onControlClick("power")} title="Power">
-                <ha-icon icon="mdi:power"></ha-icon>
-              </button>
-            </div>
-            <div class="volume-row${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? ' has-source' : ''}">
-              ${showSlider
-                ? html`
-                    <input
-                      class="vol-slider"
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      .value=${vol}
-                      @input=${(e) => this._onVolumeChange(e)}
-                      title="Volume"
-                    />
-                  `
-                : html`
-                    <div class="vol-stepper">
-                      <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
-                      <span>${Math.round(vol * 100)}%</span>
-                      <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
-                    </div>
-                  `}
-              ${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? html`
-                <div class="source-menu">
-                  <button class="source-menu-btn" @click=${() => this._toggleSourceMenu()}>
-                    <span class="source-selected">
-                      ${stateObj.attributes.source || "Source"}
-                    </span>
-                    <ha-icon icon="mdi:chevron-down"></ha-icon>
+            <!-- Remove previous .media-artwork-bg and overlays for the lower part -->
+            <div class="card-lower-content-bg" style="${art ? `background-image:url('${art}')` : ''}">
+              <div class="card-lower-fade"></div>
+              <div class="card-lower-content">
+                <div class="card-artwork-spacer"></div>
+                <div class="details">
+                  ${title ? html`<div class="title">${title}</div>` : nothing}
+                  ${artist ? html`<div class="artist">${artist}</div>` : nothing}
+                </div>
+                <div
+                  class="progress-bar"
+                  @click=${(e) => this._onProgressBarClick(e)}
+                  title="Seek"
+                >
+                  <div class="progress-inner" style="width: ${progress * 100}%;"></div>
+                </div>
+                <div class="controls-row">
+                  <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
+                    <ha-icon icon="mdi:skip-previous"></ha-icon>
                   </button>
-                  ${this._showSourceMenu ? html`
-                    <div class="source-dropdown${this._shouldDropdownOpenUp ? ' up' : ''}">
-                      ${stateObj.attributes.source_list.map(src => html`
-                        <div class="source-option" @click=${() => this._selectSource(src)}>${src}</div>
-                      `)}
+                  <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
+                    <ha-icon icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+                  </button>
+                  <button class="button" @click=${() => this._onControlClick("next")} title="Next">
+                    <ha-icon icon="mdi:skip-next"></ha-icon>
+                  </button>
+                  <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
+                    <ha-icon icon="mdi:shuffle"></ha-icon>
+                  </button>
+                  <button class="button${repeatActive ? ' active' : ''}" @click=${() => this._onControlClick("repeat")} title="Repeat">
+                    <ha-icon icon=${
+                      stateObj.attributes.repeat === "one"
+                        ? "mdi:repeat-once"
+                        : "mdi:repeat"
+                    }></ha-icon>
+                  </button>
+                  <button class="button" @click=${() => this._onControlClick("power")} title="Power">
+                    <ha-icon icon="mdi:power"></ha-icon>
+                  </button>
+                </div>
+                <div class="volume-row${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? ' has-source' : ''}">
+                  ${showSlider
+                    ? html`
+                        <input
+                          class="vol-slider"
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          .value=${vol}
+                          @input=${(e) => this._onVolumeChange(e)}
+                          title="Volume"
+                        />
+                      `
+                    : html`
+                        <div class="vol-stepper">
+                          <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
+                          <span>${Math.round(vol * 100)}%</span>
+                          <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
+                        </div>
+                      `}
+                  ${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? html`
+                    <div class="source-menu">
+                      <button class="source-menu-btn" @click=${() => this._toggleSourceMenu()}>
+                        <span class="source-selected">
+                          ${stateObj.attributes.source || "Source"}
+                        </span>
+                        <ha-icon icon="mdi:chevron-down"></ha-icon>
+                      </button>
+                      ${this._showSourceMenu ? html`
+                        <div class="source-dropdown${this._shouldDropdownOpenUp ? ' up' : ''}">
+                          ${stateObj.attributes.source_list.map(src => html`
+                            <div class="source-option" @click=${() => this._selectSource(src)}>${src}</div>
+                          `)}
+                        </div>
+                      ` : nothing}
                     </div>
                   ` : nothing}
                 </div>
-              ` : nothing}
+              </div>
             </div>
           </div>
         </div>
