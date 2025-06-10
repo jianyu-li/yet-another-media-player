@@ -18,7 +18,7 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 ## Screenshot
 
-<img src="assets/screenshot1.png" alt="Yet Another Media Player screenshot" width="400"/>
+<img src="assets/screenshot1.png" alt="Yet Another Media Player" width="400"/>
 
 *Example with multiple media players and custom actions
 
@@ -71,14 +71,14 @@ volume_mode: slider
 
 ## Installation via HACS
 
-[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository_url=https://github.com/YOURUSERNAME/yet-another-media-player&category=frontend)
+[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jianyu-li&repository=yet-another-media-player&category=frontend)
 
 You can install **Yet Another Media Player** with HACS (Home Assistant Community Store):
 
 1. Go to **HACS → Frontend → Custom repositories**.
 2. Add this repository URL:  
    `https://github.com/jianyu-li/yet-another-media-player`
-3. Set category to **"Lovelace"**.
+3. Set category to **Frontend**.
 4. Find and install the card from the list.
 5. Refresh your browser, then add the card via the UI or YAML:
 
