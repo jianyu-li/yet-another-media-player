@@ -20,13 +20,13 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 ![Yet Another Media Player screenshot](assets/screenshot1.png)
 
-*Example: Multiple media players, custom chip names, action buttons, and artwork background.*
+*Example with multiple media players and custom actions
 
 ---
 
 ## Basic Usage
 
-Add the card to your Lovelace dashboard using YAML (recommended for custom chip/entity names):
+Add the card to your Lovelace dashboard using YAML (for custom chip/entity names) or the UI (for default entity names):
 
 ```yaml
 type: custom:yet-another-media-player
