@@ -26,7 +26,9 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 ## Basic Usage
 
-Add the card to your Lovelace dashboard using YAML (for custom chip/entity names) or the UI (for default entity names):
+Add the card to your Lovelace dashboard using YAML (for custom chip/entity names) or the UI (for default entity names). 
+
+You can use music assistant actions in conjunction with "current" as the entity id and it will target whatever the current entity that is displayed in the card (e.g.: genres)
 
 ```yaml
 type: custom:yet-another-media-player
@@ -55,18 +57,6 @@ actions:
     service_data:
       entity_id: current
       media_id: apple_music://playlist/pl.3cb881c4590341fabc374f003afaf2b4
-      enqueue: replace
-  - name: Americana
-    service: music_assistant.play_media
-    service_data:
-      entity_id: current
-      media_id: apple_music://playlist/pl.09d2969fa441483eba00a5ec41e279eb
-      enqueue: replace
-  - name: Country
-    service: music_assistant.play_media
-    service_data:
-      entity_id: current
-      media_id: apple_music://playlist/pl.064dfb9229794de696c4376426d709ac
       enqueue: replace
   - name: Dinner
     service: music_assistant.play_media
