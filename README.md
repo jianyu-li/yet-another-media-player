@@ -8,14 +8,11 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 - Switch between multiple media players in a single card using chip-style selector
 - Custom chip/entity names via YAML
-- Optional full-card artwork background with auto-dimming and white text
-- Dynamic source selection menu
-- Shuffle, repeat, and playback controls
-- Responsive layout—works on mobile and desktop
-- Presence-aware: auto-switches to the active media player, but respects manual selection
-- Theme-aware: works with both light and dark themes
-- Action buttons: run any Home Assistant service, not just music
-- HACS compatible (coming soon)
+- Optional full-card artwork background 
+- Shuffle, repeat, and playback controls for compatible players
+- Auto-switches to the active media player
+- Action buttons: run any Home Assistant service
+- Use "current" for the entity_id to reference the currently selected media player (see example below)
 
 ---
 
