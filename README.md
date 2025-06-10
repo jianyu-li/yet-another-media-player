@@ -11,7 +11,7 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 - Optional full-card artwork background 
 - Shuffle, repeat, and playback controls for compatible players
 - Auto-switches to the active media player
-- Action buttons: run any Home Assistant service
+- Action buttons run any Home Assistant service or script
 - Use "current" for the entity_id to reference the currently selected media player (see example below)
 
 ---
