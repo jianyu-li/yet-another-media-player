@@ -495,9 +495,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     position: relative;
     z-index: 2;
   }
-  :host(.artwork-bg-active) .vol-stepper span {
-  color: #fff !important;
-  } 
+  /* Removed redundant rule for :host(.artwork-bg-active) .vol-stepper span */
+  .vol-stepper span {
+    color: #fff !important;
+  }
   `;
 
 
