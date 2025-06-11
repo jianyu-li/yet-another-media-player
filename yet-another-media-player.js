@@ -750,10 +750,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // Artwork
       const isPlaying = stateObj.state === "playing";
-      const art =
-        (isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)) ||
-        "/local/custom-media-card/assets/media_player_placeholder.png";
-      const showBackground = !!this.config.artwork_background;
+      const isRealArtwork = isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
+      const art = isRealArtwork || "/local/custom-media-card/assets/media_player_placeholder.png";
+      const showBackground = !!this.config.artwork_background && isRealArtwork;
       // Details
       const title = isPlaying ? (stateObj.attributes.media_title || "") : "";
       const artist = isPlaying ? (stateObj.attributes.media_artist || stateObj.attributes.media_series_title || "") : "";
