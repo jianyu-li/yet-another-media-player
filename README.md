@@ -17,7 +17,7 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 ## Screenshot
 
-<img src="/images/preview.png" width="500px" alt="Preview Image" />
+![Preview Image](/images/preview.png)
 
 
 
