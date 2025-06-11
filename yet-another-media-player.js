@@ -497,7 +497,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
   :host(.artwork-bg-active) .vol-stepper span {
   color: #fff !important;
-  }
+  } 
   `;
 
 
