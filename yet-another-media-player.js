@@ -751,7 +751,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Artwork
       const isPlaying = stateObj.state === "playing";
       const isRealArtwork = isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
-      const art = isRealArtwork || "/local/yet-another-media-player/assets/media_player_placeholder.png";
+      const art = isRealArtwork
+        ? isRealArtwork
+        : "https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png";
       const showBackground = !!this.config.artwork_background && isRealArtwork;
       // Details
       const title = isPlaying ? (stateObj.attributes.media_title || "") : "";
@@ -819,7 +821,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 `
               : nothing}
             <!-- Remove previous .media-artwork-bg and overlays for the lower part -->
-            <div class="card-lower-content-bg" style="${art ? `background-image:url('${art}')` : ''}">
+            <div class="card-lower-content-bg" style="${art ? `background-image:url('${art}')` : `background-image:url('https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png')`}">
               <div class="card-lower-fade"></div>
               <div class="card-lower-content">
                 <div class="card-artwork-spacer"></div>
