@@ -738,7 +738,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const vol = Number(stateObj.attributes.volume_level || 0);
       const showSlider = this.config.volume_mode !== "stepper";
 
-      // No longer toggling artwork-bg-active class; always show artwork as background
+      
 
       return html`
         <div style="position:relative;">
