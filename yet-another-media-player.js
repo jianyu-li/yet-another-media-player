@@ -391,16 +391,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     .progress-bar {
       width: 100%;
       height: 6px;
-      background: #444;
+      background: rgba(255,255,255,0.22);
       border-radius: 3px;
       margin: 8px 0;
       cursor: pointer;
       position: relative;
+      box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
     }
     .progress-inner {
       height: 100%;
       background: var(--accent-color, #1976d2);
       border-radius: 3px 0 0 3px;
+      box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
     }
     .volume-row {
       display: flex;
