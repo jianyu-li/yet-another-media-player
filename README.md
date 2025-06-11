@@ -8,7 +8,6 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 - Switch between multiple media players in a single card using chip-style selector
 - Custom chip/entity names via YAML
-- Optional full-card artwork background 
 - Shuffle, repeat, and playback controls for compatible players
 - Auto-switches to the active media player
 - Action buttons run any Home Assistant service or script
@@ -18,7 +17,7 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 ## Screenshot
 
-![Preview Image](/images/preview.png)
+<img src="/images/preview.png" width="500px" alt="Preview Image" />
 
 
 
@@ -66,7 +65,6 @@ actions:
       entity_id: current
       media_id: apple_music://playlist/pl.6a236667fbc046a49b48ea9cf4e8b639
       enqueue: replace
-artwork_background: false
 volume_mode: slider
 ```
 ---
