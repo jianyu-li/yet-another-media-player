@@ -49,32 +49,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     z-index: 1;
     pointer-events: none;
   }
-  :host(.artwork-bg-active) .title,
-  :host(.artwork-bg-active) .artist,
-  :host(.artwork-bg-active) .source-menu-btn,
-  :host(.artwork-bg-active) .source-dropdown,
-  :host(.artwork-bg-active) .source-option,
-  :host(.artwork-bg-active) .source-selected,
-  :host(.artwork-bg-active) .vol-stepper span,
-  :host(.artwork-bg-active) .vol-stepper,
-  :host(.artwork-bg-active) .controls-row,
-  :host(.artwork-bg-active) .details {
-    color: #fff !important;
-  }
-  :host(.artwork-bg-active) .artist {
-    color: #eee !important;
-  }
-  :host(.artwork-bg-active) .source-dropdown {
-    background: #222 !important;
-    border-color: #444 !important;
-  }
-  :host(.artwork-bg-active) .progress-bar {
-    background: #333 !important;
-  }
-  :host(.artwork-bg-active) .chip {
-    background: var(--chip-background, #333) !important;
-    color: #fff !important;
-  }
   .source-menu {
     position: relative;
     display: flex;
@@ -306,14 +280,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       background: var(--accent-color, #1976d2);
       color: #fff;
       opacity: 1;
-    }
-    :host(.artwork-bg-active) .chip[selected] {
-      background: var(--accent-color, #ff9800) !important;
-      color: #fff !important;
-      opacity: 1;
-    }
-    :host(.artwork-bg-active) .action-chip {
-      color: #111 !important;
     }
     .media-artwork-bg {
       position: relative;
@@ -754,7 +720,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const art = isRealArtwork
         ? isRealArtwork
         : "https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png";
-      const showBackground = !!this.config.artwork_background && isRealArtwork;
       // Details
       const title = isPlaying ? (stateObj.attributes.media_title || "") : "";
       const artist = isPlaying ? (stateObj.attributes.media_artist || stateObj.attributes.media_series_title || "") : "";
@@ -773,20 +738,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const vol = Number(stateObj.attributes.volume_level || 0);
       const showSlider = this.config.volume_mode !== "stepper";
 
-      // Add or remove white-text class for artwork background
-      if (showBackground && art) {
-        this.classList.add('artwork-bg-active');
-      } else {
-        this.classList.remove('artwork-bg-active');
-      }
+      // No longer toggling artwork-bg-active class; always show artwork as background
 
       return html`
         <div style="position:relative;">
-          ${showBackground && art ? html`
-            <div class="media-bg-full" style="background-image:url('${art}');">
-              <div class="media-bg-dim"></div>
-            </div>
-          ` : nothing}
           <div style="position:relative; z-index:2;">
             <div class="chip-row">
               ${this.sortedEntityIds.map((id) => {
@@ -946,10 +901,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             domain: "media_player"
           }
         }
-      },
-      {
-        name: "artwork_background",
-        selector: { boolean: {} }
       },
       {
         name: "volume_mode",
