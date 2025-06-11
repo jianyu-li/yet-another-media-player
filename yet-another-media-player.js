@@ -861,7 +861,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           </div>
         </div>
       `;
-    }
+    } 
 
 
   disconnectedCallback() {
