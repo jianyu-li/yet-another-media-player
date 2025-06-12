@@ -435,24 +435,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
     overflow: hidden;
   }
   .artwork-dim-overlay {
-  position: absolute;
-  left: 0; right: 0; top: 0; bottom: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0) 55%,
-    rgba(0,0,0,0.9) 100%
-  );  
-   .card-lower-fade {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 55%,        /* Start fading at 55% */
+      rgba(0,0,0,0.88) 65%,     /* Pretty dark by 65% */
+      rgba(0,0,0,0.96) 100%     /* Almost black at the very bottom */
+    );
+    z-index: 2;
+  }
+  .card-lower-fade {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 1;
     background: linear-gradient(
-  to bottom,
-  rgba(0,0,0,0.0) 55%,
-  rgba(0,0,0,0.9) 100%
-); 
+      to bottom,
+      rgba(0,0,0,0.0) 55%,
+      rgba(0,0,0,0.88) 65%,
+      rgba(0,0,0,0.96) 100%
+    );
+  }
   }
   .card-lower-content {
     position: relative;
