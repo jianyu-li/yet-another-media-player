@@ -450,7 +450,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background: linear-gradient(
   to bottom,
   rgba(0,0,0,0.0) 75%,
-  rgba(0,0,0,0.7) 100%
+  rgba(0,0,0,0.9) 100%
 ); 
   }
   .card-lower-content {
@@ -773,7 +773,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               : nothing}
             <!-- Remove previous .media-artwork-bg and overlays for the lower part -->
             <div class="card-lower-content-bg" style="${art ? `background-image:url('${art}')` : `background-image:url('https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png')`}">
-              <div class="card-lower-fade"></div>
+              <div class="card-lower-fade" part="fade"></div>
               <div class="card-lower-content">
                 <div class="card-artwork-spacer"></div>
                 <div class="details">
