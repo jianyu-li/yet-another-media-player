@@ -207,6 +207,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     font-size: 24px;
     color: var(--accent-color, #1976d2);
   }
+  .chip-icon ha-icon {
+    font-size: 28px;
+  }
+  .chip[selected]:not([playing]) ha-icon {
+    color: #222;
+    /* Or color: #000; or any high-contrast color depending on your accent color */
+  }
 	.chip-row {
 	  display: flex;
 	  gap: 8px; 
@@ -795,7 +802,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <span class="chip-icon">
                       ${miniArt
                         ? html`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />`
-                        : html`<ha-icon icon="${entityIcon}"></ha-icon>`
+                        : html`<ha-icon icon="${entityIcon}" style="font-size: 28px;"></ha-icon>`
                       }
                     </span>
                     ${this.getChipName(id)}
