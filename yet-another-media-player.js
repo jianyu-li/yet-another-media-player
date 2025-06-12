@@ -425,6 +425,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       border-radius: 3px;
       outline: none;
       box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
+      flex: 1 1 auto;
+      min-width: 80px;
+      max-width: none;
+      margin-right: 12px;
+    }
+    .volume-row .source-menu {
+      flex: 0 0 auto;
     }
 
     /* Webkit browsers (Chrome, Safari, Edge) */
@@ -468,9 +475,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       background: rgba(255,255,255,0.22);
       border-radius: 3px;
     }
-    .volume-row .source-menu {
-      flex: 0 0 auto;    /* Prevent the source menu from growing/shrinking */
-    }      
+    /* .volume-row .source-menu block moved and replaced above for consistency */
     .vol-stepper {
       display: flex;
       align-items: center;
