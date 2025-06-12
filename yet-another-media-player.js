@@ -40,15 +40,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background-repeat: no-repeat;
     pointer-events: none;
   }
-  .media-bg-dim {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1;
-    pointer-events: none;
-  }
+
   .source-menu {
     position: relative;
     display: flex;
@@ -294,7 +286,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       position: absolute;
       left: 0; right: 0; top: 0; bottom: 0;
       pointer-events: none;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.70) 100%);
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0) 75%,
+        rgba(0,0,0,0.7) 100%
+      );
       z-index: 2;
     }
     .artwork {
