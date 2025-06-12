@@ -205,10 +205,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     color: var(--accent-color, #ff9800) !important; /* Orange for unselected chips */
   }
   .chip[selected]:not([playing]) .chip-icon {
-    background: #fff !important;
+    background: transparent !important;
   }
   .chip[selected]:not([playing]) .chip-icon ha-icon {
-    color: var(--accent-color, #ff9800) !important;
+    color: #fff !important;
   }
   .chip-icon ha-icon {
     width: 100%;
