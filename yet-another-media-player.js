@@ -434,18 +434,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     border-radius: 0 0 16px 16px;
     overflow: hidden;
   }
-/*   .artwork-dim-overlay {
-    position: absolute;
-    left: 0; right: 0; top: 0; bottom: 0;
-    pointer-events: none;
-    background: linear-gradient(
-      to bottom,
-      rgba(0,0,0,0) 55%,        
-      rgba(0,0,0,0.5) 65%,    
-      rgba(0,0,0,0.96) 100%     
-    );
-    z-index: 1;
-  } */
   .card-lower-fade {
     position: absolute;
     inset: 0;
@@ -779,7 +767,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
               : nothing}
             <!-- Remove previous .media-artwork-bg and overlays for the lower part -->
             <div class="card-lower-content-bg" style="${art ? `background-image:url('${art}')` : `background-image:url('https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png')`}">
-              <div class="artwork-dim-overlay"></div>
               <div class="card-lower-fade"></div>
               <div class="card-lower-content">
                 <div class="card-artwork-spacer"></div>
