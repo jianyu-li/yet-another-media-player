@@ -193,6 +193,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     margin-right: 8px;
     width: 28px;
     height: 28px;
+    background: #fff;
+  }
+  .chip[selected]:not([playing]) .chip-icon {
+    background: #fff;
   }
   .chip-mini-art {
     width: 28px;
@@ -200,7 +204,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     border-radius: 50%;
     object-fit: cover;
     box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-    background: #111;
     display: block;
   }
   .chip ha-icon {
