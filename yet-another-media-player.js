@@ -1,4 +1,18 @@
+
 import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+
+// Media Player Supported Features bitmask
+const SUPPORT_PAUSE = 1;
+const SUPPORT_SEEK = 2;
+const SUPPORT_VOLUME_SET = 4;
+const SUPPORT_VOLUME_MUTE = 8;
+const SUPPORT_PREVIOUS_TRACK = 16;
+const SUPPORT_NEXT_TRACK = 32;
+const SUPPORT_TURN_ON = 128;
+const SUPPORT_TURN_OFF = 256;
+const SUPPORT_PLAY_MEDIA = 512;
+const SUPPORT_SHUFFLE = 4096;
+const SUPPORT_REPEAT_SET = 262144;
 
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -8,6 +22,10 @@ window.customCards.push({
 });
 
 class YetAnotherMediaPlayerCard extends LitElement {
+  _supportsFeature(stateObj, featureBit) {
+    if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
+    return (stateObj.attributes.supported_features & featureBit) !== 0;
+  }
   get sortedEntityIds() {
   return [...this.entityIds].sort((a, b) => {
     const tA = this._playTimestamps[a] || 0;
@@ -744,8 +762,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const vol = Number(stateObj.attributes.volume_level || 0);
       const showSlider = this.config.volume_mode !== "stepper";
 
-      
-
       return html`
         <div style="position:relative;">
           <div style="position:relative; z-index:2;">
@@ -800,28 +816,38 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 ` : html`<div class="progress-bar" style="visibility:hidden"></div>`}
                 <div class="controls-row">
-                  <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
-                    <ha-icon icon="mdi:skip-previous"></ha-icon>
-                  </button>
+                  ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
+                    <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
+                      <ha-icon icon="mdi:skip-previous"></ha-icon>
+                    </button>
+                  ` : nothing}
                   <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
                     <ha-icon icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
                   </button>
-                  <button class="button" @click=${() => this._onControlClick("next")} title="Next">
-                    <ha-icon icon="mdi:skip-next"></ha-icon>
-                  </button>
-                  <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
-                    <ha-icon icon="mdi:shuffle"></ha-icon>
-                  </button>
-                  <button class="button${repeatActive ? ' active' : ''}" @click=${() => this._onControlClick("repeat")} title="Repeat">
-                    <ha-icon icon=${
-                      stateObj.attributes.repeat === "one"
-                        ? "mdi:repeat-once"
-                        : "mdi:repeat"
-                    }></ha-icon>
-                  </button>
-                  <button class="button" @click=${() => this._onControlClick("power")} title="Power">
-                    <ha-icon icon="mdi:power"></ha-icon>
-                  </button>
+                  ${this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? html`
+                    <button class="button" @click=${() => this._onControlClick("next")} title="Next">
+                      <ha-icon icon="mdi:skip-next"></ha-icon>
+                    </button>
+                  ` : nothing}
+                  ${this._supportsFeature(stateObj, SUPPORT_SHUFFLE) ? html`
+                    <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
+                      <ha-icon icon="mdi:shuffle"></ha-icon>
+                    </button>
+                  ` : nothing}
+                  ${this._supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? html`
+                    <button class="button${repeatActive ? ' active' : ''}" @click=${() => this._onControlClick("repeat")} title="Repeat">
+                      <ha-icon icon=${
+                        stateObj.attributes.repeat === "one"
+                          ? "mdi:repeat-once"
+                          : "mdi:repeat"
+                      }></ha-icon>
+                    </button>
+                  ` : nothing}
+                  ${this._supportsFeature(stateObj, SUPPORT_TURN_OFF) ? html`
+                    <button class="button" @click=${() => this._onControlClick("power")} title="Power">
+                      <ha-icon icon="mdi:power"></ha-icon>
+                    </button>
+                  ` : nothing}
                 </div>
                 <div class="volume-row${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? ' has-source' : ''}">
                   ${showSlider
@@ -867,7 +893,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           </div>
         </div>
       `;
-    } 
+    }
 
 
   disconnectedCallback() {
