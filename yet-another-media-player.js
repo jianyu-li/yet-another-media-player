@@ -44,7 +44,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   static styles = css`
   .card-artwork-spacer {
     width: 100%;
-    height: 180px; 
+    height: 180px; /* Adjust as needed for your old artwork area */
     pointer-events: none;
   }
   .media-bg-full {
@@ -269,7 +269,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   .action-chip {
     border-radius: 8px;                  /* Squarer corners */
     padding: 12px 20px;                  /* Taller chip, wider text space */
-    background: var(--chip-action-bg, #222); 
+    background: var(--chip-action-bg, #222); /* Contrasting bg (override in theme if you want) */
     color: var(--primary-text-color, #fff);
     font-weight: 600;                    /* Bolder */
     font-size: 1.1em;
@@ -607,13 +607,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   getChipName(entity_id) {
     const obj = this.entityObjs.find(e => e.entity_id === entity_id);
-    if (obj) {
-      if (obj.name) return obj.name;
-      // If this is a custom YAML object with no name, show a friendly hint
-      if (typeof obj !== "string" && Object.keys(obj).length > 1) {
-        return "Configured via YAML";
-      }
-    }
+    if (obj && obj.name) return obj.name;
     const state = this.hass.states[entity_id];
     return state?.attributes.friendly_name || entity_id;
   }
@@ -1000,7 +994,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._progressTimer = null;
     }
   }
-  // Card editor support 
+  // Card editor support (partial, expand as needed)
   static getConfigElement() {
     return document.createElement("yet-another-media-player-editor");
   }
@@ -1061,7 +1055,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   render() {
     if (!this.config) return html``;
-    const configForEditor = this.config;
+    const configForEditor = {
+      ...this.config,
+      entities: (this.config.entities || []).filter(e => typeof e === "string"),
+    };
     return html`
       <ha-form
         .hass=${this.hass}
