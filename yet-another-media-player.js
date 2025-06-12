@@ -186,23 +186,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     }    
 
-  .playing-dot {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    right: 8px;
-    width: 10px;
-    height: 10px;
-    background: var(--accent-color, #1976d2);
-    border-radius: 50%;
-    box-shadow: 0 0 3px 0 #222a;
-    z-index: 1;
-    border: 2px solid #fff;
-    pointer-events: none;
+  .chip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    width: 28px;
+    height: 28px;
   }
-  .chip[selected] .playing-dot {
-    border: 2px solid var(--accent-color, #1976d2);
-  }      
+  .chip-mini-art {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    background: #111;
+    display: block;
+  }
+  .chip ha-icon {
+    font-size: 24px;
+    color: var(--accent-color, #1976d2);
+  }
 	.chip-row {
 	  display: flex;
 	  gap: 8px; 
@@ -769,16 +773,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ${this.sortedEntityIds.map((id) => {
                 const state = this.hass.states[id];
                 const isPlaying = state && state.state === "playing";
+                // miniArt: show if playing and has entity_picture or album_art
+                let miniArt = null;
+                if (isPlaying && (state?.attributes.entity_picture || state?.attributes.album_art)) {
+                  miniArt = state.attributes.entity_picture || state.attributes.album_art;
+                }
+                // entityIcon: icon attribute or fallback
+                const entityIcon = state?.attributes.icon || "mdi:cast";
                 return html`
                   <button
                     class="chip"
                     ?selected=${this.currentEntityId === id}
                     ?playing=${isPlaying}
                     @click=${() => this._onChipClick(this.entityIds.indexOf(id))}
+                    @mousedown=${(e) => this._handleChipTouchStart?.(e, id)}
+                    @mouseup=${(e) => this._handleChipTouchEnd?.(e, id)}
+                    @touchstart=${(e) => this._handleChipTouchStart?.(e, id)}
+                    @touchend=${(e) => this._handleChipTouchEnd?.(e, id)}
                   >
-                    ${isPlaying
-                      ? html`<span class="playing-dot"></span>`
-                      : nothing}
+                    <span class="chip-icon">
+                      ${miniArt
+                        ? html`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />`
+                        : html`<ha-icon icon="${entityIcon}"></ha-icon>`
+                      }
+                    </span>
                     ${this.getChipName(id)}
                   </button>
                 `;
