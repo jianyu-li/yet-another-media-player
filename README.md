@@ -51,7 +51,7 @@ actions:
     service: music_assistant.play_media
     service_data:
       entity_id: current
-      media_id: apple_music://playlist/pl.5feba9fd5ea441a29aeb3597c8314384
+      media_id: apple_music://playlist/pl.ea843ef3098747f9815a77adf164e1fc
       enqueue: replace
   - name: Soul
     service: music_assistant.play_media
