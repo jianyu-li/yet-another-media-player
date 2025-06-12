@@ -26,7 +26,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   static styles = css`
   .card-artwork-spacer {
     width: 100%;
-    height: 180px; 
+    height: 180px; /* Adjust as needed for your old artwork area */
     pointer-events: none;
   }
   .media-bg-full {
@@ -40,7 +40,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background-repeat: no-repeat;
     pointer-events: none;
   }
-
+  .media-bg-dim {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1;
+    pointer-events: none;
+  }
   .source-menu {
     position: relative;
     display: flex;
@@ -217,7 +225,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   .action-chip {
     border-radius: 8px;                  /* Squarer corners */
     padding: 12px 20px;                  /* Taller chip, wider text space */
-    background: var(--chip-action-bg, #222); /* Contrasting bg  */
+    background: var(--chip-action-bg, #222); /* Contrasting bg (override in theme if you want) */
     color: var(--primary-text-color, #fff);
     font-weight: 600;                    /* Bolder */
     font-size: 1.1em;
@@ -262,7 +270,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 	  transition: background 0.2s, opacity 0.2s;
 	  flex: 0 0 auto;        /* Ensures chips don't stretch or shrink */
 	  white-space: nowrap;   /* Prevents text from wrapping to next line */
-	  display: inline-block; /* Ensures correct sizing in flex */
+	  display: inline-block; /* Optional: ensures correct sizing in flex */
     position: relative;
 	}
     .chip[playing] {
@@ -283,8 +291,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       background-position: top center;
     }
 
-      z-index: 2;
-    }
     .artwork {
       width: 96px;
       height: 96px;
@@ -424,6 +430,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
         color: #fff !important;
       }
     }
+    .artwork-dim-overlay {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom, 
+    rgba(0,0,0,0.05) 55%,
+    rgba(0,0,0,0.70) 100%);
+    z-index: 2;
+  }    
   .card-lower-content-bg {
     position: relative;
     width: 100%;
@@ -440,18 +455,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     pointer-events: none;
     z-index: 1;
     background: linear-gradient(
-      to bottom,
-      rgba(0,0,0,0.0) 55%,
-      rgba(0,0,0,0.5) 65%,
-      rgba(0,0,0,0.96) 100%
-    );
-  }
+  to bottom,
+  rgba(0,0,0,0.40) 55%,
+  rgba(0,0,0,0.92) 100%
+);
   }
   .card-lower-content {
     position: relative;
     z-index: 2;
   }
-  
+  /* Removed redundant rule for :host(.artwork-bg-active) .vol-stepper span */
   .vol-stepper span {
     color: #fff !important;
   }
