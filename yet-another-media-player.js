@@ -26,7 +26,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   static styles = css`
   .card-artwork-spacer {
     width: 100%;
-    height: 180px; /* Adjust as needed for your old artwork area */
+    height: 180px; 
     pointer-events: none;
   }
   .media-bg-full {
@@ -217,7 +217,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   .action-chip {
     border-radius: 8px;                  /* Squarer corners */
     padding: 12px 20px;                  /* Taller chip, wider text space */
-    background: var(--chip-action-bg, #222); /* Contrasting bg (override in theme if you want) */
+    background: var(--chip-action-bg, #222); /* Contrasting bg  */
     color: var(--primary-text-color, #fff);
     font-weight: 600;                    /* Bolder */
     font-size: 1.1em;
@@ -262,7 +262,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 	  transition: background 0.2s, opacity 0.2s;
 	  flex: 0 0 auto;        /* Ensures chips don't stretch or shrink */
 	  white-space: nowrap;   /* Prevents text from wrapping to next line */
-	  display: inline-block; /* Optional: ensures correct sizing in flex */
+	  display: inline-block; /* Ensures correct sizing in flex */
     position: relative;
 	}
     .chip[playing] {
@@ -442,7 +442,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     border-radius: 0 0 16px 16px;
     overflow: hidden;
   }
-  .card-lower-fade {
+/*   .card-lower-fade {
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -451,7 +451,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   to bottom,
   rgba(0,0,0,0.40) 15%,
   rgba(0,0,0,0.92) 100%
-);
+); */
   }
   .card-lower-content {
     position: relative;
