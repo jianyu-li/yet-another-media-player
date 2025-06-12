@@ -198,11 +198,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     overflow: hidden;
     padding: 0; /* Remove padding */
   }
-  .chip[selected]:not([playing]) .chip-icon {
-    background: transparent !important;
-  }
-  .chip[selected]:not([playing]) .chip-icon ha-icon {
-    color: #fff !important;
+  .chip:not([selected]):not([playing]) .chip-icon {
     background: transparent !important;
   }
   .chip:not([selected]) .chip-icon ha-icon {
@@ -319,11 +315,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     .chip[playing] {
       padding-right: 26px;
     }
-    .chip[selected] {
-      background: var(--accent-color, #1976d2);
-      color: #fff;
-      opacity: 1;
-    }
+      .chip[selected] {
+        background: var(--accent-color, #1976d2);
+        color: #fff;
+        opacity: 1;
+      }
     .media-artwork-bg {
       position: relative;
       width: 100%;
