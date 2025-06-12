@@ -816,15 +816,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 ` : html`<div class="progress-bar" style="visibility:hidden"></div>`}
                 <div class="controls-row">
-                  <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
-                    <ha-icon icon="mdi:skip-previous"></ha-icon>
-                  </button>
+                  ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
+                    <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
+                      <ha-icon icon="mdi:skip-previous"></ha-icon>
+                    </button>
+                  ` : nothing}
                   <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
                     <ha-icon icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
                   </button>
-                  <button class="button" @click=${() => this._onControlClick("next")} title="Next">
-                    <ha-icon icon="mdi:skip-next"></ha-icon>
-                  </button>
+                  ${this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? html`
+                    <button class="button" @click=${() => this._onControlClick("next")} title="Next">
+                      <ha-icon icon="mdi:skip-next"></ha-icon>
+                    </button>
+                  ` : nothing}
                   ${this._supportsFeature(stateObj, SUPPORT_SHUFFLE) ? html`
                     <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
                       <ha-icon icon="mdi:shuffle"></ha-icon>
@@ -839,9 +843,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       }></ha-icon>
                     </button>
                   ` : nothing}
-                  <button class="button" @click=${() => this._onControlClick("power")} title="Power">
-                    <ha-icon icon="mdi:power"></ha-icon>
-                  </button>
+                  ${this._supportsFeature(stateObj, SUPPORT_TURN_OFF) ? html`
+                    <button class="button" @click=${() => this._onControlClick("power")} title="Power">
+                      <ha-icon icon="mdi:power"></ha-icon>
+                    </button>
+                  ` : nothing}
                 </div>
                 <div class="volume-row${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? ' has-source' : ''}">
                   ${showSlider
