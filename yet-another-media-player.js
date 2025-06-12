@@ -1073,7 +1073,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     if (!this.config) return html``;
     const configForEditor = {
       ...this.config,
-      entities: (this.config.entities || []).filter(e => typeof e === "string"),
+      entities: this.config.entities || [],
     };
     return html`
       <ha-form
