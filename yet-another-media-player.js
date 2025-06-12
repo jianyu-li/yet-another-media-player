@@ -305,7 +305,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     display: flex;           /* Flexbox for vertical centering */
     align-items: center;     /* Vertically center content */
     border-radius: 24px;
-    padding: 6px 16px 6px 16px;
+    padding: 6px 20px 6px 8px;
     background: var(--chip-background, #333);
     color: var(--primary-text-color, #fff);
     cursor: pointer;
