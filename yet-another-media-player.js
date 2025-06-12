@@ -450,7 +450,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background: linear-gradient(
   to bottom,
   rgba(0,0,0,0.0) 75%,
-  rgba(0,0,0,0.92) 25%
+  rgba(0,0,0,0.7) 100%
 ); 
   }
   .card-lower-content {
