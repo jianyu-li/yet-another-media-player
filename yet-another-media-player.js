@@ -436,7 +436,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     pointer-events: none;
     background: linear-gradient(to bottom, 
     rgba(0,0,0,0.0) 0%,
-    rgba(0,0,0,0.05) 55%,
+    rgba(0,0,0,0.25) 55%,
     rgba(0,0,0,0.70) 100%);
     z-index: 2;
   }    
