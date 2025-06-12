@@ -442,22 +442,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
     border-radius: 0 0 16px 16px;
     overflow: hidden;
   }
-/*   .card-lower-fade {
+   .card-lower-fade {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 1;
     background: linear-gradient(
   to bottom,
-  rgba(0,0,0,0.40) 15%,
-  rgba(0,0,0,0.92) 100%
-); */
+  rgba(0,0,0,0.0) 75%,
+  rgba(0,0,0,0.92) 25%
+); 
   }
   .card-lower-content {
     position: relative;
     z-index: 2;
   }
-  /* Removed redundant rule for :host(.artwork-bg-active) .vol-stepper span */
+  
   .vol-stepper span {
     color: #fff !important;
   }
