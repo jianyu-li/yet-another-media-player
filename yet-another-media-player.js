@@ -27,23 +27,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
   get sortedEntityIds() {
-    const pinned = [];
-    const unpinned = [];
-    this.entityObjs.forEach(obj => {
-      if (obj.pinned) {
-        pinned.push(obj.entity_id);
-      } else {
-        unpinned.push(obj.entity_id);
-      }
-    });
-    // Sort unpinned by last play timestamp
-    unpinned.sort((a, b) => {
-      const tA = this._playTimestamps[a] || 0;
-      const tB = this._playTimestamps[b] || 0;
-      return tB - tA;
-    });
-    return [...pinned, ...unpinned];
-  }
+  return [...this.entityIds].sort((a, b) => {
+    const tA = this._playTimestamps[a] || 0;
+    const tB = this._playTimestamps[b] || 0;
+    return tB - tA;
+  });
+}
   static properties = {
     hass: {},
     config: {},
@@ -607,8 +596,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   get entityObjs() {
     return this.config.entities.map(e =>
       typeof e === "string"
-        ? { entity_id: e, name: "", pinned: false }
-        : { entity_id: e.entity_id, name: e.name || "", pinned: !!e.pinned }
+        ? { entity_id: e, name: "" }
+        : { entity_id: e.entity_id, name: e.name || "" }
     );
   }
 
@@ -618,7 +607,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   getChipName(entity_id) {
     const obj = this.entityObjs.find(e => e.entity_id === entity_id);
-    if (obj && obj.name) return obj.name;
+    if (obj) {
+      if (obj.name) return obj.name;
+      // If this is a custom YAML object with no name, show a friendly hint
+      if (typeof obj !== "string" && Object.keys(obj).length > 1) {
+        return "Configured via YAML";
+      }
+    }
     const state = this.hass.states[entity_id];
     return state?.attributes.friendly_name || entity_id;
   }
@@ -1027,20 +1022,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   get _schema() {
     return [
-  {
-    name: "entities",
-    selector: {
-      "array": {
-        "item_selector": {
-          "object": {
-            "entity_id": { selector: { entity: { domain: "media_player" } } },
-            "name": { selector: { text: {} }, optional: true },
-            "pinned": { selector: { boolean: {} }, optional: true }
+      {
+        name: "entities",
+        selector: {
+          entity: {
+            multiple: true,
+            domain: "media_player"
           }
         }
-      }
-    }
-  },
+      },
       {
         name: "volume_mode",
         selector: {
@@ -1071,10 +1061,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   render() {
     if (!this.config) return html``;
-    const configForEditor = {
-      ...this.config,
-      entities: this.config.entities || [],
-    };
+    const configForEditor = this.config;
     return html`
       <ha-form
         .hass=${this.hass}
