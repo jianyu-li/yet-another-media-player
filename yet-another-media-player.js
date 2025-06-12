@@ -279,22 +279,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }  
 
-	.chip {
-	  border-radius: 24px;
-	  padding: 6px 16px 6px 16px;
-	  background: var(--chip-background, #333);
-	  color: var(--primary-text-color, #fff);
-	  cursor: pointer;
-	  font-weight: 500;
-	  opacity: 0.85;
-	  border: none;
-	  outline: none;
-	  transition: background 0.2s, opacity 0.2s;
-	  flex: 0 0 auto;        /* Ensures chips don't stretch or shrink */
-	  white-space: nowrap;   /* Prevents text from wrapping to next line */
-	  display: inline-block; /* Optional: ensures correct sizing in flex */
+  .chip {
+    display: flex;           /* Flexbox for vertical centering */
+    align-items: center;     /* Vertically center content */
+    border-radius: 24px;
+    padding: 6px 16px 6px 16px;
+    background: var(--chip-background, #333);
+    color: var(--primary-text-color, #fff);
+    cursor: pointer;
+    font-weight: 500;
+    opacity: 0.85;
+    border: none;
+    outline: none;
+    transition: background 0.2s, opacity 0.2s;
+    flex: 0 0 auto;
+    white-space: nowrap;
     position: relative;
-	}
+  }
     .chip[playing] {
       padding-right: 26px;
     }
