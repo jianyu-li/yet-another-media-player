@@ -418,10 +418,55 @@ class YetAnotherMediaPlayerCard extends LitElement {
       justify-content: space-between;
     }
     .vol-slider {
-      flex: 1 1 auto;    /* Grow to fill available space */
-      min-width: 80px;
-      max-width: none;   /* Remove max-width constraint */
-      margin-right: 12px;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      background: rgba(255,255,255,0.22);
+      border-radius: 3px;
+      outline: none;
+      box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
+    }
+
+    /* Webkit browsers (Chrome, Safari, Edge) */
+    .vol-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-color, #1976d2);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      border: 2px solid #fff;
+    }
+    /* Firefox */
+    .vol-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-color, #1976d2);
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
+    .vol-slider::-moz-range-track {
+      height: 6px;
+      background: rgba(255,255,255,0.22);
+      border-radius: 3px;
+    }
+    /* IE and Edge (legacy) */
+    .vol-slider::-ms-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-color, #1976d2);
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
+    .vol-slider::-ms-fill-lower,
+    .vol-slider::-ms-fill-upper {
+      height: 6px;
+      background: rgba(255,255,255,0.22);
+      border-radius: 3px;
     }
     .volume-row .source-menu {
       flex: 0 0 auto;    /* Prevent the source menu from growing/shrinking */
