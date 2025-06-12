@@ -440,11 +440,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     pointer-events: none;
     background: linear-gradient(
       to bottom,
-      rgba(0,0,0,0) 55%,        /* Start fading at 55% */
-      rgba(0,0,0,0.88) 65%,     /* Pretty dark by 65% */
-      rgba(0,0,0,0.96) 100%     /* Almost black at the very bottom */
+      rgba(0,0,0,0) 55%,        
+      rgba(0,0,0,0.5) 65%,    
+      rgba(0,0,0,0.96) 100%     
     );
-    z-index: 2;
+    z-index: 1;
   }
   .card-lower-fade {
     position: absolute;
@@ -454,7 +454,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background: linear-gradient(
       to bottom,
       rgba(0,0,0,0.0) 55%,
-      rgba(0,0,0,0.88) 65%,
+      rgba(0,0,0,0.5) 65%,
       rgba(0,0,0,0.96) 100%
     );
   }
