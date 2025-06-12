@@ -196,9 +196,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background: #fff;
     border-radius: 50%;
     overflow: hidden;
+    padding: 0; /* Remove padding */
   }
   .chip[selected]:not([playing]) .chip-icon {
     background: transparent !important;
+  }
+  .chip[selected]:not([playing]) .chip-icon ha-icon {
+    color: #fff !important;
+    background: transparent !important;
+  }
+  .chip:not([selected]) .chip-icon ha-icon {
+    color: var(--accent-color, #ff9800) !important; /* Orange for unselected chips */
+  }
+  .chip-icon ha-icon {
+    width: 100%;
+    height: 100%;
+    font-size: 28px !important;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
   }
   .chip-mini-art {
     width: 28px;
@@ -207,12 +226,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     object-fit: cover;
     box-shadow: 0 1px 4px rgba(0,0,0,0.18);
     display: block;
-  }
-  .chip-icon ha-icon {
-    font-size: 28px;
-  }
-  .chip[selected]:not([playing]) ha-icon {
-    color: #fff !important;
   }
 	.chip-row {
 	  display: flex;
