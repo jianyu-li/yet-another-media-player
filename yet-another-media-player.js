@@ -621,7 +621,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 	  clearTimeout(this._manualSelectTimeout);
 	  this._manualSelectTimeout = setTimeout(() => {
 		this._manualSelect = false;
-	  }, 30000); // 30 seconds of "manual" mode after a chip click
+	  }, 60000); // 60 seconds of "manual" mode after a chip click
 	}
 
   _onActionChipClick(idx) {
