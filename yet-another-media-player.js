@@ -27,12 +27,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
   get sortedEntityIds() {
-  return [...this.entityIds].sort((a, b) => {
-    const tA = this._playTimestamps[a] || 0;
-    const tB = this._playTimestamps[b] || 0;
-    return tB - tA;
-  });
-}
+    const pinned = [];
+    const unpinned = [];
+    this.entityObjs.forEach(obj => {
+      if (obj.pinned) {
+        pinned.push(obj.entity_id);
+      } else {
+        unpinned.push(obj.entity_id);
+      }
+    });
+    // Sort unpinned by last play timestamp
+    unpinned.sort((a, b) => {
+      const tA = this._playTimestamps[a] || 0;
+      const tB = this._playTimestamps[b] || 0;
+      return tB - tA;
+    });
+    return [...pinned, ...unpinned];
+  }
   static properties = {
     hass: {},
     config: {},
@@ -44,7 +55,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   static styles = css`
   .card-artwork-spacer {
     width: 100%;
-    height: 180px; /* Adjust as needed for your old artwork area */
+    height: 180px; 
     pointer-events: none;
   }
   .media-bg-full {
@@ -269,7 +280,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   .action-chip {
     border-radius: 8px;                  /* Squarer corners */
     padding: 12px 20px;                  /* Taller chip, wider text space */
-    background: var(--chip-action-bg, #222); /* Contrasting bg (override in theme if you want) */
+    background: var(--chip-action-bg, #222); 
     color: var(--primary-text-color, #fff);
     font-weight: 600;                    /* Bolder */
     font-size: 1.1em;
@@ -596,8 +607,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   get entityObjs() {
     return this.config.entities.map(e =>
       typeof e === "string"
-        ? { entity_id: e, name: "" }
-        : { entity_id: e.entity_id, name: e.name || "" }
+        ? { entity_id: e, name: "", pinned: false }
+        : { entity_id: e.entity_id, name: e.name || "", pinned: !!e.pinned }
     );
   }
 
@@ -994,7 +1005,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._progressTimer = null;
     }
   }
-  // Card editor support (partial, expand as needed)
+  // Card editor support 
   static getConfigElement() {
     return document.createElement("yet-another-media-player-editor");
   }
@@ -1016,15 +1027,20 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   get _schema() {
     return [
-      {
-        name: "entities",
-        selector: {
-          entity: {
-            multiple: true,
-            domain: "media_player"
+  {
+    name: "entities",
+    selector: {
+      "array": {
+        "item_selector": {
+          "object": {
+            "entity_id": { selector: { entity: { domain: "media_player" } } },
+            "name": { selector: { text: {} }, optional: true },
+            "pinned": { selector: { boolean: {} }, optional: true }
           }
         }
-      },
+      }
+    }
+  },
       {
         name: "volume_mode",
         selector: {
