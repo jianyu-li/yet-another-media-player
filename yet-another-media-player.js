@@ -323,6 +323,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: #fff !important;
     }
     .controls-row {
       display: flex;
@@ -436,7 +437,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     pointer-events: none;
     background: linear-gradient(to bottom, 
     rgba(0,0,0,0.0) 0%,
-    rgba(0,0,0,0.25) 55%,
+    rgba(0,0,0,0.40) 55%,
     rgba(0,0,0,0.70) 100%);
     z-index: 2;
   }    
