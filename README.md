@@ -88,27 +88,22 @@ actions:
     icon: mdi:television-play
     service: script.play_bluey_on_living    
 ```
+
+## Notes
+
+- When an entity is manually selected it will be pinned in place and will not auto-switch to the more recently playing entity for that session. Tap or click the pin icon that appears to unpin the entity.
+- Entity names can be updated via YAML, but if you try and add a new entity through the ui then the YAML based entities disappear. It is recommended to either use the ui or YAML, but not both. 
+- Actions can run any home assistant service, not just media services. Specifying "current" in the entity_id field will target the currently selected entity. 
+
+
+
 ---
 
 ## Installation via HACS
 
 [![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=yet-another-media-player&category=dashboard&owner=jianyu-li)
 
-You can install **Yet Another Media Player** with HACS (Home Assistant Community Store):
 
-1. Go to **HACS → Custom repositories**.
-2. Add this repository URL:  
-   `https://github.com/jianyu-li/yet-another-media-player`
-3. Set category to **dashboard**.
-4. Find and install the card from the list.
-5. Refresh your browser, then add the card via the UI or YAML:
-
-```yaml
-type: custom:yet-another-media-player
-entities:
-  - media_player.your_player
-  # ...
-```
 
 ---
 
