@@ -38,7 +38,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     config: {},
     _selectedIndex: { state: true },
     _lastPlaying: { state: true },
-    _shouldDropdownOpenUp: { state: true }
+    _shouldDropdownOpenUp: { state: true },
+    _pinnedIndex: { state: true }
   };
 
   static styles = css`
@@ -318,6 +319,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
     white-space: nowrap;
     position: relative;
   }
+  .chip-pin {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #fff;
+    border-radius: 50%;
+    padding: 2px;
+    z-index: 2;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #FFD600;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.11);
+    cursor: pointer;
+    transition: box-shadow 0.18s;
+  }
+  .chip-pin:hover {
+    box-shadow: 0 2px 12px rgba(33,33,33,0.17);
+  }
+  .chip-pin ha-icon {
+    color: #FFD600;
+    font-size: 16px;
+    background: transparent;
+    border-radius: 50%;
+    margin: 0;
+    padding: 0;
+  }
     .chip[playing] {
       padding-right: 26px;
     }
@@ -582,6 +612,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._progressTimer = null;
     this._progressValue = null;
     this._lastProgressEntityId = null;
+    this._pinnedIndex = null;
   }
 
   setConfig(config) {
@@ -692,14 +723,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
     });
   }
 
-	_onChipClick(idx) {
-	  this._selectedIndex = idx;
-	  this._manualSelect = true;
-	  clearTimeout(this._manualSelectTimeout);
-	  this._manualSelectTimeout = setTimeout(() => {
-		this._manualSelect = false;
-	  }, 60000); // 60 seconds of "manual" mode after a chip click
-	}
+  _onPinClick(e) {
+    e.stopPropagation();
+    this._manualSelect = false;
+    this._pinnedIndex = null;
+    
+  }  
+
+  _onChipClick(idx) {
+    this._selectedIndex = idx;
+    this._manualSelect = true;
+    this._pinnedIndex = idx;
+    clearTimeout(this._manualSelectTimeout);
+    // Remove or extend the timeout since “pinned” means user must unpin manually
+  }
 
   _onActionChipClick(idx) {
     const action = this.config.actions[idx];
@@ -871,6 +908,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       }
                     </span>
                     ${this.getChipName(id)}
+                    ${this._manualSelect && this._pinnedIndex === this.entityIds.indexOf(id)
+                      ? html`
+                          <button class="chip-pin" title="Unpin and resume auto-switch" @click=${(e) => this._onPinClick(e)}>
+                            <ha-icon icon="mdi:pin"></ha-icon>
+                          </button>
+                        `
+                      : nothing}
                   </button>
                 `;
               })}
