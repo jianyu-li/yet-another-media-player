@@ -881,7 +881,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     ${this.config.actions.map(
                       (a, idx) => html`
                         <button class="action-chip" @click=${() => this._onActionChipClick(idx)}>
-                          ${a.name}
+                          ${a.icon
+                            ? html`<ha-icon icon="${a.icon}" style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>`
+                            : nothing}
+                          ${a.name || ""}
                         </button>
                       `
                     )}
