@@ -6,11 +6,12 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 ## Features
 
-- Switch between multiple media players in a single card using chip-style selector
+- Switch between multiple media players in a single card using chips
 - Custom chip/entity names via YAML
 - Shuffle, repeat, and playback controls for compatible players
 - Auto-switches to the active media player
-- Action buttons run any Home Assistant service or script
+- Action buttons run any Home Assistant service or script 
+- Add icons to custom actions to differentiate types (e.g.: playlist versus tv script)
 - Use "current" for the entity_id to reference the currently selected media player (see example below)
 
 ---
@@ -22,6 +23,10 @@ Home Assistant Lovelace card for controlling multiple media players with chip-ba
 
 
 *Example with multiple media players and custom actions
+
+![Preview Image Icons](/images/previewwithicons.png)
+
+*Example with action icons and volume stepper
 
 ---
 
@@ -66,6 +71,22 @@ actions:
       media_id: apple_music://playlist/pl.6a236667fbc046a49b48ea9cf4e8b639
       enqueue: replace
 volume_mode: slider
+```
+
+You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
+
+```yaml
+actions:
+  - name: Grunge
+    service: music_assistant.play_media
+    icon: mdi:music
+    service_data:
+      entity_id: current
+      media_id: apple_music://playlist/pl.5feba9fd5ea441a29aeb3597c8314384
+      enqueue: replace
+  - name: Play Bluey
+    icon: mdi:television-play
+    service: script.play_bluey_on_living    
 ```
 ---
 
