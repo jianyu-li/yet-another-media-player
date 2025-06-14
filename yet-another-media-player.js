@@ -135,6 +135,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background: var(--accent-color, #1976d2);
     color: #fff;
   }
+
+  @media (prefers-color-scheme: light) {
+    .source-option {
+      color: #222 !important;
+    }
+    .source-option:hover,
+    .source-option:focus {
+      background: var(--custom-accent) !important;
+      color: #222 !important;
+    }
+  }
   @media (prefers-color-scheme: light) {
     .source-menu-btn {
       color: #222;
