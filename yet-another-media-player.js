@@ -634,6 +634,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._pinnedIndex = null;
     // Accent color property for custom accent (updated in setConfig)
     this._customAccent = "#ff9800";
+    // For outside click detection on source dropdown
+    this._sourceDropdownOutsideHandler = null;
   }
 
   setConfig(config) {
@@ -733,20 +735,56 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showSourceMenu = !this._showSourceMenu;
     if (this._showSourceMenu) {
       this._manualSelect = true;
-        setTimeout(() => {
-          const btn = this.renderRoot.querySelector('.source-menu-btn');
-          if (btn) {
-            const rect = btn.getBoundingClientRect();
-            const spaceBelow = window.innerHeight - rect.bottom;
-            const spaceAbove = rect.top;
-            // Open up only if there's less space below and enough above
-            this._shouldDropdownOpenUp = (spaceBelow < 240) && (spaceAbove > spaceBelow);
-            this.requestUpdate();
-          }
-        }, 0);
+      setTimeout(() => {
+        const btn = this.renderRoot.querySelector('.source-menu-btn');
+        if (btn) {
+          const rect = btn.getBoundingClientRect();
+          const spaceBelow = window.innerHeight - rect.bottom;
+          const spaceAbove = rect.top;
+          // Open up only if there's less space below and enough above
+          this._shouldDropdownOpenUp = (spaceBelow < 240) && (spaceAbove > spaceBelow);
+          this.requestUpdate();
+        }
+        // Add outside click/touch handler after dropdown is rendered
+        this._addSourceDropdownOutsideHandler();
+      }, 0);
     } else {
       this._manualSelect = false;
+      this._removeSourceDropdownOutsideHandler();
     }
+  }
+
+  _addSourceDropdownOutsideHandler() {
+    if (this._sourceDropdownOutsideHandler) return;
+    // Use arrow fn to preserve 'this'
+    this._sourceDropdownOutsideHandler = (evt) => {
+      // Find dropdown and button in shadow DOM
+      const dropdown = this.renderRoot.querySelector('.source-dropdown');
+      const btn = this.renderRoot.querySelector('.source-menu-btn');
+      // If click/tap is not inside dropdown or button, close
+      // evt.composedPath() includes shadow DOM path
+      const path = evt.composedPath ? evt.composedPath() : [];
+      if (
+        (dropdown && path.includes(dropdown)) ||
+        (btn && path.includes(btn))
+      ) {
+        return;
+      }
+      // Otherwise, close the dropdown and remove handler
+      this._showSourceMenu = false;
+      this._manualSelect = false;
+      this._removeSourceDropdownOutsideHandler();
+      this.requestUpdate();
+    };
+    window.addEventListener('mousedown', this._sourceDropdownOutsideHandler, true);
+    window.addEventListener('touchstart', this._sourceDropdownOutsideHandler, true);
+  }
+
+  _removeSourceDropdownOutsideHandler() {
+    if (!this._sourceDropdownOutsideHandler) return;
+    window.removeEventListener('mousedown', this._sourceDropdownOutsideHandler, true);
+    window.removeEventListener('touchstart', this._sourceDropdownOutsideHandler, true);
+    this._sourceDropdownOutsideHandler = null;
   }
 
   _selectSource(src) {
@@ -1082,8 +1120,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       clearInterval(this._progressTimer);
       this._progressTimer = null;
     }
+    this._removeSourceDropdownOutsideHandler();
   }
-  // Card editor support (partial, expand as needed)
+  // Card editor support 
   static getConfigElement() {
     return document.createElement("yet-another-media-player-editor");
   }
