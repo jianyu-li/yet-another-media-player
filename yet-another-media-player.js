@@ -139,6 +139,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   @media (prefers-color-scheme: light) {
     .source-option {
       color: #222 !important;
+      background: #fff !important;
+      transition: background 0.13s, color 0.13s;
     }
     .source-option:hover,
     .source-option:focus {
@@ -164,11 +166,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     .source-menu-btn,
     .source-selected,
     .source-dropdown,
-    .source-option,
     .source-row,
     .action-chip-row {
       color: #fff !important;
     }
+    /* .source-option removed from above: handled separately */
   }
     :host {
       display: block;
@@ -567,11 +569,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       .source-menu-btn,
       .source-selected,
       .source-dropdown,
-      .source-option,
       .source-row,
       .action-chip-row {
         color: #fff !important;
       }
+      /* .source-option removed from above: handled separately */
     }
     .artwork-dim-overlay {
     position: absolute;
