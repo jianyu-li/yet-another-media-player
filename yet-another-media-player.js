@@ -1112,16 +1112,22 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           }
         }
       },
-      // match_theme is only supported via YAML, not exposed in visual editor
+      {
+        name: "match_theme",
+        selector: {
+          boolean: {}
+        },
+        required: false
+      },
       {
         name: "actions",
         selector: {
-          "array": {
-            "item_selector": {
-              "object": {
-                "name": { "selector": { "text": {} } },
-                "service": { "selector": { "text": {} } },
-                "service_data": { "selector": { "object": {} } }
+          array: {
+            item_selector: {
+              object: {
+                name: { selector: { text: {} } },
+                service: { selector: { text: {} } },
+                service_data: { selector: { object: {} } }
               }
             }
           }
