@@ -10,6 +10,7 @@ Home Assistant media card for controlling multiple entities with customizable ac
 - Custom chip/entity names via YAML
 - Shuffle, repeat, and playback controls for compatible players
 - Auto-switches to the active media player
+  - Manually selected players will pin in place for the current session until manually removed
 - Action buttons run any Home Assistant service or script 
 - Add icons to custom actions to differentiate types (e.g.: playlist versus tv script)
 - Use "current" for the entity_id to reference the currently selected media player (see example below)
