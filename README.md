@@ -13,6 +13,7 @@ Home Assistant media card for controlling multiple entities with customizable ac
 - Action buttons run any Home Assistant service or script 
 - Add icons to custom actions to differentiate types (e.g.: playlist versus tv script)
 - Use "current" for the entity_id to reference the currently selected media player (see example below)
+- Set match_theme to TRUE to have the cards accent colors follow your selected accent theme color
 
 ---
 
@@ -71,6 +72,7 @@ actions:
       media_id: apple_music://playlist/pl.6a236667fbc046a49b48ea9cf4e8b639
       enqueue: replace
 volume_mode: slider
+match_theme: true
 ```
 
 You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
