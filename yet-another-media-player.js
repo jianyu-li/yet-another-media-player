@@ -627,15 +627,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
-    // Add match_theme property, default true
+    // Add match_theme property, default false
     if (typeof config.match_theme === "undefined") {
-      config.match_theme = true;
+      config.match_theme = false;
     }
     this.config = config;
     this._selectedIndex = 0;
     this._lastPlaying = null;
     // Update custom accent property
-    if (this.config.match_theme !== false) {
+    if (this.config.match_theme === true) {
       // Try to get CSS var --accent-color
       const cssAccent = getComputedStyle(document.documentElement).getPropertyValue("--accent-color").trim();
       this._customAccent = cssAccent || "#ff9800";
@@ -644,7 +644,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     // Update data-match-theme attribute on the host
     if (this.shadowRoot && this.shadowRoot.host) {
-      this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme !== false));
+      this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
   }
 
@@ -873,7 +873,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!this.hass || !this.config) return nothing;
       // Set data-match-theme attribute on the host
       if (this.shadowRoot && this.shadowRoot.host) {
-        this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme !== false));
+        this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       }
       const stateObj = this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
@@ -1141,7 +1141,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     const configForEditor = {
       ...this.config,
       entities: (this.config.entities || []).filter(e => typeof e === "string"),
-      match_theme: typeof this.config.match_theme === "undefined" ? true : this.config.match_theme,
+      match_theme: typeof this.config.match_theme === "undefined" ? false : this.config.match_theme,
     };
     return html`
       <ha-form
