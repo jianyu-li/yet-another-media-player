@@ -699,15 +699,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showSourceMenu = !this._showSourceMenu;
     if (this._showSourceMenu) {
       this._manualSelect = true;
-      setTimeout(() => {
-        const btn = this.renderRoot.querySelector('.source-menu-btn');
-        if (btn) {
-          const rect = btn.getBoundingClientRect();
-          const spaceBelow = window.innerHeight - rect.bottom;
-          this._shouldDropdownOpenUp = (spaceBelow < 240);
-          this.requestUpdate();
-        }
-      }, 0);
+        setTimeout(() => {
+          const btn = this.renderRoot.querySelector('.source-menu-btn');
+          if (btn) {
+            const rect = btn.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            // Open up only if there's less space below and enough above
+            this._shouldDropdownOpenUp = (spaceBelow < 240) && (spaceAbove > spaceBelow);
+            this.requestUpdate();
+          }
+        }, 0);
     } else {
       this._manualSelect = false;
     }
