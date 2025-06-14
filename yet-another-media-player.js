@@ -338,7 +338,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #ff9800;
+    border: 2px solid var(--custom-accent);
     box-shadow: 0 1px 5px rgba(0,0,0,0.11);
     cursor: pointer;
     transition: box-shadow 0.18s;
@@ -347,7 +347,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     box-shadow: 0 2px 12px rgba(33,33,33,0.17);
   }
   .chip-pin ha-icon {
-    color: #ff9800;
+    color: var(--custom-accent);
     font-size: 16px;
     background: transparent;
     border-radius: 50%;
