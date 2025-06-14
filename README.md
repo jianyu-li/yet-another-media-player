@@ -17,17 +17,19 @@ Home Assistant media card for controlling multiple entities with customizable ac
 
 ---
 
-## Screenshot
+## Screenshots
 
 ![Preview Image](/images/preview3.png)
-
-
 
 *Example with multiple media players and custom actions
 
 ![Preview Image Icons](/images/previewwithicons.png)
 
 *Example with action icons and volume stepper
+
+![Preview Image Theme](/images/preview_theme.png)
+
+*Example with custom theme
 
 ---
 
