@@ -1,6 +1,6 @@
 # Yet Another Media Player
 
-Home Assistant Lovelace card for controlling multiple media players with chip-based switching and a customizable actions.
+Home Assistant media card for controlling multiple entities with customizable actions.
 
 ---
 
