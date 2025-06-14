@@ -43,6 +43,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
   };
 
   static styles = css`
+    :host {
+      --custom-accent: var(--accent-color, #ff9800);
+    }
+    :host([data-match-theme="false"]) {
+      --custom-accent: #ff9800;
+    }
   .card-artwork-spacer {
     width: 100%;
     height: 180px; /* Adjust as needed for your old artwork area */
@@ -203,7 +209,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background: transparent !important;
   }
   .chip:not([selected]) .chip-icon ha-icon {
-    color: var(--accent-color, #ff9800) !important; /* Orange for unselected chips */
+    color: var(--custom-accent) !important; /* Orange for unselected chips */
   }
   .chip[selected]:not([playing]) .chip-icon {
     background: transparent !important;
@@ -275,7 +281,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     font-weight: 600;                    /* Bolder */
     font-size: 1.1em;
     cursor: pointer;
-    border: 2px solid var(--accent-color, #1976d2); /* Subtle border */
+    border: 2px solid var(--custom-accent); /* Subtle border */
     margin-top: 2px;                     /* Space above */
     margin-bottom: 4px;                  /* Space below */
     outline: none;
@@ -287,7 +293,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     box-shadow: 0 2px 6px rgba(0,0,0,0.10); /* Slight shadow */
   }
   .action-chip:active {
-    background: var(--accent-color, #1976d2);
+    background: var(--custom-accent);
     color: #fff;
     opacity: 1;
   }
@@ -352,7 +358,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       padding-right: 26px;
     }
       .chip[selected] {
-        background: var(--accent-color, #1976d2);
+        background: var(--custom-accent);
         color: #fff;
         opacity: 1;
       }
@@ -422,7 +428,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     .button.active ha-icon,
     .button.active {
-      color: var(--accent-color, #1976d2) !important;
+      color: var(--custom-accent) !important;
     }
     .progress-bar {
       width: 100%;
@@ -436,7 +442,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     .progress-inner {
       height: 100%;
-      background: var(--accent-color, #1976d2);
+      background: var(--custom-accent);
       border-radius: 3px 0 0 3px;
       box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
     }
@@ -471,7 +477,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      background: var(--accent-color, #1976d2);
+      background: var(--custom-accent);
       cursor: pointer;
       box-shadow: 0 2px 8px rgba(0,0,0,0.12);
       border: 2px solid #fff;
@@ -481,7 +487,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      background: var(--accent-color, #1976d2);
+      background: var(--custom-accent);
       cursor: pointer;
       border: 2px solid #fff;
     }
@@ -495,7 +501,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      background: var(--accent-color, #1976d2);
+      background: var(--custom-accent);
       cursor: pointer;
       border: 2px solid #fff;
     }
@@ -613,15 +619,33 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._progressValue = null;
     this._lastProgressEntityId = null;
     this._pinnedIndex = null;
+    // Accent color property for custom accent (updated in setConfig)
+    this._customAccent = "#ff9800";
   }
 
   setConfig(config) {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
+    // Add match_theme property, default true
+    if (typeof config.match_theme === "undefined") {
+      config.match_theme = true;
+    }
     this.config = config;
     this._selectedIndex = 0;
     this._lastPlaying = null;
+    // Update custom accent property
+    if (this.config.match_theme !== false) {
+      // Try to get CSS var --accent-color
+      const cssAccent = getComputedStyle(document.documentElement).getPropertyValue("--accent-color").trim();
+      this._customAccent = cssAccent || "#ff9800";
+    } else {
+      this._customAccent = "#ff9800";
+    }
+    // Update data-match-theme attribute on the host
+    if (this.shadowRoot && this.shadowRoot.host) {
+      this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme !== false));
+    }
   }
 
   get entityObjs() {
@@ -847,6 +871,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     render() {
       if (!this.hass || !this.config) return nothing;
+      // Set data-match-theme attribute on the host
+      if (this.shadowRoot && this.shadowRoot.host) {
+        this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme !== false));
+      }
       const stateObj = this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
 
@@ -880,7 +908,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       return html`
         <div style="position:relative;">
-          <div style="position:relative; z-index:2;">
+          <div style="position:relative; z-index:2;"
+            data-match-theme="${String(this.config.match_theme !== false)}"
+          >
             <div class="chip-row">
               ${this.sortedEntityIds.map((id) => {
                 const state = this.hass.states[id];
@@ -1086,6 +1116,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         }
       },
       {
+        name: "match_theme",
+        selector: { boolean: {} }
+      },
+      {
         name: "actions",
         selector: {
           "array": {
@@ -1107,6 +1141,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     const configForEditor = {
       ...this.config,
       entities: (this.config.entities || []).filter(e => typeof e === "string"),
+      match_theme: typeof this.config.match_theme === "undefined" ? true : this.config.match_theme,
     };
     return html`
       <ha-form
