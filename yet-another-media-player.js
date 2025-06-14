@@ -627,14 +627,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
-    // Add match_theme property, default false
-    if (typeof config.match_theme === "undefined") {
-      config.match_theme = false;
-    }
     this.config = config;
     this._selectedIndex = 0;
     this._lastPlaying = null;
     // Update custom accent property
+    // match_theme is YAML-only. If provided as true, use theme accent color; if false or undefined, use default accent.
     if (this.config.match_theme === true) {
       // Try to get CSS var --accent-color
       const cssAccent = getComputedStyle(document.documentElement).getPropertyValue("--accent-color").trim();
@@ -642,7 +639,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._customAccent = "#ff9800";
     }
-    // Update data-match-theme attribute on the host
+    // Update data-match-theme attribute on the host (YAML-only)
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
@@ -871,7 +868,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     render() {
       if (!this.hass || !this.config) return nothing;
-      // Set data-match-theme attribute on the host
+      // Set data-match-theme attribute on the host (YAML-only)
       if (this.shadowRoot && this.shadowRoot.host) {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       }
@@ -909,7 +906,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return html`
         <div style="position:relative;">
           <div style="position:relative; z-index:2;"
-            data-match-theme="${String(this.config.match_theme !== false)}"
+            data-match-theme="${String(this.config.match_theme === true)}"
           >
             <div class="chip-row">
               ${this.sortedEntityIds.map((id) => {
@@ -1115,10 +1112,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           }
         }
       },
-      {
-        name: "match_theme",
-        selector: { boolean: {} }
-      },
+      // match_theme is only supported via YAML, not exposed in visual editor
       {
         name: "actions",
         selector: {
@@ -1141,7 +1135,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     const configForEditor = {
       ...this.config,
       entities: (this.config.entities || []).filter(e => typeof e === "string"),
-      match_theme: typeof this.config.match_theme === "undefined" ? false : this.config.match_theme,
+      // match_theme is YAML-only: do not expose in editor config
     };
     return html`
       <ha-form
