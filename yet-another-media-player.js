@@ -959,6 +959,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // Collapse artwork/details on idle if configured
       const collapsed = !!this._collapseOnIdle && !(stateObj && stateObj.state === "playing");
+      // Always use placeholder if not playing or no artwork available
+      const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
+        ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
+        : "https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png";
 
       return html`
         <div style="position:relative;">
@@ -1023,25 +1027,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
               : nothing}
             <div class="card-lower-content-bg"
               style="
-                background: ${!collapsed && art ? `url('${art}')` : "none"};
+                background-image: ${collapsed ? "none" : `url('${artworkUrl}')`};
+                min-height: ${collapsed ? "0px" : "320px"};
                 background-size: cover;
                 background-position: top center;
-                min-height: ${collapsed ? "0px" : "320px"};
+                background-repeat: no-repeat;
                 transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
               "
             >
               <div class="card-lower-fade"></div>
-              <div class="card-lower-content" style="${collapsed ? "padding-top: 0;" : ""}">
-              ${!collapsed ? html`
-                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%;">
-                  <img
-                    class="artwork"
-                    src="${art || placeholder}"
-                    alt="Artwork"
-                    style="margin: 20px auto 12px auto; display: block;"
-                  />
-                </div>
-              ` : nothing}
+              <div class="card-lower-content">
+                ${!collapsed
+                  ? html`<div class="card-artwork-spacer"></div>`
+                  : nothing
+                }
                 ${(isPlaying && duration && !collapsed)
                   ? html`
                       <div
