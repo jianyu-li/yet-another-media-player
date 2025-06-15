@@ -744,6 +744,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }, 500);
     }
 
+   
     // Collapse debounce logic for collapse_on_idle
     if (this._collapseOnIdle) {
       const stateObj = this.currentStateObj;
