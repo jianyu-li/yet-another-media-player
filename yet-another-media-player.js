@@ -51,7 +51,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   .card-artwork-spacer {
     width: 100%;
-    height: 180px; /* Adjust as needed for your old artwork area */
+    height: 180px; 
     pointer-events: none;
   }
   .media-bg-full {
@@ -1084,15 +1084,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ? html`<div class="card-artwork-spacer"></div>`
                   : nothing
                 }
-                <div class="details">
-                  ${collapsed
-                    ? (title ? html`<div class="title">${title}</div>` : nothing)
-                    : html`<div class="title">${isPlaying ? title : ""}</div>`
-                  }
-                  ${collapsed
-                    ? html`<div class="artist"></div>`
-                    : (isPlaying ? html`<div class="artist">${artist}</div>` : nothing)}
-                </div>
+                ${!collapsed
+                  ? html`
+                      <div class="details">
+                        ${isPlaying
+                          ? html`
+                              <div class="title">${title}</div>
+                              <div class="artist">${artist}</div>
+                            `
+                          : html`
+                              <div class="title"></div>
+                              <div class="artist"></div>
+                            `
+                        }
+                      </div>
+                    `
+                  : nothing}
                 ${(isPlaying && duration && !collapsed)
                   ? html`
                       <div
