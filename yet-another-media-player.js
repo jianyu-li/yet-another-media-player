@@ -611,6 +611,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     position: relative;
     z-index: 2;
   }
+  .card-lower-content.transitioning .details,
+  .card-lower-content.transitioning .card-artwork-spacer {
+    transition: opacity 0.3s;
+  }
+  .card-lower-content.collapsed .details,
+  .card-lower-content.collapsed .card-artwork-spacer {
+    opacity: 0;
+    pointer-events: none;
+  }
   /* Removed redundant rule for :host(.artwork-bg-active) .vol-stepper span */
   .vol-stepper span {
     color: #fff !important;
@@ -1036,7 +1045,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               "
             >
               <div class="card-lower-fade"></div>
-              <div class="card-lower-content">
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}">
                 ${!collapsed
                   ? html`<div class="card-artwork-spacer"></div>`
                   : nothing
