@@ -1031,12 +1031,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
             >
               <div class="card-lower-fade"></div>
               <div class="card-lower-content" style="${collapsed ? "padding-top: 0;" : ""}">
-                ${!collapsed ? html`
-                  <div class="details">
-                    <div class="title">${title || "\u00A0"}</div>
-                    <div class="artist">${artist || "\u00A0"}</div>
-                  </div>
-                ` : nothing}
+              ${!collapsed ? html`
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%;">
+                  <img
+                    class="artwork"
+                    src="${art}"
+                    alt="Artwork"
+                    style="margin: 20px auto 12px auto; display: block;"
+                  />
+                </div>
+              ` : nothing}
                 ${(isPlaying && duration && !collapsed)
                   ? html`
                       <div
