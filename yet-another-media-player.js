@@ -647,6 +647,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._sourceDropdownOutsideHandler = null;
     this._idleTimeout = null;
     this._pendingIdle = false;
+    this._hasCollapsedForIdle = false;
   }
 
   setConfig(config) {
@@ -739,13 +740,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._pendingIdle = false;
         this.requestUpdate();
       }
-    } else if (stateObj && stateObj.state !== "playing" && !this._pendingIdle) {
-      // Start delayed idle if not already pending
+      this._hasCollapsedForIdle = false;
+    } else if (stateObj && stateObj.state !== "playing" && !this._pendingIdle && !this._hasCollapsedForIdle) {
+      // Start delayed idle if not already pending and not already collapsed for idle
       this._pendingIdle = true;
       if (this._idleTimeout) clearTimeout(this._idleTimeout);
       this._idleTimeout = setTimeout(() => {
         this._idleTimeout = null;
         this._pendingIdle = false;
+        this._hasCollapsedForIdle = true;
         this.requestUpdate();
       }, 2000);
     }
@@ -989,7 +992,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const showSlider = this.config.volume_mode !== "stepper";
 
       // Collapse artwork/details on idle if configured
-      const collapsed = !!this._collapseOnIdle && !(stateObj && (stateObj.state === "playing" || this._pendingIdle));
+      const collapsed = !!this._collapseOnIdle && this._hasCollapsedForIdle;
       // Always use placeholder if not playing or no artwork available
       const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
