@@ -99,7 +99,7 @@ actions:
     service: script.play_bluey_on_living    
 ```
 
-With custom brand icons (also available on HACS), you can set up source actions with the providers logo.
+With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also available on HACS), you can set up source actions with the providers logo.
 
 ```yaml
 actions:
