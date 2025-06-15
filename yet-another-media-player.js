@@ -672,6 +672,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     // collapse_on_idle config option (default to false)
     this._collapseOnIdle = !!config.collapse_on_idle;
+    // always_collapsed config option (default to false)
+    this._alwaysCollapsed = !!config.always_collapsed;
   }
 
   get entityObjs() {
@@ -996,8 +998,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const vol = Number(stateObj.attributes.volume_level || 0);
       const showSlider = this.config.volume_mode !== "stepper";
 
-      // Collapse artwork/details on idle if configured
-      const collapsed = this._collapseOnIdle ? this._isActuallyCollapsed : false;
+      // Collapse artwork/details on idle if configured and/or always_collapsed
+      const collapsed = this._alwaysCollapsed
+        ? true
+        : (this._collapseOnIdle ? this._isActuallyCollapsed : false);
       // Always use placeholder if not playing or no artwork available
       const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
@@ -1253,6 +1257,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       },
       {
         name: "collapse_on_idle",
+        selector: { boolean: {} },
+        required: false
+      },
+      {
+        name: "always_collapsed",
         selector: { boolean: {} },
         required: false
       },
