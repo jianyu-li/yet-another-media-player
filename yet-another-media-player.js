@@ -646,6 +646,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._customAccent = "#ff9800";
     // For outside click detection on source dropdown
     this._sourceDropdownOutsideHandler = null;
+    this._isActuallyCollapsed = false;
+    this._collapseTimeout = null;
   }
 
   setConfig(config) {
@@ -740,6 +742,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._progressTimer = setInterval(() => {
         this.requestUpdate();
       }, 500);
+    }
+
+    // Collapse debounce logic for collapse_on_idle
+    if (this._collapseOnIdle) {
+      const stateObj = this.currentStateObj;
+      if (stateObj && stateObj.state === "playing") {
+        // If playing, cancel any collapse timeout and expand immediately
+        if (this._collapseTimeout) clearTimeout(this._collapseTimeout);
+        this._collapseTimeout = null;
+        if (this._isActuallyCollapsed) {
+          this._isActuallyCollapsed = false;
+          this.requestUpdate();
+        }
+      } else {
+        // If idle and not already collapsed, start debounce
+        if (!this._isActuallyCollapsed && !this._collapseTimeout) {
+          this._collapseTimeout = setTimeout(() => {
+            this._isActuallyCollapsed = true;
+            this._collapseTimeout = null;
+            this.requestUpdate();
+          }, 2000); // 2 seconds
+        }
+      }
     }
   }
 
@@ -935,12 +960,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this.shadowRoot && this.shadowRoot.host) {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       }
+      
       const stateObj = this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
 
       // Calculate shuffle/repeat state only AFTER confirming stateObj exists
       const shuffleActive = !!stateObj.attributes.shuffle;
       const repeatActive = stateObj.attributes.repeat && stateObj.attributes.repeat !== "off";
+
+      
 
       // Artwork
       const isPlaying = stateObj.state === "playing";
@@ -968,7 +996,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const showSlider = this.config.volume_mode !== "stepper";
 
       // Collapse artwork/details on idle if configured
-      const collapsed = !!this._collapseOnIdle && !(stateObj && stateObj.state === "playing");
+      const collapsed = this._collapseOnIdle ? this._isActuallyCollapsed : false;
       // Always use placeholder if not playing or no artwork available
       const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
@@ -1165,6 +1193,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._progressTimer) {
       clearInterval(this._progressTimer);
       this._progressTimer = null;
+    }
+    // Collapse debounce cleanup for collapse_on_idle
+    if (this._collapseTimeout) {
+      clearTimeout(this._collapseTimeout);
+      this._collapseTimeout = null;
     }
     this._removeSourceDropdownOutsideHandler();
   }
