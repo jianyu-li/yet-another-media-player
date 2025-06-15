@@ -1163,7 +1163,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
                         </div>
                       `}
-                  ${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? html`
+                  ${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 && !collapsed ? html`
                     <div class="source-menu">
                       <button class="source-menu-btn" @click=${() => this._toggleSourceMenu()}>
                         <span class="source-selected">
