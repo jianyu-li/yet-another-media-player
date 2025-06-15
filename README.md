@@ -35,7 +35,7 @@ Home Assistant media card for controlling multiple entities with customizable ac
 
 ![Preview Image Tv](/images/preview_tv.png)
 
-*Example with tv sources
+*Example with tv sources and collapsed view when idle
 
 ---
 
