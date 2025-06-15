@@ -15,6 +15,7 @@ Home Assistant media card for controlling multiple entities with customizable ac
 - Add icons to custom actions to differentiate types (e.g.: playlist versus tv script)
 - Use "current" for the entity_id to reference the currently selected media player (see example below)
 - Set match_theme to TRUE to have the cards accent colors follow your selected accent theme color
+- Use collapse_on_idle to collapse the card down when nothing is playing. This looks great on mobile! (currently in pre-release v10.1.0)
 
 ---
 
@@ -31,6 +32,10 @@ Home Assistant media card for controlling multiple entities with customizable ac
 ![Preview Image Theme](/images/preview_theme.png)
 
 *Example with custom theme
+
+![Preview Image Tv](/images/preview_tv.png)
+
+*Example with tv sources
 
 ---
 
@@ -92,6 +97,42 @@ actions:
   - name: Play Bluey
     icon: mdi:television-play
     service: script.play_bluey_on_living    
+```
+
+With custom brand icons (also available on HACS), you can set up source actions with the providers logo.
+
+```yaml
+actions:
+  - icon: phu:peacock
+    service: media_player.select_source
+    service_data:
+      entity_id: current
+      source: Peacock
+  - icon: phu:netflix
+    service: media_player.select_source
+    service_data:
+      entity_id: current
+      source: Netflix
+  - icon: phu:youtube
+    service: media_player.select_source
+    service_data:
+      entity_id: current
+      source: Youtube
+  - icon: phu:hulu
+    service: media_player.select_source
+    service_data:
+      entity_id: current
+      source: Hulu
+  - icon: phu:max
+    service: media_player.select_source
+    service_data:
+      entity_id: current
+      source: Max
+  - icon: phu:paramount
+    service: media_player.select_source
+    service_data:
+      entity_id: current
+      source: Paramount+   
 ```
 
 ## Notes
