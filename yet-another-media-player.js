@@ -936,8 +936,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const isPlaying = stateObj.state === "playing";
       const isRealArtwork = isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
       const art = isRealArtwork
-        ? isRealArtwork
-        : "https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png";
+        ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
+        : null;
+      const placeholder = "https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png";
       // Details
       const title = isPlaying ? (stateObj.attributes.media_title || "") : "";
       const artist = isPlaying ? (stateObj.attributes.media_artist || stateObj.attributes.media_series_title || "") : "";
@@ -1022,7 +1023,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               : nothing}
             <div class="card-lower-content-bg"
               style="
-                background: ${!collapsed ? `url('${art}')` : "none"};
+                background: ${!collapsed && art ? `url('${art}')` : "none"};
                 background-size: cover;
                 background-position: top center;
                 min-height: ${collapsed ? "0px" : "320px"};
@@ -1035,7 +1036,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%;">
                   <img
                     class="artwork"
-                    src="${art}"
+                    src="${art || placeholder}"
                     alt="Artwork"
                     style="margin: 20px auto 12px auto; display: block;"
                   />
