@@ -658,6 +658,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
+    // collapse_on_idle config option (default to false)
+    this._collapseOnIdle = !!config.collapse_on_idle;
   }
 
   get entityObjs() {
@@ -954,6 +956,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const vol = Number(stateObj.attributes.volume_level || 0);
       const showSlider = this.config.volume_mode !== "stepper";
 
+      // Collapse artwork on idle if configured
+      const collapsed = !!this._collapseOnIdle && !(stateObj && stateObj.state === "playing");
+
       return html`
         <div style="position:relative;">
           <div style="position:relative; z-index:2;"
@@ -1019,7 +1024,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             <div class="card-lower-content-bg" style="${art ? `background-image:url('${art}')` : `background-image:url('https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png')`}">
               <div class="card-lower-fade"></div>
               <div class="card-lower-content">
-                <div class="card-artwork-spacer"></div>
+                <div class="card-artwork-spacer" style="height: ${collapsed ? '0' : '180px'};"></div>
                 <div class="details">
                   <div class="title">${title || "\u00A0"}</div>
                   <div class="artist">${artist || "\u00A0"}</div>
