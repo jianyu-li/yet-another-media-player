@@ -1,5 +1,5 @@
 
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
 // Media Player Supported Features bitmask
 const SUPPORT_PAUSE = 1;
