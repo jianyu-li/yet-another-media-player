@@ -400,6 +400,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       flex-direction: column;
       gap: 8px;
       margin-top: 8px;
+      min-height: 48px;
     }
     .title {
       font-size: 1.1em;
