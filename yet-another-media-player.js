@@ -645,6 +645,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._customAccent = "#ff9800";
     // For outside click detection on source dropdown
     this._sourceDropdownOutsideHandler = null;
+    // Debounce for not playing state
+    this._notPlayingTimestamps = {};
+    this._playingDebounceTimer = null;
   }
 
   setConfig(config) {
@@ -709,6 +712,44 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       });
 
+      // --- Not playing debounce logic ---
+      let debounceNeeded = false;
+      let debounceCancel = false;
+      const now = Date.now();
+      this.entityIds.forEach(id => {
+        const state = this.hass.states[id];
+        if (state && state.state !== "playing") {
+          // If not already set, set timestamp
+          if (!(id in this._notPlayingTimestamps)) {
+            this._notPlayingTimestamps[id] = now;
+            debounceNeeded = true;
+          }
+        } else {
+          // Remove timestamp if returned to playing
+          if (id in this._notPlayingTimestamps) {
+            delete this._notPlayingTimestamps[id];
+            debounceCancel = true;
+          }
+        }
+      });
+      // If any returned to playing, cancel debounce and update immediately
+      if (debounceCancel && this._playingDebounceTimer) {
+        clearTimeout(this._playingDebounceTimer);
+        this._playingDebounceTimer = null;
+        this.requestUpdate();
+      }
+      // If any timestamp was added, debounce update
+      if (debounceNeeded) {
+        if (this._playingDebounceTimer) clearTimeout(this._playingDebounceTimer);
+        this._playingDebounceTimer = setTimeout(() => {
+          this._playingDebounceTimer = null;
+          this.requestUpdate();
+        }, 2000);
+      }
+      // Clean up timestamps for removed entities
+      Object.keys(this._notPlayingTimestamps).forEach(id => {
+        if (!this.entityIds.includes(id)) delete this._notPlayingTimestamps[id];
+      });
       // Only pause auto-switching if manual select is active
       if (this._manualSelect) return;
 
@@ -937,12 +978,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const stateObj = this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
 
+      // Helper: has entity been playing for last 2s (or not been in non-playing for <2s)
+      const now = Date.now();
+      const isPlayingDebounced = (entityId) => {
+        const state = this.hass.states[entityId];
+        if (!state) return false;
+        if (state.state === "playing") return true;
+        // If not playing, check if 2s have elapsed since not playing
+        const ts = this._notPlayingTimestamps?.[entityId];
+        if (!ts) return true; // treat as playing if never marked not playing
+        return (now - ts) > 2000;
+      };
+      // Helper: for current entity
+      const isCurrentPlayingDebounced = isPlayingDebounced(this.currentEntityId);
+
       // Calculate shuffle/repeat state only AFTER confirming stateObj exists
       const shuffleActive = !!stateObj.attributes.shuffle;
       const repeatActive = stateObj.attributes.repeat && stateObj.attributes.repeat !== "off";
 
       // Artwork
-      const isPlaying = stateObj.state === "playing";
+      const isPlaying = isCurrentPlayingDebounced;
       const isRealArtwork = isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
       const art = isRealArtwork
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
@@ -967,9 +1022,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const showSlider = this.config.volume_mode !== "stepper";
 
       // Collapse artwork/details on idle if configured
-      const collapsed = !!this._collapseOnIdle && !(stateObj && stateObj.state === "playing");
+      const collapsed = !!this._collapseOnIdle && !isCurrentPlayingDebounced;
       // Always use placeholder if not playing or no artwork available
-      const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
+      const artworkUrl = isCurrentPlayingDebounced && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         : "https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png";
 
@@ -981,10 +1036,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
             <div class="chip-row">
               ${this.sortedEntityIds.map((id) => {
                 const state = this.hass.states[id];
-                const isPlaying = state && state.state === "playing";
-                // miniArt: show if playing and has entity_picture or album_art
+                const playingDebounced = isPlayingDebounced(id);
+                // miniArt: show if playing (debounced) and has entity_picture or album_art
                 let miniArt = null;
-                if (isPlaying && (state?.attributes.entity_picture || state?.attributes.album_art)) {
+                if (playingDebounced && (state?.attributes.entity_picture || state?.attributes.album_art)) {
                   miniArt = state.attributes.entity_picture || state.attributes.album_art;
                 }
                 // entityIcon: icon attribute or fallback
@@ -993,7 +1048,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <button
                     class="chip"
                     ?selected=${this.currentEntityId === id}
-                    ?playing=${isPlaying}
+                    ?playing=${playingDebounced}
                     @click=${() => this._onChipClick(this.entityIds.indexOf(id))}
                     @mousedown=${(e) => this._handleChipTouchStart?.(e, id)}
                     @mouseup=${(e) => this._handleChipTouchEnd?.(e, id)}
@@ -1154,6 +1209,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._progressTimer) {
       clearInterval(this._progressTimer);
       this._progressTimer = null;
+    }
+    if (this._playingDebounceTimer) {
+      clearTimeout(this._playingDebounceTimer);
+      this._playingDebounceTimer = null;
     }
     this._removeSourceDropdownOutsideHandler();
   }
