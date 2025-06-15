@@ -956,7 +956,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const vol = Number(stateObj.attributes.volume_level || 0);
       const showSlider = this.config.volume_mode !== "stepper";
 
-      // Collapse artwork on idle if configured
+      // Collapse artwork/details on idle if configured
       const collapsed = !!this._collapseOnIdle && !(stateObj && stateObj.state === "playing");
 
       return html`
@@ -1020,24 +1020,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 `
               : nothing}
-            <!-- Remove previous .media-artwork-bg and overlays for the lower part -->
-            <div class="card-lower-content-bg" style="${art ? `background-image:url('${art}')` : `background-image:url('https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png')`}">
+            <div class="card-lower-content-bg"
+              style="
+                background: ${!collapsed ? `url('${art}')` : "none"};
+                background-size: cover;
+                background-position: top center;
+                min-height: ${collapsed ? "0px" : "320px"};
+                transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
+              "
+            >
               <div class="card-lower-fade"></div>
-              <div class="card-lower-content">
-                <div class="card-artwork-spacer" style="height: ${collapsed ? '0' : '180px'};"></div>
-                <div class="details">
-                  <div class="title">${title || "\u00A0"}</div>
-                  <div class="artist">${artist || "\u00A0"}</div>
-                </div>
-                ${(isPlaying && duration) ? html`
-                  <div
-                    class="progress-bar"
-                    @click=${(e) => this._onProgressBarClick(e)}
-                    title="Seek"
-                  >
-                    <div class="progress-inner" style="width: ${progress * 100}%;"></div>
+              <div class="card-lower-content" style="${collapsed ? "padding-top: 0;" : ""}">
+                ${!collapsed ? html`
+                  <div class="details">
+                    <div class="title">${title || "\u00A0"}</div>
+                    <div class="artist">${artist || "\u00A0"}</div>
                   </div>
-                ` : html`<div class="progress-bar" style="visibility:hidden"></div>`}
+                ` : nothing}
+                ${(isPlaying && duration && !collapsed)
+                  ? html`
+                      <div
+                        class="progress-bar"
+                        @click=${(e) => this._onProgressBarClick(e)}
+                        title="Seek"
+                      >
+                        <div class="progress-inner" style="width: ${progress * 100}%;"></div>
+                      </div>
+                    `
+                  : html`<div class="progress-bar" style="visibility:hidden"></div>`
+                }
                 <div class="controls-row">
                   ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
                     <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
@@ -1174,6 +1185,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         selector: {
           boolean: {}
         },
+        required: false
+      },
+      {
+        name: "collapse_on_idle",
+        selector: { boolean: {} },
         required: false
       },
       {
