@@ -148,30 +148,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
       color: #222 !important;
     }
   }
-  @media (prefers-color-scheme: light) {
-    .source-menu-btn {
-      color: #222;
+    @media (prefers-color-scheme: light) {
+      .source-menu-btn {
+        color: #222;
+      }
+      .source-dropdown {
+        background: #fff;
+        color: #222;
+        border: 1px solid #bbb;
+      }
+      /* Force text color to white for overlayed controls/text */
+      .details,
+      .artist,
+      .controls-row,
+      .button,
+      .source-menu-btn,
+      .source-selected,
+      .source-dropdown,
+      .source-row,
+      .action-chip-row {
+        color: #fff !important;
+      }
+      /* .source-option removed from above: handled separately */
     }
-    .source-dropdown {
-      background: #fff;
-      color: #222;
-      border: 1px solid #bbb;
-    }
-    /* Force text color to white for overlayed controls/text */
-    .details,
-    .title,
-    .artist,
-    .controls-row,
-    .button,
-    .source-menu-btn,
-    .source-selected,
-    .source-dropdown,
-    .source-row,
-    .action-chip-row {
-      color: #fff !important;
-    }
-    /* .source-option removed from above: handled separately */
-  }
     :host {
       display: block;
       border-radius: 16px;
@@ -563,7 +562,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       /* Force text color to white for overlayed controls/text (override after light mode) */
       .details,
-      .title,
       .artist,
       .controls-row,
       .button,
@@ -575,6 +573,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         color: #fff !important;
       }
       /* .source-option removed from above: handled separately */
+    }
+    /* Additional light mode override for .details .title and .title */
+    @media (prefers-color-scheme: light) {
+      .details .title,
+      .title {
+        color: #222 !important;
+      }
     }
     .artwork-dim-overlay {
     position: absolute;
@@ -634,6 +639,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     color: #fff !important;
   }
   `;
+
+
 
 
 
