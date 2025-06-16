@@ -540,7 +540,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         background: var(--accent-color, #1976d2);
         color: #fff;
       }
-      /* Last override: collapsed details/title text color */
+      /* Only for collapsed cards: override details/title color */
       .card-lower-content.collapsed .details .title,
       .card-lower-content.collapsed .title {
         color: #222 !important;
