@@ -356,7 +356,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-     
     }
     .artist {
       font-size: 1em;
@@ -598,10 +597,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     opacity: 0;
     pointer-events: none;
   }
-  /* Removed redundant rule for :host(.artwork-bg-active) .vol-stepper span */
-  .vol-stepper span {
-    color: #fff !important;
-  }
+    /* Force white text for important UI elements */
+    .details,
+    .title,
+    .artist,
+    .controls-row,
+    .button,
+    .vol-stepper span {
+      color: #fff !important;
+    }
   `;
 
 
