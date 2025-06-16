@@ -647,6 +647,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // For outside click detection on source dropdown
     this._sourceDropdownOutsideHandler = null;
     this._isActuallyCollapsed = false;
+    // On initial load, collapse immediately if nothing is playing
+    setTimeout(() => {
+      if (this.hass && this.entityIds && this.entityIds.length > 0) {
+        const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
+        if (stateObj && stateObj.state !== "playing") {
+          this._isActuallyCollapsed = true;
+          this.requestUpdate();
+        }
+      }
+    }, 0);    
     this._collapseTimeout = null;
   }
 
@@ -759,14 +769,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this.requestUpdate();
         }
       } else {
-        // If idle and not already collapsed, start debounce
+        // Only debounce collapse if card isn't already collapsed (chip switch or initial load already handled it)
         if (!this._isActuallyCollapsed && !this._collapseTimeout) {
           this._collapseTimeout = setTimeout(() => {
             this._isActuallyCollapsed = true;
             this._collapseTimeout = null;
             this.requestUpdate();
-          }, 2000); // 2 seconds
+          }, 2000); // 2 seconds debounce for normal idle
         }
+        // If the card is already collapsed (e.g. due to chip switch), do nothing—skip debounce
       }
     }
   }
@@ -849,7 +860,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._manualSelect = true;
     this._pinnedIndex = idx;
     clearTimeout(this._manualSelectTimeout);
-    // Remove or extend the timeout since “pinned” means user must unpin manually
+    // Collapse logic on chip switch
+    const stateObj = this.hass.states[this.entityIds[idx]];
+    if (stateObj && stateObj.state !== "playing") {
+      this._isActuallyCollapsed = true;
+    } else {
+      this._isActuallyCollapsed = false;
+    }
+    this.requestUpdate();
   }
 
   _onActionChipClick(idx) {
