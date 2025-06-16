@@ -538,6 +538,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         background: var(--accent-color, #1976d2);
         color: #fff;
       }
+      /* Keep source menu text white when expanded (matches controls) */
+      .card-lower-content:not(.collapsed) .source-menu-btn,
+      .card-lower-content:not(.collapsed) .source-selected {
+        color: #fff !important;
+      }
       /* Only for collapsed cards: override details/title color */
       .card-lower-content.collapsed .details .title,
       .card-lower-content.collapsed .title {
