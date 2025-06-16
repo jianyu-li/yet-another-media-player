@@ -493,7 +493,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     @media (prefers-color-scheme: light) {
       :host {
         background: var(--card-background-color, #fff);
-        color: var(--primary-text-color, #222);
       }
       .chip {
         background: #f0f0f0;
