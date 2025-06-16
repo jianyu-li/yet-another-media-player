@@ -400,6 +400,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       position: relative;
       box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
     }
+    .progress-bar-container {
+      padding-left: 24px;
+      padding-right: 24px;
+      box-sizing: border-box;
+    }
     .progress-inner {
       height: 100%;
       background: var(--custom-accent);
@@ -1100,15 +1105,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </div>
                 ${(isPlaying && duration && !collapsed)
                   ? html`
-                      <div
-                        class="progress-bar"
-                        @click=${(e) => this._onProgressBarClick(e)}
-                        title="Seek"
-                      >
-                        <div class="progress-inner" style="width: ${progress * 100}%;"></div>
+                      <div class="progress-bar-container">
+                        <div
+                          class="progress-bar"
+                          @click=${(e) => this._onProgressBarClick(e)}
+                          title="Seek"
+                        >
+                          <div class="progress-inner" style="width: ${progress * 100}%;"></div>
+                        </div>
                       </div>
                     `
-                  : html`<div class="progress-bar" style="visibility:hidden"></div>`
+                  : html`
+                      <div class="progress-bar-container">
+                        <div class="progress-bar" style="visibility:hidden"></div>
+                      </div>
+                    `
                 }
                 <div class="controls-row">
                   ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
