@@ -136,41 +136,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     color: #fff;
   }
 
-  @media (prefers-color-scheme: light) {
-    .source-option {
-      color: #222 !important;
-      background: #fff !important;
-      transition: background 0.13s, color 0.13s;
-    }
-    .source-option:hover,
-    .source-option:focus {
-      background: var(--custom-accent) !important;
-      color: #222 !important;
-    }
-  }
-    @media (prefers-color-scheme: light) {
-      .source-menu-btn {
-        color: #222;
-      }
-      .source-dropdown {
-        background: #fff;
-        color: #222;
-        border: 1px solid #bbb;
-      }
-      /* Force text color to white for overlayed controls/text */
-      .details,
-      .artist,
-      .controls-row,
-      .button,
-      .source-menu-btn,
-      .source-selected,
-      .source-dropdown,
-      .source-row,
-      .action-chip-row {
-        color: #fff !important;
-      }
-      /* .source-option removed from above: handled separately */
-    }
     :host {
       display: block;
       border-radius: 16px;
@@ -197,13 +162,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       outline: none;
       margin-top: 2px;
     }
-    @media (prefers-color-scheme: light) {
-      .source-select {
-        background: #fff;
-        color: #222;
-        border: 1px solid #aaa;
-      }
-    }    
 
   .chip-icon {
     display: flex;
@@ -309,16 +267,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     color: #fff;
     opacity: 1;
   }
-  @media (prefers-color-scheme: light) {
-    .action-chip {
-      background: #e0e0e0;
-      color: #222;
-    }
-    .action-chip:active {
-      background: var(--accent-color, #1976d2);
-      color: #fff;
-    }
-  }  
 
   .chip {
     display: flex;           /* Flexbox for vertical centering */
@@ -540,7 +488,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       align-items: center;
       justify-content: center;
     }    
-    /* Light/Dark Mode */
+
+    /* Consolidated Light Mode Styles */
     @media (prefers-color-scheme: light) {
       :host {
         background: var(--card-background-color, #fff);
@@ -560,22 +509,38 @@ class YetAnotherMediaPlayerCard extends LitElement {
       .progress-bar {
         background: #eee;
       }
-      /* Force text color to white for overlayed controls/text (override after light mode) */
-      .details,
-      .artist,
-      .controls-row,
-      .button,
-      .source-menu-btn,
-      .source-selected,
-      .source-dropdown,
-      .source-row,
-      .action-chip-row {
-        color: #fff !important;
+      .source-menu-btn {
+        color: #222;
       }
-      /* .source-option removed from above: handled separately */
-    }
-    /* Additional light mode override for collapsed .details .title and .title */
-    @media (prefers-color-scheme: light) {
+      .source-dropdown {
+        background: #fff;
+        color: #222;
+        border: 1px solid #bbb;
+      }
+      .source-option {
+        color: #222 !important;
+        background: #fff !important;
+        transition: background 0.13s, color 0.13s;
+      }
+      .source-option:hover,
+      .source-option:focus {
+        background: var(--custom-accent) !important;
+        color: #222 !important;
+      }
+      .source-select {
+        background: #fff;
+        color: #222;
+        border: 1px solid #aaa;
+      }
+      .action-chip {
+        background: #e0e0e0;
+        color: #222;
+      }
+      .action-chip:active {
+        background: var(--accent-color, #1976d2);
+        color: #fff;
+      }
+      /* Last override: collapsed details/title text color */
       .card-lower-content.collapsed .details .title,
       .card-lower-content.collapsed .title {
         color: #222 !important;
