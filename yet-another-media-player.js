@@ -349,6 +349,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       margin-top: 8px;
       min-height: 48px;
     }
+    .progress-bar-container {
+      padding-left: 24px;
+      padding-right: 24px;
+      box-sizing: border-box;
+    }
     .title {
       font-size: 1.1em;
       font-weight: 600;
@@ -399,11 +404,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       cursor: pointer;
       position: relative;
       box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
-    }
-    .progress-bar-container {
-      padding-left: 24px;
-      padding-right: 24px;
-      box-sizing: border-box;
     }
     .progress-inner {
       height: 100%;
@@ -616,6 +616,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
     .vol-stepper span {
       color: #fff !important;
     }
+  .media-artwork-placeholder ha-icon {
+    width: 104px !important;
+    height: 104px !important;
+    min-width: 104px !important;
+    min-height: 104px !important;
+    max-width: 104px !important;
+    max-height: 104px !important;
+    display: block;
+  }
+  .media-artwork-placeholder ha-icon svg {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
   `;
 
 
@@ -983,7 +997,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const art = isRealArtwork
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         : null;
-      const placeholder = "https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png";
       // Details
       const title = isPlaying ? (stateObj.attributes.media_title || "") : "";
       const artist = isPlaying ? (stateObj.attributes.media_artist || stateObj.attributes.media_series_title || "") : "";
@@ -1006,10 +1019,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const collapsed = this._alwaysCollapsed
         ? true
         : (this._collapseOnIdle ? this._isActuallyCollapsed : false);
-      // Always use placeholder if not playing or no artwork available
+      // Use null if not playing or no artwork available
       const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
-        : "https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png";
+        : null;
 
       return html`
         <div style="position:relative;">
@@ -1074,7 +1087,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
               : nothing}
             <div class="card-lower-content-bg"
               style="
-                background-image: ${collapsed ? "none" : `url('${artworkUrl}')`};
+                background-image: ${
+                  collapsed ? "none" :
+                  artworkUrl ? `url('${artworkUrl}')` : "none"
+                };
                 min-height: ${collapsed ? "0px" : "320px"};
                 background-size: cover;
                 background-position: top center;
@@ -1088,6 +1104,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ? html`<div class="card-artwork-spacer"></div>`
                   : nothing
                 }
+                ${(!collapsed && !artworkUrl) ? html`
+                  <div class="media-artwork-placeholder"
+                    style="
+                      position: absolute;
+                      left: 50%; top: 36px;
+                      transform: translateX(-50%);
+                      width: 184px; height: 184px;
+                      display: flex; align-items: center; justify-content: center;
+                      background: none;
+                      z-index: 2;">
+                    <svg width="184" height="184" viewBox="0 0 184 184"
+                      style="display:block;opacity:0.85;${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"/>
+                      <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"/>
+                      <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"/>
+                      <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"/>
+                    </svg>
+                  </div>
+                ` : nothing}
                 <div class="details">
                   <div class="title">
                     ${isPlaying ? title : ""}
