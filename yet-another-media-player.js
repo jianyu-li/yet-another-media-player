@@ -1084,22 +1084,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ? html`<div class="card-artwork-spacer"></div>`
                   : nothing
                 }
-                ${!collapsed
-                  ? html`
-                      <div class="details">
-                        ${isPlaying
-                          ? html`
-                              <div class="title">${title}</div>
-                              <div class="artist">${artist}</div>
-                            `
-                          : html`
-                              <div class="title"></div>
-                              <div class="artist"></div>
-                            `
-                        }
-                      </div>
-                    `
-                  : nothing}
+                <div class="details">
+                  <div class="title">
+                    ${isPlaying ? title : ""}
+                  </div>
+                  ${!collapsed
+                    ? html`
+                        <div class="artist">
+                          ${isPlaying ? artist : ""}
+                        </div>
+                      `
+                    : html`
+                        <div class="artist"></div>
+                      `
+                  }
+                </div>
                 ${(isPlaying && duration && !collapsed)
                   ? html`
                       <div
