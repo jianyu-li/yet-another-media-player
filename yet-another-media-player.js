@@ -574,10 +574,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       /* .source-option removed from above: handled separately */
     }
-    /* Additional light mode override for .details .title and .title */
+    /* Additional light mode override for collapsed .details .title and .title */
     @media (prefers-color-scheme: light) {
-      .details .title,
-      .title {
+      .card-lower-content.collapsed .details .title,
+      .card-lower-content.collapsed .title {
         color: #222 !important;
       }
     }
