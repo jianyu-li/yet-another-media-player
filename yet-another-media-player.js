@@ -616,7 +616,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
   .card-lower-content.transitioning .card-artwork-spacer {
     transition: opacity 0.3s;
   }
-  .card-lower-content.collapsed .details,
+  /* Show details (title) when collapsed (but hide artist/artwork spacer) */
+  .card-lower-content.collapsed .details {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .card-lower-content.collapsed .artist {
+    opacity: 0;
+    pointer-events: none;
+  }
   .card-lower-content.collapsed .card-artwork-spacer {
     opacity: 0;
     pointer-events: none;
