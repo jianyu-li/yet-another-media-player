@@ -790,6 +790,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._manualSelect = false;
       this._removeSourceDropdownOutsideHandler();
+      this._removePortalDropdown();
     }
   }
 
@@ -797,11 +798,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._sourceDropdownOutsideHandler) return;
     // Use arrow fn to preserve 'this'
     this._sourceDropdownOutsideHandler = (evt) => {
-      // Find dropdown and button in shadow DOM
-      const dropdown = this.renderRoot.querySelector('.source-dropdown');
+      // Check for portal dropdown and button in real DOM
+      const dropdown = document.body.querySelector('.yamp-portal-dropdown');
       const btn = this.renderRoot.querySelector('.source-menu-btn');
-      // If click/tap is not inside dropdown or button, close
-      // evt.composedPath() includes shadow DOM path
       const path = evt.composedPath ? evt.composedPath() : [];
       if (
         (dropdown && path.includes(dropdown)) ||
@@ -813,6 +812,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._showSourceMenu = false;
       this._manualSelect = false;
       this._removeSourceDropdownOutsideHandler();
+      this._removePortalDropdown();
       this.requestUpdate();
     };
     window.addEventListener('mousedown', this._sourceDropdownOutsideHandler, true);
@@ -824,6 +824,44 @@ class YetAnotherMediaPlayerCard extends LitElement {
     window.removeEventListener('mousedown', this._sourceDropdownOutsideHandler, true);
     window.removeEventListener('touchstart', this._sourceDropdownOutsideHandler, true);
     this._sourceDropdownOutsideHandler = null;
+    this._removePortalDropdown();
+  }
+  // Portal dropdown logic for source menu
+  _createPortalDropdown(content, anchorSelector, openUp) {
+    this._removePortalDropdown(); // Remove any existing
+    const anchor = this.renderRoot.querySelector(anchorSelector);
+    if (!anchor) return;
+    const rect = anchor.getBoundingClientRect();
+    const portal = document.createElement('div');
+    portal.className = 'source-dropdown yamp-portal-dropdown' + (openUp ? ' up' : '');
+    portal.style.position = 'absolute';
+    // Style: left/right/top/bottom relative to viewport
+    portal.style.minWidth = rect.width + 'px';
+    portal.style.zIndex = '3002';
+    portal.style.background = getComputedStyle(this).getPropertyValue('--card-background-color') || '#222';
+    // Calculate position
+    if (!openUp) {
+      portal.style.left = rect.left + 'px';
+      portal.style.top = (rect.bottom + 2) + 'px';
+      portal.style.right = 'auto';
+      portal.style.bottom = 'auto';
+    } else {
+      portal.style.left = rect.left + 'px';
+      portal.style.top = (rect.top - 2 - 220) + 'px'; // 220px is max-height
+      portal.style.right = 'auto';
+      portal.style.bottom = 'auto';
+    }
+    portal.innerHTML = '';
+    portal.appendChild(content);
+    document.body.appendChild(portal);
+    this._portalDropdownEl = portal;
+  }
+
+  _removePortalDropdown() {
+    if (this._portalDropdownEl && this._portalDropdownEl.parentNode) {
+      this._portalDropdownEl.parentNode.removeChild(this._portalDropdownEl);
+    }
+    this._portalDropdownEl = null;
   }
 
   _selectSource(src) {
@@ -977,8 +1015,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const shuffleActive = !!stateObj.attributes.shuffle;
       const repeatActive = stateObj.attributes.repeat && stateObj.attributes.repeat !== "off";
 
-      
-
       // Artwork
       const isPlaying = stateObj.state === "playing";
       const isRealArtwork = isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
@@ -1012,6 +1048,52 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         : "https://raw.githubusercontent.com/jianyu-li/yet-another-media-player/main/assets/media_player_placeholder.png";
+
+      // --- PORTAL RENDERING LOGIC for source dropdown ---
+      // Only create portal when source_list is available and not collapsed
+      if (
+        Array.isArray(stateObj.attributes.source_list) &&
+        stateObj.attributes.source_list.length > 0 &&
+        !collapsed
+      ) {
+        // Remove any previous dropdown if menu is closed
+        if (!this._showSourceMenu) {
+          this._removePortalDropdown();
+        } else {
+          // If menu is open, create a DOM node and portal it
+          // Build dropdown DOM node (not lit-html)
+          const dropdownDiv = document.createElement('div');
+          dropdownDiv.className = 'source-dropdown' + (this._shouldDropdownOpenUp ? ' up' : '');
+          dropdownDiv.style.minWidth = '110px';
+          dropdownDiv.style.maxHeight = '220px';
+          dropdownDiv.style.overflowY = 'auto';
+          dropdownDiv.style.background = '';
+          dropdownDiv.style.borderRadius = '';
+          dropdownDiv.style.boxShadow = '';
+          dropdownDiv.style.border = '';
+          dropdownDiv.style.color = '';
+          dropdownDiv.style.padding = '';
+          dropdownDiv.style.margin = '';
+          dropdownDiv.style.zIndex = '';
+          dropdownDiv.style.position = '';
+          // Populate source options
+          stateObj.attributes.source_list.forEach(src => {
+            const opt = document.createElement('div');
+            opt.className = 'source-option';
+            opt.textContent = src;
+            opt.tabIndex = 0;
+            opt.onclick = () => {
+              this._selectSource(src);
+              this._removePortalDropdown();
+            };
+            dropdownDiv.appendChild(opt);
+          });
+          // Portal it
+          this._createPortalDropdown(dropdownDiv, '.source-menu-btn', this._shouldDropdownOpenUp);
+        }
+      } else {
+        this._removePortalDropdown();
+      }
 
       return html`
         <div style="position:relative;">
@@ -1180,13 +1262,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         </span>
                         <ha-icon icon="mdi:chevron-down"></ha-icon>
                       </button>
-                      ${this._showSourceMenu ? html`
-                        <div class="source-dropdown${this._shouldDropdownOpenUp ? ' up' : ''}">
-                          ${stateObj.attributes.source_list.map(src => html`
-                            <div class="source-option" @click=${() => this._selectSource(src)}>${src}</div>
-                          `)}
-                        </div>
-                      ` : nothing}
+                      <!-- Dropdown is rendered via portal, not in shadow DOM -->
                     </div>
                   ` : nothing}
                 </div>
@@ -1210,6 +1286,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._collapseTimeout = null;
     }
     this._removeSourceDropdownOutsideHandler();
+    this._removePortalDropdown();
   }
   // Card editor support 
   static getConfigElement() {
