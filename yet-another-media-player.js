@@ -44,7 +44,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   static styles = css`
     :host {
-      --custom-accent: var(--color-accent, #ff9800);
+      --custom-accent: var(--accent-color, #ff9800);
     }
     :host([data-match-theme="false"]) {
       --custom-accent: #ff9800;
@@ -85,7 +85,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   .source-menu-btn {
     background: none;
     border: none;
-    color: var(--color-primary-text, #fff);
+    color: var(--primary-text-color, #fff);
     font: inherit;
     cursor: pointer;
     display: flex;
@@ -106,8 +106,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     top: 32px;
     right: 0;
     left: auto;
-    background: var(--color-background-card, #222);
-    color: var(--color-primary-text, #fff);
+    background: var(--card-background-color, #222);
+    color: var(--primary-text-color, #fff);
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.13);
     min-width: 110px;
@@ -132,16 +132,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     white-space: nowrap;
   }
   .source-option:hover, .source-option:focus {
-    background: var(--color-accent, #1976d2);
+    background: var(--accent-color, #1976d2);
     color: #fff;
   }
 
     :host {
       display: block;
       border-radius: 16px;
-      box-shadow: var(--elevation-z2, 0 2px 4px rgba(0,0,0,0.1));
-      background: var(--color-background-card, #222);
-      color: var(--color-primary-text, #fff);
+      box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
+      background: var(--card-background-color, #222);
+      color: var(--primary-text-color, #fff);
       transition: background 0.2s;
       overflow: hidden;
     }
@@ -157,8 +157,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       padding: 4px 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      background: var(--color-background-card, #222);
-      color: var(--color-primary-text, #fff);
+      background: var(--card-background-color, #222);
+      color: var(--primary-text-color, #fff);
       outline: none;
       margin-top: 2px;
     }
@@ -215,7 +215,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 	  overflow-y: hidden;
 	  white-space: nowrap;
 	  scrollbar-width: none;
-	  scrollbar-color: var(--color-accent, #1976d2) #222;
+	  scrollbar-color: var(--accent-color, #1976d2) #222;
 	  -webkit-overflow-scrolling: touch; /* Enables momentum scrolling on iOS */
 	  touch-action: pan-x; /* Hint for horizontal pan/swipe on some browsers */
 	  max-width: 100vw;
@@ -224,7 +224,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 	  display: none;
 	}
 	.chip-row::-webkit-scrollbar-thumb {
-	  background: var(--color-accent, #1976d2);
+	  background: var(--accent-color, #1976d2);
 	  border-radius: 6px;
 	}
 	.chip-row::-webkit-scrollbar-track {
@@ -247,7 +247,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     border-radius: 8px;                  /* Squarer corners */
     padding: 12px 20px;                  /* Taller chip, wider text space */
     background: var(--chip-action-bg, #222); /* Contrasting bg (override in theme if you want) */
-    color: var(--color-primary-text, #fff);
+    color: var(--primary-text-color, #fff);
     font-weight: 600;                    /* Bolder */
     font-size: 1.1em;
     cursor: pointer;
@@ -274,7 +274,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     border-radius: 24px;
     padding: 6px 20px 6px 8px;
     background: var(--chip-background, #333);
-    color: var(--color-primary-text, #fff);
+    color: var(--primary-text-color, #fff);
     cursor: pointer;
     font-weight: 500;
     opacity: 0.85;
@@ -360,7 +360,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     .artist {
       font-size: 1em;
       font-weight: 400;
-      color: var(--color-secondary-text, #aaa);
+      color: var(--secondary-text-color, #aaa);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -496,14 +496,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     /* Consolidated Light Mode Styles */
     @media (prefers-color-scheme: light) {
       :host {
-        background: var(--color-background-card, #fff);
+        background: var(--card-background-color, #fff);
       }
       .chip {
         background: #f0f0f0;
         color: #222;
       }
       .chip[selected] {
-        background: var(--color-accent, #1976d2);
+        background: var(--accent-color, #1976d2);
         color: #fff;
       }
       .artwork {
@@ -540,7 +540,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         color: #222;
       }
       .action-chip:active {
-        background: var(--color-accent, #1976d2);
+        background: var(--accent-color, #1976d2);
         color: #fff;
       }
       /* Keep source menu text white when expanded (matches controls) */
