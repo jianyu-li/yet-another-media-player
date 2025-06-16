@@ -15,7 +15,8 @@ Home Assistant media card for controlling multiple entities with customizable ac
 - Add icons to custom actions to differentiate types (e.g.: playlist versus tv script)
 - Use "current" for the entity_id to reference the currently selected media player (see example below)
 - Set match_theme to TRUE to have the cards accent colors follow your selected accent theme color
-- Use collapse_on_idle to collapse the card down when nothing is playing. This looks great on mobile! (currently in pre-release v10.3.0)
+- Use collapse_on_idle to collapse the card down when nothing is playing. This looks great on mobile!
+- Use always_collapsed to keep the card collapsed even when something is playing
 
 ---
 
@@ -50,6 +51,15 @@ Home Assistant media card for controlling multiple entities with customizable ac
 Add the card to your Lovelace dashboard using YAML (for custom chip/entity names) or the UI (for default entity names). 
 
 You can use music assistant actions in conjunction with "current" as the entity id and it will target whatever the current entity that is displayed in the card (e.g.: genres)
+
+| Element   | Type   | Required | Description                  |
+|-----------|--------|----------|------------------------------|
+| `type`    | string | Yes      | custom:yet-another-media-player     |
+| `entities`     | string | Yes       | List of your media player entities            |
+| `actions`   | string | No      | Use any home assistant service here. Use "current" as the entity_id to target the currently selected media player    |
+| `match_theme`| boolean | No | Updates the cards accent colors to match your home assistant theme |
+| `collapse_on_idle` | boolean | No | When nothing is playing, card collapses to save space (great on mobile) | 
+| `always_collapsed` | boolean | No | This will keep the card in collapsed or "mini" mode even when something is playing |
 
 ```yaml
 type: custom:yet-another-media-player
