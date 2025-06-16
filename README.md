@@ -25,6 +25,10 @@ Home Assistant media card for controlling multiple entities with customizable ac
 
 *Example with multiple media players and custom actions
 
+![Preview Image Movie](/images/moviepreview.png)
+
+*Example with movie and blue theme
+
 ![Preview Image Icons](/images/previewwithicons.png)
 
 *Example with action icons and volume stepper
@@ -36,6 +40,8 @@ Home Assistant media card for controlling multiple entities with customizable ac
 ![Preview Image Tv](/images/preview_tv.png)
 
 *Example with tv sources and collapsed view when idle
+
+
 
 ---
 
