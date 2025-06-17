@@ -1,0 +1,34 @@
+{
+  "name": "yet-another-media-player",
+  "version": "1.0.0",
+  "description": "Home Assistant media card for controlling multiple entities with customizable actions.",
+  "main": "rollup.config.js",
+  "type": "module",
+  "dependencies": {
+    "lit-element": "^3.3.3"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.27.2",
+    "@babel/core": "^7.27.4",
+    "@babel/plugin-transform-optional-chaining": "^7.27.1",
+    "@babel/preset-env": "^7.27.2",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "rollup": "^4.43.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jianyu-li/yet-another-media-player.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jianyu-li/yet-another-media-player/issues"
+  },
+  "homepage": "https://github.com/jianyu-li/yet-another-media-player#readme"
+}
