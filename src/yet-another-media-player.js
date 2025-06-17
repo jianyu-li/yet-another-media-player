@@ -1,5 +1,5 @@
 
-import { LitElement, html, css, nothing } from "lit-element";
+import { LitElement, html, css, nothing } from "lit";
 
 // Media Player Supported Features bitmask
 const SUPPORT_PAUSE = 1;

@@ -5,7 +5,7 @@
   "main": "rollup.config.js",
   "type": "module",
   "dependencies": {
-    "lit-element": "^3.3.3"
+    "lit": "^3.3.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.27.2",
