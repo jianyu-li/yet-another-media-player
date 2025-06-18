@@ -1714,8 +1714,9 @@ class YetAnotherMediaPlayerCard extends i {
           <div style="position:relative; z-index:2;"
             data-match-theme="${String(this.config.match_theme === true)}"
           >
-            <div class="chip-row">
-              ${this.sortedEntityIds.map(id => {
+            ${this.entityIds.length > 1 ? x`
+              <div class="chip-row">
+                ${this.sortedEntityIds.map(id => {
       const state = this.hass.states[id];
       const isPlaying = state && state.state === "playing";
       // miniArt: show if playing and has entity_picture or album_art
@@ -1726,41 +1727,42 @@ class YetAnotherMediaPlayerCard extends i {
       // entityIcon: icon attribute or fallback
       const entityIcon = (state === null || state === void 0 ? void 0 : state.attributes.icon) || "mdi:cast";
       return x`
-                  <button
-                    class="chip"
-                    ?selected=${this.currentEntityId === id}
-                    ?playing=${isPlaying}
-                    @click=${() => this._onChipClick(this.entityIds.indexOf(id))}
-                    @mousedown=${e => {
+                    <button
+                      class="chip"
+                      ?selected=${this.currentEntityId === id}
+                      ?playing=${isPlaying}
+                      @click=${() => this._onChipClick(this.entityIds.indexOf(id))}
+                      @mousedown=${e => {
         var _this$_handleChipTouc;
         return (_this$_handleChipTouc = this._handleChipTouchStart) === null || _this$_handleChipTouc === void 0 ? void 0 : _this$_handleChipTouc.call(this, e, id);
       }}
-                    @mouseup=${e => {
+                      @mouseup=${e => {
         var _this$_handleChipTouc2;
         return (_this$_handleChipTouc2 = this._handleChipTouchEnd) === null || _this$_handleChipTouc2 === void 0 ? void 0 : _this$_handleChipTouc2.call(this, e, id);
       }}
-                    @touchstart=${e => {
+                      @touchstart=${e => {
         var _this$_handleChipTouc3;
         return (_this$_handleChipTouc3 = this._handleChipTouchStart) === null || _this$_handleChipTouc3 === void 0 ? void 0 : _this$_handleChipTouc3.call(this, e, id);
       }}
-                    @touchend=${e => {
+                      @touchend=${e => {
         var _this$_handleChipTouc4;
         return (_this$_handleChipTouc4 = this._handleChipTouchEnd) === null || _this$_handleChipTouc4 === void 0 ? void 0 : _this$_handleChipTouc4.call(this, e, id);
       }}
-                  >
-                    <span class="chip-icon">
-                      ${miniArt ? x`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />` : x`<ha-icon icon="${entityIcon}" style="font-size: 28px;"></ha-icon>`}
-                    </span>
-                    ${this.getChipName(id)}
-                    ${this._manualSelect && this._pinnedIndex === this.entityIds.indexOf(id) ? x`
-                          <button class="chip-pin" title="Unpin and resume auto-switch" @click=${e => this._onPinClick(e)}>
-                            <ha-icon icon="mdi:pin"></ha-icon>
-                          </button>
-                        ` : E}
-                  </button>
-                `;
+                    >
+                      <span class="chip-icon">
+                        ${miniArt ? x`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />` : x`<ha-icon icon="${entityIcon}" style="font-size: 28px;"></ha-icon>`}
+                      </span>
+                      ${this.getChipName(id)}
+                      ${this._manualSelect && this._pinnedIndex === this.entityIds.indexOf(id) ? x`
+                            <button class="chip-pin" title="Unpin and resume auto-switch" @click=${e => this._onPinClick(e)}>
+                              <ha-icon icon="mdi:pin"></ha-icon>
+                            </button>
+                          ` : E}
+                    </button>
+                  `;
     })}
-            </div>
+              </div>
+            ` : E}
             ${this.config.actions && this.config.actions.length ? x`
                   <div class="action-chip-row">
                     ${this.config.actions.map((a, idx) => x`

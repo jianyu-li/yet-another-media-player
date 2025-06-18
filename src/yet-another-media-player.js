@@ -1029,46 +1029,48 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <div style="position:relative; z-index:2;"
             data-match-theme="${String(this.config.match_theme === true)}"
           >
-            <div class="chip-row">
-              ${this.sortedEntityIds.map((id) => {
-                const state = this.hass.states[id];
-                const isPlaying = state && state.state === "playing";
-                // miniArt: show if playing and has entity_picture or album_art
-                let miniArt = null;
-                if (isPlaying && (state?.attributes.entity_picture || state?.attributes.album_art)) {
-                  miniArt = state.attributes.entity_picture || state.attributes.album_art;
-                }
-                // entityIcon: icon attribute or fallback
-                const entityIcon = state?.attributes.icon || "mdi:cast";
-                return html`
-                  <button
-                    class="chip"
-                    ?selected=${this.currentEntityId === id}
-                    ?playing=${isPlaying}
-                    @click=${() => this._onChipClick(this.entityIds.indexOf(id))}
-                    @mousedown=${(e) => this._handleChipTouchStart?.(e, id)}
-                    @mouseup=${(e) => this._handleChipTouchEnd?.(e, id)}
-                    @touchstart=${(e) => this._handleChipTouchStart?.(e, id)}
-                    @touchend=${(e) => this._handleChipTouchEnd?.(e, id)}
-                  >
-                    <span class="chip-icon">
-                      ${miniArt
-                        ? html`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />`
-                        : html`<ha-icon icon="${entityIcon}" style="font-size: 28px;"></ha-icon>`
-                      }
-                    </span>
-                    ${this.getChipName(id)}
-                    ${this._manualSelect && this._pinnedIndex === this.entityIds.indexOf(id)
-                      ? html`
-                          <button class="chip-pin" title="Unpin and resume auto-switch" @click=${(e) => this._onPinClick(e)}>
-                            <ha-icon icon="mdi:pin"></ha-icon>
-                          </button>
-                        `
-                      : nothing}
-                  </button>
-                `;
-              })}
-            </div>
+            ${this.entityIds.length > 1 ? html`
+              <div class="chip-row">
+                ${this.sortedEntityIds.map((id) => {
+                  const state = this.hass.states[id];
+                  const isPlaying = state && state.state === "playing";
+                  // miniArt: show if playing and has entity_picture or album_art
+                  let miniArt = null;
+                  if (isPlaying && (state?.attributes.entity_picture || state?.attributes.album_art)) {
+                    miniArt = state.attributes.entity_picture || state.attributes.album_art;
+                  }
+                  // entityIcon: icon attribute or fallback
+                  const entityIcon = state?.attributes.icon || "mdi:cast";
+                  return html`
+                    <button
+                      class="chip"
+                      ?selected=${this.currentEntityId === id}
+                      ?playing=${isPlaying}
+                      @click=${() => this._onChipClick(this.entityIds.indexOf(id))}
+                      @mousedown=${(e) => this._handleChipTouchStart?.(e, id)}
+                      @mouseup=${(e) => this._handleChipTouchEnd?.(e, id)}
+                      @touchstart=${(e) => this._handleChipTouchStart?.(e, id)}
+                      @touchend=${(e) => this._handleChipTouchEnd?.(e, id)}
+                    >
+                      <span class="chip-icon">
+                        ${miniArt
+                          ? html`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />`
+                          : html`<ha-icon icon="${entityIcon}" style="font-size: 28px;"></ha-icon>`
+                        }
+                      </span>
+                      ${this.getChipName(id)}
+                      ${this._manualSelect && this._pinnedIndex === this.entityIds.indexOf(id)
+                        ? html`
+                            <button class="chip-pin" title="Unpin and resume auto-switch" @click=${(e) => this._onPinClick(e)}>
+                              <ha-icon icon="mdi:pin"></ha-icon>
+                            </button>
+                          `
+                        : nothing}
+                    </button>
+                  `;
+                })}
+              </div>
+            ` : nothing}
             ${this.config.actions && this.config.actions.length
               ? html`
                   <div class="action-chip-row">
