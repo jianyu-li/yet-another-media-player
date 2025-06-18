@@ -22,6 +22,7 @@ window.customCards.push({
 });
 
 class YetAnotherMediaPlayerCard extends LitElement {
+  _debouncedVolumeTimer = null;
   _supportsFeature(stateObj, featureBit) {
     if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
     return (stateObj.attributes.supported_features & featureBit) !== 0;
@@ -931,7 +932,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const entity = this.currentEntityId;
     if (!entity) return;
     const vol = Number(e.target.value);
-    this.hass.callService("media_player", "volume_set", { entity_id: entity, volume_level: vol });
+    // Clear previous debounce timer if any
+    if (this._debouncedVolumeTimer) clearTimeout(this._debouncedVolumeTimer);
+    // Debounce service call
+    this._debouncedVolumeTimer = setTimeout(() => {
+      this.hass.callService("media_player", "volume_set", { entity_id: entity, volume_level: vol });
+      this._debouncedVolumeTimer = null;
+    }, 250);
   }
 
   _onVolumeStep(direction) {
@@ -1250,6 +1257,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._collapseTimeout) {
       clearTimeout(this._collapseTimeout);
       this._collapseTimeout = null;
+    }
+    if (this._debouncedVolumeTimer) {
+      clearTimeout(this._debouncedVolumeTimer);
+      this._debouncedVolumeTimer = null;
     }
     this._removeSourceDropdownOutsideHandler();
   }
