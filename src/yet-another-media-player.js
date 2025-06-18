@@ -207,30 +207,38 @@ class YetAnotherMediaPlayerCard extends LitElement {
     box-shadow: 0 1px 4px rgba(0,0,0,0.18);
     display: block;
   }
-	.chip-row {
-	  display: flex;
-	  gap: 8px; 
-	  padding: 8px 12px 0 12px;
-	  margin-bottom: 12px;
-	  overflow-x: auto;
-	  overflow-y: hidden;
-	  white-space: nowrap;
-	  scrollbar-width: none;
-	  scrollbar-color: var(--accent-color, #1976d2) #222;
-	  -webkit-overflow-scrolling: touch; /* Enables momentum scrolling on iOS */
-	  touch-action: pan-x; /* Hint for horizontal pan/swipe on some browsers */
-	  max-width: 100vw;
-	}
-	.chip-row::-webkit-scrollbar {
-	  display: none;
-	}
-	.chip-row::-webkit-scrollbar-thumb {
-	  background: var(--accent-color, #1976d2);
-	  border-radius: 6px;
-	}
-	.chip-row::-webkit-scrollbar-track {
-	  background: #222;
-	}
+  .chip-row.grab-scroll-active,
+  .action-chip-row.grab-scroll-active {
+    cursor: grabbing !important;
+  }
+  .chip-row,
+  .action-chip-row {
+    cursor: grab;
+  }
+  .chip-row {
+    display: flex;
+    gap: 8px; 
+    padding: 8px 12px 0 12px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    scrollbar-color: var(--accent-color, #1976d2) #222;
+    -webkit-overflow-scrolling: touch; /* Enables momentum scrolling on iOS */
+    touch-action: pan-x; /* Hint for horizontal pan/swipe on some browsers */
+    max-width: 100vw;
+  }
+  .chip-row::-webkit-scrollbar {
+    display: none;
+  }
+  .chip-row::-webkit-scrollbar-thumb {
+    background: var(--accent-color, #1976d2);
+    border-radius: 6px;
+  }
+  .chip-row::-webkit-scrollbar-track {
+    background: #222;
+  }
 
   .action-chip-row {
     display: flex;
@@ -764,7 +772,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }, 500);
     }
 
-   
     // Collapse debounce logic for collapse_on_idle
     if (this._collapseOnIdle) {
       const stateObj = this.currentStateObj;
@@ -788,6 +795,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // If the card is already collapsed (e.g. due to chip switch), do nothing—skip debounce
       }
     }
+
+    // Add grab scroll to chip rows after update/render
+    this._addGrabScroll('.chip-row');
+    this._addGrabScroll('.action-chip-row');
   }
 
   _toggleSourceMenu() {
@@ -1225,7 +1236,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <div class="source-menu">
                       <button class="source-menu-btn" @click=${() => this._toggleSourceMenu()}>
                         <span class="source-selected">
-                          ${stateObj.attributes.source || "Source"}
+                        ${stateObj.attributes.source && String(stateObj.attributes.source).trim() !== "" ? stateObj.attributes.source : "Source"}
                         </span>
                         <ha-icon icon="mdi:chevron-down"></ha-icon>
                       </button>
@@ -1246,6 +1257,56 @@ class YetAnotherMediaPlayerCard extends LitElement {
       `;
     }
 
+
+  firstUpdated() {
+    super.firstUpdated?.();
+    // No need to call _addGrabScroll here; handled in updated().
+  }
+
+  _addGrabScroll(selector) {
+    const row = this.renderRoot.querySelector(selector);
+    if (!row || row._grabScrollAttached) return;
+    let isDown = false;
+    let startX, scrollLeft;
+    // Add a _dragged property to track if a drag occurred
+    // Always allow dragging, even if starting on a button
+    row.addEventListener('mousedown', (e) => {
+      isDown = true;
+      row._dragged = false;
+      row.classList.add('grab-scroll-active');
+      startX = e.pageX - row.offsetLeft;
+      scrollLeft = row.scrollLeft;
+      e.preventDefault();
+    });
+    row.addEventListener('mouseleave', () => {
+      isDown = false;
+      row.classList.remove('grab-scroll-active');
+    });
+    row.addEventListener('mouseup', () => {
+      isDown = false;
+      row.classList.remove('grab-scroll-active');
+    });
+    row.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      const x = e.pageX - row.offsetLeft;
+      const walk = (x - startX);
+      // If drag distance exceeds 5px, set _dragged to true
+      if (Math.abs(walk) > 5) {
+        row._dragged = true;
+      }
+      e.preventDefault();
+      row.scrollLeft = scrollLeft - walk;
+    });
+    // Prevent click events if a drag occurred
+    row.addEventListener('click', (e) => {
+      if (row._dragged) {
+        e.stopPropagation();
+        e.preventDefault();
+        row._dragged = false;
+      }
+    }, true);
+    row._grabScrollAttached = true;
+  }
 
   disconnectedCallback() {
     super.disconnectedCallback?.();
