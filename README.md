@@ -151,6 +151,14 @@ actions:
       source: Paramount+   
 ```
 
+You can update the name of the media player entity like the following. Be aware that customized entities via YAML will disappear if you had a new entity via the UI so it's recommended to keep using YAML if you have custom entities
+
+```
+entities:
+  - entity_id: media_player.living_room_2
+    name: Living
+```
+
 ## Notes
 
 - When an entity is manually selected it will be pinned in place and will not auto-switch to the more recently playing entity for that session. Tap or click the pin icon that appears to unpin the entity.
