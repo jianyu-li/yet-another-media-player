@@ -34,9 +34,9 @@ Home Assistant media card for controlling multiple entities with customizable ac
 
 *Example with one entity and no actions
 
-![Preview Image Icons](/images/previewwithicons.png)
+![Preview Image Collapsed](/images/miniplayerpreview.jpg)
 
-*Example with action icons and volume stepper
+*Example with collapsed mode
 
 ![Preview Image Theme](/images/preview_theme.png)
 
