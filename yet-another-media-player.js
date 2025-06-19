@@ -1398,7 +1398,23 @@ class YetAnotherMediaPlayerCard extends i {
   .card-lower-content-bg {
     height: 100% !important;
   }
-  `)();
+  
+  @media (max-width: 420px) {
+    .card-lower-content.collapsed .controls-row {
+      max-width: 100% !important;
+      margin-right: 0 !important;
+    }
+    .card-lower-content.collapsed .collapsed-artwork-container {
+      width: 70px !important;
+      height: 70px !important;
+      right: 10px !important;
+    }
+    .card-lower-content.collapsed .collapsed-artwork {
+      width: 62px !important;
+      height: 62px !important;
+    }
+  }
+`)();
   constructor() {
     super();
     this._selectedIndex = 0;
