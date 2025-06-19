@@ -23,26 +23,10 @@ Home Assistant media card for controlling multiple entities with customizable ac
 ## Screenshots
 
 ![Preview Image](/images/preview3.png)
-
-*Example with multiple media players and custom actions
-
 ![Preview Image Movie](/images/moviepreview.png)
-
-*Example with movie and blue theme
-
 ![Preview Image One Entity](/images/preview_one_entity.png)
-
-*Example with one entity and no actions
-
 ![Preview Image Collapsed](/images/miniplayerpreview.jpg)
-
-*Example with collapsed mode
-
 ![Preview Image Tv](/images/preview_tv.png)
-
-*Example with tv sources and collapsed view when idle
-
-
 
 ---
 
@@ -176,4 +160,9 @@ entities:
 
 
 ---
+
+## Support the project
+
+Like having Yet Another Media Player? You can show your support with a coffee ☕️
+
 <a href="https://www.buymeacoffee.com/jianyu_li" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
