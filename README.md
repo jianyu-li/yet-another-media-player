@@ -38,10 +38,6 @@ Home Assistant media card for controlling multiple entities with customizable ac
 
 *Example with collapsed mode
 
-![Preview Image Theme](/images/preview_theme.png)
-
-*Example with custom theme
-
 ![Preview Image Tv](/images/preview_tv.png)
 
 *Example with tv sources and collapsed view when idle
