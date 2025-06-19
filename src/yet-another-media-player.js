@@ -358,6 +358,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       margin-top: 8px;
       min-height: 48px;
     }
+    .details .title {
+      padding-top: 8px;
+    }
     .progress-bar-container {
       padding-left: 24px;
       padding-right: 24px;
@@ -558,10 +561,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
         color: #fff !important;
       }
       /* Only for collapsed cards: override details/title color */
-      .card-lower-content.collapsed .details .title,
+      /* .card-lower-content.collapsed .details .title,
       .card-lower-content.collapsed .title {
         color: #222 !important;
-      }
+      } */
     }
     .artwork-dim-overlay {
     position: absolute;
@@ -573,15 +576,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
     rgba(0,0,0,0.70) 100%);
     z-index: 2;
   }    
-  .card-lower-content-bg {
+  .card-lower-content-container {
     position: relative;
     width: 100%;
     min-height: 320px;
-    background-size: cover;
-    background-position: top center;
-    background-repeat: no-repeat;
     border-radius: 0 0 16px 16px;
     overflow: hidden;
+  }
+  .card-lower-content-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
   }
   .card-lower-fade {
     position: absolute;
@@ -589,11 +598,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     pointer-events: none;
     z-index: 1;
     background: linear-gradient(
-  to bottom,
-  rgba(0,0,0,0.0) 0%,
-  rgba(0,0,0,0.40) 55%,
-  rgba(0,0,0,0.92) 100%
-);
+      to bottom,
+      rgba(0,0,0,0.0) 0%,
+      rgba(0,0,0,0.40) 55%,
+      rgba(0,0,0,0.92) 100%
+    );
   }
   .card-lower-content {
     position: relative;
@@ -607,10 +616,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
   .card-lower-content.collapsed .details {
     opacity: 1;
     pointer-events: auto;
-  }
-  .card-lower-content.collapsed .artist {
-    opacity: 0;
-    pointer-events: none;
   }
   .card-lower-content.collapsed .card-artwork-spacer {
     opacity: 0;
@@ -639,7 +644,50 @@ class YetAnotherMediaPlayerCard extends LitElement {
     height: 100% !important;
     display: block !important;
   }
-  `;
+  .card-lower-content.collapsed .collapsed-artwork-container {
+    position: absolute;
+    top: 0;
+    right: 18px;
+    width: 110px;
+    height: calc(100% - 120px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    z-index: 5;
+    background: transparent !important;
+    pointer-events: none;
+    box-shadow: none !important;
+    padding: 0;
+    transition: background 0.4s;
+  }
+  .card-lower-content.collapsed .collapsed-artwork {
+    width: 98px !important;
+    height: 98px !important;
+    border-radius: 14px !important;
+    object-fit: cover !important;
+    background: transparent !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.22);
+    pointer-events: none;
+    user-select: none;
+    display: block;
+    margin: 2px;
+  }
+  .card-lower-content.collapsed .controls-row {
+    max-width: calc(100% - 120px); /* Leaves room for floating artwork + margin */
+    margin-right: 110px;            /* Visually lines up with artwork edge */
+  }
+  .card-lower-content-container {
+    min-height: 0 !important;
+    height: 100%;
+  }
+  .card-lower-content.collapsed .card-lower-content-container {
+    min-height: 0 !important;
+    height: 120px !important;
+  }
+  .card-lower-content-bg {
+    height: 100% !important;
+  }
+  `
 
 
 
@@ -653,6 +701,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._playTimestamps = {};
     this._showSourceMenu = false;
     this._shouldDropdownOpenUp = false;
+    this._collapsedArtDominantColor = "#444";
+    this._lastArtworkUrl = null;
     // Progress bar timer
     this._progressTimer = null;
     this._progressValue = null;
@@ -674,6 +724,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     }, 0);    
     this._collapseTimeout = null;
+  }
+
+  // Extracts the dominant color from an image URL (returns a Promise)
+  async _extractDominantColor(imgUrl) {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.crossOrigin = "Anonymous";
+      img.src = imgUrl;
+      img.onload = function() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1;
+        canvas.height = 1;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, 1, 1);
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        resolve(`rgb(${r},${g},${b})`);
+      };
+      img.onerror = function() { resolve("#888"); };
+    });
   }
 
   setConfig(config) {
@@ -1007,8 +1076,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const shuffleActive = !!stateObj.attributes.shuffle;
       const repeatActive = stateObj.attributes.repeat && stateObj.attributes.repeat !== "off";
 
-      
-
       // Artwork
       const isPlaying = stateObj.state === "playing";
       const isRealArtwork = isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
@@ -1041,6 +1108,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         : null;
+
+      // Dominant color extraction for collapsed artwork
+      if (collapsed && artworkUrl && artworkUrl !== this._lastArtworkUrl) {
+        this._extractDominantColor(artworkUrl).then(color => {
+          this._collapsedArtDominantColor = color;
+          this.requestUpdate();
+        });
+        this._lastArtworkUrl = artworkUrl;
+      }
 
       return html`
         <div style="position:relative;">
@@ -1105,21 +1181,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 `
               : nothing}
-            <div class="card-lower-content-bg"
-              style="
-                background-image: ${
-                  collapsed ? "none" :
-                  artworkUrl ? `url('${artworkUrl}')` : "none"
-                };
-                min-height: ${collapsed ? "0px" : "320px"};
-                background-size: cover;
-                background-position: top center;
-                background-repeat: no-repeat;
-                transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
-              "
-            >
+            <div class="card-lower-content-container">
+              <div class="card-lower-content-bg"
+                style="
+                  background-image: ${
+                    artworkUrl ? `url('${artworkUrl}')` : "none"
+                  };
+                  min-height: ${collapsed ? "0px" : "320px"};
+                  background-size: cover;
+                  background-position: center;
+                  background-repeat: no-repeat;
+                  filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
+                  transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
+                "
+              ></div>
               <div class="card-lower-fade"></div>
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}">
+                ${collapsed && artworkUrl ? html`
+                  <div class="collapsed-artwork-container"
+                       style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
+                    <img class="collapsed-artwork" src="${artworkUrl}" />
+                  </div>
+                ` : nothing}
                 ${!collapsed
                   ? html`<div class="card-artwork-spacer"></div>`
                   : nothing
@@ -1148,34 +1231,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <div class="title">
                     ${isPlaying ? title : ""}
                   </div>
-                  ${!collapsed
-                    ? html`
-                        <div class="artist">
-                          ${isPlaying ? artist : ""}
-                        </div>
-                      `
-                    : html`
-                        <div class="artist"></div>
-                      `
-                  }
+                  <div class="artist">
+                    ${isPlaying ? artist : ""}
+                  </div>
                 </div>
-                ${(isPlaying && duration && !collapsed)
-                  ? html`
-                      <div class="progress-bar-container">
-                        <div
-                          class="progress-bar"
-                          @click=${(e) => this._onProgressBarClick(e)}
-                          title="Seek"
-                        >
-                          <div class="progress-inner" style="width: ${progress * 100}%;"></div>
-                        </div>
-                      </div>
-                    `
-                  : html`
-                      <div class="progress-bar-container">
-                        <div class="progress-bar" style="visibility:hidden"></div>
-                      </div>
-                    `
+                ${collapsed
+                  ? nothing
+                  : (isPlaying && duration
+                      ? html`
+                          <div class="progress-bar-container">
+                            <div
+                              class="progress-bar"
+                              @click=${(e) => this._onProgressBarClick(e)}
+                              title="Seek"
+                            >
+                              <div class="progress-inner" style="width: ${progress * 100}%;"></div>
+                            </div>
+                          </div>
+                        `
+                      : html`
+                          <div class="progress-bar-container">
+                            <div class="progress-bar" style="visibility:hidden"></div>
+                          </div>
+                        `
+                    )
                 }
                 <div class="controls-row">
                   ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
