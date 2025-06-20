@@ -773,7 +773,7 @@ class YetAnotherMediaPlayerCard extends i {
     height: 100%;
     z-index: 0;
     background-size: cover;
-    background-position: center;
+    background-position: top center;
     background-repeat: no-repeat;
     pointer-events: none;
   }
@@ -1301,7 +1301,7 @@ class YetAnotherMediaPlayerCard extends i {
     inset: 0;
     z-index: 0;
     background-size: cover;
-    background-position: center;
+    background-position: top center;
     background-repeat: no-repeat;
     pointer-events: none;
   }
@@ -1896,7 +1896,7 @@ class YetAnotherMediaPlayerCard extends i {
                   background-image: ${artworkUrl ? `url('${artworkUrl}')` : "none"};
                   min-height: ${collapsed ? "0px" : "320px"};
                   background-size: cover;
-                  background-position: center;
+                  background-position: top center;
                   background-repeat: no-repeat;
                   filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
                   transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
