@@ -18,7 +18,7 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
   name: "Yet Another Media Player",
-  description: "A multi-entity, feature-rich media card for Home Assistant."
+  description: "YAMP is a multi-entity media card with custom actions."
 });
 
 class YetAnotherMediaPlayerCard extends LitElement {

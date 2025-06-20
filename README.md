@@ -1,6 +1,6 @@
 # Yet Another Media Player
 
-Home Assistant media card for controlling multiple entities with customizable actions.
+YAMP is a Home Assistant media card for controlling multiple entities with customizable actions.
 
 ---
 
