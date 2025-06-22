@@ -50,19 +50,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
     margin-right: 8px;
   }
   .media-browser-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    width: 36px;
+    padding: 0;
+    margin: 0 4px;
     background: none;
     border: none;
     color: var(--primary-text-color, #fff);
     font: inherit;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 2px 0;
-    font-size: 1.5em;
     outline: none;
   }
   .media-browser-btn ha-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.5em;
+    width: 28px;
+    height: 28px;
+    line-height: 1;
+    vertical-align: middle;
+    position: relative;
+    margin: 0;
+    margin-bottom: 2px;
     color: #fff !important;
   }
     :host {
