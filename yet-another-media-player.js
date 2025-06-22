@@ -755,6 +755,27 @@ class YetAnotherMediaPlayerCard extends i {
     }
   };
   static styles = (() => i$3`
+  .media-browser-menu {
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+  }
+  .media-browser-btn {
+    background: none;
+    border: none;
+    color: var(--primary-text-color, #fff);
+    font: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px 0;
+    font-size: 1.5em;
+    outline: none;
+  }
+  .media-browser-btn ha-icon {
+    font-size: 1.5em;
+    color: #fff !important;
+  }
     :host {
       --custom-accent: var(--accent-color, #ff9800);
     }
@@ -1478,7 +1499,7 @@ class YetAnotherMediaPlayerCard extends i {
     this._selectedIndex = 0;
     this._lastPlaying = null;
     // Update custom accent property
-    // match_theme is YAML-only. If provided as true, use theme accent color; if false or undefined, use default accent.
+
     if (this.config.match_theme === true) {
       // Try to get CSS var --accent-color
       const cssAccent = getComputedStyle(document.documentElement).getPropertyValue("--accent-color").trim();
@@ -1486,7 +1507,6 @@ class YetAnotherMediaPlayerCard extends i {
     } else {
       this._customAccent = "#ff9800";
     }
-    // Update data-match-theme attribute on the host (YAML-only)
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
@@ -1760,6 +1780,15 @@ class YetAnotherMediaPlayerCard extends i {
       source
     });
   }
+  _openMediaBrowser() {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: {
+        entityId: this.currentEntityId
+      },
+      bubbles: true,
+      composed: true
+    }));
+  }
   _onProgressBarClick(e) {
     const entity = this.currentEntityId;
     const stateObj = this.currentStateObj;
@@ -1782,7 +1811,6 @@ class YetAnotherMediaPlayerCard extends i {
   }
   render() {
     if (!this.hass || !this.config) return E;
-    // Set data-match-theme attribute on the host (YAML-only)
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
@@ -2003,6 +2031,11 @@ class YetAnotherMediaPlayerCard extends i {
                           <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
                         </div>
                       `}
+                  <div class="media-browser-menu">
+                    <button class="media-browser-btn" @click=${() => this._openMediaBrowser()}>
+                      <ha-icon icon="${(stateObj === null || stateObj === void 0 ? void 0 : stateObj.attributes.icon) || 'mdi:cast'}"></ha-icon>
+                    </button>
+                  </div>
                   ${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 && !collapsed ? x`
                     <div class="source-menu">
                       <button class="source-menu-btn" @click=${() => this._toggleSourceMenu()}>
@@ -2030,7 +2063,6 @@ class YetAnotherMediaPlayerCard extends i {
   firstUpdated() {
     var _super$firstUpdated;
     (_super$firstUpdated = super.firstUpdated) === null || _super$firstUpdated === void 0 || _super$firstUpdated.call(this);
-    // No need to call _addGrabScroll here; handled in updated().
   }
   _addGrabScroll(selector) {
     const row = this.renderRoot.querySelector(selector);
@@ -2187,7 +2219,6 @@ class YetAnotherMediaPlayerEditor extends i {
     const configForEditor = {
       ...this.config,
       entities: (this.config.entities || []).filter(e => typeof e === "string")
-      // match_theme is YAML-only: do not expose in editor config
     };
     return x`
       <ha-form
