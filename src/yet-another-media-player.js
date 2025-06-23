@@ -308,14 +308,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
     gap: 6px;
   }
 
-  .action-chip:hover {
+  :host([data-match-theme="true"]) .action-chip:hover {
+    background: var(--custom-accent);
+    color: #fff;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  :host([data-match-theme="false"]) .action-chip:hover {
     background: var(--custom-accent);
     color: #fff;
     box-shadow: none !important;
     text-shadow: none !important;
   }
 
-  .action-chip:active {
+  :host([data-match-theme="true"]) .action-chip:active {
+    background: var(--custom-accent);
+    color: #fff;
+    transform: scale(0.96);
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  :host([data-match-theme="false"]) .action-chip:active {
     background: var(--custom-accent);
     color: #fff;
     transform: scale(0.96);
