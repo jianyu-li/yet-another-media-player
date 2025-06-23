@@ -998,28 +998,40 @@ class YetAnotherMediaPlayerCard extends i {
     display: none;
   }
   .action-chip {
-    border-radius: 8px;                  /* Squarer corners */
-    padding: 12px 20px;                  /* Taller chip, wider text space */
-    background: var(--chip-action-bg, #222); /* Contrasting bg (override in theme if you want) */
+    background: var(--card-background-color, #222);
+    opacity: 1;
+    border-radius: 8px;
     color: var(--primary-text-color, #fff);
-    font-weight: 600;                    /* Bolder */
-    font-size: 1.1em;
-    cursor: pointer;
-    border: 2px solid var(--custom-accent); /* Subtle border */
-    margin-top: 2px;                     /* Space above */
-    margin-bottom: 4px;                  /* Space below */
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border: none;
     outline: none;
-    opacity: 0.95;
-    transition: background 0.2s, opacity 0.2s;
+    padding: 4px 12px;
+    font-weight: 500;
+    font-size: 0.95em;
+    cursor: pointer;
+    margin: 4px 0;
+    transition: background 0.2s ease, transform 0.1s ease;
     flex: 0 0 auto;
     white-space: nowrap;
-    display: inline-block;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.10); /* Slight shadow */
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
+
+  .action-chip:hover {
+    background: var(--custom-accent);
+    color: #fff;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
   .action-chip:active {
     background: var(--custom-accent);
     color: #fff;
-    opacity: 1;
+    transform: scale(0.96);
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 
   .chip {
@@ -1038,6 +1050,10 @@ class YetAnotherMediaPlayerCard extends i {
     flex: 0 0 auto;
     white-space: nowrap;
     position: relative;
+  }
+  .chip:hover {
+    background: var(--custom-accent);
+    color: #fff;
   }
   .chip-pin {
     position: absolute;
@@ -1261,7 +1277,7 @@ class YetAnotherMediaPlayerCard extends i {
         background: #f0f0f0;
         color: #222;
       }
-      .chip[selected] {
+      :host([data-match-theme="true"]) .chip[selected] {
         background: var(--accent-color, #1976d2);
         color: #fff;
       }
@@ -1295,12 +1311,22 @@ class YetAnotherMediaPlayerCard extends i {
         border: 1px solid #aaa;
       }
       .action-chip {
-        background: #e0e0e0;
-        color: #222;
+        background: var(--card-background-color, #fff);
+        opacity: 1;
+        border-radius: 8px;
+        color: var(--primary-text-color, #222);
+        box-shadow: none !important;
+        text-shadow: none !important;
+        border: none;
+        outline: none;
       }
       .action-chip:active {
         background: var(--accent-color, #1976d2);
         color: #fff;
+        opacity: 1;
+        transform: scale(0.98);
+        box-shadow: none !important;
+        text-shadow: none !important;
       }
       /* Keep source menu text white when expanded (matches controls) */
       .card-lower-content:not(.collapsed) .source-menu-btn,
