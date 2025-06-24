@@ -745,9 +745,19 @@ class YetAnotherMediaPlayerCard extends i {
     const row = (_this$renderRoot = this.renderRoot) === null || _this$renderRoot === void 0 ? void 0 : _this$renderRoot.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
-    const controls = Array.from(row.querySelectorAll('.button')).length;
+    const controls = this._countMainControls(stateObj);
     // If wide, show stop; if not, only show if there are 5 or fewer controls.
     return minWide || controls <= 5;
+  }
+  _countMainControls(stateObj) {
+    let count = 0;
+    if (this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
+    count++; // Play/Pause (always rendered)
+    if (this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
+    if (this._supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
+    if (this._supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
+    if (this._supportsFeature(stateObj, SUPPORT_TURN_OFF)) count++;
+    return count;
   }
   get sortedEntityIds() {
     return [...this.entityIds].sort((a, b) => {
