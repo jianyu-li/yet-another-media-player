@@ -717,7 +717,8 @@ o === null || o === void 0 || o({
 const SUPPORT_PREVIOUS_TRACK = 16;
 const SUPPORT_NEXT_TRACK = 32;
 const SUPPORT_TURN_OFF = 256;
-const SUPPORT_SHUFFLE = 4096;
+const SUPPORT_STOP = 4096;
+const SUPPORT_SHUFFLE = 32768;
 const SUPPORT_REPEAT_SET = 262144;
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -730,6 +731,23 @@ class YetAnotherMediaPlayerCard extends i {
   _supportsFeature(stateObj, featureBit) {
     if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
     return (stateObj.attributes.supported_features & featureBit) !== 0;
+  }
+
+  /**
+   * Determines whether the Stop button should be shown.
+   * Only displays if the STOP feature is supported and there is horizontal space.
+   * On desktop/wide screens, always shows if supported. On narrow/mobile, only if controls fit.
+   */
+  _shouldShowStopButton(stateObj) {
+    var _this$renderRoot;
+    if (!this._supportsFeature(stateObj, SUPPORT_STOP)) return false;
+    // Allow stop if card is wider than 480px or if there are 5 or fewer controls present.
+    const row = (_this$renderRoot = this.renderRoot) === null || _this$renderRoot === void 0 ? void 0 : _this$renderRoot.querySelector('.controls-row');
+    if (!row) return true; // Default to show if can't measure
+    const minWide = row.offsetWidth > 480;
+    const controls = Array.from(row.querySelectorAll('.button')).length;
+    // If wide, show stop; if not, only show if there are 5 or fewer controls.
+    return minWide || controls <= 5;
   }
   get sortedEntityIds() {
     return [...this.entityIds].sort((a, b) => {
@@ -1766,6 +1784,11 @@ class YetAnotherMediaPlayerCard extends i {
           entity_id: entity
         });
         break;
+      case "stop":
+        this.hass.callService("media_player", "media_stop", {
+          entity_id: entity
+        });
+        break;
       case "shuffle":
         {
           // Toggle shuffle based on current state
@@ -2043,6 +2066,12 @@ class YetAnotherMediaPlayerCard extends i {
                   <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
                     <ha-icon icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
                   </button>
+                  <!-- Stop button, only if supported and horizontal space allows -->
+                  ${this._shouldShowStopButton(stateObj) ? x`
+                      <button class="button" @click=${() => this._onControlClick("stop")} title="Stop">
+                        <ha-icon icon="mdi:stop"></ha-icon>
+                      </button>
+                    ` : E}
                   ${this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
                     <button class="button" @click=${() => this._onControlClick("next")} title="Next">
                       <ha-icon icon="mdi:skip-next"></ha-icon>
