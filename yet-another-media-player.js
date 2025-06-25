@@ -1960,24 +1960,24 @@ class YetAnotherMediaPlayerCard extends i {
           <div style="position:relative; z-index:2;"
             data-match-theme="${String(this.config.match_theme === true)}"
           >
-            ${this.entityIds.length > 1 ? x`
+            ${this.entityObjs.length > 1 ? x`
               <div class="chip-row">
                 ${this.sortedEntityIds.map(id => {
+      const configIdx = this.entityIds.indexOf(id);
+      this.entityObjs[configIdx];
       const state = this.hass.states[id];
       const isPlaying = state && state.state === "playing";
-      // miniArt: show if playing and has entity_picture or album_art
       let miniArt = null;
       if (isPlaying && (state !== null && state !== void 0 && state.attributes.entity_picture || state !== null && state !== void 0 && state.attributes.album_art)) {
         miniArt = state.attributes.entity_picture || state.attributes.album_art;
       }
-      // entityIcon: icon attribute or fallback
       const entityIcon = (state === null || state === void 0 ? void 0 : state.attributes.icon) || "mdi:cast";
       return x`
                     <button
                       class="chip"
                       ?selected=${this.currentEntityId === id}
                       ?playing=${isPlaying}
-                      @click=${() => this._onChipClick(this.entityIds.indexOf(id))}
+                      @click=${() => this._onChipClick(configIdx)}
                       @mousedown=${e => {
         var _this$_handleChipTouc;
         return (_this$_handleChipTouc = this._handleChipTouchStart) === null || _this$_handleChipTouc === void 0 ? void 0 : _this$_handleChipTouc.call(this, e, id);
@@ -1999,7 +1999,7 @@ class YetAnotherMediaPlayerCard extends i {
                         ${miniArt ? x`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />` : x`<ha-icon icon="${entityIcon}" style="font-size: 28px;"></ha-icon>`}
                       </span>
                       ${this.getChipName(id)}
-                      ${this._manualSelect && this._pinnedIndex === this.entityIds.indexOf(id) ? x`
+                      ${this._manualSelect && this._pinnedIndex === configIdx ? x`
                             <button class="chip-pin" title="Unpin and resume auto-switch" @click=${e => this._onPinClick(e)}>
                               <ha-icon icon="mdi:pin"></ha-icon>
                             </button>
@@ -2323,17 +2323,37 @@ class YetAnotherMediaPlayerEditor extends i {
   }
   render() {
     if (!this.config) return x``;
+    // Display friendly names or entity_ids for all entities/objects
+    const entitiesForEditor = (this.config.entities || []).map(e => {
+      if (typeof e === "string") {
+        var _this$hass, _state$attributes;
+        const state = (_this$hass = this.hass) === null || _this$hass === void 0 || (_this$hass = _this$hass.states) === null || _this$hass === void 0 ? void 0 : _this$hass[e];
+        return (state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.friendly_name) || e;
+      }
+      if (e && typeof e === "object" && e.entity_id) {
+        var _this$hass2, _state$attributes2;
+        const state = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[e.entity_id];
+        return (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.friendly_name) || e.entity_id;
+      }
+      return "(invalid entity)";
+    });
+    // Show a simple list above the form
     const configForEditor = {
       ...this.config,
-      entities: (this.config.entities || []).filter(e => typeof e === "string")
+      entities: this.config.entities
     };
     return x`
-      <ha-form
-        .hass=${this.hass}
-        .data=${configForEditor}
-        .schema=${this._schema}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
+      <div>
+        <ul style="list-style:none; padding:0; margin-bottom:16px;">
+          ${entitiesForEditor.map(name => x`<li style="padding:2px 0;">${name}</li>`)}
+        </ul>
+        <ha-form
+          .hass=${this.hass}
+          .data=${configForEditor}
+          .schema=${this._schema}
+          @value-changed=${this._valueChanged}
+        ></ha-form>
+      </div>
     `;
   }
   _valueChanged(ev) {

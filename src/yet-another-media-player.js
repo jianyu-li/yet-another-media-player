@@ -1267,24 +1267,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <div style="position:relative; z-index:2;"
             data-match-theme="${String(this.config.match_theme === true)}"
           >
-            ${this.entityIds.length > 1 ? html`
+            ${this.entityObjs.length > 1 ? html`
               <div class="chip-row">
-                ${this.sortedEntityIds.map((id) => {
+                ${this.sortedEntityIds.map(id => {
+                  const configIdx = this.entityIds.indexOf(id);
+                  const obj = this.entityObjs[configIdx];
                   const state = this.hass.states[id];
                   const isPlaying = state && state.state === "playing";
-                  // miniArt: show if playing and has entity_picture or album_art
                   let miniArt = null;
                   if (isPlaying && (state?.attributes.entity_picture || state?.attributes.album_art)) {
                     miniArt = state.attributes.entity_picture || state.attributes.album_art;
                   }
-                  // entityIcon: icon attribute or fallback
                   const entityIcon = state?.attributes.icon || "mdi:cast";
                   return html`
                     <button
                       class="chip"
                       ?selected=${this.currentEntityId === id}
                       ?playing=${isPlaying}
-                      @click=${() => this._onChipClick(this.entityIds.indexOf(id))}
+                      @click=${() => this._onChipClick(configIdx)}
                       @mousedown=${(e) => this._handleChipTouchStart?.(e, id)}
                       @mouseup=${(e) => this._handleChipTouchEnd?.(e, id)}
                       @touchstart=${(e) => this._handleChipTouchStart?.(e, id)}
@@ -1297,7 +1297,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         }
                       </span>
                       ${this.getChipName(id)}
-                      ${this._manualSelect && this._pinnedIndex === this.entityIds.indexOf(id)
+                      ${this._manualSelect && this._pinnedIndex === configIdx
                         ? html`
                             <button class="chip-pin" title="Unpin and resume auto-switch" @click=${(e) => this._onPinClick(e)}>
                               <ha-icon icon="mdi:pin"></ha-icon>
@@ -1639,18 +1639,36 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   render() {
     if (!this.config) return html``;
+    // Display friendly names or entity_ids for all entities/objects
+    const entitiesForEditor = (this.config.entities || []).map(e => {
+      if (typeof e === "string") {
+        const state = this.hass?.states?.[e];
+        return state?.attributes?.friendly_name || e;
+      }
+      if (e && typeof e === "object" && e.entity_id) {
+        const state = this.hass?.states?.[e.entity_id];
+        return state?.attributes?.friendly_name || e.entity_id;
+      }
+      return "(invalid entity)";
+    });
+    // Show a simple list above the form
     const configForEditor = {
       ...this.config,
-      entities: (this.config.entities || []).filter(e => typeof e === "string"),
+      entities: this.config.entities
       
     };
     return html`
-      <ha-form
-        .hass=${this.hass}
-        .data=${configForEditor}
-        .schema=${this._schema}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
+      <div>
+        <ul style="list-style:none; padding:0; margin-bottom:16px;">
+          ${entitiesForEditor.map(name => html`<li style="padding:2px 0;">${name}</li>`)}
+        </ul>
+        <ha-form
+          .hass=${this.hass}
+          .data=${configForEditor}
+          .schema=${this._schema}
+          @value-changed=${this._valueChanged}
+        ></ha-form>
+      </div>
     `;
   }
 
