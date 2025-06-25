@@ -120,7 +120,7 @@ actions:
       source: Paramount+   
 ```
 
-You can update the name of the media player entity like the following. Be aware that customized entities via YAML will disappear if you had a new entity via the UI so it's recommended to keep using YAML if you have custom entities
+You can update the name of the media player entity like the following. 
 
 ```
 entities:
