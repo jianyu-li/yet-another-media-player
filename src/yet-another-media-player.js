@@ -385,6 +385,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background: var(--custom-accent);
     color: #fff;
   }
+  .chip:hover .chip-icon ha-icon {
+    color: #fff !important;
+  }
   .chip-pin {
     position: absolute;
     top: -6px;
@@ -805,6 +808,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
       width: 62px !important;
       height: 62px !important;
     }
+  }
+
+  .collapsed-progress-bar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 4px;
+    background: var(--custom-accent, #ff9800);
+    border-radius: 0 0 12px 12px;
+    z-index: 99;
+    transition: width 0.2s linear;
+    pointer-events: none;
   }
 `
 
@@ -1487,6 +1502,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ` : nothing}
                 </div>
               </div>
+              ${collapsed && isPlaying && duration
+                ? html`
+                    <div class="collapsed-progress-bar"
+                      style="width: ${progress * 100}%;"></div>
+                  `
+                : nothing}
             </div>
           </div>
         </div>
