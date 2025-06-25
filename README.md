@@ -8,6 +8,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 
 - Switch between multiple media players in a single card using chips
 - Custom chip/entity names via YAML
+- Separate volume entity via YAML
 - Shuffle, repeat, and playback controls for compatible players
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
@@ -43,6 +44,7 @@ You can use music assistant actions in conjunction with "current" as the entity 
 | `match_theme`| boolean | No | Updates the cards accent colors to match your home assistant theme |
 | `collapse_on_idle` | boolean | No | When nothing is playing, card collapses to save space (great on mobile) | 
 | `always_collapsed` | boolean | No | This will keep the card in collapsed or "mini" mode even when something is playing |
+| `volume_entity` | string | No | Use this to specify a separate entity from the player to control volume |
 
 ```yaml
 type: custom:yet-another-media-player
@@ -50,33 +52,16 @@ entities:
   - media_player.downstairs_2
   - media_player.kitchen_speaker_2
   - media_player.kitchen_homepod
-  - media_player.living_room_apple_tv
+  - entity_id: media_player.living_room_apple_tv
+    volume_entity: media_player.living_room_sonos
   - media_player.bedroom
   - media_player.entryway_speaker
 actions:
-  - name: Grunge
-    service: music_assistant.play_media
-    service_data:
-      entity_id: current
-      media_id: apple_music://playlist/pl.5feba9fd5ea441a29aeb3597c8314384
-      enqueue: replace
-  - name: Alternative
-    service: music_assistant.play_media
-    service_data:
-      entity_id: current
-      media_id: apple_music://playlist/pl.ea843ef3098747f9815a77adf164e1fc
-      enqueue: replace
   - name: Soul
     service: music_assistant.play_media
     service_data:
       entity_id: current
       media_id: apple_music://playlist/pl.3cb881c4590341fabc374f003afaf2b4
-      enqueue: replace
-  - name: Dinner
-    service: music_assistant.play_media
-    service_data:
-      entity_id: current
-      media_id: apple_music://playlist/pl.6a236667fbc046a49b48ea9cf4e8b639
       enqueue: replace
 volume_mode: slider
 match_theme: true
@@ -97,6 +82,8 @@ actions:
     icon: mdi:television-play
     service: script.play_bluey_on_living    
 ```
+
+
 
 With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also available on HACS), you can set up source actions with the providers logo.
 

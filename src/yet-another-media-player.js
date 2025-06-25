@@ -893,8 +893,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return this.config.entities.map(e =>
       typeof e === "string"
         ? { entity_id: e, name: "" }
-        : { entity_id: e.entity_id, name: e.name || "" }
+        : { entity_id: e.entity_id, name: e.name || "", volume_entity: e.volume_entity }
     );
+  }
+
+  /**
+   * Returns the entity_id to use for volume controls for the given index.
+   * If a volume_entity is specified for the entity, use that instead.
+   */
+  _getVolumeEntity(idx) {
+    const obj = this.entityObjs[idx];
+    return (obj && obj.volume_entity) ? obj.volume_entity : obj.entity_id;
   }
 
   get entityIds() {
@@ -915,6 +924,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
   get currentStateObj() {
     if (!this.hass || !this.currentEntityId) return null;
     return this.hass.states[this.currentEntityId];
+  }
+
+  get currentVolumeStateObj() {
+    const obj = this.entityObjs[this._selectedIndex];
+    const entityId = obj?.volume_entity || obj?.entity_id;
+    return entityId ? this.hass.states[entityId] : null;
   }
 
   updated(changedProps) {
@@ -1130,7 +1145,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _onVolumeChange(e) {
-    const entity = this.currentEntityId;
+    const entity = this._getVolumeEntity(this._selectedIndex);
     if (!entity) return;
     const vol = Number(e.target.value);
     // Clear previous debounce timer if any
@@ -1143,9 +1158,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _onVolumeStep(direction) {
-    const entity = this.currentEntityId;
+    const entity = this._getVolumeEntity(this._selectedIndex);
     if (!entity) return;
-    const stateObj = this.currentStateObj;
+    const stateObj = this.currentVolumeStateObj;
     if (!stateObj) return;
     let current = Number(stateObj.attributes.volume_level || 0);
     current += direction * 0.05;
@@ -1226,7 +1241,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const progress = duration ? Math.min(1, pos / duration) : 0;
 
       // Volume
-      const vol = Number(stateObj.attributes.volume_level || 0);
+      const vol = Number(this.currentVolumeStateObj?.attributes.volume_level || 0);
       const showSlider = this.config.volume_mode !== "stepper";
 
       // Collapse artwork/details on idle if configured and/or always_collapsed
