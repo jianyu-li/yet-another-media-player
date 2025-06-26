@@ -2011,12 +2011,12 @@ class YetAnotherMediaPlayerCard extends i {
       }}
                     >
                       <span class="chip-icon">
-                        ${miniArt ? x`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />` : x`<ha-icon icon="${entityIcon}" style="font-size: 28px;"></ha-icon>`}
+                        ${miniArt ? x`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />` : x`<ha-icon .icon=${entityIcon} style="font-size: 28px;"></ha-icon>`}
                       </span>
                       ${this.getChipName(id)}
                       ${this._manualSelect && this._pinnedIndex === configIdx ? x`
                             <button class="chip-pin" title="Unpin and resume auto-switch" @click=${e => this._onPinClick(e)}>
-                              <ha-icon icon="mdi:pin"></ha-icon>
+                              <ha-icon .icon=${"mdi:pin"}></ha-icon>
                             </button>
                           ` : E}
                     </button>
@@ -2028,7 +2028,7 @@ class YetAnotherMediaPlayerCard extends i {
                   <div class="action-chip-row">
                     ${this.config.actions.map((a, idx) => x`
                         <button class="action-chip" @click=${() => this._onActionChipClick(idx)}>
-                          ${a.icon ? x`<ha-icon icon="${a.icon}" style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : E}
+                          ${a.icon ? x`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : E}
                           ${a.name || ""}
                         </button>
                       `)}
@@ -2101,36 +2101,36 @@ class YetAnotherMediaPlayerCard extends i {
                 <div class="controls-row">
                   ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
                     <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
-                      <ha-icon icon="mdi:skip-previous"></ha-icon>
+                      <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
                     </button>
                   ` : E}
                   <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                    <ha-icon icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+                    <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
                   </button>
                   <!-- Stop button, only if supported and horizontal space allows -->
                   ${this._shouldShowStopButton(stateObj) ? x`
                       <button class="button" @click=${() => this._onControlClick("stop")} title="Stop">
-                        <ha-icon icon="mdi:stop"></ha-icon>
+                        <ha-icon .icon=${"mdi:stop"}></ha-icon>
                       </button>
                     ` : E}
                   ${this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
                     <button class="button" @click=${() => this._onControlClick("next")} title="Next">
-                      <ha-icon icon="mdi:skip-next"></ha-icon>
+                      <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
                     </button>
                   ` : E}
                   ${this._supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
                     <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
-                      <ha-icon icon="mdi:shuffle"></ha-icon>
+                      <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
                     </button>
                   ` : E}
                   ${this._supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
                     <button class="button${repeatActive ? ' active' : ''}" @click=${() => this._onControlClick("repeat")} title="Repeat">
-                      <ha-icon icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
+                      <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
                     </button>
                   ` : E}
                   ${this._supportsFeature(stateObj, SUPPORT_TURN_OFF) ? x`
                     <button class="button" @click=${() => this._onControlClick("power")} title="Power">
-                      <ha-icon icon="mdi:power"></ha-icon>
+                      <ha-icon .icon=${"mdi:power"}></ha-icon>
                     </button>
                   ` : E}
                 </div>
@@ -2155,7 +2155,7 @@ class YetAnotherMediaPlayerCard extends i {
                       `}
                   <div class="media-browser-menu">
                     <button class="media-browser-btn" @click=${() => this._openMediaBrowser()}>
-                      <ha-icon icon="${(stateObj === null || stateObj === void 0 ? void 0 : stateObj.attributes.icon) || 'mdi:cast'}"></ha-icon>
+                      <ha-icon .icon=${(stateObj === null || stateObj === void 0 ? void 0 : stateObj.attributes.icon) || 'mdi:cast'}></ha-icon>
                     </button>
                   </div>
                   ${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 && !collapsed ? x`
@@ -2164,7 +2164,7 @@ class YetAnotherMediaPlayerCard extends i {
                         <span class="source-selected">
                         ${stateObj.attributes.source && String(stateObj.attributes.source).trim() !== "" ? stateObj.attributes.source : "Source"}
                         </span>
-                        <ha-icon icon="mdi:chevron-down"></ha-icon>
+                        <ha-icon .icon=${"mdi:chevron-down"}></ha-icon>
                       </button>
                       ${this._showSourceMenu ? x`
                         <div class="source-dropdown${this._shouldDropdownOpenUp ? ' up' : ''}">
