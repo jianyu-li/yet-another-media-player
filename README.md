@@ -88,11 +88,6 @@ With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also av
 
 ```yaml
 actions:
-  - icon: phu:peacock
-    service: media_player.select_source
-    service_data:
-      entity_id: current
-      source: Peacock
   - icon: phu:netflix
     service: media_player.select_source
     service_data:
@@ -108,17 +103,25 @@ actions:
     service_data:
       entity_id: current
       source: Hulu
-  - icon: phu:max
-    service: media_player.select_source
-    service_data:
-      entity_id: current
-      source: Max
-  - icon: phu:paramount
-    service: media_player.select_source
-    service_data:
-      entity_id: current
-      source: Paramount+   
 ```
+Example action for playing a radio station on [Chromecast](https://www.home-assistant.io/integrations/cast/). This also pushes an image to chromecast devices with a screen with the station (submitted by @rafaelmagic). 
+
+```yaml
+- name: 🎷 Jazz
+  service: media_player.play_media
+  service_data:
+    entity_id: current
+    media_content_id: https://streaming.live365.com/a49833
+    media_content_type: music
+    extra:
+      metadata:
+        metadataType: 3
+        title: KJazz 88.1
+        subtitle: KJazz 88.1
+        images:
+          - url: https://cdn-profiles.tunein.com/s37062/images/logod.jpg
+```
+
 
 You can update the name of the media player entity like the following. 
 
