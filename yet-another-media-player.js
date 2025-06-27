@@ -786,7 +786,7 @@ class YetAnotherMediaPlayerCard extends i {
   .media-browser-menu {
     display: flex;
     align-items: center;
-    margin-right: 8px;
+    margin-right: 0px;
   }
   .media-browser-btn {
     display: flex;
@@ -825,7 +825,10 @@ class YetAnotherMediaPlayerCard extends i {
     }
   .card-artwork-spacer {
     width: 100%;
-    height: 180px; 
+    flex: 1 1 0;          /* grow *and* shrink with the card height */
+    height: auto;         /* let the browser compute height */
+    min-height: 180px;        /* allow the spacer to collapse on tiny cards */
+   
     pointer-events: none;
   }
   .media-bg-full {
@@ -864,8 +867,8 @@ class YetAnotherMediaPlayerCard extends i {
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 2px 0;
+    gap: 1px;
+    padding: 2px 10px;
     font-size: 1em;
     outline: none;
   }
@@ -911,6 +914,16 @@ class YetAnotherMediaPlayerCard extends i {
   }
 
     :host {
+      display: block;
+      border-radius: 16px;
+      box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
+      background: var(--card-background-color, #222);
+      color: var(--primary-text-color, #fff);
+      transition: background 0.2s;
+      overflow: hidden;
+    }
+
+    ha-card.yamp-card {
       display: block;
       border-radius: 16px;
       box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
@@ -1232,14 +1245,14 @@ class YetAnotherMediaPlayerCard extends i {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 0 16px 12px 16px;
+      padding: 0 12px 12px 25px;
       justify-content: space-between;
     }
     .vol-slider {
       -webkit-appearance: none;
       appearance: none;
       height: 6px;
-      background: rgba(255,255,255,0.22);
+      background: hsla(0, 0.00%, 100.00%, 0.22);
       border-radius: 3px;
       outline: none;
       box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
@@ -1396,7 +1409,11 @@ class YetAnotherMediaPlayerCard extends i {
   .card-lower-content-container {
     position: relative;
     width: 100%;
-    min-height: 320px;
+    min-height: auto; /* allow vertical auto‑resize */
+    height: 100%;     /* stretch to fill grid-assigned rows */
+    display: flex;    /* enables spacer to grow */
+    flex: 1 1 auto;
+    flex-direction: column;
     border-radius: 0 0 16px 16px;
     overflow: hidden;
   }
@@ -1438,6 +1455,15 @@ class YetAnotherMediaPlayerCard extends i {
     opacity: 0;
     pointer-events: none;
   }
+
+  /* Stretch the lower content to fill the card so flex‑grown elements
+     like .card-artwork-spacer can expand and consume extra vertical space */
+  .card-lower-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
     /* Force white text for important UI elements */
     .details,
     .title,
@@ -1463,7 +1489,7 @@ class YetAnotherMediaPlayerCard extends i {
   }
   .card-lower-content.collapsed .collapsed-artwork-container {
     position: absolute;
-    top: 0;
+    top: 10px;
     right: 18px;
     width: 110px;
     height: calc(100% - 120px);
@@ -1492,14 +1518,6 @@ class YetAnotherMediaPlayerCard extends i {
   .card-lower-content.collapsed .controls-row {
     max-width: calc(100% - 120px); /* Leaves room for floating artwork + margin */
     margin-right: 110px;            /* Visually lines up with artwork edge */
-  }
-  .card-lower-content-container {
-    min-height: 0 !important;
-    height: 100%;
-  }
-  .card-lower-content.collapsed .card-lower-content-container {
-    min-height: 0 !important;
-    height: 120px !important;
   }
   .card-lower-content-bg {
     height: 100% !important;
@@ -1564,6 +1582,19 @@ class YetAnotherMediaPlayerCard extends i {
       }
     }, 0);
     this._collapseTimeout = null;
+    // Track previous collapsed state so we can emit resize when it changes
+    this._prevCollapsed = null;
+  }
+
+  /**
+   * Notify Home Assistant that our card’s size may have changed so the
+   * Sections‑view grid can recalculate its layout.
+   */
+  _notifyResize() {
+    this.dispatchEvent(new Event("iron-resize", {
+      bubbles: true,
+      composed: true
+    }));
   }
 
   // Extracts the dominant color from an image URL (returns a Promise)
@@ -1710,6 +1741,14 @@ class YetAnotherMediaPlayerCard extends i {
         }
         // If the card is already collapsed (e.g. due to chip switch), do nothing—skip debounce
       }
+    }
+
+    /* ---- Notify HA grid when collapsed state flips ---- */
+    const collapsedNow = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isActuallyCollapsed : false;
+    if (this._prevCollapsed !== collapsedNow) {
+      this._prevCollapsed = collapsedNow;
+      // Tell Home Assistant the card’s height might have changed
+      this._notifyResize();
     }
 
     // Add grab scroll to chip rows after update/render
@@ -1971,8 +2010,8 @@ class YetAnotherMediaPlayerCard extends i {
       this._lastArtworkUrl = artworkUrl;
     }
     return x`
-        <div style="position:relative;">
-          <div style="position:relative; z-index:2;"
+        <ha-card class="yamp-card" style="position:relative;">
+          <div style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
           >
             ${this.entityObjs.length > 1 ? x`
@@ -2183,8 +2222,27 @@ class YetAnotherMediaPlayerCard extends i {
                   ` : E}
             </div>
           </div>
-        </div>
+        </ha-card>
       `;
+  }
+
+  // Home Assistant Sections‑view: provide dynamic grid sizing.
+  // We declare a sensible minimum number of rows but deliberately
+  // omit the `rows` property so the dashboard can freely grow/shrink
+  // the card’s height.  This allows true vertical responsiveness.
+  getGridOptions() {
+    // Use the same logic as in render() to know if the card is collapsed.
+    const collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isActuallyCollapsed : false;
+
+    // Ensure the card never becomes smaller than this:
+    // – 2 rows when collapsed  (≈ 120 px)
+    // – 4 rows when expanded   (≈ 248 px)
+    const minRows = collapsed ? 2 : 4;
+    return {
+      min_rows: minRows,
+      // Keep the default full‑width behaviour explicit.
+      columns: 12
+    };
   }
   firstUpdated() {
     var _super$firstUpdated;

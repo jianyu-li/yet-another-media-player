@@ -45,6 +45,11 @@ You can use music assistant actions in conjunction with "current" as the entity 
 | `always_collapsed` | boolean | No | This will keep the card in collapsed or "mini" mode even when something is playing |
 | `volume_entity` | string | No | Use this to specify a separate entity from the player to control volume |
 
+## Config Examples
+
+### Full Example 
+Customize entities using name and volume_entity (sets a different entity for volume control) arguments. 
+
 ```yaml
 type: custom:yet-another-media-player
 entities:
@@ -53,6 +58,7 @@ entities:
   - media_player.kitchen_homepod
   - entity_id: media_player.living_room_apple_tv
     volume_entity: media_player.living_room_sonos
+    name: Living Room
   - media_player.bedroom
   - media_player.entryway_speaker
 actions:
@@ -62,10 +68,13 @@ actions:
       entity_id: current
       media_id: apple_music://playlist/pl.3cb881c4590341fabc374f003afaf2b4
       enqueue: replace
-volume_mode: slider
 match_theme: true
+volume_mode: slider
+collapse_on_idle: true
+always_collapsed: false
 ```
 
+### Custom Actions
 You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
 
 ```yaml
@@ -83,7 +92,7 @@ actions:
 ```
 
 
-
+### Input Source Actions (Icon Only)
 With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also available on HACS), you can set up source actions with the providers logo.
 
 ```yaml
@@ -104,6 +113,8 @@ actions:
       entity_id: current
       source: Hulu
 ```
+
+### Radio Station Service Action
 Example action for playing a radio station on [Chromecast](https://www.home-assistant.io/integrations/cast/). This also pushes an image to chromecast devices with a screen with the station (submitted by @rafaelmagic). 
 
 ```yaml
@@ -122,14 +133,36 @@ Example action for playing a radio station on [Chromecast](https://www.home-assi
           - url: https://cdn-profiles.tunein.com/s37062/images/logod.jpg
 ```
 
+## Card Mod Examples
 
-You can update the name of the media player entity like the following. 
+### Decrease Height
+You must adjust the ha-card height as well as .card-artwork-spacer min-height, see example: 
+```
+card_mod:
+  style: |
+    ha-card {
+      height: 300px !important;
+    }
+    .card-artwork-spacer {
+      min-height: 0px !important;
+      }
+```
 
+### Increase Height
+You must adjust the ha-card height as well as .card-artwork-spacer min-height, see example: 
 ```
-entities:
-  - entity_id: media_player.living_room_2
-    name: Living
+card_mod:
+  style: |
+    ha-card {
+      height: 700px !important;
+    }
+    .card-artwork-spacer {
+      min-height: 0px !important;
+      }
 ```
+
+
+
 
 ## Notes
 
