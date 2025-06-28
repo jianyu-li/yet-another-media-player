@@ -92,8 +92,9 @@ actions:
 ```
 
 
-### Input Source Actions (Icon Only)
+### Input Source Actions
 With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also available on HACS), you can set up source actions with the providers logo.
+Use the "name" argument to include a name or leave it off for icon only
 
 ```yaml
 actions:
