@@ -176,6 +176,8 @@ card_mod:
     }
 ```
 
+![Preview Image Background](/Preview/Card-Mod-Background.png)
+
 ## Notes
 
 - When an entity is manually selected it will be pinned in place and will not auto-switch to the more recently playing entity for that session. Tap or click the pin icon that appears to unpin the entity.
