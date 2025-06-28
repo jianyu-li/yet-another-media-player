@@ -716,6 +716,7 @@ o === null || o === void 0 || o({
 
 const SUPPORT_PREVIOUS_TRACK = 16;
 const SUPPORT_NEXT_TRACK = 32;
+const SUPPORT_TURN_ON = 128;
 const SUPPORT_TURN_OFF = 256;
 const SUPPORT_STOP = 4096;
 const SUPPORT_SHUFFLE = 32768;
@@ -733,11 +734,7 @@ class YetAnotherMediaPlayerCard extends i {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
 
-  /**
-   * Determines whether the Stop button should be shown.
-   * Only displays if the STOP feature is supported and there is horizontal space.
-   * On desktop/wide screens, always shows if supported. On narrow/mobile, only if controls fit.
-   */
+  // Determines whether the Stop button should be shown.
   _shouldShowStopButton(stateObj) {
     var _this$renderRoot;
     if (!this._supportsFeature(stateObj, SUPPORT_STOP)) return false;
@@ -756,7 +753,7 @@ class YetAnotherMediaPlayerCard extends i {
     if (this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
     if (this._supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
     if (this._supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
-    if (this._supportsFeature(stateObj, SUPPORT_TURN_OFF)) count++;
+    if (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
     return count;
   }
   get sortedEntityIds() {
@@ -1586,10 +1583,7 @@ class YetAnotherMediaPlayerCard extends i {
     this._prevCollapsed = null;
   }
 
-  /**
-   * Notify Home Assistant that our card’s size may have changed so the
-   * Sections‑view grid can recalculate its layout.
-   */
+  // Notify Home Assistant that the cards size may have changed so the sections‑view grid can recalculate its layout.
   _notifyResize() {
     this.dispatchEvent(new Event("iron-resize", {
       bubbles: true,
@@ -1652,10 +1646,7 @@ class YetAnotherMediaPlayerCard extends i {
     });
   }
 
-  /**
-   * Returns the entity_id to use for volume controls for the given index.
-   * If a volume_entity is specified for the entity, use that instead.
-   */
+  // Returns the entity_id to use for volume controls for the given index, if a volume_entity is specified for the entity, use that instead.
   _getVolumeEntity(idx) {
     const obj = this.entityObjs[idx];
     return obj && obj.volume_entity ? obj.volume_entity : obj.entity_id;
@@ -1747,7 +1738,7 @@ class YetAnotherMediaPlayerCard extends i {
     const collapsedNow = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isActuallyCollapsed : false;
     if (this._prevCollapsed !== collapsedNow) {
       this._prevCollapsed = collapsedNow;
-      // Tell Home Assistant the card’s height might have changed
+      // Tell Home Assistant the cards height might have changed
       this._notifyResize();
     }
 
@@ -1777,8 +1768,7 @@ class YetAnotherMediaPlayerCard extends i {
       // Find dropdown and button in shadow DOM
       const dropdown = this.renderRoot.querySelector('.source-dropdown');
       const btn = this.renderRoot.querySelector('.source-menu-btn');
-      // If click/tap is not inside dropdown or button, close
-      // evt.composedPath() includes shadow DOM path
+      // If click/tap is not inside dropdown or button, close, evt.composedPath() includes shadow DOM path
       const path = evt.composedPath ? evt.composedPath() : [];
       if (dropdown && path.includes(dropdown) || btn && path.includes(btn)) {
         return;
@@ -1891,10 +1881,14 @@ class YetAnotherMediaPlayerCard extends i {
           break;
         }
       case "power":
-        this.hass.callService("media_player", "turn_off", {
-          entity_id: entity
-        });
-        break;
+        {
+          // Toggle between turn_on and turn_off based on current state
+          const svc = stateObj.state === "off" ? "turn_on" : "turn_off";
+          this.hass.callService("media_player", svc, {
+            entity_id: entity
+          });
+          break;
+        }
     }
   }
   _onVolumeChange(e) {
@@ -2167,8 +2161,12 @@ class YetAnotherMediaPlayerCard extends i {
                       <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
                     </button>
                   ` : E}
-                  ${this._supportsFeature(stateObj, SUPPORT_TURN_OFF) ? x`
-                    <button class="button" @click=${() => this._onControlClick("power")} title="Power">
+                  ${this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON) ? x`
+                    <button
+                      class="button${stateObj.state !== "off" ? " active" : ""}"
+                      @click=${() => this._onControlClick("power")}
+                      title="Power"
+                    >
                       <ha-icon .icon=${"mdi:power"}></ha-icon>
                     </button>
                   ` : E}
@@ -2226,17 +2224,10 @@ class YetAnotherMediaPlayerCard extends i {
       `;
   }
 
-  // Home Assistant Sections‑view: provide dynamic grid sizing.
-  // We declare a sensible minimum number of rows but deliberately
-  // omit the `rows` property so the dashboard can freely grow/shrink
-  // the card’s height.  This allows true vertical responsiveness.
+  // Home assistant layout options
   getGridOptions() {
     // Use the same logic as in render() to know if the card is collapsed.
     const collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isActuallyCollapsed : false;
-
-    // Ensure the card never becomes smaller than this:
-    // – 2 rows when collapsed  (≈ 120 px)
-    // – 4 rows when expanded   (≈ 248 px)
     const minRows = collapsed ? 2 : 4;
     return {
       min_rows: minRows,
@@ -2254,7 +2245,7 @@ class YetAnotherMediaPlayerCard extends i {
     let isDown = false;
     let startX, scrollLeft;
     // Add a _dragged property to track if a drag occurred
-    // Always allow dragging, even if starting on a button
+
     row.addEventListener('mousedown', e => {
       isDown = true;
       row._dragged = false;
@@ -2414,7 +2405,7 @@ class YetAnotherMediaPlayerEditor extends i {
       }
       return "(invalid entity)";
     });
-    // Show a simple list above the form
+    // Show list above the form
     const configForEditor = {
       ...this.config,
       entities: this.config.entities

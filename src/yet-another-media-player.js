@@ -49,7 +49,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
     if (this._supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
     if (this._supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
-    if (this._supportsFeature(stateObj, SUPPORT_TURN_OFF)) count++;
+    if (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) ||
+        this._supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
     return count;
   }
   get sortedEntityIds() {
@@ -1184,9 +1185,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this.hass.callService("media_player", "repeat_set", { entity_id: entity, repeat: next });
         break;
       }
-      case "power":
-        this.hass.callService("media_player", "turn_off", { entity_id: entity });
+      case "power": {
+        // Toggle between turn_on and turn_off based on current state
+        const svc = stateObj.state === "off" ? "turn_on" : "turn_off";
+        this.hass.callService("media_player", svc, { entity_id: entity });
         break;
+      }
     }
   }
 
@@ -1482,8 +1486,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       }></ha-icon>
                     </button>
                   ` : nothing}
-                  ${this._supportsFeature(stateObj, SUPPORT_TURN_OFF) ? html`
-                    <button class="button" @click=${() => this._onControlClick("power")} title="Power">
+                  ${
+                    (
+                      this._supportsFeature(stateObj, SUPPORT_TURN_OFF) ||
+                      this._supportsFeature(stateObj, SUPPORT_TURN_ON)
+                    ) ? html`
+                    <button
+                      class="button${stateObj.state !== "off" ? " active" : ""}"
+                      @click=${() => this._onControlClick("power")}
+                      title="Power"
+                    >
                       <ha-icon .icon=${"mdi:power"}></ha-icon>
                     </button>
                   ` : nothing}
