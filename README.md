@@ -161,8 +161,20 @@ card_mod:
       }
 ```
 
-
-
+### Update Background Image
+```
+card_mod:
+  style: |
+    ha-card {
+      background-image: url('/local/image/background_dawn.png') !important;
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+    }
+    .media-artwork-placeholder {
+      display: none !important /* optionally hide the placeholder image */
+    }
+```
 
 ## Notes
 
