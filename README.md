@@ -60,6 +60,7 @@ entities:
   - entity_id: media_player.living_room_apple_tv
     volume_entity: media_player.living_room_sonos
     name: Living Room
+    sync_power: true
   - media_player.bedroom
   - media_player.entryway_speaker
 actions:
