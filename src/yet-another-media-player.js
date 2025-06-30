@@ -932,7 +932,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return this.config.entities.map(e =>
       typeof e === "string"
         ? { entity_id: e, name: "" }
-        : { entity_id: e.entity_id, name: e.name || "", volume_entity: e.volume_entity }
+        : {
+            entity_id: e.entity_id,
+            name: e.name || "",
+            volume_entity: e.volume_entity,
+            sync_power: !!e.sync_power
+          }
     );
   }
 
@@ -1189,6 +1194,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Toggle between turn_on and turn_off based on current state
         const svc = stateObj.state === "off" ? "turn_on" : "turn_off";
         this.hass.callService("media_player", svc, { entity_id: entity });
+
+        // Also toggle volume_entity if sync_power is enabled for this entity
+        const obj = this.entityObjs[this._selectedIndex];
+        if (
+          obj &&
+          obj.sync_power &&
+          obj.volume_entity &&
+          obj.volume_entity !== obj.entity_id
+        ) {
+          this.hass.callService("media_player", svc, { entity_id: obj.volume_entity });
+        }
         break;
       }
     }

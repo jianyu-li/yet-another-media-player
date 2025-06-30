@@ -1642,7 +1642,8 @@ class YetAnotherMediaPlayerCard extends i {
     } : {
       entity_id: e.entity_id,
       name: e.name || "",
-      volume_entity: e.volume_entity
+      volume_entity: e.volume_entity,
+      sync_power: !!e.sync_power
     });
   }
 
@@ -1887,6 +1888,14 @@ class YetAnotherMediaPlayerCard extends i {
           this.hass.callService("media_player", svc, {
             entity_id: entity
           });
+
+          // Also toggle volume_entity if sync_power is enabled for this entity
+          const obj = this.entityObjs[this._selectedIndex];
+          if (obj && obj.sync_power && obj.volume_entity && obj.volume_entity !== obj.entity_id) {
+            this.hass.callService("media_player", svc, {
+              entity_id: obj.volume_entity
+            });
+          }
           break;
         }
     }
