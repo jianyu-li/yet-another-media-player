@@ -12,6 +12,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
 - Action buttons run any Home Assistant service or script 
+  - Pass currently selected entity to a script
 - Use "current" for the entity_id to reference the currently selected media player (see example below)
 - Set match_theme to TRUE to have the cards accent colors follow your selected accent theme color
 - Use collapse_on_idle to collapse the card down when nothing is playing. This looks great on mobile!
@@ -40,6 +41,7 @@ You can use music assistant actions in conjunction with "current" as the entity 
 | `type`    | string | Yes      | custom:yet-another-media-player     |
 | `entities`     | string | Yes       | List of your media player entities            |
 | `actions`   | string | No      | Use any home assistant service here. Use "current" as the entity_id to target the currently selected media player    |
+| `script_variable` | boolean | No | Passes the currently selected entity_id to be used in a script (see example below) |
 | `match_theme`| boolean | No | Updates the cards accent colors to match your home assistant theme |
 | `collapse_on_idle` | boolean | No | When nothing is playing, card collapses to save space (great on mobile) | 
 | `always_collapsed` | boolean | No | This will keep the card in collapsed or "mini" mode even when something is playing |
@@ -93,6 +95,34 @@ actions:
     service: script.play_bluey_on_living    
 ```
 
+## Passing Current Entity to a Script
+
+# Example YAML config
+```yaml
+type: custom:yet-another-media-player-beta
+entities:
+  - media_player.office_speaker_airplay
+actions:
+  - name: test
+    icon: mdi:music
+    service: script.test_music
+    script_variable: true
+```    
+
+# Example Script
+```yaml
+alias: test_music
+mode: single
+fields:
+  yamp_entity:
+    description: Target media player
+sequence:
+  - service: music_assistant.play_media
+    data:
+      entity_id: "{{ yamp_entity }}"
+      media_id: apple_music://playlist/pl.6a236667fbc046a49b48ea9cf4e8b639
+      enqueue: replace
+```  
 
 ### Input Source Actions
 With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also available on HACS), you can set up source actions with the providers logo.

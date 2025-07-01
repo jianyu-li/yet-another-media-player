@@ -1378,12 +1378,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Clone the service data
     let data = { ...(action.service_data || {}) };
 
-    // Replace entity_id "current" (or similar placeholder) with currentEntityId
-    if (
-      data.entity_id === "current" ||
-      data.entity_id === "$current" ||
-      data.entity_id === "this" ||
-      !data.entity_id // Optionally default if omitted
+    // For script calls **and** `script_variable: true`, inject `yamp_entity` and omit `entity_id` to avoid invalid IDs.
+    if (domain === "script" && action.script_variable === true) {
+      const currentId = this.currentEntityId;
+
+      // Remove any placeholder entity_id the user might have supplied
+      if (
+        data.entity_id === "current" ||
+        data.entity_id === "$current" ||
+        data.entity_id === "this"
+      ) {
+        delete data.entity_id;
+      }
+
+      data.yamp_entity = currentId;
+    } else if (
+      !(domain === "script" && action.script_variable === true) &&
+      (
+        data.entity_id === "current" ||
+        data.entity_id === "$current" ||
+        data.entity_id === "this" ||
+        !data.entity_id // Optionally default if omitted
+      )
     ) {
       data.entity_id = this.currentEntityId;
     }
