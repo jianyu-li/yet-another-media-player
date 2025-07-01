@@ -7,12 +7,11 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 ## Features
 
 - Switch between multiple media players in a single card using chips
-- Custom chip/entity names via YAML
+- Group players
 - Separate volume entity via YAML
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
 - Action buttons run any Home Assistant service or script 
-- Add icons to custom actions to differentiate types (e.g.: playlist versus tv script)
 - Use "current" for the entity_id to reference the currently selected media player (see example below)
 - Set match_theme to TRUE to have the cards accent colors follow your selected accent theme color
 - Use collapse_on_idle to collapse the card down when nothing is playing. This looks great on mobile!
@@ -26,6 +25,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 ![Preview Image Collapsed](/Preview/collapsed.png)
 ![Preview Image Movie](/Preview/movie.png)
 ![Preview Image No Icon](/Preview/NoIcons.png)
+![Preview Image Grouping](/Preview/grouping.gif)
 
 ---
 

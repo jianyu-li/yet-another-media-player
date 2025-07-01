@@ -720,6 +720,7 @@ const SUPPORT_TURN_ON = 128;
 const SUPPORT_TURN_OFF = 256;
 const SUPPORT_STOP = 4096;
 const SUPPORT_SHUFFLE = 32768;
+const SUPPORT_GROUPING = 524288;
 const SUPPORT_REPEAT_SET = 262144;
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -734,22 +735,22 @@ class YetAnotherMediaPlayerCard extends i {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
 
-  // Determines whether the Stop button should be shown.
+  // Show Stop button if supported and layout allows.
   _shouldShowStopButton(stateObj) {
     var _this$renderRoot;
     if (!this._supportsFeature(stateObj, SUPPORT_STOP)) return false;
-    // Allow stop if card is wider than 480px or if there are 5 or fewer controls present.
+    // Show if wide layout or few controls.
     const row = (_this$renderRoot = this.renderRoot) === null || _this$renderRoot === void 0 ? void 0 : _this$renderRoot.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
     const controls = this._countMainControls(stateObj);
-    // If wide, show stop; if not, only show if there are 5 or fewer controls.
+    // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
   _countMainControls(stateObj) {
     let count = 0;
     if (this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
-    count++; // Play/Pause (always rendered)
+    count++;
     if (this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
     if (this._supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
     if (this._supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
@@ -762,6 +763,23 @@ class YetAnotherMediaPlayerCard extends i {
       const tB = this._playTimestamps[b] || 0;
       return tB - tA;
     });
+  }
+
+  // Return array of groups, ordered by most recent play
+  get groupedSortedEntityIds() {
+    if (!this.entityIds || !Array.isArray(this.entityIds)) return [];
+    const map = {};
+    for (const id of this.entityIds) {
+      const key = this._getGroupKey(id);
+      if (!map[key]) map[key] = {
+        ids: [],
+        ts: 0
+      };
+      map[key].ids.push(id);
+      map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
+    }
+    return Object.values(map).sort((a, b) => b.ts - a.ts) // sort groups by recency
+    .map(g => g.ids.sort()); // sort ids alphabetically inside each group
   }
   static properties = {
     hass: {},
@@ -1146,6 +1164,20 @@ class YetAnotherMediaPlayerCard extends i {
         color: #fff;
         opacity: 1;
       }
+  /* Grouped master chip shows a count instead of artwork/icon */
+  .chip-icon.group-icon {
+    background: var(--custom-accent);
+    color: #fff !important;
+    position: relative;
+  }
+  .group-count {
+    font-weight: 700;
+    font-size: 0.9em;
+    line-height: 28px; /* matches .chip-icon width */
+    text-align: center;
+    width: 100%;
+    color: inherit;
+  }
     .media-artwork-bg {
       position: relative;
       width: 100%;
@@ -1547,6 +1579,111 @@ class YetAnotherMediaPlayerCard extends i {
     transition: width 0.2s linear;
     pointer-events: none;
   }
+  /* === Entity Options Overlay Styles === */
+  .entity-options-overlay {
+    position: absolute;
+    left: 0; right: 0; bottom: 0; top: 0;
+    z-index: 30;
+    background: rgba(15,18,30,0.58);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: entityOptionsFadeIn 0.23s;
+  }
+  @keyframes entityOptionsFadeIn {
+    from { background: rgba(0,0,0,0); }
+    to { background: rgba(0,0,0,0.22); }
+  }
+  .entity-options-sheet {
+    background: none;
+    border-radius: 16px 16px 0 0;
+    box-shadow: none;
+    width: 96%;
+    max-width: 430px;
+    margin-bottom: 2.5%;
+    padding: 28px 18px 18px 18px;
+    transform: translateY(100%);
+    animation: entityOptionsSlideUp 0.3s cubic-bezier(0.5,1.3,0.4,1) forwards;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  @keyframes entityOptionsSlideUp {
+    from { transform: translateY(110%); }
+    to { transform: translateY(0); }
+  }
+  .entity-options-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 18px;
+    text-align: center;
+    color: #fff;
+    background: none;
+    text-shadow: 0 2px 8px #0009;
+  }
+  .entity-options-item {
+    background: none;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.12em;
+    font-weight: 500;
+    margin: 10px 0;
+    padding: 18px 0 10px 0;
+    cursor: pointer;
+    transition: color 0.13s, text-shadow 0.13s;
+    text-align: center;
+    text-shadow: 0 2px 8px #0009;
+  }
+
+  .entity-options-item:hover {
+    color: var(--custom-accent, #ff9800) !important;
+    text-shadow: none !important;
+    background: none;
+  }
+
+  .group-toggle-btn {
+    background: none;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15em;
+    line-height: 1;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .group-toggle-btn span,
+  .group-toggle-btn .group-toggle-fix {
+    position: relative;
+    left: 0.5px;
+  }
+  .group-toggle-btn:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* Force white text/icons in the grouping sheet */
+  .entity-options-sheet,
+  .entity-options-sheet * {
+    color: #fff !important;
+  }
+
+  /* Ensure the + / – toggle icon and border are white */
+  .group-toggle-btn {
+    color: #fff !important;
+    border-color: #fff !important;
+  }
+  .group-toggle-btn:hover {
+    background: rgba(255,255,255,0.15);
+  }
 `)();
   constructor() {
     super();
@@ -1558,17 +1695,21 @@ class YetAnotherMediaPlayerCard extends i {
     this._shouldDropdownOpenUp = false;
     this._collapsedArtDominantColor = "#444";
     this._lastArtworkUrl = null;
-    // Progress bar timer
+    // Timer for progress updates
     this._progressTimer = null;
     this._progressValue = null;
     this._lastProgressEntityId = null;
     this._pinnedIndex = null;
-    // Accent color property for custom accent (updated in setConfig)
+    // Accent color, updated in setConfig
     this._customAccent = "#ff9800";
-    // For outside click detection on source dropdown
+    // Outside click handler for source dropdown
     this._sourceDropdownOutsideHandler = null;
     this._isActuallyCollapsed = false;
-    // On initial load, collapse immediately if nothing is playing
+    // Overlay state for entity options
+    this._showEntityOptions = false;
+    // Overlay state for grouping sheet
+    this._showGrouping = false;
+    // Collapse on load if nothing is playing
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
         const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
@@ -1579,11 +1720,11 @@ class YetAnotherMediaPlayerCard extends i {
       }
     }, 0);
     this._collapseTimeout = null;
-    // Track previous collapsed state so we can emit resize when it changes
+    // Store previous collapsed state
     this._prevCollapsed = null;
   }
 
-  // Notify Home Assistant that the cards size may have changed so the sections‑view grid can recalculate its layout.
+  // Notify Home Assistant to recalculate layout
   _notifyResize() {
     this.dispatchEvent(new Event("iron-resize", {
       bubbles: true,
@@ -1591,7 +1732,7 @@ class YetAnotherMediaPlayerCard extends i {
     }));
   }
 
-  // Extracts the dominant color from an image URL (returns a Promise)
+  // Extract dominant color from image
   async _extractDominantColor(imgUrl) {
     return new Promise(resolve => {
       const img = new window.Image();
@@ -1618,7 +1759,7 @@ class YetAnotherMediaPlayerCard extends i {
     this.config = config;
     this._selectedIndex = 0;
     this._lastPlaying = null;
-    // Update custom accent property
+    // Set accent color
 
     if (this.config.match_theme === true) {
       // Try to get CSS var --accent-color
@@ -1630,9 +1771,9 @@ class YetAnotherMediaPlayerCard extends i {
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
-    // collapse_on_idle config option (default to false)
+    // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
-    // always_collapsed config option (default to false)
+    // Force always-collapsed view
     this._alwaysCollapsed = !!config.always_collapsed;
   }
   get entityObjs() {
@@ -1647,19 +1788,108 @@ class YetAnotherMediaPlayerCard extends i {
     });
   }
 
-  // Returns the entity_id to use for volume controls for the given index, if a volume_entity is specified for the entity, use that instead.
+  // Return volume entity for given index (use override if set)
   _getVolumeEntity(idx) {
     const obj = this.entityObjs[idx];
     return obj && obj.volume_entity ? obj.volume_entity : obj.entity_id;
   }
+
+  // Return grouping key
+  _getGroupKey(id) {
+    var _this$hass;
+    const st = (_this$hass = this.hass) === null || _this$hass === void 0 || (_this$hass = _this$hass.states) === null || _this$hass === void 0 ? void 0 : _this$hass[id];
+    if (!st) return id;
+    const members = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
+    if (!members.length) return id;
+    const all = [id, ...members].sort();
+    return all[0];
+  }
   get entityIds() {
     return this.entityObjs.map(e => e.entity_id);
   }
+
+  // Return display name for a chip/entity
   getChipName(entity_id) {
     const obj = this.entityObjs.find(e => e.entity_id === entity_id);
     if (obj && obj.name) return obj.name;
     const state = this.hass.states[entity_id];
     return (state === null || state === void 0 ? void 0 : state.attributes.friendly_name) || entity_id;
+  }
+
+  // Render a chip for an entity (safe if state is missing)
+  _renderChip(id) {
+    var _this$hass2, _state$attributes, _state$attributes2, _state$attributes3;
+    const idx = this.entityIds.indexOf(id);
+    const state = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[id];
+    const isPlaying = (state === null || state === void 0 ? void 0 : state.state) === "playing";
+    const art = isPlaying && ((state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art));
+    const icon = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.icon) || "mdi:cast";
+    return x`
+      <button class="chip"
+              ?selected=${this.currentEntityId === id}
+              ?playing=${isPlaying}
+              @click=${() => this._onChipClick(idx)}>
+        <span class="chip-icon">
+          ${art ? x`<img class="chip-mini-art" src="${art}" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+        </span>
+        ${this._pinnedIndex === idx ? x`
+          <span class="chip-pin" @click=${e => this._onPinClick(e)} title="Unpin">
+            <ha-icon .icon=${"mdi:pin"}></ha-icon>
+          </span>
+        ` : E}
+        ${this.getChipName(id)}
+      </button>
+    `;
+  }
+
+  // Return group master (includes all others in group_members)
+  _getActualGroupMaster(group) {
+    if (!this.hass || !group || group.length < 2) return group[0];
+    return group.find(id => {
+      const st = this.hass.states[id];
+      if (!st) return false;
+      const members = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
+      // Master should include all other group members in the group
+      return group.every(otherId => otherId === id || members.includes(otherId));
+    }) || group[0];
+  }
+
+  // Render group chip (shows count instead of icon, opens group sheet)
+  _renderGroupChip(group) {
+    var _this$hass3;
+    const id = this._getActualGroupMaster(group); // true group master if possible
+    const idx = this.entityIds.indexOf(id);
+    const state = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
+    const isPlaying = (state === null || state === void 0 ? void 0 : state.state) === "playing";
+    const count = group.length; // total players in the group
+
+    return x`
+      <button class="chip"
+              ?selected=${this.currentEntityId === id}
+              ?playing=${isPlaying}
+              @click=${() => this._onChipClick(idx)}>
+        <span class="chip-icon group-icon"
+              @click=${e => {
+      e.stopPropagation();
+      const idx = this.entityIds.indexOf(id);
+      if (idx >= 0) {
+        this._selectedIndex = idx;
+        this._manualSelect = true;
+        this._pinnedIndex = idx;
+      }
+      this._openGrouping();
+    }}
+              title="Show grouped players">
+          <span class="group-count">${count}</span>
+        </span>
+        ${this._pinnedIndex === idx ? x`
+          <span class="chip-pin" @click=${e => this._onPinClick(e)} title="Unpin">
+            <ha-icon .icon=${"mdi:pin"}></ha-icon>
+          </span>
+        ` : E}
+        ${this.getChipName(id)}
+      </button>
+    `;
   }
   get currentEntityId() {
     return this.entityIds[this._selectedIndex];
@@ -1676,7 +1906,7 @@ class YetAnotherMediaPlayerCard extends i {
   updated(changedProps) {
     var _super$updated;
     if (this.hass && this.entityIds) {
-      // Update play timestamps for entities that are playing
+      // Update timestamps for playing entities
       this.entityIds.forEach(id => {
         const state = this.hass.states[id];
         if (state && state.state === "playing") {
@@ -1684,9 +1914,9 @@ class YetAnotherMediaPlayerCard extends i {
         }
       });
 
-      // Only auto-switch if not manually pinned
+      // Auto-switch unless manually pinned
       if (!this._manualSelect) {
-        // Find the most recently playing entity
+        // Switch to most recent if applicable
         const sortedIds = this.sortedEntityIds;
         if (sortedIds.length > 0) {
           const mostRecentId = sortedIds[0];
@@ -1698,7 +1928,7 @@ class YetAnotherMediaPlayerCard extends i {
       }
     }
 
-    // Progress bar timer logic
+    // Restart progress timer
     (_super$updated = super.updated) === null || _super$updated === void 0 || _super$updated.call(this, changedProps);
     if (this._progressTimer) {
       clearInterval(this._progressTimer);
@@ -1711,7 +1941,7 @@ class YetAnotherMediaPlayerCard extends i {
       }, 500);
     }
 
-    // Collapse debounce logic for collapse_on_idle
+    // Debounce collapse if idle
     if (this._collapseOnIdle) {
       const stateObj = this.currentStateObj;
       if (stateObj && stateObj.state === "playing") {
@@ -1735,11 +1965,11 @@ class YetAnotherMediaPlayerCard extends i {
       }
     }
 
-    /* ---- Notify HA grid when collapsed state flips ---- */
+    // Notify HA if collapsed state changes
     const collapsedNow = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isActuallyCollapsed : false;
     if (this._prevCollapsed !== collapsedNow) {
       this._prevCollapsed = collapsedNow;
-      // Tell Home Assistant the cards height might have changed
+      // Trigger layout update
       this._notifyResize();
     }
 
@@ -1754,7 +1984,7 @@ class YetAnotherMediaPlayerCard extends i {
       setTimeout(() => {
         this._shouldDropdownOpenUp = true;
         this.requestUpdate();
-        // Add outside click/touch handler after dropdown is rendered
+        // Setup outside click handler
         this._addSourceDropdownOutsideHandler();
       }, 0);
     } else {
@@ -1901,19 +2131,32 @@ class YetAnotherMediaPlayerCard extends i {
     }
   }
   _onVolumeChange(e) {
-    const entity = this._getVolumeEntity(this._selectedIndex);
-    if (!entity) return;
+    var _state$attributes4;
+    const idx = this._selectedIndex;
+    const mainEntity = this.entityObjs[idx].entity_id;
+    const state = this.hass.states[mainEntity];
     const vol = Number(e.target.value);
-    // Clear previous debounce timer if any
-    if (this._debouncedVolumeTimer) clearTimeout(this._debouncedVolumeTimer);
-    // Debounce service call
-    this._debouncedVolumeTimer = setTimeout(() => {
+
+    // Determine group members (including self) for group chips
+    let targets;
+    if (Array.isArray(state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.group_members) && state.attributes.group_members.length) {
+      // Group master: update all members AND self
+      targets = [mainEntity, ...state.attributes.group_members];
+    } else {
+      // Not grouped: use volume_entity as before
+      targets = [mainEntity];
+    }
+
+    // For each target, use its own volume_entity override if present
+    for (const t of targets) {
+      // Find the corresponding config object (if any)
+      const obj = this.entityObjs.find(e => e.entity_id === t);
+      const volTarget = obj && obj.volume_entity ? obj.volume_entity : t;
       this.hass.callService("media_player", "volume_set", {
-        entity_id: entity,
+        entity_id: volTarget,
         volume_level: vol
       });
-      this._debouncedVolumeTimer = null;
-    }, 250);
+    }
   }
   _onVolumeStep(direction) {
     const entity = this._getVolumeEntity(this._selectedIndex);
@@ -2019,51 +2262,7 @@ class YetAnotherMediaPlayerCard extends i {
           >
             ${this.entityObjs.length > 1 ? x`
               <div class="chip-row">
-                ${this.sortedEntityIds.map(id => {
-      const configIdx = this.entityIds.indexOf(id);
-      this.entityObjs[configIdx];
-      const state = this.hass.states[id];
-      const isPlaying = state && state.state === "playing";
-      let miniArt = null;
-      if (isPlaying && (state !== null && state !== void 0 && state.attributes.entity_picture || state !== null && state !== void 0 && state.attributes.album_art)) {
-        miniArt = state.attributes.entity_picture || state.attributes.album_art;
-      }
-      const entityIcon = (state === null || state === void 0 ? void 0 : state.attributes.icon) || "mdi:cast";
-      return x`
-                    <button
-                      class="chip"
-                      ?selected=${this.currentEntityId === id}
-                      ?playing=${isPlaying}
-                      @click=${() => this._onChipClick(configIdx)}
-                      @mousedown=${e => {
-        var _this$_handleChipTouc;
-        return (_this$_handleChipTouc = this._handleChipTouchStart) === null || _this$_handleChipTouc === void 0 ? void 0 : _this$_handleChipTouc.call(this, e, id);
-      }}
-                      @mouseup=${e => {
-        var _this$_handleChipTouc2;
-        return (_this$_handleChipTouc2 = this._handleChipTouchEnd) === null || _this$_handleChipTouc2 === void 0 ? void 0 : _this$_handleChipTouc2.call(this, e, id);
-      }}
-                      @touchstart=${e => {
-        var _this$_handleChipTouc3;
-        return (_this$_handleChipTouc3 = this._handleChipTouchStart) === null || _this$_handleChipTouc3 === void 0 ? void 0 : _this$_handleChipTouc3.call(this, e, id);
-      }}
-                      @touchend=${e => {
-        var _this$_handleChipTouc4;
-        return (_this$_handleChipTouc4 = this._handleChipTouchEnd) === null || _this$_handleChipTouc4 === void 0 ? void 0 : _this$_handleChipTouc4.call(this, e, id);
-      }}
-                    >
-                      <span class="chip-icon">
-                        ${miniArt ? x`<img class="chip-mini-art" src="${miniArt}" alt="artwork" />` : x`<ha-icon .icon=${entityIcon} style="font-size: 28px;"></ha-icon>`}
-                      </span>
-                      ${this.getChipName(id)}
-                      ${this._manualSelect && this._pinnedIndex === configIdx ? x`
-                            <button class="chip-pin" title="Unpin and resume auto-switch" @click=${e => this._onPinClick(e)}>
-                              <ha-icon .icon=${"mdi:pin"}></ha-icon>
-                            </button>
-                          ` : E}
-                    </button>
-                  `;
-    })}
+                ${this.groupedSortedEntityIds.map(group => group.length > 1 ? x`${this._renderGroupChip(group)}` : x`${this._renderChip(group[0])}`)}
               </div>
             ` : E}
             ${this.config.actions && this.config.actions.length ? x`
@@ -2199,11 +2398,6 @@ class YetAnotherMediaPlayerCard extends i {
                           <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
                         </div>
                       `}
-                  <div class="media-browser-menu">
-                    <button class="media-browser-btn" @click=${() => this._openMediaBrowser()}>
-                      <ha-icon .icon=${(stateObj === null || stateObj === void 0 ? void 0 : stateObj.attributes.icon) || 'mdi:cast'}></ha-icon>
-                    </button>
-                  </div>
                   ${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 && !collapsed ? x`
                     <div class="source-menu">
                       <button class="source-menu-btn" @click=${() => this._toggleSourceMenu()}>
@@ -2221,6 +2415,11 @@ class YetAnotherMediaPlayerCard extends i {
                       ` : E}
                     </div>
                   ` : E}
+                  <div class="media-browser-menu">
+                    <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
+                      <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               ${collapsed && isPlaying && duration ? x`
@@ -2229,6 +2428,54 @@ class YetAnotherMediaPlayerCard extends i {
                   ` : E}
             </div>
           </div>
+          ${this._showEntityOptions ? x`
+          <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
+            <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
+              ${!this._showGrouping ? x`
+                <button class="entity-options-item" @click=${() => this._triggerMoreInfo()}>More Info</button>
+                ${this._supportsFeature(this.currentStateObj, SUPPORT_GROUPING) ? x`
+                  <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
+                ` : E}
+                <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
+              ` : x`
+                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
+                ${
+    // Group All/Ungroup All dynamic button logic
+    (_masterState$attribut => {
+      const masterState = this.hass.states[this.currentEntityId];
+      const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) && masterState.attributes.group_members.length > 0;
+      return x`
+                      <div style="display:flex;align-items:center;justify-content:flex-end;font-weight:600;margin-bottom:0;">
+                        <button class="group-all-btn"
+                          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
+                          style="color:#d22; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
+                          ${groupedAny ? "Ungroup All" : "Group All"}
+                        </button>
+                      </div>
+                    `;
+    })()}
+                <hr style="margin:8px 0 2px 0;opacity:0.19;border:0;border-top:1px solid #fff;" />
+                ${this.entityIds.filter(id => id !== this.currentEntityId).map(id => {
+      const st = this.hass.states[id];
+      if (!this._supportsFeature(st, SUPPORT_GROUPING)) return E; // skip unsupported targets
+      const name = this.getChipName(id);
+      const masterState = this.hass.states[this.currentEntityId];
+      const grouped = Array.isArray(masterState.attributes.group_members) && masterState.attributes.group_members.includes(id);
+      return x`
+                      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px;">
+                        <span>${name}</span>
+                        <button class="group-toggle-btn"
+                                @click=${() => this._toggleGroup(id)}
+                                title=${grouped ? "Unjoin" : "Join"}>
+                          <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
+                        </button>
+                      </div>
+                    `;
+    })}
+              `}
+            </div>
+          </div>
+        ` : E}
         </ha-card>
       `;
   }
@@ -2253,7 +2500,7 @@ class YetAnotherMediaPlayerCard extends i {
     if (!row || row._grabScrollAttached) return;
     let isDown = false;
     let startX, scrollLeft;
-    // Add a _dragged property to track if a drag occurred
+    // Track drag state to suppress clicks
 
     row.addEventListener('mousedown', e => {
       isDown = true;
@@ -2275,14 +2522,14 @@ class YetAnotherMediaPlayerCard extends i {
       if (!isDown) return;
       const x = e.pageX - row.offsetLeft;
       const walk = x - startX;
-      // If drag distance exceeds 5px, set _dragged to true
+      // Mark as dragged if moved > 5px
       if (Math.abs(walk) > 5) {
         row._dragged = true;
       }
       e.preventDefault();
       row.scrollLeft = scrollLeft - walk;
     });
-    // Prevent click events if a drag occurred
+    // Suppress click after drag
     row.addEventListener('click', e => {
       if (row._dragged) {
         e.stopPropagation();
@@ -2299,7 +2546,7 @@ class YetAnotherMediaPlayerCard extends i {
       clearInterval(this._progressTimer);
       this._progressTimer = null;
     }
-    // Collapse debounce cleanup for collapse_on_idle
+    // Clear collapse debounce
     if (this._collapseTimeout) {
       clearTimeout(this._collapseTimeout);
       this._collapseTimeout = null;
@@ -2310,6 +2557,83 @@ class YetAnotherMediaPlayerCard extends i {
     }
     this._removeSourceDropdownOutsideHandler();
   }
+  // Entity options overlay handlers
+  _closeEntityOptions() {
+    if (this._showGrouping) {
+      // Close the grouping sheet and the overlay
+      this._showGrouping = false;
+      this._showEntityOptions = false;
+      // Auto-select the chip for the group just created (same as _closeGrouping logic)
+      const groups = this.groupedSortedEntityIds;
+      const curId = this.currentEntityId;
+      const group = groups.find(g => g.includes(curId));
+      if (group && group.length > 1) {
+        const master = this._getActualGroupMaster(group);
+        const idx = this.entityIds.indexOf(master);
+        if (idx >= 0) this._selectedIndex = idx;
+      }
+      this.requestUpdate();
+    } else {
+      this._showEntityOptions = false;
+      this._showGrouping = false;
+      this.requestUpdate();
+    }
+  }
+  _openEntityOptions() {
+    this._showEntityOptions = true;
+    this.requestUpdate();
+  }
+  _triggerMoreInfo() {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: {
+        entityId: this.currentEntityId
+      },
+      bubbles: true,
+      composed: true
+    }));
+    this._closeEntityOptions();
+  }
+
+  // Grouping Helper Methods 
+  _openGrouping() {
+    this._showEntityOptions = true; // ensure the overlay is visible
+    this._showGrouping = true; // show grouping sheet immediately
+    this.requestUpdate();
+  }
+  _closeGrouping() {
+    this._showGrouping = false;
+    // Auto-select the chip for the group just created
+    const groups = this.groupedSortedEntityIds;
+    const curId = this.currentEntityId;
+    const group = groups.find(g => g.includes(curId));
+    if (group && group.length > 1) {
+      const master = this._getActualGroupMaster(group);
+      const idx = this.entityIds.indexOf(master);
+      if (idx >= 0) this._selectedIndex = idx;
+    }
+    // No requestUpdate here; overlay close will handle it.
+  }
+  async _toggleGroup(targetId) {
+    const masterId = this.currentEntityId;
+    if (!masterId || !targetId) return;
+    const masterState = this.hass.states[masterId];
+    const grouped = Array.isArray(masterState === null || masterState === void 0 ? void 0 : masterState.attributes.group_members) && masterState.attributes.group_members.includes(targetId);
+    if (grouped) {
+      // Unjoin the target from the group
+      await this.hass.callService("media_player", "unjoin", {
+        entity_id: targetId
+      });
+    } else {
+      // Join the target player to the master's group
+      await this.hass.callService("media_player", "join", {
+        entity_id: masterId,
+        // call on the master
+        group_members: [targetId] // player(s) to add
+      });
+    }
+    // Keep sheet open for more grouping actions
+  }
+
   // Card editor support 
   static getConfigElement() {
     return document.createElement("yet-another-media-player-editor");
@@ -2318,6 +2642,49 @@ class YetAnotherMediaPlayerCard extends i {
     return {
       entities: (entities || []).filter(e => e.startsWith("media_player.")).slice(0, 2)
     };
+  }
+
+  // Group all supported entities to current master
+  async _groupAll() {
+    const masterId = this.currentEntityId;
+    if (!masterId) return;
+    const masterState = this.hass.states[masterId];
+    if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
+
+    // Get all other entities that support grouping and are not already grouped with master
+    const alreadyGrouped = Array.isArray(masterState.attributes.group_members) ? masterState.attributes.group_members : [];
+    const toJoin = this.entityIds.filter(id => id !== masterId).filter(id => {
+      const st = this.hass.states[id];
+      return this._supportsFeature(st, SUPPORT_GROUPING) && !alreadyGrouped.includes(id);
+    });
+    if (toJoin.length > 0) {
+      await this.hass.callService("media_player", "join", {
+        entity_id: masterId,
+        group_members: toJoin
+      });
+    }
+    // Remain in grouping sheet
+  }
+
+  // Ungroup all members from current master
+  async _ungroupAll() {
+    const masterId = this.currentEntityId;
+    if (!masterId) return;
+    const masterState = this.hass.states[masterId];
+    if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
+    const members = Array.isArray(masterState.attributes.group_members) ? masterState.attributes.group_members : [];
+    // Only unjoin those that support grouping
+    const toUnjoin = members.filter(id => {
+      const st = this.hass.states[id];
+      return this._supportsFeature(st, SUPPORT_GROUPING);
+    });
+    // Unjoin each member individually
+    for (const id of toUnjoin) {
+      await this.hass.callService("media_player", "unjoin", {
+        entity_id: id
+      });
+    }
+    // Remain in grouping sheet
   }
 }
 class YetAnotherMediaPlayerEditor extends i {
@@ -2403,14 +2770,14 @@ class YetAnotherMediaPlayerEditor extends i {
     // Display friendly names or entity_ids for all entities/objects
     const entitiesForEditor = (this.config.entities || []).map(e => {
       if (typeof e === "string") {
-        var _this$hass, _state$attributes;
-        const state = (_this$hass = this.hass) === null || _this$hass === void 0 || (_this$hass = _this$hass.states) === null || _this$hass === void 0 ? void 0 : _this$hass[e];
-        return (state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.friendly_name) || e;
+        var _this$hass4, _state$attributes5;
+        const state = (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[e];
+        return (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.friendly_name) || e;
       }
       if (e && typeof e === "object" && e.entity_id) {
-        var _this$hass2, _state$attributes2;
-        const state = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[e.entity_id];
-        return (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.friendly_name) || e.entity_id;
+        var _this$hass5, _state$attributes6;
+        const state = (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[e.entity_id];
+        return (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.friendly_name) || e.entity_id;
       }
       return "(invalid entity)";
     });
