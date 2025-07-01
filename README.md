@@ -7,7 +7,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 ## Features
 
 - Switch between multiple media players in a single card using chips
-- Group players
+- Group supported players
 - Separate volume entity via YAML
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
@@ -186,6 +186,7 @@ card_mod:
 - When an entity is manually selected it will be pinned in place and will not auto-switch to the more recently playing entity for that session. Tap or click the pin icon that appears to unpin the entity.
 - Entity names and separate volume entities are set via YAML. The ui will show "[object Object]" for customized entities
 - Actions can run any home assistant service, not just media services. Specifying "current" in the entity_id field will target the currently selected entity. 
+- Grouping players only works on supported entities, if the entity is not supported the option will not be visible
 
 
 
