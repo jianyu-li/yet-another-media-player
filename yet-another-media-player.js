@@ -1584,7 +1584,7 @@ class YetAnotherMediaPlayerCard extends i {
     position: absolute; /* Now relative to the card, not the page */
     left: 0; right: 0; top: 0; bottom: 0;
     z-index: 30;
-    background: rgba(15,18,30,0.38); /* Subtle darkening for clarity */
+    background: rgba(15,18,30,0.70); /* Increased darkening for clarity */
     display: flex;
     align-items: flex-end;
     justify-content: center;
