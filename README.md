@@ -97,7 +97,7 @@ actions:
 
 ## Passing Current Entity to a Script
 
-# Example YAML config
+### Example YAML config
 ```yaml
 type: custom:yet-another-media-player-beta
 entities:
@@ -109,7 +109,7 @@ actions:
     script_variable: true
 ```    
 
-# Example Script
+### Example Script
 ```yaml
 alias: test_music
 mode: single
