@@ -1579,40 +1579,42 @@ class YetAnotherMediaPlayerCard extends i {
     transition: width 0.2s linear;
     pointer-events: none;
   }
-  /* === Entity Options Overlay Styles === */
+  /* Options overlay is card-contained, not fixed to viewport */
   .entity-options-overlay {
-    position: absolute;
-    left: 0; right: 0; bottom: 0; top: 0;
+    position: absolute; /* Now relative to the card, not the page */
+    left: 0; right: 0; top: 0; bottom: 0;
     z-index: 30;
-    background: rgba(15,18,30,0.58);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
+    background: rgba(15,18,30,0.38); /* Subtle darkening for clarity */
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    animation: entityOptionsFadeIn 0.23s;
+    /* No blur/backdrop, just a hint of background */
   }
-  @keyframes entityOptionsFadeIn {
-    from { background: rgba(0,0,0,0); }
-    to { background: rgba(0,0,0,0.22); }
-  }
+  /* Options sheet is scrollable and clipped to card, not the page */
   .entity-options-sheet {
     background: none;
     border-radius: 16px 16px 0 0;
     box-shadow: none;
-    width: 96%;
+    width: 98%;
     max-width: 430px;
-    margin-bottom: 2.5%;
-    padding: 28px 18px 18px 18px;
-    transform: translateY(100%);
-    animation: entityOptionsSlideUp 0.3s cubic-bezier(0.5,1.3,0.4,1) forwards;
+    margin-bottom: 1.5%;
+    padding: 18px 8px 8px 8px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    /* Sheet max-height is now relative to the card, so scrolling stays inside */
+    max-height: 85%;
+    min-height: 90px;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
   }
-  @keyframes entityOptionsSlideUp {
-    from { transform: translateY(110%); }
-    to { transform: translateY(0); }
+  .entity-options-sheet {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE & Edge Legacy */
+  }
+  .entity-options-sheet::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
   }
   .entity-options-title {
     font-size: 1.1em;
@@ -2433,9 +2435,25 @@ class YetAnotherMediaPlayerCard extends i {
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
               ${!this._showGrouping ? x`
                 <button class="entity-options-item" @click=${() => this._triggerMoreInfo()}>More Info</button>
-                ${this._supportsFeature(this.currentStateObj, SUPPORT_GROUPING) ? x`
-                  <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
-                ` : E}
+                ${
+    // Only show "Group Players" if:
+    // 1. More than one entity on the card, AND
+    // 2. More than one entity supports grouping (including current)
+    (() => {
+      const totalEntities = this.entityIds.length;
+      // Count how many entities on the card support grouping
+      const groupableCount = this.entityIds.reduce((acc, id) => {
+        const st = this.hass.states[id];
+        return acc + (this._supportsFeature(st, SUPPORT_GROUPING) ? 1 : 0);
+      }, 0);
+      // Only render if both conditions are met
+      if (totalEntities > 1 && groupableCount > 1 && this._supportsFeature(this.currentStateObj, SUPPORT_GROUPING)) {
+        return x`
+                        <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
+                      `;
+      }
+      return E;
+    })()}
                 <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
               ` : x`
                 <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
