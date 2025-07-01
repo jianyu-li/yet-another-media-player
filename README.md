@@ -13,7 +13,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
   - Manually selected players will pin in place for the current session until manually removed
 - Action buttons run any Home Assistant service or script 
   - Pass currently selected entity to a script
-- Use "current" for the entity_id to reference the currently selected media player (see example below)
+- Use "current" for the entity_id to reference the currently selected media player ([see example below](https://github.com/jianyu-li/yet-another-media-player#custom-actions))
 - Set match_theme to TRUE to have the cards accent colors follow your selected accent theme color
 - Use collapse_on_idle to collapse the card down when nothing is playing. This looks great on mobile!
 - Use always_collapsed to keep the card collapsed even when something is playing
@@ -41,7 +41,7 @@ You can use music assistant actions in conjunction with "current" as the entity 
 | `type`    | string | Yes      | custom:yet-another-media-player     |
 | `entities`     | string | Yes       | List of your media player entities            |
 | `actions`   | string | No      | Use any home assistant service here. Use "current" as the entity_id to target the currently selected media player    |
-| `script_variable` | boolean | No | Passes the currently selected entity_id to be used in a script (see example below) |
+| `script_variable` | boolean | No | Passes the currently selected entity_id to be used in a script ([see example below](https://github.com/jianyu-li/yet-another-media-player#passing-current-entity-to-a-script)) |
 | `match_theme`| boolean | No | Updates the cards accent colors to match your home assistant theme |
 | `collapse_on_idle` | boolean | No | When nothing is playing, card collapses to save space (great on mobile) | 
 | `always_collapsed` | boolean | No | This will keep the card in collapsed or "mini" mode even when something is playing |
