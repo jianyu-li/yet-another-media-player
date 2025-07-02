@@ -795,6 +795,9 @@ class YetAnotherMediaPlayerCard extends i {
     },
     _pinnedIndex: {
       state: true
+    },
+    _showSourceList: {
+      state: true
     }
   };
   static styles = (() => i$3`
@@ -1711,6 +1714,8 @@ class YetAnotherMediaPlayerCard extends i {
     this._showEntityOptions = false;
     // Overlay state for grouping sheet
     this._showGrouping = false;
+    // Overlay state for source list sheet
+    this._showSourceList = false;
     // Collapse on load if nothing is playing
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -2024,11 +2029,12 @@ class YetAnotherMediaPlayerCard extends i {
   _selectSource(src) {
     const entity = this.currentEntityId;
     if (!entity || !src) return;
-    this._showSourceMenu = false;
     this.hass.callService("media_player", "select_source", {
       entity_id: entity,
       source: src
     });
+    // Close the source list sheet after selection
+    this._closeEntityOptions();
   }
   _onPinClick(e) {
     e.stopPropagation();
@@ -2220,7 +2226,7 @@ class YetAnotherMediaPlayerCard extends i {
     });
   }
   render() {
-    var _this$currentVolumeSt;
+    var _this$currentVolumeSt, _this$currentStateObj, _this$currentStateObj2;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -2408,23 +2414,6 @@ class YetAnotherMediaPlayerCard extends i {
                           <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
                         </div>
                       `}
-                  ${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 && !collapsed ? x`
-                    <div class="source-menu">
-                      <button class="source-menu-btn" @click=${() => this._toggleSourceMenu()}>
-                        <span class="source-selected">
-                        ${stateObj.attributes.source && String(stateObj.attributes.source).trim() !== "" ? stateObj.attributes.source : "Source"}
-                        </span>
-                        <ha-icon .icon=${"mdi:chevron-down"}></ha-icon>
-                      </button>
-                      ${this._showSourceMenu ? x`
-                        <div class="source-dropdown${this._shouldDropdownOpenUp ? ' up' : ''}">
-                          ${stateObj.attributes.source_list.map(src => x`
-                            <div class="source-option" @click=${() => this._selectSource(src)}>${src}</div>
-                          `)}
-                        </div>
-                      ` : E}
-                    </div>
-                  ` : E}
                   <div class="media-browser-menu">
                     <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
@@ -2441,20 +2430,17 @@ class YetAnotherMediaPlayerCard extends i {
           ${this._showEntityOptions ? x`
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
-              ${!this._showGrouping ? x`
+              ${!this._showGrouping && !this._showSourceList ? x`
                 <button class="entity-options-item" @click=${() => this._triggerMoreInfo()}>More Info</button>
-                ${
-    // Only show "Group Players" if:
-    // 1. More than one entity on the card, AND
-    // 2. More than one entity supports grouping (including current)
-    (() => {
+                ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
+                  <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
+                ` : E}
+                ${(() => {
       const totalEntities = this.entityIds.length;
-      // Count how many entities on the card support grouping
       const groupableCount = this.entityIds.reduce((acc, id) => {
         const st = this.hass.states[id];
         return acc + (this._supportsFeature(st, SUPPORT_GROUPING) ? 1 : 0);
       }, 0);
-      // Only render if both conditions are met
       if (totalEntities > 1 && groupableCount > 1 && this._supportsFeature(this.currentStateObj, SUPPORT_GROUPING)) {
         return x`
                         <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
@@ -2463,11 +2449,9 @@ class YetAnotherMediaPlayerCard extends i {
       return E;
     })()}
                 <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
-              ` : x`
+              ` : this._showGrouping ? x`
                 <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
-                ${
-    // Group All/Ungroup All dynamic button logic
-    (_masterState$attribut => {
+                ${(_masterState$attribut => {
       const masterState = this.hass.states[this.currentEntityId];
       const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) && masterState.attributes.group_members.length > 0;
       return x`
@@ -2483,7 +2467,7 @@ class YetAnotherMediaPlayerCard extends i {
                 <hr style="margin:8px 0 2px 0;opacity:0.19;border:0;border-top:1px solid #fff;" />
                 ${this.entityIds.filter(id => id !== this.currentEntityId).map(id => {
       const st = this.hass.states[id];
-      if (!this._supportsFeature(st, SUPPORT_GROUPING)) return E; // skip unsupported targets
+      if (!this._supportsFeature(st, SUPPORT_GROUPING)) return E;
       const name = this.getChipName(id);
       const masterState = this.hass.states[this.currentEntityId];
       const grouped = Array.isArray(masterState.attributes.group_members) && masterState.attributes.group_members.includes(id);
@@ -2498,6 +2482,11 @@ class YetAnotherMediaPlayerCard extends i {
                       </div>
                     `;
     })}
+              ` : x`
+                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
+                ${(_this$currentStateObj2 = this.currentStateObj) === null || _this$currentStateObj2 === void 0 || (_this$currentStateObj2 = _this$currentStateObj2.attributes) === null || _this$currentStateObj2 === void 0 || (_this$currentStateObj2 = _this$currentStateObj2.source_list) === null || _this$currentStateObj2 === void 0 ? void 0 : _this$currentStateObj2.map(src => x`
+                  <div class="entity-options-item" @click=${() => this._selectSource(src)}>${src}</div>
+                `)}
               `}
             </div>
           </div>
@@ -2602,6 +2591,7 @@ class YetAnotherMediaPlayerCard extends i {
     } else {
       this._showEntityOptions = false;
       this._showGrouping = false;
+      this._showSourceList = false;
       this.requestUpdate();
     }
   }
@@ -2624,6 +2614,18 @@ class YetAnotherMediaPlayerCard extends i {
   _openGrouping() {
     this._showEntityOptions = true; // ensure the overlay is visible
     this._showGrouping = true; // show grouping sheet immediately
+    this.requestUpdate();
+  }
+
+  // Source List Helper Methods
+  _openSourceList() {
+    this._showEntityOptions = true;
+    this._showSourceList = true;
+    this._showGrouping = false;
+    this.requestUpdate();
+  }
+  _closeSourceList() {
+    this._showSourceList = false;
     this.requestUpdate();
   }
   _closeGrouping() {

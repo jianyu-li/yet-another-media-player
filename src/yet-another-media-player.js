@@ -83,6 +83,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _lastPlaying: { state: true },
     _shouldDropdownOpenUp: { state: true },
     _pinnedIndex: { state: true }
+    ,_showSourceList: { state: true }
   };
 
   static styles = css`
@@ -1003,6 +1004,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showEntityOptions = false;
     // Overlay state for grouping sheet
     this._showGrouping = false;
+    // Overlay state for source list sheet
+    this._showSourceList = false;
     // Collapse on load if nothing is playing
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -1341,11 +1344,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _selectSource(src) {
     const entity = this.currentEntityId;
     if (!entity || !src) return;
-    this._showSourceMenu = false;
     this.hass.callService("media_player", "select_source", {
       entity_id: entity,
       source: src
     });
+    // Close the source list sheet after selection
+    this._closeEntityOptions();
   }
 
   _onPinClick(e) {
@@ -1766,23 +1770,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
                         </div>
                       `}
-                  ${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 && !collapsed ? html`
-                    <div class="source-menu">
-                      <button class="source-menu-btn" @click=${() => this._toggleSourceMenu()}>
-                        <span class="source-selected">
-                        ${stateObj.attributes.source && String(stateObj.attributes.source).trim() !== "" ? stateObj.attributes.source : "Source"}
-                        </span>
-                        <ha-icon .icon=${"mdi:chevron-down"}></ha-icon>
-                      </button>
-                      ${this._showSourceMenu ? html`
-                        <div class="source-dropdown${this._shouldDropdownOpenUp ? ' up' : ''}">
-                          ${stateObj.attributes.source_list.map(src => html`
-                            <div class="source-option" @click=${() => this._selectSource(src)}>${src}</div>
-                          `)}
-                        </div>
-                      ` : nothing}
-                    </div>
-                  ` : nothing}
                   <div class="media-browser-menu">
                     <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
@@ -1801,20 +1788,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ${this._showEntityOptions ? html`
           <div class="entity-options-overlay" @click=${(e) => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
-              ${!this._showGrouping ? html`
+              ${(!this._showGrouping && !this._showSourceList) ? html`
                 <button class="entity-options-item" @click=${() => this._triggerMoreInfo()}>More Info</button>
+                ${Array.isArray(this.currentStateObj?.attributes?.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? html`
+                  <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
+                ` : nothing}
                 ${
-                  // Only show "Group Players" if:
-                  // 1. More than one entity on the card, AND
-                  // 2. More than one entity supports grouping (including current)
                   (() => {
                     const totalEntities = this.entityIds.length;
-                    // Count how many entities on the card support grouping
                     const groupableCount = this.entityIds.reduce((acc, id) => {
                       const st = this.hass.states[id];
                       return acc + (this._supportsFeature(st, SUPPORT_GROUPING) ? 1 : 0);
                     }, 0);
-                    // Only render if both conditions are met
                     if (
                       totalEntities > 1 &&
                       groupableCount > 1 &&
@@ -1828,10 +1813,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   })()
                 }
                 <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
-              ` : html`
+              ` : this._showGrouping ? html`
                 <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
                 ${
-                  // Group All/Ungroup All dynamic button logic
                   (() => {
                     const masterState = this.hass.states[this.currentEntityId];
                     const groupedAny = Array.isArray(masterState?.attributes?.group_members) && masterState.attributes.group_members.length > 0;
@@ -1851,9 +1835,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   .filter(id => id !== this.currentEntityId)
                   .map(id => {
                     const st = this.hass.states[id];
-                    if (!this._supportsFeature(st, SUPPORT_GROUPING)) return nothing; // skip unsupported targets
+                    if (!this._supportsFeature(st, SUPPORT_GROUPING)) return nothing;
                     const name = this.getChipName(id);
-
                     const masterState = this.hass.states[this.currentEntityId];
                     const grouped =
                       Array.isArray(masterState.attributes.group_members) &&
@@ -1869,6 +1852,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       </div>
                     `;
                   })}
+              ` : html`
+                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
+                ${this.currentStateObj?.attributes?.source_list?.map(src => html`
+                  <div class="entity-options-item" @click=${() => this._selectSource(src)}>${src}</div>
+                `)}
               `}
             </div>
           </div>
@@ -1981,6 +1969,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._showEntityOptions = false;
       this._showGrouping = false;
+      this._showSourceList = false;
       this.requestUpdate();
     }
   }
@@ -2003,6 +1992,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _openGrouping() {
     this._showEntityOptions = true;  // ensure the overlay is visible
     this._showGrouping = true;       // show grouping sheet immediately
+    this.requestUpdate();
+  }
+
+  // Source List Helper Methods
+  _openSourceList() {
+    this._showEntityOptions = true;
+    this._showSourceList = true;
+    this._showGrouping = false;
+    this.requestUpdate();
+  }
+
+  _closeSourceList() {
+    this._showSourceList = false;
     this.requestUpdate();
   }
   _closeGrouping() {
