@@ -1110,7 +1110,7 @@ class YetAnotherMediaPlayerCard extends i {
     display: flex;           /* Flexbox for vertical centering */
     align-items: center;     /* Vertically center content */
     border-radius: 24px;
-    padding: 6px 20px 6px 8px;
+    padding: 6px 6px 6px 8px;
     background: var(--chip-background, #333);
     color: var(--primary-text-color, #fff);
     cursor: pointer;
@@ -1159,8 +1159,32 @@ class YetAnotherMediaPlayerCard extends i {
     margin: 0;
     padding: 0;
   }
+  .chip-pin-inside {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    background: transparent;
+    border-radius: 50%;
+    padding: 2px;
+    cursor: pointer;
+  }
+  .chip-pin-inside ha-icon {
+    color: var(--custom-accent, #ff9800);
+    font-size: 17px;
+    margin: 0;
+  }
+  .chip[selected] .chip-pin-inside ha-icon {
+    color: #fff !important;  /* White pin icon for selected (orange) chips */
+  }
+  .chip-pin-spacer {
+    display: flex;
+    width: 24px;
+    min-width: 24px;
+    height: 1px;
+  }
     .chip[playing] {
-      padding-right: 26px;
+      padding-right: 6px;
     }
       .chip[selected] {
         background: var(--custom-accent);
@@ -1839,16 +1863,22 @@ class YetAnotherMediaPlayerCard extends i {
       <button class="chip"
               ?selected=${this.currentEntityId === id}
               ?playing=${isPlaying}
-              @click=${() => this._onChipClick(idx)}>
+              @click=${() => this._onChipClick(idx)}
+              style="display:flex;align-items:center;justify-content:space-between;">
         <span class="chip-icon">
           ${art ? x`<img class="chip-mini-art" src="${art}" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
         </span>
+        <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+          ${this.getChipName(id)}
+        </span>
         ${this._pinnedIndex === idx ? x`
-          <span class="chip-pin" @click=${e => this._onPinClick(e)} title="Unpin">
-            <ha-icon .icon=${"mdi:pin"}></ha-icon>
-          </span>
-        ` : E}
-        ${this.getChipName(id)}
+              <span class="chip-pin-inside" @click=${e => {
+      e.stopPropagation();
+      this._onPinClick(e);
+    }} title="Unpin">
+                <ha-icon .icon=${"mdi:pin"}></ha-icon>
+              </span>
+            ` : x`<span class="chip-pin-spacer"></span>`}
       </button>
     `;
   }
