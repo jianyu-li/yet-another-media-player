@@ -1006,6 +1006,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showGrouping = false;
     // Overlay state for source list sheet
     this._showSourceList = false;
+    // Alternate progress‑bar mode
+    this._alternateProgressBar = false;
     // Collapse on load if nothing is playing
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -1070,6 +1072,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._collapseOnIdle = !!config.collapse_on_idle;
     // Force always-collapsed view
     this._alwaysCollapsed = !!config.always_collapsed;
+    // Alternate progress‑bar mode
+    this._alternateProgressBar = !!config.alternate_progress_bar;
   }
 
   get entityObjs() {
@@ -1678,7 +1682,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     ${isPlaying ? artist : ""}
                   </div>
                 </div>
-                ${collapsed
+                ${(collapsed || this._alternateProgressBar)
                   ? nothing
                   : (isPlaying && duration
                       ? html`
@@ -1777,7 +1781,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 </div>
               </div>
-              ${collapsed && isPlaying && duration
+              ${(this._alternateProgressBar || collapsed) && isPlaying && duration
                 ? html`
                     <div class="collapsed-progress-bar"
                       style="width: ${progress * 100}%;"></div>
@@ -2151,6 +2155,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       },
       {
         name: "always_collapsed",
+        selector: { boolean: {} },
+        required: false
+      },
+      {
+        name: "alternate_progress_bar",
         selector: { boolean: {} },
         required: false
       },

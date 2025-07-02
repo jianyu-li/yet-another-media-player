@@ -1716,6 +1716,8 @@ class YetAnotherMediaPlayerCard extends i {
     this._showGrouping = false;
     // Overlay state for source list sheet
     this._showSourceList = false;
+    // Alternate progress‑bar mode
+    this._alternateProgressBar = false;
     // Collapse on load if nothing is playing
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -1782,6 +1784,8 @@ class YetAnotherMediaPlayerCard extends i {
     this._collapseOnIdle = !!config.collapse_on_idle;
     // Force always-collapsed view
     this._alwaysCollapsed = !!config.always_collapsed;
+    // Alternate progress‑bar mode
+    this._alternateProgressBar = !!config.alternate_progress_bar;
   }
   get entityObjs() {
     return this.config.entities.map(e => typeof e === "string" ? {
@@ -2340,7 +2344,7 @@ class YetAnotherMediaPlayerCard extends i {
                     ${isPlaying ? artist : ""}
                   </div>
                 </div>
-                ${collapsed ? E : isPlaying && duration ? x`
+                ${collapsed || this._alternateProgressBar ? E : isPlaying && duration ? x`
                           <div class="progress-bar-container">
                             <div
                               class="progress-bar"
@@ -2421,7 +2425,7 @@ class YetAnotherMediaPlayerCard extends i {
                   </div>
                 </div>
               </div>
-              ${collapsed && isPlaying && duration ? x`
+              ${(this._alternateProgressBar || collapsed) && isPlaying && duration ? x`
                     <div class="collapsed-progress-bar"
                       style="width: ${progress * 100}%;"></div>
                   ` : E}
@@ -2762,6 +2766,12 @@ class YetAnotherMediaPlayerEditor extends i {
       required: false
     }, {
       name: "always_collapsed",
+      selector: {
+        boolean: {}
+      },
+      required: false
+    }, {
+      name: "alternate_progress_bar",
       selector: {
         boolean: {}
       },

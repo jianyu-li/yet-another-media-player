@@ -47,6 +47,7 @@ You can use music assistant actions in conjunction with "current" as the entity 
 | `always_collapsed` | boolean | No | This will keep the card in collapsed or "mini" mode even when something is playing |
 | `volume_entity` | string | No | Use this to specify a separate entity from the player to control volume |
 | `sync_power` | boolean | No | When volume_entity is set, you can use this argument to power on/off the volume entity with your main entity |
+| `alternate_progress_bar` | boolean | No | Uses the collapsed player progress bar when expanded |
 
 ## Config Examples
 
@@ -76,6 +77,7 @@ match_theme: true
 volume_mode: slider
 collapse_on_idle: true
 always_collapsed: false
+alternate_progress_bar: false
 ```
 
 ### Custom Actions
