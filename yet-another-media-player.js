@@ -2211,15 +2211,23 @@ class YetAnotherMediaPlayerCard extends i {
   _onVolumeStep(direction) {
     const entity = this._getVolumeEntity(this._selectedIndex);
     if (!entity) return;
+    const isRemoteVolumeEntity = entity.startsWith && entity.startsWith("remote.");
     const stateObj = this.currentVolumeStateObj;
     if (!stateObj) return;
-    let current = Number(stateObj.attributes.volume_level || 0);
-    current += direction * 0.05;
-    current = Math.max(0, Math.min(1, current));
-    this.hass.callService("media_player", "volume_set", {
-      entity_id: entity,
-      volume_level: current
-    });
+    if (isRemoteVolumeEntity) {
+      this.hass.callService("remote", "send_command", {
+        entity_id: entity,
+        command: direction > 0 ? "volume_up" : "volume_down"
+      });
+    } else {
+      let current = Number(stateObj.attributes.volume_level || 0);
+      current += direction * 0.05;
+      current = Math.max(0, Math.min(1, current));
+      this.hass.callService("media_player", "volume_set", {
+        entity_id: entity,
+        volume_level: current
+      });
+    }
   }
   _onSourceChange(e) {
     const entity = this.currentEntityId;
@@ -2287,6 +2295,11 @@ class YetAnotherMediaPlayerCard extends i {
       pos += elapsed;
     }
     const progress = duration ? Math.min(1, pos / duration) : 0;
+
+    // Volume entity determination
+    const idx = this._selectedIndex;
+    const entity = this._getVolumeEntity(idx);
+    const isRemoteVolumeEntity = entity && entity.startsWith && entity.startsWith("remote.");
 
     // Volume
     const vol = Number(((_this$currentVolumeSt = this.currentVolumeStateObj) === null || _this$currentVolumeSt === void 0 ? void 0 : _this$currentVolumeSt.attributes.volume_level) || 0);
@@ -2430,24 +2443,29 @@ class YetAnotherMediaPlayerCard extends i {
                   ` : E}
                 </div>
                 <div class="volume-row${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? ' has-source' : ''}">
-                  ${showSlider ? x`
-                        <input
-                          class="vol-slider"
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          .value=${vol}
-                          @input=${e => this._onVolumeChange(e)}
-                          title="Volume"
-                        />
-                      ` : x`
+                  ${isRemoteVolumeEntity ? x`
                         <div class="vol-stepper">
                           <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
-                          <span>${Math.round(vol * 100)}%</span>
                           <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
                         </div>
-                      `}
+                      ` : showSlider ? x`
+                            <input
+                              class="vol-slider"
+                              type="range"
+                              min="0"
+                              max="1"
+                              step="0.01"
+                              .value=${vol}
+                              @input=${e => this._onVolumeChange(e)}
+                              title="Volume"
+                            />
+                          ` : x`
+                            <div class="vol-stepper">
+                              <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
+                              ${!isRemoteVolumeEntity ? x`<span>${Math.round(vol * 100)}%</span>` : E}
+                              <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
+                            </div>
+                          `}
                   <div class="media-browser-menu">
                     <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
