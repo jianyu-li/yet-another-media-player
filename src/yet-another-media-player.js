@@ -1098,6 +1098,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._alwaysCollapsed = !!config.always_collapsed;
     // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
+    // Do not mutate config.force_chip_row here.
   }
 
   get entityObjs() {
@@ -1588,6 +1589,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       }
       
+      const showChipRow = this.config.show_chip_row || "auto";
       const stateObj = this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
 
@@ -1647,7 +1649,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <div style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
           >
-            ${this.entityObjs.length > 1 ? html`
+            ${(this.entityObjs.length > 1 || showChipRow === "always") ? html`
               <div class="chip-row">
                 ${this.groupedSortedEntityIds.map(group =>
                   group.length > 1
@@ -2215,6 +2217,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       {
         name: "alternate_progress_bar",
         selector: { boolean: {} },
+        required: false
+      },
+      {
+        name: "show_chip_row",
+        selector: {
+          select: {
+            options: [
+              { value: "auto", label: "Auto (hide with one entity)" },
+              { value: "always", label: "Always show" }
+            ]
+          }
+        },
         required: false
       },
       {
