@@ -801,6 +801,14 @@ class YetAnotherMediaPlayerCard extends i {
     }
   };
   static styles = (() => i$3`
+  .dim-idle .details,
+  .dim-idle .controls-row,
+  .dim-idle .volume-row,
+  .dim-idle .chip-row,
+  .dim-idle .action-chip-row {
+    opacity: 0.28 !important;
+    transition: opacity 0.5s;
+  }
   .media-browser-menu {
     display: flex;
     align-items: center;
@@ -2278,6 +2286,14 @@ class YetAnotherMediaPlayerCard extends i {
     const stateObj = this.currentStateObj;
     if (!stateObj) return x`<div class="details">Entity not found.</div>`;
 
+    // Idle image "picture frame" mode when idle
+    let idleImageUrl = null;
+    if (this.config.idle_image && stateObj.state !== "playing" && this.hass.states[this.config.idle_image]) {
+      const sensorState = this.hass.states[this.config.idle_image];
+      idleImageUrl = sensorState.attributes.entity_picture || (sensorState.state && sensorState.state.startsWith("http") ? sensorState.state : null);
+    }
+    const dimIdleFrame = !!idleImageUrl;
+
     // Calculate shuffle/repeat state only AFTER confirming stateObj exists
     const shuffleActive = !!stateObj.attributes.shuffle;
     const repeatActive = stateObj.attributes.repeat && stateObj.attributes.repeat !== "off";
@@ -2322,8 +2338,10 @@ class YetAnotherMediaPlayerCard extends i {
     }
     return x`
         <ha-card class="yamp-card" style="position:relative;">
-          <div style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
+          <div
+            style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
+            class="${dimIdleFrame ? 'dim-idle' : ''}"
           >
             ${this.entityObjs.length > 1 || showChipRow === "always" ? x`
               <div class="chip-row">
@@ -2337,13 +2355,13 @@ class YetAnotherMediaPlayerCard extends i {
                           ${a.icon ? x`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : E}
                           ${a.name || ""}
                         </button>
-                      `)}
+`)}
                   </div>
                 ` : E}
             <div class="card-lower-content-container">
               <div class="card-lower-content-bg"
                 style="
-                  background-image: ${artworkUrl ? `url('${artworkUrl}')` : "none"};
+                  background-image: ${idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none"};
                   min-height: ${collapsed ? "0px" : "320px"};
                   background-size: cover;
                   background-position: top center;
@@ -2361,7 +2379,7 @@ class YetAnotherMediaPlayerCard extends i {
                   </div>
                 ` : E}
                 ${!collapsed ? x`<div class="card-artwork-spacer"></div>` : E}
-                ${!collapsed && !artworkUrl ? x`
+                ${!collapsed && !artworkUrl && !idleImageUrl ? x`
                   <div class="media-artwork-placeholder"
                     style="
                       position: absolute;
@@ -2837,6 +2855,16 @@ class YetAnotherMediaPlayerEditor extends i {
             value: "always",
             label: "Always show"
           }]
+        }
+      },
+      required: false
+    },
+    // Add idle_image entity picker after progress bar options
+    {
+      name: "idle_image",
+      selector: {
+        entity: {
+          domain: "sensor"
         }
       },
       required: false
