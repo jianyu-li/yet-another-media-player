@@ -2263,7 +2263,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       {
         name: "idle_image",
         selector: {
-          entity: { domain: "sensor" },
+          entity: { domain: ["sensor", "camera"] },
         },
         required: false,
       },
