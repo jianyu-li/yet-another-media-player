@@ -51,7 +51,7 @@ You can use music assistant actions in conjunction with "current" as the entity 
 | `sync_power` | boolean | No | When volume_entity is set, you can use this argument to power on/off the volume entity with your main entity |
 | `alternate_progress_bar` | boolean | No | Uses the collapsed player progress bar when expanded |
 | `idle_image` | image/camera | No | Sets a background image from an image sensor or still image camera sensor to use for when the player is idle. Good for showing a slideshow when not in use |
-| `show_chip_row` | choice | No | Auto: hides the player chip row if only one chip is configured. Always show: shows the chip row even if one player entity is configured |
+| `show_chip_row` | choice | No | auto: hides the player chip row if only one chip is configured. always: shows the chip row even if one player entity is configured |
 
 # Group Players
 Player entities can be grouped together for supported entities. Access the hamburger menu and choose "Group Players" to see a list of supported players that are currently configured on your card. If no players are supported (or only one entity is) then the "Group Players" option will not be visible. 
@@ -92,6 +92,7 @@ volume_mode: slider
 collapse_on_idle: true
 always_collapsed: false
 alternate_progress_bar: false
+idle_image: camera.family_slideshow
 ```
 
 ### Custom Actions
