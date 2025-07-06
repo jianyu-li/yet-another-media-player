@@ -8,7 +8,9 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 
 - Switch between multiple media players in a single card using chips
 - Group supported players
+  - Control volume as a group or individually
 - Separate volume entity via YAML
+- Add background image sensor for when not in use
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
 - Action buttons run any Home Assistant service or script 
@@ -26,7 +28,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 ![Preview Image Collapsed](/Preview/collapsed.png)
 ![Preview Image Movie](/Preview/movie.png)
 ![Preview Image No Icon](/Preview/NoIcons.png)
-![Preview Image Grouping](/Preview/grouping.gif)
+![Preview Image Grouping](/Preview/group-player-menu.png)
 
 ---
 
@@ -45,9 +47,18 @@ You can use music assistant actions in conjunction with "current" as the entity 
 | `match_theme`| boolean | No | Updates the cards accent colors to match your home assistant theme |
 | `collapse_on_idle` | boolean | No | When nothing is playing, card collapses to save space (great on mobile) | 
 | `always_collapsed` | boolean | No | This will keep the card in collapsed or "mini" mode even when something is playing |
-| `volume_entity` | string | No | Use this to specify a separate entity from the player to control volume |
+| `volume_entity` | string | No | Use this to specify a separate entity from the player to control volume. Accepted classes are media_player.* and remote.*. remote.* is useful for controlling tv volume from apple tv's connected through CEC |
 | `sync_power` | boolean | No | When volume_entity is set, you can use this argument to power on/off the volume entity with your main entity |
 | `alternate_progress_bar` | boolean | No | Uses the collapsed player progress bar when expanded |
+| `idle_image` | image/camera | No | Sets a background image from an image sensor or still image camera sensor to use for when the player is idle. Good for showing a slideshow when not in use |
+| `show_chip_row` | choice | No | Auto: hides the player chip row if only one chip is configured. Always show: shows the chip row even if one player entity is configured |
+
+# Group Players
+Player entities can be grouped together for supported entities. Access the hamburger menu and choose "Group Players" to see a list of supported players that are currently configured on your card. If no players are supported (or only one entity is) then the "Group Players" option will not be visible. 
+- Grouped entities will increase and decrease proportionately with the main entity. 
+- Use the Grouped Players menu to adjust individual player volume or to sync the volume percentage across all grouped players to the main entity
+
+
 
 ## Config Examples
 
@@ -73,6 +84,9 @@ actions:
       entity_id: current
       media_id: apple_music://playlist/pl.3cb881c4590341fabc374f003afaf2b4
       enqueue: replace
+  - name: Set the Mood
+    service: script.set_mood
+    script_variable: true      
 match_theme: true
 volume_mode: slider
 collapse_on_idle: true
@@ -105,24 +119,34 @@ type: custom:yet-another-media-player-beta
 entities:
   - media_player.office_speaker_airplay
 actions:
-  - name: test
-    icon: mdi:music
-    service: script.test_music
+  - name: Set the Mood
+    icon: mdi:heart
+    service: script.set_mood
     script_variable: true
 ```    
 
 ### Example Script
 ```yaml
-alias: test_music
+alias: set_mood
 mode: single
 fields:
   yamp_entity:
     description: Target media player
 sequence:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.bedroom
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.fireplace
   - service: music_assistant.play_media
     data:
       entity_id: "{{ yamp_entity }}"
-      media_id: apple_music://playlist/pl.6a236667fbc046a49b48ea9cf4e8b639
+      media_id: apple_music://track/1431053629
       enqueue: replace
 ```  
 
