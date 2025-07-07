@@ -2602,7 +2602,7 @@ class YetAnotherMediaPlayerCard extends i {
                   transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
                 "
               ></div>
-              <div class="card-lower-fade"></div>
+              ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}">
                 ${collapsed && artworkUrl ? x`
                   <div class="collapsed-artwork-container"
@@ -2654,82 +2654,84 @@ class YetAnotherMediaPlayerCard extends i {
                             <div class="progress-bar" style="visibility:hidden"></div>
                           </div>
                         `}
-                <div class="controls-row">
-                  ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
-                    <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
-                      <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
-                    </button>
-                  ` : E}
-                  ${this._supportsFeature(stateObj, SUPPORT_PAUSE) || this._supportsFeature(stateObj, SUPPORT_PLAY) ? x`
-                    <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                      <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-                    </button>
-                  ` : E}
-                  <!-- Stop button, only if supported and horizontal space allows -->
-                  ${this._shouldShowStopButton(stateObj) ? x`
-                      <button class="button" @click=${() => this._onControlClick("stop")} title="Stop">
-                        <ha-icon .icon=${"mdi:stop"}></ha-icon>
+                ${!dimIdleFrame ? x`
+                  <div class="controls-row">
+                    ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
+                      <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
+                        <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
                       </button>
                     ` : E}
-                  ${this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
-                    <button class="button" @click=${() => this._onControlClick("next")} title="Next">
-                      <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
-                    </button>
-                  ` : E}
-                  ${this._supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
-                    <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
-                      <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
-                    </button>
-                  ` : E}
-                  ${this._supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
-                    <button class="button${repeatActive ? ' active' : ''}" @click=${() => this._onControlClick("repeat")} title="Repeat">
-                      <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
-                    </button>
-                  ` : E}
-                  ${this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON) ? x`
-                    <button
-                      class="button${stateObj.state !== "off" ? " active" : ""}"
-                      @click=${() => this._onControlClick("power")}
-                      title="Power"
-                    >
-                      <ha-icon .icon=${"mdi:power"}></ha-icon>
-                    </button>
-                  ` : E}
-                </div>
-                <div class="volume-row${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? ' has-source' : ''}">
-                  ${isRemoteVolumeEntity ? x`
-                        <div class="vol-stepper">
-                          <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
-                          <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
-                        </div>
-                      ` : showSlider ? x`
-                            <input
-                              class="vol-slider"
-                              type="range"
-                              min="0"
-                              max="1"
-                              step="0.01"
-                              .value=${vol}
-                              @mousedown=${e => this._onVolumeDragStart(e)}
-                              @touchstart=${e => this._onVolumeDragStart(e)}
-                              @change=${e => this._onVolumeChange(e)}
-                              @mouseup=${e => this._onVolumeDragEnd(e)}
-                              @touchend=${e => this._onVolumeDragEnd(e)}
-                              title="Volume"
-                            />
-                          ` : x`
-                            <div class="vol-stepper">
-                              <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
-                              ${!isRemoteVolumeEntity ? x`<span>${Math.round(vol * 100)}%</span>` : E}
-                              <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
-                            </div>
-                          `}
-                  <div class="media-browser-menu">
-                    <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
-                      <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
-                    </button>
+                    ${this._supportsFeature(stateObj, SUPPORT_PAUSE) || this._supportsFeature(stateObj, SUPPORT_PLAY) ? x`
+                      <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
+                        <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+                      </button>
+                    ` : E}
+                    <!-- Stop button, only if supported and horizontal space allows -->
+                    ${this._shouldShowStopButton(stateObj) ? x`
+                        <button class="button" @click=${() => this._onControlClick("stop")} title="Stop">
+                          <ha-icon .icon=${"mdi:stop"}></ha-icon>
+                        </button>
+                      ` : E}
+                    ${this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
+                      <button class="button" @click=${() => this._onControlClick("next")} title="Next">
+                        <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+                      </button>
+                    ` : E}
+                    ${this._supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
+                      <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
+                        <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
+                      </button>
+                    ` : E}
+                    ${this._supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
+                      <button class="button${repeatActive ? ' active' : ''}" @click=${() => this._onControlClick("repeat")} title="Repeat">
+                        <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
+                      </button>
+                    ` : E}
+                    ${this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON) ? x`
+                      <button
+                        class="button${stateObj.state !== "off" ? " active" : ""}"
+                        @click=${() => this._onControlClick("power")}
+                        title="Power"
+                      >
+                        <ha-icon .icon=${"mdi:power"}></ha-icon>
+                      </button>
+                    ` : E}
                   </div>
-                </div>
+                  <div class="volume-row${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? ' has-source' : ''}">
+                    ${isRemoteVolumeEntity ? x`
+                          <div class="vol-stepper">
+                            <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
+                            <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
+                          </div>
+                        ` : showSlider ? x`
+                              <input
+                                class="vol-slider"
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                .value=${vol}
+                                @mousedown=${e => this._onVolumeDragStart(e)}
+                                @touchstart=${e => this._onVolumeDragStart(e)}
+                                @change=${e => this._onVolumeChange(e)}
+                                @mouseup=${e => this._onVolumeDragEnd(e)}
+                                @touchend=${e => this._onVolumeDragEnd(e)}
+                                title="Volume"
+                              />
+                            ` : x`
+                              <div class="vol-stepper">
+                                <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
+                                ${!isRemoteVolumeEntity ? x`<span>${Math.round(vol * 100)}%</span>` : E}
+                                <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
+                              </div>
+                            `}
+                    <div class="media-browser-menu">
+                      <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
+                        <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                      </button>
+                    </div>
+                  </div>
+                ` : E}
               </div>
               ${(this._alternateProgressBar || collapsed) && isPlaying && duration ? x`
                     <div class="collapsed-progress-bar"
@@ -3365,7 +3367,7 @@ class YetAnotherMediaPlayerEditor extends i {
       name: "idle_image",
       selector: {
         entity: {
-          domain: ["sensor", "camera", "image"]
+          domain: ["camera", "image"]
         }
       },
       required: false
