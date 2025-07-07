@@ -2732,6 +2732,13 @@ class YetAnotherMediaPlayerCard extends i {
                     </div>
                   </div>
                 ` : E}
+                ${dimIdleFrame ? x`
+                  <div class="media-browser-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
+                    <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
+                      <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                    </button>
+                  </div>
+                ` : E}
               </div>
               ${(this._alternateProgressBar || collapsed) && isPlaying && duration ? x`
                     <div class="collapsed-progress-bar"
