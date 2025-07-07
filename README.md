@@ -223,6 +223,7 @@ card_mod:
 ```
 
 ### Update Background Image
+This is different from the idle_image argument (that allows a background image when not playing), using card-mod to change the background will apply the background at all times. 
 ```
 card_mod:
   style: |
@@ -236,8 +237,6 @@ card_mod:
       display: none !important /* optionally hide the placeholder image */
     }
 ```
-
-![Preview Image Background](/Preview/Card-Mod-Background.png)
 
 ## Notes
 
