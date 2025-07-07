@@ -2748,6 +2748,13 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         required: false
       },
       {
+      name: "hold_to_pin",          
+      selector: {
+        boolean: {}
+      },
+      required: false
+      },
+      {
         name: "show_chip_row",
         selector: {
           select: {
@@ -2758,13 +2765,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           }
         },
         required: false
-      },
-      {
-      name: "hold_to_pin",          
-      selector: {
-        boolean: {}
-      },
-      required: false
       },
       // Add idle_image entity picker after progress bar options
       {

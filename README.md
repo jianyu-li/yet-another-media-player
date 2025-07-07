@@ -50,8 +50,9 @@ You can use music assistant actions in conjunction with "current" as the entity 
 | `volume_entity` | string | No | Use this to specify a separate entity from the player to control volume. Accepted classes are media_player.* and remote.*. remote.* is useful for controlling tv volume from apple tv's connected through CEC |
 | `sync_power` | boolean | No | When volume_entity is set, you can use this argument to power on/off the volume entity with your main entity |
 | `alternate_progress_bar` | boolean | No | Uses the collapsed player progress bar when expanded |
-| `idle_image` | image/camera | No | Sets a background image from an image sensor or still image camera sensor to use for when the player is idle. Good for showing a slideshow when not in use |
+| `hold_to_pin` | boolean | No | By default, the chip entity pins in place when selected. You can override this behavior to only pin in place by holding the chip | 
 | `show_chip_row` | choice | No | auto: hides the player chip row if only one chip is configured. always: shows the chip row even if one player entity is configured |
+| `idle_image` | image/camera | No | Sets a background image from an image sensor or still image camera sensor to use for when the player is idle. Good for showing a slideshow when not in use |
 
 # Group Players
 Player entities can be grouped together for supported entities. Access the hamburger menu and choose "Group Players" to see a list of supported players that are currently configured on your card. If no players are supported (or only one entity is) then the "Group Players" option will not be visible. 

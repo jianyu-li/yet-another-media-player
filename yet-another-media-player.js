@@ -3349,6 +3349,12 @@ class YetAnotherMediaPlayerEditor extends i {
       },
       required: false
     }, {
+      name: "hold_to_pin",
+      selector: {
+        boolean: {}
+      },
+      required: false
+    }, {
       name: "show_chip_row",
       selector: {
         select: {
@@ -3360,12 +3366,6 @@ class YetAnotherMediaPlayerEditor extends i {
             label: "Always show"
           }]
         }
-      },
-      required: false
-    }, {
-      name: "hold_to_pin",
-      selector: {
-        boolean: {}
       },
       required: false
     },
