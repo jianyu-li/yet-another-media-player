@@ -2611,7 +2611,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       {
         name: "idle_image",
         selector: {
-          entity: { domain: ["sensor", "camera"] },
+          entity: { domain: ["sensor", "camera", "image"] },
         },
         required: false,
       },
@@ -2675,4 +2675,3 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 }
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
-
