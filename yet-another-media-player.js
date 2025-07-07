@@ -2006,7 +2006,7 @@ class YetAnotherMediaPlayerCard extends i {
       if (!this._holdToPin) return;
       pressTimer = setTimeout(() => {
         this._pinChip(idx);
-      }, 400);
+      }, 650);
     };
     const handlePointerUp = e => {
       if (!this._holdToPin) return;
@@ -2069,7 +2069,7 @@ class YetAnotherMediaPlayerCard extends i {
       if (!this._holdToPin) return;
       pressTimer = setTimeout(() => {
         this._pinChip(idx);
-      }, 400);
+      }, 650);
     };
     const handlePointerUp = e => {
       if (!this._holdToPin) return;

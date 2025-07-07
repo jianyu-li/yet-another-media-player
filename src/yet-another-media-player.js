@@ -1297,7 +1297,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!this._holdToPin) return;
       pressTimer = setTimeout(() => {
         this._pinChip(idx);
-      }, 400);
+      }, 650);
     };
 
     const handlePointerUp = (e) => {
@@ -1363,7 +1363,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!this._holdToPin) return;
       pressTimer = setTimeout(() => {
         this._pinChip(idx);
-      }, 400);
+      }, 650);
     };
     const handlePointerUp = (e) => {
       if (!this._holdToPin) return;
