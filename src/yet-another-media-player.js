@@ -97,8 +97,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _selectedIndex: { state: true },
     _lastPlaying: { state: true },
     _shouldDropdownOpenUp: { state: true },
-    _pinnedIndex: { state: true }
-    ,_showSourceList: { state: true }
+    _pinnedIndex: { state: true },
+    _showSourceList: { state: true },
+    _holdToPin: { state: true }
   };
 
   static styles = css`
@@ -486,6 +487,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
   .chip[selected] .chip-pin-inside ha-icon {
     color: #fff !important;  /* White pin icon for selected (orange) chips */
   }
+  .chip-pin:hover ha-icon,
+  .chip-pin-inside:hover ha-icon {
+    color: #fff !important;
+  }
+  /* When the user hovers the chip, force the pin icon white */
+  .chip:hover .chip-pin ha-icon,
+  .chip:hover .chip-pin-inside ha-icon {
+    color: #fff !important;
+  }    
   .chip-pin-spacer {
     display: flex;
     width: 24px;
@@ -1201,6 +1211,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       throw new Error("You must define at least one media_player entity.");
     }
     this.config = config;
+    this._holdToPin = !!config.hold_to_pin;
     this._selectedIndex = 0;
     this._lastPlaying = null;
     // Set accent color
@@ -1280,11 +1291,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
     );
     const icon = state?.attributes?.icon || "mdi:cast";
 
+    let pressTimer = null;
+
+    const handlePointerDown = (e) => {
+      if (!this._holdToPin) return;
+      pressTimer = setTimeout(() => {
+        this._pinChip(idx);
+      }, 400);
+    };
+
+    const handlePointerUp = (e) => {
+      if (!this._holdToPin) return;
+      if (pressTimer) clearTimeout(pressTimer);
+    };
+
     return html`
       <button class="chip"
               ?selected=${this.currentEntityId === id}
               ?playing=${isPlaying}
               @click=${() => this._onChipClick(idx)}
+              @pointerdown=${handlePointerDown}
+              @pointerup=${handlePointerUp}
+              @pointerleave=${handlePointerUp}
               style="display:flex;align-items:center;justify-content:space-between;">
         <span class="chip-icon">
           ${art
@@ -1330,11 +1358,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const isPlaying = state?.state === "playing";
     const count = group.length;          // total players in the group
 
+    let pressTimer = null;
+    const handlePointerDown = (e) => {
+      if (!this._holdToPin) return;
+      pressTimer = setTimeout(() => {
+        this._pinChip(idx);
+      }, 400);
+    };
+    const handlePointerUp = (e) => {
+      if (!this._holdToPin) return;
+      if (pressTimer) clearTimeout(pressTimer);
+    };
+
     return html`
       <button class="chip"
               ?selected=${this.currentEntityId === id}
               ?playing=${isPlaying}
-              @click=${() => this._onChipClick(idx)}>
+              @click=${() => this._onChipClick(idx)}
+              @pointerdown=${handlePointerDown}
+              @pointerup=${handlePointerUp}
+              @pointerleave=${handlePointerUp}>
         <span class="chip-icon group-icon"
               @click=${e => { 
                 e.stopPropagation(); 
@@ -1526,7 +1569,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _onChipClick(idx) {
     this._selectedIndex = idx;
     this._manualSelect = true;
-    this._pinnedIndex = idx;
+    if (!this._holdToPin) {
+      this._pinnedIndex = idx;
+    }
     clearTimeout(this._manualSelectTimeout);
     // Collapse logic on chip switch
     const stateObj = this.hass.states[this.entityIds[idx]];
@@ -1535,6 +1580,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._isActuallyCollapsed = false;
     }
+    this.requestUpdate();
+  }
+
+  _pinChip(idx) {
+    this._pinnedIndex = idx;
+    this._manualSelect = true;
     this.requestUpdate();
   }
 
@@ -2223,7 +2274,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         ? true
         : (this._collapseOnIdle ? this._isActuallyCollapsed : false);
 
- 
       const minRows = collapsed ? 2 : 4;
 
       return {
@@ -2231,6 +2281,99 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Keep the default full‑width behaviour explicit.
         columns: 12,
       };
+    }
+
+    // Configuration editor schema for Home Assistant UI editors
+    static get _schema() {
+      return [
+        {
+          name: "entities",
+          selector: {
+            entity: {
+              multiple: true,
+              domain: "media_player"
+            }
+          },
+          required: true
+        },
+        {
+          name: "show_chip_row",
+          selector: {
+            select: {
+              options: [
+                { value: "auto", label: "Auto" },
+                { value: "always", label: "Always" },
+                { value: "never", label: "Never" }
+              ]
+            }
+          },
+          required: false
+        },
+        {
+          name: "hold_to_pin",
+          selector: {
+            boolean: {}
+          },
+          required: false
+        },
+        {
+          name: "idle_image",
+          selector: {
+            entity: {
+              domain: "",
+              multiple: false
+            }
+          },
+          required: false
+        },
+        {
+          name: "match_theme",
+          selector: {
+            boolean: {}
+          },
+          required: false
+        },
+        {
+          name: "collapse_on_idle",
+          selector: {
+            boolean: {}
+          },
+          required: false
+        },
+        {
+          name: "always_collapsed",
+          selector: {
+            boolean: {}
+          },
+          required: false
+        },
+        {
+          name: "alternate_progress_bar",
+          selector: {
+            boolean: {}
+          },
+          required: false
+        },
+        {
+          name: "volume_mode",
+          selector: {
+            select: {
+              options: [
+                { value: "slider", label: "Slider" },
+                { value: "stepper", label: "Stepper" }
+              ]
+            }
+          },
+          required: false
+        },
+        {
+          name: "actions",
+          selector: {
+            object: {}
+          },
+          required: false
+        }
+      ];
     }
 
   firstUpdated() {
@@ -2607,11 +2750,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         },
         required: false
       },
+      {
+      name: "hold_to_pin",          
+      selector: {
+        boolean: {}
+      },
+      required: false
+      },
       // Add idle_image entity picker after progress bar options
       {
         name: "idle_image",
         selector: {
-          entity: { domain: ["camera", "image"] },
+          entity: { domain: ["sensor", "camera", "image"] },
         },
         required: false,
       },
@@ -2675,3 +2825,4 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 }
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
+

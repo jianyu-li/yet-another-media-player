@@ -817,6 +817,9 @@ class YetAnotherMediaPlayerCard extends i {
     },
     _showSourceList: {
       state: true
+    },
+    _holdToPin: {
+      state: true
     }
   };
   static styles = (() => i$3`
@@ -1204,6 +1207,15 @@ class YetAnotherMediaPlayerCard extends i {
   .chip[selected] .chip-pin-inside ha-icon {
     color: #fff !important;  /* White pin icon for selected (orange) chips */
   }
+  .chip-pin:hover ha-icon,
+  .chip-pin-inside:hover ha-icon {
+    color: #fff !important;
+  }
+  /* When the user hovers the chip, force the pin icon white */
+  .chip:hover .chip-pin ha-icon,
+  .chip:hover .chip-pin-inside ha-icon {
+    color: #fff !important;
+  }    
   .chip-pin-spacer {
     display: flex;
     width: 24px;
@@ -1918,6 +1930,7 @@ class YetAnotherMediaPlayerCard extends i {
       throw new Error("You must define at least one media_player entity.");
     }
     this.config = config;
+    this._holdToPin = !!config.hold_to_pin;
     this._selectedIndex = 0;
     this._lastPlaying = null;
     // Set accent color
@@ -1988,11 +2001,25 @@ class YetAnotherMediaPlayerCard extends i {
     const isPlaying = (state === null || state === void 0 ? void 0 : state.state) === "playing";
     const art = isPlaying && ((state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art));
     const icon = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.icon) || "mdi:cast";
+    let pressTimer = null;
+    const handlePointerDown = e => {
+      if (!this._holdToPin) return;
+      pressTimer = setTimeout(() => {
+        this._pinChip(idx);
+      }, 400);
+    };
+    const handlePointerUp = e => {
+      if (!this._holdToPin) return;
+      if (pressTimer) clearTimeout(pressTimer);
+    };
     return x`
       <button class="chip"
               ?selected=${this.currentEntityId === id}
               ?playing=${isPlaying}
               @click=${() => this._onChipClick(idx)}
+              @pointerdown=${handlePointerDown}
+              @pointerup=${handlePointerUp}
+              @pointerleave=${handlePointerUp}
               style="display:flex;align-items:center;justify-content:space-between;">
         <span class="chip-icon">
           ${art ? x`<img class="chip-mini-art" src="${art}" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
@@ -2037,11 +2064,25 @@ class YetAnotherMediaPlayerCard extends i {
     const isPlaying = (state === null || state === void 0 ? void 0 : state.state) === "playing";
     const count = group.length; // total players in the group
 
+    let pressTimer = null;
+    const handlePointerDown = e => {
+      if (!this._holdToPin) return;
+      pressTimer = setTimeout(() => {
+        this._pinChip(idx);
+      }, 400);
+    };
+    const handlePointerUp = e => {
+      if (!this._holdToPin) return;
+      if (pressTimer) clearTimeout(pressTimer);
+    };
     return x`
       <button class="chip"
               ?selected=${this.currentEntityId === id}
               ?playing=${isPlaying}
-              @click=${() => this._onChipClick(idx)}>
+              @click=${() => this._onChipClick(idx)}
+              @pointerdown=${handlePointerDown}
+              @pointerup=${handlePointerUp}
+              @pointerleave=${handlePointerUp}>
         <span class="chip-icon group-icon"
               @click=${e => {
       e.stopPropagation();
@@ -2212,7 +2253,9 @@ class YetAnotherMediaPlayerCard extends i {
   _onChipClick(idx) {
     this._selectedIndex = idx;
     this._manualSelect = true;
-    this._pinnedIndex = idx;
+    if (!this._holdToPin) {
+      this._pinnedIndex = idx;
+    }
     clearTimeout(this._manualSelectTimeout);
     // Collapse logic on chip switch
     const stateObj = this.hass.states[this.entityIds[idx]];
@@ -2221,6 +2264,11 @@ class YetAnotherMediaPlayerCard extends i {
     } else {
       this._isActuallyCollapsed = false;
     }
+    this.requestUpdate();
+  }
+  _pinChip(idx) {
+    this._pinnedIndex = idx;
+    this._manualSelect = true;
     this.requestUpdate();
   }
   _onActionChipClick(idx) {
@@ -2848,6 +2896,96 @@ class YetAnotherMediaPlayerCard extends i {
       columns: 12
     };
   }
+
+  // Configuration editor schema for Home Assistant UI editors
+  static get _schema() {
+    return [{
+      name: "entities",
+      selector: {
+        entity: {
+          multiple: true,
+          domain: "media_player"
+        }
+      },
+      required: true
+    }, {
+      name: "show_chip_row",
+      selector: {
+        select: {
+          options: [{
+            value: "auto",
+            label: "Auto"
+          }, {
+            value: "always",
+            label: "Always"
+          }, {
+            value: "never",
+            label: "Never"
+          }]
+        }
+      },
+      required: false
+    }, {
+      name: "hold_to_pin",
+      selector: {
+        boolean: {}
+      },
+      required: false
+    }, {
+      name: "idle_image",
+      selector: {
+        entity: {
+          domain: "",
+          multiple: false
+        }
+      },
+      required: false
+    }, {
+      name: "match_theme",
+      selector: {
+        boolean: {}
+      },
+      required: false
+    }, {
+      name: "collapse_on_idle",
+      selector: {
+        boolean: {}
+      },
+      required: false
+    }, {
+      name: "always_collapsed",
+      selector: {
+        boolean: {}
+      },
+      required: false
+    }, {
+      name: "alternate_progress_bar",
+      selector: {
+        boolean: {}
+      },
+      required: false
+    }, {
+      name: "volume_mode",
+      selector: {
+        select: {
+          options: [{
+            value: "slider",
+            label: "Slider"
+          }, {
+            value: "stepper",
+            label: "Stepper"
+          }]
+        }
+      },
+      required: false
+    }, {
+      name: "actions",
+      selector: {
+        object: {}
+      },
+      required: false
+    }];
+  }
   firstUpdated() {
     var _super$firstUpdated;
     (_super$firstUpdated = super.firstUpdated) === null || _super$firstUpdated === void 0 || _super$firstUpdated.call(this);
@@ -3215,13 +3353,19 @@ class YetAnotherMediaPlayerEditor extends i {
         }
       },
       required: false
+    }, {
+      name: "hold_to_pin",
+      selector: {
+        boolean: {}
+      },
+      required: false
     },
     // Add idle_image entity picker after progress bar options
     {
       name: "idle_image",
       selector: {
         entity: {
-          domain: ["camera", "image"]
+          domain: ["sensor", "camera", "image"]
         }
       },
       required: false
