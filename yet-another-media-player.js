@@ -3221,7 +3221,7 @@ class YetAnotherMediaPlayerEditor extends i {
       name: "idle_image",
       selector: {
         entity: {
-          domain: ["sensor", "camera", "image"]
+          domain: ["camera", "image"]
         }
       },
       required: false
