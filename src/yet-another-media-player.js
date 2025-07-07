@@ -12,6 +12,7 @@ const SUPPORT_TURN_ON = 128;
 const SUPPORT_TURN_OFF = 256;
 const SUPPORT_PLAY_MEDIA = 512;
 const SUPPORT_STOP = 4096;
+const SUPPORT_PLAY = 16384;
 const SUPPORT_SHUFFLE = 32768;
 const SUPPORT_GROUPING = 524288;  
 const SUPPORT_REPEAT_SET = 262144;
@@ -24,6 +25,7 @@ window.customCards.push({
 });
 
 class YetAnotherMediaPlayerCard extends LitElement {
+  _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
   _lastGroupingMasterId = null;
   _debouncedVolumeTimer = null;
@@ -32,6 +34,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
 
+  // Scroll to first source option starting with the given letter
+  _scrollToSourceLetter(letter) {
+    // Find the options sheet (source list) in the shadow DOM
+    const menu = this.renderRoot.querySelector('.entity-options-sheet');
+    if (!menu) return;
+    const items = Array.from(menu.querySelectorAll('.entity-options-item'));
+    const item = items.find(el =>
+      (el.textContent || "").trim().toUpperCase().startsWith(letter)
+    );
+    if (item) item.scrollIntoView({ behavior: "smooth", block: "center" });
+  }  
 
    // Show Stop button if supported and layout allows.
   _shouldShowStopButton(stateObj) {
@@ -982,6 +995,92 @@ class YetAnotherMediaPlayerCard extends LitElement {
     background: none;
   }
 
+  /* Source index letter button accessibility and hover styling */
+  .source-index-letter:focus {
+    background: rgba(255,255,255,0.11);
+    outline: 1px solid #ff9800;
+  }
+
+  /* Floating source index and source list overlay styles (updated) */
+  .entity-options-sheet.source-list-sheet {
+    position: relative;
+    overflow: visible !important;
+  }
+  .source-list-scroll {
+    overflow-y: auto;
+    max-height: 340px;
+    scrollbar-width: none;           /* Firefox: hide scrollbar */
+  }
+  .source-list-scroll::-webkit-scrollbar {
+    display: none !important;        /* Chrome/Safari/Edge: hide scrollbar */
+  }
+  .floating-source-index.grab-scroll-active,
+  .floating-source-index.grab-scroll-active * {
+    cursor: grabbing !important;
+  }
+  .floating-source-index {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: auto;          /* was none – allow wheel capture */
+    overscroll-behavior: contain;  /* stop wheel bubbling */
+    z-index: 10;
+    padding: 12px 8px 8px 0;
+    overflow-y: auto;
+    max-height: 100%;
+    min-width: 32px;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE & Edge */
+    cursor: grab;
+  }
+  .floating-source-index::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Opera */
+  }
+  .floating-source-index .source-index-letter {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.08em;
+    cursor: pointer;
+    margin: 2px 0;
+    padding: 2px 2px;
+    pointer-events: auto;
+    outline: none;
+    transition: color 0.13s, background 0.13s, transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
+    transform: scale(1);
+    z-index: 1;
+    min-height: 32px;
+    min-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .floating-source-index .source-index-letter[data-scale="max"] {
+    transform: scale(1.38);
+    z-index: 3;
+  }
+  .floating-source-index .source-index-letter[data-scale="large"] {
+    transform: scale(1.19);
+    z-index: 2;
+  }
+  .floating-source-index .source-index-letter[data-scale="med"] {
+    transform: scale(1.10);
+    z-index: 1;
+  }
+  .floating-source-index .source-index-letter::after {
+    display: none !important;
+  }
+  .floating-source-index .source-index-letter:hover,
+  .floating-source-index .source-index-letter:focus {
+    color: #fff;
+  }
+
   .group-toggle-btn {
     background: none;
     border: 1px solid currentColor;
@@ -1355,6 +1454,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Add grab scroll to chip rows after update/render
     this._addGrabScroll('.chip-row');
     this._addGrabScroll('.action-chip-row');
+    this._addVerticalGrabScroll('.floating-source-index');
   }
 
   _toggleSourceMenu() {
@@ -1672,6 +1772,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const stateObj = this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
 
+      // Collect unique, sorted first letters of source names
+      const sourceList = stateObj.attributes.source_list || [];
+      const sourceLetters = Array.from(new Set(sourceList.map(s => (s && s[0] ? s[0].toUpperCase() : ""))))
+        .filter(l => l && /^[A-Z]$/.test(l))
+        .sort();
+
       // Idle image "picture frame" mode when idle
       let idleImageUrl = null;
       if (
@@ -1854,9 +1960,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
                     </button>
                   ` : nothing}
-                  <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                    <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-                  </button>
+                  ${(this._supportsFeature(stateObj, SUPPORT_PAUSE) || this._supportsFeature(stateObj, SUPPORT_PLAY)) ? html`
+                    <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
+                      <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+                    </button>
+                  ` : nothing}
                   <!-- Stop button, only if supported and horizontal space allows -->
                   ${this._shouldShowStopButton(stateObj)
                     ? html`
@@ -2069,9 +2177,36 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   })}
               ` : html`
                 <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
-                ${this.currentStateObj?.attributes?.source_list?.map(src => html`
-                  <div class="entity-options-item" @click=${() => this._selectSource(src)}>${src}</div>
-                `)}
+                <div class="entity-options-sheet source-list-sheet" style="position:relative;">
+                  <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
+                    ${sourceList.map(src => html`
+                      <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
+                    `)}
+                  </div>
+                </div>
+                <div class="floating-source-index">
+                  ${sourceLetters.map((letter, i) => {
+                    const hovered = this._hoveredSourceLetterIndex;
+                    let scale = "";
+                    if (hovered !== null && hovered !== undefined) {
+                      const dist = Math.abs(hovered - i);
+                      if (dist === 0) scale = "max";
+                      else if (dist === 1) scale = "large";
+                      else if (dist === 2) scale = "med";
+                    }
+                    return html`
+                      <button
+                        class="source-index-letter"
+                        data-scale=${scale}
+                        @mouseenter=${() => { this._hoveredSourceLetterIndex = i; this.requestUpdate(); }}
+                        @mouseleave=${() => { this._hoveredSourceLetterIndex = null; this.requestUpdate(); }}
+                        @click=${() => this._scrollToSourceLetter(letter)}
+                      >
+                        ${letter}
+                      </button>
+                    `;
+                  })}
+                </div>
               `}
             </div>
           </div>
@@ -2100,7 +2235,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   firstUpdated() {
     super.firstUpdated?.();
-    
+    // Trap scroll events inside floating index so they don't scroll the page
+    const index = this.renderRoot.querySelector('.floating-source-index');
+    if (index) {
+      index.addEventListener('wheel', function(e) {
+        const { scrollTop, scrollHeight, clientHeight } = index;
+        const delta = e.deltaY;
+        if (
+          (delta < 0 && scrollTop === 0) ||
+          (delta > 0 && scrollTop + clientHeight >= scrollHeight)
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        // Otherwise, allow scroll
+      }, { passive: false });
+    }
   }
 
   _addGrabScroll(selector) {
@@ -2146,6 +2296,46 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     }, true);
     row._grabScrollAttached = true;
+  }
+
+  _addVerticalGrabScroll(selector) {
+    const col = this.renderRoot.querySelector(selector);
+    if (!col || col._grabScrollAttached) return;
+    let isDown = false;
+    let startY, scrollTop;
+    col.addEventListener('mousedown', (e) => {
+      isDown = true;
+      col._dragged = false;
+      col.classList.add('grab-scroll-active');
+      startY = e.pageY - col.getBoundingClientRect().top;
+      scrollTop = col.scrollTop;
+      e.preventDefault();
+    });
+    col.addEventListener('mouseleave', () => {
+      isDown = false;
+      col.classList.remove('grab-scroll-active');
+    });
+    col.addEventListener('mouseup', () => {
+      isDown = false;
+      col.classList.remove('grab-scroll-active');
+    });
+    col.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      const y = e.pageY - col.getBoundingClientRect().top;
+      const walk = (y - startY);
+      if (Math.abs(walk) > 5) col._dragged = true;
+      e.preventDefault();
+      col.scrollTop = scrollTop - walk;
+    });
+    // Suppress clicks after drag
+    col.addEventListener('click', (e) => {
+      if (col._dragged) {
+        e.stopPropagation();
+        e.preventDefault();
+        col._dragged = false;
+      }
+    }, true);
+    col._grabScrollAttached = true;
   }
 
   disconnectedCallback() {
