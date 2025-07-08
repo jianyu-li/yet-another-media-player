@@ -11,7 +11,7 @@
     "@babel/cli": "^7.28.0",
     "@babel/core": "^7.27.4",
     "@babel/plugin-transform-optional-chaining": "^7.27.1",
-    "@babel/preset-env": "^7.27.2",
+    "@babel/preset-env": "^7.28.0",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
