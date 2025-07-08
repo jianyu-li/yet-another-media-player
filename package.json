@@ -8,7 +8,7 @@
     "lit": "^3.3.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.27.2",
+    "@babel/cli": "^7.28.0",
     "@babel/core": "^7.27.4",
     "@babel/plugin-transform-optional-chaining": "^7.27.1",
     "@babel/preset-env": "^7.27.2",
