@@ -88,7 +88,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
     }
     return Object.values(map)
-      .sort((a, b) => b.ts - a.ts)   // sort groups by recency
+      .sort((a, b) => b.ts - a.ts)   // sort groups by most recent
       .map(g => g.ids.sort());       // sort ids alphabetically inside each group
   }
   static properties = {
@@ -2766,7 +2766,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         },
         required: false
       },
-      // Add idle_image entity picker after progress bar options
+      
       {
         name: "idle_image",
         selector: {
