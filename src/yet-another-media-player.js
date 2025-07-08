@@ -2834,4 +2834,3 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 }
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
-
