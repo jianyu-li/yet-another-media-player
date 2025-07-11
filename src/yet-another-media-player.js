@@ -777,10 +777,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         selected: this.currentEntityId === id,
                         groupName: this.getChipName(id),
                         art: null, // group chips show count or icon, not artwork
-                        icon: "mdi:account-multiple", // or your preferred group icon
+                        icon: "mdi:group", 
                         pinned: this._pinnedIndex === idx,
                         holdToPin: this._holdToPin,
-                        onChipClick: (idx) => this._onChipClick(idx),
+                        onChipClick: (idx) => {
+                          this._onChipClick(idx);
+                          this._openGrouping();          // open the grouped‑players bottom sheet
+                        },
                         onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
                         onPointerDown: (e) => this._handleChipPointerDown(idx),
                         onPointerUp: (e) => this._handleChipPointerUp()
@@ -990,72 +993,91 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   })()
                 }
                 <hr style="margin:8px 0 2px 0;opacity:0.19;border:0;border-top:1px solid #fff;" />
-                ${this.entityIds
-                  .filter(id => id !== this.currentEntityId)
-                  .map(id => {
-                    const st = this.hass.states[id];
-                    if (!this._supportsFeature(st, SUPPORT_GROUPING)) return nothing;
-                    const name = this.getChipName(id);
-                    const masterState = this.hass.states[this.currentEntityId];
-                    const grouped =
-                      Array.isArray(masterState.attributes.group_members) &&
-                      masterState.attributes.group_members.includes(id);
-                    const obj = this.entityObjs.find(e => e.entity_id === id);
-                    const volumeEntity = (obj && obj.volume_entity) ? obj.volume_entity : id;
-                    const volumeState = this.hass.states[volumeEntity];
-                    const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
-                    const volVal = Number(volumeState?.attributes?.volume_level || 0);
-
-                    // New improved layout
-                    return html`
-                      <div style="
-                        display: flex;
-                        align-items: center;
-                        padding: 6px 4px;
-                      ">
-                        <span style="
-                          display:inline-block;
-                          width: 140px;
-                          min-width: 100px;
-                          max-width: 160px;
-                          overflow: hidden;
-                          text-overflow: ellipsis;
-                          white-space: nowrap;
-                        ">${name}</span>
-                        <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
+                ${
+                  (() => {
+                    // --- Begin new group player rows logic ---
+                    const masterId = this.currentEntityId;
+                    const sortedIds = [masterId, ...this.entityIds.filter(id => id !== masterId)];
+                    return sortedIds.map(id => {
+                      const st = this.hass.states[id];
+                      if (!this._supportsFeature(st, SUPPORT_GROUPING)) return nothing;
+                      const name = this.getChipName(id);
+                      const masterState = this.hass.states[masterId];
+                      const grouped =
+                        id === masterId
+                          ? true
+                          : (
+                            Array.isArray(masterState.attributes.group_members) &&
+                            masterState.attributes.group_members.includes(id)
+                          );
+                      const obj = this.entityObjs.find(e => e.entity_id === id);
+                      const volumeEntity = (obj && obj.volume_entity) ? obj.volume_entity : id;
+                      const volumeState = this.hass.states[volumeEntity];
+                      const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
+                      const volVal = Number(volumeState?.attributes?.volume_level || 0);
+                      return html`
+                        <div style="
+                          display: flex;
+                          align-items: center;
+                          padding: 6px 4px;
+                        ">
+                          <span style="
+                            display:inline-block;
+                            width: 140px;
+                            min-width: 100px;
+                            max-width: 160px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                          ">${name}</span>
+                          <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
+                            ${
+                              isRemoteVol
+                                ? html`
+                                    <div class="vol-stepper">
+                                      <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
+                                      <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
+                                    </div>
+                                  `
+                                : html`
+                                    <input
+                                      class="vol-slider"
+                                      type="range"
+                                      min="0"
+                                      max="1"
+                                      step="0.01"
+                                      .value=${volVal}
+                                      @change=${e => this._onGroupVolumeChange(id, volumeEntity, e)}
+                                      title="Volume"
+                                      style="width:100%;max-width:260px;"
+                                    />
+                                  `
+                            }
+                            <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
+                          </div>
                           ${
-                            isRemoteVol
+                            id === masterId
                               ? html`
-                                  <div class="vol-stepper">
-                                    <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
-                                    <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
-                                  </div>
+                                  <button class="group-toggle-btn group-toggle-transparent"
+                                          disabled
+                                          aria-label="Master"
+                                          style="margin-left:14px;"></button>
                                 `
                               : html`
-                                  <input
-                                    class="vol-slider"
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.01"
-                                    .value=${volVal}
-                                    @change=${e => this._onGroupVolumeChange(id, volumeEntity, e)}
-                                    title="Volume"
-                                    style="width:100%;max-width:260px;"
-                                  />
+                                  <button class="group-toggle-btn"
+                                          @click=${() => this._toggleGroup(id)}
+                                          title=${grouped ? "Unjoin" : "Join"}
+                                          style="margin-left:14px;">
+                                    <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
+                                  </button>
                                 `
                           }
-                          <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                         </div>
-                        <button class="group-toggle-btn"
-                                @click=${() => this._toggleGroup(id)}
-                                title=${grouped ? "Unjoin" : "Join"}
-                                style="margin-left:14px;">
-                          <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
-                        </button>
-                      </div>
-                    `;
-                  })}
+                      `;
+                    });
+                    // --- End new group player rows logic ---
+                  })()
+                }
               ` : html`
                 <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">

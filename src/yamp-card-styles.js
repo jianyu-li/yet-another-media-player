@@ -1015,6 +1015,18 @@ export const yampCardStyles = css`
     background: rgba(255,255,255,0.1);
   }
 
+  /* Invisible master button to keep layout aligned */
+  .group-toggle-transparent {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: transparent !important;
+    pointer-events: none !important;
+  }
+  .group-toggle-transparent:hover {
+    background: none !important;   /* suppress hover tint */
+  }
+
   /* Force white text/icons in the grouping sheet */
   .entity-options-sheet,
   .entity-options-sheet * {
