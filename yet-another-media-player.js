@@ -2663,7 +2663,7 @@ class YetAnotherMediaPlayerCard extends i {
     isRealArtwork ? stateObj.attributes.entity_picture || stateObj.attributes.album_art : null;
     // Details
     const title = isPlaying ? stateObj.attributes.media_title || "" : "";
-    const artist = isPlaying ? stateObj.attributes.media_artist || stateObj.attributes.media_series_title || "" : "";
+    const artist = isPlaying ? stateObj.attributes.media_artist || stateObj.attributes.media_series_title || stateObj.attributes.app_name || "" : "";
     let pos = stateObj.attributes.media_position || 0;
     const duration = stateObj.attributes.media_duration || 0;
     if (isPlaying) {
@@ -2807,9 +2807,7 @@ class YetAnotherMediaPlayerCard extends i {
                   <div class="title">
                     ${isPlaying ? title : ""}
                   </div>
-                  <div class="artist">
-                    ${isPlaying ? artist : ""}
-                  </div>
+                  ${isPlaying && artist ? x`<div class="artist">${artist}</div>` : E}
                 </div>
                 ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
