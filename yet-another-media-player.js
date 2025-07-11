@@ -2867,7 +2867,11 @@ class YetAnotherMediaPlayerCard extends i {
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
               ${!this._showGrouping && !this._showSourceList ? x`
-                <button class="entity-options-item" @click=${() => this._openMoreInfo()}>More Info</button>
+                <button class="entity-options-item" @click=${() => {
+      this._openMoreInfo();
+      this._showEntityOptions = false;
+      this.requestUpdate();
+    }}>More Info</button>
                 ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
                   <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
                 ` : E}
