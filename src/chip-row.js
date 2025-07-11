@@ -11,6 +11,7 @@ export function renderChip({
   pinned,
   holdToPin,
   onChipClick,
+  onIconClick,
   onPinClick,
   onPointerDown,
   onPointerUp,
@@ -54,6 +55,7 @@ export function renderGroupChip({
   pinned,
   holdToPin,
   onChipClick,
+  onIconClick,
   onPinClick,
   onPointerDown,
   onPointerUp,
@@ -66,9 +68,22 @@ export function renderGroupChip({
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}>
       <span class="chip-icon">
-        ${art
-          ? html`<img class="chip-mini-art" src="${art}" />`
-          : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+        ${
+          art
+            ? html`<img class="chip-mini-art" src="${art}" />`
+            : html`<ha-icon
+                      .icon=${icon}
+                      style="font-size:28px;"
+                      @click=${e => {
+                        e.stopPropagation();
+                        if (onIconClick) {
+                          onIconClick(idx, e);
+                        } else {
+                          onChipClick(idx);
+                        }
+                      }}
+                    ></ha-icon>`
+        }
       </span>
       <span class="chip-label">${groupName}</span>
       ${pinned

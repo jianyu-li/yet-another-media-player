@@ -223,6 +223,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Do not mutate config.force_chip_row here.
   }
 
+  // Returns array of entity config objects, including group_volume if present in user config.
   get entityObjs() {
     return this.config.entities.map(e =>
       typeof e === "string"
@@ -231,7 +232,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
             entity_id: e.entity_id,
             name: e.name || "",
             volume_entity: e.volume_entity,
-            sync_power: !!e.sync_power
+            sync_power: !!e.sync_power,
+            // Pass through group_volume if present, otherwise undefined
+            ...(typeof e.group_volume !== "undefined" ? { group_volume: e.group_volume } : {})
           }
     );
   }
@@ -532,13 +535,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
+  /**
+   * Handles volume change events.
+   * Supports per-entity group_volume override:
+   *  - If group_volume is false, always sets volume only on the volume entity, even if grouped.
+   *  - If group_volume is true or undefined, uses group volume logic (default YAMP behavior).
+   */
   _onVolumeChange(e) {
     const idx = this._selectedIndex;
     const mainEntity = this.entityObjs[idx].entity_id;
     const state = this.hass.states[mainEntity];
     const newVol = Number(e.target.value);
+    const obj = this.entityObjs[idx];
 
-    // If grouped, apply delta to each group member
+    // Check for per-entity group_volume override (default to current YAMP behavior)
+    const groupVolume = (typeof obj.group_volume === "boolean") ? obj.group_volume : true;
+
+    // If group_volume is false, always control only the volume entity, regardless of group status
+    if (!groupVolume) {
+      this.hass.callService("media_player", "volume_set", {
+        entity_id: this._getVolumeEntity(idx),
+        volume_level: newVol
+      });
+      return;
+    }
+
+    // --- Existing group volume logic follows ---
     if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
       // Get current group volumes
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -780,9 +802,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         icon: "mdi:group", 
                         pinned: this._pinnedIndex === idx,
                         holdToPin: this._holdToPin,
-                        onChipClick: (idx) => {
-                          this._onChipClick(idx);
-                          this._openGrouping();          // open the grouped‑players bottom sheet
+                        onChipClick: (idx) => this._onChipClick(idx),
+                        onIconClick: (idx, e) => {
+                          e.stopPropagation();
+                          this._onChipClick(idx); // Optional: select as well
+                          this._openGrouping();
                         },
                         onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
                         onPointerDown: (e) => this._handleChipPointerDown(idx),
