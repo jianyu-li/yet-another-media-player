@@ -1,6 +1,13 @@
 
 import { LitElement, html, css, nothing } from "lit";
 
+import { renderChip, renderGroupChip } from "./chip-row.js";
+import { renderActionChipRow } from "./action-chip-row.js";
+import { renderControlsRow } from "./controls-row.js";
+import { renderVolumeRow } from "./volume-row.js";
+import { renderProgressBar } from "./progress-bar.js";
+import { yampCardStyles } from "./yamp-card-styles.js";
+
 // Supported feature flags
 const SUPPORT_PAUSE = 1;
 const SUPPORT_SEEK = 2;
@@ -25,6 +32,18 @@ window.customCards.push({
 });
 
 class YetAnotherMediaPlayerCard extends LitElement {
+  _pressTimer = null;
+  _handleChipPointerDown(idx) {
+    if (!this._holdToPin) return;
+    this._pressTimer = setTimeout(() => {
+      this._pinChip(idx);
+    }, 650);
+  }
+  _handleChipPointerUp() {
+    if (!this._holdToPin) return;
+    if (this._pressTimer) clearTimeout(this._pressTimer);
+    this._pressTimer = null;
+  }
   _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
   _lastGroupingMasterId = null;
@@ -88,7 +107,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
     }
     return Object.values(map)
-      .sort((a, b) => b.ts - a.ts)   // sort groups by most recent
+      .sort((a, b) => b.ts - a.ts)   // sort groups by recency
       .map(g => g.ids.sort());       // sort ids alphabetically inside each group
   }
   static properties = {
@@ -102,1039 +121,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _holdToPin: { state: true }
   };
 
-  static styles = css`
-  .dim-idle .details,
-  .dim-idle .controls-row,
-  .dim-idle .volume-row,
-  .dim-idle .chip-row,
-  .dim-idle .action-chip-row {
-    opacity: 0.28 !important;
-    transition: opacity 0.5s;
-  }
-  .media-browser-menu {
-    display: flex;
-    align-items: center;
-    margin-right: 0px;
-  }
-  .media-browser-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 36px;
-    width: 36px;
-    padding: 0;
-    margin: 0 4px;
-    background: none;
-    border: none;
-    color: var(--primary-text-color, #fff);
-    font: inherit;
-    cursor: pointer;
-    outline: none;
-  }
-  .media-browser-btn ha-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5em;
-    width: 28px;
-    height: 28px;
-    line-height: 1;
-    vertical-align: middle;
-    position: relative;
-    margin: 0;
-    margin-bottom: 2px;
-    color: #fff !important;
-  }
-    :host {
-      --custom-accent: var(--accent-color, #ff9800);
-    }
-    :host([data-match-theme="false"]) {
-      --custom-accent: #ff9800;
-    }
-  .card-artwork-spacer {
-    width: 100%;
-    flex: 1 1 0;          /* grow *and* shrink with the card height */
-    height: auto;         /* let the browser compute height */
-    min-height: 180px;        /* allow the spacer to collapse on tiny cards */
-   
-    pointer-events: none;
-  }
-  .media-bg-full {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    background-size: cover;
-    background-position: top center;
-    background-repeat: no-repeat;
-    pointer-events: none;
-  }
-  .media-bg-dim {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1;
-    pointer-events: none;
-  }
-  .source-menu {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    padding: 0;
-    margin: 0;
-  }
-  .source-menu-btn {
-    background: none;
-    border: none;
-    color: var(--primary-text-color, #fff);
-    font: inherit;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 1px;
-    padding: 2px 10px;
-    font-size: 1em;
-    outline: none;
-  }
-  .source-selected {
-    min-width: 64px;
-    font-weight: 500;
-    padding-right: 4px;
-    text-align: left;
-  }
-  .source-dropdown {
-    position: absolute;
-    top: 32px;
-    right: 0;
-    left: auto;
-    background: var(--card-background-color, #222);
-    color: var(--primary-text-color, #fff);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.13);
-    min-width: 110px;
-    z-index: 11;
-    margin-top: 2px;
-    border: 1px solid #444;
-    overflow: hidden;
-    max-height: 220px;
-    overflow-y: auto;
-  }
-
-  .source-dropdown.up {
-    top: auto;
-    bottom: 38px;
-    border-radius: 8px 8px 8px 8px;
-  }  
-
-  .source-option {
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: background 0.13s;
-    white-space: nowrap;
-  }
-  .source-option:hover, .source-option:focus {
-    background: var(--accent-color, #1976d2);
-    color: #fff;
-  }
-
-    :host {
-      display: block;
-      border-radius: 16px;
-      box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
-      background: var(--card-background-color, #222);
-      color: var(--primary-text-color, #fff);
-      transition: background 0.2s;
-      overflow: hidden;
-    }
-
-    ha-card.yamp-card {
-      display: block;
-      border-radius: 16px;
-      box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
-      background: var(--card-background-color, #222);
-      color: var(--primary-text-color, #fff);
-      transition: background 0.2s;
-      overflow: hidden;
-    }
-
-    .source-row {
-      display: flex;
-      align-items: center;
-      padding: 0 16px 8px 16px;
-      margin-top: 8px;
-    }
-    .source-select {
-      font-size: 1em;
-      padding: 4px 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      background: var(--card-background-color, #222);
-      color: var(--primary-text-color, #fff);
-      outline: none;
-      margin-top: 2px;
-    }
-
-  .chip-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    margin-right: 8px;
-    background: #fff;
-    border-radius: 50%;
-    overflow: hidden;
-    padding: 0; /* Remove padding */
-  }
-  .chip:not([selected]):not([playing]) .chip-icon {
-    background: transparent !important;
-  }
-  .chip:not([selected]) .chip-icon ha-icon {
-    color: var(--custom-accent) !important; /* Orange for unselected chips */
-  }
-  .chip[selected]:not([playing]) .chip-icon {
-    background: transparent !important;
-  }
-  .chip[selected]:not([playing]) .chip-icon ha-icon {
-    color: #fff !important;
-  }
-  .chip-icon ha-icon {
-    width: 100%;
-    height: 100%;
-    font-size: 28px !important;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    padding: 0;
-  }
-  .chip-mini-art {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-    display: block;
-  }
-  .chip-row.grab-scroll-active,
-  .action-chip-row.grab-scroll-active {
-    cursor: grabbing !important;
-  }
-  .chip-row,
-  .action-chip-row {
-    cursor: grab;
-  }
-  .chip-row {
-    display: flex;
-    gap: 8px; 
-    padding: 8px 12px 0 12px;
-    margin-bottom: 12px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    scrollbar-width: none;
-    scrollbar-color: var(--accent-color, #1976d2) #222;
-    -webkit-overflow-scrolling: touch; /* Enables momentum scrolling on iOS */
-    touch-action: pan-x; /* Hint for horizontal pan/swipe on some browsers */
-    max-width: 100vw;
-  }
-  .chip-row::-webkit-scrollbar {
-    display: none;
-  }
-  .chip-row::-webkit-scrollbar-thumb {
-    background: var(--accent-color, #1976d2);
-    border-radius: 6px;
-  }
-  .chip-row::-webkit-scrollbar-track {
-    background: #222;
-  }
-
-  .action-chip-row {
-    display: flex;
-    gap: 8px;
-    padding: 2px 12px 0 12px;
-    margin-bottom: 8px;
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: none;
-  }
-  .action-chip-row::-webkit-scrollbar {
-    display: none;
-  }
-  .action-chip {
-    background: var(--card-background-color, #222);
-    opacity: 1;
-    border-radius: 8px;
-    color: var(--primary-text-color, #fff);
-    box-shadow: none !important;
-    text-shadow: none !important;
-    border: none;
-    outline: none;
-    padding: 4px 12px;
-    font-weight: 500;
-    font-size: 0.95em;
-    cursor: pointer;
-    margin: 4px 0;
-    transition: background 0.2s ease, transform 0.1s ease;
-    flex: 0 0 auto;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  :host([data-match-theme="true"]) .action-chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-  :host([data-match-theme="false"]) .action-chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-
-  :host([data-match-theme="true"]) .action-chip:active {
-    background: var(--custom-accent);
-    color: #fff;
-    transform: scale(0.96);
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-  :host([data-match-theme="false"]) .action-chip:active {
-    background: var(--custom-accent);
-    color: #fff;
-    transform: scale(0.96);
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-
-  .chip {
-    display: flex;           /* Flexbox for vertical centering */
-    align-items: center;     /* Vertically center content */
-    border-radius: 24px;
-    padding: 6px 6px 6px 8px;
-    background: var(--chip-background, #333);
-    color: var(--primary-text-color, #fff);
-    cursor: pointer;
-    font-weight: 500;
-    opacity: 0.85;
-    border: none;
-    outline: none;
-    transition: background 0.2s, opacity 0.2s;
-    flex: 0 0 auto;
-    white-space: nowrap;
-    position: relative;
-  }
-  .chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
-  }
-  .chip:hover .chip-icon ha-icon {
-    color: #fff !important;
-  }
-  .chip-pin {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #fff;
-    border-radius: 50%;
-    padding: 2px;
-    z-index: 2;
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--custom-accent);
-    box-shadow: 0 1px 5px rgba(0,0,0,0.11);
-    cursor: pointer;
-    transition: box-shadow 0.18s;
-  }
-  .chip-pin:hover {
-    box-shadow: 0 2px 12px rgba(33,33,33,0.17);
-  }
-  .chip-pin ha-icon {
-    color: var(--custom-accent);
-    font-size: 16px;
-    background: transparent;
-    border-radius: 50%;
-    margin: 0;
-    padding: 0;
-  }
-  .chip-pin-inside {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 8px;
-    background: transparent;
-    border-radius: 50%;
-    padding: 2px;
-    cursor: pointer;
-  }
-  .chip-pin-inside ha-icon {
-    color: var(--custom-accent, #ff9800);
-    font-size: 17px;
-    margin: 0;
-  }
-  .chip[selected] .chip-pin-inside ha-icon {
-    color: #fff !important;  /* White pin icon for selected (orange) chips */
-  }
-  .chip-pin:hover ha-icon,
-  .chip-pin-inside:hover ha-icon {
-    color: #fff !important;
-  }
-  /* When the user hovers the chip, force the pin icon white */
-  .chip:hover .chip-pin ha-icon,
-  .chip:hover .chip-pin-inside ha-icon {
-    color: #fff !important;
-  }    
-  .chip-pin-spacer {
-    display: flex;
-    width: 24px;
-    min-width: 24px;
-    height: 1px;
-  }
-    .chip[playing] {
-      padding-right: 6px;
-    }
-      .chip[selected] {
-        background: var(--custom-accent);
-        color: #fff;
-        opacity: 1;
-      }
-  /* Grouped master chip shows a count instead of artwork/icon */
-  .chip-icon.group-icon {
-    background: var(--custom-accent);
-    color: #fff !important;
-    position: relative;
-  }
-  .group-count {
-    font-weight: 700;
-    font-size: 0.9em;
-    line-height: 28px; /* matches .chip-icon width */
-    text-align: center;
-    width: 100%;
-    color: inherit;
-  }
-    .media-artwork-bg {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1.75/1;
-      overflow: hidden;
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: top center;
-    }
-
-    .artwork {
-      width: 96px;
-      height: 96px;
-      object-fit: cover;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      background: #222;
-      
-    }
-    .details {
-      padding: 0 16px 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 8px;
-      min-height: 48px;
-    }
-    .details .title {
-      padding-top: 8px;
-    }
-    .progress-bar-container {
-      padding-left: 24px;
-      padding-right: 24px;
-      box-sizing: border-box;
-    }
-    .title {
-      font-size: 1.1em;
-      font-weight: 600;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .artist {
-      font-size: 1em;
-      font-weight: 400;
-      color: var(--secondary-text-color, #aaa);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: #fff !important;
-    }
-    .controls-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      padding: 4px 16px;
-    }
-    .button {
-      background: none;
-      border: none;
-      color: inherit;
-      font-size: 1.5em;
-      cursor: pointer;
-      padding: 6px;
-      border-radius: 8px;
-      transition: background 0.2s;
-    }
-    .button:active {
-      background: rgba(0,0,0,0.10);
-    }
-    .button.active ha-icon,
-    .button.active {
-      color: var(--custom-accent) !important;
-    }
-    .progress-bar {
-      width: 100%;
-      height: 6px;
-      background: rgba(255,255,255,0.22);
-      border-radius: 3px;
-      margin: 8px 0;
-      cursor: pointer;
-      position: relative;
-      box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
-    }
-    .progress-inner {
-      height: 100%;
-      background: var(--custom-accent);
-      border-radius: 3px 0 0 3px;
-      box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
-    }
-    .volume-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 12px 12px 25px;
-      justify-content: space-between;
-    }
-    .vol-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      height: 6px;
-      background: hsla(0, 0.00%, 100.00%, 0.22);
-      border-radius: 3px;
-      outline: none;
-      box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
-      flex: 1 1 auto;
-      min-width: 80px;
-      max-width: none;
-      margin-right: 12px;
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
-    .volume-row .source-menu {
-      flex: 0 0 auto;
-    }
-
-    /* Webkit browsers (Chrome, Safari, Edge) */
-    .vol-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--custom-accent);
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-      border: 2px solid #fff;
-    }
-    /* Firefox */
-    .vol-slider::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--custom-accent);
-      cursor: pointer;
-      border: 2px solid #fff;
-    }
-    .vol-slider::-moz-range-track {
-      height: 6px;
-      background: rgba(255,255,255,0.22);
-      border-radius: 3px;
-    }
-    /* IE and Edge (legacy) */
-    .vol-slider::-ms-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--custom-accent);
-      cursor: pointer;
-      border: 2px solid #fff;
-    }
-    .vol-slider::-ms-fill-lower,
-    .vol-slider::-ms-fill-upper {
-      height: 6px;
-      background: rgba(255,255,255,0.22);
-      border-radius: 3px;
-    }
-
-    /* Make .vol-slider thumbs easier to grab on touch devices without changing their visual appearance */
-    @media (pointer: coarse) {
-      .vol-slider::-webkit-slider-thumb {
-        box-shadow: 0 0 0 18px rgba(0,0,0,0);
-      }
-      .vol-slider::-moz-range-thumb {
-        box-shadow: 0 0 0 18px rgba(0,0,0,0);
-      }
-      .vol-slider::-ms-thumb {
-        box-shadow: 0 0 0 18px rgba(0,0,0,0);
-      }
-    }
-    /* .volume-row .source-menu block moved and replaced above for consistency */
-    .vol-stepper {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .vol-stepper .button {
-      min-width: 36px;
-      min-height: 36px;
-      font-size: 1.5em;
-      padding: 6px 0;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }    
-
-    /* Consolidated Light Mode Styles */
-    @media (prefers-color-scheme: light) {
-      :host {
-        background: var(--card-background-color, #fff);
-      }
-      .chip {
-        background: #f0f0f0;
-        color: #222;
-      }
-      :host([data-match-theme="true"]) .chip[selected] {
-        background: var(--accent-color, #1976d2);
-        color: #fff;
-      }
-      .artwork {
-        background: #eee;
-      }
-      .progress-bar {
-        background: #eee;
-      }
-      .source-menu-btn {
-        color: #222;
-      }
-      .source-dropdown {
-        background: #fff;
-        color: #222;
-        border: 1px solid #bbb;
-      }
-      .source-option {
-        color: #222 !important;
-        background: #fff !important;
-        transition: background 0.13s, color 0.13s;
-      }
-      .source-option:hover,
-      .source-option:focus {
-        background: var(--custom-accent) !important;
-        color: #222 !important;
-      }
-      .source-select {
-        background: #fff;
-        color: #222;
-        border: 1px solid #aaa;
-      }
-      .action-chip {
-        background: var(--card-background-color, #fff);
-        opacity: 1;
-        border-radius: 8px;
-        color: var(--primary-text-color, #222);
-        box-shadow: none !important;
-        text-shadow: none !important;
-        border: none;
-        outline: none;
-      }
-      .action-chip:active {
-        background: var(--accent-color, #1976d2);
-        color: #fff;
-        opacity: 1;
-        transform: scale(0.98);
-        box-shadow: none !important;
-        text-shadow: none !important;
-      }
-      /* Keep source menu text white when expanded (matches controls) */
-      .card-lower-content:not(.collapsed) .source-menu-btn,
-      .card-lower-content:not(.collapsed) .source-selected {
-        color: #fff !important;
-      }
-      /* Only for collapsed cards: override details/title color */
-      /* .card-lower-content.collapsed .details .title,
-      .card-lower-content.collapsed .title {
-        color: #222 !important;
-      } */
-    }
-    .artwork-dim-overlay {
-    position: absolute;
-    left: 0; right: 0; top: 0; bottom: 0;
-    pointer-events: none;
-    background: linear-gradient(to bottom, 
-    rgba(0,0,0,0.0) 0%,
-    rgba(0,0,0,0.40) 55%,
-    rgba(0,0,0,0.70) 100%);
-    z-index: 2;
-  }    
-  .card-lower-content-container {
-    position: relative;
-    width: 100%;
-    min-height: auto; /* allow vertical auto‑resize */
-    height: 100%;     /* stretch to fill grid-assigned rows */
-    display: flex;    /* enables spacer to grow */
-    flex: 1 1 auto;
-    flex-direction: column;
-    border-radius: 0 0 16px 16px;
-    overflow: hidden;
-  }
-  .card-lower-content-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background-size: cover;
-    background-position: top center;
-    background-repeat: no-repeat;
-    pointer-events: none;
-  }
-  .card-lower-fade {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    background: linear-gradient(
-      to bottom,
-      rgba(0,0,0,0.0) 0%,
-      rgba(0,0,0,0.40) 55%,
-      rgba(0,0,0,0.92) 100%
-    );
-  }
-  .card-lower-content {
-    position: relative;
-    z-index: 2;
-  }
-  .card-lower-content.transitioning .details,
-  .card-lower-content.transitioning .card-artwork-spacer {
-    transition: opacity 0.3s;
-  }
-  /* Show details (title) when collapsed (but hide artist/artwork spacer) */
-  .card-lower-content.collapsed .details {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .card-lower-content.collapsed .card-artwork-spacer {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  /* Stretch the lower content to fill the card so flex‑grown elements
-     like .card-artwork-spacer can expand and consume extra vertical space */
-  .card-lower-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-    /* Force white text for important UI elements */
-    .details,
-    .title,
-    .artist,
-    .controls-row,
-    .button,
-    .vol-stepper span {
-      color: #fff !important;
-    }
-  .media-artwork-placeholder ha-icon {
-    width: 104px !important;
-    height: 104px !important;
-    min-width: 104px !important;
-    min-height: 104px !important;
-    max-width: 104px !important;
-    max-height: 104px !important;
-    display: block;
-  }
-  .media-artwork-placeholder ha-icon svg {
-    width: 100% !important;
-    height: 100% !important;
-    display: block !important;
-  }
-  .card-lower-content.collapsed .collapsed-artwork-container {
-    position: absolute;
-    top: 10px;
-    right: 18px;
-    width: 110px;
-    height: calc(100% - 120px);
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-end;
-    z-index: 5;
-    background: transparent !important;
-    pointer-events: none;
-    box-shadow: none !important;
-    padding: 0;
-    transition: background 0.4s;
-  }
-  .card-lower-content.collapsed .collapsed-artwork {
-    width: 98px !important;
-    height: 98px !important;
-    border-radius: 14px !important;
-    object-fit: cover !important;
-    background: transparent !important;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.22);
-    pointer-events: none;
-    user-select: none;
-    display: block;
-    margin: 2px;
-  }
-  .card-lower-content.collapsed .controls-row {
-    max-width: calc(100% - 120px); /* Leaves room for floating artwork + margin */
-    margin-right: 110px;            /* Visually lines up with artwork edge */
-  }
-  .card-lower-content-bg {
-    height: 100% !important;
-  }
-  
-  @media (max-width: 420px) {
-    .card-lower-content.collapsed .controls-row {
-      max-width: 100% !important;
-      margin-right: 0 !important;
-    }
-    .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 70px !important;
-      height: 70px !important;
-      right: 10px !important;
-    }
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 62px !important;
-      height: 62px !important;
-    }
-  }
-
-  .collapsed-progress-bar {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    height: 4px;
-    background: var(--custom-accent, #ff9800);
-    border-radius: 0 0 12px 12px;
-    z-index: 99;
-    transition: width 0.2s linear;
-    pointer-events: none;
-  }
-  /* Options overlay is card-contained, not fixed to viewport */
-  .entity-options-overlay {
-    position: absolute; /* Now relative to the card, not the page */
-    left: 0; right: 0; top: 0; bottom: 0;
-    z-index: 30;
-    background: rgba(15,18,30,0.70); /* Increased darkening for clarity */
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    /* No blur/backdrop, just a hint of background */
-  }
-  /* Options sheet is scrollable and clipped to card, not the page */
-  .entity-options-sheet {
-    background: none;
-    border-radius: 16px 16px 0 0;
-    box-shadow: none;
-    width: 98%;
-    max-width: 430px;
-    margin-bottom: 1.5%;
-    padding: 18px 8px 8px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    /* Sheet max-height is now relative to the card, so scrolling stays inside */
-    max-height: 85%;
-    min-height: 90px;
-    overflow-y: auto !important;
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-  }
-  .entity-options-sheet {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE & Edge Legacy */
-  }
-  .entity-options-sheet::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-  }
-  .entity-options-title {
-    font-size: 1.1em;
-    font-weight: bold;
-    margin-bottom: 18px;
-    text-align: center;
-    color: #fff;
-    background: none;
-    text-shadow: 0 2px 8px #0009;
-  }
-  .entity-options-item {
-    background: none;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-size: 1.12em;
-    font-weight: 500;
-    margin: 10px 0;
-    padding: 18px 0 10px 0;
-    cursor: pointer;
-    transition: color 0.13s, text-shadow 0.13s;
-    text-align: center;
-    text-shadow: 0 2px 8px #0009;
-  }
-
-  .entity-options-item:hover {
-    color: var(--custom-accent, #ff9800) !important;
-    text-shadow: none !important;
-    background: none;
-  }
-
-  /* Source index letter button accessibility and hover styling */
-  .source-index-letter:focus {
-    background: rgba(255,255,255,0.11);
-    outline: 1px solid #ff9800;
-  }
-
-  /* Floating source index and source list overlay styles (updated) */
-  .entity-options-sheet.source-list-sheet {
-    position: relative;
-    overflow: visible !important;
-  }
-  .source-list-scroll {
-    overflow-y: auto;
-    max-height: 340px;
-    scrollbar-width: none;           /* Firefox: hide scrollbar */
-  }
-  .source-list-scroll::-webkit-scrollbar {
-    display: none !important;        /* Chrome/Safari/Edge: hide scrollbar */
-  }
-  .floating-source-index.grab-scroll-active,
-  .floating-source-index.grab-scroll-active * {
-    cursor: grabbing !important;
-  }
-  .floating-source-index {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    width: 28px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-start;
-    pointer-events: auto;          /* was none – allow wheel capture */
-    overscroll-behavior: contain;  /* stop wheel bubbling */
-    z-index: 10;
-    padding: 12px 8px 8px 0;
-    overflow-y: auto;
-    max-height: 100%;
-    min-width: 32px;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE & Edge */
-    cursor: grab;
-  }
-  .floating-source-index::-webkit-scrollbar {
-    display: none !important; /* Chrome, Safari, Opera */
-  }
-  .floating-source-index .source-index-letter {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 1.08em;
-    cursor: pointer;
-    margin: 2px 0;
-    padding: 2px 2px;
-    pointer-events: auto;
-    outline: none;
-    transition: color 0.13s, background 0.13s, transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
-    transform: scale(1);
-    z-index: 1;
-    min-height: 32px;
-    min-width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .floating-source-index .source-index-letter[data-scale="max"] {
-    transform: scale(1.38);
-    z-index: 3;
-  }
-  .floating-source-index .source-index-letter[data-scale="large"] {
-    transform: scale(1.19);
-    z-index: 2;
-  }
-  .floating-source-index .source-index-letter[data-scale="med"] {
-    transform: scale(1.10);
-    z-index: 1;
-  }
-  .floating-source-index .source-index-letter::after {
-    display: none !important;
-  }
-  .floating-source-index .source-index-letter:hover,
-  .floating-source-index .source-index-letter:focus {
-    color: #fff;
-  }
-
-  .group-toggle-btn {
-    background: none;
-    border: 1px solid currentColor;
-    border-radius: 50%;
-    width: 26px;
-    height: 26px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.15em;
-    line-height: 1;
-    margin-right: 10px;
-    cursor: pointer;
-    transition: background 0.15s;
-    position: relative;
-    overflow: hidden;
-  }
-  .group-toggle-btn span,
-  .group-toggle-btn .group-toggle-fix {
-    position: relative;
-    left: 0.5px;
-  }
-  .group-toggle-btn:hover {
-    background: rgba(255,255,255,0.1);
-  }
-
-  /* Force white text/icons in the grouping sheet */
-  .entity-options-sheet,
-  .entity-options-sheet * {
-    color: #fff !important;
-  }
-
-  /* Ensure the + / – toggle icon and border are white */
-  .group-toggle-btn {
-    color: #fff !important;
-    border-color: #fff !important;
-  }
-  .group-toggle-btn:hover {
-    background: rgba(255,255,255,0.15);
-  }
-`
-
-
-
+  static styles = yampCardStyles;
 
   constructor() {
     super();
@@ -1155,7 +142,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._customAccent = "#ff9800";
     // Outside click handler for source dropdown
     this._sourceDropdownOutsideHandler = null;
-    this._isActuallyCollapsed = false;
+    this._isIdle = false;
+    this._idleTimeout = null;
     // Overlay state for entity options
     this._showEntityOptions = false;
     // Overlay state for grouping sheet
@@ -1171,12 +159,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
         const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
         if (stateObj && stateObj.state !== "playing") {
-          this._isActuallyCollapsed = true;
+          this._isIdle = true;
           this.requestUpdate();
         }
       }
-    }, 0);    
-    this._collapseTimeout = null;
+    }, 0);
     // Store previous collapsed state
     this._prevCollapsed = null;
   }
@@ -1280,60 +267,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return state?.attributes.friendly_name || entity_id;
   }
 
-  // Render a chip for an entity (safe if state is missing)
-  _renderChip(id) {
-    const idx   = this.entityIds.indexOf(id);
-    const state = this.hass?.states?.[id];
-    const isPlaying = state?.state === "playing";
-
-    const art  = isPlaying && (
-      state?.attributes?.entity_picture || state?.attributes?.album_art
-    );
-    const icon = state?.attributes?.icon || "mdi:cast";
-
-    let pressTimer = null;
-
-    const handlePointerDown = (e) => {
-      if (!this._holdToPin) return;
-      pressTimer = setTimeout(() => {
-        this._pinChip(idx);
-      }, 650);
-    };
-
-    const handlePointerUp = (e) => {
-      if (!this._holdToPin) return;
-      if (pressTimer) clearTimeout(pressTimer);
-    };
-
-    return html`
-      <button class="chip"
-              ?selected=${this.currentEntityId === id}
-              ?playing=${isPlaying}
-              @click=${() => this._onChipClick(idx)}
-              @pointerdown=${handlePointerDown}
-              @pointerup=${handlePointerUp}
-              @pointerleave=${handlePointerUp}
-              style="display:flex;align-items:center;justify-content:space-between;">
-        <span class="chip-icon">
-          ${art
-            ? html`<img class="chip-mini-art" src="${art}" />`
-            : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
-        </span>
-        <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
-          ${this.getChipName(id)}
-        </span>
-        ${this._pinnedIndex === idx
-          ? html`
-              <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); this._onPinClick(e); }} title="Unpin">
-                <ha-icon .icon=${"mdi:pin"}></ha-icon>
-              </span>
-            `
-          : html`<span class="chip-pin-spacer"></span>`
-        }
-      </button>
-    `;
-  }
-
   // Return group master (includes all others in group_members)
   _getActualGroupMaster(group) {
     if (!this.hass || !group || group.length < 2) return group[0];
@@ -1348,58 +281,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Master should include all other group members in the group
       return group.every(otherId => otherId === id || members.includes(otherId));
     }) || group[0];
-  }
-
-  // Render group chip (shows count instead of icon, opens group sheet)
-  _renderGroupChip(group) {
-    const id   = this._getActualGroupMaster(group); // true group master if possible
-    const idx  = this.entityIds.indexOf(id);
-    const state = this.hass?.states?.[id];
-    const isPlaying = state?.state === "playing";
-    const count = group.length;          // total players in the group
-
-    let pressTimer = null;
-    const handlePointerDown = (e) => {
-      if (!this._holdToPin) return;
-      pressTimer = setTimeout(() => {
-        this._pinChip(idx);
-      }, 650);
-    };
-    const handlePointerUp = (e) => {
-      if (!this._holdToPin) return;
-      if (pressTimer) clearTimeout(pressTimer);
-    };
-
-    return html`
-      <button class="chip"
-              ?selected=${this.currentEntityId === id}
-              ?playing=${isPlaying}
-              @click=${() => this._onChipClick(idx)}
-              @pointerdown=${handlePointerDown}
-              @pointerup=${handlePointerUp}
-              @pointerleave=${handlePointerUp}>
-        <span class="chip-icon group-icon"
-              @click=${e => { 
-                e.stopPropagation(); 
-                const idx = this.entityIds.indexOf(id);
-                if (idx >= 0) {
-                  this._selectedIndex = idx;
-                  this._manualSelect = true;
-                  this._pinnedIndex = idx;
-                }
-                this._openGrouping();
-              }}
-              title="Show grouped players">
-          <span class="group-count">${count}</span>
-        </span>
-        ${this._pinnedIndex === idx ? html`
-          <span class="chip-pin" @click=${e => this._onPinClick(e)} title="Unpin">
-            <ha-icon .icon=${"mdi:pin"}></ha-icon>
-          </span>
-        ` : nothing}
-        ${this.getChipName(id)}
-      </button>
-    `;
   }
 
   get currentEntityId() {
@@ -1459,34 +340,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }, 500);
     }
 
-    // Debounce collapse if idle
-    if (this._collapseOnIdle) {
-      const stateObj = this.currentStateObj;
-      if (stateObj && stateObj.state === "playing") {
-        // If playing, cancel any collapse timeout and expand immediately
-        if (this._collapseTimeout) clearTimeout(this._collapseTimeout);
-        this._collapseTimeout = null;
-        if (this._isActuallyCollapsed) {
-          this._isActuallyCollapsed = false;
-          this.requestUpdate();
-        }
-      } else {
-        // Only debounce collapse if card isn't already collapsed (chip switch or initial load already handled it)
-        if (!this._isActuallyCollapsed && !this._collapseTimeout) {
-          this._collapseTimeout = setTimeout(() => {
-            this._isActuallyCollapsed = true;
-            this._collapseTimeout = null;
-            this.requestUpdate();
-          }, 2000); // 2 seconds debounce for normal idle
-        }
-        // If the card is already collapsed (e.g. due to chip switch), do nothing—skip debounce
-      }
-    }
+    // Update idle state after all other state checks
+    this._updateIdleState();
 
     // Notify HA if collapsed state changes
     const collapsedNow = this._alwaysCollapsed
       ? true
-      : (this._collapseOnIdle ? this._isActuallyCollapsed : false);
+      : (this._collapseOnIdle ? this._isIdle : false);
 
     if (this._prevCollapsed !== collapsedNow) {
       this._prevCollapsed = collapsedNow;
@@ -1573,13 +433,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._pinnedIndex = idx;
     }
     clearTimeout(this._manualSelectTimeout);
-    // Collapse logic on chip switch
-    const stateObj = this.hass.states[this.entityIds[idx]];
-    if (stateObj && stateObj.state !== "playing") {
-      this._isActuallyCollapsed = true;
-    } else {
-      this._isActuallyCollapsed = false;
-    }
     this.requestUpdate();
   }
 
@@ -1784,7 +637,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     });
   }
 
-  _openMediaBrowser() {
+  _openMoreInfo() {
     this.dispatchEvent(new CustomEvent("hass-more-info", {
       detail: { entityId: this.currentEntityId },
       bubbles: true,
@@ -1833,7 +686,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       let idleImageUrl = null;
       if (
         this.config.idle_image &&
-        stateObj.state !== "playing" &&
+        this._isIdle &&
         this.hass.states[this.config.idle_image]
       ) {
         const sensorState = this.hass.states[this.config.idle_image];
@@ -1847,9 +700,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const shuffleActive = !!stateObj.attributes.shuffle;
       const repeatActive = stateObj.attributes.repeat && stateObj.attributes.repeat !== "off";
 
-      // Artwork
-      const isPlaying = stateObj.state === "playing";
-      const isRealArtwork = isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
+      // Artwork and idle logic
+      const isPlaying = !this._isIdle && stateObj.state === "playing";
+      const isRealArtwork = !this._isIdle && isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
       const art = isRealArtwork
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         : null;
@@ -1858,7 +711,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const artist = isPlaying ? (stateObj.attributes.media_artist || stateObj.attributes.media_series_title || "") : "";
       let pos = stateObj.attributes.media_position || 0;
       const duration = stateObj.attributes.media_duration || 0;
-      if (stateObj.state === "playing") {
+      if (isPlaying) {
         const updatedAt = stateObj.attributes.media_position_updated_at
           ? Date.parse(stateObj.attributes.media_position_updated_at)
           : Date.parse(stateObj.last_changed);
@@ -1879,9 +732,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Collapse artwork/details on idle if configured and/or always_collapsed
       const collapsed = this._alwaysCollapsed
         ? true
-        : (this._collapseOnIdle ? this._isActuallyCollapsed : false);
-      // Use null if not playing or no artwork available
-      const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
+        : (this._collapseOnIdle ? this._isIdle : false);
+      // Use null if idle or no artwork available
+      const artworkUrl = !this._isIdle && stateObj && (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         ? (stateObj.attributes.entity_picture || stateObj.attributes.album_art)
         : null;
 
@@ -1902,30 +755,62 @@ class YetAnotherMediaPlayerCard extends LitElement {
             class="${dimIdleFrame ? 'dim-idle' : ''}"
           >
             ${(this.entityObjs.length > 1 || showChipRow === "always") ? html`
-              <div class="chip-row">
-                ${this.groupedSortedEntityIds.map(group =>
-                  group.length > 1
-                    ? html`${this._renderGroupChip(group)}`
-                    : html`${this._renderChip(group[0])}`
-                )}
-              </div>
+                <div class="chip-row">
+                  ${this.groupedSortedEntityIds.map(group => {
+                    if (group.length > 1) {
+                      const id = this._getActualGroupMaster(group);
+                      const idx = this.entityIds.indexOf(id);
+                      const state = this.hass?.states?.[id];
+                      // For group chips, art is always null, but update isPlaying logic for selected chip
+                      const isPlaying = this.currentEntityId === id
+                        ? !this._isIdle
+                        : state?.state === "playing";
+                      return renderGroupChip({
+                        idx,
+                        selected: this.currentEntityId === id,
+                        groupName: this.getChipName(id),
+                        art: null, // group chips show count or icon, not artwork
+                        icon: "mdi:account-multiple", // or your preferred group icon
+                        pinned: this._pinnedIndex === idx,
+                        holdToPin: this._holdToPin,
+                        onChipClick: (idx) => this._onChipClick(idx),
+                        onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
+                        onPointerDown: (e) => this._handleChipPointerDown(idx),
+                        onPointerUp: (e) => this._handleChipPointerUp()
+                      });
+                    } else {
+                      const id = group[0];
+                      const idx = this.entityIds.indexOf(id);
+                      const state = this.hass?.states?.[id];
+                      const isPlaying = this.currentEntityId === id
+                        ? !this._isIdle
+                        : state?.state === "playing";
+                      const art = this.currentEntityId === id
+                        ? (!this._isIdle && (state?.attributes?.entity_picture || state?.attributes?.album_art))
+                        : (state?.state === "playing" && (state?.attributes?.entity_picture || state?.attributes?.album_art));
+                      const icon = state?.attributes?.icon || "mdi:cast";
+                      return renderChip({
+                        idx,
+                        selected: this.currentEntityId === id,
+                        playing: isPlaying,
+                        name: this.getChipName(id),
+                        art,
+                        icon,
+                        pinned: this._pinnedIndex === idx,
+                        holdToPin: this._holdToPin,
+                        onChipClick: (idx) => this._onChipClick(idx),
+                        onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
+                        onPointerDown: (e) => this._handleChipPointerDown(idx),
+                        onPointerUp: (e) => this._handleChipPointerUp()
+                      });
+                    }
+                  })}
+                </div>
             ` : nothing}
-            ${this.config.actions && this.config.actions.length
-              ? html`
-                  <div class="action-chip-row">
-                    ${this.config.actions.map(
-                      (a, idx) => html`
-                        <button class="action-chip" @click=${() => this._onActionChipClick(idx)}>
-                          ${a.icon
-                            ? html`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>`
-                            : nothing}
-                          ${a.name || ""}
-                        </button>
-`
-                    )}
-                  </div>
-                `
-              : nothing}
+            ${renderActionChipRow({
+              actions: this.config.actions,
+              onActionChipClick: (idx) => this._onActionChipClick(idx)
+            })}
             <div class="card-lower-content-container">
               <div class="card-lower-content-bg"
                 style="
@@ -1984,143 +869,74 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     ${isPlaying ? artist : ""}
                   </div>
                 </div>
-                ${(collapsed || this._alternateProgressBar)
-                  ? nothing
-                  : (isPlaying && duration
-                      ? html`
-                          <div class="progress-bar-container">
-                            <div
-                              class="progress-bar"
-                              @click=${(e) => this._onProgressBarClick(e)}
-                              title="Seek"
-                            >
-                              <div class="progress-inner" style="width: ${progress * 100}%;"></div>
-                            </div>
-                          </div>
-                        `
-                      : html`
-                          <div class="progress-bar-container">
-                            <div class="progress-bar" style="visibility:hidden"></div>
-                          </div>
-                        `
+                ${(!collapsed && !this._alternateProgressBar)
+                  ? (isPlaying && duration
+                      ? renderProgressBar({
+                          progress,
+                          seekEnabled: true,
+                          onSeek: (e) => this._onProgressBarClick(e),
+                          collapsed: false,
+                          accent: this._customAccent
+                        })
+                      : renderProgressBar({
+                          progress: 0,
+                          seekEnabled: false,
+                          collapsed: false,
+                          accent: this._customAccent,
+                          style: "visibility:hidden"
+                        })
                     )
+                  : nothing
+                }
+                ${(collapsed || this._alternateProgressBar) && isPlaying && duration
+                  ? renderProgressBar({
+                      progress,
+                      collapsed: true,
+                      accent: this._customAccent
+                    })
+                  : nothing
                 }
                 ${!dimIdleFrame ? html`
-                  <div class="controls-row">
-                    ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
-                      <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
-                        <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
-                      </button>
-                    ` : nothing}
-                    ${(this._supportsFeature(stateObj, SUPPORT_PAUSE) || this._supportsFeature(stateObj, SUPPORT_PLAY)) ? html`
-                      <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                        <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-                      </button>
-                    ` : nothing}
-                    <!-- Stop button, only if supported and horizontal space allows -->
-                    ${this._shouldShowStopButton(stateObj)
-                      ? html`
-                        <button class="button" @click=${() => this._onControlClick("stop")} title="Stop">
-                          <ha-icon .icon=${"mdi:stop"}></ha-icon>
-                        </button>
-                      `
-                      : nothing}
-                    ${this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? html`
-                      <button class="button" @click=${() => this._onControlClick("next")} title="Next">
-                        <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
-                      </button>
-                    ` : nothing}
-                    ${this._supportsFeature(stateObj, SUPPORT_SHUFFLE) ? html`
-                      <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
-                        <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
-                      </button>
-                    ` : nothing}
-                    ${this._supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? html`
-                      <button class="button${repeatActive ? ' active' : ''}" @click=${() => this._onControlClick("repeat")} title="Repeat">
-                        <ha-icon .icon=${
-                          stateObj.attributes.repeat === "one"
-                            ? "mdi:repeat-once"
-                            : "mdi:repeat"
-                        }></ha-icon>
-                      </button>
-                    ` : nothing}
-                    ${
-                      (
-                        this._supportsFeature(stateObj, SUPPORT_TURN_OFF) ||
-                        this._supportsFeature(stateObj, SUPPORT_TURN_ON)
-                      ) ? html`
-                      <button
-                        class="button${stateObj.state !== "off" ? " active" : ""}"
-                        @click=${() => this._onControlClick("power")}
-                        title="Power"
-                      >
-                        <ha-icon .icon=${"mdi:power"}></ha-icon>
-                      </button>
-                    ` : nothing}
-                  </div>
-                  <div class="volume-row${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? ' has-source' : ''}">
-                    ${isRemoteVolumeEntity
-                      ? html`
-                          <div class="vol-stepper">
-                            <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
-                            <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
-                          </div>
-                        `
-                      : (
-                          showSlider
-                          ? html`
-                              <input
-                                class="vol-slider"
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.01"
-                                .value=${vol}
-                                @mousedown=${(e) => this._onVolumeDragStart(e)}
-                                @touchstart=${(e) => this._onVolumeDragStart(e)}
-                                @change=${(e) => this._onVolumeChange(e)}
-                                @mouseup=${(e) => this._onVolumeDragEnd(e)}
-                                @touchend=${(e) => this._onVolumeDragEnd(e)}
-                                title="Volume"
-                              />
-                            `
-                          : html`
-                              <div class="vol-stepper">
-                                <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
-                                ${!isRemoteVolumeEntity ? html`<span>${Math.round(vol * 100)}%</span>` : nothing}
-                                <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
-                              </div>
-                            `
-                        )
-                    }
-                    <div class="media-browser-menu">
-                      <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
+                ${renderControlsRow({
+                  stateObj,
+                  showStop: this._shouldShowStopButton(stateObj),
+                  shuffleActive,
+                  repeatActive,
+                  onControlClick: (action) => this._onControlClick(action),
+                  supportsFeature: (state, feature) => this._supportsFeature(state, feature)
+                })}
+                ${renderVolumeRow({
+                  isRemoteVolumeEntity,
+                  showSlider,
+                  vol,
+                  onVolumeDragStart: (e) => this._onVolumeDragStart(e),
+                  onVolumeDragEnd: (e) => this._onVolumeDragEnd(e),
+                  onVolumeChange: (e) => this._onVolumeChange(e),
+                  onVolumeStep: (dir) => this._onVolumeStep(dir),
+                  moreInfoMenu: html`
+                    <div class="more-info-menu">
+                      <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
                         <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
                       </button>
                     </div>
-                  </div>
+                  `,
+                })}
                 ` : nothing}
                 ${dimIdleFrame ? html`
-                  <div class="media-browser-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
-                    <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
+                  <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
+                    <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
                     </button>
                   </div>
                 ` : nothing}
               </div>
-              ${(this._alternateProgressBar || collapsed) && isPlaying && duration
-                ? html`
-                    <div class="collapsed-progress-bar"
-                      style="width: ${progress * 100}%;"></div>
-                  `
-                : nothing}
             </div>
           </div>
           ${this._showEntityOptions ? html`
           <div class="entity-options-overlay" @click=${(e) => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
               ${(!this._showGrouping && !this._showSourceList) ? html`
-                <button class="entity-options-item" @click=${() => this._triggerMoreInfo()}>More Info</button>
+                <button class="entity-options-item" @click=${() => this._openMoreInfo()}>More Info</button>
                 ${Array.isArray(this.currentStateObj?.attributes?.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? html`
                   <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
                 ` : nothing}
@@ -2274,14 +1090,36 @@ class YetAnotherMediaPlayerCard extends LitElement {
         </ha-card>
       `;
     }
-
+    
+    _updateIdleState() {
+      const stateObj = this.currentStateObj;
+      // Only start idle timer if not playing
+      if (stateObj && stateObj.state === "playing") {
+        // Became active, clear timer and set not idle
+        if (this._idleTimeout) clearTimeout(this._idleTimeout);
+        this._idleTimeout = null;
+        if (this._isIdle) {
+          this._isIdle = false;
+          this.requestUpdate();
+        }
+      } else {
+        // Only set timer if not already idle and not already waiting
+        if (!this._isIdle && !this._idleTimeout) {
+          this._idleTimeout = setTimeout(() => {
+            this._isIdle = true;
+            this._idleTimeout = null;
+            this.requestUpdate();
+          }, 60000); // 1 minute
+        }
+      }
+    }
 
     // Home assistant layout options
     getGridOptions() {
-      // Use the same logic as in render() to know if the card is collapsed.
-      const collapsed = this._alwaysCollapsed
-        ? true
-        : (this._collapseOnIdle ? this._isActuallyCollapsed : false);
+    // Use the same logic as in render() to know if the card is collapsed.
+    const collapsed = this._alwaysCollapsed
+      ? true
+      : (this._collapseOnIdle ? this._isIdle : false);
 
       const minRows = collapsed ? 2 : 4;
 
@@ -2491,15 +1329,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   disconnectedCallback() {
+    if (this._idleTimeout) {
+      clearTimeout(this._idleTimeout);
+      this._idleTimeout = null;
+    }
     super.disconnectedCallback?.();
     if (this._progressTimer) {
       clearInterval(this._progressTimer);
       this._progressTimer = null;
-    }
-    // Clear collapse debounce
-    if (this._collapseTimeout) {
-      clearTimeout(this._collapseTimeout);
-      this._collapseTimeout = null;
     }
     if (this._debouncedVolumeTimer) {
       clearTimeout(this._debouncedVolumeTimer);
@@ -2536,14 +1373,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
   }
 
-  _triggerMoreInfo() {
-    this.dispatchEvent(new CustomEvent("hass-more-info", {
-      detail: { entityId: this.currentEntityId },
-      bubbles: true,
-      composed: true,
-    }));
-    this._closeEntityOptions();
-  }
+  // Deprecated: _triggerMoreInfo is replaced by _openMoreInfo for clarity.
+
 
   // Grouping Helper Methods 
   _openGrouping() {
@@ -2766,7 +1597,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         },
         required: false
       },
-      
+      // Add idle_image entity picker after progress bar options
       {
         name: "idle_image",
         selector: {

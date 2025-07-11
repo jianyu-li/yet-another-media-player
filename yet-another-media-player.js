@@ -714,115 +714,249 @@ o === null || o === void 0 || o({
 });
 (s.litElementVersions ??= []).push("4.2.0");
 
-// Supported feature flags
-const SUPPORT_PAUSE = 1;
-const SUPPORT_PREVIOUS_TRACK = 16;
-const SUPPORT_NEXT_TRACK = 32;
-const SUPPORT_TURN_ON = 128;
-const SUPPORT_TURN_OFF = 256;
-const SUPPORT_STOP = 4096;
-const SUPPORT_PLAY = 16384;
-const SUPPORT_SHUFFLE = 32768;
-const SUPPORT_GROUPING = 524288;
-const SUPPORT_REPEAT_SET = 262144;
-window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "yet-another-media-player",
-  name: "Yet Another Media Player",
-  description: "YAMP is a multi-entity media card with custom actions"
-});
-class YetAnotherMediaPlayerCard extends i {
-  _hoveredSourceLetterIndex = null;
-  // Stores the last grouping master id for group chip selection
-  _lastGroupingMasterId = null;
-  _debouncedVolumeTimer = null;
-  _supportsFeature(stateObj, featureBit) {
-    if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
-    return (stateObj.attributes.supported_features & featureBit) !== 0;
-  }
+// Helper to render a single chip
+function renderChip(_ref) {
+  let {
+    idx,
+    selected,
+    playing,
+    name,
+    art,
+    icon,
+    pinned,
+    onChipClick,
+    onPinClick,
+    onPointerDown,
+    onPointerUp
+  } = _ref;
+  return x`
+    <button class="chip"
+            ?selected=${selected}
+            ?playing=${playing}
+            @click=${() => onChipClick(idx)}
+            @pointerdown=${onPointerDown}
+            @pointerup=${onPointerUp}
+            @pointerleave=${onPointerUp}
+            style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="chip-icon">
+        ${art ? x`<img class="chip-mini-art" src="${art}" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+      </span>
+      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+        ${name}
+      </span>
+      ${pinned ? x`
+            <span class="chip-pin-inside" @click=${e => {
+    e.stopPropagation();
+    onPinClick(idx, e);
+  }} title="Unpin">
+              <ha-icon .icon=${"mdi:pin"}></ha-icon>
+            </span>
+          ` : x`<span class="chip-pin-spacer"></span>`}
+    </button>
+  `;
+}
 
-  // Scroll to first source option starting with the given letter
-  _scrollToSourceLetter(letter) {
-    // Find the options sheet (source list) in the shadow DOM
-    const menu = this.renderRoot.querySelector('.entity-options-sheet');
-    if (!menu) return;
-    const items = Array.from(menu.querySelectorAll('.entity-options-item'));
-    const item = items.find(el => (el.textContent || "").trim().toUpperCase().startsWith(letter));
-    if (item) item.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
-  }
+// Helper to render a group chip (simplified)
+function renderGroupChip(_ref2) {
+  let {
+    idx,
+    selected,
+    groupName,
+    icon,
+    pinned,
+    onChipClick,
+    onPinClick,
+    onPointerDown,
+    onPointerUp
+  } = _ref2;
+  return x`
+    <button class="chip group"
+            ?selected=${selected}
+            @click=${() => onChipClick(idx)}
+            @pointerdown=${onPointerDown}
+            @pointerup=${onPointerUp}
+            @pointerleave=${onPointerUp}>
+      <span class="chip-icon">
+        ${x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+      </span>
+      <span class="chip-label">${groupName}</span>
+      ${pinned ? x`
+            <span class="chip-pin-inside" @click=${e => {
+    e.stopPropagation();
+    onPinClick(idx, e);
+  }} title="Unpin">
+              <ha-icon .icon=${"mdi:pin"}></ha-icon>
+            </span>
+          ` : x`<span class="chip-pin-spacer"></span>`}
+    </button>
+  `;
+}
 
-  // Show Stop button if supported and layout allows.
-  _shouldShowStopButton(stateObj) {
-    var _this$renderRoot;
-    if (!this._supportsFeature(stateObj, SUPPORT_STOP)) return false;
-    // Show if wide layout or few controls.
-    const row = (_this$renderRoot = this.renderRoot) === null || _this$renderRoot === void 0 ? void 0 : _this$renderRoot.querySelector('.controls-row');
-    if (!row) return true; // Default to show if can't measure
-    const minWide = row.offsetWidth > 480;
-    const controls = this._countMainControls(stateObj);
-    // Limit Stop visibility on compact layouts.
-    return minWide || controls <= 5;
-  }
-  _countMainControls(stateObj) {
-    let count = 0;
-    if (this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
-    count++;
-    if (this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
-    if (this._supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
-    if (this._supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
-    if (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
-    return count;
-  }
-  get sortedEntityIds() {
-    return [...this.entityIds].sort((a, b) => {
-      const tA = this._playTimestamps[a] || 0;
-      const tB = this._playTimestamps[b] || 0;
-      return tB - tA;
-    });
-  }
+function renderActionChipRow(_ref) {
+  let {
+    actions,
+    onActionChipClick
+  } = _ref;
+  if (!(actions !== null && actions !== void 0 && actions.length)) return E;
+  return x`
+    <div class="action-chip-row">
+      ${actions.map((a, idx) => x`
+          <button class="action-chip" @click=${() => onActionChipClick(idx)}>
+            ${a.icon ? x`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : E}
+            ${a.name || ""}
+          </button>
+        `)}
+    </div>
+  `;
+}
 
-  // Return array of groups, ordered by most recent play
-  get groupedSortedEntityIds() {
-    if (!this.entityIds || !Array.isArray(this.entityIds)) return [];
-    const map = {};
-    for (const id of this.entityIds) {
-      const key = this._getGroupKey(id);
-      if (!map[key]) map[key] = {
-        ids: [],
-        ts: 0
-      };
-      map[key].ids.push(id);
-      map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
-    }
-    return Object.values(map).sort((a, b) => b.ts - a.ts) // sort groups by most recent
-    .map(g => g.ids.sort()); // sort ids alphabetically inside each group
+function renderControlsRow(_ref) {
+  let {
+    stateObj,
+    showStop,
+    shuffleActive,
+    repeatActive,
+    onControlClick,
+    supportsFeature
+  } = _ref;
+  if (!stateObj) return E;
+  const SUPPORT_PAUSE = 1;
+  const SUPPORT_PREVIOUS_TRACK = 16;
+  const SUPPORT_NEXT_TRACK = 32;
+  const SUPPORT_SHUFFLE = 32768;
+  const SUPPORT_REPEAT_SET = 262144;
+  const SUPPORT_TURN_ON = 128;
+  const SUPPORT_TURN_OFF = 256;
+  const SUPPORT_PLAY = 16384;
+  return x`
+    <div class="controls-row">
+      ${supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
+        <button class="button" @click=${() => onControlClick("prev")} title="Previous">
+          <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+        </button>
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY) ? x`
+        <button class="button" @click=${() => onControlClick("play_pause")} title="Play/Pause">
+          <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+        </button>
+      ` : E}
+      ${showStop ? x`
+        <button class="button" @click=${() => onControlClick("stop")} title="Stop">
+          <ha-icon .icon=${"mdi:stop"}></ha-icon>
+        </button>
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
+        <button class="button" @click=${() => onControlClick("next")} title="Next">
+          <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+        </button>
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
+        <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="Shuffle">
+          <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
+        </button>
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
+        <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
+          <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
+        </button>
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON) ? x`
+            <button
+              class="button${stateObj.state !== "off" ? " active" : ""}"
+              @click=${() => onControlClick("power")}
+              title="Power"
+            >
+              <ha-icon .icon=${"mdi:power"}></ha-icon>
+            </button>
+          ` : E}
+    </div>
+  `;
+}
+
+function renderVolumeRow(_ref) {
+  let {
+    isRemoteVolumeEntity,
+    showSlider,
+    vol,
+    onVolumeDragStart,
+    onVolumeDragEnd,
+    onVolumeChange,
+    onVolumeStep,
+    moreInfoMenu
+  } = _ref;
+  return x`
+    <div class="volume-row">
+      ${isRemoteVolumeEntity ? x`
+            <div class="vol-stepper">
+              <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
+              <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
+            </div>
+          ` : showSlider ? x`
+            <input
+              class="vol-slider"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              .value=${vol}
+              @mousedown=${onVolumeDragStart}
+              @touchstart=${onVolumeDragStart}
+              @change=${onVolumeChange}
+              @mouseup=${onVolumeDragEnd}
+              @touchend=${onVolumeDragEnd}
+              title="Volume"
+            />
+          ` : x`
+            <div class="vol-stepper">
+              <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
+              <span>${Math.round(vol * 100)}%</span>
+              <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
+            </div>
+          `}
+      ${moreInfoMenu}
+    </div>
+  `;
+}
+
+function renderProgressBar(_ref) {
+  let {
+    progress,
+    seekEnabled,
+    onSeek,
+    collapsed,
+    accent,
+    height = 6,
+    style = ""
+  } = _ref;
+  // Use `accent` for color, fallback to default if not set
+  const barColor = accent || "var(--custom-accent, #ff9800)";
+  // Collapsed bar is typically smaller and positioned differently
+  if (collapsed) {
+    return x`
+      <div
+        class="collapsed-progress-bar"
+        style="width: ${progress * 100}%; background: ${barColor}; height: 4px; ${style}"
+      ></div>
+    `;
   }
-  static properties = {
-    hass: {},
-    config: {},
-    _selectedIndex: {
-      state: true
-    },
-    _lastPlaying: {
-      state: true
-    },
-    _shouldDropdownOpenUp: {
-      state: true
-    },
-    _pinnedIndex: {
-      state: true
-    },
-    _showSourceList: {
-      state: true
-    },
-    _holdToPin: {
-      state: true
-    }
-  };
-  static styles = (() => i$3`
+  return x`
+    <div class="progress-bar-container">
+      <div
+        class="progress-bar"
+        style="height:${height}px; background:rgba(255,255,255,0.22); ${style}"
+        @click=${seekEnabled ? onSeek : null}
+        title=${seekEnabled ? "Seek" : ""}
+      >
+        <div
+          class="progress-inner"
+          style="width: ${progress * 100}%; background: ${barColor}; height:${height}px;"
+        ></div>
+      </div>
+    </div>
+  `;
+}
+
+const yampCardStyles = i$3`
   .dim-idle .details,
   .dim-idle .controls-row,
   .dim-idle .volume-row,
@@ -831,12 +965,12 @@ class YetAnotherMediaPlayerCard extends i {
     opacity: 0.28 !important;
     transition: opacity 0.5s;
   }
-  .media-browser-menu {
+  .more-info-menu {
     display: flex;
     align-items: center;
     margin-right: 0px;
   }
-  .media-browser-btn {
+  .more-info-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -851,7 +985,7 @@ class YetAnotherMediaPlayerCard extends i {
     cursor: pointer;
     outline: none;
   }
-  .media-browser-btn ha-icon {
+  .more-info-btn ha-icon {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1851,7 +1985,126 @@ class YetAnotherMediaPlayerCard extends i {
   .group-toggle-btn:hover {
     background: rgba(255,255,255,0.15);
   }
-`)();
+`;
+
+const SUPPORT_PREVIOUS_TRACK = 16;
+const SUPPORT_NEXT_TRACK = 32;
+const SUPPORT_TURN_ON = 128;
+const SUPPORT_TURN_OFF = 256;
+const SUPPORT_STOP = 4096;
+const SUPPORT_SHUFFLE = 32768;
+const SUPPORT_GROUPING = 524288;
+const SUPPORT_REPEAT_SET = 262144;
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "yet-another-media-player",
+  name: "Yet Another Media Player",
+  description: "YAMP is a multi-entity media card with custom actions"
+});
+class YetAnotherMediaPlayerCard extends i {
+  _pressTimer = null;
+  _handleChipPointerDown(idx) {
+    if (!this._holdToPin) return;
+    this._pressTimer = setTimeout(() => {
+      this._pinChip(idx);
+    }, 650);
+  }
+  _handleChipPointerUp() {
+    if (!this._holdToPin) return;
+    if (this._pressTimer) clearTimeout(this._pressTimer);
+    this._pressTimer = null;
+  }
+  _hoveredSourceLetterIndex = null;
+  // Stores the last grouping master id for group chip selection
+  _lastGroupingMasterId = null;
+  _debouncedVolumeTimer = null;
+  _supportsFeature(stateObj, featureBit) {
+    if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
+    return (stateObj.attributes.supported_features & featureBit) !== 0;
+  }
+
+  // Scroll to first source option starting with the given letter
+  _scrollToSourceLetter(letter) {
+    // Find the options sheet (source list) in the shadow DOM
+    const menu = this.renderRoot.querySelector('.entity-options-sheet');
+    if (!menu) return;
+    const items = Array.from(menu.querySelectorAll('.entity-options-item'));
+    const item = items.find(el => (el.textContent || "").trim().toUpperCase().startsWith(letter));
+    if (item) item.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }
+
+  // Show Stop button if supported and layout allows.
+  _shouldShowStopButton(stateObj) {
+    var _this$renderRoot;
+    if (!this._supportsFeature(stateObj, SUPPORT_STOP)) return false;
+    // Show if wide layout or few controls.
+    const row = (_this$renderRoot = this.renderRoot) === null || _this$renderRoot === void 0 ? void 0 : _this$renderRoot.querySelector('.controls-row');
+    if (!row) return true; // Default to show if can't measure
+    const minWide = row.offsetWidth > 480;
+    const controls = this._countMainControls(stateObj);
+    // Limit Stop visibility on compact layouts.
+    return minWide || controls <= 5;
+  }
+  _countMainControls(stateObj) {
+    let count = 0;
+    if (this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
+    count++;
+    if (this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
+    if (this._supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
+    if (this._supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
+    if (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
+    return count;
+  }
+  get sortedEntityIds() {
+    return [...this.entityIds].sort((a, b) => {
+      const tA = this._playTimestamps[a] || 0;
+      const tB = this._playTimestamps[b] || 0;
+      return tB - tA;
+    });
+  }
+
+  // Return array of groups, ordered by most recent play
+  get groupedSortedEntityIds() {
+    if (!this.entityIds || !Array.isArray(this.entityIds)) return [];
+    const map = {};
+    for (const id of this.entityIds) {
+      const key = this._getGroupKey(id);
+      if (!map[key]) map[key] = {
+        ids: [],
+        ts: 0
+      };
+      map[key].ids.push(id);
+      map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
+    }
+    return Object.values(map).sort((a, b) => b.ts - a.ts) // sort groups by recency
+    .map(g => g.ids.sort()); // sort ids alphabetically inside each group
+  }
+  static properties = {
+    hass: {},
+    config: {},
+    _selectedIndex: {
+      state: true
+    },
+    _lastPlaying: {
+      state: true
+    },
+    _shouldDropdownOpenUp: {
+      state: true
+    },
+    _pinnedIndex: {
+      state: true
+    },
+    _showSourceList: {
+      state: true
+    },
+    _holdToPin: {
+      state: true
+    }
+  };
+  static styles = (() => yampCardStyles)();
   constructor() {
     super();
     this._selectedIndex = 0;
@@ -1871,7 +2124,8 @@ class YetAnotherMediaPlayerCard extends i {
     this._customAccent = "#ff9800";
     // Outside click handler for source dropdown
     this._sourceDropdownOutsideHandler = null;
-    this._isActuallyCollapsed = false;
+    this._isIdle = false;
+    this._idleTimeout = null;
     // Overlay state for entity options
     this._showEntityOptions = false;
     // Overlay state for grouping sheet
@@ -1887,12 +2141,11 @@ class YetAnotherMediaPlayerCard extends i {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
         const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
         if (stateObj && stateObj.state !== "playing") {
-          this._isActuallyCollapsed = true;
+          this._isIdle = true;
           this.requestUpdate();
         }
       }
     }, 0);
-    this._collapseTimeout = null;
     // Store previous collapsed state
     this._prevCollapsed = null;
   }
@@ -1993,52 +2246,6 @@ class YetAnotherMediaPlayerCard extends i {
     return (state === null || state === void 0 ? void 0 : state.attributes.friendly_name) || entity_id;
   }
 
-  // Render a chip for an entity (safe if state is missing)
-  _renderChip(id) {
-    var _this$hass2, _state$attributes, _state$attributes2, _state$attributes3;
-    const idx = this.entityIds.indexOf(id);
-    const state = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[id];
-    const isPlaying = (state === null || state === void 0 ? void 0 : state.state) === "playing";
-    const art = isPlaying && ((state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art));
-    const icon = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.icon) || "mdi:cast";
-    let pressTimer = null;
-    const handlePointerDown = e => {
-      if (!this._holdToPin) return;
-      pressTimer = setTimeout(() => {
-        this._pinChip(idx);
-      }, 650);
-    };
-    const handlePointerUp = e => {
-      if (!this._holdToPin) return;
-      if (pressTimer) clearTimeout(pressTimer);
-    };
-    return x`
-      <button class="chip"
-              ?selected=${this.currentEntityId === id}
-              ?playing=${isPlaying}
-              @click=${() => this._onChipClick(idx)}
-              @pointerdown=${handlePointerDown}
-              @pointerup=${handlePointerUp}
-              @pointerleave=${handlePointerUp}
-              style="display:flex;align-items:center;justify-content:space-between;">
-        <span class="chip-icon">
-          ${art ? x`<img class="chip-mini-art" src="${art}" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
-        </span>
-        <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
-          ${this.getChipName(id)}
-        </span>
-        ${this._pinnedIndex === idx ? x`
-              <span class="chip-pin-inside" @click=${e => {
-      e.stopPropagation();
-      this._onPinClick(e);
-    }} title="Unpin">
-                <ha-icon .icon=${"mdi:pin"}></ha-icon>
-              </span>
-            ` : x`<span class="chip-pin-spacer"></span>`}
-      </button>
-    `;
-  }
-
   // Return group master (includes all others in group_members)
   _getActualGroupMaster(group) {
     if (!this.hass || !group || group.length < 2) return group[0];
@@ -2053,58 +2260,6 @@ class YetAnotherMediaPlayerCard extends i {
       // Master should include all other group members in the group
       return group.every(otherId => otherId === id || members.includes(otherId));
     }) || group[0];
-  }
-
-  // Render group chip (shows count instead of icon, opens group sheet)
-  _renderGroupChip(group) {
-    var _this$hass3;
-    const id = this._getActualGroupMaster(group); // true group master if possible
-    const idx = this.entityIds.indexOf(id);
-    const state = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
-    const isPlaying = (state === null || state === void 0 ? void 0 : state.state) === "playing";
-    const count = group.length; // total players in the group
-
-    let pressTimer = null;
-    const handlePointerDown = e => {
-      if (!this._holdToPin) return;
-      pressTimer = setTimeout(() => {
-        this._pinChip(idx);
-      }, 650);
-    };
-    const handlePointerUp = e => {
-      if (!this._holdToPin) return;
-      if (pressTimer) clearTimeout(pressTimer);
-    };
-    return x`
-      <button class="chip"
-              ?selected=${this.currentEntityId === id}
-              ?playing=${isPlaying}
-              @click=${() => this._onChipClick(idx)}
-              @pointerdown=${handlePointerDown}
-              @pointerup=${handlePointerUp}
-              @pointerleave=${handlePointerUp}>
-        <span class="chip-icon group-icon"
-              @click=${e => {
-      e.stopPropagation();
-      const idx = this.entityIds.indexOf(id);
-      if (idx >= 0) {
-        this._selectedIndex = idx;
-        this._manualSelect = true;
-        this._pinnedIndex = idx;
-      }
-      this._openGrouping();
-    }}
-              title="Show grouped players">
-          <span class="group-count">${count}</span>
-        </span>
-        ${this._pinnedIndex === idx ? x`
-          <span class="chip-pin" @click=${e => this._onPinClick(e)} title="Unpin">
-            <ha-icon .icon=${"mdi:pin"}></ha-icon>
-          </span>
-        ` : E}
-        ${this.getChipName(id)}
-      </button>
-    `;
   }
   get currentEntityId() {
     return this.entityIds[this._selectedIndex];
@@ -2156,32 +2311,11 @@ class YetAnotherMediaPlayerCard extends i {
       }, 500);
     }
 
-    // Debounce collapse if idle
-    if (this._collapseOnIdle) {
-      const stateObj = this.currentStateObj;
-      if (stateObj && stateObj.state === "playing") {
-        // If playing, cancel any collapse timeout and expand immediately
-        if (this._collapseTimeout) clearTimeout(this._collapseTimeout);
-        this._collapseTimeout = null;
-        if (this._isActuallyCollapsed) {
-          this._isActuallyCollapsed = false;
-          this.requestUpdate();
-        }
-      } else {
-        // Only debounce collapse if card isn't already collapsed (chip switch or initial load already handled it)
-        if (!this._isActuallyCollapsed && !this._collapseTimeout) {
-          this._collapseTimeout = setTimeout(() => {
-            this._isActuallyCollapsed = true;
-            this._collapseTimeout = null;
-            this.requestUpdate();
-          }, 2000); // 2 seconds debounce for normal idle
-        }
-        // If the card is already collapsed (e.g. due to chip switch), do nothing—skip debounce
-      }
-    }
+    // Update idle state after all other state checks
+    this._updateIdleState();
 
     // Notify HA if collapsed state changes
-    const collapsedNow = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isActuallyCollapsed : false;
+    const collapsedNow = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
     if (this._prevCollapsed !== collapsedNow) {
       this._prevCollapsed = collapsedNow;
       // Trigger layout update
@@ -2257,13 +2391,6 @@ class YetAnotherMediaPlayerCard extends i {
       this._pinnedIndex = idx;
     }
     clearTimeout(this._manualSelectTimeout);
-    // Collapse logic on chip switch
-    const stateObj = this.hass.states[this.entityIds[idx]];
-    if (stateObj && stateObj.state !== "playing") {
-      this._isActuallyCollapsed = true;
-    } else {
-      this._isActuallyCollapsed = false;
-    }
     this.requestUpdate();
   }
   _pinChip(idx) {
@@ -2363,14 +2490,14 @@ class YetAnotherMediaPlayerCard extends i {
     }
   }
   _onVolumeChange(e) {
-    var _state$attributes4;
+    var _state$attributes;
     const idx = this._selectedIndex;
     const mainEntity = this.entityObjs[idx].entity_id;
     const state = this.hass.states[mainEntity];
     const newVol = Number(e.target.value);
 
     // If grouped, apply delta to each group member
-    if (Array.isArray(state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.group_members) && state.attributes.group_members.length) {
+    if (Array.isArray(state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.group_members) && state.attributes.group_members.length) {
       var _this$currentVolumeSt;
       // Get current group volumes
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -2400,7 +2527,7 @@ class YetAnotherMediaPlayerCard extends i {
     }
   }
   _onVolumeStep(direction) {
-    var _state$attributes5;
+    var _state$attributes2;
     const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
     if (!entity) return;
@@ -2416,7 +2543,7 @@ class YetAnotherMediaPlayerCard extends i {
     }
     const mainEntity = this.entityObjs[idx].entity_id;
     const state = this.hass.states[mainEntity];
-    if (Array.isArray(state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.group_members) && state.attributes.group_members.length) {
+    if (Array.isArray(state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.group_members) && state.attributes.group_members.length) {
       // Grouped: apply group gain step
       const targets = [mainEntity, ...state.attributes.group_members];
       // Fixed step size
@@ -2475,7 +2602,7 @@ class YetAnotherMediaPlayerCard extends i {
       source
     });
   }
-  _openMediaBrowser() {
+  _openMoreInfo() {
     this.dispatchEvent(new CustomEvent("hass-more-info", {
       detail: {
         entityId: this.currentEntityId
@@ -2520,7 +2647,7 @@ class YetAnotherMediaPlayerCard extends i {
 
     // Idle image "picture frame" mode when idle
     let idleImageUrl = null;
-    if (this.config.idle_image && stateObj.state !== "playing" && this.hass.states[this.config.idle_image]) {
+    if (this.config.idle_image && this._isIdle && this.hass.states[this.config.idle_image]) {
       const sensorState = this.hass.states[this.config.idle_image];
       idleImageUrl = sensorState.attributes.entity_picture || (sensorState.state && sensorState.state.startsWith("http") ? sensorState.state : null);
     }
@@ -2530,16 +2657,16 @@ class YetAnotherMediaPlayerCard extends i {
     const shuffleActive = !!stateObj.attributes.shuffle;
     const repeatActive = stateObj.attributes.repeat && stateObj.attributes.repeat !== "off";
 
-    // Artwork
-    const isPlaying = stateObj.state === "playing";
-    const isRealArtwork = isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
+    // Artwork and idle logic
+    const isPlaying = !this._isIdle && stateObj.state === "playing";
+    const isRealArtwork = !this._isIdle && isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
     isRealArtwork ? stateObj.attributes.entity_picture || stateObj.attributes.album_art : null;
     // Details
     const title = isPlaying ? stateObj.attributes.media_title || "" : "";
     const artist = isPlaying ? stateObj.attributes.media_artist || stateObj.attributes.media_series_title || "" : "";
     let pos = stateObj.attributes.media_position || 0;
     const duration = stateObj.attributes.media_duration || 0;
-    if (stateObj.state === "playing") {
+    if (isPlaying) {
       const updatedAt = stateObj.attributes.media_position_updated_at ? Date.parse(stateObj.attributes.media_position_updated_at) : Date.parse(stateObj.last_changed);
       const elapsed = (Date.now() - updatedAt) / 1000;
       pos += elapsed;
@@ -2556,9 +2683,9 @@ class YetAnotherMediaPlayerCard extends i {
     const showSlider = this.config.volume_mode !== "stepper";
 
     // Collapse artwork/details on idle if configured and/or always_collapsed
-    const collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isActuallyCollapsed : false;
-    // Use null if not playing or no artwork available
-    const artworkUrl = stateObj && stateObj.state === "playing" && (stateObj.attributes.entity_picture || stateObj.attributes.album_art) ? stateObj.attributes.entity_picture || stateObj.attributes.album_art : null;
+    const collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
+    // Use null if idle or no artwork available
+    const artworkUrl = !this._isIdle && stateObj && (stateObj.attributes.entity_picture || stateObj.attributes.album_art) ? stateObj.attributes.entity_picture || stateObj.attributes.album_art : null;
 
     // Dominant color extraction for collapsed artwork
     if (collapsed && artworkUrl && artworkUrl !== this._lastArtworkUrl) {
@@ -2576,20 +2703,65 @@ class YetAnotherMediaPlayerCard extends i {
             class="${dimIdleFrame ? 'dim-idle' : ''}"
           >
             ${this.entityObjs.length > 1 || showChipRow === "always" ? x`
-              <div class="chip-row">
-                ${this.groupedSortedEntityIds.map(group => group.length > 1 ? x`${this._renderGroupChip(group)}` : x`${this._renderChip(group[0])}`)}
-              </div>
+                <div class="chip-row">
+                  ${this.groupedSortedEntityIds.map(group => {
+      if (group.length > 1) {
+        var _this$hass2;
+        const id = this._getActualGroupMaster(group);
+        const idx = this.entityIds.indexOf(id);
+        const state = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[id];
+        // For group chips, art is always null, but update isPlaying logic for selected chip
+        this.currentEntityId === id ? !this._isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+        return renderGroupChip({
+          idx,
+          selected: this.currentEntityId === id,
+          groupName: this.getChipName(id),
+          // group chips show count or icon, not artwork
+          icon: "mdi:account-multiple",
+          // or your preferred group icon
+          pinned: this._pinnedIndex === idx,
+          holdToPin: this._holdToPin,
+          onChipClick: idx => this._onChipClick(idx),
+          onPinClick: (idx, e) => {
+            e.stopPropagation();
+            this._onPinClick(e);
+          },
+          onPointerDown: e => this._handleChipPointerDown(idx),
+          onPointerUp: e => this._handleChipPointerUp()
+        });
+      } else {
+        var _this$hass3, _state$attributes3, _state$attributes4, _state$attributes5, _state$attributes6, _state$attributes7;
+        const id = group[0];
+        const idx = this.entityIds.indexOf(id);
+        const state = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
+        const isPlaying = this.currentEntityId === id ? !this._isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+        const art = this.currentEntityId === id ? !this._isIdle && ((state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.entity_picture) || (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.album_art)) : (state === null || state === void 0 ? void 0 : state.state) === "playing" && ((state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.entity_picture) || (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.album_art));
+        const icon = (state === null || state === void 0 || (_state$attributes7 = state.attributes) === null || _state$attributes7 === void 0 ? void 0 : _state$attributes7.icon) || "mdi:cast";
+        return renderChip({
+          idx,
+          selected: this.currentEntityId === id,
+          playing: isPlaying,
+          name: this.getChipName(id),
+          art,
+          icon,
+          pinned: this._pinnedIndex === idx,
+          holdToPin: this._holdToPin,
+          onChipClick: idx => this._onChipClick(idx),
+          onPinClick: (idx, e) => {
+            e.stopPropagation();
+            this._onPinClick(e);
+          },
+          onPointerDown: e => this._handleChipPointerDown(idx),
+          onPointerUp: e => this._handleChipPointerUp()
+        });
+      }
+    })}
+                </div>
             ` : E}
-            ${this.config.actions && this.config.actions.length ? x`
-                  <div class="action-chip-row">
-                    ${this.config.actions.map((a, idx) => x`
-                        <button class="action-chip" @click=${() => this._onActionChipClick(idx)}>
-                          ${a.icon ? x`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : E}
-                          ${a.name || ""}
-                        </button>
-`)}
-                  </div>
-                ` : E}
+            ${renderActionChipRow({
+      actions: this.config.actions,
+      onActionChipClick: idx => this._onActionChipClick(idx)
+    })}
             <div class="card-lower-content-container">
               <div class="card-lower-content-bg"
                 style="
@@ -2639,118 +2811,65 @@ class YetAnotherMediaPlayerCard extends i {
                     ${isPlaying ? artist : ""}
                   </div>
                 </div>
-                ${collapsed || this._alternateProgressBar ? E : isPlaying && duration ? x`
-                          <div class="progress-bar-container">
-                            <div
-                              class="progress-bar"
-                              @click=${e => this._onProgressBarClick(e)}
-                              title="Seek"
-                            >
-                              <div class="progress-inner" style="width: ${progress * 100}%;"></div>
-                            </div>
-                          </div>
-                        ` : x`
-                          <div class="progress-bar-container">
-                            <div class="progress-bar" style="visibility:hidden"></div>
-                          </div>
-                        `}
+                ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
+      progress,
+      seekEnabled: true,
+      onSeek: e => this._onProgressBarClick(e),
+      collapsed: false,
+      accent: this._customAccent
+    }) : renderProgressBar({
+      progress: 0,
+      seekEnabled: false,
+      collapsed: false,
+      accent: this._customAccent,
+      style: "visibility:hidden"
+    }) : E}
+                ${(collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
+      progress,
+      collapsed: true,
+      accent: this._customAccent
+    }) : E}
                 ${!dimIdleFrame ? x`
-                  <div class="controls-row">
-                    ${this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
-                      <button class="button" @click=${() => this._onControlClick("prev")} title="Previous">
-                        <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
-                      </button>
-                    ` : E}
-                    ${this._supportsFeature(stateObj, SUPPORT_PAUSE) || this._supportsFeature(stateObj, SUPPORT_PLAY) ? x`
-                      <button class="button" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                        <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-                      </button>
-                    ` : E}
-                    <!-- Stop button, only if supported and horizontal space allows -->
-                    ${this._shouldShowStopButton(stateObj) ? x`
-                        <button class="button" @click=${() => this._onControlClick("stop")} title="Stop">
-                          <ha-icon .icon=${"mdi:stop"}></ha-icon>
-                        </button>
-                      ` : E}
-                    ${this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
-                      <button class="button" @click=${() => this._onControlClick("next")} title="Next">
-                        <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
-                      </button>
-                    ` : E}
-                    ${this._supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
-                      <button class="button${shuffleActive ? ' active' : ''}" @click=${() => this._onControlClick("shuffle")} title="Shuffle">
-                        <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
-                      </button>
-                    ` : E}
-                    ${this._supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
-                      <button class="button${repeatActive ? ' active' : ''}" @click=${() => this._onControlClick("repeat")} title="Repeat">
-                        <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
-                      </button>
-                    ` : E}
-                    ${this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON) ? x`
-                      <button
-                        class="button${stateObj.state !== "off" ? " active" : ""}"
-                        @click=${() => this._onControlClick("power")}
-                        title="Power"
-                      >
-                        <ha-icon .icon=${"mdi:power"}></ha-icon>
-                      </button>
-                    ` : E}
-                  </div>
-                  <div class="volume-row${Array.isArray(stateObj.attributes.source_list) && stateObj.attributes.source_list.length > 0 ? ' has-source' : ''}">
-                    ${isRemoteVolumeEntity ? x`
-                          <div class="vol-stepper">
-                            <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
-                            <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
-                          </div>
-                        ` : showSlider ? x`
-                              <input
-                                class="vol-slider"
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.01"
-                                .value=${vol}
-                                @mousedown=${e => this._onVolumeDragStart(e)}
-                                @touchstart=${e => this._onVolumeDragStart(e)}
-                                @change=${e => this._onVolumeChange(e)}
-                                @mouseup=${e => this._onVolumeDragEnd(e)}
-                                @touchend=${e => this._onVolumeDragEnd(e)}
-                                title="Volume"
-                              />
-                            ` : x`
-                              <div class="vol-stepper">
-                                <button class="button" @click=${() => this._onVolumeStep(-1)} title="Vol Down">–</button>
-                                ${!isRemoteVolumeEntity ? x`<span>${Math.round(vol * 100)}%</span>` : E}
-                                <button class="button" @click=${() => this._onVolumeStep(1)} title="Vol Up">+</button>
-                              </div>
-                            `}
-                    <div class="media-browser-menu">
-                      <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
+                ${renderControlsRow({
+      stateObj,
+      showStop: this._shouldShowStopButton(stateObj),
+      shuffleActive,
+      repeatActive,
+      onControlClick: action => this._onControlClick(action),
+      supportsFeature: (state, feature) => this._supportsFeature(state, feature)
+    })}
+                ${renderVolumeRow({
+      isRemoteVolumeEntity,
+      showSlider,
+      vol,
+      onVolumeDragStart: e => this._onVolumeDragStart(e),
+      onVolumeDragEnd: e => this._onVolumeDragEnd(e),
+      onVolumeChange: e => this._onVolumeChange(e),
+      onVolumeStep: dir => this._onVolumeStep(dir),
+      moreInfoMenu: x`
+                    <div class="more-info-menu">
+                      <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
                         <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
                       </button>
                     </div>
-                  </div>
+                  `
+    })}
                 ` : E}
                 ${dimIdleFrame ? x`
-                  <div class="media-browser-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
-                    <button class="media-browser-btn" @click=${() => this._openEntityOptions()}>
+                  <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
+                    <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
                     </button>
                   </div>
                 ` : E}
               </div>
-              ${(this._alternateProgressBar || collapsed) && isPlaying && duration ? x`
-                    <div class="collapsed-progress-bar"
-                      style="width: ${progress * 100}%;"></div>
-                  ` : E}
             </div>
           </div>
           ${this._showEntityOptions ? x`
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
               ${!this._showGrouping && !this._showSourceList ? x`
-                <button class="entity-options-item" @click=${() => this._triggerMoreInfo()}>More Info</button>
+                <button class="entity-options-item" @click=${() => this._openMoreInfo()}>More Info</button>
                 ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
                   <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
                 ` : E}
@@ -2893,11 +3012,33 @@ class YetAnotherMediaPlayerCard extends i {
         </ha-card>
       `;
   }
+  _updateIdleState() {
+    const stateObj = this.currentStateObj;
+    // Only start idle timer if not playing
+    if (stateObj && stateObj.state === "playing") {
+      // Became active, clear timer and set not idle
+      if (this._idleTimeout) clearTimeout(this._idleTimeout);
+      this._idleTimeout = null;
+      if (this._isIdle) {
+        this._isIdle = false;
+        this.requestUpdate();
+      }
+    } else {
+      // Only set timer if not already idle and not already waiting
+      if (!this._isIdle && !this._idleTimeout) {
+        this._idleTimeout = setTimeout(() => {
+          this._isIdle = true;
+          this._idleTimeout = null;
+          this.requestUpdate();
+        }, 60000); // 1 minute
+      }
+    }
+  }
 
   // Home assistant layout options
   getGridOptions() {
     // Use the same logic as in render() to know if the card is collapsed.
-    const collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isActuallyCollapsed : false;
+    const collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
     const minRows = collapsed ? 2 : 4;
     return {
       min_rows: minRows,
@@ -3103,15 +3244,14 @@ class YetAnotherMediaPlayerCard extends i {
   }
   disconnectedCallback() {
     var _super$disconnectedCa;
+    if (this._idleTimeout) {
+      clearTimeout(this._idleTimeout);
+      this._idleTimeout = null;
+    }
     (_super$disconnectedCa = super.disconnectedCallback) === null || _super$disconnectedCa === void 0 || _super$disconnectedCa.call(this);
     if (this._progressTimer) {
       clearInterval(this._progressTimer);
       this._progressTimer = null;
-    }
-    // Clear collapse debounce
-    if (this._collapseTimeout) {
-      clearTimeout(this._collapseTimeout);
-      this._collapseTimeout = null;
     }
     if (this._debouncedVolumeTimer) {
       clearTimeout(this._debouncedVolumeTimer);
@@ -3146,16 +3286,8 @@ class YetAnotherMediaPlayerCard extends i {
     this._showEntityOptions = true;
     this.requestUpdate();
   }
-  _triggerMoreInfo() {
-    this.dispatchEvent(new CustomEvent("hass-more-info", {
-      detail: {
-        entityId: this.currentEntityId
-      },
-      bubbles: true,
-      composed: true
-    }));
-    this._closeEntityOptions();
-  }
+
+  // Deprecated: _triggerMoreInfo is replaced by _openMoreInfo for clarity.
 
   // Grouping Helper Methods 
   _openGrouping() {
@@ -3368,7 +3500,9 @@ class YetAnotherMediaPlayerEditor extends i {
         }
       },
       required: false
-    }, {
+    },
+    // Add idle_image entity picker after progress bar options
+    {
       name: "idle_image",
       selector: {
         entity: {
@@ -3408,14 +3542,14 @@ class YetAnotherMediaPlayerEditor extends i {
     // Display friendly names or entity_ids for all entities/objects
     const entitiesForEditor = (this.config.entities || []).map(e => {
       if (typeof e === "string") {
-        var _this$hass4, _state$attributes6;
+        var _this$hass4, _state$attributes8;
         const state = (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[e];
-        return (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.friendly_name) || e;
+        return (state === null || state === void 0 || (_state$attributes8 = state.attributes) === null || _state$attributes8 === void 0 ? void 0 : _state$attributes8.friendly_name) || e;
       }
       if (e && typeof e === "object" && e.entity_id) {
-        var _this$hass5, _state$attributes7;
+        var _this$hass5, _state$attributes9;
         const state = (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[e.entity_id];
-        return (state === null || state === void 0 || (_state$attributes7 = state.attributes) === null || _state$attributes7 === void 0 ? void 0 : _state$attributes7.friendly_name) || e.entity_id;
+        return (state === null || state === void 0 || (_state$attributes9 = state.attributes) === null || _state$attributes9 === void 0 ? void 0 : _state$attributes9.friendly_name) || e.entity_id;
       }
       return "(invalid entity)";
     });
