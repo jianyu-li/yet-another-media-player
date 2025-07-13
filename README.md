@@ -9,7 +9,8 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 - Switch between multiple media players in a single card using chips
 - Group supported players
   - Control volume as a group or individually
-- Separate volume entity via YAML
+  - Separate volume entity via YAML
+  - Override sync volume behavior on a per entity basis using `group_volume`
 - Add background image sensor for when not in use
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
@@ -48,6 +49,7 @@ You can use music assistant actions in conjunction with "current" as the entity 
 | `collapse_on_idle` | boolean | No | When nothing is playing, card collapses to save space (great on mobile) | 
 | `always_collapsed` | boolean | No | This will keep the card in collapsed or "mini" mode even when something is playing |
 | `volume_entity` | string | No | Use this to specify a separate entity from the player to control volume. Accepted classes are media_player.* and remote.*. remote.* is useful for controlling tv volume from apple tv's connected through CEC |
+| `group_volume` | boolean | No | Used to override the default group volume logic: set to `true` to always control all group members with the main slider, or `false` to control only the selected entity—even if it is part of a group. If not set, the card automatically determines the best behavior based on which group members are present in the card. |
 | `sync_power` | boolean | No | When volume_entity is set, you can use this argument to power on/off the volume entity with your main entity |
 | `alternate_progress_bar` | boolean | No | Uses the collapsed player progress bar when expanded |
 | `hold_to_pin` | boolean | No | By default, the chip entity pins in place when selected. You can override this behavior to only pin in place by holding the chip | 
@@ -57,6 +59,7 @@ You can use music assistant actions in conjunction with "current" as the entity 
 # Group Players
 Player entities can be grouped together for supported entities. Access the hamburger menu and choose "Group Players" to see a list of supported players that are currently configured on your card. If no players are supported (or only one entity is) then the "Group Players" option will not be visible. 
 - Grouped entities will increase and decrease proportionately with the main entity. 
+  - If only one entity is configured, and it is part of a group, only the volume for that entity will change. See `group_volume` for additional configuration options.
 - Use the Grouped Players menu to adjust individual player volume or to sync the volume percentage across all grouped players to the main entity
 
 
@@ -76,7 +79,8 @@ entities:
     volume_entity: media_player.living_room_sonos
     name: Living Room
     sync_power: true
-  - media_player.bedroom
+  - entity_id: media_player.bedroom
+    group_volume: false
   - media_player.entryway_speaker
 actions:
   - name: Soul
