@@ -765,6 +765,7 @@ function renderGroupChip(_ref2) {
     icon,
     pinned,
     onChipClick,
+    onIconClick,
     onPinClick,
     onPointerDown,
     onPointerUp
@@ -777,7 +778,18 @@ function renderGroupChip(_ref2) {
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}>
       <span class="chip-icon">
-        ${x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+        ${x`<ha-icon
+                      .icon=${icon}
+                      style="font-size:28px;"
+                      @click=${e => {
+    e.stopPropagation();
+    if (onIconClick) {
+      onIconClick(idx, e);
+    } else {
+      onChipClick(idx);
+    }
+  }}
+                    ></ha-icon>`}
       </span>
       <span class="chip-label">${groupName}</span>
       ${pinned ? x`
@@ -1971,6 +1983,18 @@ const yampCardStyles = i$3`
     background: rgba(255,255,255,0.1);
   }
 
+  /* Invisible master button to keep layout aligned */
+  .group-toggle-transparent {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: transparent !important;
+    pointer-events: none !important;
+  }
+  .group-toggle-transparent:hover {
+    background: none !important;   /* suppress hover tint */
+  }
+
   /* Force white text/icons in the grouping sheet */
   .entity-options-sheet,
   .entity-options-sheet * {
@@ -2206,15 +2230,39 @@ class YetAnotherMediaPlayerCard extends i {
     this._alternateProgressBar = !!config.alternate_progress_bar;
     // Do not mutate config.force_chip_row here.
   }
+
+  // Returns array of entity config objects, including group_volume if present in user config.
   get entityObjs() {
-    return this.config.entities.map(e => typeof e === "string" ? {
-      entity_id: e,
-      name: ""
-    } : {
-      entity_id: e.entity_id,
-      name: e.name || "",
-      volume_entity: e.volume_entity,
-      sync_power: !!e.sync_power
+    return this.config.entities.map(e => {
+      const entity_id = typeof e === "string" ? e : e.entity_id;
+      const name = typeof e === "string" ? "" : e.name || "";
+      const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
+      const sync_power = typeof e === "string" ? false : !!e.sync_power;
+      let group_volume;
+      if (typeof e === "object" && typeof e.group_volume !== "undefined") {
+        group_volume = e.group_volume;
+      } else {
+        var _this$hass;
+        // Determine group_volume default
+        const state = (_this$hass = this.hass) === null || _this$hass === void 0 || (_this$hass = _this$hass.states) === null || _this$hass === void 0 ? void 0 : _this$hass[entity_id];
+        if (state && Array.isArray(state.attributes.group_members) && state.attributes.group_members.length > 0) {
+          // Are any group members in entityIds?
+          const otherMembers = state.attributes.group_members.filter(id => id !== entity_id);
+          // Use raw config.entities to avoid circular dependency in this.entityIds
+          const configEntityIds = this.config.entities.map(en => typeof en === "string" ? en : en.entity_id);
+          const visibleMembers = otherMembers.filter(id => configEntityIds.includes(id));
+          group_volume = visibleMembers.length > 0;
+        }
+      }
+      return {
+        entity_id,
+        name,
+        volume_entity,
+        sync_power,
+        ...(typeof group_volume !== "undefined" ? {
+          group_volume
+        } : {})
+      };
     });
   }
 
@@ -2226,8 +2274,8 @@ class YetAnotherMediaPlayerCard extends i {
 
   // Return grouping key
   _getGroupKey(id) {
-    var _this$hass;
-    const st = (_this$hass = this.hass) === null || _this$hass === void 0 || (_this$hass = _this$hass.states) === null || _this$hass === void 0 ? void 0 : _this$hass[id];
+    var _this$hass2;
+    const st = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[id];
     if (!st) return id;
     const members = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
     if (!members.length) return id;
@@ -2489,19 +2537,35 @@ class YetAnotherMediaPlayerCard extends i {
         }
     }
   }
+
+  /**
+   * Handles volume change events.
+   * With group_volume: false, always sets only the single volume entity, never the group.
+   * With group_volume: true/undefined, applies group logic.
+   * Includes debug logs to verify logic.
+   */
   _onVolumeChange(e) {
     var _state$attributes;
     const idx = this._selectedIndex;
     const mainEntity = this.entityObjs[idx].entity_id;
     const state = this.hass.states[mainEntity];
     const newVol = Number(e.target.value);
+    const obj = this.entityObjs[idx];
 
-    // If grouped, apply delta to each group member
+    // Always use group_volume directly from obj
+    const groupVolume = typeof obj.group_volume === "boolean" ? obj.group_volume : true;
+    if (!groupVolume) {
+      this.hass.callService("media_player", "volume_set", {
+        entity_id: this._getVolumeEntity(idx),
+        volume_level: newVol
+      });
+      return;
+    }
+
+    // Group volume logic: ONLY runs if group_volume is true/undefined
     if (Array.isArray(state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.group_members) && state.attributes.group_members.length) {
       var _this$currentVolumeSt;
-      // Get current group volumes
       const targets = [mainEntity, ...state.attributes.group_members];
-      // Use base volume for delta calculation (defaults to previous if missing)
       const base = typeof this._groupBaseVolume === "number" ? this._groupBaseVolume : Number(((_this$currentVolumeSt = this.currentVolumeStateObj) === null || _this$currentVolumeSt === void 0 ? void 0 : _this$currentVolumeSt.attributes.volume_level) || 0);
       const delta = newVol - base;
       for (const t of targets) {
@@ -2510,16 +2574,14 @@ class YetAnotherMediaPlayerCard extends i {
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
-        v = Math.max(0, Math.min(1, v)); // Clamp to [0,1]
+        v = Math.max(0, Math.min(1, v));
         this.hass.callService("media_player", "volume_set", {
           entity_id: volTarget,
           volume_level: v
         });
       }
-      // Update base for continuous dragging
       this._groupBaseVolume = newVol;
     } else {
-      // Not grouped, set directly
       this.hass.callService("media_player", "volume_set", {
         entity_id: this._getVolumeEntity(idx),
         volume_level: newVol
@@ -2706,10 +2768,10 @@ class YetAnotherMediaPlayerCard extends i {
                 <div class="chip-row">
                   ${this.groupedSortedEntityIds.map(group => {
       if (group.length > 1) {
-        var _this$hass2;
+        var _this$hass3;
         const id = this._getActualGroupMaster(group);
         const idx = this.entityIds.indexOf(id);
-        const state = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[id];
+        const state = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
         // For group chips, art is always null, but update isPlaying logic for selected chip
         this.currentEntityId === id ? !this._isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
         return renderGroupChip({
@@ -2717,11 +2779,15 @@ class YetAnotherMediaPlayerCard extends i {
           selected: this.currentEntityId === id,
           groupName: this.getChipName(id),
           // group chips show count or icon, not artwork
-          icon: "mdi:account-multiple",
-          // or your preferred group icon
+          icon: "mdi:group",
           pinned: this._pinnedIndex === idx,
           holdToPin: this._holdToPin,
           onChipClick: idx => this._onChipClick(idx),
+          onIconClick: (idx, e) => {
+            e.stopPropagation();
+            this._onChipClick(idx); // Optional: select as well
+            this._openGrouping();
+          },
           onPinClick: (idx, e) => {
             e.stopPropagation();
             this._onPinClick(e);
@@ -2730,10 +2796,10 @@ class YetAnotherMediaPlayerCard extends i {
           onPointerUp: e => this._handleChipPointerUp()
         });
       } else {
-        var _this$hass3, _state$attributes3, _state$attributes4, _state$attributes5, _state$attributes6, _state$attributes7;
+        var _this$hass4, _state$attributes3, _state$attributes4, _state$attributes5, _state$attributes6, _state$attributes7;
         const id = group[0];
         const idx = this.entityIds.indexOf(id);
-        const state = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
+        const state = (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[id];
         const isPlaying = this.currentEntityId === id ? !this._isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
         const art = this.currentEntityId === id ? !this._isIdle && ((state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.entity_picture) || (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.album_art)) : (state === null || state === void 0 ? void 0 : state.state) === "playing" && ((state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.entity_picture) || (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.album_art));
         const icon = (state === null || state === void 0 || (_state$attributes7 = state.attributes) === null || _state$attributes7 === void 0 ? void 0 : _state$attributes7.icon) || "mdi:cast";
@@ -2912,65 +2978,76 @@ class YetAnotherMediaPlayerCard extends i {
                     `;
     })()}
                 <hr style="margin:8px 0 2px 0;opacity:0.19;border:0;border-top:1px solid #fff;" />
-                ${this.entityIds.filter(id => id !== this.currentEntityId).map(id => {
-      var _volumeState$attribut;
-      const st = this.hass.states[id];
-      if (!this._supportsFeature(st, SUPPORT_GROUPING)) return E;
-      const name = this.getChipName(id);
-      const masterState = this.hass.states[this.currentEntityId];
-      const grouped = Array.isArray(masterState.attributes.group_members) && masterState.attributes.group_members.includes(id);
-      const obj = this.entityObjs.find(e => e.entity_id === id);
-      const volumeEntity = obj && obj.volume_entity ? obj.volume_entity : id;
-      const volumeState = this.hass.states[volumeEntity];
-      const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
-      const volVal = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) || 0);
-
-      // New improved layout
-      return x`
-                      <div style="
-                        display: flex;
-                        align-items: center;
-                        padding: 6px 4px;
-                      ">
-                        <span style="
-                          display:inline-block;
-                          width: 140px;
-                          min-width: 100px;
-                          max-width: 160px;
-                          overflow: hidden;
-                          text-overflow: ellipsis;
-                          white-space: nowrap;
-                        ">${name}</span>
-                        <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
-                          ${isRemoteVol ? x`
-                                  <div class="vol-stepper">
-                                    <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
-                                    <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
-                                  </div>
+                ${(() => {
+      // --- Begin new group player rows logic ---
+      const masterId = this.currentEntityId;
+      const sortedIds = [masterId, ...this.entityIds.filter(id => id !== masterId)];
+      return sortedIds.map(id => {
+        var _volumeState$attribut;
+        const st = this.hass.states[id];
+        if (!this._supportsFeature(st, SUPPORT_GROUPING)) return E;
+        const name = this.getChipName(id);
+        const masterState = this.hass.states[masterId];
+        const grouped = id === masterId ? true : Array.isArray(masterState.attributes.group_members) && masterState.attributes.group_members.includes(id);
+        const obj = this.entityObjs.find(e => e.entity_id === id);
+        const volumeEntity = obj && obj.volume_entity ? obj.volume_entity : id;
+        const volumeState = this.hass.states[volumeEntity];
+        const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
+        const volVal = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) || 0);
+        return x`
+                        <div style="
+                          display: flex;
+                          align-items: center;
+                          padding: 6px 4px;
+                        ">
+                          <span style="
+                            display:inline-block;
+                            width: 140px;
+                            min-width: 100px;
+                            max-width: 160px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                          ">${name}</span>
+                          <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
+                            ${isRemoteVol ? x`
+                                    <div class="vol-stepper">
+                                      <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
+                                      <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
+                                    </div>
+                                  ` : x`
+                                    <input
+                                      class="vol-slider"
+                                      type="range"
+                                      min="0"
+                                      max="1"
+                                      step="0.01"
+                                      .value=${volVal}
+                                      @change=${e => this._onGroupVolumeChange(id, volumeEntity, e)}
+                                      title="Volume"
+                                      style="width:100%;max-width:260px;"
+                                    />
+                                  `}
+                            <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
+                          </div>
+                          ${id === masterId ? x`
+                                  <button class="group-toggle-btn group-toggle-transparent"
+                                          disabled
+                                          aria-label="Master"
+                                          style="margin-left:14px;"></button>
                                 ` : x`
-                                  <input
-                                    class="vol-slider"
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.01"
-                                    .value=${volVal}
-                                    @change=${e => this._onGroupVolumeChange(id, volumeEntity, e)}
-                                    title="Volume"
-                                    style="width:100%;max-width:260px;"
-                                  />
+                                  <button class="group-toggle-btn"
+                                          @click=${() => this._toggleGroup(id)}
+                                          title=${grouped ? "Unjoin" : "Join"}
+                                          style="margin-left:14px;">
+                                    <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
+                                  </button>
                                 `}
-                          <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                         </div>
-                        <button class="group-toggle-btn"
-                                @click=${() => this._toggleGroup(id)}
-                                title=${grouped ? "Unjoin" : "Join"}
-                                style="margin-left:14px;">
-                          <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
-                        </button>
-                      </div>
-                    `;
-    })}
+                      `;
+      });
+      // --- End new group player rows logic ---
+    })()}
               ` : x`
                 <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
@@ -3544,13 +3621,13 @@ class YetAnotherMediaPlayerEditor extends i {
     // Display friendly names or entity_ids for all entities/objects
     const entitiesForEditor = (this.config.entities || []).map(e => {
       if (typeof e === "string") {
-        var _this$hass4, _state$attributes8;
-        const state = (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[e];
+        var _this$hass5, _state$attributes8;
+        const state = (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[e];
         return (state === null || state === void 0 || (_state$attributes8 = state.attributes) === null || _state$attributes8 === void 0 ? void 0 : _state$attributes8.friendly_name) || e;
       }
       if (e && typeof e === "object" && e.entity_id) {
-        var _this$hass5, _state$attributes9;
-        const state = (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[e.entity_id];
+        var _this$hass6, _state$attributes9;
+        const state = (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[e.entity_id];
         return (state === null || state === void 0 || (_state$attributes9 = state.attributes) === null || _state$attributes9 === void 0 ? void 0 : _state$attributes9.friendly_name) || e.entity_id;
       }
       return "(invalid entity)";

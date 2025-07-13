@@ -225,18 +225,38 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Returns array of entity config objects, including group_volume if present in user config.
   get entityObjs() {
-    return this.config.entities.map(e =>
-      typeof e === "string"
-        ? { entity_id: e, name: "" }
-        : {
-            entity_id: e.entity_id,
-            name: e.name || "",
-            volume_entity: e.volume_entity,
-            sync_power: !!e.sync_power,
-            // Pass through group_volume if present, otherwise undefined
-            ...(typeof e.group_volume !== "undefined" ? { group_volume: e.group_volume } : {})
-          }
-    );
+    return this.config.entities.map(e => {
+      const entity_id = typeof e === "string" ? e : e.entity_id;
+      const name = typeof e === "string" ? "" : (e.name || "");
+      const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
+      const sync_power = typeof e === "string" ? false : !!e.sync_power;
+      let group_volume;
+
+      if (typeof e === "object" && typeof e.group_volume !== "undefined") {
+        group_volume = e.group_volume;
+      } else {
+        // Determine group_volume default
+        const state = this.hass?.states?.[entity_id];
+        if (state && Array.isArray(state.attributes.group_members) && state.attributes.group_members.length > 0) {
+          // Are any group members in entityIds?
+          const otherMembers = state.attributes.group_members.filter(id => id !== entity_id);
+          // Use raw config.entities to avoid circular dependency in this.entityIds
+          const configEntityIds = this.config.entities.map(en =>
+            typeof en === "string" ? en : en.entity_id
+          );
+          const visibleMembers = otherMembers.filter(id => configEntityIds.includes(id));
+          group_volume = visibleMembers.length > 0;
+        }
+      }
+
+      return {
+        entity_id,
+        name,
+        volume_entity,
+        sync_power,
+        ...(typeof group_volume !== "undefined" ? { group_volume } : {})
+      };
+    });
   }
 
 
@@ -537,9 +557,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   /**
    * Handles volume change events.
-   * Supports per-entity group_volume override:
-   *  - If group_volume is false, always sets volume only on the volume entity, even if grouped.
-   *  - If group_volume is true or undefined, uses group volume logic (default YAMP behavior).
+   * With group_volume: false, always sets only the single volume entity, never the group.
+   * With group_volume: true/undefined, applies group logic.
+   * Includes debug logs to verify logic.
    */
   _onVolumeChange(e) {
     const idx = this._selectedIndex;
@@ -548,10 +568,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const newVol = Number(e.target.value);
     const obj = this.entityObjs[idx];
 
-    // Check for per-entity group_volume override (default to current YAMP behavior)
+
+    // Always use group_volume directly from obj
     const groupVolume = (typeof obj.group_volume === "boolean") ? obj.group_volume : true;
 
-    // If group_volume is false, always control only the volume entity, regardless of group status
     if (!groupVolume) {
       this.hass.callService("media_player", "volume_set", {
         entity_id: this._getVolumeEntity(idx),
@@ -560,11 +580,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    // --- Existing group volume logic follows ---
+    // Group volume logic: ONLY runs if group_volume is true/undefined
     if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
-      // Get current group volumes
       const targets = [mainEntity, ...state.attributes.group_members];
-      // Use base volume for delta calculation (defaults to previous if missing)
       const base = typeof this._groupBaseVolume === "number"
         ? this._groupBaseVolume
         : Number(this.currentVolumeStateObj?.attributes.volume_level || 0);
@@ -576,13 +594,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
-        v = Math.max(0, Math.min(1, v)); // Clamp to [0,1]
+        v = Math.max(0, Math.min(1, v));
         this.hass.callService("media_player", "volume_set", { entity_id: volTarget, volume_level: v });
       }
-      // Update base for continuous dragging
       this._groupBaseVolume = newVol;
     } else {
-      // Not grouped, set directly
       this.hass.callService("media_player", "volume_set", { entity_id: this._getVolumeEntity(idx), volume_level: newVol });
     }
   }
