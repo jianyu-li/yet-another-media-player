@@ -1,7 +1,7 @@
 
 import { LitElement, html, css, nothing } from "lit";
 
-import { renderChip, renderGroupChip } from "./chip-row.js";
+import { renderChip, renderGroupChip, createHoldToPinHandler } from "./chip-row.js";
 import { renderActionChipRow } from "./action-chip-row.js";
 import { renderControlsRow } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";

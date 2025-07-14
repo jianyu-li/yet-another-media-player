@@ -808,6 +808,51 @@ function renderGroupChip(_ref2) {
   `;
 }
 
+// Pin/hold logic helpers (timer, etc)
+function createHoldToPinHandler(_ref3) {
+  let {
+    onPin,
+    holdTime = 600,
+    moveThreshold = 8
+  } = _ref3;
+  let holdTimer = null;
+  let startX = null;
+  let startY = null;
+  let moved = false;
+  return {
+    pointerDown: (e, idx) => {
+      startX = e.clientX;
+      startY = e.clientY;
+      moved = false;
+      holdTimer = setTimeout(() => {
+        if (!moved) {
+          onPin(idx, e);
+        }
+      }, holdTime);
+    },
+    pointerMove: (e, idx) => {
+      if (holdTimer && startX !== null && startY !== null) {
+        const dx = Math.abs(e.clientX - startX);
+        const dy = Math.abs(e.clientY - startY);
+        if (dx > moveThreshold || dy > moveThreshold) {
+          moved = true;
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+      }
+    },
+    pointerUp: (e, idx) => {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+      startX = null;
+      startY = null;
+      moved = false;
+    }
+  };
+}
+
 function renderActionChipRow(_ref) {
   let {
     actions,
@@ -2218,7 +2263,6 @@ class YetAnotherMediaPlayerCard extends i {
     if (this._holdToPin) {
       this._holdHandler = createHoldToPinHandler({
         onPin: idx => this._pinChip(idx),
-        onHoldEnd: () => {},
         holdTime: 650,
         moveThreshold: 8
       });
