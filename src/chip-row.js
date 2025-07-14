@@ -14,6 +14,7 @@ export function renderChip({
   onIconClick,
   onPinClick,
   onPointerDown,
+  onPointerMove,
   onPointerUp,
 }) {
   return html`
@@ -22,6 +23,7 @@ export function renderChip({
             ?playing=${playing}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
+            @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}
             style="display:flex;align-items:center;justify-content:space-between;">
@@ -58,6 +60,7 @@ export function renderGroupChip({
   onIconClick,
   onPinClick,
   onPointerDown,
+  onPointerMove,
   onPointerUp,
 }) {
   return html`
@@ -65,6 +68,7 @@ export function renderGroupChip({
             ?selected=${selected}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
+            @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}>
       <span class="chip-icon">
@@ -99,20 +103,43 @@ export function renderGroupChip({
 }
 
 // Pin/hold logic helpers (timer, etc)
-export function createHoldToPinHandler({ onPin, onHoldEnd, holdTime = 600 }) {
+export function createHoldToPinHandler({ onPin, onHoldEnd, holdTime = 600, moveThreshold = 8 }) {
   let holdTimer = null;
+  let startX = null;
+  let startY = null;
+  let moved = false;
+
   return {
     pointerDown: (e, idx) => {
+      startX = e.clientX;
+      startY = e.clientY;
+      moved = false;
       holdTimer = setTimeout(() => {
-        onPin(idx, e);
-        onHoldEnd && onHoldEnd(idx);
+        if (!moved) {
+          onPin(idx, e);
+          onHoldEnd && onHoldEnd(idx);
+        }
       }, holdTime);
+    },
+    pointerMove: (e, idx) => {
+      if (holdTimer && startX !== null && startY !== null) {
+        const dx = Math.abs(e.clientX - startX);
+        const dy = Math.abs(e.clientY - startY);
+        if (dx > moveThreshold || dy > moveThreshold) {
+          moved = true;
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+      }
     },
     pointerUp: (e, idx) => {
       if (holdTimer) {
         clearTimeout(holdTimer);
         holdTimer = null;
       }
+      startX = null;
+      startY = null;
+      moved = false;
     }
   };
 }

@@ -727,6 +727,7 @@ function renderChip(_ref) {
     onChipClick,
     onPinClick,
     onPointerDown,
+    onPointerMove,
     onPointerUp
   } = _ref;
   return x`
@@ -735,6 +736,7 @@ function renderChip(_ref) {
             ?playing=${playing}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
+            @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}
             style="display:flex;align-items:center;justify-content:space-between;">
@@ -768,6 +770,7 @@ function renderGroupChip(_ref2) {
     onIconClick,
     onPinClick,
     onPointerDown,
+    onPointerMove,
     onPointerUp
   } = _ref2;
   return x`
@@ -775,6 +778,7 @@ function renderGroupChip(_ref2) {
             ?selected=${selected}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
+            @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}>
       <span class="chip-icon">
@@ -2026,17 +2030,20 @@ window.customCards.push({
   description: "YAMP is a multi-entity media card with custom actions"
 });
 class YetAnotherMediaPlayerCard extends i {
-  _pressTimer = null;
-  _handleChipPointerDown(idx) {
-    if (!this._holdToPin) return;
-    this._pressTimer = setTimeout(() => {
-      this._pinChip(idx);
-    }, 650);
+  _handleChipPointerDown(e, idx) {
+    if (this._holdToPin && this._holdHandler) {
+      this._holdHandler.pointerDown(e, idx);
+    }
   }
-  _handleChipPointerUp() {
-    if (!this._holdToPin) return;
-    if (this._pressTimer) clearTimeout(this._pressTimer);
-    this._pressTimer = null;
+  _handleChipPointerMove(e, idx) {
+    if (this._holdToPin && this._holdHandler) {
+      this._holdHandler.pointerMove(e, idx);
+    }
+  }
+  _handleChipPointerUp(e, idx) {
+    if (this._holdToPin && this._holdHandler) {
+      this._holdHandler.pointerUp(e, idx);
+    }
   }
   _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
@@ -2208,6 +2215,16 @@ class YetAnotherMediaPlayerCard extends i {
     }
     this.config = config;
     this._holdToPin = !!config.hold_to_pin;
+    if (this._holdToPin) {
+      this._holdHandler = createHoldToPinHandler({
+        onPin: idx => this._pinChip(idx),
+        onHoldEnd: () => {},
+        holdTime: 650,
+        moveThreshold: 8
+      });
+    } else {
+      this._holdHandler = null;
+    }
     this._selectedIndex = 0;
     this._lastPlaying = null;
     // Set accent color
@@ -2792,8 +2809,9 @@ class YetAnotherMediaPlayerCard extends i {
             e.stopPropagation();
             this._onPinClick(e);
           },
-          onPointerDown: e => this._handleChipPointerDown(idx),
-          onPointerUp: e => this._handleChipPointerUp()
+          onPointerDown: e => this._handleChipPointerDown(e, idx),
+          onPointerMove: e => this._handleChipPointerMove(e, idx),
+          onPointerUp: e => this._handleChipPointerUp(e, idx)
         });
       } else {
         var _this$hass4, _state$attributes3, _state$attributes4, _state$attributes5, _state$attributes6, _state$attributes7;
@@ -2817,8 +2835,9 @@ class YetAnotherMediaPlayerCard extends i {
             e.stopPropagation();
             this._onPinClick(e);
           },
-          onPointerDown: e => this._handleChipPointerDown(idx),
-          onPointerUp: e => this._handleChipPointerUp()
+          onPointerDown: e => this._handleChipPointerDown(e, idx),
+          onPointerMove: e => this._handleChipPointerMove(e, idx),
+          onPointerUp: e => this._handleChipPointerUp(e, idx)
         });
       }
     })}

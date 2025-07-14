@@ -32,17 +32,20 @@ window.customCards.push({
 });
 
 class YetAnotherMediaPlayerCard extends LitElement {
-  _pressTimer = null;
-  _handleChipPointerDown(idx) {
-    if (!this._holdToPin) return;
-    this._pressTimer = setTimeout(() => {
-      this._pinChip(idx);
-    }, 650);
+  _handleChipPointerDown(e, idx) {
+    if (this._holdToPin && this._holdHandler) {
+      this._holdHandler.pointerDown(e, idx);
+    }
   }
-  _handleChipPointerUp() {
-    if (!this._holdToPin) return;
-    if (this._pressTimer) clearTimeout(this._pressTimer);
-    this._pressTimer = null;
+  _handleChipPointerMove(e, idx) {
+    if (this._holdToPin && this._holdHandler) {
+      this._holdHandler.pointerMove(e, idx);
+    }
+  }
+  _handleChipPointerUp(e, idx) {
+    if (this._holdToPin && this._holdHandler) {
+      this._holdHandler.pointerUp(e, idx);
+    }
   }
   _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
@@ -199,6 +202,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     this.config = config;
     this._holdToPin = !!config.hold_to_pin;
+    if (this._holdToPin) {
+      this._holdHandler = createHoldToPinHandler({
+        onPin: (idx) => this._pinChip(idx),
+        onHoldEnd: () => {},
+        holdTime: 650,
+        moveThreshold: 8
+      });
+    } else {
+      this._holdHandler = null;
+    }
     this._selectedIndex = 0;
     this._lastPlaying = null;
     // Set accent color
@@ -825,8 +838,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           this._openGrouping();
                         },
                         onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
-                        onPointerDown: (e) => this._handleChipPointerDown(idx),
-                        onPointerUp: (e) => this._handleChipPointerUp()
+                        onPointerDown: (e) => this._handleChipPointerDown(e, idx),
+                        onPointerMove: (e) => this._handleChipPointerMove(e, idx),
+                        onPointerUp: (e) => this._handleChipPointerUp(e, idx)
                       });
                     } else {
                       const id = group[0];
@@ -850,8 +864,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         holdToPin: this._holdToPin,
                         onChipClick: (idx) => this._onChipClick(idx),
                         onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
-                        onPointerDown: (e) => this._handleChipPointerDown(idx),
-                        onPointerUp: (e) => this._handleChipPointerUp()
+                        onPointerDown: (e) => this._handleChipPointerDown(e, idx),
+                        onPointerMove: (e) => this._handleChipPointerMove(e, idx),
+                        onPointerUp: (e) => this._handleChipPointerUp(e, idx)
                       });
                     }
                   })}
