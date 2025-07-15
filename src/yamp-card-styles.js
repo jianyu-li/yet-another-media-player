@@ -449,14 +449,17 @@ export const yampCardStyles = css`
       margin-top: 8px;
       min-height: 48px;
     }
+    /* 
     .details .title {
       padding-top: 8px;
     }
+    */
     .progress-bar-container {
       padding-left: 24px;
       padding-right: 24px;
       box-sizing: border-box;
     }
+    /*
     .title {
       font-size: 1.1em;
       font-weight: 600;
@@ -464,6 +467,20 @@ export const yampCardStyles = css`
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    */
+
+    .details .title,
+    .title { 
+      font-size: 1.1em;
+      font-weight: 600;
+      line-height: 1.2;
+      white-space: normal !important;
+      word-break: break-word;
+      overflow: visible;
+      text-overflow: unset;
+      display: block;
+      padding-top: 8px;
     }
     .artist {
       font-size: 1em;
@@ -736,6 +753,15 @@ export const yampCardStyles = css`
   .card-lower-content.collapsed .details {
     opacity: 1;
     pointer-events: auto;
+  }
+  .card-lower-content.collapsed .details {
+    margin-right: 120px;  /* Reserve space for floating album artwork */
+    transition: margin 0.2s;
+  }
+  @media (max-width: 420px) {
+    .card-lower-content.collapsed .details {
+      margin-right: 74px; /* Reserve space for floating art on small screens */
+    }
   }
   .card-lower-content.collapsed .card-artwork-spacer {
     opacity: 0;
