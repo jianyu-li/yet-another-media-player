@@ -1067,4 +1067,115 @@ export const yampCardStyles = css`
   .group-toggle-btn:hover {
     background: rgba(255,255,255,0.15);
   }
+  .entity-options-search {
+    padding: 2px 0 4px 0;
+  }
+  .entity-options-search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px !important;
+    margin-top: 2px;
+  }
+  .entity-options-search-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 0 9px 0;
+    border-bottom: 1px solid #2227;
+    font-size: 1.10em;
+    color: var(--primary-text-color, #fff);
+    background: none;
+  }
+  .entity-options-search-result:last-child {
+    border-bottom: none;
+  }
+  .entity-options-search-thumb {
+    height: 38px;
+    width: 38px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.16);
+    margin-right: 12px;
+  }
+  .entity-options-search-play {
+    min-width: 34px;
+    font-size: 1.13em;
+    border: none;
+    background: var(--custom-accent, #ff9800);
+    color: #fff !important;
+    border-radius: 10px;
+    padding: 6px 10px 6px 10px;
+    margin-left: 7px;
+    cursor: pointer;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.13);
+    transition: background 0.2s, color 0.2s;
+    text-shadow: 0 2px 8px #0008;
+  }
+  .entity-options-search-play:hover,
+  .entity-options-search-play:focus {
+    background: #fff;
+    color: var(--custom-accent, #ff9800) !important;
+  }
+  .entity-options-search-input {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: var(--card-background-color, #222);
+    color: var(--primary-text-color, #fff);
+    font-size: 1.12em;
+    outline: none;
+    transition: border 0.13s;
+    margin-right: 7px;
+    /* padding removed/overridden below for options sheet */
+    box-sizing: border-box;
+  }
+  .entity-options-search-row .entity-options-search-input {
+    padding: 4px 10px;
+    height: 32px; 
+    min-height: 32px;
+    line-height: 1.18;
+    box-sizing: border-box;
+    border: 1.5px solid var(--custom-accent, #ff9800) !important;
+    background: #232323 !important;
+    color: #fff !important;
+    transition: border 0.13s, background 0.13s;
+    outline: none !important;
+  }
+  .entity-options-search-input:focus {
+    border: 1.5px solid var(--custom-accent, #ff9800) !important;
+    background: #232323 !important;
+    color: #fff !important;
+    outline: none !important;
+  }
+  .entity-options-search-loading,
+  .entity-options-search-error,
+  .entity-options-search-empty {
+    padding: 8px 6px 8px 6px;
+    font-size: 1.09em;
+    opacity: 0.90;
+    color: var(--primary-text-color, #fff);
+    background: none;
+    text-align: left;
+  }
+  .entity-options-search-error {
+    color: #e44747 !important;
+    font-weight: 500;
+  }
+  .entity-options-search-empty {
+    color: #999 !important;
+    font-style: italic;
+  }
+  .entity-options-search-row .entity-options-item {
+    height: 32px;
+    min-height: 32px;
+    box-sizing: border-box;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 1.12em;
+    vertical-align: middle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 `;
