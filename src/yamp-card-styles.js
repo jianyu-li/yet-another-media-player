@@ -1178,4 +1178,74 @@ export const yampCardStyles = css`
     align-items: center;
     justify-content: center;
   }
-`;
+  /* Style for search filter chips */
+  .search-filter-chips .chip {
+    color: #fff !important;
+  }
+  .search-filter-chips .chip[selected],
+  .search-filter-chips .chip[style*="background: var(--customAccent"],
+  .search-filter-chips .chip[style*="background: var(--custom-accent"] {
+    color: #111 !important;
+  }
+
+
+.entity-options-sheet .search-filter-chips .chip:not([selected]) {
+  color: #fff !important;
+}
+.entity-options-sheet .search-filter-chips .chip[selected] {
+  color: #111 !important;
+}
+  
+.entity-options-sheet .search-filter-chips .chip {
+  text-align: center !important;
+  justify-content: center !important;
+}
+
+.entity-options-sheet .entity-options-search-results {
+  min-height: 210px;   
+  /* Remove max-height and overflow-y */
+}
+
+
+  /* Highlight search filter chips on hover in options sheet */
+.entity-options-sheet .search-filter-chips .chip:hover {
+  background: var(--custom-accent, #ff9800) !important;
+  color: #111 !important;
+}
+
+.entity-options-sheet .search-filter-chips .chip:hover {
+  opacity: 1 !important;
+}
+/* --- Make the search header fixed and results flex --- */
+.entity-options-sheet .entity-options-search {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.entity-options-sheet .entity-options-search-row,
+.entity-options-sheet .search-filter-chips {
+  flex: 0 0 auto;          /* never grow/shrink */
+}
+
+.entity-options-sheet .entity-options-search-results {
+  flex: 1 1 auto;          /* take remaining space */
+  /* keeps earlier min-height */
+}
+/* Invisible placeholder rows (keep height, hide divider) */
+/* Placeholder rows keep layout height even when invisible */
+.entity-options-search-result.placeholder {
+  visibility: hidden;                              /* hide contents */
+  border-bottom: 1px solid transparent !important; /* divider invisible */
+  min-height: 46px;                                /* match real row height */
+  box-sizing: border-box;
+}
+;
+
+/* Artist text becomes clickable when it can open a search */
+.clickable-artist {
+  cursor: pointer;
+}
+.clickable-artist:hover {
+  text-decoration: underline;
+}`

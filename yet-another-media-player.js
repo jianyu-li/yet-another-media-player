@@ -1466,14 +1466,17 @@ const yampCardStyles = i$3`
       margin-top: 8px;
       min-height: 48px;
     }
+    /* 
     .details .title {
       padding-top: 8px;
     }
+    */
     .progress-bar-container {
       padding-left: 24px;
       padding-right: 24px;
       box-sizing: border-box;
     }
+    /*
     .title {
       font-size: 1.1em;
       font-weight: 600;
@@ -1481,6 +1484,20 @@ const yampCardStyles = i$3`
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    */
+
+    .details .title,
+    .title { 
+      font-size: 1.1em;
+      font-weight: 600;
+      line-height: 1.2;
+      white-space: normal !important;
+      word-break: break-word;
+      overflow: visible;
+      text-overflow: unset;
+      display: block;
+      padding-top: 8px;
     }
     .artist {
       font-size: 1em;
@@ -1753,6 +1770,15 @@ const yampCardStyles = i$3`
   .card-lower-content.collapsed .details {
     opacity: 1;
     pointer-events: auto;
+  }
+  .card-lower-content.collapsed .details {
+    margin-right: 120px;  /* Reserve space for floating album artwork */
+    transition: margin 0.2s;
+  }
+  @media (max-width: 420px) {
+    .card-lower-content.collapsed .details {
+      margin-right: 74px; /* Reserve space for floating art on small screens */
+    }
   }
   .card-lower-content.collapsed .card-artwork-spacer {
     opacity: 0;
@@ -2058,7 +2084,249 @@ const yampCardStyles = i$3`
   .group-toggle-btn:hover {
     background: rgba(255,255,255,0.15);
   }
-`;
+  .entity-options-search {
+    padding: 2px 0 4px 0;
+  }
+  .entity-options-search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px !important;
+    margin-top: 2px;
+  }
+  .entity-options-search-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 0 9px 0;
+    border-bottom: 1px solid #2227;
+    font-size: 1.10em;
+    color: var(--primary-text-color, #fff);
+    background: none;
+  }
+  .entity-options-search-result:last-child {
+    border-bottom: none;
+  }
+  .entity-options-search-thumb {
+    height: 38px;
+    width: 38px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.16);
+    margin-right: 12px;
+  }
+  .entity-options-search-play {
+    min-width: 34px;
+    font-size: 1.13em;
+    border: none;
+    background: var(--custom-accent, #ff9800);
+    color: #fff !important;
+    border-radius: 10px;
+    padding: 6px 10px 6px 10px;
+    margin-left: 7px;
+    cursor: pointer;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.13);
+    transition: background 0.2s, color 0.2s;
+    text-shadow: 0 2px 8px #0008;
+  }
+  .entity-options-search-play:hover,
+  .entity-options-search-play:focus {
+    background: #fff;
+    color: var(--custom-accent, #ff9800) !important;
+  }
+  .entity-options-search-input {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: var(--card-background-color, #222);
+    color: var(--primary-text-color, #fff);
+    font-size: 1.12em;
+    outline: none;
+    transition: border 0.13s;
+    margin-right: 7px;
+    /* padding removed/overridden below for options sheet */
+    box-sizing: border-box;
+  }
+  .entity-options-search-row .entity-options-search-input {
+    padding: 4px 10px;
+    height: 32px; 
+    min-height: 32px;
+    line-height: 1.18;
+    box-sizing: border-box;
+    border: 1.5px solid var(--custom-accent, #ff9800) !important;
+    background: #232323 !important;
+    color: #fff !important;
+    transition: border 0.13s, background 0.13s;
+    outline: none !important;
+  }
+  .entity-options-search-input:focus {
+    border: 1.5px solid var(--custom-accent, #ff9800) !important;
+    background: #232323 !important;
+    color: #fff !important;
+    outline: none !important;
+  }
+  .entity-options-search-loading,
+  .entity-options-search-error,
+  .entity-options-search-empty {
+    padding: 8px 6px 8px 6px;
+    font-size: 1.09em;
+    opacity: 0.90;
+    color: var(--primary-text-color, #fff);
+    background: none;
+    text-align: left;
+  }
+  .entity-options-search-error {
+    color: #e44747 !important;
+    font-weight: 500;
+  }
+  .entity-options-search-empty {
+    color: #999 !important;
+    font-style: italic;
+  }
+  .entity-options-search-row .entity-options-item {
+    height: 32px;
+    min-height: 32px;
+    box-sizing: border-box;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 1.12em;
+    vertical-align: middle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Style for search filter chips */
+  .search-filter-chips .chip {
+    color: #fff !important;
+  }
+  .search-filter-chips .chip[selected],
+  .search-filter-chips .chip[style*="background: var(--customAccent"],
+  .search-filter-chips .chip[style*="background: var(--custom-accent"] {
+    color: #111 !important;
+  }
+
+
+.entity-options-sheet .search-filter-chips .chip:not([selected]) {
+  color: #fff !important;
+}
+.entity-options-sheet .search-filter-chips .chip[selected] {
+  color: #111 !important;
+}
+  
+.entity-options-sheet .search-filter-chips .chip {
+  text-align: center !important;
+  justify-content: center !important;
+}
+
+.entity-options-sheet .entity-options-search-results {
+  min-height: 210px;   
+  /* Remove max-height and overflow-y */
+}
+
+
+  /* Highlight search filter chips on hover in options sheet */
+.entity-options-sheet .search-filter-chips .chip:hover {
+  background: var(--custom-accent, #ff9800) !important;
+  color: #111 !important;
+}
+
+.entity-options-sheet .search-filter-chips .chip:hover {
+  opacity: 1 !important;
+}
+/* --- Make the search header fixed and results flex --- */
+.entity-options-sheet .entity-options-search {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.entity-options-sheet .entity-options-search-row,
+.entity-options-sheet .search-filter-chips {
+  flex: 0 0 auto;          /* never grow/shrink */
+}
+
+.entity-options-sheet .entity-options-search-results {
+  flex: 1 1 auto;          /* take remaining space */
+  /* keeps earlier min-height */
+}
+/* Invisible placeholder rows (keep height, hide divider) */
+/* Placeholder rows keep layout height even when invisible */
+.entity-options-search-result.placeholder {
+  visibility: hidden;                              /* hide contents */
+  border-bottom: 1px solid transparent !important; /* divider invisible */
+  min-height: 46px;                                /* match real row height */
+  box-sizing: border-box;
+}
+;
+
+/* Artist text becomes clickable when it can open a search */
+.clickable-artist {
+  cursor: pointer;
+}
+.clickable-artist:hover {
+  text-decoration: underline;
+}`;
+
+/**
+ * Renders the search sheet UI for media search.
+ *
+ * @param {Object} opts
+ * @param {boolean} opts.open - Whether the search sheet is visible.
+ * @param {string} opts.query - Current search query value.
+ * @param {Function} opts.onQueryInput - Handler for query input change.
+ * @param {Function} opts.onSearch - Handler for search action.
+ * @param {Function} opts.onClose - Handler for closing the sheet.
+ * @param {boolean} opts.loading - Loading state for search.
+ * @param {Array} opts.results - Search result items (array of media items).
+ * @param {Function} opts.onPlay - Handler to play a media item.
+ * @param {string} [opts.error] - Optional error message.
+ */
+function renderSearchSheet(_ref) {
+  let {
+    open,
+    query,
+    onQueryInput,
+    onSearch,
+    onClose,
+    loading,
+    results,
+    onPlay,
+    error
+  } = _ref;
+  if (!open) return E;
+  return x`
+    <div class="search-sheet">
+      <div class="search-sheet-header">
+        <input
+          type="text"
+          .value=${query || ""}
+          @input=${onQueryInput}
+          placeholder="Search music..."
+          autofocus
+        />
+        <button @click=${onSearch} ?disabled=${loading || !query}>Search</button>
+        <button @click=${onClose} title="Close Search">✕</button>
+      </div>
+      ${loading ? x`<div class="search-sheet-loading">Loading...</div>` : E}
+      ${error ? x`<div class="search-sheet-error">${error}</div>` : E}
+      <div class="search-sheet-results">
+        ${(results || []).length === 0 && !loading ? x`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => x`
+                <div class="search-sheet-result">
+                  <img
+                    class="search-sheet-thumb"
+                    src=${item.thumbnail}
+                    alt=${item.title}
+                  />
+                  <span class="search-sheet-title">${item.title}</span>
+                  <button class="search-sheet-play" @click=${() => onPlay(item)}>
+                    ▶
+                  </button>
+                </div>
+              `)}
+      </div>
+    </div>
+  `;
+}
 
 const SUPPORT_PREVIOUS_TRACK = 16;
 const SUPPORT_NEXT_TRACK = 32;
@@ -2212,6 +2480,15 @@ class YetAnotherMediaPlayerCard extends i {
     this._alternateProgressBar = false;
     // Group base volume for group gain logic
     this._groupBaseVolume = null;
+    // Search sheet state variables
+    this._searchOpen = false;
+    this._searchQuery = "";
+    this._searchLoading = false;
+    this._searchResults = [];
+    this._searchError = "";
+    this._searchTotalRows = 15; // minimum 15 rows for layout padding
+    // Show search-in-sheet flag for entity options sheet
+    this._showSearchInSheet = false;
     // Collapse on load if nothing is playing
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -2224,6 +2501,159 @@ class YetAnotherMediaPlayerCard extends i {
     }, 0);
     // Store previous collapsed state
     this._prevCollapsed = null;
+    // Search attempted flag for search-in-sheet
+    this._searchAttempted = false;
+    // Media class filter for search results
+    this._searchMediaClassFilter = "all";
+    // Track last search chip classes for filter chip row scroll
+    this._lastSearchChipClasses = "";
+    // --- swipe‑to‑filter helpers ---
+    this._swipeStartX = null;
+    this._searchSwipeAttached = false;
+  } // ← closes constructor
+
+  /**
+   * Attach horizontal swipe on the search‑results area to cycle media‑class filters.
+   */
+  _attachSearchSwipe() {
+    if (this._searchSwipeAttached) return;
+    const area = this.renderRoot.querySelector('.entity-options-search-results');
+    if (!area) return;
+    this._searchSwipeAttached = true;
+    const threshold = 40; // px needed to trigger change
+
+    area.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) {
+        this._swipeStartX = e.touches[0].clientX;
+      }
+    }, {
+      passive: true
+    });
+    area.addEventListener('touchend', e => {
+      if (this._swipeStartX === null) return;
+      const endX = e.changedTouches && e.changedTouches[0].clientX || null;
+      if (endX === null) {
+        this._swipeStartX = null;
+        return;
+      }
+      const dx = endX - this._swipeStartX;
+      if (Math.abs(dx) > threshold) {
+        const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
+        const filterOrder = ['all', ...classes];
+        const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
+        const dir = dx < 0 ? 1 : -1; // swipe left -> next, right -> prev
+        let nextIdx = (currIdx + dir + filterOrder.length) % filterOrder.length;
+        this._searchMediaClassFilter = filterOrder[nextIdx];
+        this.requestUpdate();
+      }
+      this._swipeStartX = null;
+    }, {
+      passive: true
+    });
+  }
+
+  /**
+   * Open the search sheet pre‑filled with the current track’s artist and
+   * launch the search immediately (only when media_artist is present).
+   */
+  _searchArtistFromNowPlaying() {
+    var _this$currentStateObj;
+    const artist = ((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.media_artist) || "";
+    if (!artist) return; // nothing to search
+
+    // Open overlay + search sheet
+    this._showEntityOptions = true;
+    this._showSearchInSheet = true;
+
+    // Prefill search state
+    this._searchQuery = artist;
+    this._searchError = "";
+    this._searchAttempted = false;
+    this._searchLoading = false;
+
+    // Render, then run search
+    this.requestUpdate();
+    this.updateComplete.then(() => this._doSearch());
+  }
+  // Show search sheet inside entity options
+  _showSearchSheetInOptions() {
+    this._showSearchInSheet = true;
+    this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
+    this._searchAttempted = false;
+    this.requestUpdate();
+  }
+  _hideSearchSheetInOptions() {
+    this._showSearchInSheet = false;
+    this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
+    this._searchLoading = false;
+    this._searchAttempted = false;
+    this.requestUpdate();
+  }
+  // Search sheet methods
+  _searchOpenSheet() {
+    this._searchOpen = true;
+    this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
+    this.requestUpdate();
+  }
+  _searchCloseSheet() {
+    this._searchOpen = false;
+    this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
+    this._searchLoading = false;
+    this.requestUpdate();
+  }
+  async _doSearch() {
+    this._searchAttempted = true;
+    if (!this._searchQuery) return;
+    this._searchLoading = true;
+    this._searchError = "";
+    this._searchResults = [];
+    this.requestUpdate();
+    try {
+      var _res$response;
+      const msg = {
+        type: "call_service",
+        domain: "media_player",
+        service: "search_media",
+        service_data: {
+          entity_id: this.currentEntityId,
+          search_query: this._searchQuery
+        },
+        return_response: true
+      };
+      const res = await this.hass.connection.sendMessagePromise(msg);
+      const arr = (res === null || res === void 0 || (_res$response = res.response) === null || _res$response === void 0 || (_res$response = _res$response[this.currentEntityId]) === null || _res$response === void 0 ? void 0 : _res$response.result) || (res === null || res === void 0 ? void 0 : res.result) || [];
+      this._searchResults = Array.isArray(arr) ? arr : [];
+      // remember how many rows exist in the full (“All”) set, but keep at least 15 for layout
+      const rows = Array.isArray(this._searchResults) ? this._searchResults.length : 0;
+      this._searchTotalRows = Math.max(15, rows); // keep at least 15
+    } catch (e) {
+      this._searchError = e && e.message || "Unknown error";
+      this._searchResults = [];
+      this._searchTotalRows = 0;
+    }
+    this._searchLoading = false;
+    this.requestUpdate();
+  }
+  _playMediaFromSearch(item) {
+    this.hass.callService("media_player", "play_media", {
+      entity_id: this.currentEntityId,
+      media_content_type: item.media_content_type,
+      media_content_id: item.media_content_id
+    });
+    // If searching from the bottom sheet, close the entity options overlay.
+    if (this._showSearchInSheet) {
+      this._closeEntityOptions();
+      this._showSearchInSheet = false;
+    }
+    this._searchCloseSheet();
   }
 
   // Notify Home Assistant to recalculate layout
@@ -2435,6 +2865,45 @@ class YetAnotherMediaPlayerCard extends i {
     this._addGrabScroll('.chip-row');
     this._addGrabScroll('.action-chip-row');
     this._addVerticalGrabScroll('.floating-source-index');
+
+    // Autofocus the in-sheet search box when opening the search in entity options
+    if (this._showSearchInSheet) {
+      setTimeout(() => {
+        const inp = this.renderRoot.querySelector('#search-input-box');
+        if (inp) inp.focus();
+        // Only scroll filter chip row to start if the set of chips has changed
+        const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
+        const classStr = classes.join(",");
+        if (this._lastSearchChipClasses !== classStr) {
+          const chipRow = this.renderRoot.querySelector('.search-filter-chips');
+          if (chipRow) chipRow.scrollLeft = 0;
+          // Reset scroll only when the result set (and chip classes) actually changes
+          const overlayEl = this.renderRoot.querySelector('.entity-options-overlay');
+          if (overlayEl) overlayEl.scrollTop = 0;
+          const sheetEl = this.renderRoot.querySelector('.entity-options-sheet');
+          if (sheetEl) sheetEl.scrollTop = 0;
+          this._lastSearchChipClasses = classStr;
+        }
+        // Responsive alignment for search filter chips: center if no overflow, flex-start if overflow
+        const chipRowEl = this.renderRoot.querySelector('#search-filter-chip-row');
+        if (chipRowEl) {
+          if (chipRowEl.scrollWidth > chipRowEl.clientWidth + 2) {
+            chipRowEl.style.justifyContent = 'flex-start';
+          } else {
+            chipRowEl.style.justifyContent = 'center';
+          }
+        }
+        // attach swipe gesture once
+        this._attachSearchSwipe();
+      }, 0);
+    }
+    // When the source‑list sheet opens, make sure the overlay scrolls to the top
+    if (this._showSourceList) {
+      setTimeout(() => {
+        const overlayEl = this.renderRoot.querySelector('.entity-options-overlay');
+        if (overlayEl) overlayEl.scrollTop = 0;
+      }, 0);
+    }
   }
   _toggleSourceMenu() {
     this._showSourceMenu = !this._showSourceMenu;
@@ -2755,7 +3224,7 @@ class YetAnotherMediaPlayerCard extends i {
     });
   }
   render() {
-    var _this$currentVolumeSt2, _this$currentStateObj;
+    var _this$currentVolumeSt2, _this$currentStateObj2;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -2936,7 +3405,15 @@ class YetAnotherMediaPlayerCard extends i {
                   <div class="title">
                     ${isPlaying ? title : ""}
                   </div>
-                  ${isPlaying && artist ? x`<div class="artist">${artist}</div>` : E}
+                  ${isPlaying && artist ? x`
+                    <div
+                      class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
+                      @click=${() => {
+      if (stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
+    }}
+                      title=${stateObj.attributes.media_artist ? "Search for this artist" : ""}
+                    >${artist}</div>
+                  ` : E}
                 </div>
                 ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
@@ -2995,16 +3472,22 @@ class YetAnotherMediaPlayerCard extends i {
           ${this._showEntityOptions ? x`
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
-              ${!this._showGrouping && !this._showSourceList ? x`
-                <button class="entity-options-item" @click=${() => {
+              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet ? x`
+                <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:24px;">
+                  <button class="entity-options-item" @click=${() => {
       this._openMoreInfo();
       this._showEntityOptions = false;
       this.requestUpdate();
     }}>More Info</button>
-                ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
-                  <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
-                ` : E}
-                ${(() => {
+                  ${!collapsed ? x`
+                    <button class="entity-options-item" @click=${() => {
+      this._showSearchSheetInOptions();
+    }}>Search</button>
+                  ` : E}
+                  ${Array.isArray((_this$currentStateObj2 = this.currentStateObj) === null || _this$currentStateObj2 === void 0 || (_this$currentStateObj2 = _this$currentStateObj2.attributes) === null || _this$currentStateObj2 === void 0 ? void 0 : _this$currentStateObj2.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
+                      <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
+                    ` : E}
+                  ${(() => {
       const totalEntities = this.entityIds.length;
       const groupableCount = this.entityIds.reduce((acc, id) => {
         const st = this.hass.states[id];
@@ -3012,12 +3495,133 @@ class YetAnotherMediaPlayerCard extends i {
       }, 0);
       if (totalEntities > 1 && groupableCount > 1 && this._supportsFeature(this.currentStateObj, SUPPORT_GROUPING)) {
         return x`
-                        <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
-                      `;
+                          <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
+                        `;
       }
       return E;
     })()}
-                <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
+                  <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
+                </div>
+              ` : this._showSearchInSheet ? x`
+                <div class="entity-options-search" style="margin-top:12px;">
+                  <div class="entity-options-search-row">
+                      <input
+                        type="text"
+                        id="search-input-box"
+                        autofocus
+                        class="entity-options-search-input"
+                        .value=${this._searchQuery}
+                        @input=${e => {
+      this._searchQuery = e.target.value;
+      this.requestUpdate();
+    }}
+                        @keydown=${e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this._doSearch();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        this._hideSearchSheetInOptions();
+      }
+    }}
+                        placeholder="Search music..."
+                        style="flex:1; min-width:0; font-size:1.1em;"
+                      />
+                    <button
+                      class="entity-options-item"
+                      style="min-width:80px;"
+                      @click=${() => this._doSearch()}
+                      ?disabled=${this._searchLoading || !this._searchQuery}>
+                      Search
+                    </button>
+                    <button
+                      class="entity-options-item"
+                      style="min-width:80px;"
+                      @click=${() => this._hideSearchSheetInOptions()}>
+                      Cancel
+                    </button>
+                  </div>
+                  <!-- FILTER CHIPS -->
+                  ${(() => {
+      const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
+      const filter = this._searchMediaClassFilter || "all";
+      if (classes.length < 2) return E;
+      return x`
+                      <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center;">
+                        <button
+                          class="chip"
+                          style="
+                            width: 72px;
+                            background: ${filter === 'all' ? this._customAccent : '#282828'};
+                            opacity: ${filter === 'all' ? '1' : '0.8'};
+                            font-weight: ${filter === 'all' ? 'bold' : 'normal'};
+                          "
+                          ?selected=${filter === 'all'}
+                          @click=${() => {
+        this._searchMediaClassFilter = "all";
+        this.requestUpdate();
+      }}
+                        >All</button>
+                        ${classes.map(c => x`
+                          <button
+                            class="chip"
+                            style="
+                              width: 72px;
+                              background: ${filter === c ? this._customAccent : '#282828'};
+                              opacity: ${filter === c ? '1' : '0.8'};
+                              font-weight: ${filter === c ? 'bold' : 'normal'};
+                            "
+                            ?selected=${filter === c}
+                            @click=${() => {
+        this._searchMediaClassFilter = c;
+        this.requestUpdate();
+      }}
+                          >
+                            ${c.charAt(0).toUpperCase() + c.slice(1)}
+                          </button>
+                        `)}
+                      </div>
+                    `;
+    })()}
+                  ${this._searchLoading ? x`<div class="entity-options-search-loading">Loading...</div>` : E}
+                  ${this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
+                  <div class="entity-options-search-results">
+                    ${(() => {
+      const filter = this._searchMediaClassFilter || "all";
+      const allResults = this._searchResults || [];
+      const filteredResults = filter === "all" ? allResults : allResults.filter(item => item.media_class === filter);
+      // Build padded array so row‑count stays constant
+      const totalRows = Math.max(15, this._searchTotalRows || allResults.length);
+      const paddedResults = [...filteredResults, ...Array.from({
+        length: Math.max(0, totalRows - filteredResults.length)
+      }, () => null)];
+      // Always render paddedResults, even before first search
+      return this._searchAttempted && filteredResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty">No results.</div>` : paddedResults.map(item => item ? x`
+                            <!-- EXISTING non‑placeholder row markup -->
+                            <div class="entity-options-search-result">
+                              <img
+                                class="entity-options-search-thumb"
+                                src=${item.thumbnail}
+                                alt=${item.title}
+                                style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
+                              />
+                              <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                                <span>${item.title}</span>
+                                <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
+                                  ${item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : ""}
+                                </span>
+                              </div>
+                              <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)}>
+                                ▶
+                              </button>
+                            </div>
+                          ` : x`
+                            <!-- placeholder row keeps height -->
+                            <div class="entity-options-search-result placeholder"></div>
+                          `);
+    })()}
+                  </div>
+                </div>
               ` : this._showGrouping ? x`
                 <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
                 ${(_masterState$attribut => {
@@ -3042,10 +3646,12 @@ class YetAnotherMediaPlayerCard extends i {
     })()}
                 <hr style="margin:8px 0 2px 0;opacity:0.19;border:0;border-top:1px solid #fff;" />
                 ${(() => {
-      // --- Begin new group player rows logic ---
+      // --- Begin new group player rows logic, wrapped in scrollable container ---
       const masterId = this.currentEntityId;
       const sortedIds = [masterId, ...this.entityIds.filter(id => id !== masterId)];
-      return sortedIds.map(id => {
+      return x`
+                      <div class="group-list-scroll" style="overflow-y: auto; max-height: 340px;">
+                        ${sortedIds.map(id => {
         var _volumeState$attribut;
         const st = this.hass.states[id];
         if (!this._supportsFeature(st, SUPPORT_GROUPING)) return E;
@@ -3058,57 +3664,59 @@ class YetAnotherMediaPlayerCard extends i {
         const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
         const volVal = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) || 0);
         return x`
-                        <div style="
-                          display: flex;
-                          align-items: center;
-                          padding: 6px 4px;
-                        ">
-                          <span style="
-                            display:inline-block;
-                            width: 140px;
-                            min-width: 100px;
-                            max-width: 160px;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            white-space: nowrap;
-                          ">${name}</span>
-                          <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
-                            ${isRemoteVol ? x`
-                                    <div class="vol-stepper">
-                                      <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
-                                      <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
-                                    </div>
-                                  ` : x`
-                                    <input
-                                      class="vol-slider"
-                                      type="range"
-                                      min="0"
-                                      max="1"
-                                      step="0.01"
-                                      .value=${volVal}
-                                      @change=${e => this._onGroupVolumeChange(id, volumeEntity, e)}
-                                      title="Volume"
-                                      style="width:100%;max-width:260px;"
-                                    />
-                                  `}
-                            <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
-                          </div>
-                          ${id === masterId ? x`
-                                  <button class="group-toggle-btn group-toggle-transparent"
-                                          disabled
-                                          aria-label="Master"
-                                          style="margin-left:14px;"></button>
-                                ` : x`
-                                  <button class="group-toggle-btn"
-                                          @click=${() => this._toggleGroup(id)}
-                                          title=${grouped ? "Unjoin" : "Join"}
-                                          style="margin-left:14px;">
-                                    <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
-                                  </button>
-                                `}
-                        </div>
-                      `;
-      });
+                            <div style="
+                              display: flex;
+                              align-items: center;
+                              padding: 6px 4px;
+                            ">
+                              <span style="
+                                display:inline-block;
+                                width: 140px;
+                                min-width: 100px;
+                                max-width: 160px;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                white-space: nowrap;
+                              ">${name}</span>
+                              <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
+                                ${isRemoteVol ? x`
+                                        <div class="vol-stepper">
+                                          <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
+                                          <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
+                                        </div>
+                                      ` : x`
+                                        <input
+                                          class="vol-slider"
+                                          type="range"
+                                          min="0"
+                                          max="1"
+                                          step="0.01"
+                                          .value=${volVal}
+                                          @change=${e => this._onGroupVolumeChange(id, volumeEntity, e)}
+                                          title="Volume"
+                                          style="width:100%;max-width:260px;"
+                                        />
+                                      `}
+                                <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
+                              </div>
+                              ${id === masterId ? x`
+                                      <button class="group-toggle-btn group-toggle-transparent"
+                                              disabled
+                                              aria-label="Master"
+                                              style="margin-left:14px;"></button>
+                                    ` : x`
+                                      <button class="group-toggle-btn"
+                                              @click=${() => this._toggleGroup(id)}
+                                              title=${grouped ? "Unjoin" : "Join"}
+                                              style="margin-left:14px;">
+                                        <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
+                                      </button>
+                                    `}
+                            </div>
+                          `;
+      })}
+                      </div>
+                    `;
       // --- End new group player rows logic ---
     })()}
               ` : x`
@@ -3151,6 +3759,20 @@ class YetAnotherMediaPlayerCard extends i {
             </div>
           </div>
         ` : E}
+          ${this._searchOpen ? renderSearchSheet({
+      open: this._searchOpen,
+      query: this._searchQuery,
+      loading: this._searchLoading,
+      results: this._searchResults,
+      error: this._searchError,
+      onClose: () => this._searchCloseSheet(),
+      onQueryInput: e => {
+        this._searchQuery = e.target.value;
+        this.requestUpdate();
+      },
+      onSearch: () => this._doSearch(),
+      onPlay: item => this._playMediaFromSearch(item)
+    }) : E}
         </ha-card>
       `;
   }

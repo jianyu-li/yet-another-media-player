@@ -1,6 +1,6 @@
 # Yet Another Media Player
 
-YAMP is a Home Assistant media card for controlling multiple entities with customizable actions.
+YAMP is a Home Assistant media card for controlling multiple entities with customizable actions and music assistant support.
 
 ---
 
@@ -11,6 +11,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
   - Control volume as a group or individually
   - Separate volume entity via YAML
   - Override sync volume behavior on a per entity basis using `group_volume`
+- Music Assistant Support: Search music on compatible players
 - Add background image sensor for when not in use
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
@@ -27,6 +28,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 
 ![Preview Image](/Preview/largepreview.png)
 ![Preview Image Collapsed](/Preview/collapsed.png)
+![Preview Image Search](/Preview/search.png)
 ![Preview Image Movie](/Preview/movie.png)
 ![Preview Image No Icon](/Preview/NoIcons.png)
 ![Preview Image Grouping](/Preview/group-player-menu.png)
@@ -62,6 +64,10 @@ Player entities can be grouped together for supported entities. Access the hambu
   - If only one entity is configured, and it is part of a group, only the volume for that entity will change. See `group_volume` for additional configuration options.
 - Use the Grouped Players menu to adjust individual player volume or to sync the volume percentage across all grouped players to the main entity
 
+# Search
+Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
+- Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
+![Preview Image Search](/Preview/search.png)
 
 
 ## Config Examples
