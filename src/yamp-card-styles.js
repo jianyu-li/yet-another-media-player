@@ -915,8 +915,8 @@ export const yampCardStyles = css`
     border-radius: 10px;
     font-size: 1.12em;
     font-weight: 500;
-    margin: 10px 0;
-    padding: 18px 0 10px 0;
+    margin: 4px 0;
+    padding: 6px 0 8px 0;
     cursor: pointer;
     transition: color 0.13s, text-shadow 0.13s;
     text-align: center;

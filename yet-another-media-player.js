@@ -1932,8 +1932,8 @@ const yampCardStyles = i$3`
     border-radius: 10px;
     font-size: 1.12em;
     font-weight: 500;
-    margin: 10px 0;
-    padding: 18px 0 10px 0;
+    margin: 4px 0;
+    padding: 6px 0 8px 0;
     cursor: pointer;
     transition: color 0.13s, text-shadow 0.13s;
     text-align: center;
@@ -3473,17 +3473,15 @@ class YetAnotherMediaPlayerCard extends i {
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
               ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet ? x`
-                <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:24px;">
+                <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
                   <button class="entity-options-item" @click=${() => {
       this._openMoreInfo();
       this._showEntityOptions = false;
       this.requestUpdate();
     }}>More Info</button>
-                  ${!collapsed ? x`
-                    <button class="entity-options-item" @click=${() => {
+                  <button class="entity-options-item" @click=${() => {
       this._showSearchSheetInOptions();
     }}>Search</button>
-                  ` : E}
                   ${Array.isArray((_this$currentStateObj2 = this.currentStateObj) === null || _this$currentStateObj2 === void 0 || (_this$currentStateObj2 = _this$currentStateObj2.attributes) === null || _this$currentStateObj2 === void 0 ? void 0 : _this$currentStateObj2.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
                     ` : E}

@@ -1209,11 +1209,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <div class="entity-options-overlay" @click=${(e) => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
               ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet) ? html`
-                <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:24px;">
+                <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
                   <button class="entity-options-item" @click=${() => { this._openMoreInfo(); this._showEntityOptions = false; this.requestUpdate(); }}>More Info</button>
-                  ${!collapsed ? html`
-                    <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>Search</button>
-                  ` : nothing}
+                  <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>Search</button>
                   ${Array.isArray(this.currentStateObj?.attributes?.source_list) &&
                     this.currentStateObj.attributes.source_list.length > 0 ? html`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
