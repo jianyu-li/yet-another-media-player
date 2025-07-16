@@ -160,7 +160,7 @@ sequence:
   - service: music_assistant.play_media
     data:
       entity_id: "{{ yamp_entity }}"
-      media_id: apple_music://track/1431053629
+      media_id: apple_music://track/1445094678
       enqueue: replace
 ```  
 
