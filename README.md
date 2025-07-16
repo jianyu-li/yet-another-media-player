@@ -67,6 +67,7 @@ Player entities can be grouped together for supported entities. Access the hambu
 # Search
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
+- Bonus Bonus Tip: On mobile, swipe left or right to rotate through the media type to quickly filter results.
 ![Preview Image Search](/Preview/search.png)
 
 
