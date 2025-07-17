@@ -2979,24 +2979,48 @@ class YetAnotherMediaPlayerCard extends i {
   _onActionChipClick(idx) {
     const action = this.config.actions[idx];
     if (!action) return;
+    if (action.menu_item) {
+      switch (action.menu_item) {
+        case "more-info":
+          this._openMoreInfo();
+          this._showEntityOptions = false;
+          this.requestUpdate();
+          break;
+        case "group-players":
+          this._showEntityOptions = true;
+          this._showGrouping = true;
+          this.requestUpdate();
+          break;
+        case "search":
+          this._showEntityOptions = true;
+          this._showSearchInSheet = true;
+          this._searchError = "";
+          this._searchResults = [];
+          this._searchQuery = "";
+          this._searchAttempted = false;
+          this.requestUpdate();
+          break;
+        case "source":
+          this._showEntityOptions = true;
+          this._showSourceList = true;
+          this._showGrouping = false;
+          this.requestUpdate();
+          break;
+      }
+      return;
+    }
+    if (!action.service) return;
     const [domain, service] = action.service.split(".");
-
-    // Clone the service data
     let data = {
       ...(action.service_data || {})
     };
-
-    // For script calls **and** `script_variable: true`, inject `yamp_entity` and omit `entity_id` to avoid invalid IDs.
     if (domain === "script" && action.script_variable === true) {
       const currentId = this.currentEntityId;
-
-      // Remove any placeholder entity_id the user might have supplied
       if (data.entity_id === "current" || data.entity_id === "$current" || data.entity_id === "this") {
         delete data.entity_id;
       }
       data.yamp_entity = currentId;
-    } else if (!(domain === "script" && action.script_variable === true) && (data.entity_id === "current" || data.entity_id === "$current" || data.entity_id === "this" || !data.entity_id // Optionally default if omitted
-    )) {
+    } else if (!(domain === "script" && action.script_variable === true) && (data.entity_id === "current" || data.entity_id === "$current" || data.entity_id === "this" || !data.entity_id)) {
       data.entity_id = this.currentEntityId;
     }
     this.hass.callService(domain, service, data);

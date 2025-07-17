@@ -42,22 +42,30 @@ Add the card to your Lovelace dashboard using YAML (for custom chip/entity names
 
 You can use music assistant actions in conjunction with "current" as the entity id and it will target whatever the current entity that is displayed in the card (e.g.: genres)
 
-| Element   | Type   | Required | Description                  |
-|-----------|--------|----------|------------------------------|
-| `type`    | string | Yes      | custom:yet-another-media-player     |
-| `entities`     | string | Yes       | List of your media player entities            |
-| `actions`   | string | No      | Use any home assistant service here. Use "current" as the entity_id to target the currently selected media player    |
-| `script_variable` | boolean | No | Passes the currently selected entity_id to be used in a script ([see example below](https://github.com/jianyu-li/yet-another-media-player#passing-current-entity-to-a-script)) |
-| `match_theme`| boolean | No | Updates the cards accent colors to match your home assistant theme |
-| `collapse_on_idle` | boolean | No | When nothing is playing, card collapses to save space (great on mobile) | 
-| `always_collapsed` | boolean | No | This will keep the card in collapsed or "mini" mode even when something is playing |
-| `volume_entity` | string | No | Use this to specify a separate entity from the player to control volume. Accepted classes are media_player.* and remote.*. remote.* is useful for controlling tv volume from apple tv's connected through CEC |
-| `group_volume` | boolean | No | Used to override the default group volume logic: set to `true` to always control all group members with the main slider, or `false` to control only the selected entity—even if it is part of a group. If not set, the card automatically determines the best behavior based on which group members are present in the card. |
-| `sync_power` | boolean | No | When volume_entity is set, you can use this argument to power on/off the volume entity with your main entity |
-| `alternate_progress_bar` | boolean | No | Uses the collapsed player progress bar when expanded |
-| `hold_to_pin` | boolean | No | By default, the chip entity pins in place when selected. You can override this behavior to only pin in place by holding the chip | 
-| `show_chip_row` | choice | No | auto: hides the player chip row if only one chip is configured. always: shows the chip row even if one player entity is configured |
-| `idle_image` | image/camera | No | Sets a background image from an image sensor or still image camera sensor to use for when the player is idle. Good for showing a slideshow when not in use |
+| **Option**                 | **Type**     | **Required** | **Default** | **Description**                                                                                 |
+|----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
+| **General Options**        |              |              |             |                                                                                                 |
+| `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
+| `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
+| `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
+| `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
+| `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing                                          |
+| `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
+| `idle_image`               | image/camera | No           | —           | Background image when player is idle                                                            |
+| `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |
+|                                                                                                 |
+| **Entity Options**         |              |              |             |                                                                                                 |
+| `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume)                           |
+| `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
+| `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
+|                                                                                                 |
+| **Action Chip Options**    |              |              |             | (Each chip/action can have any/all of the below)                                                |
+| `name`                     | string       | No           | —           | Name for the action chip                                                                        |
+| `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
+| `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
+| `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
+| `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `source`, `more-info`, `group-players`                    |
+| `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 
 # Group Players
 Player entities can be grouped together for supported entities. Access the hamburger menu and choose "Group Players" to see a list of supported players that are currently configured on your card. If no players are supported (or only one entity is) then the "Group Players" option will not be visible. 
@@ -91,6 +99,8 @@ entities:
     group_volume: false
   - media_player.entryway_speaker
 actions:
+  - icon: mdi:magnify
+    menu_item: search
   - name: Soul
     service: music_assistant.play_media
     service_data:
@@ -113,6 +123,8 @@ You can also set mdi icons in the custom actions. This helps differentiate betwe
 
 ```yaml
 actions:
+  - icon: mdi:magnify
+    menu_item: search
   - name: Grunge
     service: music_assistant.play_media
     icon: mdi:music
