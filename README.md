@@ -4,6 +4,14 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 
 ---
 
+## Installation via HACS
+
+[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=yet-another-media-player&category=dashboard&owner=jianyu-li)
+
+
+
+---
+
 ## Features
 
 - Switch between multiple media players in a single card using chips
@@ -270,12 +278,6 @@ card_mod:
 - Grouping players only works on supported entities, if the entity is not supported the option will not be visible
 
 
-
----
-
-## Installation via HACS
-
-[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=yet-another-media-player&category=dashboard&owner=jianyu-li)
 
 
 
