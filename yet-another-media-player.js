@@ -2329,7 +2329,6 @@ function renderSearchSheet(_ref) {
 }
 
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-console.log('Rollup Build Test:', new Date().toISOString());
 const SUPPORT_PREVIOUS_TRACK = 16;
 const SUPPORT_NEXT_TRACK = 32;
 const SUPPORT_TURN_ON = 128;
