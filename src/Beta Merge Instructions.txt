@@ -14,10 +14,7 @@
 // 4. Save and stage changes:
 //    git add .
 //
-// 5. Commit:
-//    git commit -m "Merge beta into main, remove -beta references, use rollup lit"
+// 5. Commit
+// 
 //
-// 6. Rollup (build the production file)
-//
-// 7. Push:
-//    git push origin main
+// 6. Rollup occurs in github actions
