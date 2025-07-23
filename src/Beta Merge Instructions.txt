@@ -1,0 +1,23 @@
+///// Beta Merge Instructions /////
+// 1. Check out the main branch:
+//    git checkout main
+//
+// 2. Merge beta into main without committing:
+//    git merge beta --no-commit
+//
+// 3. In VS Code or your editor:
+//    - Find and replace all occurrences of '-beta' with ''
+//    - Replace the Lit import:
+//        FROM: import { ... } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module"
+//        TO:   import { ... } from "lit"
+//
+// 4. Save and stage changes:
+//    git add .
+//
+// 5. Commit:
+//    git commit -m "Merge beta into main, remove -beta references, use rollup lit"
+//
+// 6. Rollup (build the production file)
+//
+// 7. Push:
+//    git push origin main
