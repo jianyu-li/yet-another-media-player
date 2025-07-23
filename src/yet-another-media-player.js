@@ -9,8 +9,6 @@ import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
 import { renderSearchSheet } from "./search-sheet.js";
 
-console.log('Rollup Build Test:', new Date().toISOString());
-
 // Supported feature flags
 const SUPPORT_PAUSE = 1;
 const SUPPORT_SEEK = 2;
