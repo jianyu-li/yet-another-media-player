@@ -9,7 +9,7 @@ import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
 import { renderSearchSheet } from "./search-sheet.js";
 
-// Supported features
+// Supported feature flags
 const SUPPORT_PAUSE = 1;
 const SUPPORT_SEEK = 2;
 const SUPPORT_VOLUME_SET = 4;
