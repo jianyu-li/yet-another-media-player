@@ -665,16 +665,42 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }  
 
   _onChipClick(idx) {
+    // If this click is the synthetic one that fires after a long‑press pin,
+    // ignore it so the chip stays pinned.
+    if (this._holdToPin && this._justPinned) {
+      this._justPinned = false;
+      return;
+    }
     this._selectedIndex = idx;
-    this._manualSelect = true;
-    if (!this._holdToPin) {
+
+    if (this._holdToPin) {
+      // When hold_to_pin is enabled:
+      //   • If a chip is already pinned, leave it pinned and keep
+      //     `_manualSelect` true so auto‑switching stays disabled.
+      //   • If nothing is pinned yet, treat this as a normal (unpinned)
+      //     tap so auto‑switching can resume.
+      if (this._pinnedIndex !== null) {
+        this._manualSelect = true;   // keep auto‑switching off
+        // leave _pinnedIndex unchanged
+      } else {
+        this._manualSelect = false;  // allow auto‑switching
+      }
+    } else {
+      // Default behaviour: clicking pins the chip immediately and
+      // suppresses auto‑switching until the user unpins it.
+      this._manualSelect = true;
       this._pinnedIndex = idx;
     }
+
     clearTimeout(this._manualSelectTimeout);
     this.requestUpdate();
   }
 
   _pinChip(idx) {
+    // Mark that this chip was just pinned via long‑press so the
+    // click event that follows the pointer‑up can be ignored.
+    this._justPinned = true;
+
     this._pinnedIndex = idx;
     this._manualSelect = true;
     this.requestUpdate();
