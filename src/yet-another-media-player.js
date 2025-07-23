@@ -188,6 +188,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // --- swipe‑to‑filter helpers ---
     this._swipeStartX = null;
     this._searchSwipeAttached = false;
+    // Snapshot of entities that were playing when manual‑select started.
+    this._manualSelectPlayingSet = null;
   }  // ← closes constructor
 
   /**
@@ -505,6 +507,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       });
 
+      // If manual‑select is active (no pin) and a *new* entity begins playing,
+      // clear manual mode so auto‑switching resumes.
+      if (this._manualSelect && this._pinnedIndex === null && this._manualSelectPlayingSet) {
+        // Remove any entities from the snapshot that are no longer playing.
+        for (const id of [...this._manualSelectPlayingSet]) {
+          const stSnap = this.hass.states[id];
+          if (!(stSnap && stSnap.state === "playing")) {
+            this._manualSelectPlayingSet.delete(id);
+          }
+        }
+        for (const id of this.entityIds) {
+          const st = this.hass.states[id];
+          if (st && st.state === "playing" && !this._manualSelectPlayingSet.has(id)) {
+            this._manualSelect = false;
+            this._manualSelectPlayingSet = null;
+            break;
+          }
+        }
+      }
+
       // Auto-switch unless manually pinned
       if (!this._manualSelect) {
         // Switch to most recent if applicable
@@ -661,38 +683,44 @@ class YetAnotherMediaPlayerCard extends LitElement {
     e.stopPropagation();
     this._manualSelect = false;
     this._pinnedIndex = null;
-    
-  }  
+    this._manualSelectPlayingSet = null;
+  }
 
   _onChipClick(idx) {
-    // If this click is the synthetic one that fires after a long‑press pin,
-    // ignore it so the chip stays pinned.
+    // Ignore the synthetic click that fires immediately after a long‑press pin.
     if (this._holdToPin && this._justPinned) {
       this._justPinned = false;
       return;
     }
+
+    // Select the tapped chip.
     this._selectedIndex = idx;
 
+    clearTimeout(this._manualSelectTimeout);
+
     if (this._holdToPin) {
-      // When hold_to_pin is enabled:
-      //   • If a chip is already pinned, leave it pinned and keep
-      //     `_manualSelect` true so auto‑switching stays disabled.
-      //   • If nothing is pinned yet, treat this as a normal (unpinned)
-      //     tap so auto‑switching can resume.
       if (this._pinnedIndex !== null) {
-        this._manualSelect = true;   // keep auto‑switching off
-        // leave _pinnedIndex unchanged
+        // A chip is already pinned – keep manual mode active.
+        this._manualSelect = true;
       } else {
-        this._manualSelect = false;  // allow auto‑switching
+        // No chip is pinned. Pause auto‑switching until any *new* player starts.
+        this._manualSelect = true;
+        // Take a snapshot of who is currently playing.
+        this._manualSelectPlayingSet = new Set();
+        for (const id of this.entityIds) {
+          const st = this.hass?.states?.[id];
+          if (st && st.state === "playing") {
+            this._manualSelectPlayingSet.add(id);
+          }
+        }
       }
+      // Never change _pinnedIndex on a simple tap in hold_to_pin mode.
     } else {
-      // Default behaviour: clicking pins the chip immediately and
-      // suppresses auto‑switching until the user unpins it.
+      // --- default MODE ---
       this._manualSelect = true;
       this._pinnedIndex = idx;
     }
 
-    clearTimeout(this._manualSelectTimeout);
     this.requestUpdate();
   }
 
@@ -700,6 +728,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Mark that this chip was just pinned via long‑press so the
     // click event that follows the pointer‑up can be ignored.
     this._justPinned = true;
+
+    // Cancel any pending auto‑switch re‑enable timer.
+    clearTimeout(this._manualSelectTimeout);
+    // Clear the manual‑select snapshot; a long‑press establishes a pin.
+    this._manualSelectPlayingSet = null;
 
     this._pinnedIndex = idx;
     this._manualSelect = true;
