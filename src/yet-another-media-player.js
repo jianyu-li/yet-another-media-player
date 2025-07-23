@@ -1893,7 +1893,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Card editor support 
   static getConfigElement() {
-    return document.createElement("yet-another-media-player-beta-editor");
+    return document.createElement("yet-another-media-player-editor-beta");
   }
   static getStubConfig(hass, entities) {
     return { entities: (entities || []).filter(e => e.startsWith("media_player.")).slice(0, 2) };
