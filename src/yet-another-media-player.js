@@ -2357,9 +2357,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <ha-entity-picker
           .hass=${this.hass}
           .value=${entity?.volume_entity ?? ""}
+          .includeDomains=${["media_player"]}
           label="Volume Entity"
           clearable
-          include-domains="media_player"
           @value-changed=${(e) =>
             this._updateEntityProperty("volume_entity", e.detail.value)}
         ></ha-entity-picker>
