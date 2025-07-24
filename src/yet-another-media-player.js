@@ -2361,20 +2361,31 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           .includeDomains=${["media_player"]}
           label="Volume Entity"
           clearable
-          @value-changed=${(e) =>
-            this._updateEntityProperty("volume_entity", e.detail.value)}
+          @value-changed=${(e) => {
+            const value = e.detail.value;
+            this._updateEntityProperty("volume_entity", value);
+            // reset sync_power to false when volume_entity is cleared
+            if (!value) {
+              this._updateEntityProperty("sync_power", false);
+            }
+          }}
         ></ha-entity-picker>
       </div>
-      <div class="form-row form-row-multi-column">
-        <div>
-          <ha-switch
-            id="sync-power-toggle"
-            .checked=${entity?.sync_power ?? false}
-            @change=${(e) =>
-              this._updateEntityProperty("sync_power", e.target.checked)}
-          ></ha-switch>
-          <label for="sync-power-toggle">Sync Power</label>
-        </div>
+      ${entity?.volume_entity
+        ? html`
+            <div class="form-row form-row-multi-column">
+              <div>
+                <ha-switch
+                  id="sync-power-toggle"
+                  .checked=${entity?.sync_power ?? false}
+                  @change=${(e) =>
+                    this._updateEntityProperty("sync_power", e.target.checked)}
+                ></ha-switch>
+                <label for="sync-power-toggle">Sync Power</label>
+              </div>
+            </div>
+          `
+        : nothing}
       </div>
     `;
   }
