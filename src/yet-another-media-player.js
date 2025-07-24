@@ -1663,8 +1663,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             select: {
               options: [
                 { value: "auto", label: "Auto" },
-                { value: "always", label: "Always" },
-                { value: "never", label: "Never" }
+                { value: "always", label: "Always" }
               ]
             }
           },
@@ -2281,8 +2280,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               mode: "dropdown",
               options: [
                 { value: "auto", label: "Auto" },
-                { value: "always", label: "Always" },
-                { value: "never", label: "Never" }
+                { value: "always", label: "Always" }
               ],
             },
           }}
