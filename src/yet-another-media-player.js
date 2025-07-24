@@ -2295,7 +2295,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div>
           <ha-switch
             id="hold-to-pin-toggle"
-            .checked=${this._config.holt_to_pin ?? false}
+            .checked=${this._config.hold_to_pin ?? false}
             @change=${(e) => this._updateConfig("hold_to_pin", e.target.checked)}
           ></ha-switch>
           <span>Hold to Pin</span>
