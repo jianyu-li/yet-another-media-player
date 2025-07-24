@@ -247,9 +247,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 mode: "dropdown",
                 options: [
                   { value: "auto", label: "Auto" },
-                  { value: "always", label: "Always" },
-                  { value: "never", label: "Never" }
-                ],
+                  { value: "always", label: "Always" }                ],
               },
             }}
             .value=${this._config.show_chip_row ?? "auto"}
