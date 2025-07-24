@@ -168,7 +168,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                         .hass=${this.hass}
                         .selector=${{ entity: { domain: "media_player" } }}
                         .value=${ent.entity_id}
-                        label="Entity"
+                      
                         clearable
                         @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                       ></ha-selector>
@@ -300,7 +300,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             .hass=${this.hass}
             .selector=${{ entity: { domain: "media_player" } }}
             .value=${entity?.entity_id ?? ""}
-            label="Entity"
+          
             disabled
           ></ha-selector>
         </div>
