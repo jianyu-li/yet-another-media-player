@@ -2305,6 +2305,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <ha-entity-picker
           .hass=${this.hass}
           .value=${this._config.idle_image ?? ""}
+           .includeDomains=${["camera", "image"]}
           label="Idle Image Entity"
           clearable
           @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
