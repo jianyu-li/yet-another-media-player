@@ -2171,7 +2171,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
  
     return html`
       <div class="form-row entity-group">
-        Entities (Required)
+        Entities*
         ${entities.map((ent, idx) => html`
           <div class="entity-row-inner">
             <div class="selector-grow">
