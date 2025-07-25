@@ -302,6 +302,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
+        <div class="form-row">
+          <ha-textfield
+            class="full-width"
+            label="Custom Name"
+            .value=${entity?.name ?? ""}
+            @input=${(e) => this._updateEntityProperty("name", e.target.value)}
+          ></ha-textfield>
+        </div>
+
         ${showGroupVolume ? html`
           <div class="form-row">
             <ha-switch
@@ -313,15 +322,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <label for="group-volume-toggle">Group Volume</label>
           </div>
         ` : nothing}
-
-        <div class="form-row">
-          <ha-textfield
-            class="full-width"
-            label="Custom Name"
-            .value=${entity?.name ?? ""}
-            @input=${(e) => this._updateEntityProperty("name", e.target.value)}
-          ></ha-textfield>
-        </div>
 
         <div class="form-row">
           <ha-entity-picker
