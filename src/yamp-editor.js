@@ -155,6 +155,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                         .hass=${this.hass}
                         .value=${ent.entity_id}
                         .includeDomains=${["media_player"]}
+                        .excludeEntities=${this._config.entities?.map(e => e.entity_id) ?? []}
                         label="Entity"
                         clearable
                         @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
