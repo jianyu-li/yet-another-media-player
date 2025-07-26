@@ -129,6 +129,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       if (!this._config) return html``;
   
       let entities = [...(this._config.entities ?? [])];
+      let actions = [...(this._config.entities ?? [])];
   
       // Append a blank row only for rendering (not saved)
       if (entities.length === 0 || entities[entities.length - 1].entity_id) {
