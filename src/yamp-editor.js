@@ -119,7 +119,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     
       if (this._entityEditorIndex !== null) {
         const entity = this._config.entities?.[this._entityEditorIndex];
-        return this._renderEntityRowEditor(entity);
+        return this._renderEntityEditor(entity);
       }
     
       return this._renderMainEditor();
@@ -280,7 +280,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       `;
     }
   
-    _renderEntityRowEditor(entity) {
+    _renderEntityEditor(entity) {
   
       const stateObj = this.hass?.states?.[entity?.entity_id];
       const showGroupVolume = this._supportsFeature(stateObj, SUPPORT_GROUPING); 
