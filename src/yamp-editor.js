@@ -327,22 +327,22 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <ha-entity-picker
             .hass=${this.hass}
-            .value=${entity?.volume_entity ?? ""}
+            .value=${entity?.volume_entity ?? entity?.entity_id ?? ""}
             .includeDomains=${["media_player"]}
             label="Volume Entity"
             clearable
             @value-changed=${(e) => {
               const value = e.detail.value;
               this._updateEntityProperty("volume_entity", value);
-              // reset sync_power to false when volume_entity is cleared
-              if (!value) {
+              if (!value || value === entity.entity_id) {
+                // sync_power is meaningless in these cases
                 this._updateEntityProperty("sync_power", false);
               }
             }}
           ></ha-entity-picker>
         </div>
 
-        ${entity?.volume_entity
+        ${entity?.volume_entity && entity.volume_entity !== entity.entity_id
           ? html`
               <div class="form-row form-row-multi-column">
                 <div>
