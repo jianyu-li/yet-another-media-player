@@ -9,12 +9,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         hass: {},
         _config: {},
         _entityEditorIndex: { type: Number },
+        _actionEditorIndex: { type: Number },
       };
     }
   
     constructor() {
       super();
       this._entityEditorIndex = null;
+      this._actionEditorIndex = null;
     }
   
     _supportsFeature(stateObj, featureBit) {
@@ -50,6 +52,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       if (entities[idx]) {
         entities[idx] = { ...entities[idx], [key]: value };
         this._updateConfig("entities", entities);
+      }
+    }
+
+    _updateActionProperty(key, value) {
+      const actions = [...(this._config.actions ?? [])];
+      const idx = this._actionEditorIndex;
+      if (actions[idx]) {
+        actions[idx] = { ...actions[idx], [key]: value };
+        this._updateConfig("actions", actions);
       }
     }
   
@@ -114,13 +125,13 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           flex: 1;
           min-width: 0;
         }
-        .entity-editor-header {
+        .entity-editor-header, .action-editor-header {
           display: flex;
           align-items: center;
           gap: 12px;
           padding: 8px;
         }
-        .entity-editor-title {
+        .entity-editor-title, .action-editor-title {
           font-weight: 500;
           font-size: 1.1em;
         }
@@ -128,7 +139,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           width: 29px; 
           height: 24px; 
           display: inline-block;
-      }
+        }
+        .full-width {
+          width: 100%;
+        }
       `;
     }
   
@@ -138,6 +152,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       if (this._entityEditorIndex !== null) {
         const entity = this._config.entities?.[this._entityEditorIndex];
         return this._renderEntityEditor(entity);
+      } else if (this._actionEditorIndex !== null) {
+        const action = this._config.actions?.[this._actionEditorIndex];
+        return this._renderActionEditor(action);
       }
     
       return this._renderMainEditor();
@@ -326,6 +343,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 <mwc-icon-button
                   .disabled=false
                   title="Edit Action Settings"
+                  @click=${() => this._onEditAction(idx)}
                 >
                   <ha-icon icon="mdi:pencil"></ha-icon>
                 </mwc-icon-button>
@@ -422,6 +440,64 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
       `;
     }
+
+    _renderActionEditor(action) {
+
+      const mode = action?.menu_item ? "menu" : "service";
+
+      console.log("Available services:", Object.keys(this.hass?.services ?? {}));
+
+      return html`
+        <div class="action-editor-header">
+          <mwc-icon-button @click=${this._onBackFromActionEditor} title="Back">
+            <ha-icon icon="mdi:chevron-left"></ha-icon>
+          </mwc-icon-button>
+          <div class="action-editor-title">Edit Action</div>
+        </div>
+
+        <div class="form-row">
+          <ha-textfield
+            class="full-width"
+            label="Name"
+            placeholder="(Icon Only)"
+            .value=${action?.name ?? ""}
+            @input=${(e) => this._updateActionProperty("name", e.target.value)}
+          ></ha-textfield>
+        </div>
+
+        <div class="form-row">
+          <ha-icon-picker
+            label="Icon"
+            .hass=${this.hass}
+            .value=${action?.icon ?? ""}
+            @value-changed=${(e) =>
+              this._updateActionProperty("icon", e.detail.value)}
+          ></ha-icon-picker>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            label="Open Card Menu Item"
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "", label: "None" },
+                  { value: "search", label: "Search" },
+                  { value: "source", label: "Source" },
+                  { value: "more-info", label: "More Info" },
+                  { value: "group-players", label: "Group Players" }
+                ]
+              }
+            }}
+            .value=${action?.menu_item ?? ""}
+            @value-changed=${(e) =>
+              this._updateActionProperty("menu_item", e.detail.value || undefined)}
+          ></ha-selector>
+        </div>
+      `;
+    }
   
     _onEntityChanged(index, newValue) {
       const original = this._config.entities ?? [];
@@ -453,10 +529,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._entityEditorIndex = index;
     }
   
+    _onEditAction(index) {
+      this._actionEditorIndex = index;
+    }
+
     _onBackFromEntityEditor() {
       this._entityEditorIndex = null;
     }
   
+    _onBackFromActionEditor() {
+      this._actionEditorIndex = null;
+    }
+
     _onToggleChanged(e) {
       const newConfig = {
         ...this._config,
@@ -469,3 +553,4 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
   export { YetAnotherMediaPlayerEditor };
+  
