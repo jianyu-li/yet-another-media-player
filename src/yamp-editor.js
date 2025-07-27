@@ -307,14 +307,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               <div class="selector-grow">
                 <ha-textfield
                   class="full-width"
-                  placeholder="Icon Only"
+                  placeholder="(Icon Only)"
                   .value=${act?.name ?? ""}
                   helper="${
                     act?.service 
-                    ? `Calls Service: ${act?.service}`
+                    ? `Call Service: ${act?.service}`
                     : act?.menu_item
-                    ? `Opens Menu Item: ${act?.menu_item}`
-                    : `No Action Defined`
+                    ? `Open Menu Item: ${act?.menu_item}`
+                    : `Not Configured`
                   }"
                   .helperPersistent=${true}
                   @input=${a => this._onActionChanged(idx, a.target.value)}
