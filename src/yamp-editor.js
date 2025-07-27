@@ -81,6 +81,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           border-radius: 6px;
           padding: 12px 16px;
           margin-bottom: 16px;
+          margin-top: 16px;
         }
         /* wraps the entity selector and edit button */
         .entity-row-inner {
@@ -89,6 +90,20 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           gap: 8px;
           padding: 6px;
           margin: 0px;
+        }
+        /* wraps the action icon, name textbox and edit button */
+        .action-row-inner {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          padding: 6px;
+          margin: 0px;
+        }
+        .action-row-inner > ha-icon {
+          padding-top: 0px;
+          padding-bottom: 0px;
+          margin-right: 5px;
+          margin-top: 16px;
         }
         /* allow a selector to fill all available space when combined with other elements */
         .selector-grow {
@@ -129,7 +144,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       if (!this._config) return html``;
   
       let entities = [...(this._config.entities ?? [])];
-      let actions = [...(this._config.entities ?? [])];
+      let actions = [...(this._config.actions ?? [])];
   
       // Append a blank row only for rendering (not saved)
       if (entities.length === 0 || entities[entities.length - 1].entity_id) {
@@ -277,6 +292,44 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             clearable
             @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
           ></ha-entity-picker>
+        </div>
+
+         <div class="form-row entity-group">
+          Actions
+          ${actions.map((act, idx) => html`
+            <div class="action-row-inner">
+              ${act?.icon ? html`
+                <ha-icon icon="${act?.icon}"></ha-icon>
+              ` : html`
+                <span style="width: 29px; height: 24px; display: inline-block;"></span>
+              `
+              }
+              <div class="selector-grow">
+                <ha-textfield
+                  class="full-width"
+                  placeholder="Icon Only"
+                  .value=${act?.name ?? ""}
+                  helper="${
+                    act?.service 
+                    ? `Calls Service: ${act?.service}`
+                    : act?.menu_item
+                    ? `Opens Menu Item: ${act?.menu_item}`
+                    : `No Action Defined`
+                  }"
+                  .helperPersistent=${true}
+                  @input=
+                ></ha-textfield>
+              </div>
+              <div class="action-buttons">
+                <mwc-icon-button
+                  .disabled=false
+                  title="Edit Action Settings"
+                >
+                  <ha-icon icon="mdi:pencil"></ha-icon>
+                </mwc-icon-button>
+              </div>
+            </div>
+          `)}
         </div>
       `;
     }
