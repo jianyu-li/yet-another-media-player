@@ -158,7 +158,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                         .value=${ent.entity_id}
                         .includeDomains=${["media_player"]}
                         .excludeEntities=${this._config.entities?.map(e => e.entity_id) ?? []}
-                        label="Entity"
                         clearable
                         @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                       ></ha-entity-picker>
@@ -168,7 +167,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                         .hass=${this.hass}
                         .selector=${{ entity: { domain: "media_player" } }}
                         .value=${ent.entity_id}
-                      
                         clearable
                         @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                       ></ha-selector>
