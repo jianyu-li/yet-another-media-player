@@ -74,8 +74,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         .entity-row {
           padding: 6px;
         }
-        /* visually isolate the list of entity controls */
-        .entity-group {
+        /* visually isolate grouped controls */
+        .entity-group, .action-group {
           background: var(--card-background-color, #f7f7f7);
           border: 1px solid var(--divider-color, #ccc);
           border-radius: 6px;
@@ -105,14 +105,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           margin-right: 5px;
           margin-top: 16px;
         }
-        /* allow a selector to fill all available space when combined with other elements */
-        .selector-grow {
+        /* allow children to fill all available space */
+        .grow-children {
           flex: 1;
           display: flex;
         }
-        .selector-grow ha-selector, .selector-grow ha-entity-picker {
-          width: 100%;
-        } 
+        .grow-children > * {
+          flex: 1;
+          min-width: 0;
+        }
         .entity-editor-header {
           display: flex;
           align-items: center;
@@ -123,9 +124,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           font-weight: 500;
           font-size: 1.1em;
         }
-        .full-width {
-          width: 100%;
-        } 
+        .action-icon-placeholder {
+          width: 29px; 
+          height: 24px; 
+          display: inline-block;
+      }
       `;
     }
   
@@ -156,7 +159,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           Entities*
           ${entities.map((ent, idx) => html`
             <div class="entity-row-inner">
-              <div class="selector-grow">
+              <div class="grow-children">
                 ${ 
                 /* ha-entity-picker will show "[Object object]" for entities with extra properties,
                    so we'll get around that by using ha-selector. However ha-selector always renders 
@@ -294,19 +297,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-entity-picker>
         </div>
 
-         <div class="form-row entity-group">
+         <div class="form-row action-group">
           Actions
           ${actions.map((act, idx) => html`
             <div class="action-row-inner">
               ${act?.icon ? html`
                 <ha-icon icon="${act?.icon}"></ha-icon>
               ` : html`
-                <span style="width: 29px; height: 24px; display: inline-block;"></span>
+                <span class="action-icon-placeholder"></span>
               `
               }
-              <div class="selector-grow">
+              <div class="grow-children">
                 <ha-textfield
-                  class="full-width"
                   placeholder="(Icon Only)"
                   .value=${act?.name ?? ""}
                   helper="${
