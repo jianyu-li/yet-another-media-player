@@ -317,7 +317,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                     : `No Action Defined`
                   }"
                   .helperPersistent=${true}
-                  @input=
+                  @input=${a => this._onActionChanged(idx, a.target.value)}
                 ></ha-textfield>
               </div>
               <div class="action-buttons">
@@ -430,6 +430,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       const cleaned = updated.filter((e) => e.entity_id && e.entity_id.trim() !== "");
     
       this._updateConfig("entities", cleaned);
+    }
+
+    _onActionChanged(index, newValue) {
+      const original = this._config.actions ?? [];
+      const updated = [...original];
+    
+      updated[index] = { ...updated[index], name: newValue };
+   
+      this._updateConfig("actions", updated);
     }
   
     _onEditEntity(index) {
