@@ -327,6 +327,12 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 >
                   <ha-icon icon="mdi:pencil"></ha-icon>
                 </mwc-icon-button>
+                <mwc-icon-button
+                  .disabled=false
+                  title="Remove Action"
+                >
+                  <ha-icon icon="mdi:trash-can"></ha-icon>
+                </mwc-icon-button>
               </div>
             </div>
           `)}
