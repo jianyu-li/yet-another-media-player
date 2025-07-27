@@ -306,7 +306,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <ha-textfield
             class="full-width"
-            label="Custom Name"
+            label="Name"
             .value=${entity?.name ?? ""}
             @input=${(e) => this._updateEntityProperty("name", e.target.value)}
           ></ha-textfield>
