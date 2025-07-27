@@ -107,6 +107,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         .entity-editor-title {
           font-weight: 500;
           font-size: 1.1em;
+          line-height: 1;
+          margin-top: 7px; /* tweak to align with icon */
         }
         .full-width {
           width: 100%;
