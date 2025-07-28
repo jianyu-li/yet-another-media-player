@@ -1,4 +1,3 @@
-// chip-row.js
 import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 // import { LitElement, html, css, nothing } from "lit";
 
@@ -49,7 +48,7 @@ export function renderChip({
   `;
 }
 
-// Helper to render a group chip (simplified)
+// Helper to render a group chip: same as chip but with label (with count), no badge/icon for group, just art/icon and label.
 export function renderGroupChip({
   idx,
   selected,
@@ -72,26 +71,40 @@ export function renderGroupChip({
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
-            @pointerleave=${onPointerUp}>
-      <span class="chip-icon">
-        ${
-          art
-            ? html`<img class="chip-mini-art" src="${art}" />`
-            : html`<ha-icon
-                      .icon=${icon}
-                      style="font-size:28px;"
+            @pointerleave=${onPointerUp}
+            style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="chip-icon"
+            style="cursor:pointer;"
+            @click=${e => {
+              e.stopPropagation();
+              if (onIconClick) {
+                onIconClick(idx, e);
+              }
+            }}>
+        ${art
+          ? html`<img class="chip-mini-art"
+                      src="${art}"
+                      style="cursor:pointer;"
                       @click=${e => {
                         e.stopPropagation();
                         if (onIconClick) {
                           onIconClick(idx, e);
-                        } else {
-                          onChipClick(idx);
                         }
-                      }}
-                    ></ha-icon>`
+                      }}/>`
+
+          : html`<ha-icon .icon=${icon}
+                          style="font-size:28px;cursor:pointer;"
+                          @click=${e => {
+                            e.stopPropagation();
+                            if (onIconClick) {
+                              onIconClick(idx, e);
+                            }
+                          }}></ha-icon>`
         }
       </span>
-      <span class="chip-label">${groupName}</span>
+      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+        ${groupName}
+      </span>
       ${pinned
         ? html`
             <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="Unpin">
@@ -157,6 +170,7 @@ export function renderChipRow({
   isIdle,
   hass,
   onChipClick,
+  onIconClick,
   onPinClick,
   onPointerDown,
   onPointerMove,
@@ -171,17 +185,18 @@ export function renderChipRow({
         const id = getActualGroupMaster(group);
         const idx = entityIds.indexOf(id);
         const state = hass?.states?.[id];
-        // Art is null for group chip; determine if playing for chip highlight
-        const isGroupPlaying = selectedEntityId === id ? !isIdle : state?.state === "playing";
+        const art = state?.attributes?.entity_picture || state?.attributes?.album_art || null;
+        const icon = state?.attributes?.icon || "mdi:cast";
         return renderGroupChip({
           idx,
           selected: selectedEntityId === id,
-          groupName: getChipName(id),
-          art: null,
-          icon: "mdi:group", // Or use a more specific group icon if needed
+          groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
+          art,
+          icon,
           pinned: pinnedIndex === idx,
           holdToPin,
           onChipClick,
+          onIconClick,
           onPinClick,
           onPointerDown: (e) => onPointerDown(e, idx),
           onPointerMove: (e) => onPointerMove(e, idx),
