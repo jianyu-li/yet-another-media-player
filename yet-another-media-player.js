@@ -2686,7 +2686,7 @@ class YetAnotherMediaPlayerEditor extends i {
             .hass=${this.hass}
             .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
 
-            .includeDomains=${["media_player"]}
+            .includeDomains=${["media_player", "remote"]}
             label="Volume Entity"
             clearable
             @value-changed=${e => {
