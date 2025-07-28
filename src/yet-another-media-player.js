@@ -1,5 +1,5 @@
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import { LitElement, html, css, nothing } from "lit";
 
 import { renderChip, renderGroupChip, createHoldToPinHandler, renderChipRow } from "./chip-row.js";
 import { renderActionChipRow } from "./action-chip-row.js";
@@ -30,8 +30,8 @@ import {
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "yet-another-media-player",
-  name: "Yet Another Media Player",
+  type: "yet-another-media-player-beta",
+  name: "Yet Another Media Player-beta",
   description: "YAMP is a multi-entity media card with custom actions"
 });
 
@@ -1924,7 +1924,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Card editor support 
   static getConfigElement() {
-    return document.createElement("yet-another-media-player-editor");
+    return document.createElement("yet-another-media-player-editor-beta");
   }
   static getStubConfig(hass, entities) {
     return { entities: (entities || []).filter(e => e.startsWith("media_player.")).slice(0, 2) };
@@ -2009,4 +2009,4 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 }
 
-customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
+customElements.define("yet-another-media-player-beta", YetAnotherMediaPlayerCard);
