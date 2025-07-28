@@ -1,4 +1,6 @@
-import { LitElement, html, css, nothing } from "lit";
+// chip-row.js
+import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import { LitElement, html, css, nothing } from "lit";
 
 // Helper to render a single chip
 export function renderChip({
@@ -142,4 +144,76 @@ export function createHoldToPinHandler({ onPin, onHoldEnd, holdTime = 600, moveT
       moved = false;
     }
   };
+}
+// Central chip row renderer
+export function renderChipRow({
+  groupedSortedEntityIds,
+  entityIds,
+  selectedEntityId,
+  pinnedIndex,
+  holdToPin,
+  getChipName,
+  getActualGroupMaster,
+  isIdle,
+  hass,
+  onChipClick,
+  onPinClick,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp
+}) {
+  if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return nothing;
+
+  return html`
+    ${groupedSortedEntityIds.map((group) => {
+      // If it's a group (more than one entity)
+      if (group.length > 1) {
+        const id = getActualGroupMaster(group);
+        const idx = entityIds.indexOf(id);
+        const state = hass?.states?.[id];
+        // Art is null for group chip; determine if playing for chip highlight
+        const isGroupPlaying = selectedEntityId === id ? !isIdle : state?.state === "playing";
+        return renderGroupChip({
+          idx,
+          selected: selectedEntityId === id,
+          groupName: getChipName(id),
+          art: null,
+          icon: "mdi:group", // Or use a more specific group icon if needed
+          pinned: pinnedIndex === idx,
+          holdToPin,
+          onChipClick,
+          onPinClick,
+          onPointerDown: (e) => onPointerDown(e, idx),
+          onPointerMove: (e) => onPointerMove(e, idx),
+          onPointerUp: (e) => onPointerUp(e, idx),
+        });
+      } else {
+        // Single chip
+        const id = group[0];
+        const idx = entityIds.indexOf(id);
+        const state = hass?.states?.[id];
+        const isChipPlaying = selectedEntityId === id ? !isIdle : state?.state === "playing";
+        const art =
+          selectedEntityId === id
+            ? (!isIdle && (state?.attributes?.entity_picture || state?.attributes?.album_art))
+            : (state?.state === "playing" && (state?.attributes?.entity_picture || state?.attributes?.album_art));
+        const icon = state?.attributes?.icon || "mdi:cast";
+        return renderChip({
+          idx,
+          selected: selectedEntityId === id,
+          playing: isChipPlaying,
+          name: getChipName(id),
+          art,
+          icon,
+          pinned: pinnedIndex === idx,
+          holdToPin,
+          onChipClick,
+          onPinClick,
+          onPointerDown: (e) => onPointerDown(e, idx),
+          onPointerMove: (e) => onPointerMove(e, idx),
+          onPointerUp: (e) => onPointerUp(e, idx),
+        });
+      }
+    })}
+  `;
 }
