@@ -714,7 +714,7 @@ o === null || o === void 0 || o({
 });
 (s.litElementVersions ??= []).push("4.2.0");
 
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
 // Helper to render a single chip
 function renderChip(_ref) {
@@ -760,12 +760,13 @@ function renderChip(_ref) {
   `;
 }
 
-// Helper to render a group chip (simplified)
+// Helper to render a group chip: same as chip but with label (with count), no badge/icon for group, just art/icon and label.
 function renderGroupChip(_ref2) {
   let {
     idx,
     selected,
     groupName,
+    art,
     icon,
     pinned,
     onChipClick,
@@ -782,22 +783,36 @@ function renderGroupChip(_ref2) {
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
-            @pointerleave=${onPointerUp}>
-      <span class="chip-icon">
-        ${x`<ha-icon
-                      .icon=${icon}
-                      style="font-size:28px;"
+            @pointerleave=${onPointerUp}
+            style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="chip-icon"
+            style="cursor:pointer;"
+            @click=${e => {
+    e.stopPropagation();
+    if (onIconClick) {
+      onIconClick(idx, e);
+    }
+  }}>
+        ${art ? x`<img class="chip-mini-art"
+                      src="${art}"
+                      style="cursor:pointer;"
                       @click=${e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
-    } else {
-      onChipClick(idx);
     }
-  }}
-                    ></ha-icon>`}
+  }}/>` : x`<ha-icon .icon=${icon}
+                          style="font-size:28px;cursor:pointer;"
+                          @click=${e => {
+    e.stopPropagation();
+    if (onIconClick) {
+      onIconClick(idx, e);
+    }
+  }}></ha-icon>`}
       </span>
-      <span class="chip-label">${groupName}</span>
+      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+        ${groupName}
+      </span>
       ${pinned ? x`
             <span class="chip-pin-inside" @click=${e => {
     e.stopPropagation();
@@ -861,11 +876,13 @@ function renderChipRow(_ref4) {
     entityIds,
     selectedEntityId,
     pinnedIndex,
+    holdToPin,
     getChipName,
     getActualGroupMaster,
     isIdle,
     hass,
     onChipClick,
+    onIconClick,
     onPinClick,
     onPointerDown,
     onPointerMove,
@@ -876,34 +893,35 @@ function renderChipRow(_ref4) {
     ${groupedSortedEntityIds.map(group => {
     // If it's a group (more than one entity)
     if (group.length > 1) {
-      var _hass$states;
+      var _hass$states, _state$attributes, _state$attributes2, _state$attributes3;
       const id = getActualGroupMaster(group);
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states = hass.states) === null || _hass$states === void 0 ? void 0 : _hass$states[id];
-      // Art is null for group chip; determine if playing for chip highlight
-      selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+      const art = (state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art) || null;
+      const icon = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.icon) || "mdi:cast";
       return renderGroupChip({
         idx,
         selected: selectedEntityId === id,
-        groupName: getChipName(id),
-        icon: "mdi:group",
-        // Or use a more specific group icon if needed
+        groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
+        art,
+        icon,
         pinned: pinnedIndex === idx,
         onChipClick,
+        onIconClick,
         onPinClick,
         onPointerDown: e => onPointerDown(e, idx),
         onPointerMove: e => onPointerMove(e, idx),
         onPointerUp: e => onPointerUp(e, idx)
       });
     } else {
-      var _hass$states2, _state$attributes, _state$attributes2, _state$attributes3, _state$attributes4, _state$attributes5;
+      var _hass$states2, _state$attributes4, _state$attributes5, _state$attributes6, _state$attributes7, _state$attributes8;
       // Single chip
       const id = group[0];
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states2 = hass.states) === null || _hass$states2 === void 0 ? void 0 : _hass$states2[id];
       const isChipPlaying = selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
-      const art = selectedEntityId === id ? !isIdle && ((state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art)) : (state === null || state === void 0 ? void 0 : state.state) === "playing" && ((state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.entity_picture) || (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.album_art));
-      const icon = (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.icon) || "mdi:cast";
+      const art = selectedEntityId === id ? !isIdle && ((state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.entity_picture) || (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.album_art)) : (state === null || state === void 0 ? void 0 : state.state) === "playing" && ((state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.entity_picture) || (state === null || state === void 0 || (_state$attributes7 = state.attributes) === null || _state$attributes7 === void 0 ? void 0 : _state$attributes7.album_art));
+      const icon = (state === null || state === void 0 || (_state$attributes8 = state.attributes) === null || _state$attributes8 === void 0 ? void 0 : _state$attributes8.icon) || "mdi:cast";
       return renderChip({
         idx,
         selected: selectedEntityId === id,
@@ -3878,6 +3896,16 @@ class YetAnotherMediaPlayerCard extends i {
       isIdle: this._isIdle,
       hass: this.hass,
       onChipClick: idx => this._onChipClick(idx),
+      onIconClick: (idx, e) => {
+        const entityId = this.entityIds[idx];
+        const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+        if (group && group.length > 1) {
+          this._selectedIndex = idx;
+          this._showEntityOptions = true;
+          this._showGrouping = true;
+          this.requestUpdate();
+        }
+      },
       onPinClick: (idx, e) => {
         e.stopPropagation();
         this._onPinClick(e);
