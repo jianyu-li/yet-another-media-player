@@ -107,10 +107,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         .entity-editor-title {
           font-weight: 500;
           font-size: 1.1em;
-
           line-height: 1;
           margin-top: 7px; /* tweak to align with icon */
-
         }
         .full-width {
           width: 100%;
@@ -123,7 +121,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     
       if (this._entityEditorIndex !== null) {
         const entity = this._config.entities?.[this._entityEditorIndex];
-
         return this._renderEntityEditor(entity);
 
       }
@@ -161,9 +158,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                         .hass=${this.hass}
                         .value=${ent.entity_id}
                         .includeDomains=${["media_player"]}
-
                         .excludeEntities=${this._config.entities?.map(e => e.entity_id) ?? []}
-
                         clearable
                         @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                       ></ha-entity-picker>
@@ -290,7 +285,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
     _renderEntityEditor(entity) {
 
-  
       const stateObj = this.hass?.states?.[entity?.entity_id];
       const showGroupVolume = this._supportsFeature(stateObj, SUPPORT_GROUPING); 
   
@@ -350,7 +344,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
               if (!value || value === entity.entity_id) {
                 // sync_power is meaningless in these cases
-
                 this._updateEntityProperty("sync_power", false);
               }
             }}
