@@ -1,5 +1,5 @@
-import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-// import { LitElement, html, css, nothing } from "lit";
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+import { LitElement, html, css, nothing } from "lit";
 
 import {SUPPORT_GROUPING} from "./constants.js";
   
@@ -368,7 +368,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
-
         <div class="form-row">
           <ha-textfield
             class="full-width"
@@ -377,7 +376,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @input=${(e) => this._updateEntityProperty("name", e.target.value)}
           ></ha-textfield>
         </div>
-
 
         ${showGroupVolume ? html`
           <div class="form-row">
@@ -485,5 +483,5 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     }
   }
 
-  customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
+  customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
   export { YetAnotherMediaPlayerEditor };
