@@ -107,6 +107,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         .entity-editor-title {
           font-weight: 500;
           font-size: 1.1em;
+
+          line-height: 1;
+          margin-top: 7px; /* tweak to align with icon */
+
         }
         .full-width {
           width: 100%;
@@ -119,7 +123,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     
       if (this._entityEditorIndex !== null) {
         const entity = this._config.entities?.[this._entityEditorIndex];
-        return this._renderEntityRowEditor(entity);
+
+        return this._renderEntityEditor(entity);
+
       }
     
       return this._renderMainEditor();
@@ -155,7 +161,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                         .hass=${this.hass}
                         .value=${ent.entity_id}
                         .includeDomains=${["media_player"]}
-                       
+
+                        .excludeEntities=${this._config.entities?.map(e => e.entity_id) ?? []}
+
                         clearable
                         @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                       ></ha-entity-picker>
@@ -165,7 +173,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                         .hass=${this.hass}
                         .selector=${{ entity: { domain: "media_player" } }}
                         .value=${ent.entity_id}
-                      
+
                         clearable
                         @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                       ></ha-selector>
@@ -279,7 +287,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       `;
     }
   
-    _renderEntityRowEditor(entity) {
+
+    _renderEntityEditor(entity) {
+
   
       const stateObj = this.hass?.states?.[entity?.entity_id];
       const showGroupVolume = this._supportsFeature(stateObj, SUPPORT_GROUPING); 
@@ -302,6 +312,17 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
+
+        <div class="form-row">
+          <ha-textfield
+            class="full-width"
+            label="Name"
+            .value=${entity?.name ?? ""}
+            @input=${(e) => this._updateEntityProperty("name", e.target.value)}
+          ></ha-textfield>
+        </div>
+
+
         ${showGroupVolume ? html`
           <div class="form-row">
             <ha-switch
@@ -315,33 +336,30 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         ` : nothing}
 
         <div class="form-row">
-          <ha-textfield
-            class="full-width"
-            label="Custom Name"
-            .value=${entity?.name ?? ""}
-            @input=${(e) => this._updateEntityProperty("name", e.target.value)}
-          ></ha-textfield>
-        </div>
 
-        <div class="form-row">
           <ha-entity-picker
             .hass=${this.hass}
-            .value=${entity?.volume_entity ?? ""}
+            .value=${entity?.volume_entity ?? entity?.entity_id ?? ""}
+
             .includeDomains=${["media_player"]}
             label="Volume Entity"
             clearable
             @value-changed=${(e) => {
               const value = e.detail.value;
               this._updateEntityProperty("volume_entity", value);
-              // reset sync_power to false when volume_entity is cleared
-              if (!value) {
+
+              if (!value || value === entity.entity_id) {
+                // sync_power is meaningless in these cases
+
                 this._updateEntityProperty("sync_power", false);
               }
             }}
           ></ha-entity-picker>
         </div>
 
-        ${entity?.volume_entity
+
+        ${entity?.volume_entity && entity.volume_entity !== entity.entity_id
+
           ? html`
               <div class="form-row form-row-multi-column">
                 <div>
