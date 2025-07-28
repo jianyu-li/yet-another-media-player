@@ -1,5 +1,3 @@
-import { LitElement, nothing, html } from 'https://unpkg.com/lit-element@3.3.3/lit-element.js?module';
-
 /**
  * @license
  * Copyright 2019 Google LLC
@@ -2757,13 +2755,14 @@ class YetAnotherMediaPlayerEditor extends i {
 }
 customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
 
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
   name: "Yet Another Media Player",
   description: "YAMP is a multi-entity media card with custom actions"
 });
-class YetAnotherMediaPlayerCard extends LitElement {
+class YetAnotherMediaPlayerCard extends i {
   _handleChipPointerDown(e, idx) {
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerDown(e, idx);
@@ -3727,13 +3726,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
   render() {
     var _this$currentVolumeSt2, _this$currentStateObj2;
-    if (!this.hass || !this.config) return nothing;
+    if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
     const showChipRow = this.config.show_chip_row || "auto";
     const stateObj = this.currentStateObj;
-    if (!stateObj) return html`<div class="details">Entity not found.</div>`;
+    if (!stateObj) return x`<div class="details">Entity not found.</div>`;
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -3789,14 +3788,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       });
       this._lastArtworkUrl = artworkUrl;
     }
-    return html`
+    return x`
         <ha-card class="yamp-card" style="position:relative;">
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
             class="${dimIdleFrame ? 'dim-idle' : ''}"
           >
-            ${this.entityObjs.length > 1 || showChipRow === "always" ? html`
+            ${this.entityObjs.length > 1 || showChipRow === "always" ? x`
                 <div class="chip-row">
                   ${this.groupedSortedEntityIds.map(group => {
       if (group.length > 1) {
@@ -3857,7 +3856,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     })}
                 </div>
-            ` : nothing}
+            ` : E}
             ${renderActionChipRow({
       actions: this.config.actions,
       onActionChipClick: idx => this._onActionChipClick(idx)
@@ -3874,16 +3873,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
                 "
               ></div>
-              ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}">
-                ${collapsed && artworkUrl ? html`
+                ${collapsed && artworkUrl ? x`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
                     <img class="collapsed-artwork" src="${artworkUrl}" />
                   </div>
-                ` : nothing}
-                ${!collapsed ? html`<div class="card-artwork-spacer"></div>` : nothing}
-                ${!collapsed && !artworkUrl && !idleImageUrl ? html`
+                ` : E}
+                ${!collapsed ? x`<div class="card-artwork-spacer"></div>` : E}
+                ${!collapsed && !artworkUrl && !idleImageUrl ? x`
                   <div class="media-artwork-placeholder"
                     style="
                       position: absolute;
@@ -3902,12 +3901,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"/>
                     </svg>
                   </div>
-                ` : nothing}
+                ` : E}
                 <div class="details">
                   <div class="title">
                     ${isPlaying ? title : ""}
                   </div>
-                  ${isPlaying && artist ? html`
+                  ${isPlaying && artist ? x`
                     <div
                       class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
                       @click=${() => {
@@ -3915,7 +3914,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }}
                       title=${stateObj.attributes.media_artist ? "Search for this artist" : ""}
                     >${artist}</div>
-                  ` : nothing}
+                  ` : E}
                 </div>
                 ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
@@ -3929,13 +3928,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       collapsed: false,
       accent: this._customAccent,
       style: "visibility:hidden"
-    }) : nothing}
+    }) : E}
                 ${(collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
       accent: this._customAccent
-    }) : nothing}
-                ${!dimIdleFrame ? html`
+    }) : E}
+                ${!dimIdleFrame ? x`
                 ${renderControlsRow({
       stateObj,
       showStop: this._shouldShowStopButton(stateObj),
@@ -3952,7 +3951,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       onVolumeDragEnd: e => this._onVolumeDragEnd(e),
       onVolumeChange: e => this._onVolumeChange(e),
       onVolumeStep: dir => this._onVolumeStep(dir),
-      moreInfoMenu: html`
+      moreInfoMenu: x`
                     <div class="more-info-menu">
                       <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
                         <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
@@ -3960,21 +3959,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     </div>
                   `
     })}
-                ` : nothing}
-                ${dimIdleFrame ? html`
+                ` : E}
+                ${dimIdleFrame ? x`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                     <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
                     </button>
                   </div>
-                ` : nothing}
+                ` : E}
               </div>
             </div>
           </div>
-          ${this._showEntityOptions ? html`
+          ${this._showEntityOptions ? x`
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
-              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet ? html`
+              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet ? x`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
                   <button class="entity-options-item" @click=${() => {
       this._openMoreInfo();
@@ -3984,9 +3983,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <button class="entity-options-item" @click=${() => {
       this._showSearchSheetInOptions();
     }}>Search</button>
-                  ${Array.isArray((_this$currentStateObj2 = this.currentStateObj) === null || _this$currentStateObj2 === void 0 || (_this$currentStateObj2 = _this$currentStateObj2.attributes) === null || _this$currentStateObj2 === void 0 ? void 0 : _this$currentStateObj2.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? html`
+                  ${Array.isArray((_this$currentStateObj2 = this.currentStateObj) === null || _this$currentStateObj2 === void 0 || (_this$currentStateObj2 = _this$currentStateObj2.attributes) === null || _this$currentStateObj2 === void 0 ? void 0 : _this$currentStateObj2.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
-                    ` : nothing}
+                    ` : E}
                   ${(() => {
       const totalEntities = this.entityIds.length;
       const groupableCount = this.entityIds.reduce((acc, id) => {
@@ -3994,15 +3993,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
         return acc + (this._supportsFeature(st, SUPPORT_GROUPING) ? 1 : 0);
       }, 0);
       if (totalEntities > 1 && groupableCount > 1 && this._supportsFeature(this.currentStateObj, SUPPORT_GROUPING)) {
-        return html`
+        return x`
                           <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
                         `;
       }
-      return nothing;
+      return E;
     })()}
                   <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
                 </div>
-              ` : this._showSearchInSheet ? html`
+              ` : this._showSearchInSheet ? x`
                 <div class="entity-options-search" style="margin-top:12px;">
                   <div class="entity-options-search-row">
                       <input
@@ -4045,8 +4044,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${(() => {
       const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
       const filter = this._searchMediaClassFilter || "all";
-      if (classes.length < 2) return nothing;
-      return html`
+      if (classes.length < 2) return E;
+      return x`
                       <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center;">
                         <button
                           class="chip"
@@ -4062,7 +4061,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this.requestUpdate();
       }}
                         >All</button>
-                        ${classes.map(c => html`
+                        ${classes.map(c => x`
                           <button
                             class="chip"
                             style="
@@ -4083,8 +4082,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       </div>
                     `;
     })()}
-                  ${this._searchLoading ? html`<div class="entity-options-search-loading">Loading...</div>` : nothing}
-                  ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
+                  ${this._searchLoading ? x`<div class="entity-options-search-loading">Loading...</div>` : E}
+                  ${this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
                   <div class="entity-options-search-results">
                     ${(() => {
       const filter = this._searchMediaClassFilter || "all";
@@ -4096,7 +4095,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         length: Math.max(0, totalRows - filteredResults.length)
       }, () => null)];
       // Always render paddedResults, even before first search
-      return this._searchAttempted && filteredResults.length === 0 && !this._searchLoading ? html`<div class="entity-options-search-empty">No results.</div>` : paddedResults.map(item => item ? html`
+      return this._searchAttempted && filteredResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty">No results.</div>` : paddedResults.map(item => item ? x`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result">
                               <img
@@ -4115,27 +4114,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 ▶
                               </button>
                             </div>
-                          ` : html`
+                          ` : x`
                             <!-- placeholder row keeps height -->
                             <div class="entity-options-search-result placeholder"></div>
                           `);
     })()}
                   </div>
                 </div>
-              ` : this._showGrouping ? html`
+              ` : this._showGrouping ? x`
                 <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
                 ${(_masterState$attribut => {
       const masterState = this.hass.states[this.currentEntityId];
       const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) && masterState.attributes.group_members.length > 0;
-      return html`
+      return x`
                       <div style="display:flex;align-items:center;justify-content:space-between;font-weight:600;margin-bottom:0;">
-                        ${groupedAny ? html`
+                        ${groupedAny ? x`
                           <button class="group-all-btn"
                             @click=${() => this._syncGroupVolume()}
                             style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 16px 2px 0;">
                             Sync Volume
                           </button>
-                        ` : html`<span></span>`}
+                        ` : x`<span></span>`}
                         <button class="group-all-btn"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
                           style="color:#d22; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
@@ -4149,12 +4148,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // --- Begin new group player rows logic, wrapped in scrollable container ---
       const masterId = this.currentEntityId;
       const sortedIds = [masterId, ...this.entityIds.filter(id => id !== masterId)];
-      return html`
+      return x`
                       <div class="group-list-scroll" style="overflow-y: auto; max-height: 340px;">
                         ${sortedIds.map(id => {
         var _volumeState$attribut;
         const st = this.hass.states[id];
-        if (!this._supportsFeature(st, SUPPORT_GROUPING)) return nothing;
+        if (!this._supportsFeature(st, SUPPORT_GROUPING)) return E;
         const name = this.getChipName(id);
         const masterState = this.hass.states[masterId];
         const grouped = id === masterId ? true : Array.isArray(masterState.attributes.group_members) && masterState.attributes.group_members.includes(id);
@@ -4163,7 +4162,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const volumeState = this.hass.states[volumeEntity];
         const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
         const volVal = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) || 0);
-        return html`
+        return x`
                             <div style="
                               display: flex;
                               align-items: center;
@@ -4179,12 +4178,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 white-space: nowrap;
                               ">${name}</span>
                               <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
-                                ${isRemoteVol ? html`
+                                ${isRemoteVol ? x`
                                         <div class="vol-stepper">
                                           <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
                                           <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
                                         </div>
-                                      ` : html`
+                                      ` : x`
                                         <input
                                           class="vol-slider"
                                           type="range"
@@ -4199,12 +4198,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                       `}
                                 <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                               </div>
-                              ${id === masterId ? html`
+                              ${id === masterId ? x`
                                       <button class="group-toggle-btn group-toggle-transparent"
                                               disabled
                                               aria-label="Master"
                                               style="margin-left:14px;"></button>
-                                    ` : html`
+                                    ` : x`
                                       <button class="group-toggle-btn"
                                               @click=${() => this._toggleGroup(id)}
                                               title=${grouped ? "Unjoin" : "Join"}
@@ -4219,11 +4218,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     `;
       // --- End new group player rows logic ---
     })()}
-              ` : html`
+              ` : x`
                 <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
-                    ${sourceList.map(src => html`
+                    ${sourceList.map(src => x`
                       <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
                     `)}
                   </div>
@@ -4236,7 +4235,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const dist = Math.abs(hovered - i);
         if (dist === 0) scale = "max";else if (dist === 1) scale = "large";else if (dist === 2) scale = "med";
       }
-      return html`
+      return x`
                       <button
                         class="source-index-letter"
                         data-scale=${scale}
@@ -4258,7 +4257,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               `}
             </div>
           </div>
-        ` : nothing}
+        ` : E}
           ${this._searchOpen ? renderSearchSheet({
       open: this._searchOpen,
       query: this._searchQuery,
@@ -4272,7 +4271,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       },
       onSearch: () => this._doSearch(),
       onPlay: item => this._playMediaFromSearch(item)
-    }) : nothing}
+    }) : E}
         </ha-card>
       `;
   }
