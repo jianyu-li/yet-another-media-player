@@ -1,3 +1,5 @@
+import { LitElement, nothing, html } from 'https://unpkg.com/lit-element@3.3.3/lit-element.js?module';
+
 /**
  * @license
  * Copyright 2019 Google LLC
@@ -2328,7 +2330,7 @@ function renderSearchSheet(_ref) {
   `;
 }
 
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// Supported feature flags
 const SUPPORT_PREVIOUS_TRACK = 16;
 const SUPPORT_NEXT_TRACK = 32;
 const SUPPORT_TURN_ON = 128;
@@ -2337,13 +2339,431 @@ const SUPPORT_STOP = 4096;
 const SUPPORT_SHUFFLE = 32768;
 const SUPPORT_GROUPING = 524288;
 const SUPPORT_REPEAT_SET = 262144;
+
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+class YetAnotherMediaPlayerEditor extends i {
+  static get properties() {
+    return {
+      hass: {},
+      _config: {},
+      _entityEditorIndex: {
+        type: Number
+      }
+    };
+  }
+  constructor() {
+    super();
+    this._entityEditorIndex = null;
+  }
+  _supportsFeature(stateObj, featureBit) {
+    if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
+    return (stateObj.attributes.supported_features & featureBit) !== 0;
+  }
+  setConfig(config) {
+    const rawEntities = config.entities ?? [];
+    const normalizedEntities = rawEntities.map(e => typeof e === "string" ? {
+      entity_id: e
+    } : e);
+    this._config = {
+      ...config,
+      entities: normalizedEntities
+    };
+  }
+  _updateConfig(key, value) {
+    const newConfig = {
+      ...this._config,
+      [key]: value
+    };
+    this._config = newConfig;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: {
+        config: newConfig
+      },
+      bubbles: true,
+      composed: true
+    }));
+  }
+  c;
+  _updateEntityProperty(key, value) {
+    const entities = [...(this._config.entities ?? [])];
+    const idx = this._entityEditorIndex;
+    if (entities[idx]) {
+      entities[idx] = {
+        ...entities[idx],
+        [key]: value
+      };
+      this._updateConfig("entities", entities);
+    }
+  }
+  static get styles() {
+    return i$3`
+        .form-row {
+          padding: 12px 16px;
+          gap: 8px;
+        }
+        /* add to rows with multiple elements to align the elements horizontally */
+        .form-row-multi-column {
+          display: flex;
+          /*gap: 12px;*/
+        }
+        .form-row-multi-column > div {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        /* reduced padding for entity selection subrows */
+        .entity-row {
+          padding: 6px;
+        }
+        /* visually isolate the list of entity controls */
+        .entity-group {
+          background: var(--card-background-color, #f7f7f7);
+          border: 1px solid var(--divider-color, #ccc);
+          border-radius: 6px;
+          padding: 12px 16px;
+          margin-bottom: 16px;
+        }
+        /* wraps the entity selector and edit button */
+        .entity-row-inner {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px;
+          margin: 0px;
+        }
+        /* allow a selector to fill all available space when combined with other elements */
+        .selector-grow {
+          flex: 1;
+          display: flex;
+        }
+        .selector-grow ha-selector, .selector-grow ha-entity-picker {
+          width: 100%;
+        } 
+        .entity-editor-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px;
+        }
+        .entity-editor-title {
+          font-weight: 500;
+          font-size: 1.1em;
+
+          line-height: 1;
+          margin-top: 7px; /* tweak to align with icon */
+
+        }
+        .full-width {
+          width: 100%;
+        } 
+      `;
+  }
+  render() {
+    if (!this._config) return x``;
+    if (this._entityEditorIndex !== null) {
+      var _this$_config$entitie;
+      const entity = (_this$_config$entitie = this._config.entities) === null || _this$_config$entitie === void 0 ? void 0 : _this$_config$entitie[this._entityEditorIndex];
+      return this._renderEntityEditor(entity);
+    }
+    return this._renderMainEditor();
+  }
+  _renderMainEditor() {
+    if (!this._config) return x``;
+    let entities = [...(this._config.entities ?? [])];
+
+    // Append a blank row only for rendering (not saved)
+    if (entities.length === 0 || entities[entities.length - 1].entity_id) {
+      entities.push({
+        entity_id: ""
+      });
+    }
+    return x`
+        <div class="form-row entity-group">
+          Entities*
+          ${entities.map((ent, idx) => {
+      var _this$_config$entitie2;
+      return x`
+            <div class="entity-row-inner">
+              <div class="selector-grow">
+                ${
+      /* ha-entity-picker will show "[Object object]" for entities with extra properties,
+         so we'll get around that by using ha-selector. However ha-selector always renders 
+         as a required field for some reason. This is confusing for the last entity picker, 
+         used to add a new entity, which is always blank and not required. So for the last
+         last entity only, we'll use ha-entity-picker. This entity will never have extra
+         properties, because as soon as it's populated, a new blank entity is added below it
+      */
+      idx === entities.length - 1 && !ent.entity_id ? x`
+                      <ha-entity-picker
+                        .hass=${this.hass}
+                        .value=${ent.entity_id}
+                        .includeDomains=${["media_player"]}
+
+                        .excludeEntities=${((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2.map(e => e.entity_id)) ?? []}
+
+                        clearable
+                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                      ></ha-entity-picker>
+                    ` : x`
+                      <ha-selector
+                        .hass=${this.hass}
+                        .selector=${{
+        entity: {
+          domain: "media_player"
+        }
+      }}
+                        .value=${ent.entity_id}
+
+                        clearable
+                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                      ></ha-selector>
+                    `}
+              </div>
+              <mwc-icon-button
+                .disabled=${!ent.entity_id}
+                title="Edit Entity Settings"
+                @click=${() => this._onEditEntity(idx)}
+              >
+                <ha-icon icon="mdi:pencil"></ha-icon>
+              </mwc-icon-button>
+            </div>
+          `;
+    })}
+        </div>
+  
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="match-theme-toggle"
+              .checked=${this._config.match_theme ?? false}
+              @change=${e => this._updateConfig("match_theme", e.target.checked)}
+            ></ha-switch>
+            <span>Match Theme</span>
+          </div>
+          <div>
+            <ha-switch
+              id="alternate-progress-bar-toggle"
+              .checked=${this._config.alternate_progress_bar ?? false}
+              @change=${e => this._updateConfig("alternate_progress_bar", e.target.checked)}
+            ></ha-switch>
+            <span>Alternate Progress Bar</span>
+          </div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="collapsed-on-idle-toggle"
+              .checked=${this._config.collapsed_on_idle ?? false}
+              @change=${e => this._updateConfig("collapsed_on_idle", e.target.checked)}
+            ></ha-switch>
+            <span>Collapse on Idle</span>
+          </div>
+          <div>
+            <ha-switch
+              id="always-collapsed-toggle"
+              .checked=${this._config.always_collapsed ?? false}
+              @change=${e => this._updateConfig("always_collapsed", e.target.checked)}
+            ></ha-switch>
+            <span>Always Collapsed</span>
+          </div>
+        </div>
+   
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "slider",
+          label: "Slider"
+        }, {
+          value: "stepper",
+          label: "Stepper"
+        }]
+      }
+    }}
+            .value=${this._config.volume_mode ?? "slider"}
+            label="Volume Mode"
+            @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
+          ></ha-selector>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "auto",
+          label: "Auto"
+        }, {
+          value: "always",
+          label: "Always"
+        }]
+      }
+    }}
+            .value=${this._config.show_chip_row ?? "auto"}
+            label="Show Chip Row"
+            @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
+          ></ha-selector>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="hold-to-pin-toggle"
+              .checked=${this._config.hold_to_pin ?? false}
+              @change=${e => this._updateConfig("hold_to_pin", e.target.checked)}
+            ></ha-switch>
+            <span>Hold to Pin</span>
+          </div>
+        </div>   
+        <div class="form-row">
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.idle_image ?? ""}
+             .includeDomains=${["camera", "image"]}
+            label="Idle Image Entity"
+            clearable
+            @value-changed=${e => this._updateConfig("idle_image", e.detail.value)}
+          ></ha-entity-picker>
+        </div>
+      `;
+  }
+  _renderEntityEditor(entity) {
+    var _this$hass;
+    const stateObj = (_this$hass = this.hass) === null || _this$hass === void 0 || (_this$hass = _this$hass.states) === null || _this$hass === void 0 ? void 0 : _this$hass[entity === null || entity === void 0 ? void 0 : entity.entity_id];
+    const showGroupVolume = this._supportsFeature(stateObj, SUPPORT_GROUPING);
+    return x`
+        <div class="entity-editor-header">
+          <mwc-icon-button @click=${this._onBackFromEntityEditor} title="Back">
+            <ha-icon icon="mdi:chevron-left"></ha-icon>
+          </mwc-icon-button>
+          <div class="entity-editor-title">Edit Entity</div>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      entity: {
+        domain: "media_player"
+      }
+    }}
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
+          
+            disabled
+          ></ha-selector>
+        </div>
+
+
+        <div class="form-row">
+          <ha-textfield
+            class="full-width"
+            label="Name"
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.name) ?? ""}
+            @input=${e => this._updateEntityProperty("name", e.target.value)}
+          ></ha-textfield>
+        </div>
+
+
+        ${showGroupVolume ? x`
+          <div class="form-row">
+            <ha-switch
+              id="group-volume-toggle"
+              .checked=${(entity === null || entity === void 0 ? void 0 : entity.group_volume) ?? true}
+              @change=${e => this._updateEntityProperty("group_volume", e.target.checked)}
+            ></ha-switch>
+            <label for="group-volume-toggle">Group Volume</label>
+          </div>
+        ` : E}
+
+        <div class="form-row">
+
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
+
+            .includeDomains=${["media_player"]}
+            label="Volume Entity"
+            clearable
+            @value-changed=${e => {
+      const value = e.detail.value;
+      this._updateEntityProperty("volume_entity", value);
+      if (!value || value === entity.entity_id) {
+        // sync_power is meaningless in these cases
+
+        this._updateEntityProperty("sync_power", false);
+      }
+    }}
+          ></ha-entity-picker>
+        </div>
+
+
+        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id ? x`
+              <div class="form-row form-row-multi-column">
+                <div>
+                  <ha-switch
+                    id="sync-power-toggle"
+                    .checked=${(entity === null || entity === void 0 ? void 0 : entity.sync_power) ?? false}
+                    @change=${e => this._updateEntityProperty("sync_power", e.target.checked)}
+                  ></ha-switch>
+                  <label for="sync-power-toggle">Sync Power</label>
+                </div>
+              </div>
+            ` : E}
+        </div>
+      `;
+  }
+  _onEntityChanged(index, newValue) {
+    const original = this._config.entities ?? [];
+    const updated = [...original];
+    if (!newValue) {
+      // Remove empty row
+      updated.splice(index, 1);
+    } else {
+      updated[index] = {
+        ...updated[index],
+        entity_id: newValue
+      };
+    }
+
+    // Always strip blank row before writing to config
+    const cleaned = updated.filter(e => e.entity_id && e.entity_id.trim() !== "");
+    this._updateConfig("entities", cleaned);
+  }
+  _onEditEntity(index) {
+    this._entityEditorIndex = index;
+  }
+  _onBackFromEntityEditor() {
+    this._entityEditorIndex = null;
+  }
+  _onToggleChanged(e) {
+    const newConfig = {
+      ...this._config,
+      always_collapsed: e.target.checked
+    };
+    this._config = newConfig;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: {
+        config: newConfig
+      }
+    }));
+  }
+}
+customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
   name: "Yet Another Media Player",
   description: "YAMP is a multi-entity media card with custom actions"
 });
-class YetAnotherMediaPlayerCard extends i {
+class YetAnotherMediaPlayerCard extends LitElement {
   _handleChipPointerDown(e, idx) {
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerDown(e, idx);
@@ -2511,6 +2931,8 @@ class YetAnotherMediaPlayerCard extends i {
     // --- swipe‑to‑filter helpers ---
     this._swipeStartX = null;
     this._searchSwipeAttached = false;
+    // Snapshot of entities that were playing when manual‑select started.
+    this._manualSelectPlayingSet = null;
   } // ← closes constructor
 
   /**
@@ -2824,6 +3246,26 @@ class YetAnotherMediaPlayerCard extends i {
         }
       });
 
+      // If manual‑select is active (no pin) and a *new* entity begins playing,
+      // clear manual mode so auto‑switching resumes.
+      if (this._manualSelect && this._pinnedIndex === null && this._manualSelectPlayingSet) {
+        // Remove any entities from the snapshot that are no longer playing.
+        for (const id of [...this._manualSelectPlayingSet]) {
+          const stSnap = this.hass.states[id];
+          if (!(stSnap && stSnap.state === "playing")) {
+            this._manualSelectPlayingSet.delete(id);
+          }
+        }
+        for (const id of this.entityIds) {
+          const st = this.hass.states[id];
+          if (st && st.state === "playing" && !this._manualSelectPlayingSet.has(id)) {
+            this._manualSelect = false;
+            this._manualSelectPlayingSet = null;
+            break;
+          }
+        }
+      }
+
       // Auto-switch unless manually pinned
       if (!this._manualSelect) {
         // Switch to most recent if applicable
@@ -2962,17 +3404,52 @@ class YetAnotherMediaPlayerCard extends i {
     e.stopPropagation();
     this._manualSelect = false;
     this._pinnedIndex = null;
+    this._manualSelectPlayingSet = null;
   }
   _onChipClick(idx) {
+    // Ignore the synthetic click that fires immediately after a long‑press pin.
+    if (this._holdToPin && this._justPinned) {
+      this._justPinned = false;
+      return;
+    }
+
+    // Select the tapped chip.
     this._selectedIndex = idx;
-    this._manualSelect = true;
-    if (!this._holdToPin) {
+    clearTimeout(this._manualSelectTimeout);
+    if (this._holdToPin) {
+      if (this._pinnedIndex !== null) {
+        // A chip is already pinned – keep manual mode active.
+        this._manualSelect = true;
+      } else {
+        // No chip is pinned. Pause auto‑switching until any *new* player starts.
+        this._manualSelect = true;
+        // Take a snapshot of who is currently playing.
+        this._manualSelectPlayingSet = new Set();
+        for (const id of this.entityIds) {
+          var _this$hass3;
+          const st = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
+          if (st && st.state === "playing") {
+            this._manualSelectPlayingSet.add(id);
+          }
+        }
+      }
+      // Never change _pinnedIndex on a simple tap in hold_to_pin mode.
+    } else {
+      // --- default MODE ---
+      this._manualSelect = true;
       this._pinnedIndex = idx;
     }
-    clearTimeout(this._manualSelectTimeout);
     this.requestUpdate();
   }
   _pinChip(idx) {
+    // Mark that this chip was just pinned via long‑press so the
+    // click event that follows the pointer‑up can be ignored.
+    this._justPinned = true;
+
+    // Cancel any pending auto‑switch re‑enable timer.
+    clearTimeout(this._manualSelectTimeout);
+    // Clear the manual‑select snapshot; a long‑press establishes a pin.
+    this._manualSelectPlayingSet = null;
     this._pinnedIndex = idx;
     this._manualSelect = true;
     this.requestUpdate();
@@ -3250,13 +3727,13 @@ class YetAnotherMediaPlayerCard extends i {
   }
   render() {
     var _this$currentVolumeSt2, _this$currentStateObj2;
-    if (!this.hass || !this.config) return E;
+    if (!this.hass || !this.config) return nothing;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
     const showChipRow = this.config.show_chip_row || "auto";
     const stateObj = this.currentStateObj;
-    if (!stateObj) return x`<div class="details">Entity not found.</div>`;
+    if (!stateObj) return html`<div class="details">Entity not found.</div>`;
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -3312,21 +3789,21 @@ class YetAnotherMediaPlayerCard extends i {
       });
       this._lastArtworkUrl = artworkUrl;
     }
-    return x`
+    return html`
         <ha-card class="yamp-card" style="position:relative;">
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
             class="${dimIdleFrame ? 'dim-idle' : ''}"
           >
-            ${this.entityObjs.length > 1 || showChipRow === "always" ? x`
+            ${this.entityObjs.length > 1 || showChipRow === "always" ? html`
                 <div class="chip-row">
                   ${this.groupedSortedEntityIds.map(group => {
       if (group.length > 1) {
-        var _this$hass3;
+        var _this$hass4;
         const id = this._getActualGroupMaster(group);
         const idx = this.entityIds.indexOf(id);
-        const state = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
+        const state = (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[id];
         // For group chips, art is always null, but update isPlaying logic for selected chip
         this.currentEntityId === id ? !this._isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
         return renderGroupChip({
@@ -3352,10 +3829,10 @@ class YetAnotherMediaPlayerCard extends i {
           onPointerUp: e => this._handleChipPointerUp(e, idx)
         });
       } else {
-        var _this$hass4, _state$attributes3, _state$attributes4, _state$attributes5, _state$attributes6, _state$attributes7;
+        var _this$hass5, _state$attributes3, _state$attributes4, _state$attributes5, _state$attributes6, _state$attributes7;
         const id = group[0];
         const idx = this.entityIds.indexOf(id);
-        const state = (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[id];
+        const state = (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[id];
         const isPlaying = this.currentEntityId === id ? !this._isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
         const art = this.currentEntityId === id ? !this._isIdle && ((state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.entity_picture) || (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.album_art)) : (state === null || state === void 0 ? void 0 : state.state) === "playing" && ((state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.entity_picture) || (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.album_art));
         const icon = (state === null || state === void 0 || (_state$attributes7 = state.attributes) === null || _state$attributes7 === void 0 ? void 0 : _state$attributes7.icon) || "mdi:cast";
@@ -3380,7 +3857,7 @@ class YetAnotherMediaPlayerCard extends i {
       }
     })}
                 </div>
-            ` : E}
+            ` : nothing}
             ${renderActionChipRow({
       actions: this.config.actions,
       onActionChipClick: idx => this._onActionChipClick(idx)
@@ -3397,16 +3874,16 @@ class YetAnotherMediaPlayerCard extends i {
                   transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
                 "
               ></div>
-              ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
+              ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}">
-                ${collapsed && artworkUrl ? x`
+                ${collapsed && artworkUrl ? html`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
                     <img class="collapsed-artwork" src="${artworkUrl}" />
                   </div>
-                ` : E}
-                ${!collapsed ? x`<div class="card-artwork-spacer"></div>` : E}
-                ${!collapsed && !artworkUrl && !idleImageUrl ? x`
+                ` : nothing}
+                ${!collapsed ? html`<div class="card-artwork-spacer"></div>` : nothing}
+                ${!collapsed && !artworkUrl && !idleImageUrl ? html`
                   <div class="media-artwork-placeholder"
                     style="
                       position: absolute;
@@ -3425,12 +3902,12 @@ class YetAnotherMediaPlayerCard extends i {
                       <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"/>
                     </svg>
                   </div>
-                ` : E}
+                ` : nothing}
                 <div class="details">
                   <div class="title">
                     ${isPlaying ? title : ""}
                   </div>
-                  ${isPlaying && artist ? x`
+                  ${isPlaying && artist ? html`
                     <div
                       class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
                       @click=${() => {
@@ -3438,7 +3915,7 @@ class YetAnotherMediaPlayerCard extends i {
     }}
                       title=${stateObj.attributes.media_artist ? "Search for this artist" : ""}
                     >${artist}</div>
-                  ` : E}
+                  ` : nothing}
                 </div>
                 ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
@@ -3452,13 +3929,13 @@ class YetAnotherMediaPlayerCard extends i {
       collapsed: false,
       accent: this._customAccent,
       style: "visibility:hidden"
-    }) : E}
+    }) : nothing}
                 ${(collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
       accent: this._customAccent
-    }) : E}
-                ${!dimIdleFrame ? x`
+    }) : nothing}
+                ${!dimIdleFrame ? html`
                 ${renderControlsRow({
       stateObj,
       showStop: this._shouldShowStopButton(stateObj),
@@ -3475,7 +3952,7 @@ class YetAnotherMediaPlayerCard extends i {
       onVolumeDragEnd: e => this._onVolumeDragEnd(e),
       onVolumeChange: e => this._onVolumeChange(e),
       onVolumeStep: dir => this._onVolumeStep(dir),
-      moreInfoMenu: x`
+      moreInfoMenu: html`
                     <div class="more-info-menu">
                       <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
                         <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
@@ -3483,21 +3960,21 @@ class YetAnotherMediaPlayerCard extends i {
                     </div>
                   `
     })}
-                ` : E}
-                ${dimIdleFrame ? x`
+                ` : nothing}
+                ${dimIdleFrame ? html`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                     <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
                     </button>
                   </div>
-                ` : E}
+                ` : nothing}
               </div>
             </div>
           </div>
-          ${this._showEntityOptions ? x`
+          ${this._showEntityOptions ? html`
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
-              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet ? x`
+              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet ? html`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
                   <button class="entity-options-item" @click=${() => {
       this._openMoreInfo();
@@ -3507,9 +3984,9 @@ class YetAnotherMediaPlayerCard extends i {
                   <button class="entity-options-item" @click=${() => {
       this._showSearchSheetInOptions();
     }}>Search</button>
-                  ${Array.isArray((_this$currentStateObj2 = this.currentStateObj) === null || _this$currentStateObj2 === void 0 || (_this$currentStateObj2 = _this$currentStateObj2.attributes) === null || _this$currentStateObj2 === void 0 ? void 0 : _this$currentStateObj2.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
+                  ${Array.isArray((_this$currentStateObj2 = this.currentStateObj) === null || _this$currentStateObj2 === void 0 || (_this$currentStateObj2 = _this$currentStateObj2.attributes) === null || _this$currentStateObj2 === void 0 ? void 0 : _this$currentStateObj2.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? html`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
-                    ` : E}
+                    ` : nothing}
                   ${(() => {
       const totalEntities = this.entityIds.length;
       const groupableCount = this.entityIds.reduce((acc, id) => {
@@ -3517,15 +3994,15 @@ class YetAnotherMediaPlayerCard extends i {
         return acc + (this._supportsFeature(st, SUPPORT_GROUPING) ? 1 : 0);
       }, 0);
       if (totalEntities > 1 && groupableCount > 1 && this._supportsFeature(this.currentStateObj, SUPPORT_GROUPING)) {
-        return x`
+        return html`
                           <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
                         `;
       }
-      return E;
+      return nothing;
     })()}
                   <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
                 </div>
-              ` : this._showSearchInSheet ? x`
+              ` : this._showSearchInSheet ? html`
                 <div class="entity-options-search" style="margin-top:12px;">
                   <div class="entity-options-search-row">
                       <input
@@ -3568,8 +4045,8 @@ class YetAnotherMediaPlayerCard extends i {
                   ${(() => {
       const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
       const filter = this._searchMediaClassFilter || "all";
-      if (classes.length < 2) return E;
-      return x`
+      if (classes.length < 2) return nothing;
+      return html`
                       <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center;">
                         <button
                           class="chip"
@@ -3585,7 +4062,7 @@ class YetAnotherMediaPlayerCard extends i {
         this.requestUpdate();
       }}
                         >All</button>
-                        ${classes.map(c => x`
+                        ${classes.map(c => html`
                           <button
                             class="chip"
                             style="
@@ -3606,8 +4083,8 @@ class YetAnotherMediaPlayerCard extends i {
                       </div>
                     `;
     })()}
-                  ${this._searchLoading ? x`<div class="entity-options-search-loading">Loading...</div>` : E}
-                  ${this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
+                  ${this._searchLoading ? html`<div class="entity-options-search-loading">Loading...</div>` : nothing}
+                  ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   <div class="entity-options-search-results">
                     ${(() => {
       const filter = this._searchMediaClassFilter || "all";
@@ -3619,7 +4096,7 @@ class YetAnotherMediaPlayerCard extends i {
         length: Math.max(0, totalRows - filteredResults.length)
       }, () => null)];
       // Always render paddedResults, even before first search
-      return this._searchAttempted && filteredResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty">No results.</div>` : paddedResults.map(item => item ? x`
+      return this._searchAttempted && filteredResults.length === 0 && !this._searchLoading ? html`<div class="entity-options-search-empty">No results.</div>` : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result">
                               <img
@@ -3638,27 +4115,27 @@ class YetAnotherMediaPlayerCard extends i {
                                 ▶
                               </button>
                             </div>
-                          ` : x`
+                          ` : html`
                             <!-- placeholder row keeps height -->
                             <div class="entity-options-search-result placeholder"></div>
                           `);
     })()}
                   </div>
                 </div>
-              ` : this._showGrouping ? x`
+              ` : this._showGrouping ? html`
                 <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
                 ${(_masterState$attribut => {
       const masterState = this.hass.states[this.currentEntityId];
       const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) && masterState.attributes.group_members.length > 0;
-      return x`
+      return html`
                       <div style="display:flex;align-items:center;justify-content:space-between;font-weight:600;margin-bottom:0;">
-                        ${groupedAny ? x`
+                        ${groupedAny ? html`
                           <button class="group-all-btn"
                             @click=${() => this._syncGroupVolume()}
                             style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 16px 2px 0;">
                             Sync Volume
                           </button>
-                        ` : x`<span></span>`}
+                        ` : html`<span></span>`}
                         <button class="group-all-btn"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
                           style="color:#d22; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
@@ -3672,12 +4149,12 @@ class YetAnotherMediaPlayerCard extends i {
       // --- Begin new group player rows logic, wrapped in scrollable container ---
       const masterId = this.currentEntityId;
       const sortedIds = [masterId, ...this.entityIds.filter(id => id !== masterId)];
-      return x`
+      return html`
                       <div class="group-list-scroll" style="overflow-y: auto; max-height: 340px;">
                         ${sortedIds.map(id => {
         var _volumeState$attribut;
         const st = this.hass.states[id];
-        if (!this._supportsFeature(st, SUPPORT_GROUPING)) return E;
+        if (!this._supportsFeature(st, SUPPORT_GROUPING)) return nothing;
         const name = this.getChipName(id);
         const masterState = this.hass.states[masterId];
         const grouped = id === masterId ? true : Array.isArray(masterState.attributes.group_members) && masterState.attributes.group_members.includes(id);
@@ -3686,7 +4163,7 @@ class YetAnotherMediaPlayerCard extends i {
         const volumeState = this.hass.states[volumeEntity];
         const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
         const volVal = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) || 0);
-        return x`
+        return html`
                             <div style="
                               display: flex;
                               align-items: center;
@@ -3702,12 +4179,12 @@ class YetAnotherMediaPlayerCard extends i {
                                 white-space: nowrap;
                               ">${name}</span>
                               <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
-                                ${isRemoteVol ? x`
+                                ${isRemoteVol ? html`
                                         <div class="vol-stepper">
                                           <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
                                           <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
                                         </div>
-                                      ` : x`
+                                      ` : html`
                                         <input
                                           class="vol-slider"
                                           type="range"
@@ -3722,12 +4199,12 @@ class YetAnotherMediaPlayerCard extends i {
                                       `}
                                 <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                               </div>
-                              ${id === masterId ? x`
+                              ${id === masterId ? html`
                                       <button class="group-toggle-btn group-toggle-transparent"
                                               disabled
                                               aria-label="Master"
                                               style="margin-left:14px;"></button>
-                                    ` : x`
+                                    ` : html`
                                       <button class="group-toggle-btn"
                                               @click=${() => this._toggleGroup(id)}
                                               title=${grouped ? "Unjoin" : "Join"}
@@ -3742,11 +4219,11 @@ class YetAnotherMediaPlayerCard extends i {
                     `;
       // --- End new group player rows logic ---
     })()}
-              ` : x`
+              ` : html`
                 <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
-                    ${sourceList.map(src => x`
+                    ${sourceList.map(src => html`
                       <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
                     `)}
                   </div>
@@ -3759,7 +4236,7 @@ class YetAnotherMediaPlayerCard extends i {
         const dist = Math.abs(hovered - i);
         if (dist === 0) scale = "max";else if (dist === 1) scale = "large";else if (dist === 2) scale = "med";
       }
-      return x`
+      return html`
                       <button
                         class="source-index-letter"
                         data-scale=${scale}
@@ -3781,7 +4258,7 @@ class YetAnotherMediaPlayerCard extends i {
               `}
             </div>
           </div>
-        ` : E}
+        ` : nothing}
           ${this._searchOpen ? renderSearchSheet({
       open: this._searchOpen,
       query: this._searchQuery,
@@ -3795,7 +4272,7 @@ class YetAnotherMediaPlayerCard extends i {
       },
       onSearch: () => this._doSearch(),
       onPlay: item => this._playMediaFromSearch(item)
-    }) : E}
+    }) : nothing}
         </ha-card>
       `;
   }
@@ -3855,9 +4332,6 @@ class YetAnotherMediaPlayerCard extends i {
           }, {
             value: "always",
             label: "Always"
-          }, {
-            value: "never",
-            label: "Never"
           }]
         }
       },
@@ -4210,164 +4684,4 @@ class YetAnotherMediaPlayerCard extends i {
     }
   }
 }
-class YetAnotherMediaPlayerEditor extends i {
-  static properties = {
-    hass: {},
-    lovelace: {},
-    config: {}
-  };
-  setConfig(config) {
-    this.config = {
-      ...config
-    };
-  }
-  get _schema() {
-    return [{
-      name: "entities",
-      selector: {
-        entity: {
-          multiple: true,
-          domain: "media_player"
-        }
-      }
-    }, {
-      name: "volume_mode",
-      selector: {
-        select: {
-          options: [{
-            value: "slider",
-            label: "Slider"
-          }, {
-            value: "stepper",
-            label: "Stepper"
-          }]
-        }
-      }
-    }, {
-      name: "match_theme",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "collapse_on_idle",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "always_collapsed",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "alternate_progress_bar",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "hold_to_pin",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "show_chip_row",
-      selector: {
-        select: {
-          options: [{
-            value: "auto",
-            label: "Auto (hide with one entity)"
-          }, {
-            value: "always",
-            label: "Always show"
-          }]
-        }
-      },
-      required: false
-    },
-    // Add idle_image entity picker after progress bar options
-    {
-      name: "idle_image",
-      selector: {
-        entity: {
-          domain: ["camera", "image"]
-        }
-      },
-      required: false
-    }, {
-      name: "actions",
-      selector: {
-        array: {
-          item_selector: {
-            object: {
-              name: {
-                selector: {
-                  text: {}
-                }
-              },
-              service: {
-                selector: {
-                  text: {}
-                }
-              },
-              service_data: {
-                selector: {
-                  object: {}
-                }
-              }
-            }
-          }
-        }
-      }
-    }];
-  }
-  render() {
-    if (!this.config) return x``;
-    // Display friendly names or entity_ids for all entities/objects
-    const entitiesForEditor = (this.config.entities || []).map(e => {
-      if (typeof e === "string") {
-        var _this$hass5, _state$attributes8;
-        const state = (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[e];
-        return (state === null || state === void 0 || (_state$attributes8 = state.attributes) === null || _state$attributes8 === void 0 ? void 0 : _state$attributes8.friendly_name) || e;
-      }
-      if (e && typeof e === "object" && e.entity_id) {
-        var _this$hass6, _state$attributes9;
-        const state = (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[e.entity_id];
-        return (state === null || state === void 0 || (_state$attributes9 = state.attributes) === null || _state$attributes9 === void 0 ? void 0 : _state$attributes9.friendly_name) || e.entity_id;
-      }
-      return "(invalid entity)";
-    });
-    // Show list above the form
-    const configForEditor = {
-      ...this.config,
-      entities: this.config.entities
-    };
-    return x`
-      <div>
-        <ul style="list-style:none; padding:0; margin-bottom:16px;">
-          ${entitiesForEditor.map(name => x`<li style="padding:2px 0;">${name}</li>`)}
-        </ul>
-        <ha-form
-          .hass=${this.hass}
-          .data=${configForEditor}
-          .schema=${this._schema}
-          @value-changed=${this._valueChanged}
-        ></ha-form>
-      </div>
-    `;
-  }
-  _valueChanged(ev) {
-    const config = ev.detail.value;
-    this.config = config;
-    this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: {
-        config
-      }
-    }));
-  }
-}
-customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
