@@ -341,7 +341,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             .hass=${this.hass}
             .value=${entity?.volume_entity ?? entity?.entity_id ?? ""}
 
-            .includeDomains=${["media_player"]}
+            .includeDomains=${["media_player", "remote"]}
             label="Volume Entity"
             clearable
             @value-changed=${(e) => {
