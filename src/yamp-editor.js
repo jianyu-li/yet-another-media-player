@@ -413,5 +413,5 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     }
   }
 
-  customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
+  customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
   export { YetAnotherMediaPlayerEditor };
