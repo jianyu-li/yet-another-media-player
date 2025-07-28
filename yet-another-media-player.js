@@ -2434,12 +2434,16 @@ class YetAnotherMediaPlayerEditor extends i {
       _config: {},
       _entityEditorIndex: {
         type: Number
+      },
+      _entityMoveMode: {
+        type: Boolean
       }
     };
   }
   constructor() {
     super();
     this._entityEditorIndex = null;
+    this._entityMoveMode = false;
   }
   _supportsFeature(stateObj, featureBit) {
     if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
@@ -2535,13 +2539,29 @@ class YetAnotherMediaPlayerEditor extends i {
         .entity-editor-title {
           font-weight: 500;
           font-size: 1.1em;
-
           line-height: 1;
           margin-top: 7px; /* tweak to align with icon */
-
         }
         .full-width {
           width: 100%;
+        }
+        .entity-group-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 0px 6px;
+        }
+        .entity-group-title {
+          font-weight: 500;
+        }
+        .entity-group-actions {
+          display: flex;
+          align-items: center;
+        }
+        .entity-group-actions ha-icon, .entity-row-actions ha-icon {
+          position: relative;
+          top: -3px;
         } 
       `;
   }
@@ -2566,7 +2586,23 @@ class YetAnotherMediaPlayerEditor extends i {
     }
     return x`
         <div class="form-row entity-group">
-          Entities*
+          <div class="entity-group-header">
+            <div class="entity-group-title">
+              Entities*
+            </div>
+            <div class="entity-group-actions">
+              <mwc-icon-button
+                @mousedown=${e => e.preventDefault()}
+                @click=${e => {
+      this._toggleEntityMoveMode();
+      e.currentTarget.blur();
+    }}
+                title=${this._entityMoveMode ? "Back to Edit Mode" : "Enable Move Mode"}
+              >
+                <ha-icon icon=${this._entityMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}></ha-icon>
+              </mwc-icon-button>
+            </div>
+          </div>
           ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
       return x`
@@ -2585,9 +2621,7 @@ class YetAnotherMediaPlayerEditor extends i {
                         .hass=${this.hass}
                         .value=${ent.entity_id}
                         .includeDomains=${["media_player"]}
-
                         .excludeEntities=${((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2.map(e => e.entity_id)) ?? []}
-
                         clearable
                         @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                       ></ha-entity-picker>
@@ -2600,19 +2634,45 @@ class YetAnotherMediaPlayerEditor extends i {
         }
       }}
                         .value=${ent.entity_id}
-
                         clearable
                         @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                       ></ha-selector>
                     `}
               </div>
-              <mwc-icon-button
-                .disabled=${!ent.entity_id}
-                title="Edit Entity Settings"
-                @click=${() => this._onEditEntity(idx)}
-              >
-                <ha-icon icon="mdi:pencil"></ha-icon>
-              </mwc-icon-button>
+              <div class="entity-row-actions">
+                ${!this._entityMoveMode ? x`
+                  <mwc-icon-button
+                    .disabled=${!ent.entity_id}
+                    title="Edit Entity Settings"
+                    @click=${() => this._onEditEntity(idx)}
+                  >
+                    <ha-icon icon="mdi:pencil"></ha-icon>
+                  </mwc-icon-button>
+                ` : x`
+                  <mwc-icon-button
+                    .disabled=${idx === 0 || idx === entities.length - 1}
+                    @mousedown=${e => e.preventDefault()}
+                    @click=${e => {
+        this._moveEntity(idx, -1);
+        e.currentTarget.blur();
+      }}
+                    title="Move Up"
+                  >
+                    <ha-icon icon="mdi:arrow-up"></ha-icon>
+                  </mwc-icon-button>
+                  <mwc-icon-button
+                    .disabled=${idx >= entities.length - 2}
+                    @mousedown=${e => e.preventDefault()}
+                    @click=${e => {
+        this._moveEntity(idx, 1);
+        e.currentTarget.blur();
+      }}
+                    title="Move Down"
+                  >
+                    <ha-icon icon="mdi:arrow-down"></ha-icon>
+                  </mwc-icon-button>
+                `}
+              </div>
             </div>
           `;
     })}
@@ -2746,7 +2806,6 @@ class YetAnotherMediaPlayerEditor extends i {
           ></ha-selector>
         </div>
 
-
         <div class="form-row">
           <ha-textfield
             class="full-width"
@@ -2755,7 +2814,6 @@ class YetAnotherMediaPlayerEditor extends i {
             @input=${e => this._updateEntityProperty("name", e.target.value)}
           ></ha-textfield>
         </div>
-
 
         ${showGroupVolume ? x`
           <div class="form-row">
@@ -2773,7 +2831,6 @@ class YetAnotherMediaPlayerEditor extends i {
           <ha-entity-picker
             .hass=${this.hass}
             .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
-
             .includeDomains=${["media_player", "remote"]}
             label="Volume Entity"
             clearable
@@ -2782,7 +2839,6 @@ class YetAnotherMediaPlayerEditor extends i {
       this._updateEntityProperty("volume_entity", value);
       if (!value || value === entity.entity_id) {
         // sync_power is meaningless in these cases
-
         this._updateEntityProperty("sync_power", false);
       }
     }}
@@ -2827,6 +2883,19 @@ class YetAnotherMediaPlayerEditor extends i {
   }
   _onBackFromEntityEditor() {
     this._entityEditorIndex = null;
+  }
+  _toggleEntityMoveMode() {
+    this._entityMoveMode = !this._entityMoveMode;
+  }
+  _moveEntity(idx, offset) {
+    const entities = [...this._config.entities];
+    const newIndex = idx + offset;
+    if (newIndex < 0 || newIndex >= entities.length) {
+      return;
+    }
+    const [moved] = entities.splice(idx, 1);
+    entities.splice(newIndex, 0, moved);
+    this._updateConfig("entities", entities);
   }
   _onToggleChanged(e) {
     const newConfig = {
