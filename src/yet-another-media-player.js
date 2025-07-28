@@ -1115,6 +1115,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     isIdle: this._isIdle,
                     hass: this.hass,
                     onChipClick: (idx) => this._onChipClick(idx),
+                    onIconClick: (idx, e) => {
+                      const entityId = this.entityIds[idx];
+                      const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+                      if (group && group.length > 1) {
+                        this._selectedIndex = idx;
+                        this._showEntityOptions = true;
+                        this._showGrouping = true;
+                        this.requestUpdate();
+                      }
+                    },
                     onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
                     onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
                     onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
