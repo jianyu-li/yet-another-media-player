@@ -17,7 +17,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 - Switch between multiple media players in a single card using chips
 - Group supported players
   - Control volume as a group or individually
-  - Separate volume entity via YAML
+  - Separate volume entity 
   - Override sync volume behavior on a per entity basis using `group_volume`
 - Music Assistant Support: Search music on compatible players
 - Add background image sensor for when not in use
@@ -45,10 +45,8 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 ---
 
 ## Basic Usage
-
-Add the card to your Lovelace dashboard using YAML (for custom chip/entity names) or the UI (for default entity names). 
-
-You can use music assistant actions in conjunction with "current" as the entity id and it will target whatever the current entity that is displayed in the card (e.g.: genres)
+Below you will find a list of all configuration options. 
+- You can use music assistant actions in conjunction with "current" as the entity id and it will target whatever the current entity that is displayed in the card (e.g.: genres)
 
 | **Option**                 | **Type**     | **Required** | **Default** | **Description**                                                                                 |
 |----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
@@ -273,7 +271,6 @@ card_mod:
 ## Notes
 
 - When an entity is manually selected it will be pinned in place and will not auto-switch to the more recently playing entity for that session. Tap or click the pin icon that appears to unpin the entity.
-- Entity names and separate volume entities are set via YAML. The ui will show "[object Object]" for customized entities
 - Actions can run any home assistant service, not just media services. Specifying "current" in the entity_id field will target the currently selected entity. 
 - Grouping players only works on supported entities, if the entity is not supported the option will not be visible
 

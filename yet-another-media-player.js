@@ -714,6 +714,8 @@ o === null || o === void 0 || o({
 });
 (s.litElementVersions ??= []).push("4.2.0");
 
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+
 // Helper to render a single chip
 function renderChip(_ref) {
   let {
@@ -851,6 +853,74 @@ function createHoldToPinHandler(_ref3) {
       moved = false;
     }
   };
+}
+// Central chip row renderer
+function renderChipRow(_ref4) {
+  let {
+    groupedSortedEntityIds,
+    entityIds,
+    selectedEntityId,
+    pinnedIndex,
+    getChipName,
+    getActualGroupMaster,
+    isIdle,
+    hass,
+    onChipClick,
+    onPinClick,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp
+  } = _ref4;
+  if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return E;
+  return x`
+    ${groupedSortedEntityIds.map(group => {
+    // If it's a group (more than one entity)
+    if (group.length > 1) {
+      var _hass$states;
+      const id = getActualGroupMaster(group);
+      const idx = entityIds.indexOf(id);
+      const state = hass === null || hass === void 0 || (_hass$states = hass.states) === null || _hass$states === void 0 ? void 0 : _hass$states[id];
+      // Art is null for group chip; determine if playing for chip highlight
+      selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+      return renderGroupChip({
+        idx,
+        selected: selectedEntityId === id,
+        groupName: getChipName(id),
+        icon: "mdi:group",
+        // Or use a more specific group icon if needed
+        pinned: pinnedIndex === idx,
+        onChipClick,
+        onPinClick,
+        onPointerDown: e => onPointerDown(e, idx),
+        onPointerMove: e => onPointerMove(e, idx),
+        onPointerUp: e => onPointerUp(e, idx)
+      });
+    } else {
+      var _hass$states2, _state$attributes, _state$attributes2, _state$attributes3, _state$attributes4, _state$attributes5;
+      // Single chip
+      const id = group[0];
+      const idx = entityIds.indexOf(id);
+      const state = hass === null || hass === void 0 || (_hass$states2 = hass.states) === null || _hass$states2 === void 0 ? void 0 : _hass$states2[id];
+      const isChipPlaying = selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+      const art = selectedEntityId === id ? !isIdle && ((state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art)) : (state === null || state === void 0 ? void 0 : state.state) === "playing" && ((state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.entity_picture) || (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.album_art));
+      const icon = (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.icon) || "mdi:cast";
+      return renderChip({
+        idx,
+        selected: selectedEntityId === id,
+        playing: isChipPlaying,
+        name: getChipName(id),
+        art,
+        icon,
+        pinned: pinnedIndex === idx,
+        onChipClick,
+        onPinClick,
+        onPointerDown: e => onPointerDown(e, idx),
+        onPointerMove: e => onPointerMove(e, idx),
+        onPointerUp: e => onPointerUp(e, idx)
+      });
+    }
+  })}
+  `;
 }
 
 function renderActionChipRow(_ref) {
@@ -2328,7 +2398,7 @@ function renderSearchSheet(_ref) {
   `;
 }
 
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// Supported feature flags
 const SUPPORT_PREVIOUS_TRACK = 16;
 const SUPPORT_NEXT_TRACK = 32;
 const SUPPORT_TURN_ON = 128;
@@ -2337,6 +2407,425 @@ const SUPPORT_STOP = 4096;
 const SUPPORT_SHUFFLE = 32768;
 const SUPPORT_GROUPING = 524288;
 const SUPPORT_REPEAT_SET = 262144;
+
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+class YetAnotherMediaPlayerEditor extends i {
+  static get properties() {
+    return {
+      hass: {},
+      _config: {},
+      _entityEditorIndex: {
+        type: Number
+      }
+    };
+  }
+  constructor() {
+    super();
+    this._entityEditorIndex = null;
+  }
+  _supportsFeature(stateObj, featureBit) {
+    if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
+    return (stateObj.attributes.supported_features & featureBit) !== 0;
+  }
+  setConfig(config) {
+    const rawEntities = config.entities ?? [];
+    const normalizedEntities = rawEntities.map(e => typeof e === "string" ? {
+      entity_id: e
+    } : e);
+    this._config = {
+      ...config,
+      entities: normalizedEntities
+    };
+  }
+  _updateConfig(key, value) {
+    const newConfig = {
+      ...this._config,
+      [key]: value
+    };
+    this._config = newConfig;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: {
+        config: newConfig
+      },
+      bubbles: true,
+      composed: true
+    }));
+  }
+  c;
+  _updateEntityProperty(key, value) {
+    const entities = [...(this._config.entities ?? [])];
+    const idx = this._entityEditorIndex;
+    if (entities[idx]) {
+      entities[idx] = {
+        ...entities[idx],
+        [key]: value
+      };
+      this._updateConfig("entities", entities);
+    }
+  }
+  static get styles() {
+    return i$3`
+        .form-row {
+          padding: 12px 16px;
+          gap: 8px;
+        }
+        /* add to rows with multiple elements to align the elements horizontally */
+        .form-row-multi-column {
+          display: flex;
+          /*gap: 12px;*/
+        }
+        .form-row-multi-column > div {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        /* reduced padding for entity selection subrows */
+        .entity-row {
+          padding: 6px;
+        }
+        /* visually isolate the list of entity controls */
+        .entity-group {
+          background: var(--card-background-color, #f7f7f7);
+          border: 1px solid var(--divider-color, #ccc);
+          border-radius: 6px;
+          padding: 12px 16px;
+          margin-bottom: 16px;
+        }
+        /* wraps the entity selector and edit button */
+        .entity-row-inner {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px;
+          margin: 0px;
+        }
+        /* allow a selector to fill all available space when combined with other elements */
+        .selector-grow {
+          flex: 1;
+          display: flex;
+        }
+        .selector-grow ha-selector, .selector-grow ha-entity-picker {
+          width: 100%;
+        } 
+        .entity-editor-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px;
+        }
+        .entity-editor-title {
+          font-weight: 500;
+          font-size: 1.1em;
+
+          line-height: 1;
+          margin-top: 7px; /* tweak to align with icon */
+
+        }
+        .full-width {
+          width: 100%;
+        } 
+      `;
+  }
+  render() {
+    if (!this._config) return x``;
+    if (this._entityEditorIndex !== null) {
+      var _this$_config$entitie;
+      const entity = (_this$_config$entitie = this._config.entities) === null || _this$_config$entitie === void 0 ? void 0 : _this$_config$entitie[this._entityEditorIndex];
+      return this._renderEntityEditor(entity);
+    }
+    return this._renderMainEditor();
+  }
+  _renderMainEditor() {
+    if (!this._config) return x``;
+    let entities = [...(this._config.entities ?? [])];
+
+    // Append a blank row only for rendering (not saved)
+    if (entities.length === 0 || entities[entities.length - 1].entity_id) {
+      entities.push({
+        entity_id: ""
+      });
+    }
+    return x`
+        <div class="form-row entity-group">
+          Entities*
+          ${entities.map((ent, idx) => {
+      var _this$_config$entitie2;
+      return x`
+            <div class="entity-row-inner">
+              <div class="selector-grow">
+                ${
+      /* ha-entity-picker will show "[Object object]" for entities with extra properties,
+         so we'll get around that by using ha-selector. However ha-selector always renders 
+         as a required field for some reason. This is confusing for the last entity picker, 
+         used to add a new entity, which is always blank and not required. So for the last
+         last entity only, we'll use ha-entity-picker. This entity will never have extra
+         properties, because as soon as it's populated, a new blank entity is added below it
+      */
+      idx === entities.length - 1 && !ent.entity_id ? x`
+                      <ha-entity-picker
+                        .hass=${this.hass}
+                        .value=${ent.entity_id}
+                        .includeDomains=${["media_player"]}
+
+                        .excludeEntities=${((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2.map(e => e.entity_id)) ?? []}
+
+                        clearable
+                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                      ></ha-entity-picker>
+                    ` : x`
+                      <ha-selector
+                        .hass=${this.hass}
+                        .selector=${{
+        entity: {
+          domain: "media_player"
+        }
+      }}
+                        .value=${ent.entity_id}
+
+                        clearable
+                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                      ></ha-selector>
+                    `}
+              </div>
+              <mwc-icon-button
+                .disabled=${!ent.entity_id}
+                title="Edit Entity Settings"
+                @click=${() => this._onEditEntity(idx)}
+              >
+                <ha-icon icon="mdi:pencil"></ha-icon>
+              </mwc-icon-button>
+            </div>
+          `;
+    })}
+        </div>
+  
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="match-theme-toggle"
+              .checked=${this._config.match_theme ?? false}
+              @change=${e => this._updateConfig("match_theme", e.target.checked)}
+            ></ha-switch>
+            <span>Match Theme</span>
+          </div>
+          <div>
+            <ha-switch
+              id="alternate-progress-bar-toggle"
+              .checked=${this._config.alternate_progress_bar ?? false}
+              @change=${e => this._updateConfig("alternate_progress_bar", e.target.checked)}
+            ></ha-switch>
+            <span>Alternate Progress Bar</span>
+          </div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="collapsed-on-idle-toggle"
+              .checked=${this._config.collapsed_on_idle ?? false}
+              @change=${e => this._updateConfig("collapsed_on_idle", e.target.checked)}
+            ></ha-switch>
+            <span>Collapse on Idle</span>
+          </div>
+          <div>
+            <ha-switch
+              id="always-collapsed-toggle"
+              .checked=${this._config.always_collapsed ?? false}
+              @change=${e => this._updateConfig("always_collapsed", e.target.checked)}
+            ></ha-switch>
+            <span>Always Collapsed</span>
+          </div>
+        </div>
+   
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "slider",
+          label: "Slider"
+        }, {
+          value: "stepper",
+          label: "Stepper"
+        }]
+      }
+    }}
+            .value=${this._config.volume_mode ?? "slider"}
+            label="Volume Mode"
+            @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
+          ></ha-selector>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "auto",
+          label: "Auto"
+        }, {
+          value: "always",
+          label: "Always"
+        }]
+      }
+    }}
+            .value=${this._config.show_chip_row ?? "auto"}
+            label="Show Chip Row"
+            @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
+          ></ha-selector>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="hold-to-pin-toggle"
+              .checked=${this._config.hold_to_pin ?? false}
+              @change=${e => this._updateConfig("hold_to_pin", e.target.checked)}
+            ></ha-switch>
+            <span>Hold to Pin</span>
+          </div>
+        </div>   
+        <div class="form-row">
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.idle_image ?? ""}
+             .includeDomains=${["camera", "image"]}
+            label="Idle Image Entity"
+            clearable
+            @value-changed=${e => this._updateConfig("idle_image", e.detail.value)}
+          ></ha-entity-picker>
+        </div>
+      `;
+  }
+  _renderEntityEditor(entity) {
+    var _this$hass;
+    const stateObj = (_this$hass = this.hass) === null || _this$hass === void 0 || (_this$hass = _this$hass.states) === null || _this$hass === void 0 ? void 0 : _this$hass[entity === null || entity === void 0 ? void 0 : entity.entity_id];
+    const showGroupVolume = this._supportsFeature(stateObj, SUPPORT_GROUPING);
+    return x`
+        <div class="entity-editor-header">
+          <mwc-icon-button @click=${this._onBackFromEntityEditor} title="Back">
+            <ha-icon icon="mdi:chevron-left"></ha-icon>
+          </mwc-icon-button>
+          <div class="entity-editor-title">Edit Entity</div>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      entity: {
+        domain: "media_player"
+      }
+    }}
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
+          
+            disabled
+          ></ha-selector>
+        </div>
+
+
+        <div class="form-row">
+          <ha-textfield
+            class="full-width"
+            label="Name"
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.name) ?? ""}
+            @input=${e => this._updateEntityProperty("name", e.target.value)}
+          ></ha-textfield>
+        </div>
+
+
+        ${showGroupVolume ? x`
+          <div class="form-row">
+            <ha-switch
+              id="group-volume-toggle"
+              .checked=${(entity === null || entity === void 0 ? void 0 : entity.group_volume) ?? true}
+              @change=${e => this._updateEntityProperty("group_volume", e.target.checked)}
+            ></ha-switch>
+            <label for="group-volume-toggle">Group Volume</label>
+          </div>
+        ` : E}
+
+        <div class="form-row">
+
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
+
+            .includeDomains=${["media_player", "remote"]}
+            label="Volume Entity"
+            clearable
+            @value-changed=${e => {
+      const value = e.detail.value;
+      this._updateEntityProperty("volume_entity", value);
+      if (!value || value === entity.entity_id) {
+        // sync_power is meaningless in these cases
+
+        this._updateEntityProperty("sync_power", false);
+      }
+    }}
+          ></ha-entity-picker>
+        </div>
+
+
+        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id ? x`
+              <div class="form-row form-row-multi-column">
+                <div>
+                  <ha-switch
+                    id="sync-power-toggle"
+                    .checked=${(entity === null || entity === void 0 ? void 0 : entity.sync_power) ?? false}
+                    @change=${e => this._updateEntityProperty("sync_power", e.target.checked)}
+                  ></ha-switch>
+                  <label for="sync-power-toggle">Sync Power</label>
+                </div>
+              </div>
+            ` : E}
+        </div>
+      `;
+  }
+  _onEntityChanged(index, newValue) {
+    const original = this._config.entities ?? [];
+    const updated = [...original];
+    if (!newValue) {
+      // Remove empty row
+      updated.splice(index, 1);
+    } else {
+      updated[index] = {
+        ...updated[index],
+        entity_id: newValue
+      };
+    }
+
+    // Always strip blank row before writing to config
+    const cleaned = updated.filter(e => e.entity_id && e.entity_id.trim() !== "");
+    this._updateConfig("entities", cleaned);
+  }
+  _onEditEntity(index) {
+    this._entityEditorIndex = index;
+  }
+  _onBackFromEntityEditor() {
+    this._entityEditorIndex = null;
+  }
+  _onToggleChanged(e) {
+    const newConfig = {
+      ...this._config,
+      always_collapsed: e.target.checked
+    };
+    this._config = newConfig;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: {
+        config: newConfig
+      }
+    }));
+  }
+}
+customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
+
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
@@ -2511,6 +3000,8 @@ class YetAnotherMediaPlayerCard extends i {
     // --- swipe‑to‑filter helpers ---
     this._swipeStartX = null;
     this._searchSwipeAttached = false;
+    // Snapshot of entities that were playing when manual‑select started.
+    this._manualSelectPlayingSet = null;
   } // ← closes constructor
 
   /**
@@ -2824,6 +3315,26 @@ class YetAnotherMediaPlayerCard extends i {
         }
       });
 
+      // If manual‑select is active (no pin) and a *new* entity begins playing,
+      // clear manual mode so auto‑switching resumes.
+      if (this._manualSelect && this._pinnedIndex === null && this._manualSelectPlayingSet) {
+        // Remove any entities from the snapshot that are no longer playing.
+        for (const id of [...this._manualSelectPlayingSet]) {
+          const stSnap = this.hass.states[id];
+          if (!(stSnap && stSnap.state === "playing")) {
+            this._manualSelectPlayingSet.delete(id);
+          }
+        }
+        for (const id of this.entityIds) {
+          const st = this.hass.states[id];
+          if (st && st.state === "playing" && !this._manualSelectPlayingSet.has(id)) {
+            this._manualSelect = false;
+            this._manualSelectPlayingSet = null;
+            break;
+          }
+        }
+      }
+
       // Auto-switch unless manually pinned
       if (!this._manualSelect) {
         // Switch to most recent if applicable
@@ -2962,17 +3473,52 @@ class YetAnotherMediaPlayerCard extends i {
     e.stopPropagation();
     this._manualSelect = false;
     this._pinnedIndex = null;
+    this._manualSelectPlayingSet = null;
   }
   _onChipClick(idx) {
+    // Ignore the synthetic click that fires immediately after a long‑press pin.
+    if (this._holdToPin && this._justPinned) {
+      this._justPinned = false;
+      return;
+    }
+
+    // Select the tapped chip.
     this._selectedIndex = idx;
-    this._manualSelect = true;
-    if (!this._holdToPin) {
+    clearTimeout(this._manualSelectTimeout);
+    if (this._holdToPin) {
+      if (this._pinnedIndex !== null) {
+        // A chip is already pinned – keep manual mode active.
+        this._manualSelect = true;
+      } else {
+        // No chip is pinned. Pause auto‑switching until any *new* player starts.
+        this._manualSelect = true;
+        // Take a snapshot of who is currently playing.
+        this._manualSelectPlayingSet = new Set();
+        for (const id of this.entityIds) {
+          var _this$hass3;
+          const st = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
+          if (st && st.state === "playing") {
+            this._manualSelectPlayingSet.add(id);
+          }
+        }
+      }
+      // Never change _pinnedIndex on a simple tap in hold_to_pin mode.
+    } else {
+      // --- default MODE ---
+      this._manualSelect = true;
       this._pinnedIndex = idx;
     }
-    clearTimeout(this._manualSelectTimeout);
     this.requestUpdate();
   }
   _pinChip(idx) {
+    // Mark that this chip was just pinned via long‑press so the
+    // click event that follows the pointer‑up can be ignored.
+    this._justPinned = true;
+
+    // Cancel any pending auto‑switch re‑enable timer.
+    clearTimeout(this._manualSelectTimeout);
+    // Clear the manual‑select snapshot; a long‑press establishes a pin.
+    this._manualSelectPlayingSet = null;
     this._pinnedIndex = idx;
     this._manualSelect = true;
     this.requestUpdate();
@@ -3321,63 +3867,24 @@ class YetAnotherMediaPlayerCard extends i {
           >
             ${this.entityObjs.length > 1 || showChipRow === "always" ? x`
                 <div class="chip-row">
-                  ${this.groupedSortedEntityIds.map(group => {
-      if (group.length > 1) {
-        var _this$hass3;
-        const id = this._getActualGroupMaster(group);
-        const idx = this.entityIds.indexOf(id);
-        const state = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
-        // For group chips, art is always null, but update isPlaying logic for selected chip
-        this.currentEntityId === id ? !this._isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
-        return renderGroupChip({
-          idx,
-          selected: this.currentEntityId === id,
-          groupName: this.getChipName(id),
-          // group chips show count or icon, not artwork
-          icon: "mdi:group",
-          pinned: this._pinnedIndex === idx,
-          holdToPin: this._holdToPin,
-          onChipClick: idx => this._onChipClick(idx),
-          onIconClick: (idx, e) => {
-            e.stopPropagation();
-            this._onChipClick(idx); // Optional: select as well
-            this._openGrouping();
-          },
-          onPinClick: (idx, e) => {
-            e.stopPropagation();
-            this._onPinClick(e);
-          },
-          onPointerDown: e => this._handleChipPointerDown(e, idx),
-          onPointerMove: e => this._handleChipPointerMove(e, idx),
-          onPointerUp: e => this._handleChipPointerUp(e, idx)
-        });
-      } else {
-        var _this$hass4, _state$attributes3, _state$attributes4, _state$attributes5, _state$attributes6, _state$attributes7;
-        const id = group[0];
-        const idx = this.entityIds.indexOf(id);
-        const state = (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[id];
-        const isPlaying = this.currentEntityId === id ? !this._isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
-        const art = this.currentEntityId === id ? !this._isIdle && ((state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.entity_picture) || (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.album_art)) : (state === null || state === void 0 ? void 0 : state.state) === "playing" && ((state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.entity_picture) || (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.album_art));
-        const icon = (state === null || state === void 0 || (_state$attributes7 = state.attributes) === null || _state$attributes7 === void 0 ? void 0 : _state$attributes7.icon) || "mdi:cast";
-        return renderChip({
-          idx,
-          selected: this.currentEntityId === id,
-          playing: isPlaying,
-          name: this.getChipName(id),
-          art,
-          icon,
-          pinned: this._pinnedIndex === idx,
-          holdToPin: this._holdToPin,
-          onChipClick: idx => this._onChipClick(idx),
-          onPinClick: (idx, e) => {
-            e.stopPropagation();
-            this._onPinClick(e);
-          },
-          onPointerDown: e => this._handleChipPointerDown(e, idx),
-          onPointerMove: e => this._handleChipPointerMove(e, idx),
-          onPointerUp: e => this._handleChipPointerUp(e, idx)
-        });
-      }
+                  ${renderChipRow({
+      groupedSortedEntityIds: this.groupedSortedEntityIds,
+      entityIds: this.entityIds,
+      selectedEntityId: this.currentEntityId,
+      pinnedIndex: this._pinnedIndex,
+      holdToPin: this._holdToPin,
+      getChipName: id => this.getChipName(id),
+      getActualGroupMaster: group => this._getActualGroupMaster(group),
+      isIdle: this._isIdle,
+      hass: this.hass,
+      onChipClick: idx => this._onChipClick(idx),
+      onPinClick: (idx, e) => {
+        e.stopPropagation();
+        this._onPinClick(e);
+      },
+      onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
+      onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
+      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
     })}
                 </div>
             ` : E}
@@ -3855,9 +4362,6 @@ class YetAnotherMediaPlayerCard extends i {
           }, {
             value: "always",
             label: "Always"
-          }, {
-            value: "never",
-            label: "Never"
           }]
         }
       },
@@ -4210,164 +4714,4 @@ class YetAnotherMediaPlayerCard extends i {
     }
   }
 }
-class YetAnotherMediaPlayerEditor extends i {
-  static properties = {
-    hass: {},
-    lovelace: {},
-    config: {}
-  };
-  setConfig(config) {
-    this.config = {
-      ...config
-    };
-  }
-  get _schema() {
-    return [{
-      name: "entities",
-      selector: {
-        entity: {
-          multiple: true,
-          domain: "media_player"
-        }
-      }
-    }, {
-      name: "volume_mode",
-      selector: {
-        select: {
-          options: [{
-            value: "slider",
-            label: "Slider"
-          }, {
-            value: "stepper",
-            label: "Stepper"
-          }]
-        }
-      }
-    }, {
-      name: "match_theme",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "collapse_on_idle",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "always_collapsed",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "alternate_progress_bar",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "hold_to_pin",
-      selector: {
-        boolean: {}
-      },
-      required: false
-    }, {
-      name: "show_chip_row",
-      selector: {
-        select: {
-          options: [{
-            value: "auto",
-            label: "Auto (hide with one entity)"
-          }, {
-            value: "always",
-            label: "Always show"
-          }]
-        }
-      },
-      required: false
-    },
-    // Add idle_image entity picker after progress bar options
-    {
-      name: "idle_image",
-      selector: {
-        entity: {
-          domain: ["camera", "image"]
-        }
-      },
-      required: false
-    }, {
-      name: "actions",
-      selector: {
-        array: {
-          item_selector: {
-            object: {
-              name: {
-                selector: {
-                  text: {}
-                }
-              },
-              service: {
-                selector: {
-                  text: {}
-                }
-              },
-              service_data: {
-                selector: {
-                  object: {}
-                }
-              }
-            }
-          }
-        }
-      }
-    }];
-  }
-  render() {
-    if (!this.config) return x``;
-    // Display friendly names or entity_ids for all entities/objects
-    const entitiesForEditor = (this.config.entities || []).map(e => {
-      if (typeof e === "string") {
-        var _this$hass5, _state$attributes8;
-        const state = (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[e];
-        return (state === null || state === void 0 || (_state$attributes8 = state.attributes) === null || _state$attributes8 === void 0 ? void 0 : _state$attributes8.friendly_name) || e;
-      }
-      if (e && typeof e === "object" && e.entity_id) {
-        var _this$hass6, _state$attributes9;
-        const state = (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[e.entity_id];
-        return (state === null || state === void 0 || (_state$attributes9 = state.attributes) === null || _state$attributes9 === void 0 ? void 0 : _state$attributes9.friendly_name) || e.entity_id;
-      }
-      return "(invalid entity)";
-    });
-    // Show list above the form
-    const configForEditor = {
-      ...this.config,
-      entities: this.config.entities
-    };
-    return x`
-      <div>
-        <ul style="list-style:none; padding:0; margin-bottom:16px;">
-          ${entitiesForEditor.map(name => x`<li style="padding:2px 0;">${name}</li>`)}
-        </ul>
-        <ha-form
-          .hass=${this.hass}
-          .data=${configForEditor}
-          .schema=${this._schema}
-          @value-changed=${this._valueChanged}
-        ></ha-form>
-      </div>
-    `;
-  }
-  _valueChanged(ev) {
-    const config = ev.detail.value;
-    this.config = config;
-    this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: {
-        config
-      }
-    }));
-  }
-}
-customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
