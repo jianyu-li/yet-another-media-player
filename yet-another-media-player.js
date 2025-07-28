@@ -2753,7 +2753,7 @@ class YetAnotherMediaPlayerEditor extends i {
     }));
   }
 }
-customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
+customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 window.customCards = window.customCards || [];
