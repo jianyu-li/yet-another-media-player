@@ -30,8 +30,8 @@ import {
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "yet-another-media-player-beta",
-  name: "Yet Another Media Player-beta",
+  type: "yet-another-media-player",
+  name: "Yet Another Media Player",
   description: "YAMP is a multi-entity media card with custom actions"
 });
 
@@ -1954,7 +1954,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Card editor support 
   static getConfigElement() {
-    return document.createElement("yet-another-media-player-editor-beta");
+    return document.createElement("yet-another-media-player-editor");
   }
   static getStubConfig(hass, entities) {
     return { entities: (entities || []).filter(e => e.startsWith("media_player.")).slice(0, 2) };
@@ -2039,4 +2039,4 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 }
 
-customElements.define("yet-another-media-player-beta", YetAnotherMediaPlayerCard);
+customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
