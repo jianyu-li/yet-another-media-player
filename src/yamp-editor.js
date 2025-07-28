@@ -356,7 +356,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           <ha-entity-picker
             .hass=${this.hass}
             .value=${entity?.volume_entity ?? entity?.entity_id ?? ""}
-
             .includeDomains=${["media_player","remote"]}
             label="Volume Entity"
             clearable
