@@ -182,6 +182,28 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               >
                 <ha-icon icon="mdi:pencil"></ha-icon>
               </mwc-icon-button>
+              <mwc-icon-button
+                .disabled=${idx === 0 || idx === entities.length - 1}
+                @mousedown=${(e) => e.preventDefault()}
+                @click=${() => {
+                  this._moveEntity(idx, -1);
+                  e.currentTarget.blur();
+                }}
+                title="Move Up"
+              >
+                <ha-icon icon="mdi:arrow-up"></ha-icon>
+              </mwc-icon-button>
+              <mwc-icon-button
+                .disabled=${idx >= entities.length - 2}
+                @mousedown=${(e) => e.preventDefault()}
+                @click=${() => {
+                  this._moveEntity(idx, 1); 
+                  e.currentTarget.blur();
+                }}
+                title="Move Down"
+              >
+                <ha-icon icon="mdi:arrow-down"></ha-icon>
+              </mwc-icon-button>
             </div>
           `)}
         </div>
@@ -394,6 +416,20 @@ class YetAnotherMediaPlayerEditor extends LitElement {
   
     _onBackFromEntityEditor() {
       this._entityEditorIndex = null;
+    }
+
+    _moveEntity(idx, offset) {
+      const entities = [...this._config.entities];
+      const newIndex = idx + offset;
+    
+      if (newIndex < 0 || newIndex >= entities.length) {
+        return;
+      }
+    
+      const [moved] = entities.splice(idx, 1);
+      entities.splice(newIndex, 0, moved);
+    
+      this._updateConfig("entities", entities);
     }
   
     _onToggleChanged(e) {
