@@ -1,5 +1,5 @@
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import { LitElement, html, css, nothing } from "lit";
 
 import {SUPPORT_GROUPING} from "./constants.js";
   
@@ -483,5 +483,5 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     }
   }
 
-  customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
+  customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
   export { YetAnotherMediaPlayerEditor };
