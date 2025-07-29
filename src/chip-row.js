@@ -1,4 +1,5 @@
-import { LitElement, html, css, nothing } from "lit";
+import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import { LitElement, html, css, nothing } from "lit";
 
 // Helper to render a single chip
 export function renderChip({
@@ -47,7 +48,7 @@ export function renderChip({
   `;
 }
 
-// Helper to render a group chip (simplified)
+// Helper to render a group chip: same as chip but with label (with count), no badge/icon for group, just art/icon and label.
 export function renderGroupChip({
   idx,
   selected,
@@ -70,26 +71,40 @@ export function renderGroupChip({
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
-            @pointerleave=${onPointerUp}>
-      <span class="chip-icon">
-        ${
-          art
-            ? html`<img class="chip-mini-art" src="${art}" />`
-            : html`<ha-icon
-                      .icon=${icon}
-                      style="font-size:28px;"
+            @pointerleave=${onPointerUp}
+            style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="chip-icon"
+            style="cursor:pointer;"
+            @click=${e => {
+              e.stopPropagation();
+              if (onIconClick) {
+                onIconClick(idx, e);
+              }
+            }}>
+        ${art
+          ? html`<img class="chip-mini-art"
+                      src="${art}"
+                      style="cursor:pointer;"
                       @click=${e => {
                         e.stopPropagation();
                         if (onIconClick) {
                           onIconClick(idx, e);
-                        } else {
-                          onChipClick(idx);
                         }
-                      }}
-                    ></ha-icon>`
+                      }}/>`
+
+          : html`<ha-icon .icon=${icon}
+                          style="font-size:28px;cursor:pointer;"
+                          @click=${e => {
+                            e.stopPropagation();
+                            if (onIconClick) {
+                              onIconClick(idx, e);
+                            }
+                          }}></ha-icon>`
         }
       </span>
-      <span class="chip-label">${groupName}</span>
+      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+        ${groupName}
+      </span>
       ${pinned
         ? html`
             <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="Unpin">
@@ -142,4 +157,78 @@ export function createHoldToPinHandler({ onPin, onHoldEnd, holdTime = 600, moveT
       moved = false;
     }
   };
+}
+// Central chip row renderer
+export function renderChipRow({
+  groupedSortedEntityIds,
+  entityIds,
+  selectedEntityId,
+  pinnedIndex,
+  holdToPin,
+  getChipName,
+  getActualGroupMaster,
+  isIdle,
+  hass,
+  onChipClick,
+  onIconClick,
+  onPinClick,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp
+}) {
+  if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return nothing;
+
+  return html`
+    ${groupedSortedEntityIds.map((group) => {
+      // If it's a group (more than one entity)
+      if (group.length > 1) {
+        const id = getActualGroupMaster(group);
+        const idx = entityIds.indexOf(id);
+        const state = hass?.states?.[id];
+        const art = state?.attributes?.entity_picture || state?.attributes?.album_art || null;
+        const icon = state?.attributes?.icon || "mdi:cast";
+        return renderGroupChip({
+          idx,
+          selected: selectedEntityId === id,
+          groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
+          art,
+          icon,
+          pinned: pinnedIndex === idx,
+          holdToPin,
+          onChipClick,
+          onIconClick,
+          onPinClick,
+          onPointerDown: (e) => onPointerDown(e, idx),
+          onPointerMove: (e) => onPointerMove(e, idx),
+          onPointerUp: (e) => onPointerUp(e, idx),
+        });
+      } else {
+        // Single chip
+        const id = group[0];
+        const idx = entityIds.indexOf(id);
+        const state = hass?.states?.[id];
+        const isChipPlaying = selectedEntityId === id ? !isIdle : state?.state === "playing";
+        const art =
+          selectedEntityId === id
+            ? (!isIdle && (state?.attributes?.entity_picture || state?.attributes?.album_art))
+            : (state?.state === "playing" && (state?.attributes?.entity_picture || state?.attributes?.album_art));
+        const icon = state?.attributes?.icon || "mdi:cast";
+        return renderChip({
+          idx,
+          selected: selectedEntityId === id,
+          playing: isChipPlaying,
+          name: getChipName(id),
+          art,
+          icon,
+          pinned: pinnedIndex === idx,
+          holdToPin,
+          onChipClick,
+          onPinClick,
+          onPointerDown: (e) => onPointerDown(e, idx),
+          onPointerMove: (e) => onPointerMove(e, idx),
+          onPointerUp: (e) => onPointerUp(e, idx),
+        });
+      }
+    })}
+  `;
 }
