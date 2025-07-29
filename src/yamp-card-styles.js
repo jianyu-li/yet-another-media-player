@@ -1,4 +1,4 @@
-import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 // import { LitElement, html, css, nothing } from "lit";
 
 export const yampCardStyles = css`
