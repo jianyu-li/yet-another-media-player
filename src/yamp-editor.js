@@ -9,6 +9,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       return {
         hass: {},
         _config: {},
+        _entityEditorIndex: { type: Number },
+        _actionEditorIndex: { type: Number },
+        _entityMoveMode: { type: Boolean },
+        _actionMoveMode: { type: Boolean },
       };
     }
   
