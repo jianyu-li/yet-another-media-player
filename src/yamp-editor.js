@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 // import { LitElement, html, css, nothing } from "lit";
+import yaml from 'js-yaml';
 
 import {SUPPORT_GROUPING} from "./constants.js";
   
@@ -8,9 +9,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       return {
         hass: {},
         _config: {},
-        _entityEditorIndex: { type: Number },
-        _actionEditorIndex: { type: Number },
-        _entityMoveMode: { type: Boolean },
+        // todo: remove these from here? these don't need to be "reactive"
+        // _entityEditorIndex: { type: Number },
+        // _actionEditorIndex: { type: Number },
+        // _entityMoveMode: { type: Boolean },
+        // _actionMoveMode: { type: Boolean },
       };
     }
   
@@ -19,13 +22,28 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._entityEditorIndex = null;
       this._actionEditorIndex = null;
       this._entityMoveMode = false;
+      this._actionMoveMode = false;
+
+      this._yamlDraft = "";
+      this._parsedYaml = null;
+      this._yamlError = false;
     }
   
     _supportsFeature(stateObj, featureBit) {
       if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
       return (stateObj.attributes.supported_features & featureBit) !== 0;
     }
-  
+
+    _getServiceItems() {
+      if (!this.hass?.services) return [];
+      return Object.entries(this.hass.services).flatMap(([domain, services]) =>
+        Object.keys(services).map((svc) => ({
+          label: `${domain}.${svc}`,
+          value: `${domain}.${svc}`,
+        }))
+      );
+    }
+
     setConfig(config) {
       const rawEntities = config.entities ?? [];
       const normalizedEntities = rawEntities.map((e) =>
@@ -144,32 +162,54 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           height: 24px; 
           display: inline-block;
         }
-        .action-icon-placeholder {
-          width: 29px; 
-          height: 24px; 
-          display: inline-block;
-        }
         .full-width {
           width: 100%;
         }
-        .entity-group-header {
+        .entity-group-header, .action-group-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 8px;
           padding: 0px 6px;
         }
-        .entity-group-title {
+        .entity-group-title, action-group-title {
           font-weight: 500;
         }
-        .entity-group-actions {
+        .entity-group-actions, action-group-actions {
           display: flex;
           align-items: center;
         }
-        .entity-group-actions ha-icon, .entity-row-actions ha-icon {
+        .entity-group-actions ha-icon, .entity-row-actions ha-icon,
+        .action-group-actions ha-icon, .action-row-actions ha-icon,
+        .service-data-editor-actions ha-icon {
           position: relative;
           top: -3px;
-        } 
+        }
+        .service-data-editor-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-bottom: 4px;
+        }
+        .service-data-editor-title {
+          font-weight: 500;
+        }
+        .service-data-editor-actions {
+          display: flex;
+          gap: 8px;
+        }
+        .code-editor-wrapper.error {
+          border: 1px solid color: var(--error-color, red);
+          border-radius: 4px;
+          padding: 1px;
+        }
+        .yaml-error-message {
+          color: var(--error-color, red);
+          font-size: 0.85em;
+          margin: 6px;
+          white-space: pre-wrap; /* preserve line breaks */
+          font-family: monospace;
+        }
       `;
     }
   
@@ -383,7 +423,23 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
 
          <div class="form-row action-group">
-          Actions
+          <div class="action-group-header">
+            <div class="action-group-title">
+              Actions
+            </div>
+            <div class="action-group-actions">
+              <mwc-icon-button
+                @mousedown=${(e) => e.preventDefault()}
+                @click=${(e) => {
+                  this._toggleActionMoveMode();
+                  e.currentTarget.blur();
+                }}
+                title=${this._actionMoveMode ? "Back to Edit Mode" : "Enable Move Mode"}
+              >
+                <ha-icon icon=${this._actionMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}></ha-icon>
+              </mwc-icon-button>
+            </div>
+          </div>
           ${actions.map((act, idx) => html`
             <div class="action-row-inner">
               ${act?.icon ? html`
@@ -407,7 +463,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                   @input=${a => this._onActionChanged(idx, a.target.value)}
                 ></ha-textfield>
               </div>
-              <div class="action-buttons">
+              <div class="action-row-actions">
+               ${!this._actionMoveMode ? html`
                 <mwc-icon-button
                   .disabled=false
                   title="Edit Action Settings"
@@ -421,6 +478,30 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 >
                   <ha-icon icon="mdi:trash-can"></ha-icon>
                 </mwc-icon-button>
+              ` : html`
+                <mwc-icon-button
+                    .disabled=${idx === 0}
+                    @mousedown=${(e) => e.preventDefault()}
+                    @click=${(e) => {
+                      this._moveAction(idx, -1);
+                      e.currentTarget.blur();
+                    }}
+                    title="Move Up"
+                  >
+                    <ha-icon icon="mdi:arrow-up"></ha-icon>
+                  </mwc-icon-button>
+                  <mwc-icon-button
+                    .disabled=${idx >= actions.length - 1}
+                    @mousedown=${(e) => e.preventDefault()}
+                    @click=${(e) => {
+                      this._moveAction(idx, 1);
+                      e.currentTarget.blur();
+                    }}
+                    title="Move Down"
+                  >
+                    <ha-icon icon="mdi:arrow-down"></ha-icon>
+                  </mwc-icon-button>
+                `}
               </div>
             </div>
           `)}
@@ -493,7 +574,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-entity-picker>
         </div>
 
-
         ${entity?.volume_entity && entity.volume_entity !== entity.entity_id
 
           ? html`
@@ -515,10 +595,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     }
 
     _renderActionEditor(action) {
-
-      const mode = action?.menu_item ? "menu" : "service";
-
-      console.log("Available services:", Object.keys(this.hass?.services ?? {}));
 
       return html`
         <div class="action-editor-header">
@@ -569,6 +645,77 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               this._updateActionProperty("menu_item", e.detail.value || undefined)}
           ></ha-selector>
         </div>
+
+        <div class="form-row">
+          <ha-combo-box
+            label="Service"
+            .hass=${this.hass}
+            .value=${action.service ?? ""}
+            .items=${this._getServiceItems()}
+            item-value-path="value"
+            item-label-path="label"
+            @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
+          ></ha-combo-box>
+        </div>
+
+        <div class="form-row">
+          <div class="service-data-editor-header">
+            <div class="service-data-editor-title">Service Data</div>
+            <div class="service-data-editor-actions">
+              <mwc-icon-button
+                title="Save"
+                .disabled=${!this._yamlModified || this._yamlError}
+                @click=${this._saveYamlEditor}
+              >
+                <ha-icon icon="mdi:content-save"></ha-icon>
+              </mwc-icon-button>
+              <mwc-icon-button 
+                title="Revert"
+                @click=${this._revertYamlEditor}
+              >
+                <ha-icon icon="mdi:backup-restore"></ha-icon>
+              </mwc-icon-button>
+              <mwc-icon-button title="Help">
+                <ha-icon icon="mdi:help-circle-outline"></ha-icon>
+              </mwc-icon-button>
+              <mwc-icon-button title="Test Service Call">
+                <ha-icon icon="mdi:play-circle-outline"></ha-icon>
+              </mwc-icon-button>
+            </div>
+          </div>
+
+          <div class=${this._yamlError && this._yamlDraft.trim() !== "" 
+            ? "code-editor-wrapper error" 
+            : "code-editor-wrapper"}>
+            <ha-code-editor
+              id="service-data-editor"
+              label="Service Data"
+              .hass=${this.hass}
+              mode="yaml"
+              .value=${yaml.dump(action?.service_data ?? {})}
+              @value-changed=${(e) => {
+                /* the yaml will be parsed in real time to detect errors, but we will defer 
+                   updating the config until the save button above the editor is clicked.
+                */
+                this._yamlDraft = e.detail.value;
+                this._yamlModified = true;
+                try {
+                  const parsed = yaml.load(this._yamlDraft);
+                  if (parsed && typeof parsed === "object") {
+                    this._yamlError = null;
+                  } else {
+                    this._yamlError = "YAML is not a valid object.";
+                  }
+                } catch (err) {
+                  this._yamlError = err.message;
+                }
+              }}
+            ></ha-code-editor>
+            ${this._yamlError && this._yamlDraft.trim() !== ""
+              ? html`<div class="yaml-error-message">${this._yamlError}</div>`
+              : nothing}
+          </div>
+        </div>
       `;
     }
   
@@ -618,6 +765,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._entityMoveMode = !this._entityMoveMode;
     }
 
+    _toggleActionMoveMode() {
+      this._actionMoveMode = !this._actionMoveMode;
+    }
+
     _moveEntity(idx, offset) {
       const entities = [...this._config.entities];
       const newIndex = idx + offset;
@@ -630,6 +781,52 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       entities.splice(newIndex, 0, moved);
     
       this._updateConfig("entities", entities);
+    }
+    
+    _moveAction(idx, offset) {
+      const actions = [...this._config.actions];
+      const newIndex = idx + offset;
+    
+      if (newIndex < 0 || newIndex >= actions.length) {
+        return;
+      }
+    
+      const [moved] = actions.splice(idx, 1);
+      actions.splice(newIndex, 0, moved);
+    
+      this._updateConfig("actions", actions);
+    }
+
+    _saveYamlEditor() {
+      try {
+        const parsed = yaml.load(this._yamlDraft);
+    
+        if (!parsed || typeof parsed !== "object") {
+          this._yamlError = "YAML is not a valid object.";
+          return;
+        }
+    
+        this._updateActionProperty("service_data", parsed);
+        this._yamlDraft = yaml.dump(parsed);
+        this._yamlError = null;
+        this._parsedYaml = parsed;
+      } catch (err) {
+        this._yamlError = err.message;
+      }
+    }
+
+    _revertYamlEditor() {
+      const editor = this.shadowRoot.querySelector("#service-data-editor");
+      const currentAction = this._config.actions?.[this._actionEditorIndex];
+    
+      if (!editor || !currentAction) return;
+    
+      const yamlText = yaml.dump(currentAction.service_data ?? {});
+      editor.value = yamlText;
+    
+      this._yamlDraft = yamlText;
+      this._yamlError = null;
+      this._yamlModified = false;
     }
 
     _onToggleChanged(e) {
