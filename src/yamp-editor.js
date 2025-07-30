@@ -49,8 +49,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
     async _loadServiceDocs() {
       try {
-        this._serviceDocs = await this.hass.callApi("get", "services");
-        console.log("Service docs loaded:", this._serviceDocs);
+        const raw = await this.hass.callApi("get", "services");
+        this._serviceDocs = {};
+    
+        for (const entry of raw) {
+          const domain = entry.domain;
+          for (const [service, data] of Object.entries(entry.services)) {
+            if (!this._serviceDocs[domain]) this._serviceDocs[domain] = {};
+            this._serviceDocs[domain][service] = data;
+          }
+        }
+    
+        // Optional: console.log(this._serviceDocs);
       } catch (e) {
         console.error("Failed to load service docs:", e);
         this._serviceDocs = {};
