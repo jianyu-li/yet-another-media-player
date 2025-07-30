@@ -285,6 +285,23 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <span>Always Collapsed</span>
           </div>
         </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              number: {
+                min: 0,
+                step: 1000,
+                unit_of_measurement: "ms",
+                mode: "box"
+              }
+            }}
+            .value=${this._config.idle_timeout_ms ?? 60000}
+            label="Idle Timeout (ms)"
+            @value-changed=${(e) => this._updateConfig("idle_timeout_ms", e.detail.value)}
+          ></ha-selector>
+        </div>
    
         <div class="form-row">
           <ha-selector
@@ -303,6 +320,25 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
           ></ha-selector>
         </div>
+        ${this._config.volume_mode === "stepper" ? html`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+                number: {
+                  min: 0.01,
+                  max: 1,
+                  step: 0.01,
+                  unit_of_measurement: "",
+                  mode: "box"
+                }
+              }}
+              .value=${this._config.volume_step ?? 0.05}
+              label="Volume Step (0.05 = 5%)"
+              @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
+            ></ha-selector>
+          </div>
+        ` : nothing}
 
         <div class="form-row">
           <ha-selector
