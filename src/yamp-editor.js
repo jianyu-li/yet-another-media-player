@@ -44,6 +44,20 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       );
     }
 
+    firstUpdated() {
+      this._loadServiceDocs();
+    }
+
+    async _loadServiceDocs() {
+      try {
+        this._serviceDocs = await this.hass.callApi("get", "services");
+        console.log("Service docs loaded:", this._serviceDocs);
+      } catch (e) {
+        console.error("Failed to load service docs:", e);
+        this._serviceDocs = {};
+      }
+    }
+    
     setConfig(config) {
       const rawEntities = config.entities ?? [];
       const normalizedEntities = rawEntities.map((e) =>
