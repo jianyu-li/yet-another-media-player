@@ -2563,6 +2563,26 @@ class YetAnotherMediaPlayerEditor extends i {
           position: relative;
           top: -3px;
         } 
+        .form-row > ha-selector,
+        .form-row > ha-entity-picker {
+          flex: 1;
+          width: 100%;
+        }
+        .form-row > div > ha-selector {
+          width: 100%;
+        }
+        .form-row mwc-icon-button {
+          position: relative;
+        }
+        .form-row .reset-icon {
+          cursor: pointer;
+          position: relative;
+          top: -3px;
+          transition: color 0.2s;
+        }
+        .form-row .reset-icon:hover {
+          color: var(--primary-color, #2196f3);
+        }
       `;
   }
   render() {
@@ -2591,16 +2611,13 @@ class YetAnotherMediaPlayerEditor extends i {
               Entities*
             </div>
             <div class="entity-group-actions">
-              <mwc-icon-button
-                @mousedown=${e => e.preventDefault()}
-                @click=${e => {
-      this._toggleEntityMoveMode();
-      e.currentTarget.blur();
-    }}
+              <ha-icon
+                class="reset-icon"
+                icon=${this._entityMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}
                 title=${this._entityMoveMode ? "Back to Edit Mode" : "Enable Move Mode"}
-              >
-                <ha-icon icon=${this._entityMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}></ha-icon>
-              </mwc-icon-button>
+                @mousedown=${e => e.preventDefault()}
+                @click=${() => this._toggleEntityMoveMode()}
+              ></ha-icon>
             </div>
           </div>
           ${entities.map((ent, idx) => {
@@ -2641,36 +2658,30 @@ class YetAnotherMediaPlayerEditor extends i {
               </div>
               <div class="entity-row-actions">
                 ${!this._entityMoveMode ? x`
-                  <mwc-icon-button
-                    .disabled=${!ent.entity_id}
-                    title="Edit Entity Settings"
-                    @click=${() => this._onEditEntity(idx)}
-                  >
-                    <ha-icon icon="mdi:pencil"></ha-icon>
-                  </mwc-icon-button>
+                <ha-icon
+                  class="reset-icon"
+                  icon="mdi:pencil"
+                  title="Edit Entity Settings"
+                  @click=${() => this._onEditEntity(idx)}
+                  style=${!ent.entity_id ? "opacity:0.4;pointer-events:none;" : ""}
+                ></ha-icon>
                 ` : x`
-                  <mwc-icon-button
-                    .disabled=${idx === 0 || idx === entities.length - 1}
-                    @mousedown=${e => e.preventDefault()}
-                    @click=${e => {
-        this._moveEntity(idx, -1);
-        e.currentTarget.blur();
-      }}
+                  <ha-icon
+                    class="reset-icon"
+                    icon="mdi:arrow-up"
                     title="Move Up"
-                  >
-                    <ha-icon icon="mdi:arrow-up"></ha-icon>
-                  </mwc-icon-button>
-                  <mwc-icon-button
-                    .disabled=${idx >= entities.length - 2}
                     @mousedown=${e => e.preventDefault()}
-                    @click=${e => {
-        this._moveEntity(idx, 1);
-        e.currentTarget.blur();
-      }}
+                    @click=${e => this._moveEntity(idx, -1)}
+                    style=${idx === 0 || idx === entities.length - 1 ? "opacity:0.4;pointer-events:none;" : ""}
+                  ></ha-icon>
+                  <ha-icon
+                    class="reset-icon"
+                    icon="mdi:arrow-down"
                     title="Move Down"
-                  >
-                    <ha-icon icon="mdi:arrow-down"></ha-icon>
-                  </mwc-icon-button>
+                    @mousedown=${e => e.preventDefault()}
+                    @click=${e => this._moveEntity(idx, 1)}
+                    style=${idx >= entities.length - 2 ? "opacity:0.4;pointer-events:none;" : ""}
+                  ></ha-icon>
                 `}
               </div>
             </div>
@@ -2715,6 +2726,31 @@ class YetAnotherMediaPlayerEditor extends i {
             <span>Always Collapsed</span>
           </div>
         </div>
+
+        <div class="form-row" style="display:flex; align-items:center; gap:8px;">
+          <div style="flex:1">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+      number: {
+        min: 0,
+        step: 1000,
+        unit_of_measurement: "ms",
+        mode: "box"
+      }
+    }}
+              .value=${this._config.idle_timeout_ms ?? 60000}
+              label="Idle Timeout (ms)"
+              @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
+            ></ha-selector>
+          </div>
+          <ha-icon
+            class="reset-icon"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
+          ></ha-icon>
+        </div>
    
         <div class="form-row">
           <ha-selector
@@ -2736,6 +2772,33 @@ class YetAnotherMediaPlayerEditor extends i {
             @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
           ></ha-selector>
         </div>
+        ${this._config.volume_mode === "stepper" ? x`
+          <div class="form-row" style="display:flex; align-items:center; gap:8px;">
+            <div style="flex:1">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
+      number: {
+        min: 0.01,
+        max: 1,
+        step: 0.01,
+        unit_of_measurement: "",
+        mode: "box"
+      }
+    }}
+                .value=${this._config.volume_step ?? 0.05}
+                label="Volume Step (0.05 = 5%)"
+                @value-changed=${e => this._updateConfig("volume_step", e.detail.value)}
+              ></ha-selector>
+            </div>
+            <ha-icon
+              class="reset-icon"
+              icon="mdi:restore"
+              title="Reset to default"
+              @click=${() => this._updateConfig("volume_step", 0.05)}
+            ></ha-icon>
+          </div>
+        ` : E}
 
         <div class="form-row">
           <ha-selector
@@ -3089,6 +3152,8 @@ class YetAnotherMediaPlayerCard extends i {
     this._searchSwipeAttached = false;
     // Snapshot of entities that were playing when manual‑select started.
     this._manualSelectPlayingSet = null;
+    this._idleTimeoutMs = 60000;
+    this._volumeStep = 0.05;
   } // ← closes constructor
 
   /**
@@ -3298,6 +3363,9 @@ class YetAnotherMediaPlayerCard extends i {
     this._alwaysCollapsed = !!config.always_collapsed;
     // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
+    // Set idle timeout ms
+    this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
+    this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
     // Do not mutate config.force_chip_row here.
   }
 
@@ -3796,8 +3864,8 @@ class YetAnotherMediaPlayerCard extends i {
     if (Array.isArray(state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.group_members) && state.attributes.group_members.length) {
       // Grouped: apply group gain step
       const targets = [mainEntity, ...state.attributes.group_members];
-      // Fixed step size
-      const step = 0.05 * direction;
+      // Use configurable step size
+      const step = this._volumeStep * direction;
       for (const t of targets) {
         const obj = this.entityObjs.find(e => e.entity_id === t);
         const volTarget = obj && obj.volume_entity ? obj.volume_entity : t;
@@ -3813,7 +3881,7 @@ class YetAnotherMediaPlayerCard extends i {
     } else {
       // Not grouped, set directly
       let current = Number(stateObj.attributes.volume_level || 0);
-      current += direction * 0.05;
+      current += this._volumeStep * direction;
       current = Math.max(0, Math.min(1, current));
       this.hass.callService("media_player", "volume_set", {
         entity_id: entity,
@@ -4415,13 +4483,13 @@ class YetAnotherMediaPlayerCard extends i {
         this.requestUpdate();
       }
     } else {
-      // Only set timer if not already idle and not already waiting
-      if (!this._isIdle && !this._idleTimeout) {
+      // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
+      if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
         this._idleTimeout = setTimeout(() => {
           this._isIdle = true;
           this._idleTimeout = null;
           this.requestUpdate();
-        }, 60000); // 1 minute
+        }, this._idleTimeoutMs);
       }
     }
   }
@@ -4500,6 +4568,29 @@ class YetAnotherMediaPlayerCard extends i {
       name: "alternate_progress_bar",
       selector: {
         boolean: {}
+      },
+      required: false
+    }, {
+      name: "idle_timeout_ms",
+      selector: {
+        number: {
+          min: 0,
+          step: 1000,
+          unit_of_measurement: "ms",
+          mode: "box"
+        }
+      },
+      required: false
+    }, {
+      name: "volume_step",
+      selector: {
+        number: {
+          min: 0.01,
+          max: 1,
+          step: 0.01,
+          unit_of_measurement: "",
+          mode: "box"
+        }
       },
       required: false
     }, {
