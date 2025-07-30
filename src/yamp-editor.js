@@ -133,6 +133,26 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           position: relative;
           top: -3px;
         } 
+        .form-row > ha-selector,
+        .form-row > ha-entity-picker {
+          flex: 1;
+          width: 100%;
+        }
+        .form-row > div > ha-selector {
+          width: 100%;
+        }
+        .form-row mwc-icon-button {
+          position: relative;
+        }
+        .form-row .reset-icon {
+          cursor: pointer;
+          position: relative;
+          top: -3px;
+          transition: color 0.2s;
+        }
+        .form-row .reset-icon:hover {
+          color: var(--primary-color, #2196f3);
+        }
       `;
     }
   
@@ -165,16 +185,13 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               Entities*
             </div>
             <div class="entity-group-actions">
-              <mwc-icon-button
-                @mousedown=${(e) => e.preventDefault()}
-                @click=${(e) => {
-                  this._toggleEntityMoveMode();
-                  e.currentTarget.blur();
-                }}
+              <ha-icon
+                class="reset-icon"
+                icon=${this._entityMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}
                 title=${this._entityMoveMode ? "Back to Edit Mode" : "Enable Move Mode"}
-              >
-                <ha-icon icon=${this._entityMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}></ha-icon>
-              </mwc-icon-button>
+                @mousedown=${(e) => e.preventDefault()}
+                @click=${() => this._toggleEntityMoveMode()}
+              ></ha-icon>
             </div>
           </div>
           ${entities.map((ent, idx) => html`
@@ -212,36 +229,30 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
               <div class="entity-row-actions">
                 ${!this._entityMoveMode ? html`
-                  <mwc-icon-button
-                    .disabled=${!ent.entity_id}
-                    title="Edit Entity Settings"
-                    @click=${() => this._onEditEntity(idx)}
-                  >
-                    <ha-icon icon="mdi:pencil"></ha-icon>
-                  </mwc-icon-button>
+                <ha-icon
+                  class="reset-icon"
+                  icon="mdi:pencil"
+                  title="Edit Entity Settings"
+                  @click=${() => this._onEditEntity(idx)}
+                  style=${!ent.entity_id ? "opacity:0.4;pointer-events:none;" : ""}
+                ></ha-icon>
                 ` : html`
-                  <mwc-icon-button
-                    .disabled=${idx === 0 || idx === entities.length - 1}
-                    @mousedown=${(e) => e.preventDefault()}
-                    @click=${(e) => {
-                      this._moveEntity(idx, -1);
-                      e.currentTarget.blur();
-                    }}
+                  <ha-icon
+                    class="reset-icon"
+                    icon="mdi:arrow-up"
                     title="Move Up"
-                  >
-                    <ha-icon icon="mdi:arrow-up"></ha-icon>
-                  </mwc-icon-button>
-                  <mwc-icon-button
-                    .disabled=${idx >= entities.length - 2}
                     @mousedown=${(e) => e.preventDefault()}
-                    @click=${(e) => {
-                      this._moveEntity(idx, 1);
-                      e.currentTarget.blur();
-                    }}
+                    @click=${(e) => this._moveEntity(idx, -1)}
+                    style=${idx === 0 || idx === entities.length - 1 ? "opacity:0.4;pointer-events:none;" : ""}
+                  ></ha-icon>
+                  <ha-icon
+                    class="reset-icon"
+                    icon="mdi:arrow-down"
                     title="Move Down"
-                  >
-                    <ha-icon icon="mdi:arrow-down"></ha-icon>
-                  </mwc-icon-button>
+                    @mousedown=${(e) => e.preventDefault()}
+                    @click=${(e) => this._moveEntity(idx, 1)}
+                    style=${idx >= entities.length - 2 ? "opacity:0.4;pointer-events:none;" : ""}
+                  ></ha-icon>
                 `}
               </div>
             </div>
@@ -285,6 +296,31 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <span>Always Collapsed</span>
           </div>
         </div>
+
+        <div class="form-row" style="display:flex; align-items:center; gap:8px;">
+          <div style="flex:1">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+                number: {
+                  min: 0,
+                  step: 1000,
+                  unit_of_measurement: "ms",
+                  mode: "box"
+                }
+              }}
+              .value=${this._config.idle_timeout_ms ?? 60000}
+              label="Idle Timeout (ms)"
+              @value-changed=${(e) => this._updateConfig("idle_timeout_ms", e.detail.value)}
+            ></ha-selector>
+          </div>
+          <ha-icon
+            class="reset-icon"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
+          ></ha-icon>
+        </div>
    
         <div class="form-row">
           <ha-selector
@@ -303,6 +339,33 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
           ></ha-selector>
         </div>
+        ${this._config.volume_mode === "stepper" ? html`
+          <div class="form-row" style="display:flex; align-items:center; gap:8px;">
+            <div style="flex:1">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
+                  number: {
+                    min: 0.01,
+                    max: 1,
+                    step: 0.01,
+                    unit_of_measurement: "",
+                    mode: "box"
+                  }
+                }}
+                .value=${this._config.volume_step ?? 0.05}
+                label="Volume Step (0.05 = 5%)"
+                @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
+              ></ha-selector>
+            </div>
+            <ha-icon
+              class="reset-icon"
+              icon="mdi:restore"
+              title="Reset to default"
+              @click=${() => this._updateConfig("volume_step", 0.05)}
+            ></ha-icon>
+          </div>
+        ` : nothing}
 
         <div class="form-row">
           <ha-selector

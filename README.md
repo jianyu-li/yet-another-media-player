@@ -57,6 +57,8 @@ Below you will find a list of all configuration options.
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing                                          |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
+| `idle_timeout_ms`          | number       | No           | `60000`     | How long (in ms) before the card goes idle/collapses. Set to 0 to never go idle.               |
+| `volume_step`              | number       | No           | `0.05`      | The step size (from 0.01 to 1) for volume buttons in stepper mode. 0.05 = 5%.                  |
 | `idle_image`               | image/camera | No           | —           | Background image when player is idle                                                            |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |
 |                                                                                                 |
