@@ -133,6 +133,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           position: relative;
           top: -3px;
         } 
+        .form-row > ha-selector,
+        .form-row > ha-entity-picker {
+          flex: 1;
+          width: 100%;
+        }
+        .form-row > div > ha-selector {
+          width: 100%;
+        }
       `;
     }
   
@@ -286,21 +294,29 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
         </div>
 
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-              number: {
-                min: 0,
-                step: 1000,
-                unit_of_measurement: "ms",
-                mode: "box"
-              }
-            }}
-            .value=${this._config.idle_timeout_ms ?? 60000}
-            label="Idle Timeout (ms)"
-            @value-changed=${(e) => this._updateConfig("idle_timeout_ms", e.detail.value)}
-          ></ha-selector>
+        <div class="form-row" style="display:flex; align-items:center; gap:8px;">
+          <div style="flex:1">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+                number: {
+                  min: 0,
+                  step: 1000,
+                  unit_of_measurement: "ms",
+                  mode: "box"
+                }
+              }}
+              .value=${this._config.idle_timeout_ms ?? 60000}
+              label="Idle Timeout (ms)"
+              @value-changed=${(e) => this._updateConfig("idle_timeout_ms", e.detail.value)}
+            ></ha-selector>
+          </div>
+          <mwc-icon-button
+            @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
+            title="Reset to default"
+          >
+            <ha-icon icon="mdi:restore"></ha-icon>
+          </mwc-icon-button>
         </div>
    
         <div class="form-row">
@@ -321,22 +337,30 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
         ${this._config.volume_mode === "stepper" ? html`
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-                number: {
-                  min: 0.01,
-                  max: 1,
-                  step: 0.01,
-                  unit_of_measurement: "",
-                  mode: "box"
-                }
-              }}
-              .value=${this._config.volume_step ?? 0.05}
-              label="Volume Step (0.05 = 5%)"
-              @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
-            ></ha-selector>
+          <div class="form-row" style="display:flex; align-items:center; gap:8px;">
+            <div style="flex:1">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
+                  number: {
+                    min: 0.01,
+                    max: 1,
+                    step: 0.01,
+                    unit_of_measurement: "",
+                    mode: "box"
+                  }
+                }}
+                .value=${this._config.volume_step ?? 0.05}
+                label="Volume Step (0.05 = 5%)"
+                @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
+              ></ha-selector>
+            </div>
+            <mwc-icon-button
+              @click=${() => this._updateConfig("volume_step", 0.05)}
+              title="Reset to default"
+            >
+              <ha-icon icon="mdi:restore"></ha-icon>
+            </mwc-icon-button>
           </div>
         ` : nothing}
 
