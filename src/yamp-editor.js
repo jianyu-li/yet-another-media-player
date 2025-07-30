@@ -9,11 +9,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       return {
         hass: {},
         _config: {},
-        // todo: remove these from here? these don't need to be "reactive"
-        // _entityEditorIndex: { type: Number },
-        // _actionEditorIndex: { type: Number },
-        // _entityMoveMode: { type: Boolean },
-        // _actionMoveMode: { type: Boolean },
       };
     }
   
