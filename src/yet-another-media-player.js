@@ -193,6 +193,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchSwipeAttached = false;
     // Snapshot of entities that were playing when manual‑select started.
     this._manualSelectPlayingSet = null;
+    this._idleTimeoutMs = 60000;
+    this._volumeStep = 0.05;
   }  // ← closes constructor
 
   /**
@@ -399,6 +401,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._alwaysCollapsed = !!config.always_collapsed;
     // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
+    // Set idle timeout ms
+    this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
+    this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
     // Do not mutate config.force_chip_row here.
   }
 
@@ -928,8 +933,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
         // Grouped: apply group gain step
         const targets = [mainEntity, ...state.attributes.group_members];
-        // Fixed step size
-        const step = 0.05 * direction;
+        // Use configurable step size
+        const step = this._volumeStep * direction;
         for (const t of targets) {
           const obj = this.entityObjs.find(e => e.entity_id === t);
           const volTarget = (obj && obj.volume_entity) ? obj.volume_entity : t;
@@ -942,7 +947,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else {
         // Not grouped, set directly
         let current = Number(stateObj.attributes.volume_level || 0);
-        current += direction * 0.05;
+        current += this._volumeStep * direction;
         current = Math.max(0, Math.min(1, current));
         this.hass.callService("media_player", "volume_set", { entity_id: entity, volume_level: current });
       }
@@ -1590,13 +1595,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this.requestUpdate();
         }
       } else {
-        // Only set timer if not already idle and not already waiting
-        if (!this._isIdle && !this._idleTimeout) {
+        // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
+        if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
           this._idleTimeout = setTimeout(() => {
             this._isIdle = true;
             this._idleTimeout = null;
             this.requestUpdate();
-          }, 60000); // 1 minute
+          }, this._idleTimeoutMs);
         }
       }
     }
@@ -1684,6 +1689,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
           name: "alternate_progress_bar",
           selector: {
             boolean: {}
+          },
+          required: false
+        },
+        {
+          name: "idle_timeout_ms",
+          selector: {
+            number: {
+              min: 0,
+              step: 1000,
+              unit_of_measurement: "ms",
+              mode: "box"
+            }
+          },
+          required: false
+        },
+        {
+          name: "volume_step",
+          selector: {
+            number: {
+              min: 0.01,
+              max: 1,
+              step: 0.01,
+              unit_of_measurement: "",
+              mode: "box"
+            }
           },
           required: false
         },
