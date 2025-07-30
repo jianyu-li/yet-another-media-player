@@ -96,8 +96,6 @@ Customize entities using name and volume_entity (sets a different entity for vol
 ```yaml
 type: custom:yet-another-media-player
 entities:
-  - media_player.downstairs_2
-  - media_player.kitchen_speaker_2
   - media_player.kitchen_homepod
   - entity_id: media_player.living_room_apple_tv
     volume_entity: media_player.living_room_sonos
@@ -105,7 +103,9 @@ entities:
     sync_power: true
   - entity_id: media_player.bedroom
     group_volume: false
-  - media_player.entryway_speaker
+  - entity_id: media_player.guest_room_apple_tv
+    volume_entity: remote.guest_room_apple_tv
+    name: Guest Room
 actions:
   - icon: mdi:magnify
     menu_item: search
@@ -119,7 +119,10 @@ actions:
     service: script.set_mood
     script_variable: true      
 match_theme: true
-volume_mode: slider
+volume_mode: stepper
+volume_step: 0.05
+idle_timeout_ms: 60000
+show_chip_row: auto
 collapse_on_idle: true
 always_collapsed: false
 alternate_progress_bar: false
