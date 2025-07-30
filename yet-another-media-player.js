@@ -2980,7 +2980,8 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
   name: "Yet Another Media Player",
-  description: "YAMP is a multi-entity media card with custom actions"
+  description: "YAMP is a multi-entity media card with custom actions",
+  preview: true
 });
 class YetAnotherMediaPlayerCard extends i {
   _handleChipPointerDown(e, idx) {
