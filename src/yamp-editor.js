@@ -23,6 +23,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._entityMoveMode = false;
       this._actionMoveMode = false;
 
+      this._showServiceHelp = false;
       this._yamlDraft = "";
       this._parsedYaml = null;
       this._yamlError = false;
@@ -49,24 +50,38 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
     async _loadServiceDocs() {
       try {
-        const raw = await this.hass.callApi("get", "services");
+        const raw = await this.hass.connection.sendMessagePromise({ type: "get_services" });
         this._serviceDocs = {};
     
-        for (const entry of raw) {
-          const domain = entry.domain;
-          for (const [service, data] of Object.entries(entry.services)) {
-            if (!this._serviceDocs[domain]) this._serviceDocs[domain] = {};
-            this._serviceDocs[domain][service] = data;
+        for (const [domain, services] of Object.entries(raw)) {
+          this._serviceDocs[domain] = {};
+    
+          for (const [service, meta] of Object.entries(services)) {
+            const fields = { ...meta.fields };
+    
+            // // Flatten advanced_fields if present
+            // if (fields.advanced_fields?.fields) {
+            //   for (const [advKey, advVal] of Object.entries(fields.advanced_fields.fields)) {
+            //     fields[advKey] = { ...advVal, advanced: true };
+            //   }
+            //   delete fields.advanced_fields;
+            // }
+    
+            this._serviceDocs[domain][service] = {
+              ...meta,
+              fields
+            };
           }
         }
+
+        console.log("Service Documentation:", this._serviceDocs);
     
-        // Optional: console.log(this._serviceDocs);
       } catch (e) {
         console.error("Failed to load service docs:", e);
         this._serviceDocs = {};
       }
     }
-    
+
     setConfig(config) {
       const rawEntities = config.entities ?? [];
       const normalizedEntities = rawEntities.map((e) =>
@@ -228,10 +243,39 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         }
         .yaml-error-message {
           color: var(--error-color, red);
-          font-size: 0.85em;
+          font-size: 14px;
           margin: 6px;
-          white-space: pre-wrap; /* preserve line breaks */
+          white-space: pre-wrap;
+          font-family: Consolas, Menlo, Monaco, monospace;
+          line-height: 1.4;
+        }
+        .help-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 8px;
+          font-size: 0.9em;
+        }
+        .help-table th,
+        .help-table td {
+          border: 1px solid var(--divider-color, #444);
+          padding: 8px;
+          text-align: left;
+          vertical-align: top;
+        }
+        .help-table thead {
+          background: var(--card-background-color, #222);
+          font-weight: bold;
+        }
+        .help-title {
+          font-weight: bold;
+          margin-top: 16px;
+          font-size: 1em;
+        }
+        code {
           font-family: monospace;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 2px 4px;
+          border-radius: 4px;
         }
       `;
     }
@@ -619,6 +663,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
     _renderActionEditor(action) {
 
+      let serviceHelpBlock = nothing;
+      if (this._showServiceHelp && action?.service) {
+        const [domain, service] = action.service.split(".");
+        serviceHelpBlock = html`
+        <div class="form-row">
+        ${this._renderServiceHelp(domain, service)}
+        </div>
+        `;
+      }
+
       return html`
         <div class="action-editor-header">
           <mwc-icon-button @click=${this._onBackFromActionEditor} title="Back">
@@ -698,7 +752,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               >
                 <ha-icon icon="mdi:backup-restore"></ha-icon>
               </mwc-icon-button>
-              <mwc-icon-button title="Help">
+              <mwc-icon-button 
+                title="Help"
+                  @click=${() => {
+                    this._showServiceHelp = !this._showServiceHelp;
+                  }}>
                 <ha-icon icon="mdi:help-circle-outline"></ha-icon>
               </mwc-icon-button>
               <mwc-icon-button title="Test Service Call">
@@ -713,6 +771,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-code-editor
               id="service-data-editor"
               label="Service Data"
+              autocomplete-entities
+              autocomplete-icons
               .hass=${this.hass}
               mode="yaml"
               .value=${yaml.dump(action?.service_data ?? {})}
@@ -738,9 +798,56 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               ? html`<div class="yaml-error-message">${this._yamlError}</div>`
               : nothing}
           </div>
+
+          ${serviceHelpBlock}
         </div>
       `;
     }
+
+    _renderServiceHelp(domain, service) {
+      const serviceObj = this._serviceDocs?.[domain]?.[service];
+      if (!serviceObj) {
+        console.log("no serviceObj!");
+        return nothing;
+      }
+    
+      const fields = serviceObj.fields ?? {};
+      const serviceDescription = serviceObj.description ?? "";
+      console.log("serviceDescription:", serviceDescription);
+    
+      return html`
+        <div class="service-help-box">
+          <div class="help-title">${serviceObj.name || "Parameters"}</div>
+          ${serviceDescription
+            ? html`<div class="service-description">${serviceDescription}</div>`
+            : nothing}
+    
+          ${Object.keys(fields).length > 0 ? html`
+            <table class="help-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Description</th>
+                  <th>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.entries(fields).map(([param, meta]) => html`
+                  <tr>
+                    <td><code>${param}</code>${meta.required ? " *" : ""}</td>
+                    <td>${meta.description ?? ""}</td>
+                    <td>${meta.example ?? ""}</td>
+                  </tr>
+                `)}
+              </tbody>
+            </table>
+          ` : html`
+            <div class="no-parameters">This service takes no parameters.</div>
+          `}
+        </div>
+      `;
+    }
+    
   
     _onEntityChanged(index, newValue) {
       const original = this._config.entities ?? [];
