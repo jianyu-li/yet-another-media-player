@@ -13,6 +13,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         _actionEditorIndex: { type: Number },
         _entityMoveMode: { type: Boolean },
         _actionMoveMode: { type: Boolean },
+        _actionMode: { type: String },
       };
     }
   
@@ -23,10 +24,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._entityMoveMode = false;
       this._actionMoveMode = false;
 
-      this._showServiceHelp = false;
       this._yamlDraft = "";
       this._parsedYaml = null;
       this._yamlError = false;
+      this._serviceItems = [];
+    }
+
+    firstUpdated() {
+      this._serviceItems = this._getServiceItems();
     }
   
     _supportsFeature(stateObj, featureBit) {
@@ -42,44 +47,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           value: `${domain}.${svc}`,
         }))
       );
-    }
-
-    firstUpdated() {
-      this._loadServiceDocs();
-    }
-
-    async _loadServiceDocs() {
-      try {
-        const raw = await this.hass.connection.sendMessagePromise({ type: "get_services" });
-        this._serviceDocs = {};
-    
-        for (const [domain, services] of Object.entries(raw)) {
-          this._serviceDocs[domain] = {};
-    
-          for (const [service, meta] of Object.entries(services)) {
-            const fields = { ...meta.fields };
-    
-            // // Flatten advanced_fields if present
-            // if (fields.advanced_fields?.fields) {
-            //   for (const [advKey, advVal] of Object.entries(fields.advanced_fields.fields)) {
-            //     fields[advKey] = { ...advVal, advanced: true };
-            //   }
-            //   delete fields.advanced_fields;
-            // }
-    
-            this._serviceDocs[domain][service] = {
-              ...meta,
-              fields
-            };
-          }
-        }
-
-        console.log("Service Documentation:", this._serviceDocs);
-    
-      } catch (e) {
-        console.error("Failed to load service docs:", e);
-        this._serviceDocs = {};
-      }
     }
 
     setConfig(config) {
@@ -102,8 +69,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         bubbles: true,
         composed: true,
       }));
-    }c
-  
+    }
+
     _updateEntityProperty(key, value) {
       const entities = [...(this._config.entities ?? [])];
       const idx = this._entityEditorIndex;
@@ -169,10 +136,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           margin: 0px;
         }
         .action-row-inner > ha-icon {
-          padding-top: 0px;
-          padding-bottom: 0px;
           margin-right: 5px;
-          margin-top: 16px;
+          margin-top: 0px;
         }
         /* allow children to fill all available space */
         .grow-children {
@@ -193,7 +158,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           font-weight: 500;
           font-size: 1.1em;
           line-height: 1;
-          margin-top: 7px; /* tweak to align with icon */
         }
         .action-icon-placeholder {
           width: 29px; 
@@ -217,11 +181,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           display: flex;
           align-items: center;
         }
-        .entity-group-actions ha-icon, .entity-row-actions ha-icon,
-        .action-group-actions ha-icon, .action-row-actions ha-icon,
-        .service-data-editor-actions ha-icon {
-          position: relative;
-          top: -3px;
+        entity-row-actions {
+          display: flex;
+          align-items: center;
+        }
+        .action-row-actions {
+          display: flex;
+          align-items: flex-start;
+          padding-top: 3px;
+        }
+        .action-icon {
+          align-self: flex-start;
+          padding-top: 16px;
         }
         .service-data-editor-header {
           display: flex;
@@ -277,25 +248,28 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           padding: 2px 4px;
           border-radius: 4px;
         } 
-        .form-row > ha-selector,
-        .form-row > ha-entity-picker {
-          flex: 1;
-          width: 100%;
-        }
-        .form-row > div > ha-selector {
-          width: 100%;
-        }
-        .form-row mwc-icon-button {
-          position: relative;
-        }
-        .form-row .reset-icon {
+        .icon-button {
+          display: inline-flex;
           cursor: pointer;
           position: relative;
-          top: -3px;
           transition: color 0.2s;
+          align-self: center;
+          align-items: center;
+          padding: 12px;
         }
-        .form-row .reset-icon:hover {
+        .icon-button:hover {
           color: var(--primary-color, #2196f3);
+        }
+        .icon-button-disabled {
+          opacity: 0.4;
+          pointer-events: none;
+        }
+        .help-text {
+          padding: 12px 25px;
+        }
+        .add-action-button-wrapper {
+          display: flex;
+          justify-content: center;
         }
       `;
     }
@@ -333,7 +307,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
             <div class="entity-group-actions">
               <ha-icon
-                class="reset-icon"
+                class="icon-button"
                 icon=${this._entityMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}
                 title=${this._entityMoveMode ? "Back to Edit Mode" : "Enable Move Mode"}
                 @mousedown=${(e) => e.preventDefault()}
@@ -377,28 +351,25 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               <div class="entity-row-actions">
                 ${!this._entityMoveMode ? html`
                 <ha-icon
-                  class="reset-icon"
+                  class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
                   icon="mdi:pencil"
                   title="Edit Entity Settings"
                   @click=${() => this._onEditEntity(idx)}
-                  style=${!ent.entity_id ? "opacity:0.4;pointer-events:none;" : ""}
                 ></ha-icon>
                 ` : html`
                   <ha-icon
-                    class="reset-icon"
+                    class="icon-button ${idx === 0 || idx === entities.length - 1 ? "icon-button-disabled" : ""}"
                     icon="mdi:arrow-up"
                     title="Move Up"
                     @mousedown=${(e) => e.preventDefault()}
                     @click=${(e) => this._moveEntity(idx, -1)}
-                    style=${idx === 0 || idx === entities.length - 1 ? "opacity:0.4;pointer-events:none;" : ""}
                   ></ha-icon>
                   <ha-icon
-                    class="reset-icon"
+                    class="icon-button ${idx >= entities.length - 2 ? "icon-button-disabled" : ""}"
                     icon="mdi:arrow-down"
                     title="Move Down"
                     @mousedown=${(e) => e.preventDefault()}
                     @click=${(e) => this._moveEntity(idx, 1)}
-                    style=${idx >= entities.length - 2 ? "opacity:0.4;pointer-events:none;" : ""}
                   ></ha-icon>
                 `}
               </div>
@@ -444,8 +415,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
         </div>
 
-        <div class="form-row" style="display:flex; align-items:center; gap:8px;">
-          <div style="flex:1">
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
               .selector=${{
@@ -462,7 +433,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-selector>
           </div>
           <ha-icon
-            class="reset-icon"
+            class="icon-button"
             icon="mdi:restore"
             title="Reset to default"
             @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
@@ -487,8 +458,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
         ${this._config.volume_mode === "stepper" ? html`
-          <div class="form-row" style="display:flex; align-items:center; gap:8px;">
-            <div style="flex:1">
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
               <ha-selector
                 .hass=${this.hass}
                 .selector=${{
@@ -506,7 +477,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-selector>
             </div>
             <ha-icon
-              class="reset-icon"
+              class="icon-button"
               icon="mdi:restore"
               title="Reset to default"
               @click=${() => this._updateConfig("volume_step", 0.05)}
@@ -558,22 +529,24 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               Actions
             </div>
             <div class="action-group-actions">
-              <mwc-icon-button
+              <ha-icon
+                class="icon-button"
+                icon=${this._actionMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}
+                title=${this._actionMoveMode ? "Back to Edit Mode" : "Enable Move Mode"}
                 @mousedown=${(e) => e.preventDefault()}
                 @click=${(e) => {
                   this._toggleActionMoveMode();
                   e.currentTarget.blur();
                 }}
-                title=${this._actionMoveMode ? "Back to Edit Mode" : "Enable Move Mode"}
-              >
-                <ha-icon icon=${this._actionMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}></ha-icon>
-              </mwc-icon-button>
+              ></ha-icon>
             </div>
           </div>
           ${actions.map((act, idx) => html`
             <div class="action-row-inner">
               ${act?.icon ? html`
-                <ha-icon icon="${act?.icon}"></ha-icon>
+                <ha-icon 
+                class="action-icon"
+                icon="${act?.icon}"></ha-icon>
               ` : html`
                 <span class="action-icon-placeholder"></span>
               `
@@ -583,10 +556,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                   placeholder="(Icon Only)"
                   .value=${act?.name ?? ""}
                   helper="${
-                    act?.service 
-                    ? `Call Service: ${act?.service}`
-                    : act?.menu_item
+                    act?.menu_item
                     ? `Open Menu Item: ${act?.menu_item}`
+                    : act?.service 
+                    ? `Call Service: ${act?.service}`
                     : `Not Configured`
                   }"
                   .helperPersistent=${true}
@@ -595,51 +568,61 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
               <div class="action-row-actions">
                ${!this._actionMoveMode ? html`
-                <mwc-icon-button
-                  .disabled=false
+                <ha-icon
+                  class="icon-button"
+                  icon="mdi:pencil"
                   title="Edit Action Settings"
                   @click=${() => this._onEditAction(idx)}
-                >
-                  <ha-icon icon="mdi:pencil"></ha-icon>
-                </mwc-icon-button>
-                <mwc-icon-button
-                  .disabled=false
-                  title="Remove Action"
-                >
-                  <ha-icon icon="mdi:trash-can"></ha-icon>
-                </mwc-icon-button>
+                ></ha-icon>
+                <ha-icon
+                  class="icon-button"
+                  icon="mdi:trash-can"
+                  title="Delete Action"
+                  @click=${() => this._removeAction(idx)}
+                ></ha-icon>
               ` : html`
-                <mwc-icon-button
-                    .disabled=${idx === 0}
-                    @mousedown=${(e) => e.preventDefault()}
-                    @click=${(e) => {
-                      this._moveAction(idx, -1);
-                      e.currentTarget.blur();
-                    }}
-                    title="Move Up"
-                  >
-                    <ha-icon icon="mdi:arrow-up"></ha-icon>
-                  </mwc-icon-button>
-                  <mwc-icon-button
-                    .disabled=${idx >= actions.length - 1}
-                    @mousedown=${(e) => e.preventDefault()}
-                    @click=${(e) => {
-                      this._moveAction(idx, 1);
-                      e.currentTarget.blur();
-                    }}
-                    title="Move Down"
-                  >
-                    <ha-icon icon="mdi:arrow-down"></ha-icon>
-                  </mwc-icon-button>
+                <ha-icon
+                  class="icon-button ${idx === 0 ? "icon-button-disabled" : ""}"
+                  icon="mdi:arrow-up"
+                  title="Move Up"
+                  @mousedown=${(e) => e.preventDefault()}
+                  @click=${(e) => {
+                    this._moveAction(idx, -1);
+                    e.currentTarget.blur();
+                  }}
+                ></ha-icon>
+                <ha-icon
+                  class="icon-button ${idx >= actions.length - 1 ? "icon-button-disabled" : ""}"
+                  icon="mdi:arrow-down"
+                  title="Move Down"
+                  @mousedown=${(e) => e.preventDefault()}
+                  @click=${(e) => {
+                    this._moveAction(idx, 1);
+                    e.currentTarget.blur();
+                  }}
+                ></ha-icon>
                 `}
               </div>
             </div>
           `)}
+          <div class="add-action-button-wrapper">
+            <ha-icon
+              class="icon-button"
+              icon="mdi:plus"
+              title="Add Action"
+              @click=${() => {
+                const newActions = [...(this._config.actions ?? []), {}];
+                const newIndex = newActions.length - 1;
+                this._updateConfig("actions", newActions);
+                this._onEditAction(newIndex);
+              }}
+            ></ha-icon>
+          </div>
         </div>
+
       `;
     }
   
-
     _renderEntityEditor(entity) {
 
       const stateObj = this.hass?.states?.[entity?.entity_id];
@@ -647,9 +630,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
   
       return html`
         <div class="entity-editor-header">
-          <mwc-icon-button @click=${this._onBackFromEntityEditor} title="Back">
-            <ha-icon icon="mdi:chevron-left"></ha-icon>
-          </mwc-icon-button>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:chevron-left"
+            @click=${this._onBackFromEntityEditor}>
+          </ha-icon>
           <div class="entity-editor-title">Edit Entity</div>
         </div>
 
@@ -726,21 +711,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
     _renderActionEditor(action) {
 
-      let serviceHelpBlock = nothing;
-      if (this._showServiceHelp && action?.service) {
-        const [domain, service] = action.service.split(".");
-        serviceHelpBlock = html`
-        <div class="form-row">
-        ${this._renderServiceHelp(domain, service)}
-        </div>
-        `;
-      }
+      const actionMode = this._actionMode ?? (action?.menu_item?.trim() ? "menu" : "service");
 
       return html`
         <div class="action-editor-header">
-          <mwc-icon-button @click=${this._onBackFromActionEditor} title="Back">
-            <ha-icon icon="mdi:chevron-left"></ha-icon>
-          </mwc-icon-button>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:chevron-left"
+            @click=${this._onBackFromActionEditor}>
+          </ha-icon>
           <div class="action-editor-title">Edit Action</div>
         </div>
 
@@ -767,151 +746,159 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
-            label="Open Card Menu Item"
+            label="Action Type"
             .selector=${{
               select: {
                 mode: "dropdown",
                 options: [
-                  { value: "", label: "None" },
-                  { value: "search", label: "Search" },
-                  { value: "source", label: "Source" },
-                  { value: "more-info", label: "More Info" },
-                  { value: "group-players", label: "Group Players" }
+                  { value: "menu", label: "Open a Card Menu Item" },
+                  { value: "service", label: "Call a Service" }
                 ]
               }
             }}
-            .value=${action?.menu_item ?? ""}
-            @value-changed=${(e) =>
-              this._updateActionProperty("menu_item", e.detail.value || undefined)}
+            .value=${this._actionMode ?? (action?.menu_item?.trim() ? "menu" : "service")}
+            @value-changed=${(e) => {
+              const mode = e.detail.value;
+              this._actionMode = mode;
+              if (mode === "service") {
+                this._updateActionProperty("menu_item", undefined);
+              } else if (mode === "menu") {
+                this._updateActionProperty("service", undefined);
+                this._updateActionProperty("service_data", undefined);
+                this._updateActionProperty("script_variable", undefined);
+              }
+            }}
           ></ha-selector>
         </div>
-
-        <div class="form-row">
-          <ha-combo-box
-            label="Service"
-            .hass=${this.hass}
-            .value=${action.service ?? ""}
-            .items=${this._getServiceItems()}
-            item-value-path="value"
-            item-label-path="label"
-            @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
-          ></ha-combo-box>
-        </div>
-
-        <div class="form-row">
-          <div class="service-data-editor-header">
-            <div class="service-data-editor-title">Service Data</div>
-            <div class="service-data-editor-actions">
-              <mwc-icon-button
-                title="Save"
-                .disabled=${!this._yamlModified || this._yamlError}
-                @click=${this._saveYamlEditor}
-              >
-                <ha-icon icon="mdi:content-save"></ha-icon>
-              </mwc-icon-button>
-              <mwc-icon-button 
-                title="Revert"
-                @click=${this._revertYamlEditor}
-              >
-                <ha-icon icon="mdi:backup-restore"></ha-icon>
-              </mwc-icon-button>
-              <mwc-icon-button 
-                title="Help"
-                  @click=${() => {
-                    this._showServiceHelp = !this._showServiceHelp;
-                  }}>
-                <ha-icon icon="mdi:help-circle-outline"></ha-icon>
-              </mwc-icon-button>
-              <mwc-icon-button title="Test Service Call">
-                <ha-icon icon="mdi:play-circle-outline"></ha-icon>
-              </mwc-icon-button>
-            </div>
-          </div>
-
-          <div class=${this._yamlError && this._yamlDraft.trim() !== "" 
-            ? "code-editor-wrapper error" 
-            : "code-editor-wrapper"}>
-            <ha-code-editor
-              id="service-data-editor"
-              label="Service Data"
-              autocomplete-entities
-              autocomplete-icons
+        
+        ${actionMode === "menu" ? html`
+          <div class="form-row">
+            <ha-selector
               .hass=${this.hass}
-              mode="yaml"
-              .value=${yaml.dump(action?.service_data ?? {})}
-              @value-changed=${(e) => {
-                /* the yaml will be parsed in real time to detect errors, but we will defer 
-                   updating the config until the save button above the editor is clicked.
-                */
-                this._yamlDraft = e.detail.value;
-                this._yamlModified = true;
-                try {
-                  const parsed = yaml.load(this._yamlDraft);
-                  if (parsed && typeof parsed === "object") {
-                    this._yamlError = null;
-                  } else {
-                    this._yamlError = "YAML is not a valid object.";
-                  }
-                } catch (err) {
-                  this._yamlError = err.message;
+              label="Menu Item"
+              .selector=${{
+                select: {
+                  mode: "dropdown",
+                  options: [
+                    { value: "", label: "" },
+                    { value: "search", label: "Search" },
+                    { value: "source", label: "Source" },
+                    { value: "more-info", label: "More Info" },
+                    { value: "group-players", label: "Group Players" }
+                  ]
                 }
               }}
-            ></ha-code-editor>
-            ${this._yamlError && this._yamlDraft.trim() !== ""
-              ? html`<div class="yaml-error-message">${this._yamlError}</div>`
-              : nothing}
+              .value=${action?.menu_item ?? ""}
+              @value-changed=${(e) =>
+                this._updateActionProperty("menu_item", e.detail.value || undefined)}
+            ></ha-selector>
+          </div>
+        ` : nothing} 
+        ${actionMode === 'service' ? html`
+          <div class="form-row">
+            <ha-combo-box
+              label="Service"
+              .hass=${this.hass}
+              .value=${action.service ?? ""}
+              .items=${this._serviceItems ?? []}
+              item-value-path="value"
+              item-label-path="label"
+              required
+              @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
+            ></ha-combo-box>
           </div>
 
-          ${serviceHelpBlock}
-        </div>
-      `;
-    }
+          ${typeof action.service === "string" && action.service.startsWith("script.") ? html`
+            <div class="form-row form-row-multi-column">
+              <div>
+                <ha-switch
+                  id="script-variable-toggle"
+                  .checked=${action?.script_variable ?? false}
+                  @change=${(e) =>
+                    this._updateActionProperty("script_variable", e.target.checked)}
+                ></ha-switch>
+                <span>Script Variable (yamp_entity)</span>
+              </div>
+            </div>
+          ` : nothing}
 
-    _renderServiceHelp(domain, service) {
-      const serviceObj = this._serviceDocs?.[domain]?.[service];
-      if (!serviceObj) {
-        console.log("no serviceObj!");
-        return nothing;
-      }
-    
-      const fields = serviceObj.fields ?? {};
-      const serviceDescription = serviceObj.description ?? "";
-      console.log("serviceDescription:", serviceDescription);
-    
-      return html`
-        <div class="service-help-box">
-          <div class="help-title">${serviceObj.name || "Parameters"}</div>
-          ${serviceDescription
-            ? html`<div class="service-description">${serviceDescription}</div>`
-            : nothing}
-    
-          ${Object.keys(fields).length > 0 ? html`
-            <table class="help-table">
-              <thead>
-                <tr>
-                  <th>Parameter</th>
-                  <th>Description</th>
-                  <th>Example</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${Object.entries(fields).map(([param, meta]) => html`
-                  <tr>
-                    <td><code>${param}</code>${meta.required ? " *" : ""}</td>
-                    <td>${meta.description ?? ""}</td>
-                    <td>${meta.example ?? ""}</td>
-                  </tr>
-                `)}
-              </tbody>
-            </table>
-          ` : html`
-            <div class="no-parameters">This service takes no parameters.</div>
-          `}
-        </div>
-      `;
+          ${action.service ? html`
+            <div class="help-text">
+              <ha-icon
+                icon="mdi:information-outline"
+              ></ha-icon>
+              Use <code>entity_id: current</code> to target the card's 
+              currently selected media player entity.
+            </div>
+            <div class="help-text">
+              <ha-icon
+                icon="mdi:information-outline"
+              ></ha-icon>
+            Changes to the service data below are not committed to the config until 
+            <ha-icon icon="mdi:content-save"></ha-icon> is clicked!
+            </div>
+            <div class="form-row">
+              <div class="service-data-editor-header">
+                <div class="service-data-editor-title">Service Data</div>
+                <div class="service-data-editor-actions">
+                  <ha-icon
+                    class="icon-button ${!this._yamlModified ? "icon-button-disabled": ""}"
+                    icon="mdi:content-save"
+                    title="Save Service Data"
+                    @click=${this._saveYamlEditor}
+                  ></ha-icon>
+                  <ha-icon
+                    class="icon-button ${!this._yamlModified ? "icon-button-disabled": ""}"
+                    icon="mdi:backup-restore"
+                    title="Revert to Saved Service Data"
+                    @click=${this._revertYamlEditor}
+                  ></ha-icon>
+                  <ha-icon
+                    class="icon-button ${this._yamlError || !action?.service ? "icon-button-disabled": ""}"
+                    icon="mdi:play-circle-outline"
+                    title="Test Action"
+                    @click=${this._testServiceCall}
+                  ></ha-icon>              
+                </div>
+            </div>
+            <div class=${this._yamlError && this._yamlDraft.trim() !== "" 
+              ? "code-editor-wrapper error" 
+              : "code-editor-wrapper"}>
+              <ha-code-editor
+                id="service-data-editor"
+                label="Service Data"
+                autocomplete-entities
+                autocomplete-icons
+                .hass=${this.hass}
+                mode="yaml"
+                .value=${action?.service_data ? yaml.dump(action.service_data) : ""}
+                @value-changed=${(e) => {
+                  /* the yaml will be parsed in real time to detect errors, but we will defer 
+                    updating the config until the save button above the editor is clicked.
+                  */
+                  this._yamlDraft = e.detail.value;
+                  this._yamlModified = true;
+                  try {
+                    const parsed = yaml.load(this._yamlDraft);
+                    if (parsed && typeof parsed === "object") {
+                      this._yamlError = null;
+                    } else {
+                      this._yamlError = "Invalid YAML";
+                    }
+                  } catch (err) {
+                    this._yamlError = err.message;
+                  }
+                }}
+              ></ha-code-editor>
+              ${this._yamlError && this._yamlDraft.trim() !== ""
+                ? html`<div class="yaml-error-message">${this._yamlError}</div>`
+                : nothing}
+            </div>
+          ` : nothing}
+        ` : nothing}
+      </div>`
     }
-    
-  
+ 
     _onEntityChanged(index, newValue) {
       const original = this._config.entities ?? [];
       const updated = [...original];
@@ -944,6 +931,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
   
     _onEditAction(index) {
       this._actionEditorIndex = index;
+      const action = this._config.actions?.[index];
+      this._actionMode = action?.menu_item ? "menu" : "service";
     }
 
     _onBackFromEntityEditor() {
@@ -990,6 +979,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._updateConfig("actions", actions);
     }
 
+    _removeAction(index) {
+      const actions = [...(this._config.actions ?? [])];
+      if (index < 0 || index >= actions.length) return;
+    
+      actions.splice(index, 1);
+      this._updateConfig("actions", actions);
+    }
+
     _saveYamlEditor() {
       try {
         const parsed = yaml.load(this._yamlDraft);
@@ -1014,12 +1011,47 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     
       if (!editor || !currentAction) return;
     
-      const yamlText = yaml.dump(currentAction.service_data ?? {});
+      const yamlText = currentAction.service_data ? yaml.dump(currentAction.service_data): "";
       editor.value = yamlText;
     
       this._yamlDraft = yamlText;
       this._yamlError = null;
       this._yamlModified = false;
+    }
+
+    async _testServiceCall() {
+      if (this._yamlError || !this._yamlDraft?.trim()) {
+        return;
+      }
+    
+      let serviceData;
+      try {
+        serviceData = yaml.load(this._yamlDraft);
+        if (typeof serviceData !== "object" || serviceData === null) {
+          console.error("Service data must be a valid object.");
+          return;
+        }
+      } catch (e) {
+        this._yamlError = e.message;
+        return;
+      }
+    
+      const action = this._config.actions?.[this._actionEditorIndex];
+      const service = action?.service;
+      if (!service || !this.hass) {
+        return;
+      }
+    
+      const [domain, serviceName] = service.split(".");
+      if (!domain || !serviceName) {
+        return;
+      }
+    
+      try {
+        await this.hass.callService(domain, serviceName, serviceData);
+      } catch (err) {
+        console.error("Failed to call service:", err);
+      }
     }
 
     _onToggleChanged(e) {
