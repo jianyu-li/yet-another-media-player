@@ -5,6 +5,7 @@
   "main": "rollup.config.js",
   "type": "module",
   "dependencies": {
+    "js-yaml": "^4.1.0",
     "lit": "^3.3.1"
   },
   "devDependencies": {
