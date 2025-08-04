@@ -12,8 +12,11 @@ export default {
     resolve({
       browser: true,
       extensions: ['.js', '.mjs'],
+      include: ['node_modules/js-yaml/**']
     }),
-    commonjs(),
+    commonjs({
+      include: ['node_modules/js-yaml/**']
+    }),
     babel({
       babelHelpers: 'bundled',
       extensions: ['.js', '.mjs'],
@@ -23,6 +26,7 @@ export default {
         'node_modules/lit-element/**/*',
         'node_modules/lit/**/*',
         'node_modules/@lit/**/*',
+        'node_modules/js-yaml/**/*'
       ],
       exclude: [],
     }),
