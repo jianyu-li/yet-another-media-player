@@ -6361,8 +6361,11 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               <ha-icon
                 icon="mdi:information-outline"
               ></ha-icon>
-              Use <code>entity_id: current</code> to target the card's 
-              currently selected media player entity.
+
+              Use <code>entity_id: current</code> to target the card's currently selected
+              media player entity. The <ha-icon icon="mdi:play-circle-outline"></ha-icon> button
+              below does not work if you use this feature.
+
             </div>
             <div class="help-text">
               <ha-icon
@@ -6388,7 +6391,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                     @click=${this._revertYamlEditor}
                   ></ha-icon>
                   <ha-icon
-                    class="icon-button ${this._yamlError || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : ""}"
+
+                    class="icon-button ${this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : ""}"
+
                     icon="mdi:play-circle-outline"
                     title="Test Action"
                     @click=${this._testServiceCall}
@@ -6526,6 +6531,12 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     this._yamlDraft = yamlText;
     this._yamlError = null;
     this._yamlModified = false;
+  }
+  _yamlDraftUsesCurrentEntity() {
+    if (!this._yamlDraft) return false;
+    const regex = /^\s*entity_id\s*:\s*current\s*$/m;
+    let result = regex.test(this._yamlDraft);
+    return result;
   }
   async _testServiceCall() {
     var _this$_yamlDraft, _this$_config$actions4;
