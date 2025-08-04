@@ -132,6 +132,11 @@ idle_image: camera.family_slideshow
 ### Custom Actions
 You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
 
+- YAML code editor for service_data:
+  - Parses in real time and displays errors.
+  - Save button to commit to preview config. Revert button to go back. Saving is disabled if there are errors.
+  - Test button to run service (works before saving changes)
+
 ```yaml
 actions:
   - icon: mdi:magnify
