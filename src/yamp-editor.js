@@ -828,9 +828,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               <ha-icon
                 icon="mdi:information-outline"
               ></ha-icon>
+
               Use <code>entity_id: current</code> to target the card's currently selected
               media player entity. The <ha-icon icon="mdi:play-circle-outline"></ha-icon> button
               below does not work if you use this feature.
+
             </div>
             <div class="help-text">
               <ha-icon
@@ -856,8 +858,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                     @click=${this._revertYamlEditor}
                   ></ha-icon>
                   <ha-icon
+
                     class="icon-button ${this._yamlError || this._yamlDraftUsesCurrentEntity() || !action?.service 
                       ? "icon-button-disabled": ""}"
+
                     icon="mdi:play-circle-outline"
                     title="Test Action"
                     @click=${this._testServiceCall}
@@ -1022,12 +1026,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._yamlModified = false;
     }
 
+
     _yamlDraftUsesCurrentEntity() {
       if (!this._yamlDraft) return false;
       const regex = /^\s*entity_id\s*:\s*current\s*$/m;
       let result = regex.test(this._yamlDraft);
       return result;
     }
+
 
     async _testServiceCall() {
       if (this._yamlError || !this._yamlDraft?.trim()) {
