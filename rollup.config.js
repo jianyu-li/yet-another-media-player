@@ -12,10 +12,10 @@ export default {
     resolve({
       browser: true,
       extensions: ['.js', '.mjs'],
-      include: ['node_modules/js-yaml/**']
     }),
     commonjs({
-      include: ['node_modules/js-yaml/**']
+      include: ['node_modules/js-yaml/**'],
+      transformMixedEsModules: true,
     }),
     babel({
       babelHelpers: 'bundled',

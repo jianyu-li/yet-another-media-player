@@ -16,7 +16,7 @@
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
-    "rollup": "^4.45.0"
+    "rollup": "^4.46.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
