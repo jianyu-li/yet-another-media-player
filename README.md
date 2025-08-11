@@ -62,6 +62,7 @@ Below you will find a list of all configuration options.
 |                                                                                                 |
 | **Entity Options**         |              |              |             |                                                                                                 |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume)                           |
+| `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping (supports Jinja templates)                            |
 | `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 |                                                                                                 |
@@ -89,7 +90,7 @@ Initiate a search using the hamburger menu and selecting `search`. Press Enter o
 ## Config Examples
 
 ### Full Example 
-Customize entities using name and volume_entity (sets a different entity for volume control) arguments. 
+Customize entities using name, volume_entity (sets a different entity for volume control), and music_assistant_entity (for search/grouping) arguments. 
 
 ```yaml
 type: custom:yet-another-media-player
@@ -99,6 +100,7 @@ entities:
   - media_player.kitchen_homepod
   - entity_id: media_player.living_room_apple_tv
     volume_entity: media_player.living_room_sonos
+    music_assistant_entity: media_player.living_room_homepod
     name: Living Room
     sync_power: true
   - entity_id: media_player.bedroom
@@ -143,6 +145,35 @@ actions:
     service: script.play_bluey_on_living    
 ```
 
+## Music Assistant Entity Configuration
+
+You can associate a Music Assistant entity with any media player to enable search and grouping functionality. This is particularly useful for Universal Media Player (UMP) setups where you want physical control (amp power, source switching) through the main entity while using Music Assistant for advanced media features. When the card is actively using the music assistant entity, the chip will have an indicator outline.
+
+### Basic Example
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    music_assistant_entity: media_player.kitchen_homepod_2
+```
+
+### Jinja Template Example
+For advanced users, you can use Jinja templates to dynamically select the Music Assistant entity:
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    music_assistant_entity: |
+      {% if is_state('input_boolean.target_office','on') %}
+        media_player.office_homepod_2
+      {% else %}
+        media_player.kitchen_homepod_2
+      {% endif %}
+```
+
 ## Passing Current Entity to a Script
 
 ### Example YAML config
@@ -163,7 +194,11 @@ alias: set_mood
 mode: single
 fields:
   yamp_entity:
-    description: Target media player
+    description: Target media player (MA entity if configured, else main entity)
+  yamp_main_entity:
+    description: Main configured entity
+  yamp_playback_entity:
+    description: Currently active playback entity
 sequence:
   - action: light.turn_off
     metadata: {}
@@ -180,7 +215,12 @@ sequence:
       entity_id: "{{ yamp_entity }}"
       media_id: apple_music://track/1445094678
       enqueue: replace
-```  
+```
+
+**Available Script Variables:**
+- `yamp_entity`: The Music Assistant entity if configured, otherwise the main entity
+- `yamp_main_entity`: The main configured entity
+- `yamp_playback_entity`: The currently active playback entity (MA or main)  
 
 ### Input Source Actions
 With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also available on HACS), you can set up source actions with the providers logo.

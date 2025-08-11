@@ -1,5 +1,6 @@
-// import { LitElement, html, css, nothing } from "lit";
+// controls-row.js
 import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import { html, nothing } from "lit";
 
 export function renderControlsRow({
   stateObj,
@@ -72,4 +73,23 @@ export function renderControlsRow({
       }
     </div>
   `;
+}
+
+// Export a small helper used by the card for layout decisions
+export function countMainControls(stateObj, supportsFeature) {
+  const SUPPORT_PREVIOUS_TRACK = 16;
+  const SUPPORT_NEXT_TRACK = 32;
+  const SUPPORT_SHUFFLE = 32768;
+  const SUPPORT_REPEAT_SET = 262144;
+  const SUPPORT_TURN_ON = 128;
+  const SUPPORT_TURN_OFF = 256;
+
+  let count = 0;
+  if (supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
+  count++; // play/pause button always present if row exists
+  if (supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
+  if (supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
+  if (supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
+  if (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
+  return count;
 }
