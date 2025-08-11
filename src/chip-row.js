@@ -1,5 +1,5 @@
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-import { LitElement, html, css, nothing } from "lit";
+import { html, nothing } from "lit";
 
 // Helper to render a single chip
 export function renderChip({
@@ -11,6 +11,7 @@ export function renderChip({
   icon,
   pinned,
   holdToPin,
+  maActive,
   onChipClick,
   onIconClick,
   onPinClick,
@@ -22,6 +23,7 @@ export function renderChip({
     <button class="chip"
             ?selected=${selected}
             ?playing=${playing}
+            ?ma-active=${maActive}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
@@ -57,6 +59,7 @@ export function renderGroupChip({
   icon,
   pinned,
   holdToPin,
+  maActive,
   onChipClick,
   onIconClick,
   onPinClick,
@@ -67,6 +70,7 @@ export function renderGroupChip({
   return html`
     <button class="chip group"
             ?selected=${selected}
+            ?ma-active=${maActive}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
@@ -167,6 +171,9 @@ export function renderChipRow({
   holdToPin,
   getChipName,
   getActualGroupMaster,
+  getIsChipPlaying,
+  getChipArt,
+  getIsMaActive,
   isIdle,
   hass,
   onChipClick,
@@ -185,8 +192,11 @@ export function renderChipRow({
         const id = getActualGroupMaster(group);
         const idx = entityIds.indexOf(id);
         const state = hass?.states?.[id];
-        const art = state?.attributes?.entity_picture || state?.attributes?.album_art || null;
+        const art = (typeof getChipArt === "function")
+          ? getChipArt(id)
+          : (state?.attributes?.entity_picture || state?.attributes?.album_art || null);
         const icon = state?.attributes?.icon || "mdi:cast";
+        const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
         return renderGroupChip({
           idx,
           selected: selectedEntityId === id,
@@ -195,6 +205,7 @@ export function renderChipRow({
           icon,
           pinned: pinnedIndex === idx,
           holdToPin,
+          maActive: isMaActive,
           onChipClick,
           onIconClick,
           onPinClick,
@@ -207,12 +218,15 @@ export function renderChipRow({
         const id = group[0];
         const idx = entityIds.indexOf(id);
         const state = hass?.states?.[id];
-        const isChipPlaying = selectedEntityId === id ? !isIdle : state?.state === "playing";
-        const art =
-          selectedEntityId === id
-            ? (!isIdle && (state?.attributes?.entity_picture || state?.attributes?.album_art))
-            : (state?.state === "playing" && (state?.attributes?.entity_picture || state?.attributes?.album_art));
+        const isChipPlaying = (typeof getIsChipPlaying === "function")
+          ? getIsChipPlaying(id, selectedEntityId === id)
+          : (selectedEntityId === id ? !isIdle : state?.state === "playing");
+        const artSource = (typeof getChipArt === "function")
+          ? getChipArt(id)
+          : (state?.attributes?.entity_picture || state?.attributes?.album_art || null);
+        const art = selectedEntityId === id ? (!isIdle && artSource) : (isChipPlaying && artSource);
         const icon = state?.attributes?.icon || "mdi:cast";
+        const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
         return renderChip({
           idx,
           selected: selectedEntityId === id,
@@ -222,6 +236,7 @@ export function renderChipRow({
           icon,
           pinned: pinnedIndex === idx,
           holdToPin,
+          maActive: isMaActive,
           onChipClick,
           onPinClick,
           onPointerDown: (e) => onPointerDown(e, idx),

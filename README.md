@@ -57,13 +57,12 @@ Below you will find a list of all configuration options.
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing                                          |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
-| `idle_timeout_ms`          | number       | No           | `60000`     | How long (in ms) before the card goes idle/collapses. Set to 0 to never go idle.               |
-| `volume_step`              | number       | No           | `0.05`      | The step size (from 0.01 to 1) for volume buttons in stepper mode. 0.05 = 5%.                  |
 | `idle_image`               | image/camera | No           | —           | Background image when player is idle                                                            |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |
 |                                                                                                 |
 | **Entity Options**         |              |              |             |                                                                                                 |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume)                           |
+| `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping (supports Jinja templates)                            |
 | `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 |                                                                                                 |
@@ -91,21 +90,22 @@ Initiate a search using the hamburger menu and selecting `search`. Press Enter o
 ## Config Examples
 
 ### Full Example 
-Customize entities using name and volume_entity (sets a different entity for volume control) arguments. 
+Customize entities using name, volume_entity (sets a different entity for volume control), and music_assistant_entity (for search/grouping) arguments. 
 
 ```yaml
 type: custom:yet-another-media-player
 entities:
+  - media_player.downstairs_2
+  - media_player.kitchen_speaker_2
   - media_player.kitchen_homepod
   - entity_id: media_player.living_room_apple_tv
     volume_entity: media_player.living_room_sonos
+    music_assistant_entity: media_player.living_room_homepod
     name: Living Room
     sync_power: true
   - entity_id: media_player.bedroom
     group_volume: false
-  - entity_id: media_player.guest_room_apple_tv
-    volume_entity: remote.guest_room_apple_tv
-    name: Guest Room
+  - media_player.entryway_speaker
 actions:
   - icon: mdi:magnify
     menu_item: search
@@ -119,10 +119,7 @@ actions:
     service: script.set_mood
     script_variable: true      
 match_theme: true
-volume_mode: stepper
-volume_step: 0.05
-idle_timeout_ms: 60000
-show_chip_row: auto
+volume_mode: slider
 collapse_on_idle: true
 always_collapsed: false
 alternate_progress_bar: false
@@ -131,11 +128,6 @@ idle_image: camera.family_slideshow
 
 ### Custom Actions
 You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
-
-- YAML code editor for service_data:
-  - Parses in real time and displays errors.
-  - Save button to commit to preview config. Revert button to go back. Saving is disabled if there are errors.
-  - Test button to run service (works before saving changes)
 
 ```yaml
 actions:
@@ -151,6 +143,35 @@ actions:
   - name: Play Bluey
     icon: mdi:television-play
     service: script.play_bluey_on_living    
+```
+
+## Music Assistant Entity Configuration
+
+You can associate a Music Assistant entity with any media player to enable search and grouping functionality. This is particularly useful for Universal Media Player (UMP) setups where you want physical control (amp power, source switching) through the main entity while using Music Assistant for advanced media features. When the card is actively using the music assistant entity, the chip will have an indicator outline.
+
+### Basic Example
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    music_assistant_entity: media_player.kitchen_homepod_2
+```
+
+### Jinja Template Example
+For advanced users, you can use Jinja templates to dynamically select the Music Assistant entity:
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    music_assistant_entity: |
+      {% if is_state('input_boolean.target_office','on') %}
+        media_player.office_homepod_2
+      {% else %}
+        media_player.kitchen_homepod_2
+      {% endif %}
 ```
 
 ## Passing Current Entity to a Script
@@ -173,7 +194,11 @@ alias: set_mood
 mode: single
 fields:
   yamp_entity:
-    description: Target media player
+    description: Target media player (MA entity if configured, else main entity)
+  yamp_main_entity:
+    description: Main configured entity
+  yamp_playback_entity:
+    description: Currently active playback entity
 sequence:
   - action: light.turn_off
     metadata: {}
@@ -190,7 +215,12 @@ sequence:
       entity_id: "{{ yamp_entity }}"
       media_id: apple_music://track/1445094678
       enqueue: replace
-```  
+```
+
+**Available Script Variables:**
+- `yamp_entity`: The Music Assistant entity if configured, otherwise the main entity
+- `yamp_main_entity`: The main configured entity
+- `yamp_playback_entity`: The currently active playback entity (MA or main)  
 
 ### Input Source Actions
 With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also available on HACS), you can set up source actions with the providers logo.

@@ -15,6 +15,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         _entityMoveMode: { type: Boolean },
         _actionMoveMode: { type: Boolean },
         _actionMode: { type: String },
+        _useTemplate: { type: Boolean },
       };
     }
   
@@ -29,6 +30,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._parsedYaml = null;
       this._yamlError = false;
       this._serviceItems = [];
+      this._useTemplate = null; // auto-detect per entity on open
     }
 
     firstUpdated() {
@@ -48,6 +50,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           value: `${domain}.${svc}`,
         }))
       );
+    }
+
+    _looksLikeTemplate(val) {
+      if (typeof val !== "string") return false;
+      const s = val.trim();
+      return s.includes("{{") || s.includes("{%");
+    }
+
+    _isEntityId(val) {
+      return typeof val === "string" && /^[a-z_]+\.[a-zA-Z0-9_]+$/.test(val.trim());
     }
 
     setConfig(config) {
@@ -658,6 +670,60 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-textfield>
         </div>
 
+<div class="form-row form-row-multi-column">
+  <div>
+    <ha-switch
+      id="ma-template-toggle"
+      .checked=${this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)}
+      @change=${(e) => {
+        this._useTemplate = e.target.checked;
+      }}
+    ></ha-switch>
+    <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
+  </div>
+</div>
+
+${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity))
+  ? html`
+      <div class="form-row">
+        <div class=${this._yamlError && (entity?.music_assistant_entity ?? "").trim() !== "" 
+          ? "code-editor-wrapper error" 
+          : "code-editor-wrapper"}>
+          <ha-code-editor
+            id="ma-template-editor"
+            label="Music Assistant Entity Template (Jinja)"
+            .hass=${this.hass}
+            mode="jinja2"
+            autocomplete-entities
+            .value=${entity?.music_assistant_entity ?? ""}
+            @value-changed=${(e) => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+          ></ha-code-editor>
+          <div class="help-text">
+            <ha-icon icon="mdi:information-outline"></ha-icon>
+            Enter a Jinja template that resolves to a single entity_id (e.g. <code>media_player.picore_house</code>). Example:
+            <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
+  media_player.picore_house
+{% else %}
+  media_player.ma_wiim_mini
+{% endif %}</pre>
+          </div>
+        </div>
+      </div>
+    `
+  : html`
+      <div class="form-row">
+        <ha-entity-picker
+          .hass=${this.hass}
+          .value=${this._isEntityId(entity?.music_assistant_entity) ? entity.music_assistant_entity : ""}
+          .includeDomains=${["media_player"]}
+          label="Music Assistant Entity (optional)"
+          helper="Pick a Music Assistant player for search."
+          clearable
+          @value-changed=${(e) => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+        ></ha-entity-picker>
+      </div>
+    `}
+
         ${showGroupVolume ? html`
           <div class="form-row">
             <ha-switch
@@ -934,6 +1000,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
   
     _onEditEntity(index) {
       this._entityEditorIndex = index;
+      const ent = this._config.entities?.[index];
+      const mae = ent?.music_assistant_entity;
+      this._useTemplate = this._looksLikeTemplate(mae) ? true : false;
     }
   
     _onEditAction(index) {
@@ -944,6 +1013,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
     _onBackFromEntityEditor() {
       this._entityEditorIndex = null;
+      this._useTemplate = null; // re-detect next open
     }
   
     _onBackFromActionEditor() {

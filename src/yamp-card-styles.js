@@ -1,4 +1,6 @@
-import { LitElement, html, css, nothing } from "lit";
+// yamp-card-styles.js
+// import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+import { css } from "lit";
 
 export const yampCardStyles = css`
   .dim-idle .details,
@@ -403,11 +405,29 @@ export const yampCardStyles = css`
     .chip[playing] {
       padding-right: 6px;
     }
-      .chip[selected] {
-        background: var(--custom-accent);
-        color: #fff;
-        opacity: 1;
-      }
+        .chip[selected] {
+    background: var(--custom-accent);
+    color: #fff;
+    opacity: 1;
+  }
+  
+  /* Music Assistant active outline */
+  .chip[ma-active] {
+    border: 1px solid rgba(255, 152, 0, 0.6);
+  }
+  
+  .chip[ma-active]:hover {
+    border: 1px solid rgba(255, 152, 0, 0.8);
+  }
+  
+  /* When selected and MA active */
+  .chip[selected][ma-active] {
+    border: 1px solid rgba(255, 152, 0, 0.8);
+  }
+  
+  .chip[selected][ma-active]:hover {
+    border: 1px solid rgba(255, 152, 0, 1);
+  }
   /* Grouped master chip shows a count instead of artwork/icon */
   .chip-icon.group-icon {
     background: var(--custom-accent);

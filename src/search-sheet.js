@@ -1,5 +1,6 @@
 
 
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { LitElement, html, css, nothing } from "lit";
 
 /**
@@ -64,4 +65,32 @@ export function renderSearchSheet({
       </div>
     </div>
   `;
+}
+
+// Service helpers to keep search-related logic colocated with the search UI module
+export async function searchMedia(hass, entityId, query) {
+  const msg = {
+    type: "call_service",
+    domain: "media_player",
+    service: "search_media",
+    service_data: {
+      entity_id: entityId,
+      search_query: query,
+    },
+    return_response: true,
+  };
+  const res = await hass.connection.sendMessagePromise(msg);
+  return (
+    res?.response?.[entityId]?.result ||
+    res?.result ||
+    []
+  );
+}
+
+export function playSearchedMedia(hass, entityId, item) {
+  return hass.callService("media_player", "play_media", {
+    entity_id: entityId,
+    media_content_type: item.media_content_type,
+    media_content_id: item.media_content_id,
+  });
 }
