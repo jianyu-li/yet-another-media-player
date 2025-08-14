@@ -1646,7 +1646,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           (sensorState.state && sensorState.state.startsWith("http") ? sensorState.state : null);
       }
       const dimIdleFrame = !!idleImageUrl;
-      const hideControlsNow = dimIdleFrame && this._isIdle;
+      const hideControlsNow = this._isIdle;
+      const shouldDimIdle = dimIdleFrame && this._isIdle;
 
       // Calculate shuffle/repeat state from the active playback entity when available
       // Use debounced entity selection to prevent rapid switching
@@ -1848,7 +1849,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
-            class="${hideControlsNow ? 'dim-idle' : ''}"
+            class="${shouldDimIdle ? 'dim-idle' : ''}"
           >
             ${(this.entityObjs.length > 1 || showChipRow === "always") ? html`
                 <div class="chip-row">
