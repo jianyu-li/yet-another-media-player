@@ -1063,12 +1063,24 @@ function renderVolumeRow(_ref) {
     isRemoteVolumeEntity,
     showSlider,
     vol,
+    isMuted,
+    supportsMute,
     onVolumeDragStart,
     onVolumeDragEnd,
     onVolumeChange,
     onVolumeStep,
+    onMuteToggle,
     moreInfoMenu
   } = _ref;
+  // Determine volume icon based on volume level and mute state
+  const getVolumeIcon = (volume, muted) => {
+    // For entities that don't support mute, consider them muted when volume is 0
+    const effectiveMuted = supportsMute ? muted : volume === 0;
+    if (effectiveMuted || volume === 0) return "mdi:volume-off";
+    if (volume < 0.2) return "mdi:volume-low";
+    if (volume < 0.5) return "mdi:volume-medium";
+    return "mdi:volume-high";
+  };
   return x`
     <div class="volume-row">
       ${isRemoteVolumeEntity ? x`
@@ -1077,20 +1089,31 @@ function renderVolumeRow(_ref) {
               <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
             </div>
           ` : showSlider ? x`
-            <input
-              class="vol-slider"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              .value=${vol}
-              @mousedown=${onVolumeDragStart}
-              @touchstart=${onVolumeDragStart}
-              @change=${onVolumeChange}
-              @mouseup=${onVolumeDragEnd}
-              @touchend=${onVolumeDragEnd}
-              title="Volume"
-            />
+            <div class="volume-controls">
+              <button 
+                class="volume-icon-btn" 
+                @click=${onMuteToggle} 
+                title=${(supportsMute ? isMuted : vol === 0) ? "Unmute" : "Mute"}
+              >
+                <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
+              </button>
+              <div class="volume-slider-container">
+                <input
+                  class="vol-slider"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  .value=${vol}
+                  @mousedown=${onVolumeDragStart}
+                  @touchstart=${onVolumeDragStart}
+                  @change=${onVolumeChange}
+                  @mouseup=${onVolumeDragEnd}
+                  @touchend=${onVolumeDragEnd}
+                  title="Volume"
+                />
+              </div>
+            </div>
           ` : x`
             <div class="vol-stepper">
               <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
@@ -1745,6 +1768,52 @@ const yampCardStyles = i$4`
     gap: 8px;
     padding: 0 12px 12px 25px;
     justify-content: space-between;
+  }
+
+  .volume-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .volume-icon-btn {
+    background: none;
+    border: none;
+    color: var(--primary-text);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-normal);
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .volume-icon-btn:hover {
+    color: var(--custom-accent);
+  }
+
+  .volume-icon-btn ha-icon {
+    font-size: 1.2em;
+    color: #fff;
+  }
+
+  .volume-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    position: relative;
+  }
+
+  .volume-slider-icon {
+    font-size: 1em;
+    color: var(--primary-text);
+    opacity: 0.7;
+    min-width: 20px;
   }
 
   .vol-slider {
@@ -5730,6 +5799,7 @@ var jsYaml = {
 };
 
 // Supported feature flags
+const SUPPORT_VOLUME_MUTE = 8;
 const SUPPORT_STOP = 4096;
 const SUPPORT_GROUPING = 524288;
 
@@ -8297,6 +8367,123 @@ class YetAnotherMediaPlayerCard extends i$1 {
       });
     }
   }
+  async _onMuteToggle() {
+    var _state$attributes3;
+    const idx = this._selectedIndex;
+    const entity = this._getVolumeEntity(idx);
+    if (!entity) return;
+    const isRemoteVolumeEntity = entity.startsWith && entity.startsWith("remote.");
+    const stateObj = this.currentVolumeStateObj;
+    if (!stateObj) return;
+    const isMuted = stateObj.attributes.is_volume_muted ?? false;
+    const currentVolume = stateObj.attributes.volume_level ?? 0;
+    if (isRemoteVolumeEntity) {
+      // For remote entities, we can't easily toggle mute, so just set volume to 0 or restore
+      if (isMuted) {
+        // Restore to a reasonable volume if was muted
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: entity,
+          volume_level: 0.5
+        });
+      } else {
+        // Mute by setting volume to 0
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: entity,
+          volume_level: 0
+        });
+      }
+      return;
+    }
+
+    // Check if mute is supported
+    const supportsMute = this._supportsFeature(stateObj, SUPPORT_VOLUME_MUTE);
+    if (!supportsMute) {
+      // If mute is not supported, implement mute by setting volume to 0 and storing previous volume
+      if (currentVolume > 0) {
+        // Store current volume and mute
+        this._previousVolume = currentVolume;
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: entity,
+          volume_level: 0
+        });
+      } else {
+        // Restore previous volume
+        const restoreVolume = this._previousVolume ?? 0.5;
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: entity,
+          volume_level: restoreVolume
+        });
+        this._previousVolume = null;
+      }
+      return;
+    }
+    const groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
+    const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
+    const state = this.hass.states[groupingEntity];
+    if (Array.isArray(state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.group_members) && state.attributes.group_members.length) {
+      // Grouped: apply mute to all group members
+      const mainEntity = this.entityObjs[idx].entity_id;
+      const targets = [mainEntity, ...state.attributes.group_members];
+      for (const t of targets) {
+        // Find the configured entity that has this grouping entity
+        let foundObj = null;
+        for (const obj of this.entityObjs) {
+          let resolvedGroupingId;
+          if (obj.music_assistant_entity) {
+            if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+              // For templates, resolve at action time
+              try {
+                resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
+              } catch (error) {
+                console.warn('Failed to resolve template for mute toggle:', error);
+                resolvedGroupingId = obj.entity_id;
+              }
+            } else {
+              resolvedGroupingId = obj.music_assistant_entity;
+            }
+          } else {
+            resolvedGroupingId = obj.entity_id;
+          }
+          if (resolvedGroupingId === t) {
+            foundObj = obj;
+            break;
+          }
+        }
+        const volTarget = foundObj && foundObj.volume_entity ? foundObj.volume_entity : foundObj ? foundObj.entity_id : t;
+        const targetState = this.hass.states[volTarget];
+        const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
+        if (targetSupportsMute) {
+          this.hass.callService("media_player", "volume_mute", {
+            entity_id: volTarget,
+            is_volume_muted: !isMuted
+          });
+        } else {
+          var _targetState$attribut;
+          // For entities that don't support mute, set volume to 0 or restore
+          const targetVolume = (targetState === null || targetState === void 0 || (_targetState$attribut = targetState.attributes) === null || _targetState$attribut === void 0 ? void 0 : _targetState$attribut.volume_level) ?? 0;
+          if (targetVolume > 0) {
+            // Store current volume and mute (simplified - in a real implementation you'd want to store per entity)
+            this.hass.callService("media_player", "volume_set", {
+              entity_id: volTarget,
+              volume_level: 0
+            });
+          } else {
+            // Restore to a reasonable volume
+            this.hass.callService("media_player", "volume_set", {
+              entity_id: volTarget,
+              volume_level: 0.5
+            });
+          }
+        }
+      }
+    } else {
+      // Not grouped, toggle mute directly
+      this.hass.callService("media_player", "volume_mute", {
+        entity_id: entity,
+        is_volume_muted: !isMuted
+      });
+    }
+  }
   _onVolumeDragStart(e) {
     // Store base group volume at drag start
     if (!this.hass) return;
@@ -8380,7 +8567,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass12, _playbackStateObj, _mainState$attributes, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _this$currentVolumeSt2, _this$currentStateObj;
+    var _this$_optimisticPlay, _this$hass12, _playbackStateObj, _mainState$attributes, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _this$currentVolumeSt2, _this$currentVolumeSt3, _this$currentStateObj;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -8400,7 +8587,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       idleImageUrl = sensorState.attributes.entity_picture || (sensorState.state && sensorState.state.startsWith("http") ? sensorState.state : null);
     }
     const dimIdleFrame = !!idleImageUrl;
-    const hideControlsNow = dimIdleFrame || this._isIdle;
+    const hideControlsNow = dimIdleFrame && this._isIdle;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     // Use debounced entity selection to prevent rapid switching
@@ -8746,10 +8933,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
       isRemoteVolumeEntity,
       showSlider,
       vol,
+      isMuted: ((_this$currentVolumeSt3 = this.currentVolumeStateObj) === null || _this$currentVolumeSt3 === void 0 || (_this$currentVolumeSt3 = _this$currentVolumeSt3.attributes) === null || _this$currentVolumeSt3 === void 0 ? void 0 : _this$currentVolumeSt3.is_volume_muted) ?? false,
+      supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
       onVolumeDragStart: e => this._onVolumeDragStart(e),
       onVolumeDragEnd: e => this._onVolumeDragEnd(e),
       onVolumeChange: e => this._onVolumeChange(e),
       onVolumeStep: dir => this._onVolumeStep(dir),
+      onMuteToggle: () => this._onMuteToggle(),
       moreInfoMenu: x`
                     <div class="more-info-menu">
                       <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
@@ -8849,10 +9039,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
                     ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
-      var _this$hass18, _state$attributes3, _state$attributes4;
+      var _this$hass18, _state$attributes4, _state$attributes5;
       const state = (_this$hass18 = this.hass) === null || _this$hass18 === void 0 || (_this$hass18 = _this$hass18.states) === null || _this$hass18 === void 0 ? void 0 : _this$hass18[entityId];
-      const name = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.friendly_name) || entityId;
-      const icon = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.icon) || "mdi:help-circle";
+      const name = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.friendly_name) || entityId;
+      const icon = (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.icon) || "mdi:help-circle";
 
       // Determine the role of this entity
       const idx = this._selectedIndex;
