@@ -968,6 +968,7 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet {
+    --custom-accent: var(--accent-color, #ff9800);
     background: none;
     border-radius: var(--border-radius) var(--border-radius) 0 0;
     box-shadow: none;
@@ -1017,7 +1018,7 @@ export const yampCardStyles = css`
   }
 
   .entity-options-item:hover {
-    color: var(--custom-accent);
+    color: var(--custom-accent, #ff9800);
     text-shadow: none;
     background: none;
   }
@@ -1346,7 +1347,52 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet .entity-options-search-results {
-    flex: 1 1 auto;
+    flex: 1;
+    overflow-y: auto;
+    margin: 12px 0;
+  }
+
+  .entity-options-resolved-entities {
+    --custom-accent: var(--accent-color, #ff9800);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .entity-options-resolved-entities-list {
+    flex: 1;
+    overflow-y: auto;
+    margin: 12px 0;
+  }
+
+  .entity-options-resolved-entities .entity-options-item {
+    background: none;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.12em;
+    font-weight: 500;
+    margin: 4px 0;
+    padding: 6px 0 8px 0;
+    cursor: pointer;
+    transition: color var(--transition-fast), text-shadow var(--transition-fast);
+    text-align: left;
+    text-shadow: 0 2px 8px #0009;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .entity-options-resolved-entities .entity-options-item:hover,
+  .entity-options-resolved-entities .entity-options-item:focus {
+    color: var(--custom-accent) !important;
+    text-shadow: none !important;
+    background: none !important;
+  }
+
+  .entity-options-resolved-entities .entity-options-item:last-child {
+    border-bottom: none;
   }
 
   /* Clickable artist */

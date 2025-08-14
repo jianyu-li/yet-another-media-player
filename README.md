@@ -61,7 +61,7 @@ Below you will find a list of all configuration options.
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |
 |                                                                                                 |
 | **Entity Options**         |              |              |             |                                                                                                 |
-| `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume)                           |
+| `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume) (supports Jinja templates) |
 | `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping (supports Jinja templates)                            |
 | `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
@@ -174,6 +174,35 @@ entities:
       {% else %}
         media_player.kitchen_homepod_2
       {% endif %}
+```
+
+## Volume Entity Configuration
+
+You can use a separate `volume_entity` for volume display and control. This can be a static entity or a Jinja template that resolves to an entity id (e.g., `media_player.*` or `remote.*`). If `sync_power` is enabled, the resolved volume entity will be powered on/off along with the main entity.
+
+### Basic Example
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+    volume_entity: remote.living_room_apple_tv
+    sync_power: true
+```
+
+### Jinja Template Example
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.office_homepod
+    name: Office
+    volume_entity: |
+      {% if is_state('input_boolean.tv_volume','on') %}
+        remote.soundbar
+      {% else %}
+        media_player.office_homepod
+      {% endif %}
+    sync_power: true
 ```
 
 ## Passing Current Entity to a Script
