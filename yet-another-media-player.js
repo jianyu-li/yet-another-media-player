@@ -2111,6 +2111,7 @@ const yampCardStyles = i$4`
   }
 
   .entity-options-sheet {
+    --custom-accent: var(--accent-color, #ff9800);
     background: none;
     border-radius: var(--border-radius) var(--border-radius) 0 0;
     box-shadow: none;
@@ -2160,7 +2161,7 @@ const yampCardStyles = i$4`
   }
 
   .entity-options-item:hover {
-    color: var(--custom-accent);
+    color: var(--custom-accent, #ff9800);
     text-shadow: none;
     background: none;
   }
@@ -2489,7 +2490,52 @@ const yampCardStyles = i$4`
   }
 
   .entity-options-sheet .entity-options-search-results {
-    flex: 1 1 auto;
+    flex: 1;
+    overflow-y: auto;
+    margin: 12px 0;
+  }
+
+  .entity-options-resolved-entities {
+    --custom-accent: var(--accent-color, #ff9800);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .entity-options-resolved-entities-list {
+    flex: 1;
+    overflow-y: auto;
+    margin: 12px 0;
+  }
+
+  .entity-options-resolved-entities .entity-options-item {
+    background: none;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.12em;
+    font-weight: 500;
+    margin: 4px 0;
+    padding: 6px 0 8px 0;
+    cursor: pointer;
+    transition: color var(--transition-fast), text-shadow var(--transition-fast);
+    text-align: left;
+    text-shadow: 0 2px 8px #0009;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .entity-options-resolved-entities .entity-options-item:hover,
+  .entity-options-resolved-entities .entity-options-item:focus {
+    color: var(--custom-accent) !important;
+    text-shadow: none !important;
+    background: none !important;
+  }
+
+  .entity-options-resolved-entities .entity-options-item:last-child {
+    border-bottom: none;
   }
 
   /* Clickable artist */
@@ -5710,6 +5756,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       },
       _useTemplate: {
         type: Boolean
+      },
+      _useVolTemplate: {
+        type: Boolean
       }
     };
   }
@@ -5724,6 +5773,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     this._yamlError = false;
     this._serviceItems = [];
     this._useTemplate = null; // auto-detect per entity on open
+    this._useVolTemplate = null; // auto-detect per entity on open
   }
   firstUpdated() {
     this._serviceItems = this._getServiceItems();
@@ -6396,12 +6446,13 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
           ></ha-code-editor>
           <div class="help-text">
             <ha-icon icon="mdi:information-outline"></ha-icon>
-            Enter a Jinja template that resolves to a single entity_id (e.g. <code>media_player.picore_house</code>). Example:
+            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
             <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
   media_player.picore_house
 {% else %}
   media_player.ma_wiim_mini
 {% endif %}</pre>
+           </pre>
           </div>
         </div>
       </div>
@@ -6430,15 +6481,52 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
           </div>
         ` : E}
 
-        <div class="form-row">
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="vol-template-toggle"
+              .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)}
+              @change=${e => {
+      this._useVolTemplate = e.target.checked;
+    }}
+            ></ha-switch>
+            <label for="vol-template-toggle">Use template for Volume Entity</label>
+          </div>
+        </div>
 
-          <ha-entity-picker
-            .hass=${this.hass}
-            .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
-            .includeDomains=${["media_player", "remote"]}
-            label="Volume Entity"
-            clearable
-            @value-changed=${e => {
+        ${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? x`
+              <div class="form-row">
+                <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+                  <ha-code-editor
+                    id="vol-template-editor"
+                    label="Volume Entity Template (Jinja)"
+                    .hass=${this.hass}
+                    mode="jinja2"
+                    autocomplete-entities
+                    .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? ""}
+                    @value-changed=${e => this._updateEntityProperty("volume_entity", e.detail.value)}
+                  ></ha-code-editor>
+                  <div class="help-text">
+                    <ha-icon icon="mdi:information-outline"></ha-icon>
+                    Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).
+                    Example switching volume entity based on a boolean:
+                    <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
+  remote.soundbar
+{% else %}
+  media_player.office_homepod
+{% endif %}</pre>
+                  </div>
+                </div>
+              </div>
+            ` : x`
+              <div class="form-row">
+                <ha-entity-picker
+                  .hass=${this.hass}
+                  .value=${this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
+                  .includeDomains=${["media_player", "remote"]}
+                  label="Volume Entity"
+                  clearable
+                  @value-changed=${e => {
       const value = e.detail.value;
       this._updateEntityProperty("volume_entity", value);
       if (!value || value === entity.entity_id) {
@@ -6446,8 +6534,9 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
         this._updateEntityProperty("sync_power", false);
       }
     }}
-          ></ha-entity-picker>
-        </div>
+                ></ha-entity-picker>
+              </div>
+            `}
 
         ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id ? x`
               <div class="form-row form-row-multi-column">
@@ -6694,6 +6783,8 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
     const ent = (_this$_config$entitie3 = this._config.entities) === null || _this$_config$entitie3 === void 0 ? void 0 : _this$_config$entitie3[index];
     const mae = ent === null || ent === void 0 ? void 0 : ent.music_assistant_entity;
     this._useTemplate = this._looksLikeTemplate(mae) ? true : false;
+    const vol = ent === null || ent === void 0 ? void 0 : ent.volume_entity;
+    this._useVolTemplate = this._looksLikeTemplate(vol) ? true : false;
   }
   _onEditAction(index) {
     var _this$_config$actions2;
@@ -6704,6 +6795,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
   _onBackFromEntityEditor() {
     this._entityEditorIndex = null;
     this._useTemplate = null; // re-detect next open
+    this._useVolTemplate = null; // re-detect next open
   }
   _onBackFromActionEditor() {
     this._actionEditorIndex = null;
@@ -6963,6 +7055,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchTotalRows = 15; // minimum 15 rows for layout padding
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
+    this._showResolvedEntities = false;
     // Collapse on load if nothing is playing
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -7001,6 +7094,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._maResolveTtlMs = 7000; // refresh every ~7s
     // Manual select timeout for hold-to-pin functionality
     this._manualSelectTimeout = null;
+    // Cache resolved Volume entity per index (template or static)
+    this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
+    this._volResolveTtlMs = 7000; // refresh every ~7s
     // Track the last entity that was playing for better pause/resume behavior
     this._lastPlayingEntityId = null;
     // Control focus lock to prefer most-recently controlled entity in brief paused window
@@ -7048,6 +7144,44 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
 
+  // Resolve and cache the Volume entity for a given chip index (template or static)
+  async _ensureResolvedVolForIndex(idx) {
+    var _this$entityObjs2;
+    const obj = (_this$entityObjs2 = this.entityObjs) === null || _this$entityObjs2 === void 0 ? void 0 : _this$entityObjs2[idx];
+    if (!obj) return;
+    const raw = obj.volume_entity;
+    if (!raw || typeof raw !== 'string') {
+      // Clear cache if no volume entity or not a string
+      delete this._volResolveCache[idx];
+      return;
+    }
+    const looksTemplate = raw.includes('{{') || raw.includes('{%');
+    const now = Date.now();
+    const cached = this._volResolveCache[idx];
+    if (!looksTemplate) {
+      // Static volume entity — always cache for consistency
+      this._volResolveCache[idx] = {
+        id: raw,
+        ts: now
+      };
+      return;
+    }
+    // For templates, respect TTL to avoid spamming /api/template
+    if (cached && now - cached.ts < this._volResolveTtlMs && cached.id) return;
+    try {
+      const resolved = await this._resolveTemplateAtActionTime(raw, obj.entity_id);
+      if (resolved && typeof resolved === 'string') {
+        this._volResolveCache[idx] = {
+          id: resolved,
+          ts: now
+        };
+        this.requestUpdate();
+      }
+    } catch (_) {
+      // Leave existing cache (if any); do not throw
+    }
+  }
+
   // Get the resolved playback entity id for a chip index, preferring cache
   _getResolvedPlaybackEntityIdSync(idx) {
     var _this$_maResolveCache;
@@ -7082,6 +7216,21 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
 
     // No MA entity or template - use main entity
+    return obj.entity_id;
+  }
+
+  // Get the resolved volume entity id for a chip index, preferring cache
+  _getResolvedVolumeEntityIdSync(idx) {
+    var _this$_volResolveCach;
+    const obj = this.entityObjs[idx];
+    if (!obj) return null;
+    const cached = (_this$_volResolveCach = this._volResolveCache) === null || _this$_volResolveCach === void 0 || (_this$_volResolveCach = _this$_volResolveCach[idx]) === null || _this$_volResolveCach === void 0 ? void 0 : _this$_volResolveCach.id;
+    if (cached && typeof cached === 'string') return cached;
+    const raw = obj.volume_entity;
+    if (raw && typeof raw === 'string') {
+      const looksTemplate = raw.includes('{{') || raw.includes('{%');
+      if (!looksTemplate) return raw;
+    }
     return obj.entity_id;
   }
 
@@ -7376,7 +7525,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
   // Return volume entity for given index (use override if set)
   _getVolumeEntity(idx) {
     const obj = this.entityObjs[idx];
-    return obj && obj.volume_entity ? obj.volume_entity : obj.entity_id;
+    if (!obj) return null;
+    const vol = obj.volume_entity;
+    if (!vol) return obj.entity_id;
+    if (typeof vol === 'string' && (vol.includes('{{') || vol.includes('{%'))) {
+      // Use resolved (cached) volume entity for operations
+      return this._getResolvedVolumeEntityIdSync(idx) || obj.entity_id;
+    }
+    return vol;
   }
 
   // Prefer Music Assistant entity for search/grouping if configured
@@ -7543,8 +7699,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return id ? (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[id] : null;
   }
   get currentVolumeStateObj() {
-    const obj = this.entityObjs[this._selectedIndex];
-    const entityId = (obj === null || obj === void 0 ? void 0 : obj.volume_entity) || (obj === null || obj === void 0 ? void 0 : obj.entity_id);
+    const entityId = this._getVolumeEntity(this._selectedIndex);
     return entityId ? this.hass.states[entityId] : null;
   }
   updated(changedProps) {
@@ -7590,8 +7745,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
           }
         }
       }
-      // Warm the resolved MA cache for the selected chip
+      // Warm the resolved MA/Volume caches for the selected chip
       this._ensureResolvedMaForIndex(this._selectedIndex);
+      this._ensureResolvedVolForIndex(this._selectedIndex);
     }
 
     // Restart progress timer
@@ -7982,10 +8138,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
           // Also toggle volume_entity if sync_power is enabled for this entity
           const obj = this.entityObjs[this._selectedIndex];
-          if (obj && obj.sync_power && obj.volume_entity && obj.volume_entity !== obj.entity_id) {
-            this.hass.callService("media_player", svc, {
-              entity_id: obj.volume_entity
-            });
+          if (obj && obj.sync_power) {
+            const volEntityId = this._getVolumeEntity(this._selectedIndex);
+            if (volEntityId && volEntityId !== obj.entity_id) {
+              this.hass.callService("media_player", svc, {
+                entity_id: volEntityId
+              });
+            }
           }
           break;
         }
@@ -8241,6 +8400,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       idleImageUrl = sensorState.attributes.entity_picture || (sensorState.state && sensorState.state.startsWith("http") ? sensorState.state : null);
     }
     const dimIdleFrame = !!idleImageUrl;
+    const hideControlsNow = dimIdleFrame || this._isIdle;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     // Use debounced entity selection to prevent rapid switching
@@ -8411,7 +8571,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
-            class="${dimIdleFrame ? 'dim-idle' : ''}"
+            class="${hideControlsNow ? 'dim-idle' : ''}"
           >
             ${this.entityObjs.length > 1 || showChipRow === "always" ? x`
                 <div class="chip-row">
@@ -8504,7 +8664,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
               <div class="card-lower-content-bg"
                 style="
                   background-image: ${idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none"};
-                  min-height: ${collapsed ? "0px" : "320px"};
+                  min-height: ${collapsed ? hideControlsNow ? "120px" : "0px" : "320px"};
                   background-size: cover;
                   background-position: top center;
                   background-repeat: no-repeat;
@@ -8513,7 +8673,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 "
               ></div>
               ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}">
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
                 ${collapsed && artworkUrl ? x`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
@@ -8573,7 +8733,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       collapsed: true,
       accent: this._customAccent
     }) : E}
-                ${!dimIdleFrame ? x`
+                ${!hideControlsNow ? x`
                 ${renderControlsRow({
       stateObj: playbackStateObj,
       showStop: this._shouldShowStopButton(playbackStateObj),
@@ -8599,7 +8759,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   `
     })}
                 ` : E}
-                ${dimIdleFrame ? x`
+                ${hideControlsNow ? x`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                     <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
@@ -8612,11 +8772,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
           ${this._showEntityOptions ? x`
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
-              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet ? x`
+              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities ? x`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
                   <button class="entity-options-item" @click=${() => {
-      this._openMoreInfo();
-      this._showEntityOptions = false;
+      const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
+      if (resolvedEntities.length === 1) {
+        this._openMoreInfoForEntity(resolvedEntities[0]);
+        this._showEntityOptions = false;
+      } else {
+        this._showResolvedEntities = true;
+      }
       this.requestUpdate();
     }}>More Info</button>
                   <button class="entity-options-item" @click=${() => {
@@ -8674,6 +8839,50 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return E;
     })()}
                   <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
+                </div>
+              ` : this._showResolvedEntities ? x`
+                <button class="entity-options-item" @click=${() => {
+      this._showResolvedEntities = false;
+      this.requestUpdate();
+    }} style="margin-bottom:14px;">← Back</button>
+                <div class="entity-options-resolved-entities" style="margin-top:12px;">
+                  <div class="entity-options-title">Select Entity for More Info</div>
+                  <div class="entity-options-resolved-entities-list">
+                    ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
+      var _this$hass18, _state$attributes3, _state$attributes4;
+      const state = (_this$hass18 = this.hass) === null || _this$hass18 === void 0 || (_this$hass18 = _this$hass18.states) === null || _this$hass18 === void 0 ? void 0 : _this$hass18[entityId];
+      const name = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.friendly_name) || entityId;
+      const icon = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.icon) || "mdi:help-circle";
+
+      // Determine the role of this entity
+      const idx = this._selectedIndex;
+      const obj = this.entityObjs[idx];
+      let role = "Main Entity";
+      if (obj) {
+        const maEntity = this._getActualResolvedMaEntityForState(idx);
+        const volEntity = this._getVolumeEntity(idx);
+        if (entityId === maEntity && maEntity !== obj.entity_id) {
+          role = "Music Assistant Entity";
+        } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
+          role = "Volume Entity";
+        }
+      }
+      return x`
+                        <button class="entity-options-item" @click=${() => {
+        this._openMoreInfoForEntity(entityId);
+        this._showEntityOptions = false;
+        this._showResolvedEntities = false;
+        this.requestUpdate();
+      }}>
+                          <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
+                          <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <div>${name}</div>
+                            <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
+                          </div>
+                        </button>
+                      `;
+    })}
+                  </div>
                 </div>
               ` : this._showSearchInSheet ? x`
                 <div class="entity-options-search" style="margin-top:12px;">
@@ -8804,15 +9013,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return x`
                       <div style="display:flex;align-items:center;justify-content:space-between;font-weight:600;margin-bottom:0;">
                         ${groupedAny ? x`
-                          <button class="group-all-btn"
+                          <button class="entity-options-item"
                             @click=${() => this._syncGroupVolume()}
                             style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 16px 2px 0;">
                             Sync Volume
                           </button>
                         ` : x`<span></span>`}
-                        <button class="group-all-btn"
+                        <button class="entity-options-item"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="color:#d22; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
+                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
                           ${groupedAny ? "Ungroup All" : "Group All"}
                         </button>
                       </div>
@@ -8987,12 +9196,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
       `;
   }
   _updateIdleState() {
-    var _this$hass18;
+    var _this$hass19;
     // Check if ANY relevant entity (main or MA) is playing
     const mainState = this.currentStateObj;
     // Use actual resolved MA entity for state detection (can be unconfigured)
     const actualMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const actualMaState = actualMaId ? (_this$hass18 = this.hass) === null || _this$hass18 === void 0 || (_this$hass18 = _this$hass18.states) === null || _this$hass18 === void 0 ? void 0 : _this$hass18[actualMaId] : null;
+    const actualMaState = actualMaId ? (_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[actualMaId] : null;
     const isAnyPlaying = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing" || (actualMaState === null || actualMaState === void 0 ? void 0 : actualMaState.state) === "playing";
     if (isAnyPlaying) {
       // Became active, clear timer and set not idle
@@ -9599,6 +9808,50 @@ class YetAnotherMediaPlayerCard extends i$1 {
         volume_level: masterVol
       });
     }
+  }
+
+  // Get all resolved entities for the current chip (main, MA, volume)
+  _getResolvedEntitiesForCurrentChip() {
+    const entities = new Set();
+    const idx = this._selectedIndex;
+    const obj = this.entityObjs[idx];
+    if (!obj) return [];
+
+    // Add main entity
+    entities.add(obj.entity_id);
+
+    // Add resolved MA entity if different from main
+    const maEntity = this._getActualResolvedMaEntityForState(idx);
+    if (maEntity && maEntity !== obj.entity_id) {
+      entities.add(maEntity);
+    }
+
+    // Add resolved volume entity if different from main and MA
+    const volEntity = this._getVolumeEntity(idx);
+    if (volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
+      entities.add(volEntity);
+    }
+    return Array.from(entities);
+  }
+
+  // Open more-info for a specific entity
+  _openMoreInfoForEntity(entityId) {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: {
+        entityId
+      },
+      bubbles: true,
+      composed: true
+    }));
+  }
+  _openMoreInfo() {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: {
+        entityId: this.currentEntityId
+      },
+      bubbles: true,
+      composed: true
+    }));
   }
 }
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
