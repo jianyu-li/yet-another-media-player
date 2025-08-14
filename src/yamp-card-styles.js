@@ -604,6 +604,52 @@ export const yampCardStyles = css`
     justify-content: space-between;
   }
 
+  .volume-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .volume-icon-btn {
+    background: none;
+    border: none;
+    color: var(--primary-text);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-normal);
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .volume-icon-btn:hover {
+    color: var(--custom-accent);
+  }
+
+  .volume-icon-btn ha-icon {
+    font-size: 1.2em;
+    color: #fff;
+  }
+
+  .volume-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    position: relative;
+  }
+
+  .volume-slider-icon {
+    font-size: 1em;
+    color: var(--primary-text);
+    opacity: 0.7;
+    min-width: 20px;
+  }
+
   .vol-slider {
     -webkit-appearance: none;
     appearance: none;
