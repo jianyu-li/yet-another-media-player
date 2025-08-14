@@ -16,6 +16,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         _actionMoveMode: { type: Boolean },
         _actionMode: { type: String },
         _useTemplate: { type: Boolean },
+        _useVolTemplate: { type: Boolean },
       };
     }
   
@@ -31,6 +32,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._yamlError = false;
       this._serviceItems = [];
       this._useTemplate = null; // auto-detect per entity on open
+      this._useVolTemplate = null; // auto-detect per entity on open
     }
 
     firstUpdated() {
@@ -700,12 +702,13 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
           ></ha-code-editor>
           <div class="help-text">
             <ha-icon icon="mdi:information-outline"></ha-icon>
-            Enter a Jinja template that resolves to a single entity_id (e.g. <code>media_player.picore_house</code>). Example:
+            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
             <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
   media_player.picore_house
 {% else %}
   media_player.ma_wiim_mini
 {% endif %}</pre>
+           </pre>
           </div>
         </div>
       </div>
@@ -736,25 +739,67 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
           </div>
         ` : nothing}
 
-        <div class="form-row">
-
-          <ha-entity-picker
-            .hass=${this.hass}
-            .value=${entity?.volume_entity ?? entity?.entity_id ?? ""}
-            .includeDomains=${["media_player","remote"]}
-            label="Volume Entity"
-            clearable
-            @value-changed=${(e) => {
-              const value = e.detail.value;
-              this._updateEntityProperty("volume_entity", value);
-
-              if (!value || value === entity.entity_id) {
-                // sync_power is meaningless in these cases
-                this._updateEntityProperty("sync_power", false);
-              }
-            }}
-          ></ha-entity-picker>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="vol-template-toggle"
+              .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity?.volume_entity)}
+              @change=${(e) => {
+                this._useVolTemplate = e.target.checked;
+              }}
+            ></ha-switch>
+            <label for="vol-template-toggle">Use template for Volume Entity</label>
+          </div>
         </div>
+
+        ${ (this._useVolTemplate ?? this._looksLikeTemplate(entity?.volume_entity))
+          ? html`
+              <div class="form-row">
+                <div class=${this._yamlError && (entity?.volume_entity ?? "").trim() !== "" 
+                  ? "code-editor-wrapper error" 
+                  : "code-editor-wrapper"}>
+                  <ha-code-editor
+                    id="vol-template-editor"
+                    label="Volume Entity Template (Jinja)"
+                    .hass=${this.hass}
+                    mode="jinja2"
+                    autocomplete-entities
+                    .value=${entity?.volume_entity ?? ""}
+                    @value-changed=${(e) => this._updateEntityProperty("volume_entity", e.detail.value)}
+                  ></ha-code-editor>
+                  <div class="help-text">
+                    <ha-icon icon="mdi:information-outline"></ha-icon>
+                    Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).
+                    Example switching volume entity based on a boolean:
+                    <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
+  remote.soundbar
+{% else %}
+  media_player.office_homepod
+{% endif %}</pre>
+                  </div>
+                </div>
+              </div>
+            `
+          : html`
+              <div class="form-row">
+                <ha-entity-picker
+                  .hass=${this.hass}
+                  .value=${this._isEntityId(entity?.volume_entity) ? entity.volume_entity : (entity?.entity_id ?? "")}
+                  .includeDomains=${["media_player","remote"]}
+                  label="Volume Entity"
+                  clearable
+                  @value-changed=${(e) => {
+                    const value = e.detail.value;
+                    this._updateEntityProperty("volume_entity", value);
+
+                    if (!value || value === entity.entity_id) {
+                      // sync_power is meaningless in these cases
+                      this._updateEntityProperty("sync_power", false);
+                    }
+                  }}
+                ></ha-entity-picker>
+              </div>
+            `}
 
         ${entity?.volume_entity && entity.volume_entity !== entity.entity_id
 
@@ -1003,6 +1048,8 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
       const ent = this._config.entities?.[index];
       const mae = ent?.music_assistant_entity;
       this._useTemplate = this._looksLikeTemplate(mae) ? true : false;
+      const vol = ent?.volume_entity;
+      this._useVolTemplate = this._looksLikeTemplate(vol) ? true : false;
     }
   
     _onEditAction(index) {
@@ -1014,6 +1061,7 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
     _onBackFromEntityEditor() {
       this._entityEditorIndex = null;
       this._useTemplate = null; // re-detect next open
+      this._useVolTemplate = null; // re-detect next open
     }
   
     _onBackFromActionEditor() {

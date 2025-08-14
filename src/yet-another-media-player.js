@@ -159,6 +159,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchTotalRows = 15;  // minimum 15 rows for layout padding
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
+    this._showResolvedEntities = false;
     // Collapse on load if nothing is playing
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -197,6 +198,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._maResolveTtlMs = 7000; // refresh every ~7s
     // Manual select timeout for hold-to-pin functionality
     this._manualSelectTimeout = null;
+    // Cache resolved Volume entity per index (template or static)
+    this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
+    this._volResolveTtlMs = 7000; // refresh every ~7s
     // Track the last entity that was playing for better pause/resume behavior
     this._lastPlayingEntityId = null;
     // Control focus lock to prefer most-recently controlled entity in brief paused window
@@ -230,6 +234,37 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // The rendering logic will handle validation separately
         this._maResolveCache[idx] = { id: resolved, ts: now };
         // Trigger re-render so artwork/state can use the resolved id
+        this.requestUpdate();
+      }
+    } catch (_) {
+      // Leave existing cache (if any); do not throw
+    }
+  }
+
+  // Resolve and cache the Volume entity for a given chip index (template or static)
+  async _ensureResolvedVolForIndex(idx) {
+    const obj = this.entityObjs?.[idx];
+    if (!obj) return;
+    const raw = obj.volume_entity;
+    if (!raw || typeof raw !== 'string') {
+      // Clear cache if no volume entity or not a string
+      delete this._volResolveCache[idx];
+      return;
+    }
+    const looksTemplate = raw.includes('{{') || raw.includes('{%');
+    const now = Date.now();
+    const cached = this._volResolveCache[idx];
+    if (!looksTemplate) {
+      // Static volume entity — always cache for consistency
+      this._volResolveCache[idx] = { id: raw, ts: now };
+      return;
+    }
+    // For templates, respect TTL to avoid spamming /api/template
+    if (cached && (now - cached.ts) < this._volResolveTtlMs && cached.id) return;
+    try {
+      const resolved = await this._resolveTemplateAtActionTime(raw, obj.entity_id);
+      if (resolved && typeof resolved === 'string') {
+        this._volResolveCache[idx] = { id: resolved, ts: now };
         this.requestUpdate();
       }
     } catch (_) {
@@ -272,6 +307,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     
     // No MA entity or template - use main entity
+    return obj.entity_id;
+  }
+
+  // Get the resolved volume entity id for a chip index, preferring cache
+  _getResolvedVolumeEntityIdSync(idx) {
+    const obj = this.entityObjs[idx];
+    if (!obj) return null;
+    const cached = this._volResolveCache?.[idx]?.id;
+    if (cached && typeof cached === 'string') return cached;
+    const raw = obj.volume_entity;
+    if (raw && typeof raw === 'string') {
+      const looksTemplate = raw.includes('{{') || raw.includes('{%');
+      if (!looksTemplate) return raw;
+    }
     return obj.entity_id;
   }
 
@@ -564,7 +613,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Return volume entity for given index (use override if set)
   _getVolumeEntity(idx) {
     const obj = this.entityObjs[idx];
-    return (obj && obj.volume_entity) ? obj.volume_entity : obj.entity_id;
+    if (!obj) return null;
+    const vol = obj.volume_entity;
+    if (!vol) return obj.entity_id;
+    if (typeof vol === 'string' && (vol.includes('{{') || vol.includes('{%'))) {
+      // Use resolved (cached) volume entity for operations
+      return this._getResolvedVolumeEntityIdSync(idx) || obj.entity_id;
+    }
+    return vol;
   }
 
   // Prefer Music Assistant entity for search/grouping if configured
@@ -749,8 +805,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   get currentVolumeStateObj() {
-    const obj = this.entityObjs[this._selectedIndex];
-    const entityId = obj?.volume_entity || obj?.entity_id;
+    const entityId = this._getVolumeEntity(this._selectedIndex);
     return entityId ? this.hass.states[entityId] : null;
   }
 
@@ -800,8 +855,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }
         }
       }
-      // Warm the resolved MA cache for the selected chip
+      // Warm the resolved MA/Volume caches for the selected chip
       this._ensureResolvedMaForIndex(this._selectedIndex);
+      this._ensureResolvedVolForIndex(this._selectedIndex);
     }
 
     // Restart progress timer
@@ -1072,7 +1128,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const playbackTemplate = this.currentActivePlaybackEntityId || this._getPlaybackEntityId(this._selectedIndex);
         data.entity_id = await this._resolveTemplateAtActionTime(playbackTemplate, this.currentEntityId);
       } else {
-        data.entity_id = this.currentEntityId;
+      data.entity_id = this.currentEntityId;
       }
     }
     this.hass.callService(domain, service, data);
@@ -1194,13 +1250,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
         // Also toggle volume_entity if sync_power is enabled for this entity
         const obj = this.entityObjs[this._selectedIndex];
-        if (
-          obj &&
-          obj.sync_power &&
-          obj.volume_entity &&
-          obj.volume_entity !== obj.entity_id
-        ) {
-          this.hass.callService("media_player", svc, { entity_id: obj.volume_entity });
+        if (obj && obj.sync_power) {
+          const volEntityId = this._getVolumeEntity(this._selectedIndex);
+          if (volEntityId && volEntityId !== obj.entity_id) {
+            this.hass.callService("media_player", svc, { entity_id: volEntityId });
+          }
         }
         break;
       }
@@ -1465,6 +1519,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           (sensorState.state && sensorState.state.startsWith("http") ? sensorState.state : null);
       }
       const dimIdleFrame = !!idleImageUrl;
+      const hideControlsNow = dimIdleFrame || this._isIdle;
 
       // Calculate shuffle/repeat state from the active playback entity when available
       // Use debounced entity selection to prevent rapid switching
@@ -1666,7 +1721,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
-            class="${dimIdleFrame ? 'dim-idle' : ''}"
+            class="${hideControlsNow ? 'dim-idle' : ''}"
           >
             ${(this.entityObjs.length > 1 || showChipRow === "always") ? html`
                 <div class="chip-row">
@@ -1757,7 +1812,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         ? `url('${artworkUrl}')`
                         : "none"
                   };
-                  min-height: ${collapsed ? "0px" : "320px"};
+                  min-height: ${collapsed ? (hideControlsNow ? "120px" : "0px") : "320px"};
                   background-size: cover;
                   background-position: top center;
                   background-repeat: no-repeat;
@@ -1766,7 +1821,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 "
               ></div>
               ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}">
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
                 ${collapsed && artworkUrl ? html`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
@@ -1838,7 +1893,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     })
                   : nothing
                 }
-                ${!dimIdleFrame ? html`
+                ${!hideControlsNow ? html`
                 ${renderControlsRow({
                   stateObj: playbackStateObj,
                   showStop: this._shouldShowStopButton(playbackStateObj),
@@ -1864,7 +1919,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   `,
                 })}
                 ` : nothing}
-                ${dimIdleFrame ? html`
+                ${hideControlsNow ? html`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                     <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
@@ -1877,9 +1932,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ${this._showEntityOptions ? html`
           <div class="entity-options-overlay" @click=${(e) => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
-              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet) ? html`
+              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities) ? html`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
-                  <button class="entity-options-item" @click=${() => { this._openMoreInfo(); this._showEntityOptions = false; this.requestUpdate(); }}>More Info</button>
+                  <button class="entity-options-item" @click=${() => { 
+                    const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
+                    if (resolvedEntities.length === 1) {
+                      this._openMoreInfoForEntity(resolvedEntities[0]);
+                      this._showEntityOptions = false;
+                    } else {
+                      this._showResolvedEntities = true;
+                    }
+                    this.requestUpdate(); 
+                  }}>More Info</button>
                   <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>Search</button>
                   ${Array.isArray(this.currentStateObj?.attributes?.source_list) &&
                     this.currentStateObj.attributes.source_list.length > 0 ? html`
@@ -1943,6 +2007,52 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     })()
                   }
                   <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
+                </div>
+              ` : this._showResolvedEntities ? html`
+                <button class="entity-options-item" @click=${() => {
+                  this._showResolvedEntities = false;
+                  this.requestUpdate();
+                }} style="margin-bottom:14px;">← Back</button>
+                <div class="entity-options-resolved-entities" style="margin-top:12px;">
+                  <div class="entity-options-title">Select Entity for More Info</div>
+                  <div class="entity-options-resolved-entities-list">
+                    ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
+                      const state = this.hass?.states?.[entityId];
+                      const name = state?.attributes?.friendly_name || entityId;
+                      const icon = state?.attributes?.icon || "mdi:help-circle";
+                      
+                      // Determine the role of this entity
+                      const idx = this._selectedIndex;
+                      const obj = this.entityObjs[idx];
+                      let role = "Main Entity";
+                      
+                      if (obj) {
+                        const maEntity = this._getActualResolvedMaEntityForState(idx);
+                        const volEntity = this._getVolumeEntity(idx);
+                        
+                        if (entityId === maEntity && maEntity !== obj.entity_id) {
+                          role = "Music Assistant Entity";
+                        } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
+                          role = "Volume Entity";
+                        }
+                      }
+                      
+                      return html`
+                        <button class="entity-options-item" @click=${() => {
+                          this._openMoreInfoForEntity(entityId);
+                          this._showEntityOptions = false;
+                          this._showResolvedEntities = false;
+                          this.requestUpdate();
+                        }}>
+                          <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
+                          <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <div>${name}</div>
+                            <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
+                          </div>
+                        </button>
+                      `;
+                    })}
+                  </div>
                 </div>
               ` : this._showSearchInSheet ? html`
                 <div class="entity-options-search" style="margin-top:12px;">
@@ -2067,15 +2177,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     return html`
                       <div style="display:flex;align-items:center;justify-content:space-between;font-weight:600;margin-bottom:0;">
                         ${groupedAny ? html`
-                          <button class="group-all-btn"
+                          <button class="entity-options-item"
                             @click=${() => this._syncGroupVolume()}
                             style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 16px 2px 0;">
                             Sync Volume
                           </button>
                         ` : html`<span></span>`}
-                        <button class="group-all-btn"
+                        <button class="entity-options-item"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="color:#d22; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
+                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
                           ${groupedAny ? "Ungroup All" : "Group All"}
                         </button>
                       </div>
@@ -2267,7 +2377,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       `;
     }
     
-   _updateIdleState() {
+    _updateIdleState() {
       // Check if ANY relevant entity (main or MA) is playing
       const mainState = this.currentStateObj;
       // Use actual resolved MA entity for state detection (can be unconfigured)
@@ -2926,6 +3036,49 @@ class YetAnotherMediaPlayerCard extends LitElement {
         volume_level: masterVol
       });
     }
+  }
+
+  // Get all resolved entities for the current chip (main, MA, volume)
+  _getResolvedEntitiesForCurrentChip() {
+    const entities = new Set();
+    const idx = this._selectedIndex;
+    const obj = this.entityObjs[idx];
+    
+    if (!obj) return [];
+    
+    // Add main entity
+    entities.add(obj.entity_id);
+    
+    // Add resolved MA entity if different from main
+    const maEntity = this._getActualResolvedMaEntityForState(idx);
+    if (maEntity && maEntity !== obj.entity_id) {
+      entities.add(maEntity);
+    }
+    
+    // Add resolved volume entity if different from main and MA
+    const volEntity = this._getVolumeEntity(idx);
+    if (volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
+      entities.add(volEntity);
+    }
+    
+    return Array.from(entities);
+  }
+
+  // Open more-info for a specific entity
+  _openMoreInfoForEntity(entityId) {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: { entityId },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
+  _openMoreInfo() {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: { entityId: this.currentEntityId },
+      bubbles: true,
+      composed: true,
+    }));
   }
 }
 
