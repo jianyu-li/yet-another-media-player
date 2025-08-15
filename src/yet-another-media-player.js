@@ -146,7 +146,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showGrouping = false;
     // Overlay state for source list sheet
     this._showSourceList = false;
-    // Alternate progressâ€‘bar mode
+    // Alternate progress‑bar mode
     this._alternateProgressBar = false;
     // Group base volume for group gain logic
     this._groupBaseVolume = null;
@@ -178,10 +178,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchMediaClassFilter = "all";
     // Track last search chip classes for filter chip row scroll
     this._lastSearchChipClasses = "";
-    // --- swipeâ€‘toâ€‘filter helpers ---
+    // --- swipe‑to‑filter helpers ---
     this._swipeStartX = null;
     this._searchSwipeAttached = false;
-    // Snapshot of entities that were playing when manualâ€‘select started.
+    // Snapshot of entities that were playing when manual‑select started.
     this._manualSelectPlayingSet = null;
     this._idleTimeoutMs = 60000;
     this._volumeStep = 0.05;
@@ -221,7 +221,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const now = Date.now();
     const cached = this._maResolveCache[idx];
     if (!looksTemplate) {
-      // Static MA â€” always cache for consistency
+      // Static MA — always cache for consistency
       this._maResolveCache[idx] = { id: raw, ts: now };
       return;
     }
@@ -263,7 +263,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const now = Date.now();
     const cached = this._volResolveCache[idx];
     if (!looksTemplate) {
-      // Static volume entity â€” always cache for consistency
+      // Static volume entity — always cache for consistency
       this._volResolveCache[idx] = { id: raw, ts: now };
       return;
     }
@@ -363,7 +363,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   async _resolveTemplateAtActionTime(templateString, fallbackEntityId) {
     if (!templateString || typeof templateString !== 'string') return fallbackEntityId;
 
-    // Not a template â€” return as-is
+    // Not a template — return as-is
     if (!templateString.includes('{{') && !templateString.includes('{%')) {
       return templateString;
     }
@@ -381,7 +381,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   /**
-   * Attach horizontal swipe on the searchâ€‘results area to cycle mediaâ€‘class filters.
+   * Attach horizontal swipe on the search‑results area to cycle media‑class filters.
    */
   _attachSearchSwipe() {
     if (this._searchSwipeAttached) return;
@@ -427,7 +427,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
   
   /**
-   * Open the search sheet preâ€‘filled with the current track's artist and
+   * Open the search sheet pre‑filled with the current track's artist and
    * launch the search immediately (only when media_artist is present).
    */
   _searchArtistFromNowPlaying() {
@@ -577,7 +577,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._collapseOnIdle = !!config.collapse_on_idle;
     // Force always-collapsed view
     this._alwaysCollapsed = !!config.always_collapsed;
-    // Alternate progressâ€‘bar mode
+    // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
@@ -845,8 +845,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       });
 
-      // If manualâ€‘select is active (no pin) and a *new* entity begins playing,
-      // clear manual mode so autoâ€‘switching resumes.
+      // If manual‑select is active (no pin) and a *new* entity begins playing,
+      // clear manual mode so auto‑switching resumes.
       if (this._manualSelect && this._pinnedIndex === null && this._manualSelectPlayingSet) {
         // Remove any entities from the snapshot that are no longer playing.
         for (const id of [...this._manualSelectPlayingSet]) {
@@ -952,7 +952,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._attachSearchSwipe();
       }, 0);
     }
-    // When the sourceâ€‘list sheet opens, make sure the overlay scrolls to the top
+    // When the source‑list sheet opens, make sure the overlay scrolls to the top
     if (this._showSourceList) {
       setTimeout(() => {
         const overlayEl = this.renderRoot.querySelector('.entity-options-overlay');
@@ -1028,7 +1028,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _onChipClick(idx) {
-    // Ignore the synthetic click that fires immediately after a longâ€‘press pin.
+    // Ignore the synthetic click that fires immediately after a long‑press pin.
     if (this._holdToPin && this._justPinned) {
       this._justPinned = false;
       return;
@@ -1041,10 +1041,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     if (this._holdToPin) {
       if (this._pinnedIndex !== null) {
-        // A chip is already pinned â€“ keep manual mode active.
+        // A chip is already pinned – keep manual mode active.
         this._manualSelect = true;
       } else {
-        // No chip is pinned. Pause autoâ€‘switching until any *new* player starts.
+        // No chip is pinned. Pause auto‑switching until any *new* player starts.
         this._manualSelect = true;
         // Take a snapshot of who is currently playing.
         this._manualSelectPlayingSet = new Set();
@@ -1066,13 +1066,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _pinChip(idx) {
-    // Mark that this chip was just pinned via longâ€‘press so the
-    // click event that follows the pointerâ€‘up can be ignored.
+    // Mark that this chip was just pinned via long‑press so the
+    // click event that follows the pointer‑up can be ignored.
     this._justPinned = true;
 
-    // Cancel any pending autoâ€‘switch reâ€‘enable timer.
+    // Cancel any pending auto‑switch re‑enable timer.
     clearTimeout(this._manualSelectTimeout);
-    // Clear the manualâ€‘select snapshot; a longâ€‘press establishes a pin.
+    // Clear the manual‑select snapshot; a long‑press establishes a pin.
     this._manualSelectPlayingSet = null;
 
     this._pinnedIndex = idx;
@@ -1258,7 +1258,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         break;
       }
       case "repeat": {
-        // Cycle: off â†’ all â†’ one â†’ off
+        // Cycle: off → all → one → off
         let curr = stateObj.attributes.repeat || "off";
         let next;
         if (curr === "off") next = "all";
@@ -1682,7 +1682,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const optimisticEntityId = this._optimisticPlayback?.entity_id || null;
       
       // --- Fix 2: priority rule for entity selection ---
-      // Keep the currentlyâ€‘selected entity (even if paused)
+      // Keep the currently‑selected entity (even if paused)
       // unless some other entity is *playing*.
       // Use cached resolved MA ID instead of raw template string
       const resolvedMaId = this._getResolvedPlaybackEntityIdSync(this._selectedIndex);
@@ -1692,7 +1692,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       const currentId = this._lastPlaybackEntityId ?? resolvedMaId;
       // Initialise the debounced entity on first render so we don't switch
-      // away before the 30â€‘second debounce window completes.
+      // away before the 30‑second debounce window completes.
       if (!this._lastPlaybackEntityId && currentId) {
         this._lastPlaybackEntityId = currentId;
       }
@@ -1850,13 +1850,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!this._isIdle) {
         const getArt = (st) => st && (st.attributes.entity_picture || st.attributes.album_art);
         if (finalEntityId === actualResolvedMaId) {
-          // Active entity is the actual resolved MA entity â€” prefer its artwork
+          // Active entity is the actual resolved MA entity — prefer its artwork
           artworkUrl = getArt(playbackStateObj) || getArt(mainState) || null;
         } else if (finalEntityId === resolvedMaId) {
-          // Active entity is the safe resolved MA entity â€” prefer its artwork
+          // Active entity is the safe resolved MA entity — prefer its artwork
           artworkUrl = getArt(playbackStateObj) || getArt(mainState) || null;
         } else {
-          // Active entity is the main entity â€” prefer main artwork, fallback to playback
+          // Active entity is the main entity — prefer main artwork, fallback to playback
           artworkUrl = getArt(mainState) || getArt(playbackStateObj) || null;
         }
       }
@@ -2169,7 +2169,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 <button class="entity-options-item" @click=${() => {
                   this._showResolvedEntities = false;
                   this.requestUpdate();
-                }} style="margin-bottom:14px;">â† Back</button>
+                }} style="margin-bottom:14px;">← Back</button>
                 <div class="entity-options-resolved-entities" style="margin-top:12px;">
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
@@ -2287,7 +2287,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       const filteredResults = filter === "all"
                         ? allResults
                         : allResults.filter(item => item.media_class === filter);
-                      // Build padded array so rowâ€‘count stays constant
+                      // Build padded array so row‑count stays constant
                       const totalRows = Math.max(15, this._searchTotalRows || allResults.length);
                       const paddedResults = [
                         ...filteredResults,
@@ -2297,7 +2297,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       return (this._searchAttempted && filteredResults.length === 0 && !this._searchLoading)
                         ? html`<div class="entity-options-search-empty">No results.</div>`
                         : paddedResults.map(item => item ? html`
-                            <!-- EXISTING nonâ€‘placeholder row markup -->
+                            <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result">
                               <img
                                 class="entity-options-search-thumb"
@@ -2314,7 +2314,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 </span>
                               </div>
                               <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)}>
-                                â–¶
+                                ▶
                               </button>
                             </div>
                           ` : html`
@@ -2325,7 +2325,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 </div>
               ` : this._showGrouping ? html`
-                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">â† Back</button>
+                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
                 ${
                   (() => {
                     const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
@@ -2433,7 +2433,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                   isRemoteVol
                                     ? html`
                                         <div class="vol-stepper">
-                                          <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">â€“</button>
+                                          <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
                                           <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
                                         </div>
                                       `
@@ -2466,7 +2466,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                               @click=${() => this._toggleGroup(id)}
                                               title=${grouped ? "Unjoin" : "Join"}
                                               style="margin-left:14px;">
-                                        <span class="group-toggle-fix">${grouped ? "â€“" : "+"}</span>
+                                        <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
                                       </button>
                                     `
                               }
@@ -2479,7 +2479,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   })()
                 }
               ` : html`
-                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">â† Back</button>
+                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => html`
@@ -2573,7 +2573,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       return {
         min_rows: minRows,
-        // Keep the default fullâ€‘width behaviour explicit.
+        // Keep the default full‑width behaviour explicit.
         columns: 12,
       };
     }
