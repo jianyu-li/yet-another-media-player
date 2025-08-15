@@ -62,6 +62,7 @@ Below you will find a list of all configuration options.
 |                                                                                                 |
 | **Entity Options**         |              |              |             |                                                                                                 |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume) (supports Jinja templates) |
+| `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
 | `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping (supports Jinja templates)                            |
 | `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
@@ -106,6 +107,9 @@ entities:
   - entity_id: media_player.bedroom
     group_volume: false
   - media_player.entryway_speaker
+  - entity_id: media_player.office_homepod
+    name: Office
+    follow_active_volume: true
 actions:
   - icon: mdi:magnify
     menu_item: search
@@ -179,6 +183,21 @@ entities:
 ## Volume Entity Configuration
 
 You can use a separate `volume_entity` for volume display and control. This can be a static entity or a Jinja template that resolves to an entity id (e.g., `media_player.*` or `remote.*`). If `sync_power` is enabled, the resolved volume entity will be powered on/off along with the main entity.
+
+### Follow Active Entity
+
+You can also enable `follow_active_volume` to make the volume entity automatically follow the active playback entity. This is useful when you want volume controls to always target the entity that is currently playing, regardless of which chip is selected.
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+    follow_active_volume: true
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    follow_active_volume: true
+```
 
 ### Basic Example
 ```yaml
