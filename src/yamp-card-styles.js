@@ -607,7 +607,7 @@ export const yampCardStyles = css`
   .volume-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 25px;
     flex: 1;
   }
 
@@ -616,7 +616,7 @@ export const yampCardStyles = css`
     border: none;
     color: var(--primary-text);
     cursor: pointer;
-    padding: 8px;
+    padding: 0px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -624,6 +624,8 @@ export const yampCardStyles = css`
     transition: background-color var(--transition-normal);
     min-width: 36px;
     min-height: 36px;
+    margin-right: 0px;
+    margin-left: -7px;
   }
 
   .volume-icon-btn:hover {

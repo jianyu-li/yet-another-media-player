@@ -817,6 +817,30 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
               </div>
             `
           : nothing}
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="follow-active-toggle"
+              .checked=${entity?.follow_active_volume ?? false}
+              @change=${(e) =>
+                this._updateEntityProperty("follow_active_volume", e.target.checked)}
+            ></ha-switch>
+            <label for="follow-active-toggle">Volume Entity Follows Active Entity</label>
+          </div>
+        </div>
+
+        ${entity?.follow_active_volume ? html`
+          <div class="form-row">
+            <div class="help-text">
+              <ha-icon icon="mdi:information-outline"></ha-icon>
+              When enabled, the volume entity will automatically follow the active playback entity. 
+              This is useful when you want volume controls to always target the entity that is currently playing.
+              <br><br>
+             
+            </div>
+          </div>
+        ` : nothing}
         </div>
       `;
     }

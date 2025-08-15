@@ -245,6 +245,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
   async _ensureResolvedVolForIndex(idx) {
     const obj = this.entityObjs?.[idx];
     if (!obj) return;
+    
+    // If follow_active_volume is enabled, we don't need to cache a specific volume entity
+    // as it will be determined dynamically based on the active entity
+    if (obj.follow_active_volume) {
+      delete this._volResolveCache[idx];
+      return;
+    }
+    
     const raw = obj.volume_entity;
     if (!raw || typeof raw !== 'string') {
       // Clear cache if no volume entity or not a string
@@ -314,6 +322,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getResolvedVolumeEntityIdSync(idx) {
     const obj = this.entityObjs[idx];
     if (!obj) return null;
+    
+    // If follow_active_volume is enabled, return the active playback entity
+    if (obj.follow_active_volume) {
+      return this._getActivePlaybackEntityId();
+    }
+    
     const cached = this._volResolveCache?.[idx]?.id;
     if (cached && typeof cached === 'string') return cached;
     const raw = obj.volume_entity;
@@ -579,6 +593,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
       const music_assistant_entity = typeof e === "string" ? undefined : e.music_assistant_entity;
       const sync_power = typeof e === "string" ? false : !!e.sync_power;
+      const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
       let group_volume;
 
       if (typeof e === "object" && typeof e.group_volume !== "undefined") {
@@ -604,6 +619,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         volume_entity,
         music_assistant_entity,
         sync_power,
+        follow_active_volume,
         ...(typeof group_volume !== "undefined" ? { group_volume } : {})
       };
     });
@@ -614,6 +630,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getVolumeEntity(idx) {
     const obj = this.entityObjs[idx];
     if (!obj) return null;
+    
+    // Check if volume entity should follow active entity
+    if (obj.follow_active_volume) {
+      // Get the active playback entity
+      const activeEntityId = this._getActivePlaybackEntityId();
+      if (activeEntityId) {
+        return activeEntityId;
+      }
+    }
+    
     const vol = obj.volume_entity;
     if (!vol) return obj.entity_id;
     if (typeof vol === 'string' && (vol.includes('{{') || vol.includes('{%'))) {
@@ -1324,7 +1350,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }
         }
         
-        const volTarget = (foundObj && foundObj.volume_entity) ? foundObj.volume_entity : (foundObj ? foundObj.entity_id : t);
+        const volTarget = foundObj ? this._getVolumeEntity(this.entityIds.indexOf(foundObj.entity_id)) : t;
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
@@ -1391,7 +1417,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             }
           }
           
-          const volTarget = (foundObj && foundObj.volume_entity) ? foundObj.volume_entity : (foundObj ? foundObj.entity_id : t);
+          const volTarget = foundObj ? this._getVolumeEntity(this.entityIds.indexOf(foundObj.entity_id)) : t;
           const st = this.hass.states[volTarget];
           if (!st) continue;
           let v = Number(st.attributes.volume_level || 0) + step;
@@ -1497,7 +1523,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }
         }
         
-        const volTarget = (foundObj && foundObj.volume_entity) ? foundObj.volume_entity : (foundObj ? foundObj.entity_id : t);
+        const volTarget = foundObj ? this._getVolumeEntity(this.entityIds.indexOf(foundObj.entity_id)) : t;
         const targetState = this.hass.states[volTarget];
         const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
         
@@ -2383,7 +2409,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                               );
                           // For volume control, use the main entity (or volume_entity if configured)
                           // This ensures volume controls target the correct entity for volume display
-                          const volumeEntity = (obj && obj.volume_entity) ? obj.volume_entity : obj.entity_id;
+                          const volumeEntity = this._getVolumeEntity(this.entityIds.indexOf(id));
                           const volumeState = this.hass.states[volumeEntity];
                           const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
                           const volVal = Number(volumeState?.attributes?.volume_level || 0);
@@ -3124,7 +3150,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
     if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
-    const masterVolumeEntity = (masterObj && masterObj.volume_entity) ? masterObj.volume_entity : masterObj?.entity_id;
+    const masterVolumeEntity = this._getVolumeEntity(this._selectedIndex);
     const masterVolumeState = masterVolumeEntity ? this.hass.states[masterVolumeEntity] : null;
     if (!masterVolumeState) return;
     const masterVol = Number(masterVolumeState.attributes.volume_level || 0);
@@ -3161,7 +3187,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       
       if (!foundObj) continue;
-      const volumeEntity = foundObj.volume_entity ? foundObj.volume_entity : foundObj.entity_id;
+      const volumeEntity = this._getVolumeEntity(this.entityIds.indexOf(foundObj.entity_id));
       await this.hass.callService("media_player", "volume_set", {
         entity_id: volumeEntity,
         volume_level: masterVol
