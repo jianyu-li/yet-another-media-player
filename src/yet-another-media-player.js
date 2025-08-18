@@ -157,14 +157,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResults = [];
     this._searchError = "";
     this._searchTotalRows = 15;  // minimum 15 rows for layout padding
+    // Per-chip linger map to keep MA entity selected briefly after pause
+    this._playbackLingerByIdx = {};
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._showResolvedEntities = false;
-    // Collapse on load if nothing is playing
+    // Collapse on load if nothing is playing (but respect linger state)
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
         const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
-        if (stateObj && stateObj.state !== "playing") {
+        // Don't go idle if there's an active linger
+        const hasActiveLinger = this._playbackLingerByIdx?.[this._selectedIndex] && 
+                               this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
+        if (stateObj && stateObj.state !== "playing" && !hasActiveLinger) {
           this._isIdle = true;
           this.requestUpdate();
         }
@@ -282,40 +287,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Get the resolved playback entity id for a chip index, preferring cache
   _getResolvedPlaybackEntityIdSync(idx) {
-    const obj = this.entityObjs[idx];
-    if (!obj) return null;
-    
-    const cached = this._maResolveCache?.[idx]?.id;
-    if (cached && typeof cached === 'string') {
-      // For rendering purposes, we should always use entities that are in our config
-      // This prevents the card from blanking out when templates resolve to unconfigured entities
-      if (obj.entity_id === cached) {
-        // Resolved entity is the main entity - this is always valid
-        return cached;
-      }
-      // Check if the resolved entity is in our configured entities list
-      if (this.entityIds.includes(cached)) {
-        return cached;
-      }
-      // Resolved entity is not in our config - fall back to main entity for rendering
-      // The resolved entity can still be used for service calls via _getPlaybackEntityId
-      return obj.entity_id;
-    }
-    
-    // No cache or invalid cache - check if we have a static MA entity
-    const rawMaEntity = obj.music_assistant_entity;
-    if (rawMaEntity && typeof rawMaEntity === 'string' && 
-        !rawMaEntity.includes('{{') && !rawMaEntity.includes('{%')) {
-      // Static MA entity - validate it's in our config
-      if (obj.entity_id === rawMaEntity || this.entityIds.includes(rawMaEntity)) {
-        return rawMaEntity;
-      }
-      // Static MA entity not in config - fall back to main entity
-      return obj.entity_id;
-    }
-    
-    // No MA entity or template - use main entity
-    return obj.entity_id;
+    return this._getEntityForPurpose(idx, 'playback_control');
   }
 
   // Get the resolved volume entity id for a chip index, preferring cache
@@ -456,6 +428,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchQuery = "";
     this._searchAttempted = false;
     this.requestUpdate();
+    
+    // Handle focus for expand on search
+    const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
+    setTimeout(() => {
+      const inp = this.renderRoot.querySelector('#search-input-box');
+      if (inp) {
+        inp.focus();
+      } else {
+        // If input not found, try again with a longer delay
+        setTimeout(() => {
+          const retryInp = this.renderRoot.querySelector('#search-input-box');
+          if (retryInp) {
+            retryInp.focus();
+          }
+        }, 200);
+      }
+    }, focusDelay);
   }
   _hideSearchSheetInOptions() {
     this._showSearchInSheet = false;
@@ -465,6 +454,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchLoading = false;
     this._searchAttempted = false;
     this.requestUpdate();
+    // Force layout update for expand on search
+    setTimeout(() => {
+      this._notifyResize();
+    }, 0);
   }
   // Search sheet methods
   _searchOpenSheet() {
@@ -577,6 +570,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._collapseOnIdle = !!config.collapse_on_idle;
     // Force always-collapsed view
     this._alwaysCollapsed = !!config.always_collapsed;
+    // Expand on search option (only available when always_collapsed is true)
+    this._expandOnSearch = !!config.expand_on_search;
     // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
     // Set idle timeout ms
@@ -626,27 +621,139 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
 
-  // Return volume entity for given index (use override if set)
-  _getVolumeEntity(idx) {
+  // Unified entity resolution system
+  _getEntityForPurpose(idx, purpose) {
     const obj = this.entityObjs[idx];
     if (!obj) return null;
     
-    // Check if volume entity should follow active entity
-    if (obj.follow_active_volume) {
-      // Get the active playback entity
-      const activeEntityId = this._getActivePlaybackEntityId();
-      if (activeEntityId) {
-        return activeEntityId;
-      }
+    switch (purpose) {
+      case 'volume_control':
+        // For volume control: follow active entity if enabled, otherwise use volume_entity or main entity
+        if (obj.follow_active_volume) {
+          return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+        }
+        return this._resolveEntity(obj.volume_entity, obj.entity_id, idx) || obj.entity_id;
+        
+      case 'volume_display':
+        // For volume display: show active entity if follow_active_volume enabled, otherwise show control entity
+        if (obj.follow_active_volume) {
+          return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+        }
+        return this._resolveEntity(obj.volume_entity, obj.entity_id, idx) || obj.entity_id;
+        
+      case 'grouping_control':
+        // For grouping menu: use MA entity (main entity if it's MA, or configured MA entity)
+        // Check if main entity is a Music Assistant entity by checking if it supports grouping
+        const mainState = this.hass.states[obj.entity_id];
+        const mainIsMA = mainState?.attributes?.supported_features && 
+                        (mainState.attributes.supported_features & SUPPORT_GROUPING) !== 0;
+        
+        if (mainIsMA) {
+          return obj.entity_id;
+        }
+        return this._resolveEntity(obj.music_assistant_entity, obj.entity_id, idx) || obj.entity_id;
+        
+      case 'playback_control':
+        // For playback controls: use the entity that is actually playing
+        return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+        
+      case 'sorting':
+        // For chip sorting: use active playback entity (MA entity if playing, otherwise main entity)
+        return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+        
+      default:
+        return obj.entity_id;
+    }
+  }
+
+  // Helper to resolve template entities
+  _resolveEntity(entityTemplate, fallbackEntityId, idx) {
+    if (!entityTemplate) return null;
+    
+    if (typeof entityTemplate === 'string' && (entityTemplate.includes('{{') || entityTemplate.includes('{%'))) {
+      // For templates, use cached resolved entity
+      const cached = this._maResolveCache?.[idx]?.id;
+      return cached || fallbackEntityId;
     }
     
-    const vol = obj.volume_entity;
-    if (!vol) return obj.entity_id;
-    if (typeof vol === 'string' && (vol.includes('{{') || vol.includes('{%'))) {
-      // Use resolved (cached) volume entity for operations
-      return this._getResolvedVolumeEntityIdSync(idx) || obj.entity_id;
+    return entityTemplate;
+  }
+
+    // Get active playback entity for a specific index
+  _getActivePlaybackEntityForIndex(idx) {
+    const obj = this.entityObjs[idx];
+    if (!obj) return null;
+    
+    const mainId = obj.entity_id;
+    const maId = this._resolveEntity(obj.music_assistant_entity, obj.entity_id, idx);
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    const maState = maId ? this.hass?.states?.[maId] : null;
+    
+
+    
+
+    
+    if (maId === mainId) return mainId;
+    
+
+    
+    return this._getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState);
+  }
+  
+  // Internal method to avoid recursion in debug logging
+  _getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState) {
+    if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
+      console.log(`INTERNAL_METHOD: idx=${idx}, maState=${maState?.state}, mainState=${mainState?.state}`);
     }
-    return vol;
+    
+    // Check for linger first - if we recently paused MA, stay on MA unless main entity is playing
+    const linger = this._playbackLingerByIdx?.[idx];
+    const now = Date.now();
+    if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
+      console.log(`LINGER_CHECK: idx=${idx}, linger=${linger ? 'exists' : 'none'}, until=${linger?.until}, now=${now}, active=${linger && linger.until > now}`);
+    }
+    if (linger && linger.until > now) {
+      // If main entity is playing AND was recently controlled, prioritize it over linger
+      if (mainState?.state === "playing" && this._lastPlayingEntityIdByChip?.[idx] === mainId) {
+        if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
+          console.log(`LINGER_OVERRIDE: main entity playing and recently controlled, returning=${mainId}`);
+        }
+        return mainId;
+      }
+      // Return the entity that the linger is actually for
+      if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
+        console.log(`LINGER_ACTIVE: maId=${maId}, mainId=${mainId}, lingerEntityId=${linger.entityId}, returning=${linger.entityId}`);
+      }
+      return linger.entityId;
+    }
+    // Clear expired linger
+    if (linger && linger.until <= now) {
+      delete this._playbackLingerByIdx[idx];
+    }
+    
+    // Prioritize the entity that is actually playing
+    // When both are playing, prefer MA entity for better control
+    if (maState?.state === "playing") return maId;
+    if (mainState?.state === "playing") return mainId;
+    
+
+    
+    // When neither is playing, check if one was recently controlled for this specific chip
+    const lastPlayingForChip = this._lastPlayingEntityIdByChip?.[idx];
+    if (lastPlayingForChip === maId) return maId;
+    if (lastPlayingForChip === mainId) return mainId;
+    
+    // Default to main entity for consistency
+    return mainId;
+  }
+
+  // Legacy methods for backward compatibility
+  _getVolumeEntity(idx) {
+    return this._getEntityForPurpose(idx, 'volume_control');
+  }
+
+  _getVolumeEntityForGrouping(idx) {
+    return this._getEntityForPurpose(idx, 'grouping_control');
   }
 
   // Prefer Music Assistant entity for search/grouping if configured
@@ -665,23 +772,34 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
   // Prefer Music Assistant entity for playback controls (play/pause/seek/etc.) if configured
   _getPlaybackEntityId(idx) {
-    const obj = this.entityObjs[idx];
-    if (!obj || !obj.music_assistant_entity) return obj?.entity_id;
-    
-    // Check if it's a template
-    if (typeof obj.music_assistant_entity === 'string' && 
-        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-      // For templates, resolve at action time - return template string for now
-      return obj.music_assistant_entity;
-    }
-    
-    return obj.music_assistant_entity;
+    return this._getEntityForPurpose(idx, 'playback_control');
   }
   // Choose the active playback target dynamically: prefer the entity that is currently playing
   _getActivePlaybackEntityId() {
     const mainId = this.currentEntityId;
     // Use actual resolved MA entity for active playback detection (can be unconfigured)
     const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    const maState = maId ? this.hass?.states?.[maId] : null;
+    
+    if (maId === mainId) return mainId;
+    
+    // Prioritize the entity that is actually playing
+    if (mainState?.state === "playing") return mainId;
+    if (maState?.state === "playing") return maId;
+    
+    // When neither is playing, prefer the main entity for consistency
+    return mainId;
+  }
+
+  // Get the active playback entity for a specific entity index (for follow_active_volume)
+  _getActivePlaybackEntityIdForIndex(idx) {
+    const obj = this.entityObjs[idx];
+    if (!obj) return null;
+    
+    const mainId = obj.entity_id;
+    // Use actual resolved MA entity for active playback detection (can be unconfigured)
+    const maId = this._getActualResolvedMaEntityForState(idx);
     const mainState = mainId ? this.hass?.states?.[mainId] : null;
     const maState = maId ? this.hass?.states?.[maId] : null;
     
@@ -838,10 +956,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
   updated(changedProps) {
     if (this.hass && this.entityIds) {
       // Update timestamps for playing entities
-      this.entityIds.forEach(id => {
-        const state = this.hass.states[id];
-        if (state && state.state === "playing") {
-          this._playTimestamps[id] = Date.now();
+      this.entityIds.forEach((id, idx) => {
+        const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
+        if (activeEntityId) {
+          const activeState = this.hass.states[activeEntityId];
+          if (activeState && activeState.state === "playing") {
+            this._playTimestamps[id] = Date.now();
+          }
         }
       });
 
@@ -904,6 +1025,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._updateIdleState();
 
     // Notify HA if collapsed state changes
+    // If expand on search is enabled and search is open, force expanded state
+    if (this._alwaysCollapsed && this._expandOnSearch && (this._searchOpen || this._showSearchInSheet)) {
+      const collapsedNow = false;
+      if (this._prevCollapsed !== collapsedNow) {
+        this._prevCollapsed = collapsedNow;
+        // Trigger layout update
+        this._notifyResize();
+      }
+      return;
+    }
+    
+    // Otherwise use normal collapse logic
     const collapsedNow = this._alwaysCollapsed
       ? true
       : (this._collapseOnIdle ? this._isIdle : false);
@@ -921,9 +1054,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Autofocus the in-sheet search box when opening the search in entity options
     if (this._showSearchInSheet) {
+      // Use a longer delay when expand on search is enabled to allow for card expansion
+      const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
+      
       setTimeout(() => {
         const inp = this.renderRoot.querySelector('#search-input-box');
-        if (inp) inp.focus();
+        console.log('YAMP Debug - Search focus attempt:', {
+          inputFound: !!inp,
+          inputId: inp?.id,
+          inputVisible: inp?.offsetParent !== null,
+          expandOnSearch: this._expandOnSearch,
+          focusDelay: focusDelay
+        });
+        if (inp) {
+          inp.focus();
+          console.log('YAMP Debug - Focus called on search input');
+        } else {
+          // If input not found, try again with a longer delay
+          setTimeout(() => {
+            const retryInp = this.renderRoot.querySelector('#search-input-box');
+            console.log('YAMP Debug - Retry focus attempt:', {
+              inputFound: !!retryInp,
+              inputId: retryInp?.id
+            });
+            if (retryInp) {
+              retryInp.focus();
+              console.log('YAMP Debug - Focus called on retry');
+            }
+          }, 200);
+        }
         // Only scroll filter chip row to start if the set of chips has changed
         const classes = Array.from(
           new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean))
@@ -950,7 +1109,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
         // attach swipe gesture once
         this._attachSearchSwipe();
-      }, 0);
+      }, 200);
     }
     // When the source‑list sheet opens, make sure the overlay scrolls to the top
     if (this._showSourceList) {
@@ -1103,6 +1262,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._searchQuery = "";
           this._searchAttempted = false;
           this.requestUpdate();
+          
+          // Force layout update for expand on search
+          setTimeout(() => {
+            this._notifyResize();
+          }, 0);
           break;
         case "source":
           this._showEntityOptions = true;
@@ -1161,45 +1325,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   async _onControlClick(action) {
-    const entityTemplate = this._getPlaybackEntityId(this._selectedIndex);
-    const entity = await this._resolveTemplateAtActionTime(entityTemplate, this.currentEntityId);
-    if (!entity) return;
-    
-    // For control actions, we want to target the entity that is actually playing
-    // or the configured playback entity if neither is playing
-    const mainId = this.currentEntityId;
-    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const mainState = mainId ? this.hass?.states?.[mainId] : null;
-    const maState = maId ? this.hass?.states?.[maId] : null;
-    
-    let targetEntity;
-    // If a control-focus lock is set, prefer it first
-    if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
-      targetEntity = this._controlFocusEntityId;
-    } else if (maState?.state === "playing") {
-      targetEntity = maId;
-    } else if (mainState?.state === "playing") {
-      targetEntity = mainId;
-    } else {
-      // When neither is playing, prefer the last playing entity for better resume behavior
-      if (this._lastPlayingEntityId && 
-          (this._lastPlayingEntityId === maId || this._lastPlayingEntityId === mainId)) {
-        targetEntity = this._lastPlayingEntityId;
-      } else {
-        // Fallback to the configured playback entity
-        targetEntity = entity;
-      }
-    }
-    
-    // Additional safety check: if we have a last playing entity and the target entity
-    // doesn't match what we expect, force it to the last playing entity
-    if (this._lastPlayingEntityId && 
-        (this._lastPlayingEntityId === maId || this._lastPlayingEntityId === mainId) &&
-        targetEntity !== this._lastPlayingEntityId &&
-        maState?.state !== "playing" && 
-        mainState?.state !== "playing") {
-      targetEntity = this._lastPlayingEntityId;
-    }
+    // Use the unified entity resolution system for control actions
+    const targetEntity = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
+    if (!targetEntity) return;
     
     const stateObj = this.hass?.states?.[targetEntity] || this.currentStateObj;
     
@@ -1207,10 +1335,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     switch (action) {
       case "play_pause":
+        console.log(`PAUSE_CLICK: targetEntity=${targetEntity}, state=${stateObj?.state}, selectedIndex=${this._selectedIndex}`);
+        // Start debug logging for 5 seconds
+        this._debugLoggingUntil = Date.now() + 5000;
+        
         if (stateObj?.state === "playing") {
           this.hass.callService("media_player", "media_pause", { entity_id: targetEntity });
-          // When pausing, set the last playing entity to the one we just paused
-          this._lastPlayingEntityId = targetEntity;
+          // When pausing, set the last playing entity to the one we just paused (per-chip)
+          if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
+          this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
           // Lock controls to this entity during the paused window
           this._controlFocusEntityId = targetEntity;
           // Optimistic toggle to reduce flicker
@@ -1219,13 +1352,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
           setTimeout(() => { this._optimisticPlayback = null; this.requestUpdate(); }, 1200);
         } else {
           this.hass.callService("media_player", "media_play", { entity_id: targetEntity });
-          // On resume, lock to the target entity immediately and cancel any pending debounce
-          this._lastPlayingEntityId = targetEntity;
-          if (this._entitySwitchDebounceTimer) {
-            clearTimeout(this._entitySwitchDebounceTimer);
-            this._entitySwitchDebounceTimer = null;
-          }
-          this._lastPlaybackEntityId = targetEntity;
+          // On resume, lock to the target entity immediately (per-chip)
+          if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
+          this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
           // Maintain focus lock until an entity reports playing
           this._controlFocusEntityId = targetEntity;
           // Optimistic toggle to reduce flicker
@@ -1350,7 +1479,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }
         }
         
-        const volTarget = foundObj ? this._getVolumeEntity(this.entityIds.indexOf(foundObj.entity_id)) : t;
+        // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
+        const volTarget = t; // Use the grouping entity directly
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
@@ -1359,7 +1489,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       this._groupBaseVolume = newVol;
     } else {
-      this.hass.callService("media_player", "volume_set", { entity_id: this._getVolumeEntity(idx), volume_level: newVol });
+      const volumeEntity = this._getVolumeEntity(idx);
+      this.hass.callService("media_player", "volume_set", { entity_id: volumeEntity, volume_level: newVol });
     }
   }
 
@@ -1417,7 +1548,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             }
           }
           
-          const volTarget = foundObj ? this._getVolumeEntity(this.entityIds.indexOf(foundObj.entity_id)) : t;
+          // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
+          const volTarget = t; // Use the grouping entity directly
           const st = this.hass.states[volTarget];
           if (!st) continue;
           let v = Number(st.attributes.volume_level || 0) + step;
@@ -1523,7 +1655,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }
         }
         
-        const volTarget = foundObj ? this._getVolumeEntity(this.entityIds.indexOf(foundObj.entity_id)) : t;
+        // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
+        const volTarget = t; // Use the grouping entity directly
         const targetState = this.hass.states[volTarget];
         const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
         
@@ -1572,12 +1705,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _onGroupVolumeChange(entityId, volumeEntity, e) {
       const vol = Number(e.target.value);
       this.hass.callService("media_player", "volume_set", { entity_id: volumeEntity, volume_level: vol });
+      this.requestUpdate();
     }
     _onGroupVolumeStep(volumeEntity, direction) {
       this.hass.callService("remote", "send_command", {
         entity_id: volumeEntity,
         command: direction > 0 ? "volume_up" : "volume_down"
       });
+      this.requestUpdate();
     }
 
   _onSourceChange(e) {
@@ -1614,9 +1749,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       targetEntity = mainId;
     } else {
       // When neither is playing, prefer the last playing entity for better resume behavior
-      if (this._lastPlayingEntityId && 
-          (this._lastPlayingEntityId === maId || this._lastPlayingEntityId === mainId)) {
-        targetEntity = this._lastPlayingEntityId;
+      const lastPlayingForChip = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
+      if (lastPlayingForChip && 
+          (lastPlayingForChip === maId || lastPlayingForChip === mainId)) {
+        targetEntity = lastPlayingForChip;
       } else {
         // Fallback to the configured playback entity
         const entityTemplate = this._getPlaybackEntityId(this._selectedIndex);
@@ -1676,7 +1812,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const shouldDimIdle = dimIdleFrame && this._isIdle;
 
       // Calculate shuffle/repeat state from the active playback entity when available
-      // Use debounced entity selection to prevent rapid switching
       const mainStateForPlayback = this.currentStateObj;
       const maStateForPlayback = this.currentPlaybackStateObj;
       const optimisticEntityId = this._optimisticPlayback?.entity_id || null;
@@ -1690,101 +1825,72 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const actualResolvedMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
       const actualMaState = actualResolvedMaId ? this.hass?.states?.[actualResolvedMaId] : null;
       
-      const currentId = this._lastPlaybackEntityId ?? resolvedMaId;
-      // Initialise the debounced entity on first render so we don't switch
-      // away before the 30‑second debounce window completes.
-      if (!this._lastPlaybackEntityId && currentId) {
-        this._lastPlaybackEntityId = currentId;
-      }
-
-      const candidatePlayingId =
-        (actualMaState?.state === "playing") ? actualResolvedMaId :
-        (mainStateForPlayback?.state === "playing") ? this.currentEntityId :
-        null;
-
-      // Update last playing entity tracking - only when an entity starts playing
-      if (actualMaState?.state === "playing" && this._lastMaState !== "playing") {
-        this._lastPlayingEntityId = actualResolvedMaId;
-        // Clear focus lock when playback resumes on a concrete entity
-        this._controlFocusEntityId = null;
-      } else if (mainStateForPlayback?.state === "playing" && this._lastMainState !== "playing") {
-        this._lastPlayingEntityId = this.currentEntityId;
-        this._controlFocusEntityId = null;
-      }
-
-      let targetEntityId;
-      if (candidatePlayingId && candidatePlayingId !== currentId) {
-        // Switch only when another entity is actively playing
-        targetEntityId = candidatePlayingId;
-      } else {
-        // Otherwise stay on current (even if paused/idle)
-        // But prefer the last playing entity if it's paused and no other entity is playing
-        if (this._lastPlayingEntityId && 
-            (this._lastPlayingEntityId === actualResolvedMaId || this._lastPlayingEntityId === this.currentEntityId) &&
-            !candidatePlayingId) {
-          targetEntityId = this._lastPlayingEntityId;
-        } else {
-          targetEntityId = currentId ?? resolvedMaId ?? this.currentEntityId;
-        }
-      }
-
-      // -----------------------------------------------------------------
-      // Debounce entity switching with 30-second timeout to allow main entity to catch up
-       if (targetEntityId !== this._lastPlaybackEntityId) {
-         if (this._entitySwitchDebounceTimer) {
-           clearTimeout(this._entitySwitchDebounceTimer);
-         }
-         this._entitySwitchDebounceTimer = setTimeout(() => {
-           this._lastPlaybackEntityId = targetEntityId;
-           this._entitySwitchDebounceTimer = null;
-           this.requestUpdate();
-         }, 30000); // 30-second debounce
-       }
-      
-                   // Interrupt debounce if either entity transitions to playing
-      const mainStateChanged = this._lastMainState !== mainStateForPlayback?.state;
-      const maStateChanged = this._lastMaState !== actualMaState?.state;
-      
-      if (this._entitySwitchDebounceTimer && !this._optimisticPlayback) {
-        let shouldInterrupt = false;
+              // Update state tracking for optimistic playback and set/clear MA linger window
+        const prevMain = this._lastMainState;
         
-        // Check if main entity just started playing
-        if (mainStateChanged && mainStateForPlayback?.state === "playing" && this._lastMainState !== "playing") {
-          shouldInterrupt = true;
-        }
-        // Check if actual MA entity just started playing
-        else if (maStateChanged && actualMaState?.state === "playing" && this._lastMaState !== "playing") {
-          shouldInterrupt = true;
-        }
+
+              const prevMa = this._lastMaState;
+        this._lastMainState = mainStateForPlayback?.state;
+        this._lastMaState = actualMaState?.state;
+        const idx = this._selectedIndex;
         
-        if (shouldInterrupt) {
-          clearTimeout(this._entitySwitchDebounceTimer);
-          this._entitySwitchDebounceTimer = null;
-          this._lastPlaybackEntityId = targetEntityId; // Switch immediately to the entity that just began playing
-        }
+
+      // If MA just transitioned from playing -> not playing, start a linger window (30s)
+      if (prevMa === "playing" && this._lastMaState !== "playing") {
+        this._playbackLingerByIdx[idx] = {
+          entityId: actualResolvedMaId,
+          until: Date.now() + 30000,
+        };
+        
       }
+              // Also set linger when MA entity is paused (regardless of previous state) to ensure UI stays on MA
+
+        // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
+        const shouldSetLinger = (prevMa === "playing" && this._lastMaState === "paused" && this._lastPlayingEntityIdByChip?.[idx] === actualResolvedMaId) ||
+                               (prevMain === "playing" && this._lastMainState === "paused" && this._lastPlayingEntityIdByChip?.[idx] === mainStateForPlayback?.entity_id);
+        
+        if (shouldSetLinger) {
+          // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
+          const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
+          this._playbackLingerByIdx[idx] = {
+            entityId: lingerEntityId, // Use cached MA entity or last controlled entity
+            until: Date.now() + 30000,
+          };
+        }
+              // If MA resumed playing, clear linger
+        if (this._lastMaState === "playing" && this._playbackLingerByIdx?.[idx]) {
+          delete this._playbackLingerByIdx[idx];
+        }
+        // Only clear linger if main entity is playing AND MA entity is not the last controlled entity
+        const maEntityId = this.config.entities[idx]?.music_assistant_entity;
+        const currentResolvedMaId = this._getEntityForPurpose(idx, 'ma_resolve');
+        const lastControlled = this._lastPlayingEntityIdByChip?.[idx];
+        const cachedResolvedMaId = this._maResolveCache?.[idx]?.id;
+        const isLastControlledMa = !!(lastControlled && (
+          lastControlled === cachedResolvedMaId ||
+          lastControlled === currentResolvedMaId ||
+          lastControlled === maEntityId ||
+          lastControlled === actualResolvedMaId
+        ));
+
+        if (this._lastMainState === "playing" && this._playbackLingerByIdx?.[idx] && !isLastControlledMa) {
+          if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
+            console.log(`LINGER_CLEARED: idx=${idx}, reason=main_playing_not_ma_controlled`);
+          }
+          delete this._playbackLingerByIdx[idx];
+        }
       
-      // Update state tracking
-      this._lastMainState = mainStateForPlayback?.state;
-      this._lastMaState = actualMaState?.state;
+             // Use the unified entity resolution system for playback state
+       const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
+       const playbackStateObj = this.hass?.states?.[playbackEntityId];
        
-       // Use the debounced entity ID or the current target if no debounce is active
-       const finalEntityId = this._lastPlaybackEntityId || targetEntityId;
-       let playbackStateObj;
-       if (finalEntityId === actualResolvedMaId) {
-         // Use the actual resolved MA entity state (can be unconfigured)
-         playbackStateObj = actualMaState;
-       } else if (finalEntityId === resolvedMaId) {
-         // Use the safe resolved MA entity state (only configured entities)
-         playbackStateObj = maStateForPlayback;
-       } else if (finalEntityId === this.currentEntityId) {
-         playbackStateObj = mainStateForPlayback;
-       } else {
-         // Fallback - prefer actual MA state if available
-         playbackStateObj = actualMaState || maStateForPlayback || mainStateForPlayback;
-       }
-      // Blend in optimistic playback state if present
-      let effState = playbackStateObj?.state;
+       // Use the unified entity resolution system for playback state
+       const finalPlaybackStateObj = playbackStateObj;
+       
+              // Keep finalEntityId for backward compatibility with existing code
+       const finalEntityId = playbackEntityId;
+       // Blend in optimistic playback state if present
+       let effState = finalPlaybackStateObj?.state;
       if (this._optimisticPlayback) {
         // Only apply optimistic state if it matches the current playback entity
         const optimisticEntityId = this._optimisticPlayback.entity_id;
@@ -1793,8 +1899,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           effState = this._optimisticPlayback.state;
         }
       }
-      const shuffleActive = !!playbackStateObj.attributes.shuffle;
-      const repeatActive = playbackStateObj.attributes.repeat && playbackStateObj.attributes.repeat !== "off";
+      const shuffleActive = !!finalPlaybackStateObj.attributes.shuffle;
+      const repeatActive = finalPlaybackStateObj.attributes.repeat && finalPlaybackStateObj.attributes.repeat !== "off";
 
       // Artwork and idle logic
       const isPlaying = !this._isIdle && effState === "playing";
@@ -1809,31 +1915,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
             || (playbackStateObj && (playbackStateObj.attributes.entity_picture || playbackStateObj.attributes.album_art)))
         : null;
       // Details
-      const title = isPlaying ? ((playbackStateObj.attributes.media_title || mainState?.attributes?.media_title || "")) : "";
+      const title = isPlaying ? ((finalPlaybackStateObj.attributes.media_title || mainState?.attributes?.media_title || "")) : "";
       const artist = isPlaying
         ? (
-            playbackStateObj.attributes.media_artist ||
-            playbackStateObj.attributes.media_series_title ||
-            playbackStateObj.attributes.app_name ||
+            finalPlaybackStateObj.attributes.media_artist ||
+            finalPlaybackStateObj.attributes.media_series_title ||
+            finalPlaybackStateObj.attributes.app_name ||
             mainState?.attributes?.media_artist ||
             mainState?.attributes?.media_series_title ||
             mainState?.attributes?.app_name ||
             ""
           )
         : "";
-      let pos = playbackStateObj.attributes.media_position || 0;
-      const duration = playbackStateObj.attributes.media_duration || 0;
+      let pos = finalPlaybackStateObj.attributes.media_position || 0;
+      const duration = finalPlaybackStateObj.attributes.media_duration || 0;
       if (isPlaying) {
-        const updatedAt = playbackStateObj.attributes.media_position_updated_at
-          ? Date.parse(playbackStateObj.attributes.media_position_updated_at)
-          : Date.parse(playbackStateObj.last_changed);
+        const updatedAt = finalPlaybackStateObj.attributes.media_position_updated_at
+          ? Date.parse(finalPlaybackStateObj.attributes.media_position_updated_at)
+          : Date.parse(finalPlaybackStateObj.last_changed);
         const elapsed = (Date.now() - updatedAt) / 1000;
         pos += elapsed;
       }
       const progress = duration ? Math.min(1, pos / duration) : 0;
 
       // Volume entity determination
-      const idx = this._selectedIndex;
       const entity = this._getVolumeEntity(idx);
       const isRemoteVolumeEntity = entity && entity.startsWith && entity.startsWith("remote.");
 
@@ -1842,23 +1947,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const showSlider = this.config.volume_mode !== "stepper";
 
       // Collapse artwork/details on idle if configured and/or always_collapsed
-      const collapsed = this._alwaysCollapsed
-        ? true
-        : (this._collapseOnIdle ? this._isIdle : false);
+      // If expand on search is enabled and search is open, force expanded state
+      let collapsed;
+      if (this._alwaysCollapsed && this._expandOnSearch && (this._searchOpen || this._showSearchInSheet)) {
+        collapsed = false;
+      } else {
+        collapsed = this._alwaysCollapsed
+          ? true
+          : (this._collapseOnIdle ? this._isIdle : false);
+      }
       // Use null if idle or no artwork available
       let artworkUrl = null;
       if (!this._isIdle) {
         const getArt = (st) => st && (st.attributes.entity_picture || st.attributes.album_art);
-        if (finalEntityId === actualResolvedMaId) {
-          // Active entity is the actual resolved MA entity — prefer its artwork
-          artworkUrl = getArt(playbackStateObj) || getArt(mainState) || null;
-        } else if (finalEntityId === resolvedMaId) {
-          // Active entity is the safe resolved MA entity — prefer its artwork
-          artworkUrl = getArt(playbackStateObj) || getArt(mainState) || null;
-        } else {
-          // Active entity is the main entity — prefer main artwork, fallback to playback
-          artworkUrl = getArt(mainState) || getArt(playbackStateObj) || null;
-        }
+        // Use the unified entity resolution system for artwork
+        artworkUrl = getArt(playbackStateObj) || getArt(mainState) || null;
       }
 
       // Dominant color extraction for collapsed artwork
@@ -1890,29 +1993,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     getIsChipPlaying: (id, isSelected) => {
                       const obj = this._findEntityObjByAnyId(id);
                       const mainId = obj?.entity_id || id;
-                      // Use actual resolved MA entity for state detection (can be unconfigured)
                       const idx = this.entityIds.indexOf(mainId);
-                      const maId = idx >= 0 ? this._getActualResolvedMaEntityForState(idx) : null;
-                      const maState = maId ? this.hass?.states?.[maId] : null;
-                      const mainState = this.hass?.states?.[mainId];
-                      const anyPlaying = (maState?.state === "playing") || (mainState?.state === "playing");
+                      if (idx < 0) return isSelected ? !this._isIdle : false;
+                      
+                      // Use the unified entity resolution system
+                      const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+                      const playbackState = this.hass?.states?.[playbackEntityId];
+                      const anyPlaying = playbackState?.state === "playing";
                       return isSelected ? !this._isIdle : anyPlaying;
                     },
                     getChipArt: (id) => {
                       const obj = this._findEntityObjByAnyId(id);
                       const mainId = obj?.entity_id || id;
-                      // Use actual resolved MA entity for state detection (can be unconfigured)
                       const idx = this.entityIds.indexOf(mainId);
-                      const maId = idx >= 0 ? this._getActualResolvedMaEntityForState(idx) : null;
+                      if (idx < 0) return null;
+                      
+                      // Use the unified entity resolution system
+                      const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+                      const playbackState = this.hass?.states?.[playbackEntityId];
                       const mainState = this.hass?.states?.[mainId];
-                      const maState = maId ? this.hass?.states?.[maId] : null;
-                      if (maState?.state === "playing") {
-                        return maState.attributes.entity_picture || maState.attributes.album_art || mainState?.attributes?.entity_picture || mainState?.attributes?.album_art || null;
-                      }
-                      if (mainState?.state === "playing") {
-                        return mainState.attributes.entity_picture || mainState.attributes.album_art || maState?.attributes?.entity_picture || maState?.attributes?.album_art || null;
-                      }
-                      return mainState?.attributes?.entity_picture || mainState?.attributes?.album_art || maState?.attributes?.entity_picture || maState?.attributes?.album_art || null;
+                      
+                      // Prefer playback entity artwork, fallback to main entity
+                      return playbackState?.attributes?.entity_picture || 
+                             playbackState?.attributes?.album_art || 
+                             mainState?.attributes?.entity_picture || 
+                             mainState?.attributes?.album_art || null;
                     },
                     getIsMaActive: (id) => {
                       const obj = this._findEntityObjByAnyId(id);
@@ -1924,13 +2029,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       const entityObj = this.entityObjs[idx];
                       if (!entityObj?.music_assistant_entity) return false;
                       
-                      // Get the actual resolved MA entity
-                      const maId = this._getActualResolvedMaEntityForState(idx);
-                      if (!maId) return false;
+                      // Use the unified entity resolution system
+                      const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+                      const playbackState = this.hass?.states?.[playbackEntityId];
                       
-                      // Check if the MA entity is currently playing
-                      const maState = this.hass?.states?.[maId];
-                      return maState?.state === "playing";
+                      // Check if the playback entity is the MA entity and is playing
+                      return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && 
+                             playbackState?.state === "playing";
                     },
                     isIdle: this._isIdle,
                     hass: this.hass,
@@ -1940,6 +2045,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
                       if (group && group.length > 1) {
                         this._selectedIndex = idx;
+
                         this._showEntityOptions = true;
                         this._showGrouping = true;
                         this.requestUpdate();
@@ -2056,6 +2162,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   onControlClick: (action) => this._onControlClick(action),
                   supportsFeature: (state, feature) => this._supportsFeature(state, feature)
                 })}
+
                 ${renderVolumeRow({
                   isRemoteVolumeEntity,
                   showSlider,
@@ -2169,7 +2276,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 <button class="entity-options-item" @click=${() => {
                   this._showResolvedEntities = false;
                   this.requestUpdate();
-                }} style="margin-bottom:14px;">← Back</button>
+                }} style="margin-bottom:14px;">&larr; Back</button>
                 <div class="entity-options-resolved-entities" style="margin-top:12px;">
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
@@ -2325,7 +2432,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 </div>
               ` : this._showGrouping ? html`
-                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
+                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">&larr; Back</button>
                 ${
                   (() => {
                     const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
@@ -2354,33 +2461,65 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   (() => {
                     // --- Begin new group player rows logic, wrapped in scrollable container ---
                     const masterId = this.currentEntityId;
-                    const sortedIds = [masterId, ...this.entityIds.filter(id => id !== masterId)];
+                    
+                    // Build list of entities to show in group players menu
+                    // Prioritize Music Assistant entities when available, fall back to main entities only if they support grouping
+                    const groupPlayerIds = [];
+                    
+                    for (const id of this.entityIds) {
+                      const obj = this.entityObjs.find(e => e.entity_id === id);
+                      if (!obj) continue;
+                      
+                      let entityToCheck = null;
+                      let entityName = null;
+                      
+                      // First, check if there's a Music Assistant entity configured
+                      if (obj.music_assistant_entity) {
+                        let maEntityId;
+                        if (typeof obj.music_assistant_entity === 'string' && 
+                            (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+                          // For templates, use the cached resolved entity
+                          const idx = this.entityIds.indexOf(id);
+                          const cached = this._maResolveCache?.[idx]?.id;
+                          maEntityId = cached || obj.entity_id;
+                        } else {
+                          maEntityId = obj.music_assistant_entity;
+                        }
+                        
+                        const maState = this.hass.states[maEntityId];
+                        if (maState && this._supportsFeature(maState, SUPPORT_GROUPING)) {
+                          entityToCheck = maEntityId;
+                          entityName = id; // Use main entity name for display
+                        }
+                      }
+                      
+                      // If no MA entity supports grouping, check main entity
+                      if (!entityToCheck) {
+                        const mainState = this.hass.states[id];
+                        if (mainState && this._supportsFeature(mainState, SUPPORT_GROUPING)) {
+                          entityToCheck = id;
+                          entityName = id;
+                        }
+                      }
+                      
+                      // Add to list if we found a valid grouping entity
+                      if (entityToCheck && entityName) {
+                        groupPlayerIds.push({ id: entityName, groupId: entityToCheck });
+                      }
+                    }
+                    
+                    // Sort with master first
+                    const masterFirst = groupPlayerIds.find(item => item.id === masterId);
+                    const others = groupPlayerIds.filter(item => item.id !== masterId);
+                    const sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
+                    
                     return html`
                       <div class="group-list-scroll" style="overflow-y: auto; max-height: 340px;">
-                        ${sortedIds.map(id => {
+                        ${sortedGroupIds.map(item => {
+                          const id = item.id;
+                          const actualGroupId = item.groupId;
                           const obj = this.entityObjs.find(e => e.entity_id === id);
                           if (!obj) return nothing;
-                          
-                          // For feature checking, we need to resolve the actual MA entity
-                          let actualGroupId;
-                          
-                          if (obj.music_assistant_entity) {
-                            // Check if it's a template
-                            if (typeof obj.music_assistant_entity === 'string' && 
-                                (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-                              // For templates, use the cached resolved entity
-                              const idx = this.entityIds.indexOf(id);
-                              const cached = this._maResolveCache?.[idx]?.id;
-                              actualGroupId = cached || obj.entity_id;
-                            } else {
-                              actualGroupId = obj.music_assistant_entity;
-                            }
-                          } else {
-                            actualGroupId = obj.entity_id;
-                          }
-                          
-                          const st = this.hass.states[actualGroupId];
-                          if (!this._supportsFeature(st, SUPPORT_GROUPING)) return nothing;
                           const name = this.getChipName(id);
                           
                           // Get the master's resolved MA entity for proper comparison
@@ -2407,12 +2546,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 Array.isArray(masterState.attributes.group_members) &&
                                 masterState.attributes.group_members.includes(actualGroupId)
                               );
-                          // For volume control, use the main entity (or volume_entity if configured)
-                          // This ensures volume controls target the correct entity for volume display
-                          const volumeEntity = this._getVolumeEntity(this.entityIds.indexOf(id));
-                          const volumeState = this.hass.states[volumeEntity];
-                          const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
-                          const volVal = Number(volumeState?.attributes?.volume_level || 0);
+                          // Use unified entity resolution for grouping menu
+                          const entityIdx = this.entityIds.indexOf(id);
+                          const volumeEntity = this._getEntityForPurpose(entityIdx, 'grouping_control');
+                          // For group players menu, use the same entity for both control and display
+                          const displayEntity = volumeEntity;
+                          const displayVolumeState = this.hass.states[displayEntity];
+                          
+                          const isRemoteVol = displayEntity.startsWith && displayEntity.startsWith("remote.");
+                          const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
                           return html`
                             <div style="
                               display: flex;
@@ -2479,7 +2621,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   })()
                 }
               ` : html`
-                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
+                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">&larr; Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => html`
@@ -2552,7 +2694,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       } else {
         // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
-        if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
+        // Also check if there's an active linger - don't go idle if there's a linger
+        const hasActiveLinger = this._playbackLingerByIdx?.[this._selectedIndex] && 
+                               this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
+        if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0 && !hasActiveLinger) {
           this._idleTimeout = setTimeout(() => {
             this._isIdle = true;
             this._idleTimeout = null;
@@ -2565,9 +2710,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Home assistant layout options
     getGridOptions() {
     // Use the same logic as in render() to know if the card is collapsed.
-    const collapsed = this._alwaysCollapsed
-      ? true
-      : (this._collapseOnIdle ? this._isIdle : false);
+    let collapsed;
+    if (this._alwaysCollapsed && this._expandOnSearch && (this._searchOpen || this._showSearchInSheet)) {
+      collapsed = false;
+    } else {
+      collapsed = this._alwaysCollapsed
+        ? true
+        : (this._collapseOnIdle ? this._isIdle : false);
+    }
+
+
 
       const minRows = collapsed ? 2 : 4;
 
@@ -2636,6 +2788,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         },
         {
           name: "always_collapsed",
+          selector: {
+            boolean: {}
+          },
+          required: false
+        },
+        {
+          name: "expand_on_search",
           selector: {
             boolean: {}
           },
@@ -2872,14 +3031,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       clearTimeout(this._debouncedVolumeTimer);
       this._debouncedVolumeTimer = null;
     }
-    if (this._entitySwitchDebounceTimer) {
-      clearTimeout(this._entitySwitchDebounceTimer);
-      this._entitySwitchDebounceTimer = null;
-    }
+
     if (this._manualSelectTimeout) {
       clearTimeout(this._manualSelectTimeout);
       this._manualSelectTimeout = null;
     }
+
+
     this._removeSourceDropdownOutsideHandler();
     this._removeGrabScrollHandlers();
     this._removeSearchSwipeHandlers();
@@ -3150,7 +3308,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
     if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
-    const masterVolumeEntity = this._getVolumeEntity(this._selectedIndex);
+    // For sync volume, use the same entity that's being used for grouping (the MA entity) to get the master volume
+    const masterVolumeEntity = masterGroupId;
     const masterVolumeState = masterVolumeEntity ? this.hass.states[masterVolumeEntity] : null;
     if (!masterVolumeState) return;
     const masterVol = Number(masterVolumeState.attributes.volume_level || 0);
@@ -3187,7 +3346,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       
       if (!foundObj) continue;
-      const volumeEntity = this._getVolumeEntity(this.entityIds.indexOf(foundObj.entity_id));
+      
+      // For sync volume, use the same entity that's being used for grouping (the MA entity)
+      const volumeEntity = groupedId;
+      
       await this.hass.callService("media_player", "volume_set", {
         entity_id: volumeEntity,
         volume_level: masterVol
