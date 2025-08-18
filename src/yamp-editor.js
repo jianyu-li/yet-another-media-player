@@ -414,9 +414,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
-              id="collapsed-on-idle-toggle"
-              .checked=${this._config.collapsed_on_idle ?? false}
-              @change=${(e) => this._updateConfig("collapsed_on_idle", e.target.checked)}
+              id="collapse-on-idle-toggle"
+              .checked=${this._config.collapse_on_idle ?? false}
+              @change=${(e) => this._updateConfig("collapse_on_idle", e.target.checked)}
             ></ha-switch>
             <span>Collapse on Idle</span>
           </div>
@@ -428,6 +428,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-switch>
             <span>Always Collapsed</span>
           </div>
+          ${this._config.always_collapsed ? html`
+            <div>
+              <ha-switch
+                id="expand-on-search-toggle"
+                .checked=${this._config.expand_on_search ?? false}
+                @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
+              ></ha-switch>
+              <span>Expand on Search</span>
+            </div>
+          ` : nothing}
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -835,7 +845,6 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
             <div class="help-text">
               <ha-icon icon="mdi:information-outline"></ha-icon>
               When enabled, the volume entity will automatically follow the active playback entity. 
-              This is useful when you want volume controls to always target the entity that is currently playing.
               <br><br>
              
             </div>

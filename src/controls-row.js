@@ -11,6 +11,8 @@ export function renderControlsRow({
   supportsFeature,
 }) {
   if (!stateObj) return nothing;
+  
+
 
   const SUPPORT_PAUSE = 1;
   const SUPPORT_PREVIOUS_TRACK = 16;

@@ -56,6 +56,7 @@ Below you will find a list of all configuration options.
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing                                          |
+| `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `idle_image`               | image/camera | No           | —           | Background image when player is idle                                                            |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |
@@ -128,6 +129,21 @@ collapse_on_idle: true
 always_collapsed: false
 alternate_progress_bar: false
 idle_image: camera.family_slideshow
+  ```
+
+### Expand on Search Example
+When using `always_collapsed: true`, you can enable `expand_on_search: true` to temporarily expand the card to its normal size when the search interface is open:
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - media_player.living_room_apple_tv
+  - media_player.kitchen_homepod
+actions:
+  - icon: mdi:magnify
+    menu_item: search
+always_collapsed: true
+expand_on_search: true
 ```
 
 ### Custom Actions
