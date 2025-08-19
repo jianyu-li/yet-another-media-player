@@ -700,30 +700,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return this._getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState);
   }
   
-  // Internal method to avoid recursion in debug logging
+  // Internal method to avoid recursion
   _getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState) {
-    if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-      console.log(`INTERNAL_METHOD: idx=${idx}, maState=${maState?.state}, mainState=${mainState?.state}`);
-    }
-    
     // Check for linger first - if we recently paused MA, stay on MA unless main entity is playing
     const linger = this._playbackLingerByIdx?.[idx];
     const now = Date.now();
-    if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-      console.log(`LINGER_CHECK: idx=${idx}, linger=${linger ? 'exists' : 'none'}, until=${linger?.until}, now=${now}, active=${linger && linger.until > now}`);
-    }
     if (linger && linger.until > now) {
       // If main entity is playing AND was recently controlled, prioritize it over linger
       if (mainState?.state === "playing" && this._lastPlayingEntityIdByChip?.[idx] === mainId) {
-        if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-          console.log(`LINGER_OVERRIDE: main entity playing and recently controlled, returning=${mainId}`);
-        }
         return mainId;
       }
       // Return the entity that the linger is actually for
-      if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-        console.log(`LINGER_ACTIVE: maId=${maId}, mainId=${mainId}, lingerEntityId=${linger.entityId}, returning=${linger.entityId}`);
-      }
       return linger.entityId;
     }
     // Clear expired linger
@@ -1059,27 +1046,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       setTimeout(() => {
         const inp = this.renderRoot.querySelector('#search-input-box');
-        console.log('YAMP Debug - Search focus attempt:', {
-          inputFound: !!inp,
-          inputId: inp?.id,
-          inputVisible: inp?.offsetParent !== null,
-          expandOnSearch: this._expandOnSearch,
-          focusDelay: focusDelay
-        });
         if (inp) {
           inp.focus();
-          console.log('YAMP Debug - Focus called on search input');
         } else {
           // If input not found, try again with a longer delay
           setTimeout(() => {
             const retryInp = this.renderRoot.querySelector('#search-input-box');
-            console.log('YAMP Debug - Retry focus attempt:', {
-              inputFound: !!retryInp,
-              inputId: retryInp?.id
-            });
             if (retryInp) {
               retryInp.focus();
-              console.log('YAMP Debug - Focus called on retry');
             }
           }, 200);
         }
@@ -1335,10 +1309,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     switch (action) {
       case "play_pause":
-        console.log(`PAUSE_CLICK: targetEntity=${targetEntity}, state=${stateObj?.state}, selectedIndex=${this._selectedIndex}`);
-        // Start debug logging for 5 seconds
-        this._debugLoggingUntil = Date.now() + 5000;
-        
         if (stateObj?.state === "playing") {
           this.hass.callService("media_player", "media_pause", { entity_id: targetEntity });
           // When pausing, set the last playing entity to the one we just paused (per-chip)
@@ -1420,7 +1390,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
    * Handles volume change events.
    * With group_volume: false, always sets only the single volume entity, never the group.
    * With group_volume: true/undefined, applies group logic.
-   * Includes debug logs to verify logic.
    */
   async _onVolumeChange(e) {
     const idx = this._selectedIndex;
@@ -1874,9 +1843,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         ));
 
         if (this._lastMainState === "playing" && this._playbackLingerByIdx?.[idx] && !isLastControlledMa) {
-          if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-            console.log(`LINGER_CLEARED: idx=${idx}, reason=main_playing_not_ma_controlled`);
-          }
           delete this._playbackLingerByIdx[idx];
         }
       
