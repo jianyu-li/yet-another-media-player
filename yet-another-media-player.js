@@ -7699,32 +7699,19 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return this._getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState);
   }
 
-  // Internal method to avoid recursion in debug logging
+  // Internal method to avoid recursion
   _getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState) {
     var _this$_playbackLinger2, _this$_lastPlayingEnt2;
-    if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-      console.log(`INTERNAL_METHOD: idx=${idx}, maState=${maState === null || maState === void 0 ? void 0 : maState.state}, mainState=${mainState === null || mainState === void 0 ? void 0 : mainState.state}`);
-    }
-
     // Check for linger first - if we recently paused MA, stay on MA unless main entity is playing
     const linger = (_this$_playbackLinger2 = this._playbackLingerByIdx) === null || _this$_playbackLinger2 === void 0 ? void 0 : _this$_playbackLinger2[idx];
     const now = Date.now();
-    if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-      console.log(`LINGER_CHECK: idx=${idx}, linger=${linger ? 'exists' : 'none'}, until=${linger === null || linger === void 0 ? void 0 : linger.until}, now=${now}, active=${linger && linger.until > now}`);
-    }
     if (linger && linger.until > now) {
       var _this$_lastPlayingEnt;
       // If main entity is playing AND was recently controlled, prioritize it over linger
       if ((mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing" && ((_this$_lastPlayingEnt = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt === void 0 ? void 0 : _this$_lastPlayingEnt[idx]) === mainId) {
-        if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-          console.log(`LINGER_OVERRIDE: main entity playing and recently controlled, returning=${mainId}`);
-        }
         return mainId;
       }
       // Return the entity that the linger is actually for
-      if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-        console.log(`LINGER_ACTIVE: maId=${maId}, mainId=${mainId}, lingerEntityId=${linger.entityId}, returning=${linger.entityId}`);
-      }
       return linger.entityId;
     }
     // Clear expired linger
@@ -8028,30 +8015,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Autofocus the in-sheet search box when opening the search in entity options
     if (this._showSearchInSheet) {
       // Use a longer delay when expand on search is enabled to allow for card expansion
-      const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
+      this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
       setTimeout(() => {
         const inp = this.renderRoot.querySelector('#search-input-box');
-        console.log('YAMP Debug - Search focus attempt:', {
-          inputFound: !!inp,
-          inputId: inp === null || inp === void 0 ? void 0 : inp.id,
-          inputVisible: (inp === null || inp === void 0 ? void 0 : inp.offsetParent) !== null,
-          expandOnSearch: this._expandOnSearch,
-          focusDelay: focusDelay
-        });
         if (inp) {
           inp.focus();
-          console.log('YAMP Debug - Focus called on search input');
         } else {
           // If input not found, try again with a longer delay
           setTimeout(() => {
             const retryInp = this.renderRoot.querySelector('#search-input-box');
-            console.log('YAMP Debug - Retry focus attempt:', {
-              inputFound: !!retryInp,
-              inputId: retryInp === null || retryInp === void 0 ? void 0 : retryInp.id
-            });
             if (retryInp) {
               retryInp.focus();
-              console.log('YAMP Debug - Focus called on retry');
             }
           }, 200);
         }
@@ -8274,9 +8248,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const stateObj = ((_this$hass1 = this.hass) === null || _this$hass1 === void 0 || (_this$hass1 = _this$hass1.states) === null || _this$hass1 === void 0 ? void 0 : _this$hass1[targetEntity]) || this.currentStateObj;
     switch (action) {
       case "play_pause":
-        console.log(`PAUSE_CLICK: targetEntity=${targetEntity}, state=${stateObj === null || stateObj === void 0 ? void 0 : stateObj.state}, selectedIndex=${this._selectedIndex}`);
-        // Start debug logging for 5 seconds
-        this._debugLoggingUntil = Date.now() + 5000;
         if ((stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) === "playing") {
           this.hass.callService("media_player", "media_pause", {
             entity_id: targetEntity
@@ -8401,7 +8372,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
    * Handles volume change events.
    * With group_volume: false, always sets only the single volume entity, never the group.
    * With group_volume: true/undefined, applies group logic.
-   * Includes debug logs to verify logic.
    */
   async _onVolumeChange(e) {
     var _state$attributes;
@@ -8820,9 +8790,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const cachedResolvedMaId = (_this$_maResolveCache3 = this._maResolveCache) === null || _this$_maResolveCache3 === void 0 || (_this$_maResolveCache3 = _this$_maResolveCache3[idx]) === null || _this$_maResolveCache3 === void 0 ? void 0 : _this$_maResolveCache3.id;
     const isLastControlledMa = !!(lastControlled && (lastControlled === cachedResolvedMaId || lastControlled === currentResolvedMaId || lastControlled === maEntityId || lastControlled === actualResolvedMaId));
     if (this._lastMainState === "playing" && (_this$_playbackLinger4 = this._playbackLingerByIdx) !== null && _this$_playbackLinger4 !== void 0 && _this$_playbackLinger4[idx] && !isLastControlledMa) {
-      if (this._debugLoggingUntil && Date.now() < this._debugLoggingUntil) {
-        console.log(`LINGER_CLEARED: idx=${idx}, reason=main_playing_not_ma_controlled`);
-      }
       delete this._playbackLingerByIdx[idx];
     }
 
