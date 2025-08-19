@@ -6648,7 +6648,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
           <div class="form-row">
             <div class="help-text">
               <ha-icon icon="mdi:information-outline"></ha-icon>
-              When enabled, the volume entity will automatically follow the active playback entity. 
+              When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.
               <br><br>
              
             </div>
