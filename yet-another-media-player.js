@@ -1,8 +1,720 @@
-import { nothing, html, css, LitElement } from 'https://unpkg.com/lit-element@3.3.3/lit-element.js?module';
-import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
-import Sortable from 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm';
+/**
+ * @license
+ * Copyright 2019 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const t$1 = globalThis,
+  e$2 = t$1.ShadowRoot && (void 0 === t$1.ShadyCSS || t$1.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype,
+  s$2 = Symbol(),
+  o$3 = new WeakMap();
+let n$2 = class n {
+  constructor(t, e, o) {
+    if (this._$cssResult$ = true, o !== s$2) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    this.cssText = t, this.t = e;
+  }
+  get styleSheet() {
+    let t = this.o;
+    const s = this.t;
+    if (e$2 && void 0 === t) {
+      const e = void 0 !== s && 1 === s.length;
+      e && (t = o$3.get(s)), void 0 === t && ((this.o = t = new CSSStyleSheet()).replaceSync(this.cssText), e && o$3.set(s, t));
+    }
+    return t;
+  }
+  toString() {
+    return this.cssText;
+  }
+};
+const r$2 = t => new n$2("string" == typeof t ? t : t + "", void 0, s$2),
+  i$4 = function (t) {
+    for (var _len = arguments.length, e = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      e[_key - 1] = arguments[_key];
+    }
+    const o = 1 === t.length ? t[0] : e.reduce((e, s, o) => e + (t => {
+      if (true === t._$cssResult$) return t.cssText;
+      if ("number" == typeof t) return t;
+      throw Error("Value passed to 'css' function must be a 'css' function result: " + t + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
+    })(s) + t[o + 1], t[0]);
+    return new n$2(o, t, s$2);
+  },
+  S$1 = (s, o) => {
+    if (e$2) s.adoptedStyleSheets = o.map(t => t instanceof CSSStyleSheet ? t : t.styleSheet);else for (const e of o) {
+      const o = document.createElement("style"),
+        n = t$1.litNonce;
+      void 0 !== n && o.setAttribute("nonce", n), o.textContent = e.cssText, s.appendChild(o);
+    }
+  },
+  c$2 = e$2 ? t => t : t => t instanceof CSSStyleSheet ? (t => {
+    let e = "";
+    for (const s of t.cssRules) e += s.cssText;
+    return r$2(e);
+  })(t) : t;
 
-// import { html, nothing } from "lit";
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const {
+    is: i$3,
+    defineProperty: e$1,
+    getOwnPropertyDescriptor: h$1,
+    getOwnPropertyNames: r$1,
+    getOwnPropertySymbols: o$2,
+    getPrototypeOf: n$1
+  } = Object,
+  a$1 = globalThis,
+  c$1 = a$1.trustedTypes,
+  l$1 = c$1 ? c$1.emptyScript : "",
+  p$1 = a$1.reactiveElementPolyfillSupport,
+  d$1 = (t, s) => t,
+  u$1 = {
+    toAttribute(t, s) {
+      switch (s) {
+        case Boolean:
+          t = t ? l$1 : null;
+          break;
+        case Object:
+        case Array:
+          t = null == t ? t : JSON.stringify(t);
+      }
+      return t;
+    },
+    fromAttribute(t, s) {
+      let i = t;
+      switch (s) {
+        case Boolean:
+          i = null !== t;
+          break;
+        case Number:
+          i = null === t ? null : Number(t);
+          break;
+        case Object:
+        case Array:
+          try {
+            i = JSON.parse(t);
+          } catch (t) {
+            i = null;
+          }
+      }
+      return i;
+    }
+  },
+  f$1 = (t, s) => !i$3(t, s),
+  b = {
+    attribute: true,
+    type: String,
+    converter: u$1,
+    reflect: false,
+    useDefault: false,
+    hasChanged: f$1
+  };
+Symbol.metadata ??= Symbol("metadata"), a$1.litPropertyMetadata ??= new WeakMap();
+let y$1 = class y extends HTMLElement {
+  static addInitializer(t) {
+    this._$Ei(), (this.l ??= []).push(t);
+  }
+  static get observedAttributes() {
+    return this.finalize(), this._$Eh && [...this._$Eh.keys()];
+  }
+  static createProperty(t) {
+    let s = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : b;
+    if (s.state && (s.attribute = false), this._$Ei(), this.prototype.hasOwnProperty(t) && ((s = Object.create(s)).wrapped = true), this.elementProperties.set(t, s), !s.noAccessor) {
+      const i = Symbol(),
+        h = this.getPropertyDescriptor(t, i, s);
+      void 0 !== h && e$1(this.prototype, t, h);
+    }
+  }
+  static getPropertyDescriptor(t, s, i) {
+    const {
+      get: e,
+      set: r
+    } = h$1(this.prototype, t) ?? {
+      get() {
+        return this[s];
+      },
+      set(t) {
+        this[s] = t;
+      }
+    };
+    return {
+      get: e,
+      set(s) {
+        const h = e === null || e === void 0 ? void 0 : e.call(this);
+        r !== null && r !== void 0 && r.call(this, s), this.requestUpdate(t, h, i);
+      },
+      configurable: true,
+      enumerable: true
+    };
+  }
+  static getPropertyOptions(t) {
+    return this.elementProperties.get(t) ?? b;
+  }
+  static _$Ei() {
+    if (this.hasOwnProperty(d$1("elementProperties"))) return;
+    const t = n$1(this);
+    t.finalize(), void 0 !== t.l && (this.l = [...t.l]), this.elementProperties = new Map(t.elementProperties);
+  }
+  static finalize() {
+    if (this.hasOwnProperty(d$1("finalized"))) return;
+    if (this.finalized = true, this._$Ei(), this.hasOwnProperty(d$1("properties"))) {
+      const t = this.properties,
+        s = [...r$1(t), ...o$2(t)];
+      for (const i of s) this.createProperty(i, t[i]);
+    }
+    const t = this[Symbol.metadata];
+    if (null !== t) {
+      const s = litPropertyMetadata.get(t);
+      if (void 0 !== s) for (const [t, i] of s) this.elementProperties.set(t, i);
+    }
+    this._$Eh = new Map();
+    for (const [t, s] of this.elementProperties) {
+      const i = this._$Eu(t, s);
+      void 0 !== i && this._$Eh.set(i, t);
+    }
+    this.elementStyles = this.finalizeStyles(this.styles);
+  }
+  static finalizeStyles(s) {
+    const i = [];
+    if (Array.isArray(s)) {
+      const e = new Set(s.flat(1 / 0).reverse());
+      for (const s of e) i.unshift(c$2(s));
+    } else void 0 !== s && i.push(c$2(s));
+    return i;
+  }
+  static _$Eu(t, s) {
+    const i = s.attribute;
+    return false === i ? void 0 : "string" == typeof i ? i : "string" == typeof t ? t.toLowerCase() : void 0;
+  }
+  constructor() {
+    super(), this._$Ep = void 0, this.isUpdatePending = false, this.hasUpdated = false, this._$Em = null, this._$Ev();
+  }
+  _$Ev() {
+    var _this$constructor$l;
+    this._$ES = new Promise(t => this.enableUpdating = t), this._$AL = new Map(), this._$E_(), this.requestUpdate(), (_this$constructor$l = this.constructor.l) === null || _this$constructor$l === void 0 ? void 0 : _this$constructor$l.forEach(t => t(this));
+  }
+  addController(t) {
+    var _t$hostConnected;
+    (this._$EO ??= new Set()).add(t), void 0 !== this.renderRoot && this.isConnected && ((_t$hostConnected = t.hostConnected) === null || _t$hostConnected === void 0 ? void 0 : _t$hostConnected.call(t));
+  }
+  removeController(t) {
+    var _this$_$EO;
+    (_this$_$EO = this._$EO) === null || _this$_$EO === void 0 || _this$_$EO.delete(t);
+  }
+  _$E_() {
+    const t = new Map(),
+      s = this.constructor.elementProperties;
+    for (const i of s.keys()) this.hasOwnProperty(i) && (t.set(i, this[i]), delete this[i]);
+    t.size > 0 && (this._$Ep = t);
+  }
+  createRenderRoot() {
+    const t = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
+    return S$1(t, this.constructor.elementStyles), t;
+  }
+  connectedCallback() {
+    var _this$_$EO2;
+    this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(true), (_this$_$EO2 = this._$EO) === null || _this$_$EO2 === void 0 ? void 0 : _this$_$EO2.forEach(t => {
+      var _t$hostConnected2;
+      return (_t$hostConnected2 = t.hostConnected) === null || _t$hostConnected2 === void 0 ? void 0 : _t$hostConnected2.call(t);
+    });
+  }
+  enableUpdating(t) {}
+  disconnectedCallback() {
+    var _this$_$EO3;
+    (_this$_$EO3 = this._$EO) === null || _this$_$EO3 === void 0 || _this$_$EO3.forEach(t => {
+      var _t$hostDisconnected;
+      return (_t$hostDisconnected = t.hostDisconnected) === null || _t$hostDisconnected === void 0 ? void 0 : _t$hostDisconnected.call(t);
+    });
+  }
+  attributeChangedCallback(t, s, i) {
+    this._$AK(t, i);
+  }
+  _$ET(t, s) {
+    const i = this.constructor.elementProperties.get(t),
+      e = this.constructor._$Eu(t, i);
+    if (void 0 !== e && true === i.reflect) {
+      var _i$converter;
+      const h = (void 0 !== ((_i$converter = i.converter) === null || _i$converter === void 0 ? void 0 : _i$converter.toAttribute) ? i.converter : u$1).toAttribute(s, i.type);
+      this._$Em = t, null == h ? this.removeAttribute(e) : this.setAttribute(e, h), this._$Em = null;
+    }
+  }
+  _$AK(t, s) {
+    const i = this.constructor,
+      e = i._$Eh.get(t);
+    if (void 0 !== e && this._$Em !== e) {
+      var _t$converter, _this$_$Ej;
+      const t = i.getPropertyOptions(e),
+        h = "function" == typeof t.converter ? {
+          fromAttribute: t.converter
+        } : void 0 !== ((_t$converter = t.converter) === null || _t$converter === void 0 ? void 0 : _t$converter.fromAttribute) ? t.converter : u$1;
+      this._$Em = e, this[e] = h.fromAttribute(s, t.type) ?? ((_this$_$Ej = this._$Ej) === null || _this$_$Ej === void 0 ? void 0 : _this$_$Ej.get(e)) ?? null, this._$Em = null;
+    }
+  }
+  requestUpdate(t, s, i) {
+    if (void 0 !== t) {
+      var _this$_$Ej2;
+      const e = this.constructor,
+        h = this[t];
+      if (i ??= e.getPropertyOptions(t), !((i.hasChanged ?? f$1)(h, s) || i.useDefault && i.reflect && h === ((_this$_$Ej2 = this._$Ej) === null || _this$_$Ej2 === void 0 ? void 0 : _this$_$Ej2.get(t)) && !this.hasAttribute(e._$Eu(t, i)))) return;
+      this.C(t, s, i);
+    }
+    false === this.isUpdatePending && (this._$ES = this._$EP());
+  }
+  C(t, s, _ref, r) {
+    let {
+      useDefault: i,
+      reflect: e,
+      wrapped: h
+    } = _ref;
+    i && !(this._$Ej ??= new Map()).has(t) && (this._$Ej.set(t, r ?? s ?? this[t]), true !== h || void 0 !== r) || (this._$AL.has(t) || (this.hasUpdated || i || (s = void 0), this._$AL.set(t, s)), true === e && this._$Em !== t && (this._$Eq ??= new Set()).add(t));
+  }
+  async _$EP() {
+    this.isUpdatePending = true;
+    try {
+      await this._$ES;
+    } catch (t) {
+      Promise.reject(t);
+    }
+    const t = this.scheduleUpdate();
+    return null != t && (await t), !this.isUpdatePending;
+  }
+  scheduleUpdate() {
+    return this.performUpdate();
+  }
+  performUpdate() {
+    if (!this.isUpdatePending) return;
+    if (!this.hasUpdated) {
+      if (this.renderRoot ??= this.createRenderRoot(), this._$Ep) {
+        for (const [t, s] of this._$Ep) this[t] = s;
+        this._$Ep = void 0;
+      }
+      const t = this.constructor.elementProperties;
+      if (t.size > 0) for (const [s, i] of t) {
+        const {
+            wrapped: t
+          } = i,
+          e = this[s];
+        true !== t || this._$AL.has(s) || void 0 === e || this.C(s, void 0, i, e);
+      }
+    }
+    let t = false;
+    const s = this._$AL;
+    try {
+      var _this$_$EO4;
+      t = this.shouldUpdate(s), t ? (this.willUpdate(s), (_this$_$EO4 = this._$EO) !== null && _this$_$EO4 !== void 0 && _this$_$EO4.forEach(t => {
+        var _t$hostUpdate;
+        return (_t$hostUpdate = t.hostUpdate) === null || _t$hostUpdate === void 0 ? void 0 : _t$hostUpdate.call(t);
+      }), this.update(s)) : this._$EM();
+    } catch (s) {
+      throw t = false, this._$EM(), s;
+    }
+    t && this._$AE(s);
+  }
+  willUpdate(t) {}
+  _$AE(t) {
+    var _this$_$EO5;
+    (_this$_$EO5 = this._$EO) !== null && _this$_$EO5 !== void 0 && _this$_$EO5.forEach(t => {
+      var _t$hostUpdated;
+      return (_t$hostUpdated = t.hostUpdated) === null || _t$hostUpdated === void 0 ? void 0 : _t$hostUpdated.call(t);
+    }), this.hasUpdated || (this.hasUpdated = true, this.firstUpdated(t)), this.updated(t);
+  }
+  _$EM() {
+    this._$AL = new Map(), this.isUpdatePending = false;
+  }
+  get updateComplete() {
+    return this.getUpdateComplete();
+  }
+  getUpdateComplete() {
+    return this._$ES;
+  }
+  shouldUpdate(t) {
+    return true;
+  }
+  update(t) {
+    this._$Eq &&= this._$Eq.forEach(t => this._$ET(t, this[t])), this._$EM();
+  }
+  updated(t) {}
+  firstUpdated(t) {}
+};
+y$1.elementStyles = [], y$1.shadowRootOptions = {
+  mode: "open"
+}, y$1[d$1("elementProperties")] = new Map(), y$1[d$1("finalized")] = new Map(), p$1 !== null && p$1 !== void 0 && p$1({
+  ReactiveElement: y$1
+}), (a$1.reactiveElementVersions ??= []).push("2.1.0");
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const t = globalThis,
+  i$2 = t.trustedTypes,
+  s$1 = i$2 ? i$2.createPolicy("lit-html", {
+    createHTML: t => t
+  }) : void 0,
+  e = "$lit$",
+  h = `lit$${Math.random().toFixed(9).slice(2)}$`,
+  o$1 = "?" + h,
+  n = `<${o$1}>`,
+  r = document,
+  l = () => r.createComment(""),
+  c = t => null === t || "object" != typeof t && "function" != typeof t,
+  a = Array.isArray,
+  u = t => a(t) || "function" == typeof (t === null || t === void 0 ? void 0 : t[Symbol.iterator]),
+  d = "[ \t\n\f\r]",
+  f = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,
+  v = /-->/g,
+  _ = />/g,
+  m = RegExp(`>|${d}(?:([^\\s"'>=/]+)(${d}*=${d}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"),
+  p = /'/g,
+  g = /"/g,
+  $ = /^(?:script|style|textarea|title)$/i,
+  y = t => function (i) {
+    for (var _len = arguments.length, s = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      s[_key - 1] = arguments[_key];
+    }
+    return {
+      _$litType$: t,
+      strings: i,
+      values: s
+    };
+  },
+  x = y(1),
+  T = Symbol.for("lit-noChange"),
+  E = Symbol.for("lit-nothing"),
+  A = new WeakMap(),
+  C = r.createTreeWalker(r, 129);
+function P(t, i) {
+  if (!a(t) || !t.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  return void 0 !== s$1 ? s$1.createHTML(i) : i;
+}
+const V = (t, i) => {
+  const s = t.length - 1,
+    o = [];
+  let r,
+    l = 2 === i ? "<svg>" : 3 === i ? "<math>" : "",
+    c = f;
+  for (let i = 0; i < s; i++) {
+    const s = t[i];
+    let a,
+      u,
+      d = -1,
+      y = 0;
+    for (; y < s.length && (c.lastIndex = y, u = c.exec(s), null !== u);) y = c.lastIndex, c === f ? "!--" === u[1] ? c = v : void 0 !== u[1] ? c = _ : void 0 !== u[2] ? ($.test(u[2]) && (r = RegExp("</" + u[2], "g")), c = m) : void 0 !== u[3] && (c = m) : c === m ? ">" === u[0] ? (c = r ?? f, d = -1) : void 0 === u[1] ? d = -2 : (d = c.lastIndex - u[2].length, a = u[1], c = void 0 === u[3] ? m : '"' === u[3] ? g : p) : c === g || c === p ? c = m : c === v || c === _ ? c = f : (c = m, r = void 0);
+    const x = c === m && t[i + 1].startsWith("/>") ? " " : "";
+    l += c === f ? s + n : d >= 0 ? (o.push(a), s.slice(0, d) + e + s.slice(d) + h + x) : s + h + (-2 === d ? i : x);
+  }
+  return [P(t, l + (t[s] || "<?>") + (2 === i ? "</svg>" : 3 === i ? "</math>" : "")), o];
+};
+class N {
+  constructor(_ref, n) {
+    let {
+      strings: t,
+      _$litType$: s
+    } = _ref;
+    let r;
+    this.parts = [];
+    let c = 0,
+      a = 0;
+    const u = t.length - 1,
+      d = this.parts,
+      [f, v] = V(t, s);
+    if (this.el = N.createElement(f, n), C.currentNode = this.el.content, 2 === s || 3 === s) {
+      const t = this.el.content.firstChild;
+      t.replaceWith(...t.childNodes);
+    }
+    for (; null !== (r = C.nextNode()) && d.length < u;) {
+      if (1 === r.nodeType) {
+        if (r.hasAttributes()) for (const t of r.getAttributeNames()) if (t.endsWith(e)) {
+          const i = v[a++],
+            s = r.getAttribute(t).split(h),
+            e = /([.?@])?(.*)/.exec(i);
+          d.push({
+            type: 1,
+            index: c,
+            name: e[2],
+            strings: s,
+            ctor: "." === e[1] ? H : "?" === e[1] ? I : "@" === e[1] ? L : k
+          }), r.removeAttribute(t);
+        } else t.startsWith(h) && (d.push({
+          type: 6,
+          index: c
+        }), r.removeAttribute(t));
+        if ($.test(r.tagName)) {
+          const t = r.textContent.split(h),
+            s = t.length - 1;
+          if (s > 0) {
+            r.textContent = i$2 ? i$2.emptyScript : "";
+            for (let i = 0; i < s; i++) r.append(t[i], l()), C.nextNode(), d.push({
+              type: 2,
+              index: ++c
+            });
+            r.append(t[s], l());
+          }
+        }
+      } else if (8 === r.nodeType) if (r.data === o$1) d.push({
+        type: 2,
+        index: c
+      });else {
+        let t = -1;
+        for (; -1 !== (t = r.data.indexOf(h, t + 1));) d.push({
+          type: 7,
+          index: c
+        }), t += h.length - 1;
+      }
+      c++;
+    }
+  }
+  static createElement(t, i) {
+    const s = r.createElement("template");
+    return s.innerHTML = t, s;
+  }
+}
+function S(t, i) {
+  var _s$_$Co, _h, _h2, _h2$_$AO;
+  let s = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : t;
+  let e = arguments.length > 3 ? arguments[3] : undefined;
+  if (i === T) return i;
+  let h = void 0 !== e ? (_s$_$Co = s._$Co) === null || _s$_$Co === void 0 ? void 0 : _s$_$Co[e] : s._$Cl;
+  const o = c(i) ? void 0 : i._$litDirective$;
+  return ((_h = h) === null || _h === void 0 ? void 0 : _h.constructor) !== o && ((_h2 = h) !== null && _h2 !== void 0 && (_h2$_$AO = _h2._$AO) !== null && _h2$_$AO !== void 0 && _h2$_$AO.call(_h2, false), void 0 === o ? h = void 0 : (h = new o(t), h._$AT(t, s, e)), void 0 !== e ? (s._$Co ??= [])[e] = h : s._$Cl = h), void 0 !== h && (i = S(t, h._$AS(t, i.values), h, e)), i;
+}
+class M {
+  constructor(t, i) {
+    this._$AV = [], this._$AN = void 0, this._$AD = t, this._$AM = i;
+  }
+  get parentNode() {
+    return this._$AM.parentNode;
+  }
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  u(t) {
+    const {
+        el: {
+          content: i
+        },
+        parts: s
+      } = this._$AD,
+      e = ((t === null || t === void 0 ? void 0 : t.creationScope) ?? r).importNode(i, true);
+    C.currentNode = e;
+    let h = C.nextNode(),
+      o = 0,
+      n = 0,
+      l = s[0];
+    for (; void 0 !== l;) {
+      var _l;
+      if (o === l.index) {
+        let i;
+        2 === l.type ? i = new R(h, h.nextSibling, this, t) : 1 === l.type ? i = new l.ctor(h, l.name, l.strings, this, t) : 6 === l.type && (i = new z(h, this, t)), this._$AV.push(i), l = s[++n];
+      }
+      o !== ((_l = l) === null || _l === void 0 ? void 0 : _l.index) && (h = C.nextNode(), o++);
+    }
+    return C.currentNode = r, e;
+  }
+  p(t) {
+    let i = 0;
+    for (const s of this._$AV) void 0 !== s && (void 0 !== s.strings ? (s._$AI(t, s, i), i += s.strings.length - 2) : s._$AI(t[i])), i++;
+  }
+}
+class R {
+  get _$AU() {
+    var _this$_$AM;
+    return ((_this$_$AM = this._$AM) === null || _this$_$AM === void 0 ? void 0 : _this$_$AM._$AU) ?? this._$Cv;
+  }
+  constructor(t, i, s, e) {
+    this.type = 2, this._$AH = E, this._$AN = void 0, this._$AA = t, this._$AB = i, this._$AM = s, this.options = e, this._$Cv = (e === null || e === void 0 ? void 0 : e.isConnected) ?? true;
+  }
+  get parentNode() {
+    var _t;
+    let t = this._$AA.parentNode;
+    const i = this._$AM;
+    return void 0 !== i && 11 === ((_t = t) === null || _t === void 0 ? void 0 : _t.nodeType) && (t = i.parentNode), t;
+  }
+  get startNode() {
+    return this._$AA;
+  }
+  get endNode() {
+    return this._$AB;
+  }
+  _$AI(t) {
+    let i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
+    t = S(this, t, i), c(t) ? t === E || null == t || "" === t ? (this._$AH !== E && this._$AR(), this._$AH = E) : t !== this._$AH && t !== T && this._(t) : void 0 !== t._$litType$ ? this.$(t) : void 0 !== t.nodeType ? this.T(t) : u(t) ? this.k(t) : this._(t);
+  }
+  O(t) {
+    return this._$AA.parentNode.insertBefore(t, this._$AB);
+  }
+  T(t) {
+    this._$AH !== t && (this._$AR(), this._$AH = this.O(t));
+  }
+  _(t) {
+    this._$AH !== E && c(this._$AH) ? this._$AA.nextSibling.data = t : this.T(r.createTextNode(t)), this._$AH = t;
+  }
+  $(t) {
+    var _this$_$AH;
+    const {
+        values: i,
+        _$litType$: s
+      } = t,
+      e = "number" == typeof s ? this._$AC(t) : (void 0 === s.el && (s.el = N.createElement(P(s.h, s.h[0]), this.options)), s);
+    if (((_this$_$AH = this._$AH) === null || _this$_$AH === void 0 ? void 0 : _this$_$AH._$AD) === e) this._$AH.p(i);else {
+      const t = new M(e, this),
+        s = t.u(this.options);
+      t.p(i), this.T(s), this._$AH = t;
+    }
+  }
+  _$AC(t) {
+    let i = A.get(t.strings);
+    return void 0 === i && A.set(t.strings, i = new N(t)), i;
+  }
+  k(t) {
+    a(this._$AH) || (this._$AH = [], this._$AR());
+    const i = this._$AH;
+    let s,
+      e = 0;
+    for (const h of t) e === i.length ? i.push(s = new R(this.O(l()), this.O(l()), this, this.options)) : s = i[e], s._$AI(h), e++;
+    e < i.length && (this._$AR(s && s._$AB.nextSibling, e), i.length = e);
+  }
+  _$AR() {
+    let t = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this._$AA.nextSibling;
+    let i = arguments.length > 1 ? arguments[1] : undefined;
+    for ((_this$_$AP = this._$AP) === null || _this$_$AP === void 0 ? void 0 : _this$_$AP.call(this, false, true, i); t && t !== this._$AB;) {
+      var _this$_$AP;
+      const i = t.nextSibling;
+      t.remove(), t = i;
+    }
+  }
+  setConnected(t) {
+    var _this$_$AP2;
+    void 0 === this._$AM && (this._$Cv = t, (_this$_$AP2 = this._$AP) === null || _this$_$AP2 === void 0 ? void 0 : _this$_$AP2.call(this, t));
+  }
+}
+class k {
+  get tagName() {
+    return this.element.tagName;
+  }
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  constructor(t, i, s, e, h) {
+    this.type = 1, this._$AH = E, this._$AN = void 0, this.element = t, this.name = i, this._$AM = e, this.options = h, s.length > 2 || "" !== s[0] || "" !== s[1] ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = E;
+  }
+  _$AI(t) {
+    let i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
+    let s = arguments.length > 2 ? arguments[2] : undefined;
+    let e = arguments.length > 3 ? arguments[3] : undefined;
+    const h = this.strings;
+    let o = false;
+    if (void 0 === h) t = S(this, t, i, 0), o = !c(t) || t !== this._$AH && t !== T, o && (this._$AH = t);else {
+      const e = t;
+      let n, r;
+      for (t = h[0], n = 0; n < h.length - 1; n++) r = S(this, e[s + n], i, n), r === T && (r = this._$AH[n]), o ||= !c(r) || r !== this._$AH[n], r === E ? t = E : t !== E && (t += (r ?? "") + h[n + 1]), this._$AH[n] = r;
+    }
+    o && !e && this.j(t);
+  }
+  j(t) {
+    t === E ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t ?? "");
+  }
+}
+class H extends k {
+  constructor() {
+    super(...arguments), this.type = 3;
+  }
+  j(t) {
+    this.element[this.name] = t === E ? void 0 : t;
+  }
+}
+class I extends k {
+  constructor() {
+    super(...arguments), this.type = 4;
+  }
+  j(t) {
+    this.element.toggleAttribute(this.name, !!t && t !== E);
+  }
+}
+class L extends k {
+  constructor(t, i, s, e, h) {
+    super(t, i, s, e, h), this.type = 5;
+  }
+  _$AI(t) {
+    let i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
+    if ((t = S(this, t, i, 0) ?? E) === T) return;
+    const s = this._$AH,
+      e = t === E && s !== E || t.capture !== s.capture || t.once !== s.once || t.passive !== s.passive,
+      h = t !== E && (s === E || e);
+    e && this.element.removeEventListener(this.name, this, s), h && this.element.addEventListener(this.name, this, t), this._$AH = t;
+  }
+  handleEvent(t) {
+    var _this$options;
+    "function" == typeof this._$AH ? this._$AH.call(((_this$options = this.options) === null || _this$options === void 0 ? void 0 : _this$options.host) ?? this.element, t) : this._$AH.handleEvent(t);
+  }
+}
+class z {
+  constructor(t, i, s) {
+    this.element = t, this.type = 6, this._$AN = void 0, this._$AM = i, this.options = s;
+  }
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  _$AI(t) {
+    S(this, t);
+  }
+}
+const j = t.litHtmlPolyfillSupport;
+j !== null && j !== void 0 && j(N, R), (t.litHtmlVersions ??= []).push("3.3.0");
+const B = (t, i, s) => {
+  const e = (s === null || s === void 0 ? void 0 : s.renderBefore) ?? i;
+  let h = e._$litPart$;
+  if (void 0 === h) {
+    const t = (s === null || s === void 0 ? void 0 : s.renderBefore) ?? null;
+    e._$litPart$ = h = new R(i.insertBefore(l(), t), t, void 0, s ?? {});
+  }
+  return h._$AI(t), h;
+};
+
+var _s$litElementHydrateS;
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const s = globalThis;
+let i$1 = class i extends y$1 {
+  constructor() {
+    super(...arguments), this.renderOptions = {
+      host: this
+    }, this._$Do = void 0;
+  }
+  createRenderRoot() {
+    const t = super.createRenderRoot();
+    return this.renderOptions.renderBefore ??= t.firstChild, t;
+  }
+  update(t) {
+    const r = this.render();
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t), this._$Do = B(r, this.renderRoot, this.renderOptions);
+  }
+  connectedCallback() {
+    var _this$_$Do;
+    super.connectedCallback(), (_this$_$Do = this._$Do) === null || _this$_$Do === void 0 ? void 0 : _this$_$Do.setConnected(true);
+  }
+  disconnectedCallback() {
+    var _this$_$Do2;
+    super.disconnectedCallback(), (_this$_$Do2 = this._$Do) === null || _this$_$Do2 === void 0 ? void 0 : _this$_$Do2.setConnected(false);
+  }
+  render() {
+    return T;
+  }
+};
+i$1._$litElement$ = true, i$1["finalized"] = true, (_s$litElementHydrateS = s.litElementHydrateSupport) === null || _s$litElementHydrateS === void 0 ? void 0 : _s$litElementHydrateS.call(s, {
+  LitElement: i$1
+});
+const o = s.litElementPolyfillSupport;
+o === null || o === void 0 || o({
+  LitElement: i$1
+});
+(s.litElementVersions ??= []).push("4.2.0");
+
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
 // Helper to render a single chip
 function renderChip(_ref) {
@@ -21,7 +733,7 @@ function renderChip(_ref) {
     onPointerMove,
     onPointerUp
   } = _ref;
-  return html`
+  return x`
     <button class="chip"
             ?selected=${selected}
             ?playing=${playing}
@@ -33,19 +745,19 @@ function renderChip(_ref) {
             @pointerleave=${onPointerUp}
             style="display:flex;align-items:center;justify-content:space-between;">
       <span class="chip-icon">
-        ${art ? html`<img class="chip-mini-art" src="${art}" />` : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+        ${art ? x`<img class="chip-mini-art" src="${art}" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
       </span>
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${name}
       </span>
-      ${pinned ? html`
+      ${pinned ? x`
             <span class="chip-pin-inside" @click=${e => {
     e.stopPropagation();
     onPinClick(idx, e);
   }} title="Unpin">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
-          ` : html`<span class="chip-pin-spacer"></span>`}
+          ` : x`<span class="chip-pin-spacer"></span>`}
     </button>
   `;
 }
@@ -67,7 +779,7 @@ function renderGroupChip(_ref2) {
     onPointerMove,
     onPointerUp
   } = _ref2;
-  return html`
+  return x`
     <button class="chip group"
             ?selected=${selected}
             ?ma-active=${maActive}
@@ -85,7 +797,7 @@ function renderGroupChip(_ref2) {
       onIconClick(idx, e);
     }
   }}>
-        ${art ? html`<img class="chip-mini-art"
+        ${art ? x`<img class="chip-mini-art"
                       src="${art}"
                       style="cursor:pointer;"
                       @click=${e => {
@@ -93,7 +805,7 @@ function renderGroupChip(_ref2) {
     if (onIconClick) {
       onIconClick(idx, e);
     }
-  }}/>` : html`<ha-icon .icon=${icon}
+  }}/>` : x`<ha-icon .icon=${icon}
                           style="font-size:28px;cursor:pointer;"
                           @click=${e => {
     e.stopPropagation();
@@ -105,14 +817,14 @@ function renderGroupChip(_ref2) {
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${groupName}
       </span>
-      ${pinned ? html`
+      ${pinned ? x`
             <span class="chip-pin-inside" @click=${e => {
     e.stopPropagation();
     onPinClick(idx, e);
   }} title="Unpin">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
-          ` : html`<span class="chip-pin-spacer"></span>`}
+          ` : x`<span class="chip-pin-spacer"></span>`}
     </button>
   `;
 }
@@ -183,8 +895,8 @@ function renderChipRow(_ref4) {
     onPointerMove,
     onPointerUp
   } = _ref4;
-  if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return nothing;
-  return html`
+  if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return E;
+  return x`
     ${groupedSortedEntityIds.map(group => {
     // If it's a group (more than one entity)
     if (group.length > 1) {
@@ -241,20 +953,18 @@ function renderChipRow(_ref4) {
   `;
 }
 
-// action-chip-row.js
-// import { html, nothing } from "lit";
-
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderActionChipRow(_ref) {
   let {
     actions,
     onActionChipClick
   } = _ref;
-  if (!(actions !== null && actions !== void 0 && actions.length)) return nothing;
-  return html`
+  if (!(actions !== null && actions !== void 0 && actions.length)) return E;
+  return x`
     <div class="action-chip-row">
-      ${actions.map((a, idx) => html`
+      ${actions.map((a, idx) => x`
           <button class="action-chip" @click=${() => onActionChipClick(idx)}>
-            ${a.icon ? html`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : nothing}
+            ${a.icon ? x`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : E}
             ${a.name || ""}
           </button>
         `)}
@@ -262,9 +972,7 @@ function renderActionChipRow(_ref) {
   `;
 }
 
-// controls-row.js
-// import { html, nothing } from "lit";
-
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderControlsRow(_ref) {
   let {
     stateObj,
@@ -274,7 +982,7 @@ function renderControlsRow(_ref) {
     onControlClick,
     supportsFeature
   } = _ref;
-  if (!stateObj) return nothing;
+  if (!stateObj) return E;
   const SUPPORT_PAUSE = 1;
   const SUPPORT_PREVIOUS_TRACK = 16;
   const SUPPORT_NEXT_TRACK = 32;
@@ -283,39 +991,39 @@ function renderControlsRow(_ref) {
   const SUPPORT_TURN_ON = 128;
   const SUPPORT_TURN_OFF = 256;
   const SUPPORT_PLAY = 16384;
-  return html`
+  return x`
     <div class="controls-row">
-      ${supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
+      ${supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
         <button class="button" @click=${() => onControlClick("prev")} title="Previous">
           <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
         </button>
-      ` : nothing}
-      ${supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY) ? html`
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY) ? x`
         <button class="button" @click=${() => onControlClick("play_pause")} title="Play/Pause">
           <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
         </button>
-      ` : nothing}
-      ${showStop ? html`
+      ` : E}
+      ${showStop ? x`
         <button class="button" @click=${() => onControlClick("stop")} title="Stop">
           <ha-icon .icon=${"mdi:stop"}></ha-icon>
         </button>
-      ` : nothing}
-      ${supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? html`
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
         <button class="button" @click=${() => onControlClick("next")} title="Next">
           <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
         </button>
-      ` : nothing}
-      ${supportsFeature(stateObj, SUPPORT_SHUFFLE) ? html`
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
         <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="Shuffle">
           <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
         </button>
-      ` : nothing}
-      ${supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? html`
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
         <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
           <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
         </button>
-      ` : nothing}
-      ${supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON) ? html`
+      ` : E}
+      ${supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON) ? x`
             <button
               class="button${stateObj.state !== "off" ? " active" : ""}"
               @click=${() => onControlClick("power")}
@@ -323,7 +1031,7 @@ function renderControlsRow(_ref) {
             >
               <ha-icon .icon=${"mdi:power"}></ha-icon>
             </button>
-          ` : nothing}
+          ` : E}
     </div>
   `;
 }
@@ -346,9 +1054,7 @@ function countMainControls(stateObj, supportsFeature) {
   return count;
 }
 
-// volume-row.js
-// import { html, nothing } from "lit";
-
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderVolumeRow(_ref) {
   let {
     isRemoteVolumeEntity,
@@ -372,14 +1078,14 @@ function renderVolumeRow(_ref) {
     if (volume < 0.5) return "mdi:volume-medium";
     return "mdi:volume-high";
   };
-  return html`
+  return x`
     <div class="volume-row">
-      ${isRemoteVolumeEntity ? html`
+      ${isRemoteVolumeEntity ? x`
             <div class="vol-stepper">
               <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
               <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
             </div>
-          ` : showSlider ? html`
+          ` : showSlider ? x`
             <div class="volume-controls">
               <button 
                 class="volume-icon-btn" 
@@ -405,7 +1111,7 @@ function renderVolumeRow(_ref) {
                 />
               </div>
             </div>
-          ` : html`
+          ` : x`
             <div class="vol-stepper">
               <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
               <span>${Math.round(vol * 100)}%</span>
@@ -417,9 +1123,7 @@ function renderVolumeRow(_ref) {
   `;
 }
 
-// progress-bar.js
-// import { html, nothing } from "lit";
-
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderProgressBar(_ref) {
   let {
     progress,
@@ -434,14 +1138,14 @@ function renderProgressBar(_ref) {
   const barColor = accent || "var(--custom-accent, #ff9800)";
   // Collapsed bar is typically smaller and positioned differently
   if (collapsed) {
-    return html`
+    return x`
       <div
         class="collapsed-progress-bar"
         style="width: ${progress * 100}%; background: ${barColor}; height: 4px; ${style}"
       ></div>
     `;
   }
-  return html`
+  return x`
     <div class="progress-bar-container">
       <div
         class="progress-bar"
@@ -458,10 +1162,8 @@ function renderProgressBar(_ref) {
   `;
 }
 
-// yamp-card-styles.js
-// import { css } from "lit";
-
-const yampCardStyles = css`
+// import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+const yampCardStyles = i$4`
   /* CSS Custom Properties for consistency */
   :host {
     --custom-accent: var(--accent-color, #ff9800);
@@ -1782,6 +2484,10 @@ const yampCardStyles = css`
     text-align: left;
   }
 
+  .entity-options-search-loading {
+    color: #fff;
+  }
+
   .entity-options-search-error {
     color: #e44747;
     font-weight: 500;
@@ -1910,9 +2616,34 @@ const yampCardStyles = css`
   .clickable-artist:hover {
     text-decoration: underline;
   }
+
+  /* Clickable search results */
+  .clickable-search-result {
+    cursor: pointer;
+    color: var(--custom-accent);
+    transition: color var(--transition-fast);
+  }
+
+  .clickable-search-result:hover {
+    text-decoration: underline;
+    color: #fff;
+  }
+
+  /* Search breadcrumb */
+  .entity-options-search-breadcrumb {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .entity-options-search-breadcrumb-text {
+    font-size: 0.9em;
+    color: #fff;
+    font-style: italic;
+  }
 `;
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
 /**
  * Renders the search sheet UI for media search.
@@ -1940,8 +2671,8 @@ function renderSearchSheet(_ref) {
     onPlay,
     error
   } = _ref;
-  if (!open) return nothing;
-  return html`
+  if (!open) return E;
+  return x`
     <div class="search-sheet">
       <div class="search-sheet-header">
         <input
@@ -1954,10 +2685,10 @@ function renderSearchSheet(_ref) {
         <button @click=${onSearch} ?disabled=${loading || !query}>Search</button>
         <button @click=${onClose} title="Close Search">✕</button>
       </div>
-      ${loading ? html`<div class="search-sheet-loading">Loading...</div>` : nothing}
-      ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
+      ${loading ? x`<div class="search-sheet-loading">Loading...</div>` : E}
+      ${error ? x`<div class="search-sheet-error">${error}</div>` : E}
       <div class="search-sheet-results">
-        ${(results || []).length === 0 && !loading ? html`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => html`
+        ${(results || []).length === 0 && !loading ? x`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => x`
                 <div class="search-sheet-result">
                   <img
                     class="search-sheet-thumb"
@@ -1977,19 +2708,232 @@ function renderSearchSheet(_ref) {
 
 // Service helpers to keep search-related logic colocated with the search UI module
 async function searchMedia(hass, entityId, query) {
-  var _res$response;
-  const msg = {
+  let mediaType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+  let searchParams = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+  // Try to get Music Assistant config entry ID
+  let configEntryId = null;
+  try {
+    const entries = await hass.callApi("GET", "config/config_entries/entry");
+    const maEntries = entries.filter(entry => entry.domain === "music_assistant");
+    const entry = maEntries.find(entry => entry.state === "loaded");
+    if (entry) {
+      configEntryId = entry.entry_id;
+    }
+  } catch (error) {}
+
+  // Try Music Assistant search if we have a config entry
+  if (configEntryId) {
+    try {
+      const serviceData = {
+        name: query,
+        config_entry_id: configEntryId,
+        limit: mediaType === "all" ? 8 : 20 // Use 20 limit for filtered searches
+      };
+
+      // Add media_type if specified and not "all"
+      if (mediaType && mediaType !== 'all') {
+        serviceData.media_type = mediaType;
+      }
+
+      // Add search parameters for hierarchical search
+      if (searchParams.artist) {
+        serviceData.artist = searchParams.artist;
+      }
+      if (searchParams.album) {
+        serviceData.album = searchParams.album;
+      }
+      const msg = {
+        type: "call_service",
+        domain: "music_assistant",
+        service: "search",
+        service_data: serviceData,
+        return_response: true
+      };
+      const res = await hass.connection.sendMessagePromise(msg);
+      const response = res === null || res === void 0 ? void 0 : res.response;
+      if (response) {
+        // Convert grouped results to flat array and transform to expected format
+        const flatResults = [];
+        Object.entries(response).forEach(_ref2 => {
+          let [mediaType, items] = _ref2;
+          if (Array.isArray(items)) {
+            items.forEach(item => {
+              // Transform Music Assistant format to media_player format
+              const transformedItem = {
+                title: item.name,
+                media_content_id: item.uri,
+                media_content_type: item.media_type,
+                media_class: item.media_type,
+                thumbnail: item.image,
+                // Add artist info if available
+                ...(item.artists && {
+                  artist: item.artists.map(a => a.name).join(', ')
+                }),
+                // Add album info if available
+                ...(item.album && {
+                  album: item.album.name
+                })
+              };
+              flatResults.push(transformedItem);
+            });
+          }
+        });
+        return {
+          results: flatResults,
+          usedMusicAssistant: true
+        };
+      }
+    } catch (error) {}
+  }
+
+  // Fallback to media_player search
+  const fallbackResults = await fallbackToMediaPlayerSearch(hass, entityId, query, mediaType);
+  return {
+    results: fallbackResults,
+    usedMusicAssistant: false
+  };
+}
+
+// Get favorites from Music Assistant
+async function getFavorites(hass, entityId) {
+  let mediaType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  // Try to get Music Assistant config entry ID
+  let configEntryId = null;
+  try {
+    const entries = await hass.callApi("GET", "config/config_entries/entry");
+    const maEntries = entries.filter(entry => entry.domain === "music_assistant");
+    const entry = maEntries.find(entry => entry.state === "loaded");
+    if (entry) {
+      configEntryId = entry.entry_id;
+    } else {
+      // No loaded Music Assistant entry found
+    }
+  } catch (error) {
+    return [];
+  }
+  if (!configEntryId) {
+    return [];
+  }
+  try {
+    const newResults = {
+      artists: [],
+      albums: [],
+      tracks: [],
+      playlists: [],
+      radio: [],
+      podcasts: [],
+      audiobooks: []
+    };
+    const mediaTypeResponseKeyMap = {
+      artist: "artists",
+      album: "albums",
+      track: "tracks",
+      playlist: "playlists",
+      radio: "radio",
+      audiobook: "audiobooks",
+      podcast: "podcasts"
+    };
+    const getResult = async mediaType => {
+      const message = {
+        type: "call_service",
+        domain: "music_assistant",
+        service: "get_library",
+        service_data: {
+          config_entry_id: configEntryId,
+          media_type: mediaType,
+          favorite: true,
+          limit: mediaType === "all" ? 8 : 20
+        },
+        return_response: true
+      };
+      try {
+        const res = await hass.connection.sendMessagePromise(message);
+        const response = res === null || res === void 0 ? void 0 : res.response;
+        if (response !== null && response !== void 0 && response.items) {
+          return response.items;
+        } else {}
+        return [];
+      } catch (e) {
+        return [];
+      }
+    };
+    if (mediaType && mediaType !== 'all') {
+      // Get specific media type favorites
+      const items = await getResult(mediaType);
+      const responseKey = mediaTypeResponseKeyMap[mediaType];
+      if (responseKey) {
+        newResults[responseKey] = items;
+      }
+    } else {
+      // Get all favorites
+      const mediaTypes = Object.keys(mediaTypeResponseKeyMap);
+      await Promise.all(mediaTypes.map(async mediaType => {
+        const items = await getResult(mediaType);
+        const responseKey = mediaTypeResponseKeyMap[mediaType];
+        if (responseKey) {
+          newResults[responseKey] = items;
+        }
+      }));
+    }
+
+    // Convert grouped results to flat array and transform to expected format
+    const flatResults = [];
+    Object.entries(newResults).forEach(_ref3 => {
+      let [mediaType, items] = _ref3;
+      if (Array.isArray(items)) {
+        items.forEach(item => {
+          // Transform Music Assistant format to media_player format
+          const transformedItem = {
+            title: item.name,
+            media_content_id: item.uri,
+            media_content_type: item.media_type,
+            media_class: item.media_type,
+            thumbnail: item.image,
+            // Add artist info if available
+            ...(item.artists && {
+              artist: item.artists.map(a => a.name).join(', ')
+            }),
+            // Add album info if available
+            ...(item.album && {
+              album: item.album.name
+            })
+          };
+          flatResults.push(transformedItem);
+        });
+      }
+    });
+    return {
+      results: flatResults,
+      usedMusicAssistant: true
+    };
+  } catch (error) {
+    return {
+      results: [],
+      usedMusicAssistant: false
+    };
+  }
+}
+
+// Fallback function for media_player search
+async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType) {
+  var _fallbackRes$response;
+  const fallbackData = {
+    entity_id: entityId,
+    search_query: query
+  };
+  if (mediaType && mediaType !== 'all') {
+    fallbackData.media_content_type = mediaType;
+  }
+  const fallbackMsg = {
     type: "call_service",
     domain: "media_player",
     service: "search_media",
-    service_data: {
-      entity_id: entityId,
-      search_query: query
-    },
+    service_data: fallbackData,
     return_response: true
   };
-  const res = await hass.connection.sendMessagePromise(msg);
-  return (res === null || res === void 0 || (_res$response = res.response) === null || _res$response === void 0 || (_res$response = _res$response[entityId]) === null || _res$response === void 0 ? void 0 : _res$response.result) || (res === null || res === void 0 ? void 0 : res.result) || [];
+  const fallbackRes = await hass.connection.sendMessagePromise(fallbackMsg);
+  const results = (fallbackRes === null || fallbackRes === void 0 || (_fallbackRes$response = fallbackRes.response) === null || _fallbackRes$response === void 0 || (_fallbackRes$response = _fallbackRes$response[entityId]) === null || _fallbackRes$response === void 0 ? void 0 : _fallbackRes$response.result) || (fallbackRes === null || fallbackRes === void 0 ? void 0 : fallbackRes.result) || [];
+  return results;
 }
 function playSearchedMedia(hass, entityId, item) {
   return hass.callService("media_player", "play_media", {
@@ -1999,14 +2943,5761 @@ function playSearchedMedia(hass, entityId, item) {
   });
 }
 
+/*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
+function isNothing(subject) {
+  return typeof subject === 'undefined' || subject === null;
+}
+function isObject(subject) {
+  return typeof subject === 'object' && subject !== null;
+}
+function toArray(sequence) {
+  if (Array.isArray(sequence)) return sequence;else if (isNothing(sequence)) return [];
+  return [sequence];
+}
+function extend$1(target, source) {
+  var index, length, key, sourceKeys;
+  if (source) {
+    sourceKeys = Object.keys(source);
+    for (index = 0, length = sourceKeys.length; index < length; index += 1) {
+      key = sourceKeys[index];
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+function repeat(string, count) {
+  var result = '',
+    cycle;
+  for (cycle = 0; cycle < count; cycle += 1) {
+    result += string;
+  }
+  return result;
+}
+function isNegativeZero(number) {
+  return number === 0 && Number.NEGATIVE_INFINITY === 1 / number;
+}
+var isNothing_1 = isNothing;
+var isObject_1 = isObject;
+var toArray_1 = toArray;
+var repeat_1 = repeat;
+var isNegativeZero_1 = isNegativeZero;
+var extend_1 = extend$1;
+var common = {
+  isNothing: isNothing_1,
+  isObject: isObject_1,
+  toArray: toArray_1,
+  repeat: repeat_1,
+  isNegativeZero: isNegativeZero_1,
+  extend: extend_1
+};
+
+// YAML error class. http://stackoverflow.com/questions/8458984
+
+function formatError(exception, compact) {
+  var where = '',
+    message = exception.reason || '(unknown reason)';
+  if (!exception.mark) return message;
+  if (exception.mark.name) {
+    where += 'in "' + exception.mark.name + '" ';
+  }
+  where += '(' + (exception.mark.line + 1) + ':' + (exception.mark.column + 1) + ')';
+  if (!compact && exception.mark.snippet) {
+    where += '\n\n' + exception.mark.snippet;
+  }
+  return message + ' ' + where;
+}
+function YAMLException$1(reason, mark) {
+  // Super constructor
+  Error.call(this);
+  this.name = 'YAMLException';
+  this.reason = reason;
+  this.mark = mark;
+  this.message = formatError(this, false);
+
+  // Include stack trace in error object
+  if (Error.captureStackTrace) {
+    // Chrome and NodeJS
+    Error.captureStackTrace(this, this.constructor);
+  } else {
+    // FF, IE 10+ and Safari 6+. Fallback for others
+    this.stack = new Error().stack || '';
+  }
+}
+
+// Inherit from Error
+YAMLException$1.prototype = Object.create(Error.prototype);
+YAMLException$1.prototype.constructor = YAMLException$1;
+YAMLException$1.prototype.toString = function toString(compact) {
+  return this.name + ': ' + formatError(this, compact);
+};
+var exception = YAMLException$1;
+
+// get snippet for a single line, respecting maxLength
+function getLine(buffer, lineStart, lineEnd, position, maxLineLength) {
+  var head = '';
+  var tail = '';
+  var maxHalfLength = Math.floor(maxLineLength / 2) - 1;
+  if (position - lineStart > maxHalfLength) {
+    head = ' ... ';
+    lineStart = position - maxHalfLength + head.length;
+  }
+  if (lineEnd - position > maxHalfLength) {
+    tail = ' ...';
+    lineEnd = position + maxHalfLength - tail.length;
+  }
+  return {
+    str: head + buffer.slice(lineStart, lineEnd).replace(/\t/g, '→') + tail,
+    pos: position - lineStart + head.length // relative position
+  };
+}
+function padStart(string, max) {
+  return common.repeat(' ', max - string.length) + string;
+}
+function makeSnippet(mark, options) {
+  options = Object.create(options || null);
+  if (!mark.buffer) return null;
+  if (!options.maxLength) options.maxLength = 79;
+  if (typeof options.indent !== 'number') options.indent = 1;
+  if (typeof options.linesBefore !== 'number') options.linesBefore = 3;
+  if (typeof options.linesAfter !== 'number') options.linesAfter = 2;
+  var re = /\r?\n|\r|\0/g;
+  var lineStarts = [0];
+  var lineEnds = [];
+  var match;
+  var foundLineNo = -1;
+  while (match = re.exec(mark.buffer)) {
+    lineEnds.push(match.index);
+    lineStarts.push(match.index + match[0].length);
+    if (mark.position <= match.index && foundLineNo < 0) {
+      foundLineNo = lineStarts.length - 2;
+    }
+  }
+  if (foundLineNo < 0) foundLineNo = lineStarts.length - 1;
+  var result = '',
+    i,
+    line;
+  var lineNoLength = Math.min(mark.line + options.linesAfter, lineEnds.length).toString().length;
+  var maxLineLength = options.maxLength - (options.indent + lineNoLength + 3);
+  for (i = 1; i <= options.linesBefore; i++) {
+    if (foundLineNo - i < 0) break;
+    line = getLine(mark.buffer, lineStarts[foundLineNo - i], lineEnds[foundLineNo - i], mark.position - (lineStarts[foundLineNo] - lineStarts[foundLineNo - i]), maxLineLength);
+    result = common.repeat(' ', options.indent) + padStart((mark.line - i + 1).toString(), lineNoLength) + ' | ' + line.str + '\n' + result;
+  }
+  line = getLine(mark.buffer, lineStarts[foundLineNo], lineEnds[foundLineNo], mark.position, maxLineLength);
+  result += common.repeat(' ', options.indent) + padStart((mark.line + 1).toString(), lineNoLength) + ' | ' + line.str + '\n';
+  result += common.repeat('-', options.indent + lineNoLength + 3 + line.pos) + '^' + '\n';
+  for (i = 1; i <= options.linesAfter; i++) {
+    if (foundLineNo + i >= lineEnds.length) break;
+    line = getLine(mark.buffer, lineStarts[foundLineNo + i], lineEnds[foundLineNo + i], mark.position - (lineStarts[foundLineNo] - lineStarts[foundLineNo + i]), maxLineLength);
+    result += common.repeat(' ', options.indent) + padStart((mark.line + i + 1).toString(), lineNoLength) + ' | ' + line.str + '\n';
+  }
+  return result.replace(/\n$/, '');
+}
+var snippet = makeSnippet;
+var TYPE_CONSTRUCTOR_OPTIONS = ['kind', 'multi', 'resolve', 'construct', 'instanceOf', 'predicate', 'represent', 'representName', 'defaultStyle', 'styleAliases'];
+var YAML_NODE_KINDS = ['scalar', 'sequence', 'mapping'];
+function compileStyleAliases(map) {
+  var result = {};
+  if (map !== null) {
+    Object.keys(map).forEach(function (style) {
+      map[style].forEach(function (alias) {
+        result[String(alias)] = style;
+      });
+    });
+  }
+  return result;
+}
+function Type$1(tag, options) {
+  options = options || {};
+  Object.keys(options).forEach(function (name) {
+    if (TYPE_CONSTRUCTOR_OPTIONS.indexOf(name) === -1) {
+      throw new exception('Unknown option "' + name + '" is met in definition of "' + tag + '" YAML type.');
+    }
+  });
+
+  // TODO: Add tag format check.
+  this.options = options; // keep original options in case user wants to extend this type later
+  this.tag = tag;
+  this.kind = options['kind'] || null;
+  this.resolve = options['resolve'] || function () {
+    return true;
+  };
+  this.construct = options['construct'] || function (data) {
+    return data;
+  };
+  this.instanceOf = options['instanceOf'] || null;
+  this.predicate = options['predicate'] || null;
+  this.represent = options['represent'] || null;
+  this.representName = options['representName'] || null;
+  this.defaultStyle = options['defaultStyle'] || null;
+  this.multi = options['multi'] || false;
+  this.styleAliases = compileStyleAliases(options['styleAliases'] || null);
+  if (YAML_NODE_KINDS.indexOf(this.kind) === -1) {
+    throw new exception('Unknown kind "' + this.kind + '" is specified for "' + tag + '" YAML type.');
+  }
+}
+var type = Type$1;
+
+/*eslint-disable max-len*/
+
+function compileList(schema, name) {
+  var result = [];
+  schema[name].forEach(function (currentType) {
+    var newIndex = result.length;
+    result.forEach(function (previousType, previousIndex) {
+      if (previousType.tag === currentType.tag && previousType.kind === currentType.kind && previousType.multi === currentType.multi) {
+        newIndex = previousIndex;
+      }
+    });
+    result[newIndex] = currentType;
+  });
+  return result;
+}
+function compileMap(/* lists... */
+) {
+  var result = {
+      scalar: {},
+      sequence: {},
+      mapping: {},
+      fallback: {},
+      multi: {
+        scalar: [],
+        sequence: [],
+        mapping: [],
+        fallback: []
+      }
+    },
+    index,
+    length;
+  function collectType(type) {
+    if (type.multi) {
+      result.multi[type.kind].push(type);
+      result.multi['fallback'].push(type);
+    } else {
+      result[type.kind][type.tag] = result['fallback'][type.tag] = type;
+    }
+  }
+  for (index = 0, length = arguments.length; index < length; index += 1) {
+    arguments[index].forEach(collectType);
+  }
+  return result;
+}
+function Schema$1(definition) {
+  return this.extend(definition);
+}
+Schema$1.prototype.extend = function extend(definition) {
+  var implicit = [];
+  var explicit = [];
+  if (definition instanceof type) {
+    // Schema.extend(type)
+    explicit.push(definition);
+  } else if (Array.isArray(definition)) {
+    // Schema.extend([ type1, type2, ... ])
+    explicit = explicit.concat(definition);
+  } else if (definition && (Array.isArray(definition.implicit) || Array.isArray(definition.explicit))) {
+    // Schema.extend({ explicit: [ type1, type2, ... ], implicit: [ type1, type2, ... ] })
+    if (definition.implicit) implicit = implicit.concat(definition.implicit);
+    if (definition.explicit) explicit = explicit.concat(definition.explicit);
+  } else {
+    throw new exception('Schema.extend argument should be a Type, [ Type ], ' + 'or a schema definition ({ implicit: [...], explicit: [...] })');
+  }
+  implicit.forEach(function (type$1) {
+    if (!(type$1 instanceof type)) {
+      throw new exception('Specified list of YAML types (or a single Type object) contains a non-Type object.');
+    }
+    if (type$1.loadKind && type$1.loadKind !== 'scalar') {
+      throw new exception('There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.');
+    }
+    if (type$1.multi) {
+      throw new exception('There is a multi type in the implicit list of a schema. Multi tags can only be listed as explicit.');
+    }
+  });
+  explicit.forEach(function (type$1) {
+    if (!(type$1 instanceof type)) {
+      throw new exception('Specified list of YAML types (or a single Type object) contains a non-Type object.');
+    }
+  });
+  var result = Object.create(Schema$1.prototype);
+  result.implicit = (this.implicit || []).concat(implicit);
+  result.explicit = (this.explicit || []).concat(explicit);
+  result.compiledImplicit = compileList(result, 'implicit');
+  result.compiledExplicit = compileList(result, 'explicit');
+  result.compiledTypeMap = compileMap(result.compiledImplicit, result.compiledExplicit);
+  return result;
+};
+var schema = Schema$1;
+var str = new type('tag:yaml.org,2002:str', {
+  kind: 'scalar',
+  construct: function (data) {
+    return data !== null ? data : '';
+  }
+});
+var seq = new type('tag:yaml.org,2002:seq', {
+  kind: 'sequence',
+  construct: function (data) {
+    return data !== null ? data : [];
+  }
+});
+var map = new type('tag:yaml.org,2002:map', {
+  kind: 'mapping',
+  construct: function (data) {
+    return data !== null ? data : {};
+  }
+});
+var failsafe = new schema({
+  explicit: [str, seq, map]
+});
+function resolveYamlNull(data) {
+  if (data === null) return true;
+  var max = data.length;
+  return max === 1 && data === '~' || max === 4 && (data === 'null' || data === 'Null' || data === 'NULL');
+}
+function constructYamlNull() {
+  return null;
+}
+function isNull(object) {
+  return object === null;
+}
+var _null = new type('tag:yaml.org,2002:null', {
+  kind: 'scalar',
+  resolve: resolveYamlNull,
+  construct: constructYamlNull,
+  predicate: isNull,
+  represent: {
+    canonical: function () {
+      return '~';
+    },
+    lowercase: function () {
+      return 'null';
+    },
+    uppercase: function () {
+      return 'NULL';
+    },
+    camelcase: function () {
+      return 'Null';
+    },
+    empty: function () {
+      return '';
+    }
+  },
+  defaultStyle: 'lowercase'
+});
+function resolveYamlBoolean(data) {
+  if (data === null) return false;
+  var max = data.length;
+  return max === 4 && (data === 'true' || data === 'True' || data === 'TRUE') || max === 5 && (data === 'false' || data === 'False' || data === 'FALSE');
+}
+function constructYamlBoolean(data) {
+  return data === 'true' || data === 'True' || data === 'TRUE';
+}
+function isBoolean(object) {
+  return Object.prototype.toString.call(object) === '[object Boolean]';
+}
+var bool = new type('tag:yaml.org,2002:bool', {
+  kind: 'scalar',
+  resolve: resolveYamlBoolean,
+  construct: constructYamlBoolean,
+  predicate: isBoolean,
+  represent: {
+    lowercase: function (object) {
+      return object ? 'true' : 'false';
+    },
+    uppercase: function (object) {
+      return object ? 'TRUE' : 'FALSE';
+    },
+    camelcase: function (object) {
+      return object ? 'True' : 'False';
+    }
+  },
+  defaultStyle: 'lowercase'
+});
+function isHexCode(c) {
+  return 0x30 /* 0 */ <= c && c <= 0x39 /* 9 */ || 0x41 /* A */ <= c && c <= 0x46 /* F */ || 0x61 /* a */ <= c && c <= 0x66 /* f */;
+}
+function isOctCode(c) {
+  return 0x30 /* 0 */ <= c && c <= 0x37 /* 7 */;
+}
+function isDecCode(c) {
+  return 0x30 /* 0 */ <= c && c <= 0x39 /* 9 */;
+}
+function resolveYamlInteger(data) {
+  if (data === null) return false;
+  var max = data.length,
+    index = 0,
+    hasDigits = false,
+    ch;
+  if (!max) return false;
+  ch = data[index];
+
+  // sign
+  if (ch === '-' || ch === '+') {
+    ch = data[++index];
+  }
+  if (ch === '0') {
+    // 0
+    if (index + 1 === max) return true;
+    ch = data[++index];
+
+    // base 2, base 8, base 16
+
+    if (ch === 'b') {
+      // base 2
+      index++;
+      for (; index < max; index++) {
+        ch = data[index];
+        if (ch === '_') continue;
+        if (ch !== '0' && ch !== '1') return false;
+        hasDigits = true;
+      }
+      return hasDigits && ch !== '_';
+    }
+    if (ch === 'x') {
+      // base 16
+      index++;
+      for (; index < max; index++) {
+        ch = data[index];
+        if (ch === '_') continue;
+        if (!isHexCode(data.charCodeAt(index))) return false;
+        hasDigits = true;
+      }
+      return hasDigits && ch !== '_';
+    }
+    if (ch === 'o') {
+      // base 8
+      index++;
+      for (; index < max; index++) {
+        ch = data[index];
+        if (ch === '_') continue;
+        if (!isOctCode(data.charCodeAt(index))) return false;
+        hasDigits = true;
+      }
+      return hasDigits && ch !== '_';
+    }
+  }
+
+  // base 10 (except 0)
+
+  // value should not start with `_`;
+  if (ch === '_') return false;
+  for (; index < max; index++) {
+    ch = data[index];
+    if (ch === '_') continue;
+    if (!isDecCode(data.charCodeAt(index))) {
+      return false;
+    }
+    hasDigits = true;
+  }
+
+  // Should have digits and should not end with `_`
+  if (!hasDigits || ch === '_') return false;
+  return true;
+}
+function constructYamlInteger(data) {
+  var value = data,
+    sign = 1,
+    ch;
+  if (value.indexOf('_') !== -1) {
+    value = value.replace(/_/g, '');
+  }
+  ch = value[0];
+  if (ch === '-' || ch === '+') {
+    if (ch === '-') sign = -1;
+    value = value.slice(1);
+    ch = value[0];
+  }
+  if (value === '0') return 0;
+  if (ch === '0') {
+    if (value[1] === 'b') return sign * parseInt(value.slice(2), 2);
+    if (value[1] === 'x') return sign * parseInt(value.slice(2), 16);
+    if (value[1] === 'o') return sign * parseInt(value.slice(2), 8);
+  }
+  return sign * parseInt(value, 10);
+}
+function isInteger(object) {
+  return Object.prototype.toString.call(object) === '[object Number]' && object % 1 === 0 && !common.isNegativeZero(object);
+}
+var int = new type('tag:yaml.org,2002:int', {
+  kind: 'scalar',
+  resolve: resolveYamlInteger,
+  construct: constructYamlInteger,
+  predicate: isInteger,
+  represent: {
+    binary: function (obj) {
+      return obj >= 0 ? '0b' + obj.toString(2) : '-0b' + obj.toString(2).slice(1);
+    },
+    octal: function (obj) {
+      return obj >= 0 ? '0o' + obj.toString(8) : '-0o' + obj.toString(8).slice(1);
+    },
+    decimal: function (obj) {
+      return obj.toString(10);
+    },
+    /* eslint-disable max-len */
+    hexadecimal: function (obj) {
+      return obj >= 0 ? '0x' + obj.toString(16).toUpperCase() : '-0x' + obj.toString(16).toUpperCase().slice(1);
+    }
+  },
+  defaultStyle: 'decimal',
+  styleAliases: {
+    binary: [2, 'bin'],
+    octal: [8, 'oct'],
+    decimal: [10, 'dec'],
+    hexadecimal: [16, 'hex']
+  }
+});
+var YAML_FLOAT_PATTERN = new RegExp(
+// 2.5e4, 2.5 and integers
+'^(?:[-+]?(?:[0-9][0-9_]*)(?:\\.[0-9_]*)?(?:[eE][-+]?[0-9]+)?' +
+// .2e4, .2
+// special case, seems not from spec
+'|\\.[0-9_]+(?:[eE][-+]?[0-9]+)?' +
+// .inf
+'|[-+]?\\.(?:inf|Inf|INF)' +
+// .nan
+'|\\.(?:nan|NaN|NAN))$');
+function resolveYamlFloat(data) {
+  if (data === null) return false;
+  if (!YAML_FLOAT_PATTERN.test(data) ||
+  // Quick hack to not allow integers end with `_`
+  // Probably should update regexp & check speed
+  data[data.length - 1] === '_') {
+    return false;
+  }
+  return true;
+}
+function constructYamlFloat(data) {
+  var value, sign;
+  value = data.replace(/_/g, '').toLowerCase();
+  sign = value[0] === '-' ? -1 : 1;
+  if ('+-'.indexOf(value[0]) >= 0) {
+    value = value.slice(1);
+  }
+  if (value === '.inf') {
+    return sign === 1 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+  } else if (value === '.nan') {
+    return NaN;
+  }
+  return sign * parseFloat(value, 10);
+}
+var SCIENTIFIC_WITHOUT_DOT = /^[-+]?[0-9]+e/;
+function representYamlFloat(object, style) {
+  var res;
+  if (isNaN(object)) {
+    switch (style) {
+      case 'lowercase':
+        return '.nan';
+      case 'uppercase':
+        return '.NAN';
+      case 'camelcase':
+        return '.NaN';
+    }
+  } else if (Number.POSITIVE_INFINITY === object) {
+    switch (style) {
+      case 'lowercase':
+        return '.inf';
+      case 'uppercase':
+        return '.INF';
+      case 'camelcase':
+        return '.Inf';
+    }
+  } else if (Number.NEGATIVE_INFINITY === object) {
+    switch (style) {
+      case 'lowercase':
+        return '-.inf';
+      case 'uppercase':
+        return '-.INF';
+      case 'camelcase':
+        return '-.Inf';
+    }
+  } else if (common.isNegativeZero(object)) {
+    return '-0.0';
+  }
+  res = object.toString(10);
+
+  // JS stringifier can build scientific format without dots: 5e-100,
+  // while YAML requres dot: 5.e-100. Fix it with simple hack
+
+  return SCIENTIFIC_WITHOUT_DOT.test(res) ? res.replace('e', '.e') : res;
+}
+function isFloat(object) {
+  return Object.prototype.toString.call(object) === '[object Number]' && (object % 1 !== 0 || common.isNegativeZero(object));
+}
+var float = new type('tag:yaml.org,2002:float', {
+  kind: 'scalar',
+  resolve: resolveYamlFloat,
+  construct: constructYamlFloat,
+  predicate: isFloat,
+  represent: representYamlFloat,
+  defaultStyle: 'lowercase'
+});
+var json = failsafe.extend({
+  implicit: [_null, bool, int, float]
+});
+var core = json;
+var YAML_DATE_REGEXP = new RegExp('^([0-9][0-9][0-9][0-9])' +
+// [1] year
+'-([0-9][0-9])' +
+// [2] month
+'-([0-9][0-9])$'); // [3] day
+
+var YAML_TIMESTAMP_REGEXP = new RegExp('^([0-9][0-9][0-9][0-9])' +
+// [1] year
+'-([0-9][0-9]?)' +
+// [2] month
+'-([0-9][0-9]?)' +
+// [3] day
+'(?:[Tt]|[ \\t]+)' +
+// ...
+'([0-9][0-9]?)' +
+// [4] hour
+':([0-9][0-9])' +
+// [5] minute
+':([0-9][0-9])' +
+// [6] second
+'(?:\\.([0-9]*))?' +
+// [7] fraction
+'(?:[ \\t]*(Z|([-+])([0-9][0-9]?)' +
+// [8] tz [9] tz_sign [10] tz_hour
+'(?::([0-9][0-9]))?))?$'); // [11] tz_minute
+
+function resolveYamlTimestamp(data) {
+  if (data === null) return false;
+  if (YAML_DATE_REGEXP.exec(data) !== null) return true;
+  if (YAML_TIMESTAMP_REGEXP.exec(data) !== null) return true;
+  return false;
+}
+function constructYamlTimestamp(data) {
+  var match,
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    fraction = 0,
+    delta = null,
+    tz_hour,
+    tz_minute,
+    date;
+  match = YAML_DATE_REGEXP.exec(data);
+  if (match === null) match = YAML_TIMESTAMP_REGEXP.exec(data);
+  if (match === null) throw new Error('Date resolve error');
+
+  // match: [1] year [2] month [3] day
+
+  year = +match[1];
+  month = +match[2] - 1; // JS month starts with 0
+  day = +match[3];
+  if (!match[4]) {
+    // no hour
+    return new Date(Date.UTC(year, month, day));
+  }
+
+  // match: [4] hour [5] minute [6] second [7] fraction
+
+  hour = +match[4];
+  minute = +match[5];
+  second = +match[6];
+  if (match[7]) {
+    fraction = match[7].slice(0, 3);
+    while (fraction.length < 3) {
+      // milli-seconds
+      fraction += '0';
+    }
+    fraction = +fraction;
+  }
+
+  // match: [8] tz [9] tz_sign [10] tz_hour [11] tz_minute
+
+  if (match[9]) {
+    tz_hour = +match[10];
+    tz_minute = +(match[11] || 0);
+    delta = (tz_hour * 60 + tz_minute) * 60000; // delta in mili-seconds
+    if (match[9] === '-') delta = -delta;
+  }
+  date = new Date(Date.UTC(year, month, day, hour, minute, second, fraction));
+  if (delta) date.setTime(date.getTime() - delta);
+  return date;
+}
+function representYamlTimestamp(object /*, style*/) {
+  return object.toISOString();
+}
+var timestamp = new type('tag:yaml.org,2002:timestamp', {
+  kind: 'scalar',
+  resolve: resolveYamlTimestamp,
+  construct: constructYamlTimestamp,
+  instanceOf: Date,
+  represent: representYamlTimestamp
+});
+function resolveYamlMerge(data) {
+  return data === '<<' || data === null;
+}
+var merge = new type('tag:yaml.org,2002:merge', {
+  kind: 'scalar',
+  resolve: resolveYamlMerge
+});
+
+/*eslint-disable no-bitwise*/
+
+// [ 64, 65, 66 ] -> [ padding, CR, LF ]
+var BASE64_MAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\n\r';
+function resolveYamlBinary(data) {
+  if (data === null) return false;
+  var code,
+    idx,
+    bitlen = 0,
+    max = data.length,
+    map = BASE64_MAP;
+
+  // Convert one by one.
+  for (idx = 0; idx < max; idx++) {
+    code = map.indexOf(data.charAt(idx));
+
+    // Skip CR/LF
+    if (code > 64) continue;
+
+    // Fail on illegal characters
+    if (code < 0) return false;
+    bitlen += 6;
+  }
+
+  // If there are any bits left, source was corrupted
+  return bitlen % 8 === 0;
+}
+function constructYamlBinary(data) {
+  var idx,
+    tailbits,
+    input = data.replace(/[\r\n=]/g, ''),
+    // remove CR/LF & padding to simplify scan
+    max = input.length,
+    map = BASE64_MAP,
+    bits = 0,
+    result = [];
+
+  // Collect by 6*4 bits (3 bytes)
+
+  for (idx = 0; idx < max; idx++) {
+    if (idx % 4 === 0 && idx) {
+      result.push(bits >> 16 & 0xFF);
+      result.push(bits >> 8 & 0xFF);
+      result.push(bits & 0xFF);
+    }
+    bits = bits << 6 | map.indexOf(input.charAt(idx));
+  }
+
+  // Dump tail
+
+  tailbits = max % 4 * 6;
+  if (tailbits === 0) {
+    result.push(bits >> 16 & 0xFF);
+    result.push(bits >> 8 & 0xFF);
+    result.push(bits & 0xFF);
+  } else if (tailbits === 18) {
+    result.push(bits >> 10 & 0xFF);
+    result.push(bits >> 2 & 0xFF);
+  } else if (tailbits === 12) {
+    result.push(bits >> 4 & 0xFF);
+  }
+  return new Uint8Array(result);
+}
+function representYamlBinary(object /*, style*/) {
+  var result = '',
+    bits = 0,
+    idx,
+    tail,
+    max = object.length,
+    map = BASE64_MAP;
+
+  // Convert every three bytes to 4 ASCII characters.
+
+  for (idx = 0; idx < max; idx++) {
+    if (idx % 3 === 0 && idx) {
+      result += map[bits >> 18 & 0x3F];
+      result += map[bits >> 12 & 0x3F];
+      result += map[bits >> 6 & 0x3F];
+      result += map[bits & 0x3F];
+    }
+    bits = (bits << 8) + object[idx];
+  }
+
+  // Dump tail
+
+  tail = max % 3;
+  if (tail === 0) {
+    result += map[bits >> 18 & 0x3F];
+    result += map[bits >> 12 & 0x3F];
+    result += map[bits >> 6 & 0x3F];
+    result += map[bits & 0x3F];
+  } else if (tail === 2) {
+    result += map[bits >> 10 & 0x3F];
+    result += map[bits >> 4 & 0x3F];
+    result += map[bits << 2 & 0x3F];
+    result += map[64];
+  } else if (tail === 1) {
+    result += map[bits >> 2 & 0x3F];
+    result += map[bits << 4 & 0x3F];
+    result += map[64];
+    result += map[64];
+  }
+  return result;
+}
+function isBinary(obj) {
+  return Object.prototype.toString.call(obj) === '[object Uint8Array]';
+}
+var binary = new type('tag:yaml.org,2002:binary', {
+  kind: 'scalar',
+  resolve: resolveYamlBinary,
+  construct: constructYamlBinary,
+  predicate: isBinary,
+  represent: representYamlBinary
+});
+var _hasOwnProperty$3 = Object.prototype.hasOwnProperty;
+var _toString$2 = Object.prototype.toString;
+function resolveYamlOmap(data) {
+  if (data === null) return true;
+  var objectKeys = [],
+    index,
+    length,
+    pair,
+    pairKey,
+    pairHasKey,
+    object = data;
+  for (index = 0, length = object.length; index < length; index += 1) {
+    pair = object[index];
+    pairHasKey = false;
+    if (_toString$2.call(pair) !== '[object Object]') return false;
+    for (pairKey in pair) {
+      if (_hasOwnProperty$3.call(pair, pairKey)) {
+        if (!pairHasKey) pairHasKey = true;else return false;
+      }
+    }
+    if (!pairHasKey) return false;
+    if (objectKeys.indexOf(pairKey) === -1) objectKeys.push(pairKey);else return false;
+  }
+  return true;
+}
+function constructYamlOmap(data) {
+  return data !== null ? data : [];
+}
+var omap = new type('tag:yaml.org,2002:omap', {
+  kind: 'sequence',
+  resolve: resolveYamlOmap,
+  construct: constructYamlOmap
+});
+var _toString$1 = Object.prototype.toString;
+function resolveYamlPairs(data) {
+  if (data === null) return true;
+  var index,
+    length,
+    pair,
+    keys,
+    result,
+    object = data;
+  result = new Array(object.length);
+  for (index = 0, length = object.length; index < length; index += 1) {
+    pair = object[index];
+    if (_toString$1.call(pair) !== '[object Object]') return false;
+    keys = Object.keys(pair);
+    if (keys.length !== 1) return false;
+    result[index] = [keys[0], pair[keys[0]]];
+  }
+  return true;
+}
+function constructYamlPairs(data) {
+  if (data === null) return [];
+  var index,
+    length,
+    pair,
+    keys,
+    result,
+    object = data;
+  result = new Array(object.length);
+  for (index = 0, length = object.length; index < length; index += 1) {
+    pair = object[index];
+    keys = Object.keys(pair);
+    result[index] = [keys[0], pair[keys[0]]];
+  }
+  return result;
+}
+var pairs = new type('tag:yaml.org,2002:pairs', {
+  kind: 'sequence',
+  resolve: resolveYamlPairs,
+  construct: constructYamlPairs
+});
+var _hasOwnProperty$2 = Object.prototype.hasOwnProperty;
+function resolveYamlSet(data) {
+  if (data === null) return true;
+  var key,
+    object = data;
+  for (key in object) {
+    if (_hasOwnProperty$2.call(object, key)) {
+      if (object[key] !== null) return false;
+    }
+  }
+  return true;
+}
+function constructYamlSet(data) {
+  return data !== null ? data : {};
+}
+var set = new type('tag:yaml.org,2002:set', {
+  kind: 'mapping',
+  resolve: resolveYamlSet,
+  construct: constructYamlSet
+});
+var _default = core.extend({
+  implicit: [timestamp, merge],
+  explicit: [binary, omap, pairs, set]
+});
+
+/*eslint-disable max-len,no-use-before-define*/
+
+var _hasOwnProperty$1 = Object.prototype.hasOwnProperty;
+var CONTEXT_FLOW_IN = 1;
+var CONTEXT_FLOW_OUT = 2;
+var CONTEXT_BLOCK_IN = 3;
+var CONTEXT_BLOCK_OUT = 4;
+var CHOMPING_CLIP = 1;
+var CHOMPING_STRIP = 2;
+var CHOMPING_KEEP = 3;
+var PATTERN_NON_PRINTABLE = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/;
+var PATTERN_NON_ASCII_LINE_BREAKS = /[\x85\u2028\u2029]/;
+var PATTERN_FLOW_INDICATORS = /[,\[\]\{\}]/;
+var PATTERN_TAG_HANDLE = /^(?:!|!!|![a-z\-]+!)$/i;
+var PATTERN_TAG_URI = /^(?:!|[^,\[\]\{\}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/\?:@&=\+\$,_\.!~\*'\(\)\[\]])*$/i;
+function _class(obj) {
+  return Object.prototype.toString.call(obj);
+}
+function is_EOL(c) {
+  return c === 0x0A /* LF */ || c === 0x0D /* CR */;
+}
+function is_WHITE_SPACE(c) {
+  return c === 0x09 /* Tab */ || c === 0x20 /* Space */;
+}
+function is_WS_OR_EOL(c) {
+  return c === 0x09 /* Tab */ || c === 0x20 /* Space */ || c === 0x0A /* LF */ || c === 0x0D /* CR */;
+}
+function is_FLOW_INDICATOR(c) {
+  return c === 0x2C /* , */ || c === 0x5B /* [ */ || c === 0x5D /* ] */ || c === 0x7B /* { */ || c === 0x7D /* } */;
+}
+function fromHexCode(c) {
+  var lc;
+  if (0x30 /* 0 */ <= c && c <= 0x39 /* 9 */) {
+    return c - 0x30;
+  }
+
+  /*eslint-disable no-bitwise*/
+  lc = c | 0x20;
+  if (0x61 /* a */ <= lc && lc <= 0x66 /* f */) {
+    return lc - 0x61 + 10;
+  }
+  return -1;
+}
+function escapedHexLen(c) {
+  if (c === 0x78 /* x */) {
+    return 2;
+  }
+  if (c === 0x75 /* u */) {
+    return 4;
+  }
+  if (c === 0x55 /* U */) {
+    return 8;
+  }
+  return 0;
+}
+function fromDecimalCode(c) {
+  if (0x30 /* 0 */ <= c && c <= 0x39 /* 9 */) {
+    return c - 0x30;
+  }
+  return -1;
+}
+function simpleEscapeSequence(c) {
+  /* eslint-disable indent */
+  return c === 0x30 /* 0 */ ? '\x00' : c === 0x61 /* a */ ? '\x07' : c === 0x62 /* b */ ? '\x08' : c === 0x74 /* t */ ? '\x09' : c === 0x09 /* Tab */ ? '\x09' : c === 0x6E /* n */ ? '\x0A' : c === 0x76 /* v */ ? '\x0B' : c === 0x66 /* f */ ? '\x0C' : c === 0x72 /* r */ ? '\x0D' : c === 0x65 /* e */ ? '\x1B' : c === 0x20 /* Space */ ? ' ' : c === 0x22 /* " */ ? '\x22' : c === 0x2F /* / */ ? '/' : c === 0x5C /* \ */ ? '\x5C' : c === 0x4E /* N */ ? '\x85' : c === 0x5F /* _ */ ? '\xA0' : c === 0x4C /* L */ ? '\u2028' : c === 0x50 /* P */ ? '\u2029' : '';
+}
+function charFromCodepoint(c) {
+  if (c <= 0xFFFF) {
+    return String.fromCharCode(c);
+  }
+  // Encode UTF-16 surrogate pair
+  // https://en.wikipedia.org/wiki/UTF-16#Code_points_U.2B010000_to_U.2B10FFFF
+  return String.fromCharCode((c - 0x010000 >> 10) + 0xD800, (c - 0x010000 & 0x03FF) + 0xDC00);
+}
+var simpleEscapeCheck = new Array(256); // integer, for fast access
+var simpleEscapeMap = new Array(256);
+for (var i = 0; i < 256; i++) {
+  simpleEscapeCheck[i] = simpleEscapeSequence(i) ? 1 : 0;
+  simpleEscapeMap[i] = simpleEscapeSequence(i);
+}
+function State$1(input, options) {
+  this.input = input;
+  this.filename = options['filename'] || null;
+  this.schema = options['schema'] || _default;
+  this.onWarning = options['onWarning'] || null;
+  // (Hidden) Remove? makes the loader to expect YAML 1.1 documents
+  // if such documents have no explicit %YAML directive
+  this.legacy = options['legacy'] || false;
+  this.json = options['json'] || false;
+  this.listener = options['listener'] || null;
+  this.implicitTypes = this.schema.compiledImplicit;
+  this.typeMap = this.schema.compiledTypeMap;
+  this.length = input.length;
+  this.position = 0;
+  this.line = 0;
+  this.lineStart = 0;
+  this.lineIndent = 0;
+
+  // position of first leading tab in the current line,
+  // used to make sure there are no tabs in the indentation
+  this.firstTabInLine = -1;
+  this.documents = [];
+
+  /*
+  this.version;
+  this.checkLineBreaks;
+  this.tagMap;
+  this.anchorMap;
+  this.tag;
+  this.anchor;
+  this.kind;
+  this.result;*/
+}
+function generateError(state, message) {
+  var mark = {
+    name: state.filename,
+    buffer: state.input.slice(0, -1),
+    // omit trailing \0
+    position: state.position,
+    line: state.line,
+    column: state.position - state.lineStart
+  };
+  mark.snippet = snippet(mark);
+  return new exception(message, mark);
+}
+function throwError(state, message) {
+  throw generateError(state, message);
+}
+function throwWarning(state, message) {
+  if (state.onWarning) {
+    state.onWarning.call(null, generateError(state, message));
+  }
+}
+var directiveHandlers = {
+  YAML: function handleYamlDirective(state, name, args) {
+    var match, major, minor;
+    if (state.version !== null) {
+      throwError(state, 'duplication of %YAML directive');
+    }
+    if (args.length !== 1) {
+      throwError(state, 'YAML directive accepts exactly one argument');
+    }
+    match = /^([0-9]+)\.([0-9]+)$/.exec(args[0]);
+    if (match === null) {
+      throwError(state, 'ill-formed argument of the YAML directive');
+    }
+    major = parseInt(match[1], 10);
+    minor = parseInt(match[2], 10);
+    if (major !== 1) {
+      throwError(state, 'unacceptable YAML version of the document');
+    }
+    state.version = args[0];
+    state.checkLineBreaks = minor < 2;
+    if (minor !== 1 && minor !== 2) {
+      throwWarning(state, 'unsupported YAML version of the document');
+    }
+  },
+  TAG: function handleTagDirective(state, name, args) {
+    var handle, prefix;
+    if (args.length !== 2) {
+      throwError(state, 'TAG directive accepts exactly two arguments');
+    }
+    handle = args[0];
+    prefix = args[1];
+    if (!PATTERN_TAG_HANDLE.test(handle)) {
+      throwError(state, 'ill-formed tag handle (first argument) of the TAG directive');
+    }
+    if (_hasOwnProperty$1.call(state.tagMap, handle)) {
+      throwError(state, 'there is a previously declared suffix for "' + handle + '" tag handle');
+    }
+    if (!PATTERN_TAG_URI.test(prefix)) {
+      throwError(state, 'ill-formed tag prefix (second argument) of the TAG directive');
+    }
+    try {
+      prefix = decodeURIComponent(prefix);
+    } catch (err) {
+      throwError(state, 'tag prefix is malformed: ' + prefix);
+    }
+    state.tagMap[handle] = prefix;
+  }
+};
+function captureSegment(state, start, end, checkJson) {
+  var _position, _length, _character, _result;
+  if (start < end) {
+    _result = state.input.slice(start, end);
+    if (checkJson) {
+      for (_position = 0, _length = _result.length; _position < _length; _position += 1) {
+        _character = _result.charCodeAt(_position);
+        if (!(_character === 0x09 || 0x20 <= _character && _character <= 0x10FFFF)) {
+          throwError(state, 'expected valid JSON character');
+        }
+      }
+    } else if (PATTERN_NON_PRINTABLE.test(_result)) {
+      throwError(state, 'the stream contains non-printable characters');
+    }
+    state.result += _result;
+  }
+}
+function mergeMappings(state, destination, source, overridableKeys) {
+  var sourceKeys, key, index, quantity;
+  if (!common.isObject(source)) {
+    throwError(state, 'cannot merge mappings; the provided source object is unacceptable');
+  }
+  sourceKeys = Object.keys(source);
+  for (index = 0, quantity = sourceKeys.length; index < quantity; index += 1) {
+    key = sourceKeys[index];
+    if (!_hasOwnProperty$1.call(destination, key)) {
+      destination[key] = source[key];
+      overridableKeys[key] = true;
+    }
+  }
+}
+function storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, valueNode, startLine, startLineStart, startPos) {
+  var index, quantity;
+
+  // The output is a plain object here, so keys can only be strings.
+  // We need to convert keyNode to a string, but doing so can hang the process
+  // (deeply nested arrays that explode exponentially using aliases).
+  if (Array.isArray(keyNode)) {
+    keyNode = Array.prototype.slice.call(keyNode);
+    for (index = 0, quantity = keyNode.length; index < quantity; index += 1) {
+      if (Array.isArray(keyNode[index])) {
+        throwError(state, 'nested arrays are not supported inside keys');
+      }
+      if (typeof keyNode === 'object' && _class(keyNode[index]) === '[object Object]') {
+        keyNode[index] = '[object Object]';
+      }
+    }
+  }
+
+  // Avoid code execution in load() via toString property
+  // (still use its own toString for arrays, timestamps,
+  // and whatever user schema extensions happen to have @@toStringTag)
+  if (typeof keyNode === 'object' && _class(keyNode) === '[object Object]') {
+    keyNode = '[object Object]';
+  }
+  keyNode = String(keyNode);
+  if (_result === null) {
+    _result = {};
+  }
+  if (keyTag === 'tag:yaml.org,2002:merge') {
+    if (Array.isArray(valueNode)) {
+      for (index = 0, quantity = valueNode.length; index < quantity; index += 1) {
+        mergeMappings(state, _result, valueNode[index], overridableKeys);
+      }
+    } else {
+      mergeMappings(state, _result, valueNode, overridableKeys);
+    }
+  } else {
+    if (!state.json && !_hasOwnProperty$1.call(overridableKeys, keyNode) && _hasOwnProperty$1.call(_result, keyNode)) {
+      state.line = startLine || state.line;
+      state.lineStart = startLineStart || state.lineStart;
+      state.position = startPos || state.position;
+      throwError(state, 'duplicated mapping key');
+    }
+
+    // used for this specific key only because Object.defineProperty is slow
+    if (keyNode === '__proto__') {
+      Object.defineProperty(_result, keyNode, {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: valueNode
+      });
+    } else {
+      _result[keyNode] = valueNode;
+    }
+    delete overridableKeys[keyNode];
+  }
+  return _result;
+}
+function readLineBreak(state) {
+  var ch;
+  ch = state.input.charCodeAt(state.position);
+  if (ch === 0x0A /* LF */) {
+    state.position++;
+  } else if (ch === 0x0D /* CR */) {
+    state.position++;
+    if (state.input.charCodeAt(state.position) === 0x0A /* LF */) {
+      state.position++;
+    }
+  } else {
+    throwError(state, 'a line break is expected');
+  }
+  state.line += 1;
+  state.lineStart = state.position;
+  state.firstTabInLine = -1;
+}
+function skipSeparationSpace(state, allowComments, checkIndent) {
+  var lineBreaks = 0,
+    ch = state.input.charCodeAt(state.position);
+  while (ch !== 0) {
+    while (is_WHITE_SPACE(ch)) {
+      if (ch === 0x09 /* Tab */ && state.firstTabInLine === -1) {
+        state.firstTabInLine = state.position;
+      }
+      ch = state.input.charCodeAt(++state.position);
+    }
+    if (allowComments && ch === 0x23 /* # */) {
+      do {
+        ch = state.input.charCodeAt(++state.position);
+      } while (ch !== 0x0A /* LF */ && ch !== 0x0D /* CR */ && ch !== 0);
+    }
+    if (is_EOL(ch)) {
+      readLineBreak(state);
+      ch = state.input.charCodeAt(state.position);
+      lineBreaks++;
+      state.lineIndent = 0;
+      while (ch === 0x20 /* Space */) {
+        state.lineIndent++;
+        ch = state.input.charCodeAt(++state.position);
+      }
+    } else {
+      break;
+    }
+  }
+  if (checkIndent !== -1 && lineBreaks !== 0 && state.lineIndent < checkIndent) {
+    throwWarning(state, 'deficient indentation');
+  }
+  return lineBreaks;
+}
+function testDocumentSeparator(state) {
+  var _position = state.position,
+    ch;
+  ch = state.input.charCodeAt(_position);
+
+  // Condition state.position === state.lineStart is tested
+  // in parent on each call, for efficiency. No needs to test here again.
+  if ((ch === 0x2D /* - */ || ch === 0x2E /* . */) && ch === state.input.charCodeAt(_position + 1) && ch === state.input.charCodeAt(_position + 2)) {
+    _position += 3;
+    ch = state.input.charCodeAt(_position);
+    if (ch === 0 || is_WS_OR_EOL(ch)) {
+      return true;
+    }
+  }
+  return false;
+}
+function writeFoldedLines(state, count) {
+  if (count === 1) {
+    state.result += ' ';
+  } else if (count > 1) {
+    state.result += common.repeat('\n', count - 1);
+  }
+}
+function readPlainScalar(state, nodeIndent, withinFlowCollection) {
+  var preceding,
+    following,
+    captureStart,
+    captureEnd,
+    hasPendingContent,
+    _line,
+    _lineStart,
+    _lineIndent,
+    _kind = state.kind,
+    _result = state.result,
+    ch;
+  ch = state.input.charCodeAt(state.position);
+  if (is_WS_OR_EOL(ch) || is_FLOW_INDICATOR(ch) || ch === 0x23 /* # */ || ch === 0x26 /* & */ || ch === 0x2A /* * */ || ch === 0x21 /* ! */ || ch === 0x7C /* | */ || ch === 0x3E /* > */ || ch === 0x27 /* ' */ || ch === 0x22 /* " */ || ch === 0x25 /* % */ || ch === 0x40 /* @ */ || ch === 0x60 /* ` */) {
+    return false;
+  }
+  if (ch === 0x3F /* ? */ || ch === 0x2D /* - */) {
+    following = state.input.charCodeAt(state.position + 1);
+    if (is_WS_OR_EOL(following) || withinFlowCollection && is_FLOW_INDICATOR(following)) {
+      return false;
+    }
+  }
+  state.kind = 'scalar';
+  state.result = '';
+  captureStart = captureEnd = state.position;
+  hasPendingContent = false;
+  while (ch !== 0) {
+    if (ch === 0x3A /* : */) {
+      following = state.input.charCodeAt(state.position + 1);
+      if (is_WS_OR_EOL(following) || withinFlowCollection && is_FLOW_INDICATOR(following)) {
+        break;
+      }
+    } else if (ch === 0x23 /* # */) {
+      preceding = state.input.charCodeAt(state.position - 1);
+      if (is_WS_OR_EOL(preceding)) {
+        break;
+      }
+    } else if (state.position === state.lineStart && testDocumentSeparator(state) || withinFlowCollection && is_FLOW_INDICATOR(ch)) {
+      break;
+    } else if (is_EOL(ch)) {
+      _line = state.line;
+      _lineStart = state.lineStart;
+      _lineIndent = state.lineIndent;
+      skipSeparationSpace(state, false, -1);
+      if (state.lineIndent >= nodeIndent) {
+        hasPendingContent = true;
+        ch = state.input.charCodeAt(state.position);
+        continue;
+      } else {
+        state.position = captureEnd;
+        state.line = _line;
+        state.lineStart = _lineStart;
+        state.lineIndent = _lineIndent;
+        break;
+      }
+    }
+    if (hasPendingContent) {
+      captureSegment(state, captureStart, captureEnd, false);
+      writeFoldedLines(state, state.line - _line);
+      captureStart = captureEnd = state.position;
+      hasPendingContent = false;
+    }
+    if (!is_WHITE_SPACE(ch)) {
+      captureEnd = state.position + 1;
+    }
+    ch = state.input.charCodeAt(++state.position);
+  }
+  captureSegment(state, captureStart, captureEnd, false);
+  if (state.result) {
+    return true;
+  }
+  state.kind = _kind;
+  state.result = _result;
+  return false;
+}
+function readSingleQuotedScalar(state, nodeIndent) {
+  var ch, captureStart, captureEnd;
+  ch = state.input.charCodeAt(state.position);
+  if (ch !== 0x27 /* ' */) {
+    return false;
+  }
+  state.kind = 'scalar';
+  state.result = '';
+  state.position++;
+  captureStart = captureEnd = state.position;
+  while ((ch = state.input.charCodeAt(state.position)) !== 0) {
+    if (ch === 0x27 /* ' */) {
+      captureSegment(state, captureStart, state.position, true);
+      ch = state.input.charCodeAt(++state.position);
+      if (ch === 0x27 /* ' */) {
+        captureStart = state.position;
+        state.position++;
+        captureEnd = state.position;
+      } else {
+        return true;
+      }
+    } else if (is_EOL(ch)) {
+      captureSegment(state, captureStart, captureEnd, true);
+      writeFoldedLines(state, skipSeparationSpace(state, false, nodeIndent));
+      captureStart = captureEnd = state.position;
+    } else if (state.position === state.lineStart && testDocumentSeparator(state)) {
+      throwError(state, 'unexpected end of the document within a single quoted scalar');
+    } else {
+      state.position++;
+      captureEnd = state.position;
+    }
+  }
+  throwError(state, 'unexpected end of the stream within a single quoted scalar');
+}
+function readDoubleQuotedScalar(state, nodeIndent) {
+  var captureStart, captureEnd, hexLength, hexResult, tmp, ch;
+  ch = state.input.charCodeAt(state.position);
+  if (ch !== 0x22 /* " */) {
+    return false;
+  }
+  state.kind = 'scalar';
+  state.result = '';
+  state.position++;
+  captureStart = captureEnd = state.position;
+  while ((ch = state.input.charCodeAt(state.position)) !== 0) {
+    if (ch === 0x22 /* " */) {
+      captureSegment(state, captureStart, state.position, true);
+      state.position++;
+      return true;
+    } else if (ch === 0x5C /* \ */) {
+      captureSegment(state, captureStart, state.position, true);
+      ch = state.input.charCodeAt(++state.position);
+      if (is_EOL(ch)) {
+        skipSeparationSpace(state, false, nodeIndent);
+
+        // TODO: rework to inline fn with no type cast?
+      } else if (ch < 256 && simpleEscapeCheck[ch]) {
+        state.result += simpleEscapeMap[ch];
+        state.position++;
+      } else if ((tmp = escapedHexLen(ch)) > 0) {
+        hexLength = tmp;
+        hexResult = 0;
+        for (; hexLength > 0; hexLength--) {
+          ch = state.input.charCodeAt(++state.position);
+          if ((tmp = fromHexCode(ch)) >= 0) {
+            hexResult = (hexResult << 4) + tmp;
+          } else {
+            throwError(state, 'expected hexadecimal character');
+          }
+        }
+        state.result += charFromCodepoint(hexResult);
+        state.position++;
+      } else {
+        throwError(state, 'unknown escape sequence');
+      }
+      captureStart = captureEnd = state.position;
+    } else if (is_EOL(ch)) {
+      captureSegment(state, captureStart, captureEnd, true);
+      writeFoldedLines(state, skipSeparationSpace(state, false, nodeIndent));
+      captureStart = captureEnd = state.position;
+    } else if (state.position === state.lineStart && testDocumentSeparator(state)) {
+      throwError(state, 'unexpected end of the document within a double quoted scalar');
+    } else {
+      state.position++;
+      captureEnd = state.position;
+    }
+  }
+  throwError(state, 'unexpected end of the stream within a double quoted scalar');
+}
+function readFlowCollection(state, nodeIndent) {
+  var readNext = true,
+    _line,
+    _lineStart,
+    _pos,
+    _tag = state.tag,
+    _result,
+    _anchor = state.anchor,
+    following,
+    terminator,
+    isPair,
+    isExplicitPair,
+    isMapping,
+    overridableKeys = Object.create(null),
+    keyNode,
+    keyTag,
+    valueNode,
+    ch;
+  ch = state.input.charCodeAt(state.position);
+  if (ch === 0x5B /* [ */) {
+    terminator = 0x5D; /* ] */
+    isMapping = false;
+    _result = [];
+  } else if (ch === 0x7B /* { */) {
+    terminator = 0x7D; /* } */
+    isMapping = true;
+    _result = {};
+  } else {
+    return false;
+  }
+  if (state.anchor !== null) {
+    state.anchorMap[state.anchor] = _result;
+  }
+  ch = state.input.charCodeAt(++state.position);
+  while (ch !== 0) {
+    skipSeparationSpace(state, true, nodeIndent);
+    ch = state.input.charCodeAt(state.position);
+    if (ch === terminator) {
+      state.position++;
+      state.tag = _tag;
+      state.anchor = _anchor;
+      state.kind = isMapping ? 'mapping' : 'sequence';
+      state.result = _result;
+      return true;
+    } else if (!readNext) {
+      throwError(state, 'missed comma between flow collection entries');
+    } else if (ch === 0x2C /* , */) {
+      // "flow collection entries can never be completely empty", as per YAML 1.2, section 7.4
+      throwError(state, "expected the node content, but found ','");
+    }
+    keyTag = keyNode = valueNode = null;
+    isPair = isExplicitPair = false;
+    if (ch === 0x3F /* ? */) {
+      following = state.input.charCodeAt(state.position + 1);
+      if (is_WS_OR_EOL(following)) {
+        isPair = isExplicitPair = true;
+        state.position++;
+        skipSeparationSpace(state, true, nodeIndent);
+      }
+    }
+    _line = state.line; // Save the current line.
+    _lineStart = state.lineStart;
+    _pos = state.position;
+    composeNode(state, nodeIndent, CONTEXT_FLOW_IN, false, true);
+    keyTag = state.tag;
+    keyNode = state.result;
+    skipSeparationSpace(state, true, nodeIndent);
+    ch = state.input.charCodeAt(state.position);
+    if ((isExplicitPair || state.line === _line) && ch === 0x3A /* : */) {
+      isPair = true;
+      ch = state.input.charCodeAt(++state.position);
+      skipSeparationSpace(state, true, nodeIndent);
+      composeNode(state, nodeIndent, CONTEXT_FLOW_IN, false, true);
+      valueNode = state.result;
+    }
+    if (isMapping) {
+      storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, valueNode, _line, _lineStart, _pos);
+    } else if (isPair) {
+      _result.push(storeMappingPair(state, null, overridableKeys, keyTag, keyNode, valueNode, _line, _lineStart, _pos));
+    } else {
+      _result.push(keyNode);
+    }
+    skipSeparationSpace(state, true, nodeIndent);
+    ch = state.input.charCodeAt(state.position);
+    if (ch === 0x2C /* , */) {
+      readNext = true;
+      ch = state.input.charCodeAt(++state.position);
+    } else {
+      readNext = false;
+    }
+  }
+  throwError(state, 'unexpected end of the stream within a flow collection');
+}
+function readBlockScalar(state, nodeIndent) {
+  var captureStart,
+    folding,
+    chomping = CHOMPING_CLIP,
+    didReadContent = false,
+    detectedIndent = false,
+    textIndent = nodeIndent,
+    emptyLines = 0,
+    atMoreIndented = false,
+    tmp,
+    ch;
+  ch = state.input.charCodeAt(state.position);
+  if (ch === 0x7C /* | */) {
+    folding = false;
+  } else if (ch === 0x3E /* > */) {
+    folding = true;
+  } else {
+    return false;
+  }
+  state.kind = 'scalar';
+  state.result = '';
+  while (ch !== 0) {
+    ch = state.input.charCodeAt(++state.position);
+    if (ch === 0x2B /* + */ || ch === 0x2D /* - */) {
+      if (CHOMPING_CLIP === chomping) {
+        chomping = ch === 0x2B /* + */ ? CHOMPING_KEEP : CHOMPING_STRIP;
+      } else {
+        throwError(state, 'repeat of a chomping mode identifier');
+      }
+    } else if ((tmp = fromDecimalCode(ch)) >= 0) {
+      if (tmp === 0) {
+        throwError(state, 'bad explicit indentation width of a block scalar; it cannot be less than one');
+      } else if (!detectedIndent) {
+        textIndent = nodeIndent + tmp - 1;
+        detectedIndent = true;
+      } else {
+        throwError(state, 'repeat of an indentation width identifier');
+      }
+    } else {
+      break;
+    }
+  }
+  if (is_WHITE_SPACE(ch)) {
+    do {
+      ch = state.input.charCodeAt(++state.position);
+    } while (is_WHITE_SPACE(ch));
+    if (ch === 0x23 /* # */) {
+      do {
+        ch = state.input.charCodeAt(++state.position);
+      } while (!is_EOL(ch) && ch !== 0);
+    }
+  }
+  while (ch !== 0) {
+    readLineBreak(state);
+    state.lineIndent = 0;
+    ch = state.input.charCodeAt(state.position);
+    while ((!detectedIndent || state.lineIndent < textIndent) && ch === 0x20 /* Space */) {
+      state.lineIndent++;
+      ch = state.input.charCodeAt(++state.position);
+    }
+    if (!detectedIndent && state.lineIndent > textIndent) {
+      textIndent = state.lineIndent;
+    }
+    if (is_EOL(ch)) {
+      emptyLines++;
+      continue;
+    }
+
+    // End of the scalar.
+    if (state.lineIndent < textIndent) {
+      // Perform the chomping.
+      if (chomping === CHOMPING_KEEP) {
+        state.result += common.repeat('\n', didReadContent ? 1 + emptyLines : emptyLines);
+      } else if (chomping === CHOMPING_CLIP) {
+        if (didReadContent) {
+          // i.e. only if the scalar is not empty.
+          state.result += '\n';
+        }
+      }
+
+      // Break this `while` cycle and go to the funciton's epilogue.
+      break;
+    }
+
+    // Folded style: use fancy rules to handle line breaks.
+    if (folding) {
+      // Lines starting with white space characters (more-indented lines) are not folded.
+      if (is_WHITE_SPACE(ch)) {
+        atMoreIndented = true;
+        // except for the first content line (cf. Example 8.1)
+        state.result += common.repeat('\n', didReadContent ? 1 + emptyLines : emptyLines);
+
+        // End of more-indented block.
+      } else if (atMoreIndented) {
+        atMoreIndented = false;
+        state.result += common.repeat('\n', emptyLines + 1);
+
+        // Just one line break - perceive as the same line.
+      } else if (emptyLines === 0) {
+        if (didReadContent) {
+          // i.e. only if we have already read some scalar content.
+          state.result += ' ';
+        }
+
+        // Several line breaks - perceive as different lines.
+      } else {
+        state.result += common.repeat('\n', emptyLines);
+      }
+
+      // Literal style: just add exact number of line breaks between content lines.
+    } else {
+      // Keep all line breaks except the header line break.
+      state.result += common.repeat('\n', didReadContent ? 1 + emptyLines : emptyLines);
+    }
+    didReadContent = true;
+    detectedIndent = true;
+    emptyLines = 0;
+    captureStart = state.position;
+    while (!is_EOL(ch) && ch !== 0) {
+      ch = state.input.charCodeAt(++state.position);
+    }
+    captureSegment(state, captureStart, state.position, false);
+  }
+  return true;
+}
+function readBlockSequence(state, nodeIndent) {
+  var _line,
+    _tag = state.tag,
+    _anchor = state.anchor,
+    _result = [],
+    following,
+    detected = false,
+    ch;
+
+  // there is a leading tab before this token, so it can't be a block sequence/mapping;
+  // it can still be flow sequence/mapping or a scalar
+  if (state.firstTabInLine !== -1) return false;
+  if (state.anchor !== null) {
+    state.anchorMap[state.anchor] = _result;
+  }
+  ch = state.input.charCodeAt(state.position);
+  while (ch !== 0) {
+    if (state.firstTabInLine !== -1) {
+      state.position = state.firstTabInLine;
+      throwError(state, 'tab characters must not be used in indentation');
+    }
+    if (ch !== 0x2D /* - */) {
+      break;
+    }
+    following = state.input.charCodeAt(state.position + 1);
+    if (!is_WS_OR_EOL(following)) {
+      break;
+    }
+    detected = true;
+    state.position++;
+    if (skipSeparationSpace(state, true, -1)) {
+      if (state.lineIndent <= nodeIndent) {
+        _result.push(null);
+        ch = state.input.charCodeAt(state.position);
+        continue;
+      }
+    }
+    _line = state.line;
+    composeNode(state, nodeIndent, CONTEXT_BLOCK_IN, false, true);
+    _result.push(state.result);
+    skipSeparationSpace(state, true, -1);
+    ch = state.input.charCodeAt(state.position);
+    if ((state.line === _line || state.lineIndent > nodeIndent) && ch !== 0) {
+      throwError(state, 'bad indentation of a sequence entry');
+    } else if (state.lineIndent < nodeIndent) {
+      break;
+    }
+  }
+  if (detected) {
+    state.tag = _tag;
+    state.anchor = _anchor;
+    state.kind = 'sequence';
+    state.result = _result;
+    return true;
+  }
+  return false;
+}
+function readBlockMapping(state, nodeIndent, flowIndent) {
+  var following,
+    allowCompact,
+    _line,
+    _keyLine,
+    _keyLineStart,
+    _keyPos,
+    _tag = state.tag,
+    _anchor = state.anchor,
+    _result = {},
+    overridableKeys = Object.create(null),
+    keyTag = null,
+    keyNode = null,
+    valueNode = null,
+    atExplicitKey = false,
+    detected = false,
+    ch;
+
+  // there is a leading tab before this token, so it can't be a block sequence/mapping;
+  // it can still be flow sequence/mapping or a scalar
+  if (state.firstTabInLine !== -1) return false;
+  if (state.anchor !== null) {
+    state.anchorMap[state.anchor] = _result;
+  }
+  ch = state.input.charCodeAt(state.position);
+  while (ch !== 0) {
+    if (!atExplicitKey && state.firstTabInLine !== -1) {
+      state.position = state.firstTabInLine;
+      throwError(state, 'tab characters must not be used in indentation');
+    }
+    following = state.input.charCodeAt(state.position + 1);
+    _line = state.line; // Save the current line.
+
+    //
+    // Explicit notation case. There are two separate blocks:
+    // first for the key (denoted by "?") and second for the value (denoted by ":")
+    //
+    if ((ch === 0x3F /* ? */ || ch === 0x3A /* : */) && is_WS_OR_EOL(following)) {
+      if (ch === 0x3F /* ? */) {
+        if (atExplicitKey) {
+          storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, null, _keyLine, _keyLineStart, _keyPos);
+          keyTag = keyNode = valueNode = null;
+        }
+        detected = true;
+        atExplicitKey = true;
+        allowCompact = true;
+      } else if (atExplicitKey) {
+        // i.e. 0x3A/* : */ === character after the explicit key.
+        atExplicitKey = false;
+        allowCompact = true;
+      } else {
+        throwError(state, 'incomplete explicit mapping pair; a key node is missed; or followed by a non-tabulated empty line');
+      }
+      state.position += 1;
+      ch = following;
+
+      //
+      // Implicit notation case. Flow-style node as the key first, then ":", and the value.
+      //
+    } else {
+      _keyLine = state.line;
+      _keyLineStart = state.lineStart;
+      _keyPos = state.position;
+      if (!composeNode(state, flowIndent, CONTEXT_FLOW_OUT, false, true)) {
+        // Neither implicit nor explicit notation.
+        // Reading is done. Go to the epilogue.
+        break;
+      }
+      if (state.line === _line) {
+        ch = state.input.charCodeAt(state.position);
+        while (is_WHITE_SPACE(ch)) {
+          ch = state.input.charCodeAt(++state.position);
+        }
+        if (ch === 0x3A /* : */) {
+          ch = state.input.charCodeAt(++state.position);
+          if (!is_WS_OR_EOL(ch)) {
+            throwError(state, 'a whitespace character is expected after the key-value separator within a block mapping');
+          }
+          if (atExplicitKey) {
+            storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, null, _keyLine, _keyLineStart, _keyPos);
+            keyTag = keyNode = valueNode = null;
+          }
+          detected = true;
+          atExplicitKey = false;
+          allowCompact = false;
+          keyTag = state.tag;
+          keyNode = state.result;
+        } else if (detected) {
+          throwError(state, 'can not read an implicit mapping pair; a colon is missed');
+        } else {
+          state.tag = _tag;
+          state.anchor = _anchor;
+          return true; // Keep the result of `composeNode`.
+        }
+      } else if (detected) {
+        throwError(state, 'can not read a block mapping entry; a multiline key may not be an implicit key');
+      } else {
+        state.tag = _tag;
+        state.anchor = _anchor;
+        return true; // Keep the result of `composeNode`.
+      }
+    }
+
+    //
+    // Common reading code for both explicit and implicit notations.
+    //
+    if (state.line === _line || state.lineIndent > nodeIndent) {
+      if (atExplicitKey) {
+        _keyLine = state.line;
+        _keyLineStart = state.lineStart;
+        _keyPos = state.position;
+      }
+      if (composeNode(state, nodeIndent, CONTEXT_BLOCK_OUT, true, allowCompact)) {
+        if (atExplicitKey) {
+          keyNode = state.result;
+        } else {
+          valueNode = state.result;
+        }
+      }
+      if (!atExplicitKey) {
+        storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, valueNode, _keyLine, _keyLineStart, _keyPos);
+        keyTag = keyNode = valueNode = null;
+      }
+      skipSeparationSpace(state, true, -1);
+      ch = state.input.charCodeAt(state.position);
+    }
+    if ((state.line === _line || state.lineIndent > nodeIndent) && ch !== 0) {
+      throwError(state, 'bad indentation of a mapping entry');
+    } else if (state.lineIndent < nodeIndent) {
+      break;
+    }
+  }
+
+  //
+  // Epilogue.
+  //
+
+  // Special case: last mapping's node contains only the key in explicit notation.
+  if (atExplicitKey) {
+    storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, null, _keyLine, _keyLineStart, _keyPos);
+  }
+
+  // Expose the resulting mapping.
+  if (detected) {
+    state.tag = _tag;
+    state.anchor = _anchor;
+    state.kind = 'mapping';
+    state.result = _result;
+  }
+  return detected;
+}
+function readTagProperty(state) {
+  var _position,
+    isVerbatim = false,
+    isNamed = false,
+    tagHandle,
+    tagName,
+    ch;
+  ch = state.input.charCodeAt(state.position);
+  if (ch !== 0x21 /* ! */) return false;
+  if (state.tag !== null) {
+    throwError(state, 'duplication of a tag property');
+  }
+  ch = state.input.charCodeAt(++state.position);
+  if (ch === 0x3C /* < */) {
+    isVerbatim = true;
+    ch = state.input.charCodeAt(++state.position);
+  } else if (ch === 0x21 /* ! */) {
+    isNamed = true;
+    tagHandle = '!!';
+    ch = state.input.charCodeAt(++state.position);
+  } else {
+    tagHandle = '!';
+  }
+  _position = state.position;
+  if (isVerbatim) {
+    do {
+      ch = state.input.charCodeAt(++state.position);
+    } while (ch !== 0 && ch !== 0x3E /* > */);
+    if (state.position < state.length) {
+      tagName = state.input.slice(_position, state.position);
+      ch = state.input.charCodeAt(++state.position);
+    } else {
+      throwError(state, 'unexpected end of the stream within a verbatim tag');
+    }
+  } else {
+    while (ch !== 0 && !is_WS_OR_EOL(ch)) {
+      if (ch === 0x21 /* ! */) {
+        if (!isNamed) {
+          tagHandle = state.input.slice(_position - 1, state.position + 1);
+          if (!PATTERN_TAG_HANDLE.test(tagHandle)) {
+            throwError(state, 'named tag handle cannot contain such characters');
+          }
+          isNamed = true;
+          _position = state.position + 1;
+        } else {
+          throwError(state, 'tag suffix cannot contain exclamation marks');
+        }
+      }
+      ch = state.input.charCodeAt(++state.position);
+    }
+    tagName = state.input.slice(_position, state.position);
+    if (PATTERN_FLOW_INDICATORS.test(tagName)) {
+      throwError(state, 'tag suffix cannot contain flow indicator characters');
+    }
+  }
+  if (tagName && !PATTERN_TAG_URI.test(tagName)) {
+    throwError(state, 'tag name cannot contain such characters: ' + tagName);
+  }
+  try {
+    tagName = decodeURIComponent(tagName);
+  } catch (err) {
+    throwError(state, 'tag name is malformed: ' + tagName);
+  }
+  if (isVerbatim) {
+    state.tag = tagName;
+  } else if (_hasOwnProperty$1.call(state.tagMap, tagHandle)) {
+    state.tag = state.tagMap[tagHandle] + tagName;
+  } else if (tagHandle === '!') {
+    state.tag = '!' + tagName;
+  } else if (tagHandle === '!!') {
+    state.tag = 'tag:yaml.org,2002:' + tagName;
+  } else {
+    throwError(state, 'undeclared tag handle "' + tagHandle + '"');
+  }
+  return true;
+}
+function readAnchorProperty(state) {
+  var _position, ch;
+  ch = state.input.charCodeAt(state.position);
+  if (ch !== 0x26 /* & */) return false;
+  if (state.anchor !== null) {
+    throwError(state, 'duplication of an anchor property');
+  }
+  ch = state.input.charCodeAt(++state.position);
+  _position = state.position;
+  while (ch !== 0 && !is_WS_OR_EOL(ch) && !is_FLOW_INDICATOR(ch)) {
+    ch = state.input.charCodeAt(++state.position);
+  }
+  if (state.position === _position) {
+    throwError(state, 'name of an anchor node must contain at least one character');
+  }
+  state.anchor = state.input.slice(_position, state.position);
+  return true;
+}
+function readAlias(state) {
+  var _position, alias, ch;
+  ch = state.input.charCodeAt(state.position);
+  if (ch !== 0x2A /* * */) return false;
+  ch = state.input.charCodeAt(++state.position);
+  _position = state.position;
+  while (ch !== 0 && !is_WS_OR_EOL(ch) && !is_FLOW_INDICATOR(ch)) {
+    ch = state.input.charCodeAt(++state.position);
+  }
+  if (state.position === _position) {
+    throwError(state, 'name of an alias node must contain at least one character');
+  }
+  alias = state.input.slice(_position, state.position);
+  if (!_hasOwnProperty$1.call(state.anchorMap, alias)) {
+    throwError(state, 'unidentified alias "' + alias + '"');
+  }
+  state.result = state.anchorMap[alias];
+  skipSeparationSpace(state, true, -1);
+  return true;
+}
+function composeNode(state, parentIndent, nodeContext, allowToSeek, allowCompact) {
+  var allowBlockStyles,
+    allowBlockScalars,
+    allowBlockCollections,
+    indentStatus = 1,
+    // 1: this>parent, 0: this=parent, -1: this<parent
+    atNewLine = false,
+    hasContent = false,
+    typeIndex,
+    typeQuantity,
+    typeList,
+    type,
+    flowIndent,
+    blockIndent;
+  if (state.listener !== null) {
+    state.listener('open', state);
+  }
+  state.tag = null;
+  state.anchor = null;
+  state.kind = null;
+  state.result = null;
+  allowBlockStyles = allowBlockScalars = allowBlockCollections = CONTEXT_BLOCK_OUT === nodeContext || CONTEXT_BLOCK_IN === nodeContext;
+  if (allowToSeek) {
+    if (skipSeparationSpace(state, true, -1)) {
+      atNewLine = true;
+      if (state.lineIndent > parentIndent) {
+        indentStatus = 1;
+      } else if (state.lineIndent === parentIndent) {
+        indentStatus = 0;
+      } else if (state.lineIndent < parentIndent) {
+        indentStatus = -1;
+      }
+    }
+  }
+  if (indentStatus === 1) {
+    while (readTagProperty(state) || readAnchorProperty(state)) {
+      if (skipSeparationSpace(state, true, -1)) {
+        atNewLine = true;
+        allowBlockCollections = allowBlockStyles;
+        if (state.lineIndent > parentIndent) {
+          indentStatus = 1;
+        } else if (state.lineIndent === parentIndent) {
+          indentStatus = 0;
+        } else if (state.lineIndent < parentIndent) {
+          indentStatus = -1;
+        }
+      } else {
+        allowBlockCollections = false;
+      }
+    }
+  }
+  if (allowBlockCollections) {
+    allowBlockCollections = atNewLine || allowCompact;
+  }
+  if (indentStatus === 1 || CONTEXT_BLOCK_OUT === nodeContext) {
+    if (CONTEXT_FLOW_IN === nodeContext || CONTEXT_FLOW_OUT === nodeContext) {
+      flowIndent = parentIndent;
+    } else {
+      flowIndent = parentIndent + 1;
+    }
+    blockIndent = state.position - state.lineStart;
+    if (indentStatus === 1) {
+      if (allowBlockCollections && (readBlockSequence(state, blockIndent) || readBlockMapping(state, blockIndent, flowIndent)) || readFlowCollection(state, flowIndent)) {
+        hasContent = true;
+      } else {
+        if (allowBlockScalars && readBlockScalar(state, flowIndent) || readSingleQuotedScalar(state, flowIndent) || readDoubleQuotedScalar(state, flowIndent)) {
+          hasContent = true;
+        } else if (readAlias(state)) {
+          hasContent = true;
+          if (state.tag !== null || state.anchor !== null) {
+            throwError(state, 'alias node should not have any properties');
+          }
+        } else if (readPlainScalar(state, flowIndent, CONTEXT_FLOW_IN === nodeContext)) {
+          hasContent = true;
+          if (state.tag === null) {
+            state.tag = '?';
+          }
+        }
+        if (state.anchor !== null) {
+          state.anchorMap[state.anchor] = state.result;
+        }
+      }
+    } else if (indentStatus === 0) {
+      // Special case: block sequences are allowed to have same indentation level as the parent.
+      // http://www.yaml.org/spec/1.2/spec.html#id2799784
+      hasContent = allowBlockCollections && readBlockSequence(state, blockIndent);
+    }
+  }
+  if (state.tag === null) {
+    if (state.anchor !== null) {
+      state.anchorMap[state.anchor] = state.result;
+    }
+  } else if (state.tag === '?') {
+    // Implicit resolving is not allowed for non-scalar types, and '?'
+    // non-specific tag is only automatically assigned to plain scalars.
+    //
+    // We only need to check kind conformity in case user explicitly assigns '?'
+    // tag, for example like this: "!<?> [0]"
+    //
+    if (state.result !== null && state.kind !== 'scalar') {
+      throwError(state, 'unacceptable node kind for !<?> tag; it should be "scalar", not "' + state.kind + '"');
+    }
+    for (typeIndex = 0, typeQuantity = state.implicitTypes.length; typeIndex < typeQuantity; typeIndex += 1) {
+      type = state.implicitTypes[typeIndex];
+      if (type.resolve(state.result)) {
+        // `state.result` updated in resolver if matched
+        state.result = type.construct(state.result);
+        state.tag = type.tag;
+        if (state.anchor !== null) {
+          state.anchorMap[state.anchor] = state.result;
+        }
+        break;
+      }
+    }
+  } else if (state.tag !== '!') {
+    if (_hasOwnProperty$1.call(state.typeMap[state.kind || 'fallback'], state.tag)) {
+      type = state.typeMap[state.kind || 'fallback'][state.tag];
+    } else {
+      // looking for multi type
+      type = null;
+      typeList = state.typeMap.multi[state.kind || 'fallback'];
+      for (typeIndex = 0, typeQuantity = typeList.length; typeIndex < typeQuantity; typeIndex += 1) {
+        if (state.tag.slice(0, typeList[typeIndex].tag.length) === typeList[typeIndex].tag) {
+          type = typeList[typeIndex];
+          break;
+        }
+      }
+    }
+    if (!type) {
+      throwError(state, 'unknown tag !<' + state.tag + '>');
+    }
+    if (state.result !== null && type.kind !== state.kind) {
+      throwError(state, 'unacceptable node kind for !<' + state.tag + '> tag; it should be "' + type.kind + '", not "' + state.kind + '"');
+    }
+    if (!type.resolve(state.result, state.tag)) {
+      // `state.result` updated in resolver if matched
+      throwError(state, 'cannot resolve a node with !<' + state.tag + '> explicit tag');
+    } else {
+      state.result = type.construct(state.result, state.tag);
+      if (state.anchor !== null) {
+        state.anchorMap[state.anchor] = state.result;
+      }
+    }
+  }
+  if (state.listener !== null) {
+    state.listener('close', state);
+  }
+  return state.tag !== null || state.anchor !== null || hasContent;
+}
+function readDocument(state) {
+  var documentStart = state.position,
+    _position,
+    directiveName,
+    directiveArgs,
+    hasDirectives = false,
+    ch;
+  state.version = null;
+  state.checkLineBreaks = state.legacy;
+  state.tagMap = Object.create(null);
+  state.anchorMap = Object.create(null);
+  while ((ch = state.input.charCodeAt(state.position)) !== 0) {
+    skipSeparationSpace(state, true, -1);
+    ch = state.input.charCodeAt(state.position);
+    if (state.lineIndent > 0 || ch !== 0x25 /* % */) {
+      break;
+    }
+    hasDirectives = true;
+    ch = state.input.charCodeAt(++state.position);
+    _position = state.position;
+    while (ch !== 0 && !is_WS_OR_EOL(ch)) {
+      ch = state.input.charCodeAt(++state.position);
+    }
+    directiveName = state.input.slice(_position, state.position);
+    directiveArgs = [];
+    if (directiveName.length < 1) {
+      throwError(state, 'directive name must not be less than one character in length');
+    }
+    while (ch !== 0) {
+      while (is_WHITE_SPACE(ch)) {
+        ch = state.input.charCodeAt(++state.position);
+      }
+      if (ch === 0x23 /* # */) {
+        do {
+          ch = state.input.charCodeAt(++state.position);
+        } while (ch !== 0 && !is_EOL(ch));
+        break;
+      }
+      if (is_EOL(ch)) break;
+      _position = state.position;
+      while (ch !== 0 && !is_WS_OR_EOL(ch)) {
+        ch = state.input.charCodeAt(++state.position);
+      }
+      directiveArgs.push(state.input.slice(_position, state.position));
+    }
+    if (ch !== 0) readLineBreak(state);
+    if (_hasOwnProperty$1.call(directiveHandlers, directiveName)) {
+      directiveHandlers[directiveName](state, directiveName, directiveArgs);
+    } else {
+      throwWarning(state, 'unknown document directive "' + directiveName + '"');
+    }
+  }
+  skipSeparationSpace(state, true, -1);
+  if (state.lineIndent === 0 && state.input.charCodeAt(state.position) === 0x2D /* - */ && state.input.charCodeAt(state.position + 1) === 0x2D /* - */ && state.input.charCodeAt(state.position + 2) === 0x2D /* - */) {
+    state.position += 3;
+    skipSeparationSpace(state, true, -1);
+  } else if (hasDirectives) {
+    throwError(state, 'directives end mark is expected');
+  }
+  composeNode(state, state.lineIndent - 1, CONTEXT_BLOCK_OUT, false, true);
+  skipSeparationSpace(state, true, -1);
+  if (state.checkLineBreaks && PATTERN_NON_ASCII_LINE_BREAKS.test(state.input.slice(documentStart, state.position))) {
+    throwWarning(state, 'non-ASCII line breaks are interpreted as content');
+  }
+  state.documents.push(state.result);
+  if (state.position === state.lineStart && testDocumentSeparator(state)) {
+    if (state.input.charCodeAt(state.position) === 0x2E /* . */) {
+      state.position += 3;
+      skipSeparationSpace(state, true, -1);
+    }
+    return;
+  }
+  if (state.position < state.length - 1) {
+    throwError(state, 'end of the stream or a document separator is expected');
+  } else {
+    return;
+  }
+}
+function loadDocuments(input, options) {
+  input = String(input);
+  options = options || {};
+  if (input.length !== 0) {
+    // Add tailing `\n` if not exists
+    if (input.charCodeAt(input.length - 1) !== 0x0A /* LF */ && input.charCodeAt(input.length - 1) !== 0x0D /* CR */) {
+      input += '\n';
+    }
+
+    // Strip BOM
+    if (input.charCodeAt(0) === 0xFEFF) {
+      input = input.slice(1);
+    }
+  }
+  var state = new State$1(input, options);
+  var nullpos = input.indexOf('\0');
+  if (nullpos !== -1) {
+    state.position = nullpos;
+    throwError(state, 'null byte is not allowed in input');
+  }
+
+  // Use 0 as string terminator. That significantly simplifies bounds check.
+  state.input += '\0';
+  while (state.input.charCodeAt(state.position) === 0x20 /* Space */) {
+    state.lineIndent += 1;
+    state.position += 1;
+  }
+  while (state.position < state.length - 1) {
+    readDocument(state);
+  }
+  return state.documents;
+}
+function loadAll$1(input, iterator, options) {
+  if (iterator !== null && typeof iterator === 'object' && typeof options === 'undefined') {
+    options = iterator;
+    iterator = null;
+  }
+  var documents = loadDocuments(input, options);
+  if (typeof iterator !== 'function') {
+    return documents;
+  }
+  for (var index = 0, length = documents.length; index < length; index += 1) {
+    iterator(documents[index]);
+  }
+}
+function load$1(input, options) {
+  var documents = loadDocuments(input, options);
+  if (documents.length === 0) {
+    /*eslint-disable no-undefined*/
+    return undefined;
+  } else if (documents.length === 1) {
+    return documents[0];
+  }
+  throw new exception('expected a single document in the stream, but found more');
+}
+var loadAll_1 = loadAll$1;
+var load_1 = load$1;
+var loader = {
+  loadAll: loadAll_1,
+  load: load_1
+};
+
+/*eslint-disable no-use-before-define*/
+
+var _toString = Object.prototype.toString;
+var _hasOwnProperty = Object.prototype.hasOwnProperty;
+var CHAR_BOM = 0xFEFF;
+var CHAR_TAB = 0x09; /* Tab */
+var CHAR_LINE_FEED = 0x0A; /* LF */
+var CHAR_CARRIAGE_RETURN = 0x0D; /* CR */
+var CHAR_SPACE = 0x20; /* Space */
+var CHAR_EXCLAMATION = 0x21; /* ! */
+var CHAR_DOUBLE_QUOTE = 0x22; /* " */
+var CHAR_SHARP = 0x23; /* # */
+var CHAR_PERCENT = 0x25; /* % */
+var CHAR_AMPERSAND = 0x26; /* & */
+var CHAR_SINGLE_QUOTE = 0x27; /* ' */
+var CHAR_ASTERISK = 0x2A; /* * */
+var CHAR_COMMA = 0x2C; /* , */
+var CHAR_MINUS = 0x2D; /* - */
+var CHAR_COLON = 0x3A; /* : */
+var CHAR_EQUALS = 0x3D; /* = */
+var CHAR_GREATER_THAN = 0x3E; /* > */
+var CHAR_QUESTION = 0x3F; /* ? */
+var CHAR_COMMERCIAL_AT = 0x40; /* @ */
+var CHAR_LEFT_SQUARE_BRACKET = 0x5B; /* [ */
+var CHAR_RIGHT_SQUARE_BRACKET = 0x5D; /* ] */
+var CHAR_GRAVE_ACCENT = 0x60; /* ` */
+var CHAR_LEFT_CURLY_BRACKET = 0x7B; /* { */
+var CHAR_VERTICAL_LINE = 0x7C; /* | */
+var CHAR_RIGHT_CURLY_BRACKET = 0x7D; /* } */
+
+var ESCAPE_SEQUENCES = {};
+ESCAPE_SEQUENCES[0x00] = '\\0';
+ESCAPE_SEQUENCES[0x07] = '\\a';
+ESCAPE_SEQUENCES[0x08] = '\\b';
+ESCAPE_SEQUENCES[0x09] = '\\t';
+ESCAPE_SEQUENCES[0x0A] = '\\n';
+ESCAPE_SEQUENCES[0x0B] = '\\v';
+ESCAPE_SEQUENCES[0x0C] = '\\f';
+ESCAPE_SEQUENCES[0x0D] = '\\r';
+ESCAPE_SEQUENCES[0x1B] = '\\e';
+ESCAPE_SEQUENCES[0x22] = '\\"';
+ESCAPE_SEQUENCES[0x5C] = '\\\\';
+ESCAPE_SEQUENCES[0x85] = '\\N';
+ESCAPE_SEQUENCES[0xA0] = '\\_';
+ESCAPE_SEQUENCES[0x2028] = '\\L';
+ESCAPE_SEQUENCES[0x2029] = '\\P';
+var DEPRECATED_BOOLEANS_SYNTAX = ['y', 'Y', 'yes', 'Yes', 'YES', 'on', 'On', 'ON', 'n', 'N', 'no', 'No', 'NO', 'off', 'Off', 'OFF'];
+var DEPRECATED_BASE60_SYNTAX = /^[-+]?[0-9_]+(?::[0-9_]+)+(?:\.[0-9_]*)?$/;
+function compileStyleMap(schema, map) {
+  var result, keys, index, length, tag, style, type;
+  if (map === null) return {};
+  result = {};
+  keys = Object.keys(map);
+  for (index = 0, length = keys.length; index < length; index += 1) {
+    tag = keys[index];
+    style = String(map[tag]);
+    if (tag.slice(0, 2) === '!!') {
+      tag = 'tag:yaml.org,2002:' + tag.slice(2);
+    }
+    type = schema.compiledTypeMap['fallback'][tag];
+    if (type && _hasOwnProperty.call(type.styleAliases, style)) {
+      style = type.styleAliases[style];
+    }
+    result[tag] = style;
+  }
+  return result;
+}
+function encodeHex(character) {
+  var string, handle, length;
+  string = character.toString(16).toUpperCase();
+  if (character <= 0xFF) {
+    handle = 'x';
+    length = 2;
+  } else if (character <= 0xFFFF) {
+    handle = 'u';
+    length = 4;
+  } else if (character <= 0xFFFFFFFF) {
+    handle = 'U';
+    length = 8;
+  } else {
+    throw new exception('code point within a string may not be greater than 0xFFFFFFFF');
+  }
+  return '\\' + handle + common.repeat('0', length - string.length) + string;
+}
+var QUOTING_TYPE_SINGLE = 1,
+  QUOTING_TYPE_DOUBLE = 2;
+function State(options) {
+  this.schema = options['schema'] || _default;
+  this.indent = Math.max(1, options['indent'] || 2);
+  this.noArrayIndent = options['noArrayIndent'] || false;
+  this.skipInvalid = options['skipInvalid'] || false;
+  this.flowLevel = common.isNothing(options['flowLevel']) ? -1 : options['flowLevel'];
+  this.styleMap = compileStyleMap(this.schema, options['styles'] || null);
+  this.sortKeys = options['sortKeys'] || false;
+  this.lineWidth = options['lineWidth'] || 80;
+  this.noRefs = options['noRefs'] || false;
+  this.noCompatMode = options['noCompatMode'] || false;
+  this.condenseFlow = options['condenseFlow'] || false;
+  this.quotingType = options['quotingType'] === '"' ? QUOTING_TYPE_DOUBLE : QUOTING_TYPE_SINGLE;
+  this.forceQuotes = options['forceQuotes'] || false;
+  this.replacer = typeof options['replacer'] === 'function' ? options['replacer'] : null;
+  this.implicitTypes = this.schema.compiledImplicit;
+  this.explicitTypes = this.schema.compiledExplicit;
+  this.tag = null;
+  this.result = '';
+  this.duplicates = [];
+  this.usedDuplicates = null;
+}
+
+// Indents every line in a string. Empty lines (\n only) are not indented.
+function indentString(string, spaces) {
+  var ind = common.repeat(' ', spaces),
+    position = 0,
+    next = -1,
+    result = '',
+    line,
+    length = string.length;
+  while (position < length) {
+    next = string.indexOf('\n', position);
+    if (next === -1) {
+      line = string.slice(position);
+      position = length;
+    } else {
+      line = string.slice(position, next + 1);
+      position = next + 1;
+    }
+    if (line.length && line !== '\n') result += ind;
+    result += line;
+  }
+  return result;
+}
+function generateNextLine(state, level) {
+  return '\n' + common.repeat(' ', state.indent * level);
+}
+function testImplicitResolving(state, str) {
+  var index, length, type;
+  for (index = 0, length = state.implicitTypes.length; index < length; index += 1) {
+    type = state.implicitTypes[index];
+    if (type.resolve(str)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// [33] s-white ::= s-space | s-tab
+function isWhitespace(c) {
+  return c === CHAR_SPACE || c === CHAR_TAB;
+}
+
+// Returns true if the character can be printed without escaping.
+// From YAML 1.2: "any allowed characters known to be non-printable
+// should also be escaped. [However,] This isn’t mandatory"
+// Derived from nb-char - \t - #x85 - #xA0 - #x2028 - #x2029.
+function isPrintable(c) {
+  return 0x00020 <= c && c <= 0x00007E || 0x000A1 <= c && c <= 0x00D7FF && c !== 0x2028 && c !== 0x2029 || 0x0E000 <= c && c <= 0x00FFFD && c !== CHAR_BOM || 0x10000 <= c && c <= 0x10FFFF;
+}
+
+// [34] ns-char ::= nb-char - s-white
+// [27] nb-char ::= c-printable - b-char - c-byte-order-mark
+// [26] b-char  ::= b-line-feed | b-carriage-return
+// Including s-white (for some reason, examples doesn't match specs in this aspect)
+// ns-char ::= c-printable - b-line-feed - b-carriage-return - c-byte-order-mark
+function isNsCharOrWhitespace(c) {
+  return isPrintable(c) && c !== CHAR_BOM
+  // - b-char
+  && c !== CHAR_CARRIAGE_RETURN && c !== CHAR_LINE_FEED;
+}
+
+// [127]  ns-plain-safe(c) ::= c = flow-out  ⇒ ns-plain-safe-out
+//                             c = flow-in   ⇒ ns-plain-safe-in
+//                             c = block-key ⇒ ns-plain-safe-out
+//                             c = flow-key  ⇒ ns-plain-safe-in
+// [128] ns-plain-safe-out ::= ns-char
+// [129]  ns-plain-safe-in ::= ns-char - c-flow-indicator
+// [130]  ns-plain-char(c) ::=  ( ns-plain-safe(c) - “:” - “#” )
+//                            | ( /* An ns-char preceding */ “#” )
+//                            | ( “:” /* Followed by an ns-plain-safe(c) */ )
+function isPlainSafe(c, prev, inblock) {
+  var cIsNsCharOrWhitespace = isNsCharOrWhitespace(c);
+  var cIsNsChar = cIsNsCharOrWhitespace && !isWhitespace(c);
+  return (
+  // ns-plain-safe
+  inblock ?
+  // c = flow-in
+  cIsNsCharOrWhitespace : cIsNsCharOrWhitespace
+  // - c-flow-indicator
+  && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET
+
+  // ns-plain-char
+  ) && c !== CHAR_SHARP // false on '#'
+  && !(prev === CHAR_COLON && !cIsNsChar) // false on ': '
+  || isNsCharOrWhitespace(prev) && !isWhitespace(prev) && c === CHAR_SHARP // change to true on '[^ ]#'
+  || prev === CHAR_COLON && cIsNsChar; // change to true on ':[^ ]'
+}
+
+// Simplified test for values allowed as the first character in plain style.
+function isPlainSafeFirst(c) {
+  // Uses a subset of ns-char - c-indicator
+  // where ns-char = nb-char - s-white.
+  // No support of ( ( “?” | “:” | “-” ) /* Followed by an ns-plain-safe(c)) */ ) part
+  return isPrintable(c) && c !== CHAR_BOM && !isWhitespace(c) // - s-white
+  // - (c-indicator ::=
+  // “-” | “?” | “:” | “,” | “[” | “]” | “{” | “}”
+  && c !== CHAR_MINUS && c !== CHAR_QUESTION && c !== CHAR_COLON && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET
+  // | “#” | “&” | “*” | “!” | “|” | “=” | “>” | “'” | “"”
+  && c !== CHAR_SHARP && c !== CHAR_AMPERSAND && c !== CHAR_ASTERISK && c !== CHAR_EXCLAMATION && c !== CHAR_VERTICAL_LINE && c !== CHAR_EQUALS && c !== CHAR_GREATER_THAN && c !== CHAR_SINGLE_QUOTE && c !== CHAR_DOUBLE_QUOTE
+  // | “%” | “@” | “`”)
+  && c !== CHAR_PERCENT && c !== CHAR_COMMERCIAL_AT && c !== CHAR_GRAVE_ACCENT;
+}
+
+// Simplified test for values allowed as the last character in plain style.
+function isPlainSafeLast(c) {
+  // just not whitespace or colon, it will be checked to be plain character later
+  return !isWhitespace(c) && c !== CHAR_COLON;
+}
+
+// Same as 'string'.codePointAt(pos), but works in older browsers.
+function codePointAt(string, pos) {
+  var first = string.charCodeAt(pos),
+    second;
+  if (first >= 0xD800 && first <= 0xDBFF && pos + 1 < string.length) {
+    second = string.charCodeAt(pos + 1);
+    if (second >= 0xDC00 && second <= 0xDFFF) {
+      // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+      return (first - 0xD800) * 0x400 + second - 0xDC00 + 0x10000;
+    }
+  }
+  return first;
+}
+
+// Determines whether block indentation indicator is required.
+function needIndentIndicator(string) {
+  var leadingSpaceRe = /^\n* /;
+  return leadingSpaceRe.test(string);
+}
+var STYLE_PLAIN = 1,
+  STYLE_SINGLE = 2,
+  STYLE_LITERAL = 3,
+  STYLE_FOLDED = 4,
+  STYLE_DOUBLE = 5;
+
+// Determines which scalar styles are possible and returns the preferred style.
+// lineWidth = -1 => no limit.
+// Pre-conditions: str.length > 0.
+// Post-conditions:
+//    STYLE_PLAIN or STYLE_SINGLE => no \n are in the string.
+//    STYLE_LITERAL => no lines are suitable for folding (or lineWidth is -1).
+//    STYLE_FOLDED => a line > lineWidth and can be folded (and lineWidth != -1).
+function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, testAmbiguousType, quotingType, forceQuotes, inblock) {
+  var i;
+  var char = 0;
+  var prevChar = null;
+  var hasLineBreak = false;
+  var hasFoldableLine = false; // only checked if shouldTrackWidth
+  var shouldTrackWidth = lineWidth !== -1;
+  var previousLineBreak = -1; // count the first line correctly
+  var plain = isPlainSafeFirst(codePointAt(string, 0)) && isPlainSafeLast(codePointAt(string, string.length - 1));
+  if (singleLineOnly || forceQuotes) {
+    // Case: no block styles.
+    // Check for disallowed characters to rule out plain and single.
+    for (i = 0; i < string.length; char >= 0x10000 ? i += 2 : i++) {
+      char = codePointAt(string, i);
+      if (!isPrintable(char)) {
+        return STYLE_DOUBLE;
+      }
+      plain = plain && isPlainSafe(char, prevChar, inblock);
+      prevChar = char;
+    }
+  } else {
+    // Case: block styles permitted.
+    for (i = 0; i < string.length; char >= 0x10000 ? i += 2 : i++) {
+      char = codePointAt(string, i);
+      if (char === CHAR_LINE_FEED) {
+        hasLineBreak = true;
+        // Check if any line can be folded.
+        if (shouldTrackWidth) {
+          hasFoldableLine = hasFoldableLine ||
+          // Foldable line = too long, and not more-indented.
+          i - previousLineBreak - 1 > lineWidth && string[previousLineBreak + 1] !== ' ';
+          previousLineBreak = i;
+        }
+      } else if (!isPrintable(char)) {
+        return STYLE_DOUBLE;
+      }
+      plain = plain && isPlainSafe(char, prevChar, inblock);
+      prevChar = char;
+    }
+    // in case the end is missing a \n
+    hasFoldableLine = hasFoldableLine || shouldTrackWidth && i - previousLineBreak - 1 > lineWidth && string[previousLineBreak + 1] !== ' ';
+  }
+  // Although every style can represent \n without escaping, prefer block styles
+  // for multiline, since they're more readable and they don't add empty lines.
+  // Also prefer folding a super-long line.
+  if (!hasLineBreak && !hasFoldableLine) {
+    // Strings interpretable as another type have to be quoted;
+    // e.g. the string 'true' vs. the boolean true.
+    if (plain && !forceQuotes && !testAmbiguousType(string)) {
+      return STYLE_PLAIN;
+    }
+    return quotingType === QUOTING_TYPE_DOUBLE ? STYLE_DOUBLE : STYLE_SINGLE;
+  }
+  // Edge case: block indentation indicator can only have one digit.
+  if (indentPerLevel > 9 && needIndentIndicator(string)) {
+    return STYLE_DOUBLE;
+  }
+  // At this point we know block styles are valid.
+  // Prefer literal style unless we want to fold.
+  if (!forceQuotes) {
+    return hasFoldableLine ? STYLE_FOLDED : STYLE_LITERAL;
+  }
+  return quotingType === QUOTING_TYPE_DOUBLE ? STYLE_DOUBLE : STYLE_SINGLE;
+}
+
+// Note: line breaking/folding is implemented for only the folded style.
+// NB. We drop the last trailing newline (if any) of a returned block scalar
+//  since the dumper adds its own newline. This always works:
+//    • No ending newline => unaffected; already using strip "-" chomping.
+//    • Ending newline    => removed then restored.
+//  Importantly, this keeps the "+" chomp indicator from gaining an extra line.
+function writeScalar(state, string, level, iskey, inblock) {
+  state.dump = function () {
+    if (string.length === 0) {
+      return state.quotingType === QUOTING_TYPE_DOUBLE ? '""' : "''";
+    }
+    if (!state.noCompatMode) {
+      if (DEPRECATED_BOOLEANS_SYNTAX.indexOf(string) !== -1 || DEPRECATED_BASE60_SYNTAX.test(string)) {
+        return state.quotingType === QUOTING_TYPE_DOUBLE ? '"' + string + '"' : "'" + string + "'";
+      }
+    }
+    var indent = state.indent * Math.max(1, level); // no 0-indent scalars
+    // As indentation gets deeper, let the width decrease monotonically
+    // to the lower bound min(state.lineWidth, 40).
+    // Note that this implies
+    //  state.lineWidth ≤ 40 + state.indent: width is fixed at the lower bound.
+    //  state.lineWidth > 40 + state.indent: width decreases until the lower bound.
+    // This behaves better than a constant minimum width which disallows narrower options,
+    // or an indent threshold which causes the width to suddenly increase.
+    var lineWidth = state.lineWidth === -1 ? -1 : Math.max(Math.min(state.lineWidth, 40), state.lineWidth - indent);
+
+    // Without knowing if keys are implicit/explicit, assume implicit for safety.
+    var singleLineOnly = iskey
+    // No block styles in flow mode.
+    || state.flowLevel > -1 && level >= state.flowLevel;
+    function testAmbiguity(string) {
+      return testImplicitResolving(state, string);
+    }
+    switch (chooseScalarStyle(string, singleLineOnly, state.indent, lineWidth, testAmbiguity, state.quotingType, state.forceQuotes && !iskey, inblock)) {
+      case STYLE_PLAIN:
+        return string;
+      case STYLE_SINGLE:
+        return "'" + string.replace(/'/g, "''") + "'";
+      case STYLE_LITERAL:
+        return '|' + blockHeader(string, state.indent) + dropEndingNewline(indentString(string, indent));
+      case STYLE_FOLDED:
+        return '>' + blockHeader(string, state.indent) + dropEndingNewline(indentString(foldString(string, lineWidth), indent));
+      case STYLE_DOUBLE:
+        return '"' + escapeString(string) + '"';
+      default:
+        throw new exception('impossible error: invalid scalar style');
+    }
+  }();
+}
+
+// Pre-conditions: string is valid for a block scalar, 1 <= indentPerLevel <= 9.
+function blockHeader(string, indentPerLevel) {
+  var indentIndicator = needIndentIndicator(string) ? String(indentPerLevel) : '';
+
+  // note the special case: the string '\n' counts as a "trailing" empty line.
+  var clip = string[string.length - 1] === '\n';
+  var keep = clip && (string[string.length - 2] === '\n' || string === '\n');
+  var chomp = keep ? '+' : clip ? '' : '-';
+  return indentIndicator + chomp + '\n';
+}
+
+// (See the note for writeScalar.)
+function dropEndingNewline(string) {
+  return string[string.length - 1] === '\n' ? string.slice(0, -1) : string;
+}
+
+// Note: a long line without a suitable break point will exceed the width limit.
+// Pre-conditions: every char in str isPrintable, str.length > 0, width > 0.
+function foldString(string, width) {
+  // In folded style, $k$ consecutive newlines output as $k+1$ newlines—
+  // unless they're before or after a more-indented line, or at the very
+  // beginning or end, in which case $k$ maps to $k$.
+  // Therefore, parse each chunk as newline(s) followed by a content line.
+  var lineRe = /(\n+)([^\n]*)/g;
+
+  // first line (possibly an empty line)
+  var result = function () {
+    var nextLF = string.indexOf('\n');
+    nextLF = nextLF !== -1 ? nextLF : string.length;
+    lineRe.lastIndex = nextLF;
+    return foldLine(string.slice(0, nextLF), width);
+  }();
+  // If we haven't reached the first content line yet, don't add an extra \n.
+  var prevMoreIndented = string[0] === '\n' || string[0] === ' ';
+  var moreIndented;
+
+  // rest of the lines
+  var match;
+  while (match = lineRe.exec(string)) {
+    var prefix = match[1],
+      line = match[2];
+    moreIndented = line[0] === ' ';
+    result += prefix + (!prevMoreIndented && !moreIndented && line !== '' ? '\n' : '') + foldLine(line, width);
+    prevMoreIndented = moreIndented;
+  }
+  return result;
+}
+
+// Greedy line breaking.
+// Picks the longest line under the limit each time,
+// otherwise settles for the shortest line over the limit.
+// NB. More-indented lines *cannot* be folded, as that would add an extra \n.
+function foldLine(line, width) {
+  if (line === '' || line[0] === ' ') return line;
+
+  // Since a more-indented line adds a \n, breaks can't be followed by a space.
+  var breakRe = / [^ ]/g; // note: the match index will always be <= length-2.
+  var match;
+  // start is an inclusive index. end, curr, and next are exclusive.
+  var start = 0,
+    end,
+    curr = 0,
+    next = 0;
+  var result = '';
+
+  // Invariants: 0 <= start <= length-1.
+  //   0 <= curr <= next <= max(0, length-2). curr - start <= width.
+  // Inside the loop:
+  //   A match implies length >= 2, so curr and next are <= length-2.
+  while (match = breakRe.exec(line)) {
+    next = match.index;
+    // maintain invariant: curr - start <= width
+    if (next - start > width) {
+      end = curr > start ? curr : next; // derive end <= length-2
+      result += '\n' + line.slice(start, end);
+      // skip the space that was output as \n
+      start = end + 1; // derive start <= length-1
+    }
+    curr = next;
+  }
+
+  // By the invariants, start <= length-1, so there is something left over.
+  // It is either the whole string or a part starting from non-whitespace.
+  result += '\n';
+  // Insert a break if the remainder is too long and there is a break available.
+  if (line.length - start > width && curr > start) {
+    result += line.slice(start, curr) + '\n' + line.slice(curr + 1);
+  } else {
+    result += line.slice(start);
+  }
+  return result.slice(1); // drop extra \n joiner
+}
+
+// Escapes a double-quoted string.
+function escapeString(string) {
+  var result = '';
+  var char = 0;
+  var escapeSeq;
+  for (var i = 0; i < string.length; char >= 0x10000 ? i += 2 : i++) {
+    char = codePointAt(string, i);
+    escapeSeq = ESCAPE_SEQUENCES[char];
+    if (!escapeSeq && isPrintable(char)) {
+      result += string[i];
+      if (char >= 0x10000) result += string[i + 1];
+    } else {
+      result += escapeSeq || encodeHex(char);
+    }
+  }
+  return result;
+}
+function writeFlowSequence(state, level, object) {
+  var _result = '',
+    _tag = state.tag,
+    index,
+    length,
+    value;
+  for (index = 0, length = object.length; index < length; index += 1) {
+    value = object[index];
+    if (state.replacer) {
+      value = state.replacer.call(object, String(index), value);
+    }
+
+    // Write only valid elements, put null instead of invalid elements.
+    if (writeNode(state, level, value, false, false) || typeof value === 'undefined' && writeNode(state, level, null, false, false)) {
+      if (_result !== '') _result += ',' + (!state.condenseFlow ? ' ' : '');
+      _result += state.dump;
+    }
+  }
+  state.tag = _tag;
+  state.dump = '[' + _result + ']';
+}
+function writeBlockSequence(state, level, object, compact) {
+  var _result = '',
+    _tag = state.tag,
+    index,
+    length,
+    value;
+  for (index = 0, length = object.length; index < length; index += 1) {
+    value = object[index];
+    if (state.replacer) {
+      value = state.replacer.call(object, String(index), value);
+    }
+
+    // Write only valid elements, put null instead of invalid elements.
+    if (writeNode(state, level + 1, value, true, true, false, true) || typeof value === 'undefined' && writeNode(state, level + 1, null, true, true, false, true)) {
+      if (!compact || _result !== '') {
+        _result += generateNextLine(state, level);
+      }
+      if (state.dump && CHAR_LINE_FEED === state.dump.charCodeAt(0)) {
+        _result += '-';
+      } else {
+        _result += '- ';
+      }
+      _result += state.dump;
+    }
+  }
+  state.tag = _tag;
+  state.dump = _result || '[]'; // Empty sequence if no valid values.
+}
+function writeFlowMapping(state, level, object) {
+  var _result = '',
+    _tag = state.tag,
+    objectKeyList = Object.keys(object),
+    index,
+    length,
+    objectKey,
+    objectValue,
+    pairBuffer;
+  for (index = 0, length = objectKeyList.length; index < length; index += 1) {
+    pairBuffer = '';
+    if (_result !== '') pairBuffer += ', ';
+    if (state.condenseFlow) pairBuffer += '"';
+    objectKey = objectKeyList[index];
+    objectValue = object[objectKey];
+    if (state.replacer) {
+      objectValue = state.replacer.call(object, objectKey, objectValue);
+    }
+    if (!writeNode(state, level, objectKey, false, false)) {
+      continue; // Skip this pair because of invalid key;
+    }
+    if (state.dump.length > 1024) pairBuffer += '? ';
+    pairBuffer += state.dump + (state.condenseFlow ? '"' : '') + ':' + (state.condenseFlow ? '' : ' ');
+    if (!writeNode(state, level, objectValue, false, false)) {
+      continue; // Skip this pair because of invalid value.
+    }
+    pairBuffer += state.dump;
+
+    // Both key and value are valid.
+    _result += pairBuffer;
+  }
+  state.tag = _tag;
+  state.dump = '{' + _result + '}';
+}
+function writeBlockMapping(state, level, object, compact) {
+  var _result = '',
+    _tag = state.tag,
+    objectKeyList = Object.keys(object),
+    index,
+    length,
+    objectKey,
+    objectValue,
+    explicitPair,
+    pairBuffer;
+
+  // Allow sorting keys so that the output file is deterministic
+  if (state.sortKeys === true) {
+    // Default sorting
+    objectKeyList.sort();
+  } else if (typeof state.sortKeys === 'function') {
+    // Custom sort function
+    objectKeyList.sort(state.sortKeys);
+  } else if (state.sortKeys) {
+    // Something is wrong
+    throw new exception('sortKeys must be a boolean or a function');
+  }
+  for (index = 0, length = objectKeyList.length; index < length; index += 1) {
+    pairBuffer = '';
+    if (!compact || _result !== '') {
+      pairBuffer += generateNextLine(state, level);
+    }
+    objectKey = objectKeyList[index];
+    objectValue = object[objectKey];
+    if (state.replacer) {
+      objectValue = state.replacer.call(object, objectKey, objectValue);
+    }
+    if (!writeNode(state, level + 1, objectKey, true, true, true)) {
+      continue; // Skip this pair because of invalid key.
+    }
+    explicitPair = state.tag !== null && state.tag !== '?' || state.dump && state.dump.length > 1024;
+    if (explicitPair) {
+      if (state.dump && CHAR_LINE_FEED === state.dump.charCodeAt(0)) {
+        pairBuffer += '?';
+      } else {
+        pairBuffer += '? ';
+      }
+    }
+    pairBuffer += state.dump;
+    if (explicitPair) {
+      pairBuffer += generateNextLine(state, level);
+    }
+    if (!writeNode(state, level + 1, objectValue, true, explicitPair)) {
+      continue; // Skip this pair because of invalid value.
+    }
+    if (state.dump && CHAR_LINE_FEED === state.dump.charCodeAt(0)) {
+      pairBuffer += ':';
+    } else {
+      pairBuffer += ': ';
+    }
+    pairBuffer += state.dump;
+
+    // Both key and value are valid.
+    _result += pairBuffer;
+  }
+  state.tag = _tag;
+  state.dump = _result || '{}'; // Empty mapping if no valid pairs.
+}
+function detectType(state, object, explicit) {
+  var _result, typeList, index, length, type, style;
+  typeList = explicit ? state.explicitTypes : state.implicitTypes;
+  for (index = 0, length = typeList.length; index < length; index += 1) {
+    type = typeList[index];
+    if ((type.instanceOf || type.predicate) && (!type.instanceOf || typeof object === 'object' && object instanceof type.instanceOf) && (!type.predicate || type.predicate(object))) {
+      if (explicit) {
+        if (type.multi && type.representName) {
+          state.tag = type.representName(object);
+        } else {
+          state.tag = type.tag;
+        }
+      } else {
+        state.tag = '?';
+      }
+      if (type.represent) {
+        style = state.styleMap[type.tag] || type.defaultStyle;
+        if (_toString.call(type.represent) === '[object Function]') {
+          _result = type.represent(object, style);
+        } else if (_hasOwnProperty.call(type.represent, style)) {
+          _result = type.represent[style](object, style);
+        } else {
+          throw new exception('!<' + type.tag + '> tag resolver accepts not "' + style + '" style');
+        }
+        state.dump = _result;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+// Serializes `object` and writes it to global `result`.
+// Returns true on success, or false on invalid object.
+//
+function writeNode(state, level, object, block, compact, iskey, isblockseq) {
+  state.tag = null;
+  state.dump = object;
+  if (!detectType(state, object, false)) {
+    detectType(state, object, true);
+  }
+  var type = _toString.call(state.dump);
+  var inblock = block;
+  var tagStr;
+  if (block) {
+    block = state.flowLevel < 0 || state.flowLevel > level;
+  }
+  var objectOrArray = type === '[object Object]' || type === '[object Array]',
+    duplicateIndex,
+    duplicate;
+  if (objectOrArray) {
+    duplicateIndex = state.duplicates.indexOf(object);
+    duplicate = duplicateIndex !== -1;
+  }
+  if (state.tag !== null && state.tag !== '?' || duplicate || state.indent !== 2 && level > 0) {
+    compact = false;
+  }
+  if (duplicate && state.usedDuplicates[duplicateIndex]) {
+    state.dump = '*ref_' + duplicateIndex;
+  } else {
+    if (objectOrArray && duplicate && !state.usedDuplicates[duplicateIndex]) {
+      state.usedDuplicates[duplicateIndex] = true;
+    }
+    if (type === '[object Object]') {
+      if (block && Object.keys(state.dump).length !== 0) {
+        writeBlockMapping(state, level, state.dump, compact);
+        if (duplicate) {
+          state.dump = '&ref_' + duplicateIndex + state.dump;
+        }
+      } else {
+        writeFlowMapping(state, level, state.dump);
+        if (duplicate) {
+          state.dump = '&ref_' + duplicateIndex + ' ' + state.dump;
+        }
+      }
+    } else if (type === '[object Array]') {
+      if (block && state.dump.length !== 0) {
+        if (state.noArrayIndent && !isblockseq && level > 0) {
+          writeBlockSequence(state, level - 1, state.dump, compact);
+        } else {
+          writeBlockSequence(state, level, state.dump, compact);
+        }
+        if (duplicate) {
+          state.dump = '&ref_' + duplicateIndex + state.dump;
+        }
+      } else {
+        writeFlowSequence(state, level, state.dump);
+        if (duplicate) {
+          state.dump = '&ref_' + duplicateIndex + ' ' + state.dump;
+        }
+      }
+    } else if (type === '[object String]') {
+      if (state.tag !== '?') {
+        writeScalar(state, state.dump, level, iskey, inblock);
+      }
+    } else if (type === '[object Undefined]') {
+      return false;
+    } else {
+      if (state.skipInvalid) return false;
+      throw new exception('unacceptable kind of an object to dump ' + type);
+    }
+    if (state.tag !== null && state.tag !== '?') {
+      // Need to encode all characters except those allowed by the spec:
+      //
+      // [35] ns-dec-digit    ::=  [#x30-#x39] /* 0-9 */
+      // [36] ns-hex-digit    ::=  ns-dec-digit
+      //                         | [#x41-#x46] /* A-F */ | [#x61-#x66] /* a-f */
+      // [37] ns-ascii-letter ::=  [#x41-#x5A] /* A-Z */ | [#x61-#x7A] /* a-z */
+      // [38] ns-word-char    ::=  ns-dec-digit | ns-ascii-letter | “-”
+      // [39] ns-uri-char     ::=  “%” ns-hex-digit ns-hex-digit | ns-word-char | “#”
+      //                         | “;” | “/” | “?” | “:” | “@” | “&” | “=” | “+” | “$” | “,”
+      //                         | “_” | “.” | “!” | “~” | “*” | “'” | “(” | “)” | “[” | “]”
+      //
+      // Also need to encode '!' because it has special meaning (end of tag prefix).
+      //
+      tagStr = encodeURI(state.tag[0] === '!' ? state.tag.slice(1) : state.tag).replace(/!/g, '%21');
+      if (state.tag[0] === '!') {
+        tagStr = '!' + tagStr;
+      } else if (tagStr.slice(0, 18) === 'tag:yaml.org,2002:') {
+        tagStr = '!!' + tagStr.slice(18);
+      } else {
+        tagStr = '!<' + tagStr + '>';
+      }
+      state.dump = tagStr + ' ' + state.dump;
+    }
+  }
+  return true;
+}
+function getDuplicateReferences(object, state) {
+  var objects = [],
+    duplicatesIndexes = [],
+    index,
+    length;
+  inspectNode(object, objects, duplicatesIndexes);
+  for (index = 0, length = duplicatesIndexes.length; index < length; index += 1) {
+    state.duplicates.push(objects[duplicatesIndexes[index]]);
+  }
+  state.usedDuplicates = new Array(length);
+}
+function inspectNode(object, objects, duplicatesIndexes) {
+  var objectKeyList, index, length;
+  if (object !== null && typeof object === 'object') {
+    index = objects.indexOf(object);
+    if (index !== -1) {
+      if (duplicatesIndexes.indexOf(index) === -1) {
+        duplicatesIndexes.push(index);
+      }
+    } else {
+      objects.push(object);
+      if (Array.isArray(object)) {
+        for (index = 0, length = object.length; index < length; index += 1) {
+          inspectNode(object[index], objects, duplicatesIndexes);
+        }
+      } else {
+        objectKeyList = Object.keys(object);
+        for (index = 0, length = objectKeyList.length; index < length; index += 1) {
+          inspectNode(object[objectKeyList[index]], objects, duplicatesIndexes);
+        }
+      }
+    }
+  }
+}
+function dump$1(input, options) {
+  options = options || {};
+  var state = new State(options);
+  if (!state.noRefs) getDuplicateReferences(input, state);
+  var value = input;
+  if (state.replacer) {
+    value = state.replacer.call({
+      '': value
+    }, '', value);
+  }
+  if (writeNode(state, 0, value, true, true)) return state.dump + '\n';
+  return '';
+}
+var dump_1 = dump$1;
+var dumper = {
+  dump: dump_1
+};
+function renamed(from, to) {
+  return function () {
+    throw new Error('Function yaml.' + from + ' is removed in js-yaml 4. ' + 'Use yaml.' + to + ' instead, which is now safe by default.');
+  };
+}
+var Type = type;
+var Schema = schema;
+var FAILSAFE_SCHEMA = failsafe;
+var JSON_SCHEMA = json;
+var CORE_SCHEMA = core;
+var DEFAULT_SCHEMA = _default;
+var load = loader.load;
+var loadAll = loader.loadAll;
+var dump = dumper.dump;
+var YAMLException = exception;
+
+// Re-export all types in case user wants to create custom schema
+var types = {
+  binary: binary,
+  float: float,
+  map: map,
+  null: _null,
+  pairs: pairs,
+  set: set,
+  timestamp: timestamp,
+  bool: bool,
+  int: int,
+  merge: merge,
+  omap: omap,
+  seq: seq,
+  str: str
+};
+
+// Removed functions from JS-YAML 3.0.x
+var safeLoad = renamed('safeLoad', 'load');
+var safeLoadAll = renamed('safeLoadAll', 'loadAll');
+var safeDump = renamed('safeDump', 'dump');
+var jsYaml = {
+  Type: Type,
+  Schema: Schema,
+  FAILSAFE_SCHEMA: FAILSAFE_SCHEMA,
+  JSON_SCHEMA: JSON_SCHEMA,
+  CORE_SCHEMA: CORE_SCHEMA,
+  DEFAULT_SCHEMA: DEFAULT_SCHEMA,
+  load: load,
+  loadAll: loadAll,
+  dump: dump,
+  YAMLException: YAMLException,
+  types: types,
+  safeLoad: safeLoad,
+  safeLoadAll: safeLoadAll,
+  safeDump: safeDump
+};
+
 // Supported feature flags
 const SUPPORT_VOLUME_MUTE = 8;
 const SUPPORT_STOP = 4096;
 const SUPPORT_GROUPING = 524288;
 
-// import Sortable from "sortablejs";
+/**!
+ * Sortable 1.15.6
+ * @author	RubaXa   <trash@rubaxa.org>
+ * @author	owenm    <owen23355@gmail.com>
+ * @license MIT
+ */
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+    keys.push.apply(keys, symbols);
+  }
+  return keys;
+}
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+  return target;
+}
+function _typeof(obj) {
+  "@babel/helpers - typeof";
 
-class YampSortable extends LitElement {
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    _typeof = function (obj) {
+      return typeof obj;
+    };
+  } else {
+    _typeof = function (obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+  return _typeof(obj);
+}
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
+  return _extends.apply(this, arguments);
+}
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+  return target;
+}
+function _objectWithoutProperties(source, excluded) {
+  if (source == null) return {};
+  var target = _objectWithoutPropertiesLoose(source, excluded);
+  var key, i;
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+    for (i = 0; i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+var version = "1.15.6";
+function userAgent(pattern) {
+  if (typeof window !== 'undefined' && window.navigator) {
+    return !! /*@__PURE__*/navigator.userAgent.match(pattern);
+  }
+}
+var IE11OrLess = userAgent(/(?:Trident.*rv[ :]?11\.|msie|iemobile|Windows Phone)/i);
+var Edge = userAgent(/Edge/i);
+var FireFox = userAgent(/firefox/i);
+var Safari = userAgent(/safari/i) && !userAgent(/chrome/i) && !userAgent(/android/i);
+var IOS = userAgent(/iP(ad|od|hone)/i);
+var ChromeForAndroid = userAgent(/chrome/i) && userAgent(/android/i);
+var captureMode = {
+  capture: false,
+  passive: false
+};
+function on(el, event, fn) {
+  el.addEventListener(event, fn, !IE11OrLess && captureMode);
+}
+function off(el, event, fn) {
+  el.removeEventListener(event, fn, !IE11OrLess && captureMode);
+}
+function matches(/**HTMLElement*/el, /**String*/selector) {
+  if (!selector) return;
+  selector[0] === '>' && (selector = selector.substring(1));
+  if (el) {
+    try {
+      if (el.matches) {
+        return el.matches(selector);
+      } else if (el.msMatchesSelector) {
+        return el.msMatchesSelector(selector);
+      } else if (el.webkitMatchesSelector) {
+        return el.webkitMatchesSelector(selector);
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+  return false;
+}
+function getParentOrHost(el) {
+  return el.host && el !== document && el.host.nodeType ? el.host : el.parentNode;
+}
+function closest(/**HTMLElement*/el, /**String*/selector, /**HTMLElement*/ctx, includeCTX) {
+  if (el) {
+    ctx = ctx || document;
+    do {
+      if (selector != null && (selector[0] === '>' ? el.parentNode === ctx && matches(el, selector) : matches(el, selector)) || includeCTX && el === ctx) {
+        return el;
+      }
+      if (el === ctx) break;
+      /* jshint boss:true */
+    } while (el = getParentOrHost(el));
+  }
+  return null;
+}
+var R_SPACE = /\s+/g;
+function toggleClass(el, name, state) {
+  if (el && name) {
+    if (el.classList) {
+      el.classList[state ? 'add' : 'remove'](name);
+    } else {
+      var className = (' ' + el.className + ' ').replace(R_SPACE, ' ').replace(' ' + name + ' ', ' ');
+      el.className = (className + (state ? ' ' + name : '')).replace(R_SPACE, ' ');
+    }
+  }
+}
+function css(el, prop, val) {
+  var style = el && el.style;
+  if (style) {
+    if (val === void 0) {
+      if (document.defaultView && document.defaultView.getComputedStyle) {
+        val = document.defaultView.getComputedStyle(el, '');
+      } else if (el.currentStyle) {
+        val = el.currentStyle;
+      }
+      return prop === void 0 ? val : val[prop];
+    } else {
+      if (!(prop in style) && prop.indexOf('webkit') === -1) {
+        prop = '-webkit-' + prop;
+      }
+      style[prop] = val + (typeof val === 'string' ? '' : 'px');
+    }
+  }
+}
+function matrix(el, selfOnly) {
+  var appliedTransforms = '';
+  if (typeof el === 'string') {
+    appliedTransforms = el;
+  } else {
+    do {
+      var transform = css(el, 'transform');
+      if (transform && transform !== 'none') {
+        appliedTransforms = transform + ' ' + appliedTransforms;
+      }
+      /* jshint boss:true */
+    } while (!selfOnly && (el = el.parentNode));
+  }
+  var matrixFn = window.DOMMatrix || window.WebKitCSSMatrix || window.CSSMatrix || window.MSCSSMatrix;
+  /*jshint -W056 */
+  return matrixFn && new matrixFn(appliedTransforms);
+}
+function find(ctx, tagName, iterator) {
+  if (ctx) {
+    var list = ctx.getElementsByTagName(tagName),
+      i = 0,
+      n = list.length;
+    if (iterator) {
+      for (; i < n; i++) {
+        iterator(list[i], i);
+      }
+    }
+    return list;
+  }
+  return [];
+}
+function getWindowScrollingElement() {
+  var scrollingElement = document.scrollingElement;
+  if (scrollingElement) {
+    return scrollingElement;
+  } else {
+    return document.documentElement;
+  }
+}
+
+/**
+ * Returns the "bounding client rect" of given element
+ * @param  {HTMLElement} el                       The element whose boundingClientRect is wanted
+ * @param  {[Boolean]} relativeToContainingBlock  Whether the rect should be relative to the containing block of (including) the container
+ * @param  {[Boolean]} relativeToNonStaticParent  Whether the rect should be relative to the relative parent of (including) the contaienr
+ * @param  {[Boolean]} undoScale                  Whether the container's scale() should be undone
+ * @param  {[HTMLElement]} container              The parent the element will be placed in
+ * @return {Object}                               The boundingClientRect of el, with specified adjustments
+ */
+function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoScale, container) {
+  if (!el.getBoundingClientRect && el !== window) return;
+  var elRect, top, left, bottom, right, height, width;
+  if (el !== window && el.parentNode && el !== getWindowScrollingElement()) {
+    elRect = el.getBoundingClientRect();
+    top = elRect.top;
+    left = elRect.left;
+    bottom = elRect.bottom;
+    right = elRect.right;
+    height = elRect.height;
+    width = elRect.width;
+  } else {
+    top = 0;
+    left = 0;
+    bottom = window.innerHeight;
+    right = window.innerWidth;
+    height = window.innerHeight;
+    width = window.innerWidth;
+  }
+  if ((relativeToContainingBlock || relativeToNonStaticParent) && el !== window) {
+    // Adjust for translate()
+    container = container || el.parentNode;
+
+    // solves #1123 (see: https://stackoverflow.com/a/37953806/6088312)
+    // Not needed on <= IE11
+    if (!IE11OrLess) {
+      do {
+        if (container && container.getBoundingClientRect && (css(container, 'transform') !== 'none' || relativeToNonStaticParent && css(container, 'position') !== 'static')) {
+          var containerRect = container.getBoundingClientRect();
+
+          // Set relative to edges of padding box of container
+          top -= containerRect.top + parseInt(css(container, 'border-top-width'));
+          left -= containerRect.left + parseInt(css(container, 'border-left-width'));
+          bottom = top + elRect.height;
+          right = left + elRect.width;
+          break;
+        }
+        /* jshint boss:true */
+      } while (container = container.parentNode);
+    }
+  }
+  if (undoScale && el !== window) {
+    // Adjust for scale()
+    var elMatrix = matrix(container || el),
+      scaleX = elMatrix && elMatrix.a,
+      scaleY = elMatrix && elMatrix.d;
+    if (elMatrix) {
+      top /= scaleY;
+      left /= scaleX;
+      width /= scaleX;
+      height /= scaleY;
+      bottom = top + height;
+      right = left + width;
+    }
+  }
+  return {
+    top: top,
+    left: left,
+    bottom: bottom,
+    right: right,
+    width: width,
+    height: height
+  };
+}
+
+/**
+ * Checks if a side of an element is scrolled past a side of its parents
+ * @param  {HTMLElement}  el           The element who's side being scrolled out of view is in question
+ * @param  {String}       elSide       Side of the element in question ('top', 'left', 'right', 'bottom')
+ * @param  {String}       parentSide   Side of the parent in question ('top', 'left', 'right', 'bottom')
+ * @return {HTMLElement}               The parent scroll element that the el's side is scrolled past, or null if there is no such element
+ */
+function isScrolledPast(el, elSide, parentSide) {
+  var parent = getParentAutoScrollElement(el, true),
+    elSideVal = getRect(el)[elSide];
+
+  /* jshint boss:true */
+  while (parent) {
+    var parentSideVal = getRect(parent)[parentSide],
+      visible = void 0;
+    {
+      visible = elSideVal >= parentSideVal;
+    }
+    if (!visible) return parent;
+    if (parent === getWindowScrollingElement()) break;
+    parent = getParentAutoScrollElement(parent, false);
+  }
+  return false;
+}
+
+/**
+ * Gets nth child of el, ignoring hidden children, sortable's elements (does not ignore clone if it's visible)
+ * and non-draggable elements
+ * @param  {HTMLElement} el       The parent element
+ * @param  {Number} childNum      The index of the child
+ * @param  {Object} options       Parent Sortable's options
+ * @return {HTMLElement}          The child at index childNum, or null if not found
+ */
+function getChild(el, childNum, options, includeDragEl) {
+  var currentChild = 0,
+    i = 0,
+    children = el.children;
+  while (i < children.length) {
+    if (children[i].style.display !== 'none' && children[i] !== Sortable.ghost && (includeDragEl || children[i] !== Sortable.dragged) && closest(children[i], options.draggable, el, false)) {
+      if (currentChild === childNum) {
+        return children[i];
+      }
+      currentChild++;
+    }
+    i++;
+  }
+  return null;
+}
+
+/**
+ * Gets the last child in the el, ignoring ghostEl or invisible elements (clones)
+ * @param  {HTMLElement} el       Parent element
+ * @param  {selector} selector    Any other elements that should be ignored
+ * @return {HTMLElement}          The last child, ignoring ghostEl
+ */
+function lastChild(el, selector) {
+  var last = el.lastElementChild;
+  while (last && (last === Sortable.ghost || css(last, 'display') === 'none' || selector && !matches(last, selector))) {
+    last = last.previousElementSibling;
+  }
+  return last || null;
+}
+
+/**
+ * Returns the index of an element within its parent for a selected set of
+ * elements
+ * @param  {HTMLElement} el
+ * @param  {selector} selector
+ * @return {number}
+ */
+function index(el, selector) {
+  var index = 0;
+  if (!el || !el.parentNode) {
+    return -1;
+  }
+
+  /* jshint boss:true */
+  while (el = el.previousElementSibling) {
+    if (el.nodeName.toUpperCase() !== 'TEMPLATE' && el !== Sortable.clone && (!selector || matches(el, selector))) {
+      index++;
+    }
+  }
+  return index;
+}
+
+/**
+ * Returns the scroll offset of the given element, added with all the scroll offsets of parent elements.
+ * The value is returned in real pixels.
+ * @param  {HTMLElement} el
+ * @return {Array}             Offsets in the format of [left, top]
+ */
+function getRelativeScrollOffset(el) {
+  var offsetLeft = 0,
+    offsetTop = 0,
+    winScroller = getWindowScrollingElement();
+  if (el) {
+    do {
+      var elMatrix = matrix(el),
+        scaleX = elMatrix.a,
+        scaleY = elMatrix.d;
+      offsetLeft += el.scrollLeft * scaleX;
+      offsetTop += el.scrollTop * scaleY;
+    } while (el !== winScroller && (el = el.parentNode));
+  }
+  return [offsetLeft, offsetTop];
+}
+
+/**
+ * Returns the index of the object within the given array
+ * @param  {Array} arr   Array that may or may not hold the object
+ * @param  {Object} obj  An object that has a key-value pair unique to and identical to a key-value pair in the object you want to find
+ * @return {Number}      The index of the object in the array, or -1
+ */
+function indexOfObject(arr, obj) {
+  for (var i in arr) {
+    if (!arr.hasOwnProperty(i)) continue;
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key) && obj[key] === arr[i][key]) return Number(i);
+    }
+  }
+  return -1;
+}
+function getParentAutoScrollElement(el, includeSelf) {
+  // skip to window
+  if (!el || !el.getBoundingClientRect) return getWindowScrollingElement();
+  var elem = el;
+  var gotSelf = false;
+  do {
+    // we don't need to get elem css if it isn't even overflowing in the first place (performance)
+    if (elem.clientWidth < elem.scrollWidth || elem.clientHeight < elem.scrollHeight) {
+      var elemCSS = css(elem);
+      if (elem.clientWidth < elem.scrollWidth && (elemCSS.overflowX == 'auto' || elemCSS.overflowX == 'scroll') || elem.clientHeight < elem.scrollHeight && (elemCSS.overflowY == 'auto' || elemCSS.overflowY == 'scroll')) {
+        if (!elem.getBoundingClientRect || elem === document.body) return getWindowScrollingElement();
+        if (gotSelf || includeSelf) return elem;
+        gotSelf = true;
+      }
+    }
+    /* jshint boss:true */
+  } while (elem = elem.parentNode);
+  return getWindowScrollingElement();
+}
+function extend(dst, src) {
+  if (dst && src) {
+    for (var key in src) {
+      if (src.hasOwnProperty(key)) {
+        dst[key] = src[key];
+      }
+    }
+  }
+  return dst;
+}
+function isRectEqual(rect1, rect2) {
+  return Math.round(rect1.top) === Math.round(rect2.top) && Math.round(rect1.left) === Math.round(rect2.left) && Math.round(rect1.height) === Math.round(rect2.height) && Math.round(rect1.width) === Math.round(rect2.width);
+}
+var _throttleTimeout;
+function throttle(callback, ms) {
+  return function () {
+    if (!_throttleTimeout) {
+      var args = arguments,
+        _this = this;
+      if (args.length === 1) {
+        callback.call(_this, args[0]);
+      } else {
+        callback.apply(_this, args);
+      }
+      _throttleTimeout = setTimeout(function () {
+        _throttleTimeout = void 0;
+      }, ms);
+    }
+  };
+}
+function cancelThrottle() {
+  clearTimeout(_throttleTimeout);
+  _throttleTimeout = void 0;
+}
+function scrollBy(el, x, y) {
+  el.scrollLeft += x;
+  el.scrollTop += y;
+}
+function clone(el) {
+  var Polymer = window.Polymer;
+  var $ = window.jQuery || window.Zepto;
+  if (Polymer && Polymer.dom) {
+    return Polymer.dom(el).cloneNode(true);
+  } else if ($) {
+    return $(el).clone(true)[0];
+  } else {
+    return el.cloneNode(true);
+  }
+}
+function getChildContainingRectFromElement(container, options, ghostEl) {
+  var rect = {};
+  Array.from(container.children).forEach(function (child) {
+    var _rect$left, _rect$top, _rect$right, _rect$bottom;
+    if (!closest(child, options.draggable, container, false) || child.animated || child === ghostEl) return;
+    var childRect = getRect(child);
+    rect.left = Math.min((_rect$left = rect.left) !== null && _rect$left !== void 0 ? _rect$left : Infinity, childRect.left);
+    rect.top = Math.min((_rect$top = rect.top) !== null && _rect$top !== void 0 ? _rect$top : Infinity, childRect.top);
+    rect.right = Math.max((_rect$right = rect.right) !== null && _rect$right !== void 0 ? _rect$right : -Infinity, childRect.right);
+    rect.bottom = Math.max((_rect$bottom = rect.bottom) !== null && _rect$bottom !== void 0 ? _rect$bottom : -Infinity, childRect.bottom);
+  });
+  rect.width = rect.right - rect.left;
+  rect.height = rect.bottom - rect.top;
+  rect.x = rect.left;
+  rect.y = rect.top;
+  return rect;
+}
+var expando = 'Sortable' + new Date().getTime();
+function AnimationStateManager() {
+  var animationStates = [],
+    animationCallbackId;
+  return {
+    captureAnimationState: function captureAnimationState() {
+      animationStates = [];
+      if (!this.options.animation) return;
+      var children = [].slice.call(this.el.children);
+      children.forEach(function (child) {
+        if (css(child, 'display') === 'none' || child === Sortable.ghost) return;
+        animationStates.push({
+          target: child,
+          rect: getRect(child)
+        });
+        var fromRect = _objectSpread2({}, animationStates[animationStates.length - 1].rect);
+
+        // If animating: compensate for current animation
+        if (child.thisAnimationDuration) {
+          var childMatrix = matrix(child, true);
+          if (childMatrix) {
+            fromRect.top -= childMatrix.f;
+            fromRect.left -= childMatrix.e;
+          }
+        }
+        child.fromRect = fromRect;
+      });
+    },
+    addAnimationState: function addAnimationState(state) {
+      animationStates.push(state);
+    },
+    removeAnimationState: function removeAnimationState(target) {
+      animationStates.splice(indexOfObject(animationStates, {
+        target: target
+      }), 1);
+    },
+    animateAll: function animateAll(callback) {
+      var _this = this;
+      if (!this.options.animation) {
+        clearTimeout(animationCallbackId);
+        if (typeof callback === 'function') callback();
+        return;
+      }
+      var animating = false,
+        animationTime = 0;
+      animationStates.forEach(function (state) {
+        var time = 0,
+          target = state.target,
+          fromRect = target.fromRect,
+          toRect = getRect(target),
+          prevFromRect = target.prevFromRect,
+          prevToRect = target.prevToRect,
+          animatingRect = state.rect,
+          targetMatrix = matrix(target, true);
+        if (targetMatrix) {
+          // Compensate for current animation
+          toRect.top -= targetMatrix.f;
+          toRect.left -= targetMatrix.e;
+        }
+        target.toRect = toRect;
+        if (target.thisAnimationDuration) {
+          // Could also check if animatingRect is between fromRect and toRect
+          if (isRectEqual(prevFromRect, toRect) && !isRectEqual(fromRect, toRect) &&
+          // Make sure animatingRect is on line between toRect & fromRect
+          (animatingRect.top - toRect.top) / (animatingRect.left - toRect.left) === (fromRect.top - toRect.top) / (fromRect.left - toRect.left)) {
+            // If returning to same place as started from animation and on same axis
+            time = calculateRealTime(animatingRect, prevFromRect, prevToRect, _this.options);
+          }
+        }
+
+        // if fromRect != toRect: animate
+        if (!isRectEqual(toRect, fromRect)) {
+          target.prevFromRect = fromRect;
+          target.prevToRect = toRect;
+          if (!time) {
+            time = _this.options.animation;
+          }
+          _this.animate(target, animatingRect, toRect, time);
+        }
+        if (time) {
+          animating = true;
+          animationTime = Math.max(animationTime, time);
+          clearTimeout(target.animationResetTimer);
+          target.animationResetTimer = setTimeout(function () {
+            target.animationTime = 0;
+            target.prevFromRect = null;
+            target.fromRect = null;
+            target.prevToRect = null;
+            target.thisAnimationDuration = null;
+          }, time);
+          target.thisAnimationDuration = time;
+        }
+      });
+      clearTimeout(animationCallbackId);
+      if (!animating) {
+        if (typeof callback === 'function') callback();
+      } else {
+        animationCallbackId = setTimeout(function () {
+          if (typeof callback === 'function') callback();
+        }, animationTime);
+      }
+      animationStates = [];
+    },
+    animate: function animate(target, currentRect, toRect, duration) {
+      if (duration) {
+        css(target, 'transition', '');
+        css(target, 'transform', '');
+        var elMatrix = matrix(this.el),
+          scaleX = elMatrix && elMatrix.a,
+          scaleY = elMatrix && elMatrix.d,
+          translateX = (currentRect.left - toRect.left) / (scaleX || 1),
+          translateY = (currentRect.top - toRect.top) / (scaleY || 1);
+        target.animatingX = !!translateX;
+        target.animatingY = !!translateY;
+        css(target, 'transform', 'translate3d(' + translateX + 'px,' + translateY + 'px,0)');
+        this.forRepaintDummy = repaint(target); // repaint
+
+        css(target, 'transition', 'transform ' + duration + 'ms' + (this.options.easing ? ' ' + this.options.easing : ''));
+        css(target, 'transform', 'translate3d(0,0,0)');
+        typeof target.animated === 'number' && clearTimeout(target.animated);
+        target.animated = setTimeout(function () {
+          css(target, 'transition', '');
+          css(target, 'transform', '');
+          target.animated = false;
+          target.animatingX = false;
+          target.animatingY = false;
+        }, duration);
+      }
+    }
+  };
+}
+function repaint(target) {
+  return target.offsetWidth;
+}
+function calculateRealTime(animatingRect, fromRect, toRect, options) {
+  return Math.sqrt(Math.pow(fromRect.top - animatingRect.top, 2) + Math.pow(fromRect.left - animatingRect.left, 2)) / Math.sqrt(Math.pow(fromRect.top - toRect.top, 2) + Math.pow(fromRect.left - toRect.left, 2)) * options.animation;
+}
+var plugins = [];
+var defaults = {
+  initializeByDefault: true
+};
+var PluginManager = {
+  mount: function mount(plugin) {
+    // Set default static properties
+    for (var option in defaults) {
+      if (defaults.hasOwnProperty(option) && !(option in plugin)) {
+        plugin[option] = defaults[option];
+      }
+    }
+    plugins.forEach(function (p) {
+      if (p.pluginName === plugin.pluginName) {
+        throw "Sortable: Cannot mount plugin ".concat(plugin.pluginName, " more than once");
+      }
+    });
+    plugins.push(plugin);
+  },
+  pluginEvent: function pluginEvent(eventName, sortable, evt) {
+    var _this = this;
+    this.eventCanceled = false;
+    evt.cancel = function () {
+      _this.eventCanceled = true;
+    };
+    var eventNameGlobal = eventName + 'Global';
+    plugins.forEach(function (plugin) {
+      if (!sortable[plugin.pluginName]) return;
+      // Fire global events if it exists in this sortable
+      if (sortable[plugin.pluginName][eventNameGlobal]) {
+        sortable[plugin.pluginName][eventNameGlobal](_objectSpread2({
+          sortable: sortable
+        }, evt));
+      }
+
+      // Only fire plugin event if plugin is enabled in this sortable,
+      // and plugin has event defined
+      if (sortable.options[plugin.pluginName] && sortable[plugin.pluginName][eventName]) {
+        sortable[plugin.pluginName][eventName](_objectSpread2({
+          sortable: sortable
+        }, evt));
+      }
+    });
+  },
+  initializePlugins: function initializePlugins(sortable, el, defaults, options) {
+    plugins.forEach(function (plugin) {
+      var pluginName = plugin.pluginName;
+      if (!sortable.options[pluginName] && !plugin.initializeByDefault) return;
+      var initialized = new plugin(sortable, el, sortable.options);
+      initialized.sortable = sortable;
+      initialized.options = sortable.options;
+      sortable[pluginName] = initialized;
+
+      // Add default options from plugin
+      _extends(defaults, initialized.defaults);
+    });
+    for (var option in sortable.options) {
+      if (!sortable.options.hasOwnProperty(option)) continue;
+      var modified = this.modifyOption(sortable, option, sortable.options[option]);
+      if (typeof modified !== 'undefined') {
+        sortable.options[option] = modified;
+      }
+    }
+  },
+  getEventProperties: function getEventProperties(name, sortable) {
+    var eventProperties = {};
+    plugins.forEach(function (plugin) {
+      if (typeof plugin.eventProperties !== 'function') return;
+      _extends(eventProperties, plugin.eventProperties.call(sortable[plugin.pluginName], name));
+    });
+    return eventProperties;
+  },
+  modifyOption: function modifyOption(sortable, name, value) {
+    var modifiedValue;
+    plugins.forEach(function (plugin) {
+      // Plugin must exist on the Sortable
+      if (!sortable[plugin.pluginName]) return;
+
+      // If static option listener exists for this option, call in the context of the Sortable's instance of this plugin
+      if (plugin.optionListeners && typeof plugin.optionListeners[name] === 'function') {
+        modifiedValue = plugin.optionListeners[name].call(sortable[plugin.pluginName], value);
+      }
+    });
+    return modifiedValue;
+  }
+};
+function dispatchEvent(_ref) {
+  var sortable = _ref.sortable,
+    rootEl = _ref.rootEl,
+    name = _ref.name,
+    targetEl = _ref.targetEl,
+    cloneEl = _ref.cloneEl,
+    toEl = _ref.toEl,
+    fromEl = _ref.fromEl,
+    oldIndex = _ref.oldIndex,
+    newIndex = _ref.newIndex,
+    oldDraggableIndex = _ref.oldDraggableIndex,
+    newDraggableIndex = _ref.newDraggableIndex,
+    originalEvent = _ref.originalEvent,
+    putSortable = _ref.putSortable,
+    extraEventProperties = _ref.extraEventProperties;
+  sortable = sortable || rootEl && rootEl[expando];
+  if (!sortable) return;
+  var evt,
+    options = sortable.options,
+    onName = 'on' + name.charAt(0).toUpperCase() + name.substr(1);
+  // Support for new CustomEvent feature
+  if (window.CustomEvent && !IE11OrLess && !Edge) {
+    evt = new CustomEvent(name, {
+      bubbles: true,
+      cancelable: true
+    });
+  } else {
+    evt = document.createEvent('Event');
+    evt.initEvent(name, true, true);
+  }
+  evt.to = toEl || rootEl;
+  evt.from = fromEl || rootEl;
+  evt.item = targetEl || rootEl;
+  evt.clone = cloneEl;
+  evt.oldIndex = oldIndex;
+  evt.newIndex = newIndex;
+  evt.oldDraggableIndex = oldDraggableIndex;
+  evt.newDraggableIndex = newDraggableIndex;
+  evt.originalEvent = originalEvent;
+  evt.pullMode = putSortable ? putSortable.lastPutMode : undefined;
+  var allEventProperties = _objectSpread2(_objectSpread2({}, extraEventProperties), PluginManager.getEventProperties(name, sortable));
+  for (var option in allEventProperties) {
+    evt[option] = allEventProperties[option];
+  }
+  if (rootEl) {
+    rootEl.dispatchEvent(evt);
+  }
+  if (options[onName]) {
+    options[onName].call(sortable, evt);
+  }
+}
+var _excluded = ["evt"];
+var pluginEvent = function pluginEvent(eventName, sortable) {
+  var _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+    originalEvent = _ref.evt,
+    data = _objectWithoutProperties(_ref, _excluded);
+  PluginManager.pluginEvent.bind(Sortable)(eventName, sortable, _objectSpread2({
+    dragEl: dragEl,
+    parentEl: parentEl,
+    ghostEl: ghostEl,
+    rootEl: rootEl,
+    nextEl: nextEl,
+    lastDownEl: lastDownEl,
+    cloneEl: cloneEl,
+    cloneHidden: cloneHidden,
+    dragStarted: moved,
+    putSortable: putSortable,
+    activeSortable: Sortable.active,
+    originalEvent: originalEvent,
+    oldIndex: oldIndex,
+    oldDraggableIndex: oldDraggableIndex,
+    newIndex: newIndex,
+    newDraggableIndex: newDraggableIndex,
+    hideGhostForTarget: _hideGhostForTarget,
+    unhideGhostForTarget: _unhideGhostForTarget,
+    cloneNowHidden: function cloneNowHidden() {
+      cloneHidden = true;
+    },
+    cloneNowShown: function cloneNowShown() {
+      cloneHidden = false;
+    },
+    dispatchSortableEvent: function dispatchSortableEvent(name) {
+      _dispatchEvent({
+        sortable: sortable,
+        name: name,
+        originalEvent: originalEvent
+      });
+    }
+  }, data));
+};
+function _dispatchEvent(info) {
+  dispatchEvent(_objectSpread2({
+    putSortable: putSortable,
+    cloneEl: cloneEl,
+    targetEl: dragEl,
+    rootEl: rootEl,
+    oldIndex: oldIndex,
+    oldDraggableIndex: oldDraggableIndex,
+    newIndex: newIndex,
+    newDraggableIndex: newDraggableIndex
+  }, info));
+}
+var dragEl,
+  parentEl,
+  ghostEl,
+  rootEl,
+  nextEl,
+  lastDownEl,
+  cloneEl,
+  cloneHidden,
+  oldIndex,
+  newIndex,
+  oldDraggableIndex,
+  newDraggableIndex,
+  activeGroup,
+  putSortable,
+  awaitingDragStarted = false,
+  ignoreNextClick = false,
+  sortables = [],
+  tapEvt,
+  touchEvt,
+  lastDx,
+  lastDy,
+  tapDistanceLeft,
+  tapDistanceTop,
+  moved,
+  lastTarget,
+  lastDirection,
+  pastFirstInvertThresh = false,
+  isCircumstantialInvert = false,
+  targetMoveDistance,
+  // For positioning ghost absolutely
+  ghostRelativeParent,
+  ghostRelativeParentInitialScroll = [],
+  // (left, top)
+
+  _silent = false,
+  savedInputChecked = [];
+
+/** @const */
+var documentExists = typeof document !== 'undefined',
+  PositionGhostAbsolutely = IOS,
+  CSSFloatProperty = Edge || IE11OrLess ? 'cssFloat' : 'float',
+  // This will not pass for IE9, because IE9 DnD only works on anchors
+  supportDraggable = documentExists && !ChromeForAndroid && !IOS && 'draggable' in document.createElement('div'),
+  supportCssPointerEvents = function () {
+    if (!documentExists) return;
+    // false when <= IE11
+    if (IE11OrLess) {
+      return false;
+    }
+    var el = document.createElement('x');
+    el.style.cssText = 'pointer-events:auto';
+    return el.style.pointerEvents === 'auto';
+  }(),
+  _detectDirection = function _detectDirection(el, options) {
+    var elCSS = css(el),
+      elWidth = parseInt(elCSS.width) - parseInt(elCSS.paddingLeft) - parseInt(elCSS.paddingRight) - parseInt(elCSS.borderLeftWidth) - parseInt(elCSS.borderRightWidth),
+      child1 = getChild(el, 0, options),
+      child2 = getChild(el, 1, options),
+      firstChildCSS = child1 && css(child1),
+      secondChildCSS = child2 && css(child2),
+      firstChildWidth = firstChildCSS && parseInt(firstChildCSS.marginLeft) + parseInt(firstChildCSS.marginRight) + getRect(child1).width,
+      secondChildWidth = secondChildCSS && parseInt(secondChildCSS.marginLeft) + parseInt(secondChildCSS.marginRight) + getRect(child2).width;
+    if (elCSS.display === 'flex') {
+      return elCSS.flexDirection === 'column' || elCSS.flexDirection === 'column-reverse' ? 'vertical' : 'horizontal';
+    }
+    if (elCSS.display === 'grid') {
+      return elCSS.gridTemplateColumns.split(' ').length <= 1 ? 'vertical' : 'horizontal';
+    }
+    if (child1 && firstChildCSS["float"] && firstChildCSS["float"] !== 'none') {
+      var touchingSideChild2 = firstChildCSS["float"] === 'left' ? 'left' : 'right';
+      return child2 && (secondChildCSS.clear === 'both' || secondChildCSS.clear === touchingSideChild2) ? 'vertical' : 'horizontal';
+    }
+    return child1 && (firstChildCSS.display === 'block' || firstChildCSS.display === 'flex' || firstChildCSS.display === 'table' || firstChildCSS.display === 'grid' || firstChildWidth >= elWidth && elCSS[CSSFloatProperty] === 'none' || child2 && elCSS[CSSFloatProperty] === 'none' && firstChildWidth + secondChildWidth > elWidth) ? 'vertical' : 'horizontal';
+  },
+  _dragElInRowColumn = function _dragElInRowColumn(dragRect, targetRect, vertical) {
+    var dragElS1Opp = vertical ? dragRect.left : dragRect.top,
+      dragElS2Opp = vertical ? dragRect.right : dragRect.bottom,
+      dragElOppLength = vertical ? dragRect.width : dragRect.height,
+      targetS1Opp = vertical ? targetRect.left : targetRect.top,
+      targetS2Opp = vertical ? targetRect.right : targetRect.bottom,
+      targetOppLength = vertical ? targetRect.width : targetRect.height;
+    return dragElS1Opp === targetS1Opp || dragElS2Opp === targetS2Opp || dragElS1Opp + dragElOppLength / 2 === targetS1Opp + targetOppLength / 2;
+  },
+  /**
+   * Detects first nearest empty sortable to X and Y position using emptyInsertThreshold.
+   * @param  {Number} x      X position
+   * @param  {Number} y      Y position
+   * @return {HTMLElement}   Element of the first found nearest Sortable
+   */
+  _detectNearestEmptySortable = function _detectNearestEmptySortable(x, y) {
+    var ret;
+    sortables.some(function (sortable) {
+      var threshold = sortable[expando].options.emptyInsertThreshold;
+      if (!threshold || lastChild(sortable)) return;
+      var rect = getRect(sortable),
+        insideHorizontally = x >= rect.left - threshold && x <= rect.right + threshold,
+        insideVertically = y >= rect.top - threshold && y <= rect.bottom + threshold;
+      if (insideHorizontally && insideVertically) {
+        return ret = sortable;
+      }
+    });
+    return ret;
+  },
+  _prepareGroup = function _prepareGroup(options) {
+    function toFn(value, pull) {
+      return function (to, from, dragEl, evt) {
+        var sameGroup = to.options.group.name && from.options.group.name && to.options.group.name === from.options.group.name;
+        if (value == null && (pull || sameGroup)) {
+          // Default pull value
+          // Default pull and put value if same group
+          return true;
+        } else if (value == null || value === false) {
+          return false;
+        } else if (pull && value === 'clone') {
+          return value;
+        } else if (typeof value === 'function') {
+          return toFn(value(to, from, dragEl, evt), pull)(to, from, dragEl, evt);
+        } else {
+          var otherGroup = (pull ? to : from).options.group.name;
+          return value === true || typeof value === 'string' && value === otherGroup || value.join && value.indexOf(otherGroup) > -1;
+        }
+      };
+    }
+    var group = {};
+    var originalGroup = options.group;
+    if (!originalGroup || _typeof(originalGroup) != 'object') {
+      originalGroup = {
+        name: originalGroup
+      };
+    }
+    group.name = originalGroup.name;
+    group.checkPull = toFn(originalGroup.pull, true);
+    group.checkPut = toFn(originalGroup.put);
+    group.revertClone = originalGroup.revertClone;
+    options.group = group;
+  },
+  _hideGhostForTarget = function _hideGhostForTarget() {
+    if (!supportCssPointerEvents && ghostEl) {
+      css(ghostEl, 'display', 'none');
+    }
+  },
+  _unhideGhostForTarget = function _unhideGhostForTarget() {
+    if (!supportCssPointerEvents && ghostEl) {
+      css(ghostEl, 'display', '');
+    }
+  };
+
+// #1184 fix - Prevent click event on fallback if dragged but item not changed position
+if (documentExists && !ChromeForAndroid) {
+  document.addEventListener('click', function (evt) {
+    if (ignoreNextClick) {
+      evt.preventDefault();
+      evt.stopPropagation && evt.stopPropagation();
+      evt.stopImmediatePropagation && evt.stopImmediatePropagation();
+      ignoreNextClick = false;
+      return false;
+    }
+  }, true);
+}
+var nearestEmptyInsertDetectEvent = function nearestEmptyInsertDetectEvent(evt) {
+  if (dragEl) {
+    evt = evt.touches ? evt.touches[0] : evt;
+    var nearest = _detectNearestEmptySortable(evt.clientX, evt.clientY);
+    if (nearest) {
+      // Create imitation event
+      var event = {};
+      for (var i in evt) {
+        if (evt.hasOwnProperty(i)) {
+          event[i] = evt[i];
+        }
+      }
+      event.target = event.rootEl = nearest;
+      event.preventDefault = void 0;
+      event.stopPropagation = void 0;
+      nearest[expando]._onDragOver(event);
+    }
+  }
+};
+var _checkOutsideTargetEl = function _checkOutsideTargetEl(evt) {
+  if (dragEl) {
+    dragEl.parentNode[expando]._isOutsideThisEl(evt.target);
+  }
+};
+
+/**
+ * @class  Sortable
+ * @param  {HTMLElement}  el
+ * @param  {Object}       [options]
+ */
+function Sortable(el, options) {
+  if (!(el && el.nodeType && el.nodeType === 1)) {
+    throw "Sortable: `el` must be an HTMLElement, not ".concat({}.toString.call(el));
+  }
+  this.el = el; // root element
+  this.options = options = _extends({}, options);
+
+  // Export instance
+  el[expando] = this;
+  var defaults = {
+    group: null,
+    sort: true,
+    disabled: false,
+    store: null,
+    handle: null,
+    draggable: /^[uo]l$/i.test(el.nodeName) ? '>li' : '>*',
+    swapThreshold: 1,
+    // percentage; 0 <= x <= 1
+    invertSwap: false,
+    // invert always
+    invertedSwapThreshold: null,
+    // will be set to same as swapThreshold if default
+    removeCloneOnHide: true,
+    direction: function direction() {
+      return _detectDirection(el, this.options);
+    },
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    dragClass: 'sortable-drag',
+    ignore: 'a, img',
+    filter: null,
+    preventOnFilter: true,
+    animation: 0,
+    easing: null,
+    setData: function setData(dataTransfer, dragEl) {
+      dataTransfer.setData('Text', dragEl.textContent);
+    },
+    dropBubble: false,
+    dragoverBubble: false,
+    dataIdAttr: 'data-id',
+    delay: 0,
+    delayOnTouchOnly: false,
+    touchStartThreshold: (Number.parseInt ? Number : window).parseInt(window.devicePixelRatio, 10) || 1,
+    forceFallback: false,
+    fallbackClass: 'sortable-fallback',
+    fallbackOnBody: false,
+    fallbackTolerance: 0,
+    fallbackOffset: {
+      x: 0,
+      y: 0
+    },
+    // Disabled on Safari: #1571; Enabled on Safari IOS: #2244
+    supportPointer: Sortable.supportPointer !== false && 'PointerEvent' in window && (!Safari || IOS),
+    emptyInsertThreshold: 5
+  };
+  PluginManager.initializePlugins(this, el, defaults);
+
+  // Set default options
+  for (var name in defaults) {
+    !(name in options) && (options[name] = defaults[name]);
+  }
+  _prepareGroup(options);
+
+  // Bind all private methods
+  for (var fn in this) {
+    if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
+      this[fn] = this[fn].bind(this);
+    }
+  }
+
+  // Setup drag mode
+  this.nativeDraggable = options.forceFallback ? false : supportDraggable;
+  if (this.nativeDraggable) {
+    // Touch start threshold cannot be greater than the native dragstart threshold
+    this.options.touchStartThreshold = 1;
+  }
+
+  // Bind events
+  if (options.supportPointer) {
+    on(el, 'pointerdown', this._onTapStart);
+  } else {
+    on(el, 'mousedown', this._onTapStart);
+    on(el, 'touchstart', this._onTapStart);
+  }
+  if (this.nativeDraggable) {
+    on(el, 'dragover', this);
+    on(el, 'dragenter', this);
+  }
+  sortables.push(this.el);
+
+  // Restore sorting
+  options.store && options.store.get && this.sort(options.store.get(this) || []);
+
+  // Add animation state manager
+  _extends(this, AnimationStateManager());
+}
+Sortable.prototype = /** @lends Sortable.prototype */{
+  constructor: Sortable,
+  _isOutsideThisEl: function _isOutsideThisEl(target) {
+    if (!this.el.contains(target) && target !== this.el) {
+      lastTarget = null;
+    }
+  },
+  _getDirection: function _getDirection(evt, target) {
+    return typeof this.options.direction === 'function' ? this.options.direction.call(this, evt, target, dragEl) : this.options.direction;
+  },
+  _onTapStart: function _onTapStart(/** Event|TouchEvent */evt) {
+    if (!evt.cancelable) return;
+    var _this = this,
+      el = this.el,
+      options = this.options,
+      preventOnFilter = options.preventOnFilter,
+      type = evt.type,
+      touch = evt.touches && evt.touches[0] || evt.pointerType && evt.pointerType === 'touch' && evt,
+      target = (touch || evt).target,
+      originalTarget = evt.target.shadowRoot && (evt.path && evt.path[0] || evt.composedPath && evt.composedPath()[0]) || target,
+      filter = options.filter;
+    _saveInputCheckedState(el);
+
+    // Don't trigger start event when an element is been dragged, otherwise the evt.oldindex always wrong when set option.group.
+    if (dragEl) {
+      return;
+    }
+    if (/mousedown|pointerdown/.test(type) && evt.button !== 0 || options.disabled) {
+      return; // only left button and enabled
+    }
+
+    // cancel dnd if original target is content editable
+    if (originalTarget.isContentEditable) {
+      return;
+    }
+
+    // Safari ignores further event handling after mousedown
+    if (!this.nativeDraggable && Safari && target && target.tagName.toUpperCase() === 'SELECT') {
+      return;
+    }
+    target = closest(target, options.draggable, el, false);
+    if (target && target.animated) {
+      return;
+    }
+    if (lastDownEl === target) {
+      // Ignoring duplicate `down`
+      return;
+    }
+
+    // Get the index of the dragged element within its parent
+    oldIndex = index(target);
+    oldDraggableIndex = index(target, options.draggable);
+
+    // Check filter
+    if (typeof filter === 'function') {
+      if (filter.call(this, evt, target, this)) {
+        _dispatchEvent({
+          sortable: _this,
+          rootEl: originalTarget,
+          name: 'filter',
+          targetEl: target,
+          toEl: el,
+          fromEl: el
+        });
+        pluginEvent('filter', _this, {
+          evt: evt
+        });
+        preventOnFilter && evt.preventDefault();
+        return; // cancel dnd
+      }
+    } else if (filter) {
+      filter = filter.split(',').some(function (criteria) {
+        criteria = closest(originalTarget, criteria.trim(), el, false);
+        if (criteria) {
+          _dispatchEvent({
+            sortable: _this,
+            rootEl: criteria,
+            name: 'filter',
+            targetEl: target,
+            fromEl: el,
+            toEl: el
+          });
+          pluginEvent('filter', _this, {
+            evt: evt
+          });
+          return true;
+        }
+      });
+      if (filter) {
+        preventOnFilter && evt.preventDefault();
+        return; // cancel dnd
+      }
+    }
+    if (options.handle && !closest(originalTarget, options.handle, el, false)) {
+      return;
+    }
+
+    // Prepare `dragstart`
+    this._prepareDragStart(evt, touch, target);
+  },
+  _prepareDragStart: function _prepareDragStart(/** Event */evt, /** Touch */touch, /** HTMLElement */target) {
+    var _this = this,
+      el = _this.el,
+      options = _this.options,
+      ownerDocument = el.ownerDocument,
+      dragStartFn;
+    if (target && !dragEl && target.parentNode === el) {
+      var dragRect = getRect(target);
+      rootEl = el;
+      dragEl = target;
+      parentEl = dragEl.parentNode;
+      nextEl = dragEl.nextSibling;
+      lastDownEl = target;
+      activeGroup = options.group;
+      Sortable.dragged = dragEl;
+      tapEvt = {
+        target: dragEl,
+        clientX: (touch || evt).clientX,
+        clientY: (touch || evt).clientY
+      };
+      tapDistanceLeft = tapEvt.clientX - dragRect.left;
+      tapDistanceTop = tapEvt.clientY - dragRect.top;
+      this._lastX = (touch || evt).clientX;
+      this._lastY = (touch || evt).clientY;
+      dragEl.style['will-change'] = 'all';
+      dragStartFn = function dragStartFn() {
+        pluginEvent('delayEnded', _this, {
+          evt: evt
+        });
+        if (Sortable.eventCanceled) {
+          _this._onDrop();
+          return;
+        }
+        // Delayed drag has been triggered
+        // we can re-enable the events: touchmove/mousemove
+        _this._disableDelayedDragEvents();
+        if (!FireFox && _this.nativeDraggable) {
+          dragEl.draggable = true;
+        }
+
+        // Bind the events: dragstart/dragend
+        _this._triggerDragStart(evt, touch);
+
+        // Drag start event
+        _dispatchEvent({
+          sortable: _this,
+          name: 'choose',
+          originalEvent: evt
+        });
+
+        // Chosen item
+        toggleClass(dragEl, options.chosenClass, true);
+      };
+
+      // Disable "draggable"
+      options.ignore.split(',').forEach(function (criteria) {
+        find(dragEl, criteria.trim(), _disableDraggable);
+      });
+      on(ownerDocument, 'dragover', nearestEmptyInsertDetectEvent);
+      on(ownerDocument, 'mousemove', nearestEmptyInsertDetectEvent);
+      on(ownerDocument, 'touchmove', nearestEmptyInsertDetectEvent);
+      if (options.supportPointer) {
+        on(ownerDocument, 'pointerup', _this._onDrop);
+        // Native D&D triggers pointercancel
+        !this.nativeDraggable && on(ownerDocument, 'pointercancel', _this._onDrop);
+      } else {
+        on(ownerDocument, 'mouseup', _this._onDrop);
+        on(ownerDocument, 'touchend', _this._onDrop);
+        on(ownerDocument, 'touchcancel', _this._onDrop);
+      }
+
+      // Make dragEl draggable (must be before delay for FireFox)
+      if (FireFox && this.nativeDraggable) {
+        this.options.touchStartThreshold = 4;
+        dragEl.draggable = true;
+      }
+      pluginEvent('delayStart', this, {
+        evt: evt
+      });
+
+      // Delay is impossible for native DnD in Edge or IE
+      if (options.delay && (!options.delayOnTouchOnly || touch) && (!this.nativeDraggable || !(Edge || IE11OrLess))) {
+        if (Sortable.eventCanceled) {
+          this._onDrop();
+          return;
+        }
+        // If the user moves the pointer or let go the click or touch
+        // before the delay has been reached:
+        // disable the delayed drag
+        if (options.supportPointer) {
+          on(ownerDocument, 'pointerup', _this._disableDelayedDrag);
+          on(ownerDocument, 'pointercancel', _this._disableDelayedDrag);
+        } else {
+          on(ownerDocument, 'mouseup', _this._disableDelayedDrag);
+          on(ownerDocument, 'touchend', _this._disableDelayedDrag);
+          on(ownerDocument, 'touchcancel', _this._disableDelayedDrag);
+        }
+        on(ownerDocument, 'mousemove', _this._delayedDragTouchMoveHandler);
+        on(ownerDocument, 'touchmove', _this._delayedDragTouchMoveHandler);
+        options.supportPointer && on(ownerDocument, 'pointermove', _this._delayedDragTouchMoveHandler);
+        _this._dragStartTimer = setTimeout(dragStartFn, options.delay);
+      } else {
+        dragStartFn();
+      }
+    }
+  },
+  _delayedDragTouchMoveHandler: function _delayedDragTouchMoveHandler(/** TouchEvent|PointerEvent **/e) {
+    var touch = e.touches ? e.touches[0] : e;
+    if (Math.max(Math.abs(touch.clientX - this._lastX), Math.abs(touch.clientY - this._lastY)) >= Math.floor(this.options.touchStartThreshold / (this.nativeDraggable && window.devicePixelRatio || 1))) {
+      this._disableDelayedDrag();
+    }
+  },
+  _disableDelayedDrag: function _disableDelayedDrag() {
+    dragEl && _disableDraggable(dragEl);
+    clearTimeout(this._dragStartTimer);
+    this._disableDelayedDragEvents();
+  },
+  _disableDelayedDragEvents: function _disableDelayedDragEvents() {
+    var ownerDocument = this.el.ownerDocument;
+    off(ownerDocument, 'mouseup', this._disableDelayedDrag);
+    off(ownerDocument, 'touchend', this._disableDelayedDrag);
+    off(ownerDocument, 'touchcancel', this._disableDelayedDrag);
+    off(ownerDocument, 'pointerup', this._disableDelayedDrag);
+    off(ownerDocument, 'pointercancel', this._disableDelayedDrag);
+    off(ownerDocument, 'mousemove', this._delayedDragTouchMoveHandler);
+    off(ownerDocument, 'touchmove', this._delayedDragTouchMoveHandler);
+    off(ownerDocument, 'pointermove', this._delayedDragTouchMoveHandler);
+  },
+  _triggerDragStart: function _triggerDragStart(/** Event */evt, /** Touch */touch) {
+    touch = touch || evt.pointerType == 'touch' && evt;
+    if (!this.nativeDraggable || touch) {
+      if (this.options.supportPointer) {
+        on(document, 'pointermove', this._onTouchMove);
+      } else if (touch) {
+        on(document, 'touchmove', this._onTouchMove);
+      } else {
+        on(document, 'mousemove', this._onTouchMove);
+      }
+    } else {
+      on(dragEl, 'dragend', this);
+      on(rootEl, 'dragstart', this._onDragStart);
+    }
+    try {
+      if (document.selection) {
+        _nextTick(function () {
+          document.selection.empty();
+        });
+      } else {
+        window.getSelection().removeAllRanges();
+      }
+    } catch (err) {}
+  },
+  _dragStarted: function _dragStarted(fallback, evt) {
+    awaitingDragStarted = false;
+    if (rootEl && dragEl) {
+      pluginEvent('dragStarted', this, {
+        evt: evt
+      });
+      if (this.nativeDraggable) {
+        on(document, 'dragover', _checkOutsideTargetEl);
+      }
+      var options = this.options;
+
+      // Apply effect
+      !fallback && toggleClass(dragEl, options.dragClass, false);
+      toggleClass(dragEl, options.ghostClass, true);
+      Sortable.active = this;
+      fallback && this._appendGhost();
+
+      // Drag start event
+      _dispatchEvent({
+        sortable: this,
+        name: 'start',
+        originalEvent: evt
+      });
+    } else {
+      this._nulling();
+    }
+  },
+  _emulateDragOver: function _emulateDragOver() {
+    if (touchEvt) {
+      this._lastX = touchEvt.clientX;
+      this._lastY = touchEvt.clientY;
+      _hideGhostForTarget();
+      var target = document.elementFromPoint(touchEvt.clientX, touchEvt.clientY);
+      var parent = target;
+      while (target && target.shadowRoot) {
+        target = target.shadowRoot.elementFromPoint(touchEvt.clientX, touchEvt.clientY);
+        if (target === parent) break;
+        parent = target;
+      }
+      dragEl.parentNode[expando]._isOutsideThisEl(target);
+      if (parent) {
+        do {
+          if (parent[expando]) {
+            var inserted = void 0;
+            inserted = parent[expando]._onDragOver({
+              clientX: touchEvt.clientX,
+              clientY: touchEvt.clientY,
+              target: target,
+              rootEl: parent
+            });
+            if (inserted && !this.options.dragoverBubble) {
+              break;
+            }
+          }
+          target = parent; // store last element
+        }
+        /* jshint boss:true */ while (parent = getParentOrHost(parent));
+      }
+      _unhideGhostForTarget();
+    }
+  },
+  _onTouchMove: function _onTouchMove(/**TouchEvent*/evt) {
+    if (tapEvt) {
+      var options = this.options,
+        fallbackTolerance = options.fallbackTolerance,
+        fallbackOffset = options.fallbackOffset,
+        touch = evt.touches ? evt.touches[0] : evt,
+        ghostMatrix = ghostEl && matrix(ghostEl, true),
+        scaleX = ghostEl && ghostMatrix && ghostMatrix.a,
+        scaleY = ghostEl && ghostMatrix && ghostMatrix.d,
+        relativeScrollOffset = PositionGhostAbsolutely && ghostRelativeParent && getRelativeScrollOffset(ghostRelativeParent),
+        dx = (touch.clientX - tapEvt.clientX + fallbackOffset.x) / (scaleX || 1) + (relativeScrollOffset ? relativeScrollOffset[0] - ghostRelativeParentInitialScroll[0] : 0) / (scaleX || 1),
+        dy = (touch.clientY - tapEvt.clientY + fallbackOffset.y) / (scaleY || 1) + (relativeScrollOffset ? relativeScrollOffset[1] - ghostRelativeParentInitialScroll[1] : 0) / (scaleY || 1);
+
+      // only set the status to dragging, when we are actually dragging
+      if (!Sortable.active && !awaitingDragStarted) {
+        if (fallbackTolerance && Math.max(Math.abs(touch.clientX - this._lastX), Math.abs(touch.clientY - this._lastY)) < fallbackTolerance) {
+          return;
+        }
+        this._onDragStart(evt, true);
+      }
+      if (ghostEl) {
+        if (ghostMatrix) {
+          ghostMatrix.e += dx - (lastDx || 0);
+          ghostMatrix.f += dy - (lastDy || 0);
+        } else {
+          ghostMatrix = {
+            a: 1,
+            b: 0,
+            c: 0,
+            d: 1,
+            e: dx,
+            f: dy
+          };
+        }
+        var cssMatrix = "matrix(".concat(ghostMatrix.a, ",").concat(ghostMatrix.b, ",").concat(ghostMatrix.c, ",").concat(ghostMatrix.d, ",").concat(ghostMatrix.e, ",").concat(ghostMatrix.f, ")");
+        css(ghostEl, 'webkitTransform', cssMatrix);
+        css(ghostEl, 'mozTransform', cssMatrix);
+        css(ghostEl, 'msTransform', cssMatrix);
+        css(ghostEl, 'transform', cssMatrix);
+        lastDx = dx;
+        lastDy = dy;
+        touchEvt = touch;
+      }
+      evt.cancelable && evt.preventDefault();
+    }
+  },
+  _appendGhost: function _appendGhost() {
+    // Bug if using scale(): https://stackoverflow.com/questions/2637058
+    // Not being adjusted for
+    if (!ghostEl) {
+      var container = this.options.fallbackOnBody ? document.body : rootEl,
+        rect = getRect(dragEl, true, PositionGhostAbsolutely, true, container),
+        options = this.options;
+
+      // Position absolutely
+      if (PositionGhostAbsolutely) {
+        // Get relatively positioned parent
+        ghostRelativeParent = container;
+        while (css(ghostRelativeParent, 'position') === 'static' && css(ghostRelativeParent, 'transform') === 'none' && ghostRelativeParent !== document) {
+          ghostRelativeParent = ghostRelativeParent.parentNode;
+        }
+        if (ghostRelativeParent !== document.body && ghostRelativeParent !== document.documentElement) {
+          if (ghostRelativeParent === document) ghostRelativeParent = getWindowScrollingElement();
+          rect.top += ghostRelativeParent.scrollTop;
+          rect.left += ghostRelativeParent.scrollLeft;
+        } else {
+          ghostRelativeParent = getWindowScrollingElement();
+        }
+        ghostRelativeParentInitialScroll = getRelativeScrollOffset(ghostRelativeParent);
+      }
+      ghostEl = dragEl.cloneNode(true);
+      toggleClass(ghostEl, options.ghostClass, false);
+      toggleClass(ghostEl, options.fallbackClass, true);
+      toggleClass(ghostEl, options.dragClass, true);
+      css(ghostEl, 'transition', '');
+      css(ghostEl, 'transform', '');
+      css(ghostEl, 'box-sizing', 'border-box');
+      css(ghostEl, 'margin', 0);
+      css(ghostEl, 'top', rect.top);
+      css(ghostEl, 'left', rect.left);
+      css(ghostEl, 'width', rect.width);
+      css(ghostEl, 'height', rect.height);
+      css(ghostEl, 'opacity', '0.8');
+      css(ghostEl, 'position', PositionGhostAbsolutely ? 'absolute' : 'fixed');
+      css(ghostEl, 'zIndex', '100000');
+      css(ghostEl, 'pointerEvents', 'none');
+      Sortable.ghost = ghostEl;
+      container.appendChild(ghostEl);
+
+      // Set transform-origin
+      css(ghostEl, 'transform-origin', tapDistanceLeft / parseInt(ghostEl.style.width) * 100 + '% ' + tapDistanceTop / parseInt(ghostEl.style.height) * 100 + '%');
+    }
+  },
+  _onDragStart: function _onDragStart(/**Event*/evt, /**boolean*/fallback) {
+    var _this = this;
+    var dataTransfer = evt.dataTransfer;
+    var options = _this.options;
+    pluginEvent('dragStart', this, {
+      evt: evt
+    });
+    if (Sortable.eventCanceled) {
+      this._onDrop();
+      return;
+    }
+    pluginEvent('setupClone', this);
+    if (!Sortable.eventCanceled) {
+      cloneEl = clone(dragEl);
+      cloneEl.removeAttribute("id");
+      cloneEl.draggable = false;
+      cloneEl.style['will-change'] = '';
+      this._hideClone();
+      toggleClass(cloneEl, this.options.chosenClass, false);
+      Sortable.clone = cloneEl;
+    }
+
+    // #1143: IFrame support workaround
+    _this.cloneId = _nextTick(function () {
+      pluginEvent('clone', _this);
+      if (Sortable.eventCanceled) return;
+      if (!_this.options.removeCloneOnHide) {
+        rootEl.insertBefore(cloneEl, dragEl);
+      }
+      _this._hideClone();
+      _dispatchEvent({
+        sortable: _this,
+        name: 'clone'
+      });
+    });
+    !fallback && toggleClass(dragEl, options.dragClass, true);
+
+    // Set proper drop events
+    if (fallback) {
+      ignoreNextClick = true;
+      _this._loopId = setInterval(_this._emulateDragOver, 50);
+    } else {
+      // Undo what was set in _prepareDragStart before drag started
+      off(document, 'mouseup', _this._onDrop);
+      off(document, 'touchend', _this._onDrop);
+      off(document, 'touchcancel', _this._onDrop);
+      if (dataTransfer) {
+        dataTransfer.effectAllowed = 'move';
+        options.setData && options.setData.call(_this, dataTransfer, dragEl);
+      }
+      on(document, 'drop', _this);
+
+      // #1276 fix:
+      css(dragEl, 'transform', 'translateZ(0)');
+    }
+    awaitingDragStarted = true;
+    _this._dragStartId = _nextTick(_this._dragStarted.bind(_this, fallback, evt));
+    on(document, 'selectstart', _this);
+    moved = true;
+    window.getSelection().removeAllRanges();
+    if (Safari) {
+      css(document.body, 'user-select', 'none');
+    }
+  },
+  // Returns true - if no further action is needed (either inserted or another condition)
+  _onDragOver: function _onDragOver(/**Event*/evt) {
+    var el = this.el,
+      target = evt.target,
+      dragRect,
+      targetRect,
+      revert,
+      options = this.options,
+      group = options.group,
+      activeSortable = Sortable.active,
+      isOwner = activeGroup === group,
+      canSort = options.sort,
+      fromSortable = putSortable || activeSortable,
+      vertical,
+      _this = this,
+      completedFired = false;
+    if (_silent) return;
+    function dragOverEvent(name, extra) {
+      pluginEvent(name, _this, _objectSpread2({
+        evt: evt,
+        isOwner: isOwner,
+        axis: vertical ? 'vertical' : 'horizontal',
+        revert: revert,
+        dragRect: dragRect,
+        targetRect: targetRect,
+        canSort: canSort,
+        fromSortable: fromSortable,
+        target: target,
+        completed: completed,
+        onMove: function onMove(target, after) {
+          return _onMove(rootEl, el, dragEl, dragRect, target, getRect(target), evt, after);
+        },
+        changed: changed
+      }, extra));
+    }
+
+    // Capture animation state
+    function capture() {
+      dragOverEvent('dragOverAnimationCapture');
+      _this.captureAnimationState();
+      if (_this !== fromSortable) {
+        fromSortable.captureAnimationState();
+      }
+    }
+
+    // Return invocation when dragEl is inserted (or completed)
+    function completed(insertion) {
+      dragOverEvent('dragOverCompleted', {
+        insertion: insertion
+      });
+      if (insertion) {
+        // Clones must be hidden before folding animation to capture dragRectAbsolute properly
+        if (isOwner) {
+          activeSortable._hideClone();
+        } else {
+          activeSortable._showClone(_this);
+        }
+        if (_this !== fromSortable) {
+          // Set ghost class to new sortable's ghost class
+          toggleClass(dragEl, putSortable ? putSortable.options.ghostClass : activeSortable.options.ghostClass, false);
+          toggleClass(dragEl, options.ghostClass, true);
+        }
+        if (putSortable !== _this && _this !== Sortable.active) {
+          putSortable = _this;
+        } else if (_this === Sortable.active && putSortable) {
+          putSortable = null;
+        }
+
+        // Animation
+        if (fromSortable === _this) {
+          _this._ignoreWhileAnimating = target;
+        }
+        _this.animateAll(function () {
+          dragOverEvent('dragOverAnimationComplete');
+          _this._ignoreWhileAnimating = null;
+        });
+        if (_this !== fromSortable) {
+          fromSortable.animateAll();
+          fromSortable._ignoreWhileAnimating = null;
+        }
+      }
+
+      // Null lastTarget if it is not inside a previously swapped element
+      if (target === dragEl && !dragEl.animated || target === el && !target.animated) {
+        lastTarget = null;
+      }
+
+      // no bubbling and not fallback
+      if (!options.dragoverBubble && !evt.rootEl && target !== document) {
+        dragEl.parentNode[expando]._isOutsideThisEl(evt.target);
+
+        // Do not detect for empty insert if already inserted
+        !insertion && nearestEmptyInsertDetectEvent(evt);
+      }
+      !options.dragoverBubble && evt.stopPropagation && evt.stopPropagation();
+      return completedFired = true;
+    }
+
+    // Call when dragEl has been inserted
+    function changed() {
+      newIndex = index(dragEl);
+      newDraggableIndex = index(dragEl, options.draggable);
+      _dispatchEvent({
+        sortable: _this,
+        name: 'change',
+        toEl: el,
+        newIndex: newIndex,
+        newDraggableIndex: newDraggableIndex,
+        originalEvent: evt
+      });
+    }
+    if (evt.preventDefault !== void 0) {
+      evt.cancelable && evt.preventDefault();
+    }
+    target = closest(target, options.draggable, el, true);
+    dragOverEvent('dragOver');
+    if (Sortable.eventCanceled) return completedFired;
+    if (dragEl.contains(evt.target) || target.animated && target.animatingX && target.animatingY || _this._ignoreWhileAnimating === target) {
+      return completed(false);
+    }
+    ignoreNextClick = false;
+    if (activeSortable && !options.disabled && (isOwner ? canSort || (revert = parentEl !== rootEl) // Reverting item into the original list
+    : putSortable === this || (this.lastPutMode = activeGroup.checkPull(this, activeSortable, dragEl, evt)) && group.checkPut(this, activeSortable, dragEl, evt))) {
+      vertical = this._getDirection(evt, target) === 'vertical';
+      dragRect = getRect(dragEl);
+      dragOverEvent('dragOverValid');
+      if (Sortable.eventCanceled) return completedFired;
+      if (revert) {
+        parentEl = rootEl; // actualization
+        capture();
+        this._hideClone();
+        dragOverEvent('revert');
+        if (!Sortable.eventCanceled) {
+          if (nextEl) {
+            rootEl.insertBefore(dragEl, nextEl);
+          } else {
+            rootEl.appendChild(dragEl);
+          }
+        }
+        return completed(true);
+      }
+      var elLastChild = lastChild(el, options.draggable);
+      if (!elLastChild || _ghostIsLast(evt, vertical, this) && !elLastChild.animated) {
+        // Insert to end of list
+
+        // If already at end of list: Do not insert
+        if (elLastChild === dragEl) {
+          return completed(false);
+        }
+
+        // if there is a last element, it is the target
+        if (elLastChild && el === evt.target) {
+          target = elLastChild;
+        }
+        if (target) {
+          targetRect = getRect(target);
+        }
+        if (_onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, !!target) !== false) {
+          capture();
+          if (elLastChild && elLastChild.nextSibling) {
+            // the last draggable element is not the last node
+            el.insertBefore(dragEl, elLastChild.nextSibling);
+          } else {
+            el.appendChild(dragEl);
+          }
+          parentEl = el; // actualization
+
+          changed();
+          return completed(true);
+        }
+      } else if (elLastChild && _ghostIsFirst(evt, vertical, this)) {
+        // Insert to start of list
+        var firstChild = getChild(el, 0, options, true);
+        if (firstChild === dragEl) {
+          return completed(false);
+        }
+        target = firstChild;
+        targetRect = getRect(target);
+        if (_onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, false) !== false) {
+          capture();
+          el.insertBefore(dragEl, firstChild);
+          parentEl = el; // actualization
+
+          changed();
+          return completed(true);
+        }
+      } else if (target.parentNode === el) {
+        targetRect = getRect(target);
+        var direction = 0,
+          targetBeforeFirstSwap,
+          differentLevel = dragEl.parentNode !== el,
+          differentRowCol = !_dragElInRowColumn(dragEl.animated && dragEl.toRect || dragRect, target.animated && target.toRect || targetRect, vertical),
+          side1 = vertical ? 'top' : 'left',
+          scrolledPastTop = isScrolledPast(target, 'top', 'top') || isScrolledPast(dragEl, 'top', 'top'),
+          scrollBefore = scrolledPastTop ? scrolledPastTop.scrollTop : void 0;
+        if (lastTarget !== target) {
+          targetBeforeFirstSwap = targetRect[side1];
+          pastFirstInvertThresh = false;
+          isCircumstantialInvert = !differentRowCol && options.invertSwap || differentLevel;
+        }
+        direction = _getSwapDirection(evt, target, targetRect, vertical, differentRowCol ? 1 : options.swapThreshold, options.invertedSwapThreshold == null ? options.swapThreshold : options.invertedSwapThreshold, isCircumstantialInvert, lastTarget === target);
+        var sibling;
+        if (direction !== 0) {
+          // Check if target is beside dragEl in respective direction (ignoring hidden elements)
+          var dragIndex = index(dragEl);
+          do {
+            dragIndex -= direction;
+            sibling = parentEl.children[dragIndex];
+          } while (sibling && (css(sibling, 'display') === 'none' || sibling === ghostEl));
+        }
+        // If dragEl is already beside target: Do not insert
+        if (direction === 0 || sibling === target) {
+          return completed(false);
+        }
+        lastTarget = target;
+        lastDirection = direction;
+        var nextSibling = target.nextElementSibling,
+          after = false;
+        after = direction === 1;
+        var moveVector = _onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, after);
+        if (moveVector !== false) {
+          if (moveVector === 1 || moveVector === -1) {
+            after = moveVector === 1;
+          }
+          _silent = true;
+          setTimeout(_unsilent, 30);
+          capture();
+          if (after && !nextSibling) {
+            el.appendChild(dragEl);
+          } else {
+            target.parentNode.insertBefore(dragEl, after ? nextSibling : target);
+          }
+
+          // Undo chrome's scroll adjustment (has no effect on other browsers)
+          if (scrolledPastTop) {
+            scrollBy(scrolledPastTop, 0, scrollBefore - scrolledPastTop.scrollTop);
+          }
+          parentEl = dragEl.parentNode; // actualization
+
+          // must be done before animation
+          if (targetBeforeFirstSwap !== undefined && !isCircumstantialInvert) {
+            targetMoveDistance = Math.abs(targetBeforeFirstSwap - getRect(target)[side1]);
+          }
+          changed();
+          return completed(true);
+        }
+      }
+      if (el.contains(dragEl)) {
+        return completed(false);
+      }
+    }
+    return false;
+  },
+  _ignoreWhileAnimating: null,
+  _offMoveEvents: function _offMoveEvents() {
+    off(document, 'mousemove', this._onTouchMove);
+    off(document, 'touchmove', this._onTouchMove);
+    off(document, 'pointermove', this._onTouchMove);
+    off(document, 'dragover', nearestEmptyInsertDetectEvent);
+    off(document, 'mousemove', nearestEmptyInsertDetectEvent);
+    off(document, 'touchmove', nearestEmptyInsertDetectEvent);
+  },
+  _offUpEvents: function _offUpEvents() {
+    var ownerDocument = this.el.ownerDocument;
+    off(ownerDocument, 'mouseup', this._onDrop);
+    off(ownerDocument, 'touchend', this._onDrop);
+    off(ownerDocument, 'pointerup', this._onDrop);
+    off(ownerDocument, 'pointercancel', this._onDrop);
+    off(ownerDocument, 'touchcancel', this._onDrop);
+    off(document, 'selectstart', this);
+  },
+  _onDrop: function _onDrop(/**Event*/evt) {
+    var el = this.el,
+      options = this.options;
+
+    // Get the index of the dragged element within its parent
+    newIndex = index(dragEl);
+    newDraggableIndex = index(dragEl, options.draggable);
+    pluginEvent('drop', this, {
+      evt: evt
+    });
+    parentEl = dragEl && dragEl.parentNode;
+
+    // Get again after plugin event
+    newIndex = index(dragEl);
+    newDraggableIndex = index(dragEl, options.draggable);
+    if (Sortable.eventCanceled) {
+      this._nulling();
+      return;
+    }
+    awaitingDragStarted = false;
+    isCircumstantialInvert = false;
+    pastFirstInvertThresh = false;
+    clearInterval(this._loopId);
+    clearTimeout(this._dragStartTimer);
+    _cancelNextTick(this.cloneId);
+    _cancelNextTick(this._dragStartId);
+
+    // Unbind events
+    if (this.nativeDraggable) {
+      off(document, 'drop', this);
+      off(el, 'dragstart', this._onDragStart);
+    }
+    this._offMoveEvents();
+    this._offUpEvents();
+    if (Safari) {
+      css(document.body, 'user-select', '');
+    }
+    css(dragEl, 'transform', '');
+    if (evt) {
+      if (moved) {
+        evt.cancelable && evt.preventDefault();
+        !options.dropBubble && evt.stopPropagation();
+      }
+      ghostEl && ghostEl.parentNode && ghostEl.parentNode.removeChild(ghostEl);
+      if (rootEl === parentEl || putSortable && putSortable.lastPutMode !== 'clone') {
+        // Remove clone(s)
+        cloneEl && cloneEl.parentNode && cloneEl.parentNode.removeChild(cloneEl);
+      }
+      if (dragEl) {
+        if (this.nativeDraggable) {
+          off(dragEl, 'dragend', this);
+        }
+        _disableDraggable(dragEl);
+        dragEl.style['will-change'] = '';
+
+        // Remove classes
+        // ghostClass is added in dragStarted
+        if (moved && !awaitingDragStarted) {
+          toggleClass(dragEl, putSortable ? putSortable.options.ghostClass : this.options.ghostClass, false);
+        }
+        toggleClass(dragEl, this.options.chosenClass, false);
+
+        // Drag stop event
+        _dispatchEvent({
+          sortable: this,
+          name: 'unchoose',
+          toEl: parentEl,
+          newIndex: null,
+          newDraggableIndex: null,
+          originalEvent: evt
+        });
+        if (rootEl !== parentEl) {
+          if (newIndex >= 0) {
+            // Add event
+            _dispatchEvent({
+              rootEl: parentEl,
+              name: 'add',
+              toEl: parentEl,
+              fromEl: rootEl,
+              originalEvent: evt
+            });
+
+            // Remove event
+            _dispatchEvent({
+              sortable: this,
+              name: 'remove',
+              toEl: parentEl,
+              originalEvent: evt
+            });
+
+            // drag from one list and drop into another
+            _dispatchEvent({
+              rootEl: parentEl,
+              name: 'sort',
+              toEl: parentEl,
+              fromEl: rootEl,
+              originalEvent: evt
+            });
+            _dispatchEvent({
+              sortable: this,
+              name: 'sort',
+              toEl: parentEl,
+              originalEvent: evt
+            });
+          }
+          putSortable && putSortable.save();
+        } else {
+          if (newIndex !== oldIndex) {
+            if (newIndex >= 0) {
+              // drag & drop within the same list
+              _dispatchEvent({
+                sortable: this,
+                name: 'update',
+                toEl: parentEl,
+                originalEvent: evt
+              });
+              _dispatchEvent({
+                sortable: this,
+                name: 'sort',
+                toEl: parentEl,
+                originalEvent: evt
+              });
+            }
+          }
+        }
+        if (Sortable.active) {
+          /* jshint eqnull:true */
+          if (newIndex == null || newIndex === -1) {
+            newIndex = oldIndex;
+            newDraggableIndex = oldDraggableIndex;
+          }
+          _dispatchEvent({
+            sortable: this,
+            name: 'end',
+            toEl: parentEl,
+            originalEvent: evt
+          });
+
+          // Save sorting
+          this.save();
+        }
+      }
+    }
+    this._nulling();
+  },
+  _nulling: function _nulling() {
+    pluginEvent('nulling', this);
+    rootEl = dragEl = parentEl = ghostEl = nextEl = cloneEl = lastDownEl = cloneHidden = tapEvt = touchEvt = moved = newIndex = newDraggableIndex = oldIndex = oldDraggableIndex = lastTarget = lastDirection = putSortable = activeGroup = Sortable.dragged = Sortable.ghost = Sortable.clone = Sortable.active = null;
+    savedInputChecked.forEach(function (el) {
+      el.checked = true;
+    });
+    savedInputChecked.length = lastDx = lastDy = 0;
+  },
+  handleEvent: function handleEvent(/**Event*/evt) {
+    switch (evt.type) {
+      case 'drop':
+      case 'dragend':
+        this._onDrop(evt);
+        break;
+      case 'dragenter':
+      case 'dragover':
+        if (dragEl) {
+          this._onDragOver(evt);
+          _globalDragOver(evt);
+        }
+        break;
+      case 'selectstart':
+        evt.preventDefault();
+        break;
+    }
+  },
+  /**
+   * Serializes the item into an array of string.
+   * @returns {String[]}
+   */
+  toArray: function toArray() {
+    var order = [],
+      el,
+      children = this.el.children,
+      i = 0,
+      n = children.length,
+      options = this.options;
+    for (; i < n; i++) {
+      el = children[i];
+      if (closest(el, options.draggable, this.el, false)) {
+        order.push(el.getAttribute(options.dataIdAttr) || _generateId(el));
+      }
+    }
+    return order;
+  },
+  /**
+   * Sorts the elements according to the array.
+   * @param  {String[]}  order  order of the items
+   */
+  sort: function sort(order, useAnimation) {
+    var items = {},
+      rootEl = this.el;
+    this.toArray().forEach(function (id, i) {
+      var el = rootEl.children[i];
+      if (closest(el, this.options.draggable, rootEl, false)) {
+        items[id] = el;
+      }
+    }, this);
+    useAnimation && this.captureAnimationState();
+    order.forEach(function (id) {
+      if (items[id]) {
+        rootEl.removeChild(items[id]);
+        rootEl.appendChild(items[id]);
+      }
+    });
+    useAnimation && this.animateAll();
+  },
+  /**
+   * Save the current sorting
+   */
+  save: function save() {
+    var store = this.options.store;
+    store && store.set && store.set(this);
+  },
+  /**
+   * For each element in the set, get the first element that matches the selector by testing the element itself and traversing up through its ancestors in the DOM tree.
+   * @param   {HTMLElement}  el
+   * @param   {String}       [selector]  default: `options.draggable`
+   * @returns {HTMLElement|null}
+   */
+  closest: function closest$1(el, selector) {
+    return closest(el, selector || this.options.draggable, this.el, false);
+  },
+  /**
+   * Set/get option
+   * @param   {string} name
+   * @param   {*}      [value]
+   * @returns {*}
+   */
+  option: function option(name, value) {
+    var options = this.options;
+    if (value === void 0) {
+      return options[name];
+    } else {
+      var modifiedValue = PluginManager.modifyOption(this, name, value);
+      if (typeof modifiedValue !== 'undefined') {
+        options[name] = modifiedValue;
+      } else {
+        options[name] = value;
+      }
+      if (name === 'group') {
+        _prepareGroup(options);
+      }
+    }
+  },
+  /**
+   * Destroy
+   */
+  destroy: function destroy() {
+    pluginEvent('destroy', this);
+    var el = this.el;
+    el[expando] = null;
+    off(el, 'mousedown', this._onTapStart);
+    off(el, 'touchstart', this._onTapStart);
+    off(el, 'pointerdown', this._onTapStart);
+    if (this.nativeDraggable) {
+      off(el, 'dragover', this);
+      off(el, 'dragenter', this);
+    }
+    // Remove draggable attributes
+    Array.prototype.forEach.call(el.querySelectorAll('[draggable]'), function (el) {
+      el.removeAttribute('draggable');
+    });
+    this._onDrop();
+    this._disableDelayedDragEvents();
+    sortables.splice(sortables.indexOf(this.el), 1);
+    this.el = el = null;
+  },
+  _hideClone: function _hideClone() {
+    if (!cloneHidden) {
+      pluginEvent('hideClone', this);
+      if (Sortable.eventCanceled) return;
+      css(cloneEl, 'display', 'none');
+      if (this.options.removeCloneOnHide && cloneEl.parentNode) {
+        cloneEl.parentNode.removeChild(cloneEl);
+      }
+      cloneHidden = true;
+    }
+  },
+  _showClone: function _showClone(putSortable) {
+    if (putSortable.lastPutMode !== 'clone') {
+      this._hideClone();
+      return;
+    }
+    if (cloneHidden) {
+      pluginEvent('showClone', this);
+      if (Sortable.eventCanceled) return;
+
+      // show clone at dragEl or original position
+      if (dragEl.parentNode == rootEl && !this.options.group.revertClone) {
+        rootEl.insertBefore(cloneEl, dragEl);
+      } else if (nextEl) {
+        rootEl.insertBefore(cloneEl, nextEl);
+      } else {
+        rootEl.appendChild(cloneEl);
+      }
+      if (this.options.group.revertClone) {
+        this.animate(dragEl, cloneEl);
+      }
+      css(cloneEl, 'display', '');
+      cloneHidden = false;
+    }
+  }
+};
+function _globalDragOver(/**Event*/evt) {
+  if (evt.dataTransfer) {
+    evt.dataTransfer.dropEffect = 'move';
+  }
+  evt.cancelable && evt.preventDefault();
+}
+function _onMove(fromEl, toEl, dragEl, dragRect, targetEl, targetRect, originalEvent, willInsertAfter) {
+  var evt,
+    sortable = fromEl[expando],
+    onMoveFn = sortable.options.onMove,
+    retVal;
+  // Support for new CustomEvent feature
+  if (window.CustomEvent && !IE11OrLess && !Edge) {
+    evt = new CustomEvent('move', {
+      bubbles: true,
+      cancelable: true
+    });
+  } else {
+    evt = document.createEvent('Event');
+    evt.initEvent('move', true, true);
+  }
+  evt.to = toEl;
+  evt.from = fromEl;
+  evt.dragged = dragEl;
+  evt.draggedRect = dragRect;
+  evt.related = targetEl || toEl;
+  evt.relatedRect = targetRect || getRect(toEl);
+  evt.willInsertAfter = willInsertAfter;
+  evt.originalEvent = originalEvent;
+  fromEl.dispatchEvent(evt);
+  if (onMoveFn) {
+    retVal = onMoveFn.call(sortable, evt, originalEvent);
+  }
+  return retVal;
+}
+function _disableDraggable(el) {
+  el.draggable = false;
+}
+function _unsilent() {
+  _silent = false;
+}
+function _ghostIsFirst(evt, vertical, sortable) {
+  var firstElRect = getRect(getChild(sortable.el, 0, sortable.options, true));
+  var childContainingRect = getChildContainingRectFromElement(sortable.el, sortable.options, ghostEl);
+  var spacer = 10;
+  return vertical ? evt.clientX < childContainingRect.left - spacer || evt.clientY < firstElRect.top && evt.clientX < firstElRect.right : evt.clientY < childContainingRect.top - spacer || evt.clientY < firstElRect.bottom && evt.clientX < firstElRect.left;
+}
+function _ghostIsLast(evt, vertical, sortable) {
+  var lastElRect = getRect(lastChild(sortable.el, sortable.options.draggable));
+  var childContainingRect = getChildContainingRectFromElement(sortable.el, sortable.options, ghostEl);
+  var spacer = 10;
+  return vertical ? evt.clientX > childContainingRect.right + spacer || evt.clientY > lastElRect.bottom && evt.clientX > lastElRect.left : evt.clientY > childContainingRect.bottom + spacer || evt.clientX > lastElRect.right && evt.clientY > lastElRect.top;
+}
+function _getSwapDirection(evt, target, targetRect, vertical, swapThreshold, invertedSwapThreshold, invertSwap, isLastTarget) {
+  var mouseOnAxis = vertical ? evt.clientY : evt.clientX,
+    targetLength = vertical ? targetRect.height : targetRect.width,
+    targetS1 = vertical ? targetRect.top : targetRect.left,
+    targetS2 = vertical ? targetRect.bottom : targetRect.right,
+    invert = false;
+  if (!invertSwap) {
+    // Never invert or create dragEl shadow when target movemenet causes mouse to move past the end of regular swapThreshold
+    if (isLastTarget && targetMoveDistance < targetLength * swapThreshold) {
+      // multiplied only by swapThreshold because mouse will already be inside target by (1 - threshold) * targetLength / 2
+      // check if past first invert threshold on side opposite of lastDirection
+      if (!pastFirstInvertThresh && (lastDirection === 1 ? mouseOnAxis > targetS1 + targetLength * invertedSwapThreshold / 2 : mouseOnAxis < targetS2 - targetLength * invertedSwapThreshold / 2)) {
+        // past first invert threshold, do not restrict inverted threshold to dragEl shadow
+        pastFirstInvertThresh = true;
+      }
+      if (!pastFirstInvertThresh) {
+        // dragEl shadow (target move distance shadow)
+        if (lastDirection === 1 ? mouseOnAxis < targetS1 + targetMoveDistance // over dragEl shadow
+        : mouseOnAxis > targetS2 - targetMoveDistance) {
+          return -lastDirection;
+        }
+      } else {
+        invert = true;
+      }
+    } else {
+      // Regular
+      if (mouseOnAxis > targetS1 + targetLength * (1 - swapThreshold) / 2 && mouseOnAxis < targetS2 - targetLength * (1 - swapThreshold) / 2) {
+        return _getInsertDirection(target);
+      }
+    }
+  }
+  invert = invert || invertSwap;
+  if (invert) {
+    // Invert of regular
+    if (mouseOnAxis < targetS1 + targetLength * invertedSwapThreshold / 2 || mouseOnAxis > targetS2 - targetLength * invertedSwapThreshold / 2) {
+      return mouseOnAxis > targetS1 + targetLength / 2 ? 1 : -1;
+    }
+  }
+  return 0;
+}
+
+/**
+ * Gets the direction dragEl must be swapped relative to target in order to make it
+ * seem that dragEl has been "inserted" into that element's position
+ * @param  {HTMLElement} target       The target whose position dragEl is being inserted at
+ * @return {Number}                   Direction dragEl must be swapped
+ */
+function _getInsertDirection(target) {
+  if (index(dragEl) < index(target)) {
+    return 1;
+  } else {
+    return -1;
+  }
+}
+
+/**
+ * Generate id
+ * @param   {HTMLElement} el
+ * @returns {String}
+ * @private
+ */
+function _generateId(el) {
+  var str = el.tagName + el.className + el.src + el.href + el.textContent,
+    i = str.length,
+    sum = 0;
+  while (i--) {
+    sum += str.charCodeAt(i);
+  }
+  return sum.toString(36);
+}
+function _saveInputCheckedState(root) {
+  savedInputChecked.length = 0;
+  var inputs = root.getElementsByTagName('input');
+  var idx = inputs.length;
+  while (idx--) {
+    var el = inputs[idx];
+    el.checked && savedInputChecked.push(el);
+  }
+}
+function _nextTick(fn) {
+  return setTimeout(fn, 0);
+}
+function _cancelNextTick(id) {
+  return clearTimeout(id);
+}
+
+// Fixed #973:
+if (documentExists) {
+  on(document, 'touchmove', function (evt) {
+    if ((Sortable.active || awaitingDragStarted) && evt.cancelable) {
+      evt.preventDefault();
+    }
+  });
+}
+
+// Export utils
+Sortable.utils = {
+  on: on,
+  off: off,
+  css: css,
+  find: find,
+  is: function is(el, selector) {
+    return !!closest(el, selector, el, false);
+  },
+  extend: extend,
+  throttle: throttle,
+  closest: closest,
+  toggleClass: toggleClass,
+  clone: clone,
+  index: index,
+  nextTick: _nextTick,
+  cancelNextTick: _cancelNextTick,
+  detectDirection: _detectDirection,
+  getChild: getChild,
+  expando: expando
+};
+
+/**
+ * Get the Sortable instance of an element
+ * @param  {HTMLElement} element The element
+ * @return {Sortable|undefined}         The instance of Sortable
+ */
+Sortable.get = function (element) {
+  return element[expando];
+};
+
+/**
+ * Mount a plugin to Sortable
+ * @param  {...SortablePlugin|SortablePlugin[]} plugins       Plugins being mounted
+ */
+Sortable.mount = function () {
+  for (var _len = arguments.length, plugins = new Array(_len), _key = 0; _key < _len; _key++) {
+    plugins[_key] = arguments[_key];
+  }
+  if (plugins[0].constructor === Array) plugins = plugins[0];
+  plugins.forEach(function (plugin) {
+    if (!plugin.prototype || !plugin.prototype.constructor) {
+      throw "Sortable: Mounted plugin must be a constructor function, not ".concat({}.toString.call(plugin));
+    }
+    if (plugin.utils) Sortable.utils = _objectSpread2(_objectSpread2({}, Sortable.utils), plugin.utils);
+    PluginManager.mount(plugin);
+  });
+};
+
+/**
+ * Create sortable instance
+ * @param {HTMLElement}  el
+ * @param {Object}      [options]
+ */
+Sortable.create = function (el, options) {
+  return new Sortable(el, options);
+};
+
+// Export
+Sortable.version = version;
+var autoScrolls = [],
+  scrollEl,
+  scrollRootEl,
+  scrolling = false,
+  lastAutoScrollX,
+  lastAutoScrollY,
+  touchEvt$1,
+  pointerElemChangedInterval;
+function AutoScrollPlugin() {
+  function AutoScroll() {
+    this.defaults = {
+      scroll: true,
+      forceAutoScrollFallback: false,
+      scrollSensitivity: 30,
+      scrollSpeed: 10,
+      bubbleScroll: true
+    };
+
+    // Bind all private methods
+    for (var fn in this) {
+      if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
+        this[fn] = this[fn].bind(this);
+      }
+    }
+  }
+  AutoScroll.prototype = {
+    dragStarted: function dragStarted(_ref) {
+      var originalEvent = _ref.originalEvent;
+      if (this.sortable.nativeDraggable) {
+        on(document, 'dragover', this._handleAutoScroll);
+      } else {
+        if (this.options.supportPointer) {
+          on(document, 'pointermove', this._handleFallbackAutoScroll);
+        } else if (originalEvent.touches) {
+          on(document, 'touchmove', this._handleFallbackAutoScroll);
+        } else {
+          on(document, 'mousemove', this._handleFallbackAutoScroll);
+        }
+      }
+    },
+    dragOverCompleted: function dragOverCompleted(_ref2) {
+      var originalEvent = _ref2.originalEvent;
+      // For when bubbling is canceled and using fallback (fallback 'touchmove' always reached)
+      if (!this.options.dragOverBubble && !originalEvent.rootEl) {
+        this._handleAutoScroll(originalEvent);
+      }
+    },
+    drop: function drop() {
+      if (this.sortable.nativeDraggable) {
+        off(document, 'dragover', this._handleAutoScroll);
+      } else {
+        off(document, 'pointermove', this._handleFallbackAutoScroll);
+        off(document, 'touchmove', this._handleFallbackAutoScroll);
+        off(document, 'mousemove', this._handleFallbackAutoScroll);
+      }
+      clearPointerElemChangedInterval();
+      clearAutoScrolls();
+      cancelThrottle();
+    },
+    nulling: function nulling() {
+      touchEvt$1 = scrollRootEl = scrollEl = scrolling = pointerElemChangedInterval = lastAutoScrollX = lastAutoScrollY = null;
+      autoScrolls.length = 0;
+    },
+    _handleFallbackAutoScroll: function _handleFallbackAutoScroll(evt) {
+      this._handleAutoScroll(evt, true);
+    },
+    _handleAutoScroll: function _handleAutoScroll(evt, fallback) {
+      var _this = this;
+      var x = (evt.touches ? evt.touches[0] : evt).clientX,
+        y = (evt.touches ? evt.touches[0] : evt).clientY,
+        elem = document.elementFromPoint(x, y);
+      touchEvt$1 = evt;
+
+      // IE does not seem to have native autoscroll,
+      // Edge's autoscroll seems too conditional,
+      // MACOS Safari does not have autoscroll,
+      // Firefox and Chrome are good
+      if (fallback || this.options.forceAutoScrollFallback || Edge || IE11OrLess || Safari) {
+        autoScroll(evt, this.options, elem, fallback);
+
+        // Listener for pointer element change
+        var ogElemScroller = getParentAutoScrollElement(elem, true);
+        if (scrolling && (!pointerElemChangedInterval || x !== lastAutoScrollX || y !== lastAutoScrollY)) {
+          pointerElemChangedInterval && clearPointerElemChangedInterval();
+          // Detect for pointer elem change, emulating native DnD behaviour
+          pointerElemChangedInterval = setInterval(function () {
+            var newElem = getParentAutoScrollElement(document.elementFromPoint(x, y), true);
+            if (newElem !== ogElemScroller) {
+              ogElemScroller = newElem;
+              clearAutoScrolls();
+            }
+            autoScroll(evt, _this.options, newElem, fallback);
+          }, 10);
+          lastAutoScrollX = x;
+          lastAutoScrollY = y;
+        }
+      } else {
+        // if DnD is enabled (and browser has good autoscrolling), first autoscroll will already scroll, so get parent autoscroll of first autoscroll
+        if (!this.options.bubbleScroll || getParentAutoScrollElement(elem, true) === getWindowScrollingElement()) {
+          clearAutoScrolls();
+          return;
+        }
+        autoScroll(evt, this.options, getParentAutoScrollElement(elem, false), false);
+      }
+    }
+  };
+  return _extends(AutoScroll, {
+    pluginName: 'scroll',
+    initializeByDefault: true
+  });
+}
+function clearAutoScrolls() {
+  autoScrolls.forEach(function (autoScroll) {
+    clearInterval(autoScroll.pid);
+  });
+  autoScrolls = [];
+}
+function clearPointerElemChangedInterval() {
+  clearInterval(pointerElemChangedInterval);
+}
+var autoScroll = throttle(function (evt, options, rootEl, isFallback) {
+  // Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=505521
+  if (!options.scroll) return;
+  var x = (evt.touches ? evt.touches[0] : evt).clientX,
+    y = (evt.touches ? evt.touches[0] : evt).clientY,
+    sens = options.scrollSensitivity,
+    speed = options.scrollSpeed,
+    winScroller = getWindowScrollingElement();
+  var scrollThisInstance = false,
+    scrollCustomFn;
+
+  // New scroll root, set scrollEl
+  if (scrollRootEl !== rootEl) {
+    scrollRootEl = rootEl;
+    clearAutoScrolls();
+    scrollEl = options.scroll;
+    scrollCustomFn = options.scrollFn;
+    if (scrollEl === true) {
+      scrollEl = getParentAutoScrollElement(rootEl, true);
+    }
+  }
+  var layersOut = 0;
+  var currentParent = scrollEl;
+  do {
+    var el = currentParent,
+      rect = getRect(el),
+      top = rect.top,
+      bottom = rect.bottom,
+      left = rect.left,
+      right = rect.right,
+      width = rect.width,
+      height = rect.height,
+      canScrollX = void 0,
+      canScrollY = void 0,
+      scrollWidth = el.scrollWidth,
+      scrollHeight = el.scrollHeight,
+      elCSS = css(el),
+      scrollPosX = el.scrollLeft,
+      scrollPosY = el.scrollTop;
+    if (el === winScroller) {
+      canScrollX = width < scrollWidth && (elCSS.overflowX === 'auto' || elCSS.overflowX === 'scroll' || elCSS.overflowX === 'visible');
+      canScrollY = height < scrollHeight && (elCSS.overflowY === 'auto' || elCSS.overflowY === 'scroll' || elCSS.overflowY === 'visible');
+    } else {
+      canScrollX = width < scrollWidth && (elCSS.overflowX === 'auto' || elCSS.overflowX === 'scroll');
+      canScrollY = height < scrollHeight && (elCSS.overflowY === 'auto' || elCSS.overflowY === 'scroll');
+    }
+    var vx = canScrollX && (Math.abs(right - x) <= sens && scrollPosX + width < scrollWidth) - (Math.abs(left - x) <= sens && !!scrollPosX);
+    var vy = canScrollY && (Math.abs(bottom - y) <= sens && scrollPosY + height < scrollHeight) - (Math.abs(top - y) <= sens && !!scrollPosY);
+    if (!autoScrolls[layersOut]) {
+      for (var i = 0; i <= layersOut; i++) {
+        if (!autoScrolls[i]) {
+          autoScrolls[i] = {};
+        }
+      }
+    }
+    if (autoScrolls[layersOut].vx != vx || autoScrolls[layersOut].vy != vy || autoScrolls[layersOut].el !== el) {
+      autoScrolls[layersOut].el = el;
+      autoScrolls[layersOut].vx = vx;
+      autoScrolls[layersOut].vy = vy;
+      clearInterval(autoScrolls[layersOut].pid);
+      if (vx != 0 || vy != 0) {
+        scrollThisInstance = true;
+        /* jshint loopfunc:true */
+        autoScrolls[layersOut].pid = setInterval(function () {
+          // emulate drag over during autoscroll (fallback), emulating native DnD behaviour
+          if (isFallback && this.layer === 0) {
+            Sortable.active._onTouchMove(touchEvt$1); // To move ghost if it is positioned absolutely
+          }
+          var scrollOffsetY = autoScrolls[this.layer].vy ? autoScrolls[this.layer].vy * speed : 0;
+          var scrollOffsetX = autoScrolls[this.layer].vx ? autoScrolls[this.layer].vx * speed : 0;
+          if (typeof scrollCustomFn === 'function') {
+            if (scrollCustomFn.call(Sortable.dragged.parentNode[expando], scrollOffsetX, scrollOffsetY, evt, touchEvt$1, autoScrolls[this.layer].el) !== 'continue') {
+              return;
+            }
+          }
+          scrollBy(autoScrolls[this.layer].el, scrollOffsetX, scrollOffsetY);
+        }.bind({
+          layer: layersOut
+        }), 24);
+      }
+    }
+    layersOut++;
+  } while (options.bubbleScroll && currentParent !== winScroller && (currentParent = getParentAutoScrollElement(currentParent, false)));
+  scrolling = scrollThisInstance; // in case another function catches scrolling as false in between when it is not
+}, 30);
+var drop = function drop(_ref) {
+  var originalEvent = _ref.originalEvent,
+    putSortable = _ref.putSortable,
+    dragEl = _ref.dragEl,
+    activeSortable = _ref.activeSortable,
+    dispatchSortableEvent = _ref.dispatchSortableEvent,
+    hideGhostForTarget = _ref.hideGhostForTarget,
+    unhideGhostForTarget = _ref.unhideGhostForTarget;
+  if (!originalEvent) return;
+  var toSortable = putSortable || activeSortable;
+  hideGhostForTarget();
+  var touch = originalEvent.changedTouches && originalEvent.changedTouches.length ? originalEvent.changedTouches[0] : originalEvent;
+  var target = document.elementFromPoint(touch.clientX, touch.clientY);
+  unhideGhostForTarget();
+  if (toSortable && !toSortable.el.contains(target)) {
+    dispatchSortableEvent('spill');
+    this.onSpill({
+      dragEl: dragEl,
+      putSortable: putSortable
+    });
+  }
+};
+function Revert() {}
+Revert.prototype = {
+  startIndex: null,
+  dragStart: function dragStart(_ref2) {
+    var oldDraggableIndex = _ref2.oldDraggableIndex;
+    this.startIndex = oldDraggableIndex;
+  },
+  onSpill: function onSpill(_ref3) {
+    var dragEl = _ref3.dragEl,
+      putSortable = _ref3.putSortable;
+    this.sortable.captureAnimationState();
+    if (putSortable) {
+      putSortable.captureAnimationState();
+    }
+    var nextSibling = getChild(this.sortable.el, this.startIndex, this.options);
+    if (nextSibling) {
+      this.sortable.el.insertBefore(dragEl, nextSibling);
+    } else {
+      this.sortable.el.appendChild(dragEl);
+    }
+    this.sortable.animateAll();
+    if (putSortable) {
+      putSortable.animateAll();
+    }
+  },
+  drop: drop
+};
+_extends(Revert, {
+  pluginName: 'revertOnSpill'
+});
+function Remove() {}
+Remove.prototype = {
+  onSpill: function onSpill(_ref4) {
+    var dragEl = _ref4.dragEl,
+      putSortable = _ref4.putSortable;
+    var parentSortable = putSortable || this.sortable;
+    parentSortable.captureAnimationState();
+    dragEl.parentNode && dragEl.parentNode.removeChild(dragEl);
+    parentSortable.animateAll();
+  },
+  drop: drop
+};
+_extends(Remove, {
+  pluginName: 'removeOnSpill'
+});
+Sortable.mount(new AutoScrollPlugin());
+Sortable.mount(Remove, Revert);
+
+// import { LitElement, html, css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm";
+class YampSortable extends i$1 {
   static get properties() {
     return {
       disabled: {
@@ -2021,12 +8712,15 @@ class YampSortable extends LitElement {
     };
   }
   static get styles() {
-    return css`
+    return i$4`
       :host {
         display: block;
       }
       .sortable-fallback {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
       }
       .sortable-ghost {
         box-shadow: 0 0 0 2px var(--primary-color);
@@ -2041,6 +8735,14 @@ class YampSortable extends LitElement {
         box-shadow: 0px 4px 8px 3px #00000026;
         cursor: grabbing;
       }
+      /* Hide any fallback elements that might appear (mobile fix)*/
+      .sortable-fallback,
+      .sortable-fallback * {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
     `;
   }
   constructor() {
@@ -2054,7 +8756,7 @@ class YampSortable extends LitElement {
     return this;
   }
   render() {
-    return html`
+    return x`
       <slot></slot>
     `;
   }
@@ -2088,6 +8790,12 @@ class YampSortable extends LitElement {
       animation: 150,
       draggable: this.draggableSelector,
       handle: this.handleSelector,
+      // Mobile-specific options to fix ghost issues
+      fallbackTolerance: 3,
+      fallbackOnBody: true,
+      fallbackClass: "sortable-fallback",
+      // Disable fallback on mobile to prevent ghost issues
+      fallback: false,
       onChoose: this._handleChoose.bind(this),
       onStart: this._handleStart.bind(this),
       onEnd: this._handleEnd.bind(this),
@@ -2106,29 +8814,46 @@ class YampSortable extends LitElement {
     }));
   }
   _handleEnd(evt) {
+    // Clean up any remaining ghost elements
+    this._cleanupGhostElements();
+
     // Put back in original location if needed
     if (evt.item.placeholder) {
       evt.item.placeholder.replaceWith(evt.item);
       delete evt.item.placeholder;
     }
   }
-  _handleStart() {
-    // Optional: emit drag start event
+  _handleStart(evt) {
+    // Ensure proper cleanup on start
+    this._cleanupGhostElements();
   }
   _handleChoose(evt) {
     // Create placeholder to maintain layout
     evt.item.placeholder = document.createComment("sort-placeholder");
     evt.item.after(evt.item.placeholder);
   }
+  _cleanupGhostElements() {
+    // Remove any lingering ghost elements
+    const ghostElements = document.querySelectorAll('.sortable-fallback, .sortable-ghost');
+    ghostElements.forEach(el => {
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
+  }
   _destroySortable() {
     if (!this._sortable) return;
     this._sortable.destroy();
     this._sortable = null;
+    // Clean up any remaining ghost elements
+    this._cleanupGhostElements();
   }
 }
 customElements.define("yamp-sortable", YampSortable);
 
-class YetAnotherMediaPlayerEditor extends LitElement {
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
+class YetAnotherMediaPlayerEditor extends i$1 {
   static get properties() {
     return {
       hass: {},
@@ -2234,7 +8959,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     }
   }
   static get styles() {
-    return css`
+    return i$4`
         .form-row {
           padding: 12px 16px;
           gap: 8px;
@@ -2333,8 +9058,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           display: flex;
           align-items: flex-start;
         }
-        
-        /* Drag handle styles */
         .handle {
           display: flex;
           align-items: center;
@@ -2451,7 +9174,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       `;
   }
   render() {
-    if (!this._config) return html``;
+    if (!this._config) return x``;
     if (this._entityEditorIndex !== null) {
       var _this$_config$entitie;
       const entity = (_this$_config$entitie = this._config.entities) === null || _this$_config$entitie === void 0 ? void 0 : _this$_config$entitie[this._entityEditorIndex];
@@ -2464,7 +9187,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     return this._renderMainEditor();
   }
   _renderMainEditor() {
-    if (!this._config) return html``;
+    if (!this._config) return x``;
     let entities = [...(this._config.entities ?? [])];
     let actions = [...(this._config.actions ?? [])];
 
@@ -2474,7 +9197,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         entity_id: ""
       });
     }
-    return html`
+    return x`
         <div class="form-row entity-group">
           <div class="entity-group-header">
             <div class="entity-group-title">
@@ -2485,7 +9208,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <div class="sortable-container">
               ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
-      return html`
+      return x`
                 <div class="entity-row-inner ${idx < entities.length - 1 ? 'sortable-item' : ''}" data-index="${idx}">
                   <div class="handle ${idx === entities.length - 1 ? 'handle-disabled' : ''}">
                     <ha-icon icon="mdi:drag"></ha-icon>
@@ -2499,7 +9222,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
          last entity only, we'll use ha-entity-picker. This entity will never have extra
          properties, because as soon as it's populated, a new blank entity is added below it
       */
-      idx === entities.length - 1 && !ent.entity_id ? html`
+      idx === entities.length - 1 && !ent.entity_id ? x`
                           <ha-entity-picker
                             .hass=${this.hass}
                             .value=${ent.entity_id}
@@ -2508,7 +9231,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                             clearable
                             @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                           ></ha-entity-picker>
-                        ` : html`
+                        ` : x`
                           <ha-selector
                             .hass=${this.hass}
                             .selector=${{
@@ -2573,7 +9296,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-switch>
             <span>Always Collapsed</span>
           </div>
-          ${this._config.always_collapsed ? html`
+          ${this._config.always_collapsed ? x`
             <div>
               <ha-switch
                 id="expand-on-search-toggle"
@@ -2582,7 +9305,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-switch>
               <span>Expand on Search</span>
             </div>
-          ` : nothing}
+          ` : E}
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -2630,7 +9353,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
           ></ha-selector>
         </div>
-        ${this._config.volume_mode === "stepper" ? html`
+        ${this._config.volume_mode === "stepper" ? x`
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector
@@ -2656,7 +9379,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               @click=${() => this._updateConfig("volume_step", 0.05)}
             ></ha-icon>
           </div>
-        ` : nothing}
+        ` : E}
 
         <div class="form-row">
           <ha-selector
@@ -2708,16 +9431,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
             <div class="sortable-container">
-              ${actions.map((act, idx) => html`
+              ${actions.map((act, idx) => x`
                 <div class="action-row-inner sortable-item">
                   <div class="handle action-handle">
                     <ha-icon icon="mdi:drag"></ha-icon>
                   </div>
-                  ${act !== null && act !== void 0 && act.icon ? html`
+                  ${act !== null && act !== void 0 && act.icon ? x`
                     <ha-icon 
                     class="action-icon"
                     icon="${act === null || act === void 0 ? void 0 : act.icon}"></ha-icon>
-                  ` : html`
+                  ` : x`
                     <span class="action-icon-placeholder"></span>
                   `}
                   <div class="grow-children">
@@ -2768,7 +9491,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     var _this$hass2;
     const stateObj = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[entity === null || entity === void 0 ? void 0 : entity.entity_id];
     const showGroupVolume = this._supportsFeature(stateObj, SUPPORT_GROUPING);
-    return html`
+    return x`
         <div class="entity-editor-header">
           <ha-icon
             class="icon-button"
@@ -2814,7 +9537,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
   </div>
 </div>
 
-${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? html`
+${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
       <div class="form-row">
         <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
           <ha-code-editor
@@ -2838,7 +9561,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
           </div>
         </div>
       </div>
-    ` : html`
+    ` : x`
       <div class="form-row">
         <ha-entity-picker
           .hass=${this.hass}
@@ -2852,7 +9575,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
       </div>
     `}
 
-        ${showGroupVolume ? html`
+        ${showGroupVolume ? x`
           <div class="form-row">
             <ha-switch
               id="group-volume-toggle"
@@ -2861,7 +9584,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
             ></ha-switch>
             <label for="group-volume-toggle">Group Volume</label>
           </div>
-        ` : nothing}
+        ` : E}
 
         <div class="form-row form-row-multi-column">
           <div>
@@ -2876,7 +9599,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
           </div>
         </div>
 
-        ${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? html`
+        ${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? x`
               <div class="form-row">
                 <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
                   <ha-code-editor
@@ -2900,7 +9623,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
                   </div>
                 </div>
               </div>
-            ` : html`
+            ` : x`
               <div class="form-row">
                 <ha-entity-picker
                   .hass=${this.hass}
@@ -2920,7 +9643,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
               </div>
             `}
 
-        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id ? html`
+        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id ? x`
               <div class="form-row form-row-multi-column">
                 <div>
                   <ha-switch
@@ -2931,7 +9654,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
                   <label for="sync-power-toggle">Sync Power</label>
                 </div>
               </div>
-            ` : nothing}
+            ` : E}
 
         <div class="form-row form-row-multi-column">
           <div>
@@ -2944,7 +9667,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
           </div>
         </div>
 
-        ${entity !== null && entity !== void 0 && entity.follow_active_volume ? html`
+        ${entity !== null && entity !== void 0 && entity.follow_active_volume ? x`
           <div class="form-row">
             <div class="help-text">
               <ha-icon icon="mdi:information-outline"></ha-icon>
@@ -2953,14 +9676,14 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
              
             </div>
           </div>
-        ` : nothing}
+        ` : E}
         </div>
       `;
   }
   _renderActionEditor(action) {
     var _action$menu_item, _action$menu_item2;
     const actionMode = this._actionMode ?? (action !== null && action !== void 0 && (_action$menu_item = action.menu_item) !== null && _action$menu_item !== void 0 && _action$menu_item.trim() ? "menu" : "service");
-    return html`
+    return x`
         <div class="action-editor-header">
           <ha-icon
             class="icon-button"
@@ -3020,7 +9743,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
           ></ha-selector>
         </div>
         
-        ${actionMode === "menu" ? html`
+        ${actionMode === "menu" ? x`
           <div class="form-row">
             <ha-selector
               .hass=${this.hass}
@@ -3050,8 +9773,8 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
               @value-changed=${e => this._updateActionProperty("menu_item", e.detail.value || undefined)}
             ></ha-selector>
           </div>
-        ` : nothing} 
-        ${actionMode === 'service' ? html`
+        ` : E} 
+        ${actionMode === 'service' ? x`
           <div class="form-row">
             <ha-combo-box
               label="Service"
@@ -3065,7 +9788,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
             ></ha-combo-box>
           </div>
 
-          ${typeof action.service === "string" && action.service.startsWith("script.") ? html`
+          ${typeof action.service === "string" && action.service.startsWith("script.") ? x`
             <div class="form-row form-row-multi-column">
               <div>
                 <ha-switch
@@ -3076,9 +9799,9 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
                 <span>Script Variable (yamp_entity)</span>
               </div>
             </div>
-          ` : nothing}
+          ` : E}
 
-          ${action.service ? html`
+          ${action.service ? x`
             <div class="help-text">
               <ha-icon
                 icon="mdi:information-outline"
@@ -3130,7 +9853,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
                 autocomplete-icons
                 .hass=${this.hass}
                 mode="yaml"
-                .value=${action !== null && action !== void 0 && action.service_data ? yaml.dump(action.service_data) : ""}
+                .value=${action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : ""}
                 @value-changed=${e => {
       /* the yaml will be parsed in real time to detect errors, but we will defer 
         updating the config until the save button above the editor is clicked.
@@ -3138,7 +9861,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
       this._yamlDraft = e.detail.value;
       this._yamlModified = true;
       try {
-        const parsed = yaml.load(this._yamlDraft);
+        const parsed = jsYaml.load(this._yamlDraft);
         if (parsed && typeof parsed === "object") {
           this._yamlError = null;
         } else {
@@ -3149,10 +9872,10 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
       }
     }}
               ></ha-code-editor>
-              ${this._yamlError && this._yamlDraft.trim() !== "" ? html`<div class="yaml-error-message">${this._yamlError}</div>` : nothing}
+              ${this._yamlError && this._yamlDraft.trim() !== "" ? x`<div class="yaml-error-message">${this._yamlError}</div>` : E}
             </div>
-          ` : nothing}
-        ` : nothing}
+          ` : E}
+        ` : E}
       </div>`;
   }
   _onEntityChanged(index, newValue) {
@@ -3240,13 +9963,13 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
   }
   _saveYamlEditor() {
     try {
-      const parsed = yaml.load(this._yamlDraft);
+      const parsed = jsYaml.load(this._yamlDraft);
       if (!parsed || typeof parsed !== "object") {
         this._yamlError = "YAML is not a valid object.";
         return;
       }
       this._updateActionProperty("service_data", parsed);
-      this._yamlDraft = yaml.dump(parsed);
+      this._yamlDraft = jsYaml.dump(parsed);
       this._yamlError = null;
       this._parsedYaml = parsed;
     } catch (err) {
@@ -3258,7 +9981,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
     const editor = this.shadowRoot.querySelector("#service-data-editor");
     const currentAction = (_this$_config$actions3 = this._config.actions) === null || _this$_config$actions3 === void 0 ? void 0 : _this$_config$actions3[this._actionEditorIndex];
     if (!editor || !currentAction) return;
-    const yamlText = currentAction.service_data ? yaml.dump(currentAction.service_data) : "";
+    const yamlText = currentAction.service_data ? jsYaml.dump(currentAction.service_data) : "";
     editor.value = yamlText;
     this._yamlDraft = yamlText;
     this._yamlError = null;
@@ -3277,7 +10000,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
     }
     let serviceData;
     try {
-      serviceData = yaml.load(this._yamlDraft);
+      serviceData = jsYaml.load(this._yamlDraft);
       if (typeof serviceData !== "object" || serviceData === null) {
         console.error("Service data must be a valid object.");
         return;
@@ -3316,6 +10039,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
 }
 customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
 
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player-beta",
@@ -3323,7 +10047,7 @@ window.customCards.push({
   description: "YAMP is a multi-entity media card with custom actions",
   preview: true
 });
-class YetAnotherMediaPlayerCard extends LitElement {
+class YetAnotherMediaPlayerCard extends i$1 {
   _handleChipPointerDown(e, idx) {
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerDown(e, idx);
@@ -3458,6 +10182,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResults = [];
     this._searchError = "";
     this._searchTotalRows = 15; // minimum 15 rows for layout padding
+    // Cache search results by media type for better performance
+    this._searchResultsByType = {}; // { mediaType: results[] }
+    // Track the current search query for cache invalidation
+    this._currentSearchQuery = "";
+    // Search hierarchy tracking
+    this._searchHierarchy = []; // Array of {type: 'artist'|'album', name: string, query: string}
+    this._searchBreadcrumb = ""; // Display string for current search context
     // Per-chip linger map to keep MA entity selected briefly after pause
     this._playbackLingerByIdx = {};
     // Show search-in-sheet flag for entity options sheet
@@ -3673,6 +10404,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._searchSwipeAttached) return;
     const area = this.renderRoot.querySelector('.entity-options-search-results');
     if (!area) return;
+
+    // Disable swipe-to-filter when in a hierarchy (artist -> albums -> tracks)
+    if (this._searchHierarchy.length > 0) {
+      return;
+    }
     this._searchSwipeAttached = true;
     const threshold = 40; // px needed to trigger change
 
@@ -3690,13 +10426,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       const dx = endX - this._swipeStartX;
       if (Math.abs(dx) > threshold) {
-        const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
+        // Get all available media classes from cached results
+        const allClasses = new Set();
+        Object.values(this._searchResultsByType).forEach(results => {
+          results.forEach(item => {
+            if (item.media_class) allClasses.add(item.media_class);
+          });
+        });
+        const classes = Array.from(allClasses);
         const filterOrder = ['all', ...classes];
         const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
         const dir = dx < 0 ? 1 : -1; // swipe left -> next, right -> prev
         let nextIdx = (currIdx + dir + filterOrder.length) % filterOrder.length;
-        this._searchMediaClassFilter = filterOrder[nextIdx];
-        this.requestUpdate();
+        const nextFilter = filterOrder[nextIdx];
+        this._doSearch(nextFilter === 'all' ? null : nextFilter);
       }
       this._swipeStartX = null;
     };
@@ -3732,6 +10475,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchError = "";
     this._searchAttempted = false;
     this._searchLoading = false;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = artist; // Set current search query
+    this._searchHierarchy = []; // Clear search hierarchy
+    this._searchBreadcrumb = ""; // Clear breadcrumb
 
     // Render, then run search
     this.requestUpdate();
@@ -3744,7 +10491,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResults = [];
     this._searchQuery = "";
     this._searchAttempted = false;
+    this._searchResultsByType = {}; // Clear cache when opening new search
+    this._currentSearchQuery = ""; // Reset current search query
+    this._searchHierarchy = []; // Clear search hierarchy
+    this._searchBreadcrumb = ""; // Clear breadcrumb
+    this._usingMusicAssistant = false; // Track if we're using Music Assistant search
+    this._favoritesFilterActive = false; // Track if favorites filter is active
+    this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
     this.requestUpdate();
+
+    // Trigger search to load favorites when search sheet opens
+    setTimeout(() => {
+      this._doSearch();
+    }, 100);
 
     // Handle focus for expand on search
     const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
@@ -3770,6 +10529,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchQuery = "";
     this._searchLoading = false;
     this._searchAttempted = false;
+    this._searchResultsByType = {}; // Clear cache when closing
+    this._currentSearchQuery = ""; // Reset current search query
+    this._searchHierarchy = []; // Clear search hierarchy
+    this._searchBreadcrumb = ""; // Clear breadcrumb
     this.requestUpdate();
     // Force layout update for expand on search
     setTimeout(() => {
@@ -3790,11 +10553,33 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResults = [];
     this._searchQuery = "";
     this._searchLoading = false;
+    this._searchResultsByType = {}; // Clear cache when closing
+    this._currentSearchQuery = ""; // Reset current search query
+    this._searchHierarchy = []; // Clear search hierarchy
+    this._searchBreadcrumb = ""; // Clear breadcrumb
     this.requestUpdate();
   }
   async _doSearch() {
+    let mediaType = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    let searchParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     this._searchAttempted = true;
-    if (!this._searchQuery) return;
+
+    // Set the current filter
+    this._searchMediaClassFilter = mediaType || 'all';
+
+    // Check if search query has changed - if so, clear cache
+    if (this._currentSearchQuery !== this._searchQuery) {
+      this._searchResultsByType = {};
+      this._currentSearchQuery = this._searchQuery;
+    }
+
+    // Use cached results if available for this media type
+    const cacheKey = mediaType || 'all';
+    if (this._searchResultsByType[cacheKey]) {
+      this._searchResults = this._searchResultsByType[cacheKey];
+      this.requestUpdate();
+      return;
+    }
     this._searchLoading = true;
     this._searchError = "";
     this._searchResults = [];
@@ -3802,8 +10587,40 @@ class YetAnotherMediaPlayerCard extends LitElement {
     try {
       const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
       const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-      const arr = await searchMedia(this.hass, searchEntityId, this._searchQuery);
+      let searchResponse;
+
+      // If no search query or explicitly requesting favorites, load favorites
+      if (!this._searchQuery || this._searchQuery.trim() === '' || mediaType === 'favorites') {
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType);
+        // Mark that initial favorites have been loaded
+        if (!this._searchQuery || this._searchQuery.trim() === '') {
+          this._initialFavoritesLoaded = true;
+        }
+      } else {
+        // Perform search - reset initial favorites flag since this is a user search
+        this._initialFavoritesLoaded = false;
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams);
+      }
+
+      // Handle the new response format
+      const arr = searchResponse.results || [];
+      this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
+
+      // Only reset favorites filter if this is a completely new search (not just switching filters)
+      const isNewSearch = this._currentSearchQuery !== this._searchQuery;
+      if (isNewSearch) {
+        this._favoritesFilterActive = false;
+      }
       this._searchResults = Array.isArray(arr) ? arr : [];
+
+      // Apply favorites filter if it was active and we're using cached results (switching filters)
+      if (!isNewSearch && this._favoritesFilterActive) {
+        await this._applyFavoritesFilterIfActive();
+      }
+
+      // Cache the results for this media type
+      this._searchResultsByType[cacheKey] = this._searchResults;
+
       // remember how many rows exist in the full ("All") set, but keep at least 15 for layout
       const rows = Array.isArray(this._searchResults) ? this._searchResults.length : 0;
       this._searchTotalRows = Math.max(15, rows); // keep at least 15
@@ -3825,6 +10642,327 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._showSearchInSheet = false;
     }
     this._searchCloseSheet();
+  }
+
+  // Handle hierarchical search - search for albums by artist
+  async _searchArtistAlbums(artistName) {
+    this._searchHierarchy.push({
+      type: 'artist',
+      name: artistName,
+      query: this._searchQuery
+    });
+    this._searchBreadcrumb = `Albums by ${artistName}`;
+    this._searchQuery = artistName;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = artistName;
+    this._searchMediaClassFilter = 'album';
+
+    // Remove swipe handlers when entering hierarchy
+    this._removeSearchSwipeHandlers();
+
+    // Use Music Assistant search with artist name for albums
+    await this._doSearch('album');
+  }
+
+  // Handle hierarchical search - search for tracks by album
+  async _searchAlbumTracks(albumName, artistName) {
+    this._searchHierarchy.push({
+      type: 'album',
+      name: albumName,
+      query: this._searchQuery
+    });
+    this._searchBreadcrumb = `Tracks from ${albumName}`;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = albumName;
+    this._searchMediaClassFilter = 'track';
+
+    // Create a more specific search query that includes both artist and album
+    let searchQuery = albumName;
+    if (artistName) {
+      searchQuery = `${artistName} ${albumName}`;
+    }
+    this._searchQuery = searchQuery;
+
+    // Pass artist and album as search parameters for more precise results
+    const searchParams = {
+      album: albumName
+    };
+    if (artistName) {
+      searchParams.artist = artistName;
+    }
+
+    // Remove swipe handlers when entering hierarchy
+    this._removeSearchSwipeHandlers();
+
+    // Use Music Assistant search with specific parameters for tracks
+    await this._doSearch('track', searchParams);
+  }
+
+  // Handle hierarchical search - search for tracks in playlist
+  async _searchPlaylistTracks(playlistName) {
+    this._searchHierarchy.push({
+      type: 'playlist',
+      name: playlistName,
+      query: this._searchQuery
+    });
+    this._searchBreadcrumb = `Tracks in ${playlistName}`;
+    this._searchQuery = playlistName;
+    this._searchMediaClassFilter = 'track';
+
+    // For now, just search for tracks with the playlist name as a fallback
+    // This is not ideal but will work for some playlists
+
+    await this._doSearch('track');
+  }
+
+  // Go back in search hierarchy
+  _goBackInSearch() {
+    if (this._searchHierarchy.length === 0) return;
+    const previousLevel = this._searchHierarchy.pop();
+    this._searchQuery = previousLevel.query;
+    this._currentSearchQuery = previousLevel.query;
+    this._searchResultsByType = {}; // Clear cache for new search
+
+    if (this._searchHierarchy.length === 0) {
+      this._searchBreadcrumb = "";
+      this._searchMediaClassFilter = 'all';
+      this._doSearch();
+
+      // Re-attach swipe handlers when returning to top level
+      setTimeout(() => {
+        this._attachSearchSwipe();
+      }, 100);
+    } else {
+      const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
+      if (currentLevel.type === 'artist') {
+        this._searchBreadcrumb = `Albums by ${currentLevel.name}`;
+        this._searchMediaClassFilter = 'album';
+        this._doSearch('album', {
+          artist: currentLevel.name
+        });
+      } else if (currentLevel.type === 'album') {
+        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
+        this._searchMediaClassFilter = 'track';
+        // Get the artist name from the hierarchy if available
+        const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
+        const searchParams = {
+          album: currentLevel.name
+        };
+        if (artistLevel) {
+          searchParams.artist = artistLevel.name;
+        }
+        this._doSearch('track', searchParams);
+      } else if (currentLevel.type === 'playlist') {
+        this._searchBreadcrumb = `Tracks in ${currentLevel.name}`;
+        this._searchMediaClassFilter = 'track';
+        this._doSearch('track');
+      }
+    }
+  }
+
+  // Check if a search result is clickable for hierarchical navigation
+  _isClickableSearchResult(item) {
+    if (!item || !item.media_class) return false;
+
+    // Artist results are clickable when we're in the main search (to go to albums)
+    if (item.media_class === 'artist' && this._searchHierarchy.length === 0) {
+      return true;
+    }
+
+    // Album results are clickable when we're in the main search or viewing artist albums (to go to tracks)
+    if (item.media_class === 'album' && (this._searchHierarchy.length === 0 || this._searchHierarchy.length > 0 && this._searchHierarchy[this._searchHierarchy.length - 1].type === 'artist')) {
+      return true;
+    }
+
+    // Playlists are not clickable since track listing doesn't work properly
+    return false;
+  }
+
+  // Handle touch events to prevent accidental clicks during scrolling
+  _handleSearchResultTouch(item, event) {
+    // Only handle touch events on mobile
+    if (!('ontouchstart' in window)) {
+      return;
+    }
+    const touch = event.touches[0];
+    const startX = touch.clientX;
+    const startY = touch.clientY;
+    let hasMoved = false;
+    const moveThreshold = 10; // pixels
+
+    const handleTouchMove = moveEvent => {
+      const moveTouch = moveEvent.touches[0];
+      const deltaX = Math.abs(moveTouch.clientX - startX);
+      const deltaY = Math.abs(moveTouch.clientY - startY);
+      if (deltaX > moveThreshold || deltaY > moveThreshold) {
+        hasMoved = true;
+      }
+    };
+    const handleTouchEnd = endEvent => {
+      // Remove event listeners
+      document.removeEventListener('touchmove', handleTouchMove, {
+        passive: true
+      });
+      document.removeEventListener('touchend', handleTouchEnd, {
+        passive: true
+      });
+
+      // Only trigger click if finger didn't move significantly (not scrolling)
+      if (!hasMoved) {
+        this._handleSearchResultClick(item);
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('touchmove', handleTouchMove, {
+      passive: true
+    });
+    document.addEventListener('touchend', handleTouchEnd, {
+      passive: true
+    });
+  }
+
+  // Get the tooltip title for clickable search results
+  _getSearchResultClickTitle(item) {
+    if (!this._isClickableSearchResult(item)) return "";
+    if (item.media_class === 'artist') {
+      return `View albums by ${item.title}`;
+    } else if (item.media_class === 'album') {
+      return `View tracks from ${item.title}`;
+    } else if (item.media_class === 'playlist') {
+      return `View tracks in ${item.title}`;
+    }
+    return "";
+  }
+
+  // Toggle favorites filter on current search results
+  async _toggleFavoritesFilter() {
+    this._favoritesFilterActive = !this._favoritesFilterActive;
+    if (this._favoritesFilterActive) {
+      // Get favorites and filter current results
+      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+      try {
+        const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter);
+        const favorites = favoritesResponse.results || [];
+
+        // Create a set of favorite URIs for quick lookup
+        const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
+
+        // Filter current results to only show favorites
+        const currentResults = this._searchResults || [];
+        this._searchResults = currentResults.filter(item => favoriteUris.has(item.media_content_id));
+      } catch (error) {
+        // If favorites loading fails, just show current results
+        console.warn('Failed to load favorites for filtering:', error);
+      }
+    } else {
+      // Restore original results from cache
+      const cacheKey = this._searchMediaClassFilter || 'all';
+      this._searchResults = this._searchResultsByType[cacheKey] || [];
+    }
+    this.requestUpdate();
+  }
+
+  // Apply favorites filter to current results (called when switching filter chips)
+  async _applyFavoritesFilterIfActive() {
+    if (!this._favoritesFilterActive) return;
+    const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+    const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+    try {
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter);
+      const favorites = favoritesResponse.results || [];
+
+      // Create a set of favorite URIs for quick lookup
+      const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
+
+      // Filter current results to only show favorites
+      const currentResults = this._searchResults || [];
+      this._searchResults = currentResults.filter(item => favoriteUris.has(item.media_content_id));
+    } catch (error) {
+      // If favorites loading fails, just show current results
+      console.warn('Failed to load favorites for filtering:', error);
+    }
+  }
+
+  // Handle clicks on search result titles
+  async _handleSearchResultClick(item, event) {
+    if (!this._isClickableSearchResult(item)) return;
+
+    // If this is a touch device and we have a touch event, ignore the click
+    // (touch events are handled by _handleSearchResultTouch)
+    if ('ontouchstart' in window && event && event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents) {
+      return;
+    }
+    if (item.media_class === 'artist') {
+      await this._searchArtistAlbums(item.title);
+    } else if (item.media_class === 'album') {
+      // Get artist name from hierarchy if we're viewing artist albums, or from item metadata if available
+      let artistName = null;
+      if (this._searchHierarchy.length > 0 && this._searchHierarchy[this._searchHierarchy.length - 1].type === 'artist') {
+        artistName = this._searchHierarchy[this._searchHierarchy.length - 1].name;
+      } else if (item.artist) {
+        artistName = item.artist;
+      }
+      await this._searchAlbumTracks(item.title, artistName);
+    } else if (item.media_class === 'playlist') {
+      // Playlists are not clickable - just play the playlist directly
+      await this._playMediaFromSearch(item);
+    }
+  }
+
+  // Show playlist tracks - similar to how the sonos card shows queue
+  async _showPlaylistTracks(playlistItem) {
+    try {
+      // Add to search hierarchy
+      this._searchHierarchy.push({
+        type: 'playlist',
+        name: playlistItem.title,
+        query: this._searchQuery
+      });
+      this._searchBreadcrumb = `Tracks in ${playlistItem.title}`;
+
+      // Try to get playlist tracks using media_player.browse_media
+      if (playlistItem.media_content_id) {
+        var _browseRes$response;
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+        const browseMsg = {
+          type: "call_service",
+          domain: "media_player",
+          service: "browse_media",
+          service_data: {
+            entity_id: searchEntityId,
+            media_content_id: playlistItem.media_content_id
+          },
+          return_response: true
+        };
+        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
+        const browseResult = (browseRes === null || browseRes === void 0 || (_browseRes$response = browseRes.response) === null || _browseRes$response === void 0 || (_browseRes$response = _browseRes$response[searchEntityId]) === null || _browseRes$response === void 0 ? void 0 : _browseRes$response.result) || (browseRes === null || browseRes === void 0 ? void 0 : browseRes.result) || {};
+        const tracks = browseResult.children || [];
+        if (tracks.length > 0) {
+          // Set the tracks as search results
+          this._searchResults = tracks;
+          this._searchMediaClassFilter = 'track';
+          this._searchTotalRows = Math.max(15, tracks.length);
+          this.requestUpdate();
+          return;
+        }
+      }
+
+      // Fallback: show a message that playlist tracks aren't available
+
+      this._searchResults = [];
+      this._searchMediaClassFilter = 'track';
+      this._searchTotalRows = 15;
+      this.requestUpdate();
+    } catch (error) {
+      // Show empty results
+      this._searchResults = [];
+      this._searchMediaClassFilter = 'track';
+      this._searchTotalRows = 15;
+      this.requestUpdate();
+    }
   }
 
   // Notify Home Assistant to recalculate layout
@@ -4492,7 +11630,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._searchResults = [];
           this._searchQuery = "";
           this._searchAttempted = false;
+          this._searchResultsByType = {}; // Clear cache when opening new search
+          this._currentSearchQuery = ""; // Reset current search query
+          this._searchHierarchy = []; // Clear search hierarchy
+          this._searchBreadcrumb = ""; // Clear breadcrumb
           this.requestUpdate();
+
+          // Trigger search to load favorites when search sheet opens
+          setTimeout(() => {
+            this._doSearch();
+          }, 100);
 
           // Force layout update for expand on search
           setTimeout(() => {
@@ -5017,13 +12164,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
   render() {
     var _this$_optimisticPlay, _this$hass14, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache3, _this$_playbackLinger4, _this$hass15, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$currentVolumeSt3, _this$currentStateObj;
-    if (!this.hass || !this.config) return nothing;
+    if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
     const showChipRow = this.config.show_chip_row || "auto";
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj) return html`<div class="details">Entity not found.</div>`;
+    if (!stateObj) return x`<div class="details">Entity not found.</div>`;
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -5166,14 +12313,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       });
       this._lastArtworkUrl = artworkUrl;
     }
-    return html`
+    return x`
         <ha-card class="yamp-card" style="position:relative;">
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
             class="${shouldDimIdle ? 'dim-idle' : ''}"
           >
-            ${this.entityObjs.length > 1 || showChipRow === "always" ? html`
+            ${this.entityObjs.length > 1 || showChipRow === "always" ? x`
                 <div class="chip-row">
                   ${renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
@@ -5251,7 +12398,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
     })}
                 </div>
-            ` : nothing}
+            ` : E}
             ${renderActionChipRow({
       actions: this.config.actions,
       onActionChipClick: idx => this._onActionChipClick(idx)
@@ -5268,16 +12415,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
                 "
               ></div>
-              ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
-                ${collapsed && artworkUrl ? html`
+                ${collapsed && artworkUrl ? x`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
                     <img class="collapsed-artwork" src="${artworkUrl}" />
                   </div>
-                ` : nothing}
-                ${!collapsed ? html`<div class="card-artwork-spacer"></div>` : nothing}
-                ${!collapsed && !artworkUrl && !idleImageUrl ? html`
+                ` : E}
+                ${!collapsed ? x`<div class="card-artwork-spacer"></div>` : E}
+                ${!collapsed && !artworkUrl && !idleImageUrl ? x`
                   <div class="media-artwork-placeholder"
                     style="
                       position: absolute;
@@ -5296,12 +12443,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"/>
                     </svg>
                   </div>
-                ` : nothing}
+                ` : E}
                 <div class="details">
                   <div class="title">
                     ${isPlaying ? title : ""}
                   </div>
-                  ${isPlaying && artist ? html`
+                  ${isPlaying && artist ? x`
                     <div
                       class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
                       @click=${() => {
@@ -5309,7 +12456,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }}
                       title=${stateObj.attributes.media_artist ? "Search for this artist" : ""}
                     >${artist}</div>
-                  ` : nothing}
+                  ` : E}
                 </div>
                 ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
@@ -5323,13 +12470,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       collapsed: false,
       accent: this._customAccent,
       style: "visibility:hidden"
-    }) : nothing}
+    }) : E}
                 ${(collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
       accent: this._customAccent
-    }) : nothing}
-                ${!hideControlsNow ? html`
+    }) : E}
+                ${!hideControlsNow ? x`
                 ${renderControlsRow({
       stateObj: playbackStateObj,
       showStop: this._shouldShowStopButton(playbackStateObj),
@@ -5350,7 +12497,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       onVolumeChange: e => this._onVolumeChange(e),
       onVolumeStep: dir => this._onVolumeStep(dir),
       onMuteToggle: () => this._onMuteToggle(),
-      moreInfoMenu: html`
+      moreInfoMenu: x`
                     <div class="more-info-menu">
                       <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                         <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
@@ -5358,21 +12505,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     </div>
                   `
     })}
-                ` : nothing}
-                ${hideControlsNow ? html`
+                ` : E}
+                ${hideControlsNow ? x`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                     <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
                     </button>
                   </div>
-                ` : nothing}
+                ` : E}
               </div>
             </div>
           </div>
-          ${this._showEntityOptions ? html`
+          ${this._showEntityOptions ? x`
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
-              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities ? html`
+              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities ? x`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
                   <button class="entity-options-item" @click=${() => {
       const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
@@ -5387,9 +12534,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <button class="entity-options-item" @click=${() => {
       this._showSearchSheetInOptions();
     }}>Search</button>
-                  ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? html`
+                  ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
-                    ` : nothing}
+                    ` : E}
                   ${(() => {
       const totalEntities = this.entityIds.length;
       const groupableCount = this.entityIds.reduce((acc, id) => {
@@ -5432,15 +12579,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       const currGroupState = this.hass.states[currGroupId];
       if (totalEntities > 1 && groupableCount > 1 && this._supportsFeature(currGroupState, SUPPORT_GROUPING)) {
-        return html`
+        return x`
                           <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
                         `;
       }
-      return nothing;
+      return E;
     })()}
                   <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
                 </div>
-              ` : this._showResolvedEntities ? html`
+              ` : this._showResolvedEntities ? x`
                 <button class="entity-options-item" @click=${() => {
       this._showResolvedEntities = false;
       this.requestUpdate();
@@ -5467,7 +12614,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           role = "Volume Entity";
         }
       }
-      return html`
+      return x`
                         <button class="entity-options-item" @click=${() => {
         this._openMoreInfoForEntity(entityId);
         this._showEntityOptions = false;
@@ -5484,8 +12631,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     })}
                   </div>
                 </div>
-              ` : this._showSearchInSheet ? html`
+              ` : this._showSearchInSheet ? x`
                 <div class="entity-options-search" style="margin-top:12px;">
+                  ${this._searchBreadcrumb ? x`
+                    <div class="entity-options-search-breadcrumb">
+                      <button class="entity-options-item" @click=${() => this._goBackInSearch()} style="margin-bottom:8px;">&larr; Back</button>
+                      <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
+                    </div>
+                  ` : E}
                   <div class="entity-options-search-row">
                       <input
                         type="text"
@@ -5500,7 +12653,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         @keydown=${e => {
       if (e.key === "Enter") {
         e.preventDefault();
-        this._doSearch();
+        this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
       } else if (e.key === "Escape") {
         e.preventDefault();
         this._hideSearchSheetInOptions();
@@ -5512,8 +12665,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
-                      @click=${() => this._doSearch()}
-                      ?disabled=${this._searchLoading || !this._searchQuery}>
+                      @click=${() => {
+      this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
+    }}
+                      ?disabled=${this._searchLoading}>
                       Search
                     </button>
                     <button
@@ -5525,11 +12680,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                   <!-- FILTER CHIPS -->
                   ${(() => {
-      const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
+      // Get all available media classes from cached results
+      const allClasses = new Set();
+      Object.values(this._searchResultsByType).forEach(results => {
+        results.forEach(item => {
+          if (item.media_class) allClasses.add(item.media_class);
+        });
+      });
+      const classes = Array.from(allClasses);
       const filter = this._searchMediaClassFilter || "all";
-      if (classes.length < 2) return nothing;
-      return html`
-                      <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center;">
+
+      // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
+      if (this._searchHierarchy.length > 0) return E;
+
+      // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
+      if (classes.length < 2 && !this._usingMusicAssistant) return E;
+      return x`
+                      <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
                         <button
                           class="chip"
                           style="
@@ -5539,12 +12706,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             font-weight: ${filter === 'all' ? 'bold' : 'normal'};
                           "
                           ?selected=${filter === 'all'}
-                          @click=${() => {
-        this._searchMediaClassFilter = "all";
-        this.requestUpdate();
-      }}
+                          @click=${() => this._doSearch()}
                         >All</button>
-                        ${classes.map(c => html`
+                        ${classes.map(c => x`
                           <button
                             class="chip"
                             style="
@@ -5554,10 +12718,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                               font-weight: ${filter === c ? 'bold' : 'normal'};
                             "
                             ?selected=${filter === c}
-                            @click=${() => {
-        this._searchMediaClassFilter = c;
-        this.requestUpdate();
-      }}
+                            @click=${() => this._doSearch(c)}
                           >
                             ${c.charAt(0).toUpperCase() + c.slice(1)}
                           </button>
@@ -5565,20 +12726,47 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       </div>
                     `;
     })()}
-                  ${this._searchLoading ? html`<div class="entity-options-search-loading">Loading...</div>` : nothing}
-                  ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
+                  ${this._searchLoading ? x`<div class="entity-options-search-loading">Loading...</div>` : E}
+                  ${this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
+                  
+                  ${this._usingMusicAssistant && !this._searchLoading ? x`
+                    <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px;">
+                                              <button
+                          class="favorites-filter-btn"
+                          style="
+                            background: none;
+                            border: none;
+                            color: ${this._favoritesFilterActive ? '#ff6b6b' : '#999'};
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => this._toggleFavoritesFilter() : null}
+                          title=${this._searchAttempted ? this._favoritesFilterActive ? 'Show all results' : 'Show only favorites' : 'Showing favorites'}
+                        >
+                                                  <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
+                      </button>
+                      <span style="color: white; font-size: 0.9em;">
+                        ${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'Showing Favorites' : 'Filter Favorites'}
+                      </span>
+                    </div>
+                  ` : E}
+                  
                   <div class="entity-options-search-results">
                     ${(() => {
-      const filter = this._searchMediaClassFilter || "all";
-      const allResults = this._searchResults || [];
-      const filteredResults = filter === "all" ? allResults : allResults.filter(item => item.media_class === filter);
+      this._searchMediaClassFilter || "all";
+      const currentResults = this._searchResults || [];
       // Build padded array so row‑count stays constant
-      const totalRows = Math.max(15, this._searchTotalRows || allResults.length);
-      const paddedResults = [...filteredResults, ...Array.from({
-        length: Math.max(0, totalRows - filteredResults.length)
+      const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
+      const paddedResults = [...currentResults, ...Array.from({
+        length: Math.max(0, totalRows - currentResults.length)
       }, () => null)];
       // Always render paddedResults, even before first search
-      return this._searchAttempted && filteredResults.length === 0 && !this._searchLoading ? html`<div class="entity-options-search-empty">No results.</div>` : paddedResults.map(item => item ? html`
+      return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result">
                               <img
@@ -5588,7 +12776,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
                               />
                               <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-                                <span>${item.title}</span>
+                                <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
+                                      @touchstart=${e => this._handleSearchResultTouch(item, e)}
+                                      @click=${() => this._handleSearchResultClick(item)}
+                                      title=${this._getSearchResultClickTitle(item)}>
+                                  ${item.title}
+                                </span>
                                 <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
                                   ${item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : ""}
                                 </span>
@@ -5597,28 +12790,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 ▶
                               </button>
                             </div>
-                          ` : html`
+                          ` : x`
                             <!-- placeholder row keeps height -->
                             <div class="entity-options-search-result placeholder"></div>
                           `);
     })()}
                   </div>
                 </div>
-              ` : this._showGrouping ? html`
+              ` : this._showGrouping ? x`
                 <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">&larr; Back</button>
                 ${(_masterState$attribut => {
       const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
       const masterState = this.hass.states[masterGroupId];
       const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) && masterState.attributes.group_members.length > 0;
-      return html`
+      return x`
                       <div style="display:flex;align-items:center;justify-content:space-between;font-weight:600;margin-bottom:0;">
-                        ${groupedAny ? html`
+                        ${groupedAny ? x`
                           <button class="entity-options-item"
                             @click=${() => this._syncGroupVolume()}
                             style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 16px 2px 0;">
                             Sync Volume
                           </button>
-                        ` : html`<span></span>`}
+                        ` : x`<span></span>`}
                         <button class="entity-options-item"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
                           style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
@@ -5682,14 +12875,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const masterFirst = groupPlayerIds.find(item => item.id === masterId);
       const others = groupPlayerIds.filter(item => item.id !== masterId);
       const sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
-      return html`
+      return x`
                       <div class="group-list-scroll" style="overflow-y: auto; max-height: 340px;">
                         ${sortedGroupIds.map(item => {
         var _displayVolumeState$a;
         const id = item.id;
         const actualGroupId = item.groupId;
         const obj = this.entityObjs.find(e => e.entity_id === id);
-        if (!obj) return nothing;
+        if (!obj) return E;
         const name = this.getChipName(id);
 
         // Get the master's resolved MA entity for proper comparison
@@ -5717,7 +12910,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const displayVolumeState = this.hass.states[displayEntity];
         const isRemoteVol = displayEntity.startsWith && displayEntity.startsWith("remote.");
         const volVal = Number((displayVolumeState === null || displayVolumeState === void 0 || (_displayVolumeState$a = displayVolumeState.attributes) === null || _displayVolumeState$a === void 0 ? void 0 : _displayVolumeState$a.volume_level) || 0);
-        return html`
+        return x`
                             <div style="
                               display: flex;
                               align-items: center;
@@ -5733,12 +12926,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 white-space: nowrap;
                               ">${name}</span>
                               <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
-                                ${isRemoteVol ? html`
+                                ${isRemoteVol ? x`
                                         <div class="vol-stepper">
                                           <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
                                           <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
                                         </div>
-                                      ` : html`
+                                      ` : x`
                                         <input
                                           class="vol-slider"
                                           type="range"
@@ -5753,12 +12946,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                       `}
                                 <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                               </div>
-                              ${actualGroupId === masterGroupId ? html`
+                              ${actualGroupId === masterGroupId ? x`
                                       <button class="group-toggle-btn group-toggle-transparent"
                                               disabled
                                               aria-label="Master"
                                               style="margin-left:14px;"></button>
-                                    ` : html`
+                                    ` : x`
                                       <button class="group-toggle-btn"
                                               @click=${() => this._toggleGroup(id)}
                                               title=${grouped ? "Unjoin" : "Join"}
@@ -5773,11 +12966,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     `;
       // --- End new group player rows logic ---
     })()}
-              ` : html`
+              ` : x`
                 <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">&larr; Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
-                    ${sourceList.map(src => html`
+                    ${sourceList.map(src => x`
                       <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
                     `)}
                   </div>
@@ -5790,7 +12983,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const dist = Math.abs(hovered - i);
         if (dist === 0) scale = "max";else if (dist === 1) scale = "large";else if (dist === 2) scale = "med";
       }
-      return html`
+      return x`
                       <button
                         class="source-index-letter"
                         data-scale=${scale}
@@ -5812,7 +13005,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               `}
             </div>
           </div>
-        ` : nothing}
+        ` : E}
           ${this._searchOpen ? renderSearchSheet({
       open: this._searchOpen,
       query: this._searchQuery,
@@ -5824,9 +13017,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._searchQuery = e.target.value;
         this.requestUpdate();
       },
-      onSearch: () => this._doSearch(),
+      onSearch: () => this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter),
       onPlay: item => this._playMediaFromSearch(item)
-    }) : nothing}
+    }) : E}
         </ha-card>
       `;
   }

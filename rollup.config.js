@@ -14,7 +14,7 @@ export default {
       extensions: ['.js', '.mjs'],
     }),
     commonjs({
-      include: ['node_modules/js-yaml/**'],
+      include: ['node_modules/js-yaml/**', 'node_modules/sortablejs/**'],
       transformMixedEsModules: true,
     }),
     babel({
@@ -26,7 +26,8 @@ export default {
         'node_modules/lit-element/**/*',
         'node_modules/lit/**/*',
         'node_modules/@lit/**/*',
-        'node_modules/js-yaml/**/*'
+        'node_modules/js-yaml/**/*',
+        'node_modules/sortablejs/**/*'
       ],
       exclude: [],
     }),
