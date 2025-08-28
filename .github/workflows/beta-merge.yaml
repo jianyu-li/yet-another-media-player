@@ -34,8 +34,17 @@ jobs:
       - name: Fetch all branches
         run: git fetch origin
 
-      - name: Merge beta branch (no commit)
-        run: git merge origin/beta --no-commit --no-ff
+      - name: Reset to clean state and apply beta changes
+        run: |
+          # Reset to clean state
+          git reset --hard HEAD
+          # Create a temporary branch from beta
+          git checkout -b temp-beta origin/beta
+          # Copy all files from beta to main (excluding .git and .github)
+          git checkout main
+          git checkout temp-beta -- src/ package.json package-lock.json rollup.config.js babel.config.json || true
+          # Remove the temporary branch
+          git branch -D temp-beta
 
       - name: Remove -beta suffixes and update imports
         run: |
@@ -61,10 +70,11 @@ jobs:
       - name: Stage changes
         run: git add .
 
-      - name: Commit merge with beta suffix removal
+      - name: Commit beta changes with suffix removal
         run: |
-          git commit -m "Merge beta to main: Remove -beta suffixes and update imports
+          git commit -m "Apply beta changes to main: Remove -beta suffixes and update imports
 
+          - Applied beta branch changes to main
           - Removed -beta suffix from custom element type and definition
           - Converted CDN imports to local package imports
           - Updated all source files to use production naming"
