@@ -1,720 +1,8 @@
-/**
- * @license
- * Copyright 2019 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const t$1 = globalThis,
-  e$2 = t$1.ShadowRoot && (void 0 === t$1.ShadyCSS || t$1.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype,
-  s$2 = Symbol(),
-  o$3 = new WeakMap();
-let n$2 = class n {
-  constructor(t, e, o) {
-    if (this._$cssResult$ = true, o !== s$2) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
-    this.cssText = t, this.t = e;
-  }
-  get styleSheet() {
-    let t = this.o;
-    const s = this.t;
-    if (e$2 && void 0 === t) {
-      const e = void 0 !== s && 1 === s.length;
-      e && (t = o$3.get(s)), void 0 === t && ((this.o = t = new CSSStyleSheet()).replaceSync(this.cssText), e && o$3.set(s, t));
-    }
-    return t;
-  }
-  toString() {
-    return this.cssText;
-  }
-};
-const r$2 = t => new n$2("string" == typeof t ? t : t + "", void 0, s$2),
-  i$3 = function (t) {
-    for (var _len = arguments.length, e = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      e[_key - 1] = arguments[_key];
-    }
-    const o = 1 === t.length ? t[0] : e.reduce((e, s, o) => e + (t => {
-      if (true === t._$cssResult$) return t.cssText;
-      if ("number" == typeof t) return t;
-      throw Error("Value passed to 'css' function must be a 'css' function result: " + t + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
-    })(s) + t[o + 1], t[0]);
-    return new n$2(o, t, s$2);
-  },
-  S$1 = (s, o) => {
-    if (e$2) s.adoptedStyleSheets = o.map(t => t instanceof CSSStyleSheet ? t : t.styleSheet);else for (const e of o) {
-      const o = document.createElement("style"),
-        n = t$1.litNonce;
-      void 0 !== n && o.setAttribute("nonce", n), o.textContent = e.cssText, s.appendChild(o);
-    }
-  },
-  c$2 = e$2 ? t => t : t => t instanceof CSSStyleSheet ? (t => {
-    let e = "";
-    for (const s of t.cssRules) e += s.cssText;
-    return r$2(e);
-  })(t) : t;
+import { nothing, html, css, LitElement } from 'https://unpkg.com/lit-element@3.3.3/lit-element.js?module';
+import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
+import Sortable from 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm';
 
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const {
-    is: i$2,
-    defineProperty: e$1,
-    getOwnPropertyDescriptor: h$1,
-    getOwnPropertyNames: r$1,
-    getOwnPropertySymbols: o$2,
-    getPrototypeOf: n$1
-  } = Object,
-  a$1 = globalThis,
-  c$1 = a$1.trustedTypes,
-  l$1 = c$1 ? c$1.emptyScript : "",
-  p$1 = a$1.reactiveElementPolyfillSupport,
-  d$1 = (t, s) => t,
-  u$1 = {
-    toAttribute(t, s) {
-      switch (s) {
-        case Boolean:
-          t = t ? l$1 : null;
-          break;
-        case Object:
-        case Array:
-          t = null == t ? t : JSON.stringify(t);
-      }
-      return t;
-    },
-    fromAttribute(t, s) {
-      let i = t;
-      switch (s) {
-        case Boolean:
-          i = null !== t;
-          break;
-        case Number:
-          i = null === t ? null : Number(t);
-          break;
-        case Object:
-        case Array:
-          try {
-            i = JSON.parse(t);
-          } catch (t) {
-            i = null;
-          }
-      }
-      return i;
-    }
-  },
-  f$1 = (t, s) => !i$2(t, s),
-  b = {
-    attribute: true,
-    type: String,
-    converter: u$1,
-    reflect: false,
-    useDefault: false,
-    hasChanged: f$1
-  };
-Symbol.metadata ??= Symbol("metadata"), a$1.litPropertyMetadata ??= new WeakMap();
-let y$1 = class y extends HTMLElement {
-  static addInitializer(t) {
-    this._$Ei(), (this.l ??= []).push(t);
-  }
-  static get observedAttributes() {
-    return this.finalize(), this._$Eh && [...this._$Eh.keys()];
-  }
-  static createProperty(t) {
-    let s = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : b;
-    if (s.state && (s.attribute = false), this._$Ei(), this.prototype.hasOwnProperty(t) && ((s = Object.create(s)).wrapped = true), this.elementProperties.set(t, s), !s.noAccessor) {
-      const i = Symbol(),
-        h = this.getPropertyDescriptor(t, i, s);
-      void 0 !== h && e$1(this.prototype, t, h);
-    }
-  }
-  static getPropertyDescriptor(t, s, i) {
-    const {
-      get: e,
-      set: r
-    } = h$1(this.prototype, t) ?? {
-      get() {
-        return this[s];
-      },
-      set(t) {
-        this[s] = t;
-      }
-    };
-    return {
-      get: e,
-      set(s) {
-        const h = e === null || e === void 0 ? void 0 : e.call(this);
-        r !== null && r !== void 0 && r.call(this, s), this.requestUpdate(t, h, i);
-      },
-      configurable: true,
-      enumerable: true
-    };
-  }
-  static getPropertyOptions(t) {
-    return this.elementProperties.get(t) ?? b;
-  }
-  static _$Ei() {
-    if (this.hasOwnProperty(d$1("elementProperties"))) return;
-    const t = n$1(this);
-    t.finalize(), void 0 !== t.l && (this.l = [...t.l]), this.elementProperties = new Map(t.elementProperties);
-  }
-  static finalize() {
-    if (this.hasOwnProperty(d$1("finalized"))) return;
-    if (this.finalized = true, this._$Ei(), this.hasOwnProperty(d$1("properties"))) {
-      const t = this.properties,
-        s = [...r$1(t), ...o$2(t)];
-      for (const i of s) this.createProperty(i, t[i]);
-    }
-    const t = this[Symbol.metadata];
-    if (null !== t) {
-      const s = litPropertyMetadata.get(t);
-      if (void 0 !== s) for (const [t, i] of s) this.elementProperties.set(t, i);
-    }
-    this._$Eh = new Map();
-    for (const [t, s] of this.elementProperties) {
-      const i = this._$Eu(t, s);
-      void 0 !== i && this._$Eh.set(i, t);
-    }
-    this.elementStyles = this.finalizeStyles(this.styles);
-  }
-  static finalizeStyles(s) {
-    const i = [];
-    if (Array.isArray(s)) {
-      const e = new Set(s.flat(1 / 0).reverse());
-      for (const s of e) i.unshift(c$2(s));
-    } else void 0 !== s && i.push(c$2(s));
-    return i;
-  }
-  static _$Eu(t, s) {
-    const i = s.attribute;
-    return false === i ? void 0 : "string" == typeof i ? i : "string" == typeof t ? t.toLowerCase() : void 0;
-  }
-  constructor() {
-    super(), this._$Ep = void 0, this.isUpdatePending = false, this.hasUpdated = false, this._$Em = null, this._$Ev();
-  }
-  _$Ev() {
-    var _this$constructor$l;
-    this._$ES = new Promise(t => this.enableUpdating = t), this._$AL = new Map(), this._$E_(), this.requestUpdate(), (_this$constructor$l = this.constructor.l) === null || _this$constructor$l === void 0 ? void 0 : _this$constructor$l.forEach(t => t(this));
-  }
-  addController(t) {
-    var _t$hostConnected;
-    (this._$EO ??= new Set()).add(t), void 0 !== this.renderRoot && this.isConnected && ((_t$hostConnected = t.hostConnected) === null || _t$hostConnected === void 0 ? void 0 : _t$hostConnected.call(t));
-  }
-  removeController(t) {
-    var _this$_$EO;
-    (_this$_$EO = this._$EO) === null || _this$_$EO === void 0 || _this$_$EO.delete(t);
-  }
-  _$E_() {
-    const t = new Map(),
-      s = this.constructor.elementProperties;
-    for (const i of s.keys()) this.hasOwnProperty(i) && (t.set(i, this[i]), delete this[i]);
-    t.size > 0 && (this._$Ep = t);
-  }
-  createRenderRoot() {
-    const t = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return S$1(t, this.constructor.elementStyles), t;
-  }
-  connectedCallback() {
-    var _this$_$EO2;
-    this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(true), (_this$_$EO2 = this._$EO) === null || _this$_$EO2 === void 0 ? void 0 : _this$_$EO2.forEach(t => {
-      var _t$hostConnected2;
-      return (_t$hostConnected2 = t.hostConnected) === null || _t$hostConnected2 === void 0 ? void 0 : _t$hostConnected2.call(t);
-    });
-  }
-  enableUpdating(t) {}
-  disconnectedCallback() {
-    var _this$_$EO3;
-    (_this$_$EO3 = this._$EO) === null || _this$_$EO3 === void 0 || _this$_$EO3.forEach(t => {
-      var _t$hostDisconnected;
-      return (_t$hostDisconnected = t.hostDisconnected) === null || _t$hostDisconnected === void 0 ? void 0 : _t$hostDisconnected.call(t);
-    });
-  }
-  attributeChangedCallback(t, s, i) {
-    this._$AK(t, i);
-  }
-  _$ET(t, s) {
-    const i = this.constructor.elementProperties.get(t),
-      e = this.constructor._$Eu(t, i);
-    if (void 0 !== e && true === i.reflect) {
-      var _i$converter;
-      const h = (void 0 !== ((_i$converter = i.converter) === null || _i$converter === void 0 ? void 0 : _i$converter.toAttribute) ? i.converter : u$1).toAttribute(s, i.type);
-      this._$Em = t, null == h ? this.removeAttribute(e) : this.setAttribute(e, h), this._$Em = null;
-    }
-  }
-  _$AK(t, s) {
-    const i = this.constructor,
-      e = i._$Eh.get(t);
-    if (void 0 !== e && this._$Em !== e) {
-      var _t$converter, _this$_$Ej;
-      const t = i.getPropertyOptions(e),
-        h = "function" == typeof t.converter ? {
-          fromAttribute: t.converter
-        } : void 0 !== ((_t$converter = t.converter) === null || _t$converter === void 0 ? void 0 : _t$converter.fromAttribute) ? t.converter : u$1;
-      this._$Em = e, this[e] = h.fromAttribute(s, t.type) ?? ((_this$_$Ej = this._$Ej) === null || _this$_$Ej === void 0 ? void 0 : _this$_$Ej.get(e)) ?? null, this._$Em = null;
-    }
-  }
-  requestUpdate(t, s, i) {
-    if (void 0 !== t) {
-      var _this$_$Ej2;
-      const e = this.constructor,
-        h = this[t];
-      if (i ??= e.getPropertyOptions(t), !((i.hasChanged ?? f$1)(h, s) || i.useDefault && i.reflect && h === ((_this$_$Ej2 = this._$Ej) === null || _this$_$Ej2 === void 0 ? void 0 : _this$_$Ej2.get(t)) && !this.hasAttribute(e._$Eu(t, i)))) return;
-      this.C(t, s, i);
-    }
-    false === this.isUpdatePending && (this._$ES = this._$EP());
-  }
-  C(t, s, _ref, r) {
-    let {
-      useDefault: i,
-      reflect: e,
-      wrapped: h
-    } = _ref;
-    i && !(this._$Ej ??= new Map()).has(t) && (this._$Ej.set(t, r ?? s ?? this[t]), true !== h || void 0 !== r) || (this._$AL.has(t) || (this.hasUpdated || i || (s = void 0), this._$AL.set(t, s)), true === e && this._$Em !== t && (this._$Eq ??= new Set()).add(t));
-  }
-  async _$EP() {
-    this.isUpdatePending = true;
-    try {
-      await this._$ES;
-    } catch (t) {
-      Promise.reject(t);
-    }
-    const t = this.scheduleUpdate();
-    return null != t && (await t), !this.isUpdatePending;
-  }
-  scheduleUpdate() {
-    return this.performUpdate();
-  }
-  performUpdate() {
-    if (!this.isUpdatePending) return;
-    if (!this.hasUpdated) {
-      if (this.renderRoot ??= this.createRenderRoot(), this._$Ep) {
-        for (const [t, s] of this._$Ep) this[t] = s;
-        this._$Ep = void 0;
-      }
-      const t = this.constructor.elementProperties;
-      if (t.size > 0) for (const [s, i] of t) {
-        const {
-            wrapped: t
-          } = i,
-          e = this[s];
-        true !== t || this._$AL.has(s) || void 0 === e || this.C(s, void 0, i, e);
-      }
-    }
-    let t = false;
-    const s = this._$AL;
-    try {
-      var _this$_$EO4;
-      t = this.shouldUpdate(s), t ? (this.willUpdate(s), (_this$_$EO4 = this._$EO) !== null && _this$_$EO4 !== void 0 && _this$_$EO4.forEach(t => {
-        var _t$hostUpdate;
-        return (_t$hostUpdate = t.hostUpdate) === null || _t$hostUpdate === void 0 ? void 0 : _t$hostUpdate.call(t);
-      }), this.update(s)) : this._$EM();
-    } catch (s) {
-      throw t = false, this._$EM(), s;
-    }
-    t && this._$AE(s);
-  }
-  willUpdate(t) {}
-  _$AE(t) {
-    var _this$_$EO5;
-    (_this$_$EO5 = this._$EO) !== null && _this$_$EO5 !== void 0 && _this$_$EO5.forEach(t => {
-      var _t$hostUpdated;
-      return (_t$hostUpdated = t.hostUpdated) === null || _t$hostUpdated === void 0 ? void 0 : _t$hostUpdated.call(t);
-    }), this.hasUpdated || (this.hasUpdated = true, this.firstUpdated(t)), this.updated(t);
-  }
-  _$EM() {
-    this._$AL = new Map(), this.isUpdatePending = false;
-  }
-  get updateComplete() {
-    return this.getUpdateComplete();
-  }
-  getUpdateComplete() {
-    return this._$ES;
-  }
-  shouldUpdate(t) {
-    return true;
-  }
-  update(t) {
-    this._$Eq &&= this._$Eq.forEach(t => this._$ET(t, this[t])), this._$EM();
-  }
-  updated(t) {}
-  firstUpdated(t) {}
-};
-y$1.elementStyles = [], y$1.shadowRootOptions = {
-  mode: "open"
-}, y$1[d$1("elementProperties")] = new Map(), y$1[d$1("finalized")] = new Map(), p$1 !== null && p$1 !== void 0 && p$1({
-  ReactiveElement: y$1
-}), (a$1.reactiveElementVersions ??= []).push("2.1.0");
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const t = globalThis,
-  i$1 = t.trustedTypes,
-  s$1 = i$1 ? i$1.createPolicy("lit-html", {
-    createHTML: t => t
-  }) : void 0,
-  e = "$lit$",
-  h = `lit$${Math.random().toFixed(9).slice(2)}$`,
-  o$1 = "?" + h,
-  n = `<${o$1}>`,
-  r = document,
-  l = () => r.createComment(""),
-  c = t => null === t || "object" != typeof t && "function" != typeof t,
-  a = Array.isArray,
-  u = t => a(t) || "function" == typeof (t === null || t === void 0 ? void 0 : t[Symbol.iterator]),
-  d = "[ \t\n\f\r]",
-  f = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,
-  v = /-->/g,
-  _ = />/g,
-  m = RegExp(`>|${d}(?:([^\\s"'>=/]+)(${d}*=${d}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"),
-  p = /'/g,
-  g = /"/g,
-  $ = /^(?:script|style|textarea|title)$/i,
-  y = t => function (i) {
-    for (var _len = arguments.length, s = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      s[_key - 1] = arguments[_key];
-    }
-    return {
-      _$litType$: t,
-      strings: i,
-      values: s
-    };
-  },
-  x = y(1),
-  T = Symbol.for("lit-noChange"),
-  E = Symbol.for("lit-nothing"),
-  A = new WeakMap(),
-  C = r.createTreeWalker(r, 129);
-function P(t, i) {
-  if (!a(t) || !t.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return void 0 !== s$1 ? s$1.createHTML(i) : i;
-}
-const V = (t, i) => {
-  const s = t.length - 1,
-    o = [];
-  let r,
-    l = 2 === i ? "<svg>" : 3 === i ? "<math>" : "",
-    c = f;
-  for (let i = 0; i < s; i++) {
-    const s = t[i];
-    let a,
-      u,
-      d = -1,
-      y = 0;
-    for (; y < s.length && (c.lastIndex = y, u = c.exec(s), null !== u);) y = c.lastIndex, c === f ? "!--" === u[1] ? c = v : void 0 !== u[1] ? c = _ : void 0 !== u[2] ? ($.test(u[2]) && (r = RegExp("</" + u[2], "g")), c = m) : void 0 !== u[3] && (c = m) : c === m ? ">" === u[0] ? (c = r ?? f, d = -1) : void 0 === u[1] ? d = -2 : (d = c.lastIndex - u[2].length, a = u[1], c = void 0 === u[3] ? m : '"' === u[3] ? g : p) : c === g || c === p ? c = m : c === v || c === _ ? c = f : (c = m, r = void 0);
-    const x = c === m && t[i + 1].startsWith("/>") ? " " : "";
-    l += c === f ? s + n : d >= 0 ? (o.push(a), s.slice(0, d) + e + s.slice(d) + h + x) : s + h + (-2 === d ? i : x);
-  }
-  return [P(t, l + (t[s] || "<?>") + (2 === i ? "</svg>" : 3 === i ? "</math>" : "")), o];
-};
-class N {
-  constructor(_ref, n) {
-    let {
-      strings: t,
-      _$litType$: s
-    } = _ref;
-    let r;
-    this.parts = [];
-    let c = 0,
-      a = 0;
-    const u = t.length - 1,
-      d = this.parts,
-      [f, v] = V(t, s);
-    if (this.el = N.createElement(f, n), C.currentNode = this.el.content, 2 === s || 3 === s) {
-      const t = this.el.content.firstChild;
-      t.replaceWith(...t.childNodes);
-    }
-    for (; null !== (r = C.nextNode()) && d.length < u;) {
-      if (1 === r.nodeType) {
-        if (r.hasAttributes()) for (const t of r.getAttributeNames()) if (t.endsWith(e)) {
-          const i = v[a++],
-            s = r.getAttribute(t).split(h),
-            e = /([.?@])?(.*)/.exec(i);
-          d.push({
-            type: 1,
-            index: c,
-            name: e[2],
-            strings: s,
-            ctor: "." === e[1] ? H : "?" === e[1] ? I : "@" === e[1] ? L : k
-          }), r.removeAttribute(t);
-        } else t.startsWith(h) && (d.push({
-          type: 6,
-          index: c
-        }), r.removeAttribute(t));
-        if ($.test(r.tagName)) {
-          const t = r.textContent.split(h),
-            s = t.length - 1;
-          if (s > 0) {
-            r.textContent = i$1 ? i$1.emptyScript : "";
-            for (let i = 0; i < s; i++) r.append(t[i], l()), C.nextNode(), d.push({
-              type: 2,
-              index: ++c
-            });
-            r.append(t[s], l());
-          }
-        }
-      } else if (8 === r.nodeType) if (r.data === o$1) d.push({
-        type: 2,
-        index: c
-      });else {
-        let t = -1;
-        for (; -1 !== (t = r.data.indexOf(h, t + 1));) d.push({
-          type: 7,
-          index: c
-        }), t += h.length - 1;
-      }
-      c++;
-    }
-  }
-  static createElement(t, i) {
-    const s = r.createElement("template");
-    return s.innerHTML = t, s;
-  }
-}
-function S(t, i) {
-  var _s$_$Co, _h, _h2, _h2$_$AO;
-  let s = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : t;
-  let e = arguments.length > 3 ? arguments[3] : undefined;
-  if (i === T) return i;
-  let h = void 0 !== e ? (_s$_$Co = s._$Co) === null || _s$_$Co === void 0 ? void 0 : _s$_$Co[e] : s._$Cl;
-  const o = c(i) ? void 0 : i._$litDirective$;
-  return ((_h = h) === null || _h === void 0 ? void 0 : _h.constructor) !== o && ((_h2 = h) !== null && _h2 !== void 0 && (_h2$_$AO = _h2._$AO) !== null && _h2$_$AO !== void 0 && _h2$_$AO.call(_h2, false), void 0 === o ? h = void 0 : (h = new o(t), h._$AT(t, s, e)), void 0 !== e ? (s._$Co ??= [])[e] = h : s._$Cl = h), void 0 !== h && (i = S(t, h._$AS(t, i.values), h, e)), i;
-}
-class M {
-  constructor(t, i) {
-    this._$AV = [], this._$AN = void 0, this._$AD = t, this._$AM = i;
-  }
-  get parentNode() {
-    return this._$AM.parentNode;
-  }
-  get _$AU() {
-    return this._$AM._$AU;
-  }
-  u(t) {
-    const {
-        el: {
-          content: i
-        },
-        parts: s
-      } = this._$AD,
-      e = ((t === null || t === void 0 ? void 0 : t.creationScope) ?? r).importNode(i, true);
-    C.currentNode = e;
-    let h = C.nextNode(),
-      o = 0,
-      n = 0,
-      l = s[0];
-    for (; void 0 !== l;) {
-      var _l;
-      if (o === l.index) {
-        let i;
-        2 === l.type ? i = new R(h, h.nextSibling, this, t) : 1 === l.type ? i = new l.ctor(h, l.name, l.strings, this, t) : 6 === l.type && (i = new z(h, this, t)), this._$AV.push(i), l = s[++n];
-      }
-      o !== ((_l = l) === null || _l === void 0 ? void 0 : _l.index) && (h = C.nextNode(), o++);
-    }
-    return C.currentNode = r, e;
-  }
-  p(t) {
-    let i = 0;
-    for (const s of this._$AV) void 0 !== s && (void 0 !== s.strings ? (s._$AI(t, s, i), i += s.strings.length - 2) : s._$AI(t[i])), i++;
-  }
-}
-class R {
-  get _$AU() {
-    var _this$_$AM;
-    return ((_this$_$AM = this._$AM) === null || _this$_$AM === void 0 ? void 0 : _this$_$AM._$AU) ?? this._$Cv;
-  }
-  constructor(t, i, s, e) {
-    this.type = 2, this._$AH = E, this._$AN = void 0, this._$AA = t, this._$AB = i, this._$AM = s, this.options = e, this._$Cv = (e === null || e === void 0 ? void 0 : e.isConnected) ?? true;
-  }
-  get parentNode() {
-    var _t;
-    let t = this._$AA.parentNode;
-    const i = this._$AM;
-    return void 0 !== i && 11 === ((_t = t) === null || _t === void 0 ? void 0 : _t.nodeType) && (t = i.parentNode), t;
-  }
-  get startNode() {
-    return this._$AA;
-  }
-  get endNode() {
-    return this._$AB;
-  }
-  _$AI(t) {
-    let i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
-    t = S(this, t, i), c(t) ? t === E || null == t || "" === t ? (this._$AH !== E && this._$AR(), this._$AH = E) : t !== this._$AH && t !== T && this._(t) : void 0 !== t._$litType$ ? this.$(t) : void 0 !== t.nodeType ? this.T(t) : u(t) ? this.k(t) : this._(t);
-  }
-  O(t) {
-    return this._$AA.parentNode.insertBefore(t, this._$AB);
-  }
-  T(t) {
-    this._$AH !== t && (this._$AR(), this._$AH = this.O(t));
-  }
-  _(t) {
-    this._$AH !== E && c(this._$AH) ? this._$AA.nextSibling.data = t : this.T(r.createTextNode(t)), this._$AH = t;
-  }
-  $(t) {
-    var _this$_$AH;
-    const {
-        values: i,
-        _$litType$: s
-      } = t,
-      e = "number" == typeof s ? this._$AC(t) : (void 0 === s.el && (s.el = N.createElement(P(s.h, s.h[0]), this.options)), s);
-    if (((_this$_$AH = this._$AH) === null || _this$_$AH === void 0 ? void 0 : _this$_$AH._$AD) === e) this._$AH.p(i);else {
-      const t = new M(e, this),
-        s = t.u(this.options);
-      t.p(i), this.T(s), this._$AH = t;
-    }
-  }
-  _$AC(t) {
-    let i = A.get(t.strings);
-    return void 0 === i && A.set(t.strings, i = new N(t)), i;
-  }
-  k(t) {
-    a(this._$AH) || (this._$AH = [], this._$AR());
-    const i = this._$AH;
-    let s,
-      e = 0;
-    for (const h of t) e === i.length ? i.push(s = new R(this.O(l()), this.O(l()), this, this.options)) : s = i[e], s._$AI(h), e++;
-    e < i.length && (this._$AR(s && s._$AB.nextSibling, e), i.length = e);
-  }
-  _$AR() {
-    let t = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this._$AA.nextSibling;
-    let i = arguments.length > 1 ? arguments[1] : undefined;
-    for ((_this$_$AP = this._$AP) === null || _this$_$AP === void 0 ? void 0 : _this$_$AP.call(this, false, true, i); t && t !== this._$AB;) {
-      var _this$_$AP;
-      const i = t.nextSibling;
-      t.remove(), t = i;
-    }
-  }
-  setConnected(t) {
-    var _this$_$AP2;
-    void 0 === this._$AM && (this._$Cv = t, (_this$_$AP2 = this._$AP) === null || _this$_$AP2 === void 0 ? void 0 : _this$_$AP2.call(this, t));
-  }
-}
-class k {
-  get tagName() {
-    return this.element.tagName;
-  }
-  get _$AU() {
-    return this._$AM._$AU;
-  }
-  constructor(t, i, s, e, h) {
-    this.type = 1, this._$AH = E, this._$AN = void 0, this.element = t, this.name = i, this._$AM = e, this.options = h, s.length > 2 || "" !== s[0] || "" !== s[1] ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = E;
-  }
-  _$AI(t) {
-    let i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
-    let s = arguments.length > 2 ? arguments[2] : undefined;
-    let e = arguments.length > 3 ? arguments[3] : undefined;
-    const h = this.strings;
-    let o = false;
-    if (void 0 === h) t = S(this, t, i, 0), o = !c(t) || t !== this._$AH && t !== T, o && (this._$AH = t);else {
-      const e = t;
-      let n, r;
-      for (t = h[0], n = 0; n < h.length - 1; n++) r = S(this, e[s + n], i, n), r === T && (r = this._$AH[n]), o ||= !c(r) || r !== this._$AH[n], r === E ? t = E : t !== E && (t += (r ?? "") + h[n + 1]), this._$AH[n] = r;
-    }
-    o && !e && this.j(t);
-  }
-  j(t) {
-    t === E ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t ?? "");
-  }
-}
-class H extends k {
-  constructor() {
-    super(...arguments), this.type = 3;
-  }
-  j(t) {
-    this.element[this.name] = t === E ? void 0 : t;
-  }
-}
-class I extends k {
-  constructor() {
-    super(...arguments), this.type = 4;
-  }
-  j(t) {
-    this.element.toggleAttribute(this.name, !!t && t !== E);
-  }
-}
-class L extends k {
-  constructor(t, i, s, e, h) {
-    super(t, i, s, e, h), this.type = 5;
-  }
-  _$AI(t) {
-    let i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
-    if ((t = S(this, t, i, 0) ?? E) === T) return;
-    const s = this._$AH,
-      e = t === E && s !== E || t.capture !== s.capture || t.once !== s.once || t.passive !== s.passive,
-      h = t !== E && (s === E || e);
-    e && this.element.removeEventListener(this.name, this, s), h && this.element.addEventListener(this.name, this, t), this._$AH = t;
-  }
-  handleEvent(t) {
-    var _this$options;
-    "function" == typeof this._$AH ? this._$AH.call(((_this$options = this.options) === null || _this$options === void 0 ? void 0 : _this$options.host) ?? this.element, t) : this._$AH.handleEvent(t);
-  }
-}
-class z {
-  constructor(t, i, s) {
-    this.element = t, this.type = 6, this._$AN = void 0, this._$AM = i, this.options = s;
-  }
-  get _$AU() {
-    return this._$AM._$AU;
-  }
-  _$AI(t) {
-    S(this, t);
-  }
-}
-const j = t.litHtmlPolyfillSupport;
-j !== null && j !== void 0 && j(N, R), (t.litHtmlVersions ??= []).push("3.3.0");
-const B = (t, i, s) => {
-  const e = (s === null || s === void 0 ? void 0 : s.renderBefore) ?? i;
-  let h = e._$litPart$;
-  if (void 0 === h) {
-    const t = (s === null || s === void 0 ? void 0 : s.renderBefore) ?? null;
-    e._$litPart$ = h = new R(i.insertBefore(l(), t), t, void 0, s ?? {});
-  }
-  return h._$AI(t), h;
-};
-
-var _s$litElementHydrateS;
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const s = globalThis;
-class i extends y$1 {
-  constructor() {
-    super(...arguments), this.renderOptions = {
-      host: this
-    }, this._$Do = void 0;
-  }
-  createRenderRoot() {
-    const t = super.createRenderRoot();
-    return this.renderOptions.renderBefore ??= t.firstChild, t;
-  }
-  update(t) {
-    const r = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t), this._$Do = B(r, this.renderRoot, this.renderOptions);
-  }
-  connectedCallback() {
-    var _this$_$Do;
-    super.connectedCallback(), (_this$_$Do = this._$Do) === null || _this$_$Do === void 0 ? void 0 : _this$_$Do.setConnected(true);
-  }
-  disconnectedCallback() {
-    var _this$_$Do2;
-    super.disconnectedCallback(), (_this$_$Do2 = this._$Do) === null || _this$_$Do2 === void 0 ? void 0 : _this$_$Do2.setConnected(false);
-  }
-  render() {
-    return T;
-  }
-}
-i._$litElement$ = true, i["finalized"] = true, (_s$litElementHydrateS = s.litElementHydrateSupport) === null || _s$litElementHydrateS === void 0 ? void 0 : _s$litElementHydrateS.call(s, {
-  LitElement: i
-});
-const o = s.litElementPolyfillSupport;
-o === null || o === void 0 || o({
-  LitElement: i
-});
-(s.litElementVersions ??= []).push("4.2.0");
-
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import { html, nothing } from "lit";
 
 // Helper to render a single chip
 function renderChip(_ref) {
@@ -726,16 +14,18 @@ function renderChip(_ref) {
     art,
     icon,
     pinned,
+    maActive,
     onChipClick,
     onPinClick,
     onPointerDown,
     onPointerMove,
     onPointerUp
   } = _ref;
-  return x`
+  return html`
     <button class="chip"
             ?selected=${selected}
             ?playing=${playing}
+            ?ma-active=${maActive}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
@@ -743,31 +33,33 @@ function renderChip(_ref) {
             @pointerleave=${onPointerUp}
             style="display:flex;align-items:center;justify-content:space-between;">
       <span class="chip-icon">
-        ${art ? x`<img class="chip-mini-art" src="${art}" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+        ${art ? html`<img class="chip-mini-art" src="${art}" />` : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
       </span>
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${name}
       </span>
-      ${pinned ? x`
+      ${pinned ? html`
             <span class="chip-pin-inside" @click=${e => {
     e.stopPropagation();
     onPinClick(idx, e);
   }} title="Unpin">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
-          ` : x`<span class="chip-pin-spacer"></span>`}
+          ` : html`<span class="chip-pin-spacer"></span>`}
     </button>
   `;
 }
 
-// Helper to render a group chip (simplified)
+// Helper to render a group chip: same as chip but with label (with count), no badge/icon for group, just art/icon and label.
 function renderGroupChip(_ref2) {
   let {
     idx,
     selected,
     groupName,
+    art,
     icon,
     pinned,
+    maActive,
     onChipClick,
     onIconClick,
     onPinClick,
@@ -775,37 +67,52 @@ function renderGroupChip(_ref2) {
     onPointerMove,
     onPointerUp
   } = _ref2;
-  return x`
+  return html`
     <button class="chip group"
             ?selected=${selected}
+            ?ma-active=${maActive}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
-            @pointerleave=${onPointerUp}>
-      <span class="chip-icon">
-        ${x`<ha-icon
-                      .icon=${icon}
-                      style="font-size:28px;"
+            @pointerleave=${onPointerUp}
+            style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="chip-icon"
+            style="cursor:pointer;"
+            @click=${e => {
+    e.stopPropagation();
+    if (onIconClick) {
+      onIconClick(idx, e);
+    }
+  }}>
+        ${art ? html`<img class="chip-mini-art"
+                      src="${art}"
+                      style="cursor:pointer;"
                       @click=${e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
-    } else {
-      onChipClick(idx);
     }
-  }}
-                    ></ha-icon>`}
+  }}/>` : html`<ha-icon .icon=${icon}
+                          style="font-size:28px;cursor:pointer;"
+                          @click=${e => {
+    e.stopPropagation();
+    if (onIconClick) {
+      onIconClick(idx, e);
+    }
+  }}></ha-icon>`}
       </span>
-      <span class="chip-label">${groupName}</span>
-      ${pinned ? x`
+      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+        ${groupName}
+      </span>
+      ${pinned ? html`
             <span class="chip-pin-inside" @click=${e => {
     e.stopPropagation();
     onPinClick(idx, e);
   }} title="Unpin">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
-          ` : x`<span class="chip-pin-spacer"></span>`}
+          ` : html`<span class="chip-pin-spacer"></span>`}
     </button>
   `;
 }
@@ -861,49 +168,59 @@ function renderChipRow(_ref4) {
     entityIds,
     selectedEntityId,
     pinnedIndex,
+    holdToPin,
     getChipName,
     getActualGroupMaster,
+    getIsChipPlaying,
+    getChipArt,
+    getIsMaActive,
     isIdle,
     hass,
     onChipClick,
+    onIconClick,
     onPinClick,
     onPointerDown,
     onPointerMove,
     onPointerUp
   } = _ref4;
-  if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return E;
-  return x`
+  if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return nothing;
+  return html`
     ${groupedSortedEntityIds.map(group => {
     // If it's a group (more than one entity)
     if (group.length > 1) {
-      var _hass$states;
+      var _hass$states, _state$attributes, _state$attributes2, _state$attributes3;
       const id = getActualGroupMaster(group);
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states = hass.states) === null || _hass$states === void 0 ? void 0 : _hass$states[id];
-      // Art is null for group chip; determine if playing for chip highlight
-      selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+      const art = typeof getChipArt === "function" ? getChipArt(id) : (state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art) || null;
+      const icon = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.icon) || "mdi:cast";
+      const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
       return renderGroupChip({
         idx,
         selected: selectedEntityId === id,
-        groupName: getChipName(id),
-        icon: "mdi:group",
-        // Or use a more specific group icon if needed
+        groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
+        art,
+        icon,
         pinned: pinnedIndex === idx,
+        maActive: isMaActive,
         onChipClick,
+        onIconClick,
         onPinClick,
         onPointerDown: e => onPointerDown(e, idx),
         onPointerMove: e => onPointerMove(e, idx),
         onPointerUp: e => onPointerUp(e, idx)
       });
     } else {
-      var _hass$states2, _state$attributes, _state$attributes2, _state$attributes3, _state$attributes4, _state$attributes5;
+      var _hass$states2, _state$attributes4, _state$attributes5, _state$attributes6;
       // Single chip
       const id = group[0];
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states2 = hass.states) === null || _hass$states2 === void 0 ? void 0 : _hass$states2[id];
-      const isChipPlaying = selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
-      const art = selectedEntityId === id ? !isIdle && ((state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art)) : (state === null || state === void 0 ? void 0 : state.state) === "playing" && ((state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.entity_picture) || (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.album_art));
-      const icon = (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.icon) || "mdi:cast";
+      const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+      const artSource = typeof getChipArt === "function" ? getChipArt(id) : (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.entity_picture) || (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.album_art) || null;
+      const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
+      const icon = (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.icon) || "mdi:cast";
+      const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
       return renderChip({
         idx,
         selected: selectedEntityId === id,
@@ -912,6 +229,7 @@ function renderChipRow(_ref4) {
         art,
         icon,
         pinned: pinnedIndex === idx,
+        maActive: isMaActive,
         onChipClick,
         onPinClick,
         onPointerDown: e => onPointerDown(e, idx),
@@ -923,23 +241,29 @@ function renderChipRow(_ref4) {
   `;
 }
 
+// action-chip-row.js
+// import { html, nothing } from "lit";
+
 function renderActionChipRow(_ref) {
   let {
     actions,
     onActionChipClick
   } = _ref;
-  if (!(actions !== null && actions !== void 0 && actions.length)) return E;
-  return x`
+  if (!(actions !== null && actions !== void 0 && actions.length)) return nothing;
+  return html`
     <div class="action-chip-row">
-      ${actions.map((a, idx) => x`
+      ${actions.map((a, idx) => html`
           <button class="action-chip" @click=${() => onActionChipClick(idx)}>
-            ${a.icon ? x`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : E}
+            ${a.icon ? html`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : nothing}
             ${a.name || ""}
           </button>
         `)}
     </div>
   `;
 }
+
+// controls-row.js
+// import { html, nothing } from "lit";
 
 function renderControlsRow(_ref) {
   let {
@@ -950,7 +274,7 @@ function renderControlsRow(_ref) {
     onControlClick,
     supportsFeature
   } = _ref;
-  if (!stateObj) return E;
+  if (!stateObj) return nothing;
   const SUPPORT_PAUSE = 1;
   const SUPPORT_PREVIOUS_TRACK = 16;
   const SUPPORT_NEXT_TRACK = 32;
@@ -959,39 +283,39 @@ function renderControlsRow(_ref) {
   const SUPPORT_TURN_ON = 128;
   const SUPPORT_TURN_OFF = 256;
   const SUPPORT_PLAY = 16384;
-  return x`
+  return html`
     <div class="controls-row">
-      ${supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
+      ${supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
         <button class="button" @click=${() => onControlClick("prev")} title="Previous">
           <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
         </button>
-      ` : E}
-      ${supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY) ? x`
+      ` : nothing}
+      ${supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY) ? html`
         <button class="button" @click=${() => onControlClick("play_pause")} title="Play/Pause">
           <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
         </button>
-      ` : E}
-      ${showStop ? x`
+      ` : nothing}
+      ${showStop ? html`
         <button class="button" @click=${() => onControlClick("stop")} title="Stop">
           <ha-icon .icon=${"mdi:stop"}></ha-icon>
         </button>
-      ` : E}
-      ${supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
+      ` : nothing}
+      ${supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? html`
         <button class="button" @click=${() => onControlClick("next")} title="Next">
           <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
         </button>
-      ` : E}
-      ${supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
+      ` : nothing}
+      ${supportsFeature(stateObj, SUPPORT_SHUFFLE) ? html`
         <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="Shuffle">
           <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
         </button>
-      ` : E}
-      ${supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
+      ` : nothing}
+      ${supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? html`
         <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
           <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
         </button>
-      ` : E}
-      ${supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON) ? x`
+      ` : nothing}
+      ${supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON) ? html`
             <button
               class="button${stateObj.state !== "off" ? " active" : ""}"
               @click=${() => onControlClick("power")}
@@ -999,45 +323,89 @@ function renderControlsRow(_ref) {
             >
               <ha-icon .icon=${"mdi:power"}></ha-icon>
             </button>
-          ` : E}
+          ` : nothing}
     </div>
   `;
 }
+
+// Export a small helper used by the card for layout decisions
+function countMainControls(stateObj, supportsFeature) {
+  const SUPPORT_PREVIOUS_TRACK = 16;
+  const SUPPORT_NEXT_TRACK = 32;
+  const SUPPORT_SHUFFLE = 32768;
+  const SUPPORT_REPEAT_SET = 262144;
+  const SUPPORT_TURN_ON = 128;
+  const SUPPORT_TURN_OFF = 256;
+  let count = 0;
+  if (supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
+  count++; // play/pause button always present if row exists
+  if (supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
+  if (supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
+  if (supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
+  if (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
+  return count;
+}
+
+// volume-row.js
+// import { html, nothing } from "lit";
 
 function renderVolumeRow(_ref) {
   let {
     isRemoteVolumeEntity,
     showSlider,
     vol,
+    isMuted,
+    supportsMute,
     onVolumeDragStart,
     onVolumeDragEnd,
     onVolumeChange,
     onVolumeStep,
+    onMuteToggle,
     moreInfoMenu
   } = _ref;
-  return x`
+  // Determine volume icon based on volume level and mute state
+  const getVolumeIcon = (volume, muted) => {
+    // For entities that don't support mute, consider them muted when volume is 0
+    const effectiveMuted = supportsMute ? muted : volume === 0;
+    if (effectiveMuted || volume === 0) return "mdi:volume-off";
+    if (volume < 0.2) return "mdi:volume-low";
+    if (volume < 0.5) return "mdi:volume-medium";
+    return "mdi:volume-high";
+  };
+  return html`
     <div class="volume-row">
-      ${isRemoteVolumeEntity ? x`
+      ${isRemoteVolumeEntity ? html`
             <div class="vol-stepper">
               <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
               <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
             </div>
-          ` : showSlider ? x`
-            <input
-              class="vol-slider"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              .value=${vol}
-              @mousedown=${onVolumeDragStart}
-              @touchstart=${onVolumeDragStart}
-              @change=${onVolumeChange}
-              @mouseup=${onVolumeDragEnd}
-              @touchend=${onVolumeDragEnd}
-              title="Volume"
-            />
-          ` : x`
+          ` : showSlider ? html`
+            <div class="volume-controls">
+              <button 
+                class="volume-icon-btn" 
+                @click=${onMuteToggle} 
+                title=${(supportsMute ? isMuted : vol === 0) ? "Unmute" : "Mute"}
+              >
+                <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
+              </button>
+              <div class="volume-slider-container">
+                <input
+                  class="vol-slider"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  .value=${vol}
+                  @mousedown=${onVolumeDragStart}
+                  @touchstart=${onVolumeDragStart}
+                  @change=${onVolumeChange}
+                  @mouseup=${onVolumeDragEnd}
+                  @touchend=${onVolumeDragEnd}
+                  title="Volume"
+                />
+              </div>
+            </div>
+          ` : html`
             <div class="vol-stepper">
               <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
               <span>${Math.round(vol * 100)}%</span>
@@ -1048,6 +416,9 @@ function renderVolumeRow(_ref) {
     </div>
   `;
 }
+
+// progress-bar.js
+// import { html, nothing } from "lit";
 
 function renderProgressBar(_ref) {
   let {
@@ -1063,14 +434,14 @@ function renderProgressBar(_ref) {
   const barColor = accent || "var(--custom-accent, #ff9800)";
   // Collapsed bar is typically smaller and positioned differently
   if (collapsed) {
-    return x`
+    return html`
       <div
         class="collapsed-progress-bar"
         style="width: ${progress * 100}%; background: ${barColor}; height: 4px; ${style}"
       ></div>
     `;
   }
-  return x`
+  return html`
     <div class="progress-bar-container">
       <div
         class="progress-bar"
@@ -1087,20 +458,70 @@ function renderProgressBar(_ref) {
   `;
 }
 
-const yampCardStyles = i$3`
+// yamp-card-styles.js
+// import { css } from "lit";
+
+const yampCardStyles = css`
+  /* CSS Custom Properties for consistency */
+  :host {
+    --custom-accent: var(--accent-color, #ff9800);
+    --card-bg: var(--card-background-color, #222);
+    --primary-text: var(--primary-text-color, #fff);
+    --secondary-text: var(--secondary-text-color, #aaa);
+    --chip-bg: var(--chip-background, #333);
+    --transition-fast: 0.13s;
+    --transition-normal: 0.2s;
+    --transition-slow: 0.4s;
+    --border-radius: 16px;
+    --chip-border-radius: 24px;
+    --button-border-radius: 8px;
+    --shadow-light: 0 2px 8px rgba(0,0,0,0.13);
+    --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);
+    --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
+  }
+
+  :host([data-match-theme="false"]) {
+    --custom-accent: #ff9800;
+  }
+
+  /* Base card styles - set once, inherit everywhere */
+  :host {
+    display: block;
+    border-radius: var(--border-radius);
+    box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
+    background: var(--card-bg);
+    color: var(--primary-text);
+    transition: background var(--transition-normal);
+    overflow: hidden;
+  }
+
+  ha-card.yamp-card {
+    display: block;
+    border-radius: var(--border-radius);
+    box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
+    background: var(--card-bg);
+    color: var(--primary-text);
+    transition: background var(--transition-normal);
+    overflow: hidden;
+  }
+
+  /* Idle state dimming */
   .dim-idle .details,
   .dim-idle .controls-row,
   .dim-idle .volume-row,
   .dim-idle .chip-row,
   .dim-idle .action-chip-row {
-    opacity: 0.28 !important;
+    opacity: 0.28;
     transition: opacity 0.5s;
   }
+
+  /* More info menu */
   .more-info-menu {
     display: flex;
     align-items: center;
-    margin-right: 0px;
+    margin-right: 0;
   }
+
   .more-info-btn {
     display: flex;
     align-items: center;
@@ -1111,11 +532,12 @@ const yampCardStyles = i$3`
     margin: 0 4px;
     background: none;
     border: none;
-    color: var(--primary-text-color, #fff);
+    color: var(--primary-text);
     font: inherit;
     cursor: pointer;
     outline: none;
   }
+
   .more-info-btn ha-icon {
     display: flex;
     align-items: center;
@@ -1126,24 +548,20 @@ const yampCardStyles = i$3`
     line-height: 1;
     vertical-align: middle;
     position: relative;
-    margin: 0;
-    margin-bottom: 2px;
-    color: #fff !important;
+    margin: 0 0 2px 0;
+    color: #fff;
   }
-    :host {
-      --custom-accent: var(--accent-color, #ff9800);
-    }
-    :host([data-match-theme="false"]) {
-      --custom-accent: #ff9800;
-    }
+
+  /* Card artwork spacer */
   .card-artwork-spacer {
     width: 100%;
-    flex: 1 1 0;          /* grow *and* shrink with the card height */
-    height: auto;         /* let the browser compute height */
-    min-height: 180px;        /* allow the spacer to collapse on tiny cards */
-   
+    flex: 1 1 0;
+    height: auto;
+    min-height: 180px;
     pointer-events: none;
   }
+
+  /* Media background */
   .media-bg-full {
     position: absolute;
     inset: 0;
@@ -1155,6 +573,7 @@ const yampCardStyles = i$3`
     background-repeat: no-repeat;
     pointer-events: none;
   }
+
   .media-bg-dim {
     position: absolute;
     inset: 0;
@@ -1164,6 +583,8 @@ const yampCardStyles = i$3`
     z-index: 1;
     pointer-events: none;
   }
+
+  /* Source menu */
   .source-menu {
     position: relative;
     display: flex;
@@ -1172,10 +593,11 @@ const yampCardStyles = i$3`
     padding: 0;
     margin: 0;
   }
+
   .source-menu-btn {
     background: none;
     border: none;
-    color: var(--primary-text-color, #fff);
+    color: var(--primary-text);
     font: inherit;
     cursor: pointer;
     display: flex;
@@ -1185,21 +607,23 @@ const yampCardStyles = i$3`
     font-size: 1em;
     outline: none;
   }
+
   .source-selected {
     min-width: 64px;
     font-weight: 500;
     padding-right: 4px;
     text-align: left;
   }
+
   .source-dropdown {
     position: absolute;
     top: 32px;
     right: 0;
     left: auto;
-    background: var(--card-background-color, #222);
-    color: var(--primary-text-color, #fff);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+    background: var(--card-bg);
+    color: var(--primary-text);
+    border-radius: var(--button-border-radius);
+    box-shadow: var(--shadow-light);
     min-width: 110px;
     z-index: 11;
     margin-top: 2px;
@@ -1212,57 +636,41 @@ const yampCardStyles = i$3`
   .source-dropdown.up {
     top: auto;
     bottom: 38px;
-    border-radius: 8px 8px 8px 8px;
-  }  
+    border-radius: var(--button-border-radius);
+  }
 
   .source-option {
     padding: 8px 16px;
     cursor: pointer;
-    transition: background 0.13s;
+    transition: background var(--transition-fast);
     white-space: nowrap;
   }
-  .source-option:hover, .source-option:focus {
+
+  .source-option:hover,
+  .source-option:focus {
     background: var(--accent-color, #1976d2);
     color: #fff;
   }
 
-    :host {
-      display: block;
-      border-radius: 16px;
-      box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
-      background: var(--card-background-color, #222);
-      color: var(--primary-text-color, #fff);
-      transition: background 0.2s;
-      overflow: hidden;
-    }
+  .source-row {
+    display: flex;
+    align-items: center;
+    padding: 0 16px 8px 16px;
+    margin-top: 8px;
+  }
 
-    ha-card.yamp-card {
-      display: block;
-      border-radius: 16px;
-      box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
-      background: var(--card-background-color, #222);
-      color: var(--primary-text-color, #fff);
-      transition: background 0.2s;
-      overflow: hidden;
-    }
+  .source-select {
+    font-size: 1em;
+    padding: 4px 10px;
+    border-radius: var(--button-border-radius);
+    border: 1px solid #ccc;
+    background: var(--card-bg);
+    color: var(--primary-text);
+    outline: none;
+    margin-top: 2px;
+  }
 
-    .source-row {
-      display: flex;
-      align-items: center;
-      padding: 0 16px 8px 16px;
-      margin-top: 8px;
-    }
-    .source-select {
-      font-size: 1em;
-      padding: 4px 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      background: var(--card-background-color, #222);
-      color: var(--primary-text-color, #fff);
-      outline: none;
-      margin-top: 2px;
-    }
-
+  /* Chip styles */
   .chip-icon {
     display: flex;
     align-items: center;
@@ -1270,34 +678,37 @@ const yampCardStyles = i$3`
     width: 28px;
     height: 28px;
     margin-right: 8px;
-    background: #fff;
+    background: transparent;
     border-radius: 50%;
     overflow: hidden;
-    padding: 0; /* Remove padding */
+    padding: 0;
   }
-  .chip:not([selected]):not([playing]) .chip-icon {
-    background: transparent !important;
+
+  .chip[playing] .chip-icon {
+    background: #fff;
   }
-  .chip:not([selected]) .chip-icon ha-icon {
-    color: var(--custom-accent) !important; /* Orange for unselected chips */
-  }
-  .chip[selected]:not([playing]) .chip-icon {
-    background: transparent !important;
-  }
-  .chip[selected]:not([playing]) .chip-icon ha-icon {
-    color: #fff !important;
-  }
+
   .chip-icon ha-icon {
     width: 100%;
     height: 100%;
-    font-size: 28px !important;
+    font-size: 28px;
     line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0;
     padding: 0;
+    color: var(--custom-accent);
   }
+
+  .chip[selected] .chip-icon ha-icon {
+    color: #fff;
+  }
+
+  .chip:hover .chip-icon ha-icon {
+    color: #fff;
+  }
+
   .chip-mini-art {
     width: 28px;
     height: 28px;
@@ -1306,17 +717,21 @@ const yampCardStyles = i$3`
     box-shadow: 0 1px 4px rgba(0,0,0,0.18);
     display: block;
   }
+
+  /* Chip rows */
   .chip-row.grab-scroll-active,
   .action-chip-row.grab-scroll-active {
-    cursor: grabbing !important;
+    cursor: grabbing;
   }
+
   .chip-row,
   .action-chip-row {
     cursor: grab;
   }
+
   .chip-row {
     display: flex;
-    gap: 8px; 
+    gap: 8px;
     padding: 8px 12px 0 12px;
     margin-bottom: 12px;
     overflow-x: auto;
@@ -1324,17 +739,20 @@ const yampCardStyles = i$3`
     white-space: nowrap;
     scrollbar-width: none;
     scrollbar-color: var(--accent-color, #1976d2) #222;
-    -webkit-overflow-scrolling: touch; /* Enables momentum scrolling on iOS */
-    touch-action: pan-x; /* Hint for horizontal pan/swipe on some browsers */
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
     max-width: 100vw;
   }
+
   .chip-row::-webkit-scrollbar {
     display: none;
   }
+
   .chip-row::-webkit-scrollbar-thumb {
     background: var(--accent-color, #1976d2);
     border-radius: 6px;
   }
+
   .chip-row::-webkit-scrollbar-track {
     background: #222;
   }
@@ -1348,16 +766,19 @@ const yampCardStyles = i$3`
     white-space: nowrap;
     scrollbar-width: none;
   }
+
   .action-chip-row::-webkit-scrollbar {
     display: none;
   }
+
+  /* Action chips */
   .action-chip {
-    background: var(--card-background-color, #222);
+    background: var(--card-bg);
     opacity: 1;
-    border-radius: 8px;
-    color: var(--primary-text-color, #fff);
-    box-shadow: none !important;
-    text-shadow: none !important;
+    border-radius: var(--button-border-radius);
+    color: var(--primary-text);
+    box-shadow: none;
+    text-shadow: none;
     border: none;
     outline: none;
     padding: 4px 12px;
@@ -1365,7 +786,7 @@ const yampCardStyles = i$3`
     font-size: 0.95em;
     cursor: pointer;
     margin: 4px 0;
-    transition: background 0.2s ease, transform 0.1s ease;
+    transition: background var(--transition-normal) ease, transform 0.1s ease;
     flex: 0 0 auto;
     white-space: nowrap;
     display: inline-flex;
@@ -1373,58 +794,73 @@ const yampCardStyles = i$3`
     gap: 6px;
   }
 
-  :host([data-match-theme="true"]) .action-chip:hover {
+  .action-chip:hover {
     background: var(--custom-accent);
     color: #fff;
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-  :host([data-match-theme="false"]) .action-chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
-    box-shadow: none !important;
-    text-shadow: none !important;
+    box-shadow: none;
+    text-shadow: none;
   }
 
-  :host([data-match-theme="true"]) .action-chip:active {
+  .action-chip:active {
     background: var(--custom-accent);
     color: #fff;
     transform: scale(0.96);
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-  :host([data-match-theme="false"]) .action-chip:active {
-    background: var(--custom-accent);
-    color: #fff;
-    transform: scale(0.96);
-    box-shadow: none !important;
-    text-shadow: none !important;
+    box-shadow: none;
+    text-shadow: none;
   }
 
+  /* Main chips */
   .chip {
-    display: flex;           /* Flexbox for vertical centering */
-    align-items: center;     /* Vertically center content */
-    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    border-radius: var(--chip-border-radius);
     padding: 6px 6px 6px 8px;
-    background: var(--chip-background, #333);
-    color: var(--primary-text-color, #fff);
+    background: var(--chip-bg);
+    color: var(--primary-text);
     cursor: pointer;
     font-weight: 500;
     opacity: 0.85;
     border: none;
     outline: none;
-    transition: background 0.2s, opacity 0.2s;
+    transition: background var(--transition-normal), opacity var(--transition-normal);
     flex: 0 0 auto;
     white-space: nowrap;
     position: relative;
   }
+
   .chip:hover {
     background: var(--custom-accent);
     color: #fff;
   }
-  .chip:hover .chip-icon ha-icon {
-    color: #fff !important;
+
+  .chip[selected] {
+    background: var(--custom-accent);
+    color: #fff;
+    opacity: 1;
   }
+
+  .chip[playing] {
+    padding-right: 6px;
+  }
+
+  /* Music Assistant active outline */
+  .chip[ma-active] {
+    border: 1px solid rgba(255, 152, 0, 0.6);
+  }
+
+  .chip[ma-active]:hover {
+    border: 1px solid rgba(255, 152, 0, 0.8);
+  }
+
+  .chip[selected][ma-active] {
+    border: 1px solid rgba(255, 152, 0, 0.8);
+  }
+
+  .chip[selected][ma-active]:hover {
+    border: 1px solid rgba(255, 152, 0, 1);
+  }
+
+  /* Chip pin */
   .chip-pin {
     position: absolute;
     top: -6px;
@@ -1443,9 +879,11 @@ const yampCardStyles = i$3`
     cursor: pointer;
     transition: box-shadow 0.18s;
   }
+
   .chip-pin:hover {
     box-shadow: 0 2px 12px rgba(33,33,33,0.17);
   }
+
   .chip-pin ha-icon {
     color: var(--custom-accent);
     font-size: 16px;
@@ -1454,6 +892,7 @@ const yampCardStyles = i$3`
     margin: 0;
     padding: 0;
   }
+
   .chip-pin-inside {
     display: flex;
     align-items: center;
@@ -1464,349 +903,414 @@ const yampCardStyles = i$3`
     padding: 2px;
     cursor: pointer;
   }
+
   .chip-pin-inside ha-icon {
-    color: var(--custom-accent, #ff9800);
+    color: var(--custom-accent);
     font-size: 17px;
     margin: 0;
   }
+
   .chip[selected] .chip-pin-inside ha-icon {
-    color: #fff !important;  /* White pin icon for selected (orange) chips */
+    color: #fff;
   }
+
   .chip-pin:hover ha-icon,
   .chip-pin-inside:hover ha-icon {
-    color: #fff !important;
+    color: #fff;
   }
-  /* When the user hovers the chip, force the pin icon white */
+
   .chip:hover .chip-pin ha-icon,
   .chip:hover .chip-pin-inside ha-icon {
-    color: #fff !important;
-  }    
+    color: #fff;
+  }
+
   .chip-pin-spacer {
     display: flex;
     width: 24px;
     min-width: 24px;
     height: 1px;
   }
-    .chip[playing] {
-      padding-right: 6px;
-    }
-      .chip[selected] {
-        background: var(--custom-accent);
-        color: #fff;
-        opacity: 1;
-      }
-  /* Grouped master chip shows a count instead of artwork/icon */
+
+  /* Group icon */
   .chip-icon.group-icon {
     background: var(--custom-accent);
-    color: #fff !important;
+    color: #fff;
     position: relative;
   }
+
   .group-count {
     font-weight: 700;
     font-size: 0.9em;
-    line-height: 28px; /* matches .chip-icon width */
+    line-height: 28px;
     text-align: center;
     width: 100%;
     color: inherit;
   }
-    .media-artwork-bg {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1.75/1;
-      overflow: hidden;
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: top center;
+
+  /* Media artwork */
+  .media-artwork-bg {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.75/1;
+    overflow: hidden;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top center;
+  }
+
+  .artwork {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: var(--shadow-medium);
+    background: #222;
+  }
+
+  /* Details section */
+  .details {
+    padding: 0 16px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    min-height: 48px;
+  }
+
+  .details .title,
+  .title {
+    font-size: 1.1em;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+    display: block;
+    padding-top: 8px;
+  }
+
+  .artist {
+    font-size: 1em;
+    font-weight: 400;
+    color: var(--secondary-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+  }
+
+  /* Controls */
+  .controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 16px;
+  }
+
+  .button {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--button-border-radius);
+    transition: background var(--transition-normal);
+  }
+
+  .button:active {
+    background: rgba(0,0,0,0.10);
+  }
+
+  .button.active ha-icon,
+  .button.active {
+    color: var(--custom-accent);
+  }
+
+  /* Progress bar */
+  .progress-bar-container {
+    padding-left: 24px;
+    padding-right: 24px;
+    box-sizing: border-box;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 3px;
+    margin: 8px 0;
+    cursor: pointer;
+    position: relative;
+    box-shadow: var(--shadow-heavy);
+  }
+
+  .progress-inner {
+    height: 100%;
+    background: var(--custom-accent);
+    border-radius: 3px 0 0 3px;
+    box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
+  }
+
+  /* Volume controls */
+  .volume-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px 12px 25px;
+    justify-content: space-between;
+  }
+
+  .volume-controls {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    flex: 1;
+  }
+
+  .volume-icon-btn {
+    background: none;
+    border: none;
+    color: var(--primary-text);
+    cursor: pointer;
+    padding: 0px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-normal);
+    min-width: 36px;
+    min-height: 36px;
+    margin-right: 0px;
+    margin-left: -7px;
+  }
+
+  .volume-icon-btn:hover {
+    color: var(--custom-accent);
+  }
+
+  .volume-icon-btn ha-icon {
+    font-size: 1.2em;
+    color: #fff;
+  }
+
+  .volume-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    position: relative;
+  }
+
+  .volume-slider-icon {
+    font-size: 1em;
+    color: var(--primary-text);
+    opacity: 0.7;
+    min-width: 20px;
+  }
+
+  .vol-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: hsla(0, 0.00%, 100.00%, 0.22);
+    border-radius: 3px;
+    outline: none;
+    box-shadow: var(--shadow-heavy);
+    flex: 1 1 auto;
+    min-width: 80px;
+    max-width: none;
+    margin-right: 12px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .volume-row .source-menu {
+    flex: 0 0 auto;
+  }
+
+  /* Volume slider thumbs */
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--custom-accent);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 2px solid #fff;
+  }
+
+  .vol-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--custom-accent);
+    cursor: pointer;
+    border: 2px solid #fff;
+  }
+
+  .vol-slider::-moz-range-track {
+    height: 6px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 3px;
+  }
+
+  .vol-slider::-ms-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--custom-accent);
+    cursor: pointer;
+    border: 2px solid #fff;
+  }
+
+  .vol-slider::-ms-fill-lower,
+  .vol-slider::-ms-fill-upper {
+    height: 6px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 3px;
+  }
+
+  /* Touch device improvements */
+  @media (pointer: coarse) {
+    .vol-slider::-webkit-slider-thumb {
+      box-shadow: 0 0 0 18px rgba(0,0,0,0);
+    }
+    .vol-slider::-moz-range-thumb {
+      box-shadow: 0 0 0 18px rgba(0,0,0,0);
+    }
+    .vol-slider::-ms-thumb {
+      box-shadow: 0 0 0 18px rgba(0,0,0,0);
+    }
+  }
+
+  .vol-stepper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .vol-stepper .button {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 1.5em;
+    padding: 6px 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Light mode styles */
+  @media (prefers-color-scheme: light) {
+    :host {
+      background: var(--card-background-color, #fff);
+    }
+
+    .chip {
+      background: #f0f0f0;
+      color: #222;
+    }
+
+    :host([data-match-theme="true"]) .chip[selected] {
+      background: var(--accent-color, #1976d2);
+      color: #fff;
     }
 
     .artwork {
-      width: 96px;
-      height: 96px;
-      object-fit: cover;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      background: #222;
-      
+      background: #eee;
     }
-    .details {
-      padding: 0 16px 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 8px;
-      min-height: 48px;
-    }
-    /* 
-    .details .title {
-      padding-top: 8px;
-    }
-    */
-    .progress-bar-container {
-      padding-left: 24px;
-      padding-right: 24px;
-      box-sizing: border-box;
-    }
-    /*
-    .title {
-      font-size: 1.1em;
-      font-weight: 600;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    */
 
-    .details .title,
-    .title { 
-      font-size: 1.1em;
-      font-weight: 600;
-      line-height: 1.2;
-      white-space: normal !important;
-      word-break: break-word;
-      overflow: visible;
-      text-overflow: unset;
-      display: block;
-      padding-top: 8px;
-    }
-    .artist {
-      font-size: 1em;
-      font-weight: 400;
-      color: var(--secondary-text-color, #aaa);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: #fff !important;
-    }
-    .controls-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      padding: 4px 16px;
-    }
-    .button {
-      background: none;
-      border: none;
-      color: inherit;
-      font-size: 1.5em;
-      cursor: pointer;
-      padding: 6px;
-      border-radius: 8px;
-      transition: background 0.2s;
-    }
-    .button:active {
-      background: rgba(0,0,0,0.10);
-    }
-    .button.active ha-icon,
-    .button.active {
-      color: var(--custom-accent) !important;
-    }
     .progress-bar {
-      width: 100%;
-      height: 6px;
-      background: rgba(255,255,255,0.22);
-      border-radius: 3px;
-      margin: 8px 0;
-      cursor: pointer;
-      position: relative;
-      box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
+      background: #eee;
     }
-    .progress-inner {
-      height: 100%;
+
+    .source-menu-btn {
+      color: #222;
+    }
+
+    .source-dropdown {
+      background: #fff;
+      color: #222;
+      border: 1px solid #bbb;
+    }
+
+    .source-option {
+      color: #222;
+      background: #fff;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+
+    .source-option:hover,
+    .source-option:focus {
       background: var(--custom-accent);
-      border-radius: 3px 0 0 3px;
-      box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
+      color: #222;
     }
-    .volume-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 12px 12px 25px;
-      justify-content: space-between;
+
+    .source-select {
+      background: #fff;
+      color: #222;
+      border: 1px solid #aaa;
     }
-    .vol-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      height: 6px;
-      background: hsla(0, 0.00%, 100.00%, 0.22);
-      border-radius: 3px;
+
+    .action-chip {
+      background: var(--card-background-color, #fff);
+      opacity: 1;
+      border-radius: var(--button-border-radius);
+      color: var(--primary-text-color, #222);
+      box-shadow: none;
+      text-shadow: none;
+      border: none;
       outline: none;
-      box-shadow: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
-      flex: 1 1 auto;
-      min-width: 80px;
-      max-width: none;
-      margin-right: 12px;
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
-    .volume-row .source-menu {
-      flex: 0 0 auto;
     }
 
-    /* Webkit browsers (Chrome, Safari, Edge) */
-    .vol-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--custom-accent);
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-      border: 2px solid #fff;
-    }
-    /* Firefox */
-    .vol-slider::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--custom-accent);
-      cursor: pointer;
-      border: 2px solid #fff;
-    }
-    .vol-slider::-moz-range-track {
-      height: 6px;
-      background: rgba(255,255,255,0.22);
-      border-radius: 3px;
-    }
-    /* IE and Edge (legacy) */
-    .vol-slider::-ms-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--custom-accent);
-      cursor: pointer;
-      border: 2px solid #fff;
-    }
-    .vol-slider::-ms-fill-lower,
-    .vol-slider::-ms-fill-upper {
-      height: 6px;
-      background: rgba(255,255,255,0.22);
-      border-radius: 3px;
+    .action-chip:active {
+      background: var(--accent-color, #1976d2);
+      color: #fff;
+      opacity: 1;
+      transform: scale(0.98);
+      box-shadow: none;
+      text-shadow: none;
     }
 
-    /* Make .vol-slider thumbs easier to grab on touch devices without changing their visual appearance */
-    @media (pointer: coarse) {
-      .vol-slider::-webkit-slider-thumb {
-        box-shadow: 0 0 0 18px rgba(0,0,0,0);
-      }
-      .vol-slider::-moz-range-thumb {
-        box-shadow: 0 0 0 18px rgba(0,0,0,0);
-      }
-      .vol-slider::-ms-thumb {
-        box-shadow: 0 0 0 18px rgba(0,0,0,0);
-      }
+    .card-lower-content:not(.collapsed) .source-menu-btn,
+    .card-lower-content:not(.collapsed) .source-selected {
+      color: #fff;
     }
-    /* .volume-row .source-menu block moved and replaced above for consistency */
-    .vol-stepper {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .vol-stepper .button {
-      min-width: 36px;
-      min-height: 36px;
-      font-size: 1.5em;
-      padding: 6px 0;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }    
+  }
 
-    /* Consolidated Light Mode Styles */
-    @media (prefers-color-scheme: light) {
-      :host {
-        background: var(--card-background-color, #fff);
-      }
-      .chip {
-        background: #f0f0f0;
-        color: #222;
-      }
-      :host([data-match-theme="true"]) .chip[selected] {
-        background: var(--accent-color, #1976d2);
-        color: #fff;
-      }
-      .artwork {
-        background: #eee;
-      }
-      .progress-bar {
-        background: #eee;
-      }
-      .source-menu-btn {
-        color: #222;
-      }
-      .source-dropdown {
-        background: #fff;
-        color: #222;
-        border: 1px solid #bbb;
-      }
-      .source-option {
-        color: #222 !important;
-        background: #fff !important;
-        transition: background 0.13s, color 0.13s;
-      }
-      .source-option:hover,
-      .source-option:focus {
-        background: var(--custom-accent) !important;
-        color: #222 !important;
-      }
-      .source-select {
-        background: #fff;
-        color: #222;
-        border: 1px solid #aaa;
-      }
-      .action-chip {
-        background: var(--card-background-color, #fff);
-        opacity: 1;
-        border-radius: 8px;
-        color: var(--primary-text-color, #222);
-        box-shadow: none !important;
-        text-shadow: none !important;
-        border: none;
-        outline: none;
-      }
-      .action-chip:active {
-        background: var(--accent-color, #1976d2);
-        color: #fff;
-        opacity: 1;
-        transform: scale(0.98);
-        box-shadow: none !important;
-        text-shadow: none !important;
-      }
-      /* Keep source menu text white when expanded (matches controls) */
-      .card-lower-content:not(.collapsed) .source-menu-btn,
-      .card-lower-content:not(.collapsed) .source-selected {
-        color: #fff !important;
-      }
-      /* Only for collapsed cards: override details/title color */
-      /* .card-lower-content.collapsed .details .title,
-      .card-lower-content.collapsed .title {
-        color: #222 !important;
-      } */
-    }
-    .artwork-dim-overlay {
+  /* Artwork overlay */
+  .artwork-dim-overlay {
     position: absolute;
-    left: 0; right: 0; top: 0; bottom: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
     pointer-events: none;
     background: linear-gradient(to bottom, 
-    rgba(0,0,0,0.0) 0%,
-    rgba(0,0,0,0.40) 55%,
-    rgba(0,0,0,0.70) 100%);
+      rgba(0,0,0,0.0) 0%,
+      rgba(0,0,0,0.40) 55%,
+      rgba(0,0,0,0.70) 100%);
     z-index: 2;
-  }    
+  }
+
+  /* Card lower content */
   .card-lower-content-container {
     position: relative;
     width: 100%;
-    min-height: auto; /* allow vertical auto‑resize */
-    height: 100%;     /* stretch to fill grid-assigned rows */
-    display: flex;    /* enables spacer to grow */
+    min-height: auto;
+    height: 100%;
+    display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    border-radius: 0 0 16px 16px;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
     overflow: hidden;
   }
+
   .card-lower-content-bg {
     position: absolute;
     inset: 0;
@@ -1815,7 +1319,9 @@ const yampCardStyles = i$3`
     background-position: top center;
     background-repeat: no-repeat;
     pointer-events: none;
+    height: 100%;
   }
+
   .card-lower-fade {
     position: absolute;
     inset: 0;
@@ -1828,64 +1334,66 @@ const yampCardStyles = i$3`
       rgba(0,0,0,0.92) 100%
     );
   }
+
   .card-lower-content {
     position: relative;
     z-index: 2;
-  }
-  .card-lower-content.transitioning .details,
-  .card-lower-content.transitioning .card-artwork-spacer {
-    transition: opacity 0.3s;
-  }
-  /* Show details (title) when collapsed (but hide artist/artwork spacer) */
-  .card-lower-content.collapsed .details {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .card-lower-content.collapsed .details {
-    margin-right: 120px;  /* Reserve space for floating album artwork */
-    transition: margin 0.2s;
-  }
-  @media (max-width: 420px) {
-    .card-lower-content.collapsed .details {
-      margin-right: 74px; /* Reserve space for floating art on small screens */
-    }
-  }
-  .card-lower-content.collapsed .card-artwork-spacer {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  /* Stretch the lower content to fill the card so flex‑grown elements
-     like .card-artwork-spacer can expand and consume extra vertical space */
-  .card-lower-content {
     display: flex;
     flex-direction: column;
     height: 100%;
   }
 
-    /* Force white text for important UI elements */
-    .details,
-    .title,
-    .artist,
-    .controls-row,
-    .button,
-    .vol-stepper span {
-      color: #fff !important;
+  .card-lower-content.transitioning .details,
+  .card-lower-content.transitioning .card-artwork-spacer {
+    transition: opacity 0.3s;
+  }
+
+  .card-lower-content.collapsed .details {
+    opacity: 1;
+    pointer-events: auto;
+    margin-right: 120px;
+    transition: margin var(--transition-normal);
+  }
+
+  @media (max-width: 420px) {
+    .card-lower-content.collapsed .details {
+      margin-right: 74px;
     }
+  }
+
+  .card-lower-content.collapsed .card-artwork-spacer {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Force white text for important UI elements */
+  .details,
+  .title,
+  .artist,
+  .controls-row,
+  .button,
+  .vol-stepper span {
+    color: #fff;
+  }
+
+  /* Media artwork placeholder */
   .media-artwork-placeholder ha-icon {
-    width: 104px !important;
-    height: 104px !important;
-    min-width: 104px !important;
-    min-height: 104px !important;
-    max-width: 104px !important;
-    max-height: 104px !important;
+    width: 104px;
+    height: 104px;
+    min-width: 104px;
+    min-height: 104px;
+    max-width: 104px;
+    max-height: 104px;
     display: block;
   }
+
   .media-artwork-placeholder ha-icon svg {
-    width: 100% !important;
-    height: 100% !important;
-    display: block !important;
+    width: 100%;
+    height: 100%;
+    display: block;
   }
+
+  /* Collapsed artwork */
   .card-lower-content.collapsed .collapsed-artwork-container {
     position: absolute;
     top: 10px;
@@ -1896,74 +1404,80 @@ const yampCardStyles = i$3`
     align-items: flex-start;
     justify-content: flex-end;
     z-index: 5;
-    background: transparent !important;
+    background: transparent;
     pointer-events: none;
-    box-shadow: none !important;
+    box-shadow: none;
     padding: 0;
-    transition: background 0.4s;
+    transition: background var(--transition-slow);
   }
+
   .card-lower-content.collapsed .collapsed-artwork {
-    width: 98px !important;
-    height: 98px !important;
-    border-radius: 14px !important;
-    object-fit: cover !important;
-    background: transparent !important;
+    width: 98px;
+    height: 98px;
+    border-radius: 14px;
+    object-fit: cover;
+    background: transparent;
     box-shadow: 0 1px 6px rgba(0,0,0,0.22);
     pointer-events: none;
     user-select: none;
     display: block;
     margin: 2px;
   }
+
   .card-lower-content.collapsed .controls-row {
-    max-width: calc(100% - 120px); /* Leaves room for floating artwork + margin */
-    margin-right: 110px;            /* Visually lines up with artwork edge */
+    max-width: calc(100% - 120px);
+    margin-right: 110px;
   }
-  .card-lower-content-bg {
-    height: 100% !important;
-  }
-  
+
   @media (max-width: 420px) {
     .card-lower-content.collapsed .controls-row {
-      max-width: 100% !important;
-      margin-right: 0 !important;
+      max-width: 100%;
+      margin-right: 0;
     }
+
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 70px !important;
-      height: 70px !important;
-      right: 10px !important;
+      width: 70px;
+      height: 70px;
+      right: 10px;
     }
+
     .card-lower-content.collapsed .collapsed-artwork {
-      width: 62px !important;
-      height: 62px !important;
+      width: 62px;
+      height: 62px;
     }
   }
 
+  /* Collapsed progress bar */
   .collapsed-progress-bar {
     position: absolute;
     left: 0;
     bottom: 0;
     height: 4px;
-    background: var(--custom-accent, #ff9800);
+    background: var(--custom-accent);
     border-radius: 0 0 12px 12px;
     z-index: 99;
-    transition: width 0.2s linear;
+    transition: width var(--transition-normal) linear;
     pointer-events: none;
   }
-  /* Options overlay is card-contained, not fixed to viewport */
+
+  /* Entity options overlay */
   .entity-options-overlay {
-    position: absolute; /* Now relative to the card, not the page */
-    left: 0; right: 0; top: 0; bottom: 0;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
     z-index: 30;
-    background: rgba(15,18,30,0.70); /* Increased darkening for clarity */
+    background: rgba(15,18,30,0.70);
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    /* No blur/backdrop, just a hint of background */
   }
-  /* Options sheet is scrollable and clipped to card, not the page */
+
   .entity-options-sheet {
+    --custom-accent: var(--accent-color, #ff9800);
     background: none;
-    border-radius: 16px 16px 0 0;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
     box-shadow: none;
     width: 98%;
     max-width: 430px;
@@ -1972,20 +1486,19 @@ const yampCardStyles = i$3`
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    /* Sheet max-height is now relative to the card, so scrolling stays inside */
     max-height: 85%;
     min-height: 90px;
-    overflow-y: auto !important;
+    overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
-  .entity-options-sheet {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE & Edge Legacy */
-  }
+
   .entity-options-sheet::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
   }
+
   .entity-options-title {
     font-size: 1.1em;
     font-weight: bold;
@@ -1995,6 +1508,7 @@ const yampCardStyles = i$3`
     background: none;
     text-shadow: 0 2px 8px #0009;
   }
+
   .entity-options-item {
     background: none;
     color: #fff;
@@ -2005,40 +1519,43 @@ const yampCardStyles = i$3`
     margin: 4px 0;
     padding: 6px 0 8px 0;
     cursor: pointer;
-    transition: color 0.13s, text-shadow 0.13s;
+    transition: color var(--transition-fast), text-shadow var(--transition-fast);
     text-align: center;
     text-shadow: 0 2px 8px #0009;
   }
 
   .entity-options-item:hover {
-    color: var(--custom-accent, #ff9800) !important;
-    text-shadow: none !important;
+    color: var(--custom-accent, #ff9800);
+    text-shadow: none;
     background: none;
   }
 
-  /* Source index letter button accessibility and hover styling */
+  /* Source index */
   .source-index-letter:focus {
     background: rgba(255,255,255,0.11);
     outline: 1px solid #ff9800;
   }
 
-  /* Floating source index and source list overlay styles (updated) */
   .entity-options-sheet.source-list-sheet {
     position: relative;
-    overflow: visible !important;
+    overflow: visible;
   }
+
   .source-list-scroll {
     overflow-y: auto;
     max-height: 340px;
-    scrollbar-width: none;           /* Firefox: hide scrollbar */
+    scrollbar-width: none;
   }
+
   .source-list-scroll::-webkit-scrollbar {
-    display: none !important;        /* Chrome/Safari/Edge: hide scrollbar */
+    display: none;
   }
+
   .floating-source-index.grab-scroll-active,
   .floating-source-index.grab-scroll-active * {
-    cursor: grabbing !important;
+    cursor: grabbing;
   }
+
   .floating-source-index {
     position: absolute;
     top: 0;
@@ -2049,20 +1566,22 @@ const yampCardStyles = i$3`
     flex-direction: column;
     justify-content: space-between;
     align-items: flex-start;
-    pointer-events: auto;          /* was none – allow wheel capture */
-    overscroll-behavior: contain;  /* stop wheel bubbling */
+    pointer-events: auto;
+    overscroll-behavior: contain;
     z-index: 10;
     padding: 12px 8px 8px 0;
     overflow-y: auto;
     max-height: 100%;
     min-width: 32px;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE & Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     cursor: grab;
   }
+
   .floating-source-index::-webkit-scrollbar {
-    display: none !important; /* Chrome, Safari, Opera */
+    display: none;
   }
+
   .floating-source-index .source-index-letter {
     background: none;
     border: none;
@@ -2073,7 +1592,7 @@ const yampCardStyles = i$3`
     padding: 2px 2px;
     pointer-events: auto;
     outline: none;
-    transition: color 0.13s, background 0.13s, transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
+    transition: color var(--transition-fast), background var(--transition-fast), transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
     transform: scale(1);
     z-index: 1;
     min-height: 32px;
@@ -2082,26 +1601,32 @@ const yampCardStyles = i$3`
     align-items: center;
     justify-content: center;
   }
+
   .floating-source-index .source-index-letter[data-scale="max"] {
     transform: scale(1.38);
     z-index: 3;
   }
+
   .floating-source-index .source-index-letter[data-scale="large"] {
     transform: scale(1.19);
     z-index: 2;
   }
+
   .floating-source-index .source-index-letter[data-scale="med"] {
     transform: scale(1.10);
     z-index: 1;
   }
+
   .floating-source-index .source-index-letter::after {
-    display: none !important;
+    display: none;
   }
+
   .floating-source-index .source-index-letter:hover,
   .floating-source-index .source-index-letter:focus {
     color: #fff;
   }
 
+  /* Group toggle buttons */
   .group-toggle-btn {
     background: none;
     border: 1px solid currentColor;
@@ -2118,139 +1643,155 @@ const yampCardStyles = i$3`
     transition: background 0.15s;
     position: relative;
     overflow: hidden;
+    color: #fff;
+    border-color: #fff;
   }
+
   .group-toggle-btn span,
   .group-toggle-btn .group-toggle-fix {
     position: relative;
     left: 0.5px;
   }
-  .group-toggle-btn:hover {
-    background: rgba(255,255,255,0.1);
-  }
 
-  /* Invisible master button to keep layout aligned */
-  .group-toggle-transparent {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: transparent !important;
-    pointer-events: none !important;
-  }
-  .group-toggle-transparent:hover {
-    background: none !important;   /* suppress hover tint */
-  }
-
-  /* Force white text/icons in the grouping sheet */
-  .entity-options-sheet,
-  .entity-options-sheet * {
-    color: #fff !important;
-  }
-
-  /* Ensure the + / – toggle icon and border are white */
-  .group-toggle-btn {
-    color: #fff !important;
-    border-color: #fff !important;
-  }
   .group-toggle-btn:hover {
     background: rgba(255,255,255,0.15);
   }
+
+  .group-toggle-transparent {
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: transparent;
+    pointer-events: none;
+  }
+
+  .group-toggle-transparent:hover {
+    background: none;
+  }
+
+  /* Force white text in grouping sheet */
+  .entity-options-sheet,
+  .entity-options-sheet * {
+    color: #fff;
+  }
+
+  /* Search functionality */
   .entity-options-search {
     padding: 2px 0 4px 0;
   }
+
   .entity-options-search-row {
     display: flex;
     gap: 8px;
-    margin-bottom: 4px !important;
+    margin-bottom: 4px;
     margin-top: 2px;
   }
+
   .entity-options-search-result {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 9px 0 9px 0;
+    padding: 9px 0;
     border-bottom: 1px solid #2227;
     font-size: 1.10em;
-    color: var(--primary-text-color, #fff);
+    color: var(--primary-text);
     background: none;
   }
+
   .entity-options-search-result:last-child {
     border-bottom: none;
   }
+
+  .entity-options-search-result.placeholder {
+    visibility: hidden;
+    border-bottom: 1px solid transparent;
+    min-height: 46px;
+    box-sizing: border-box;
+  }
+
   .entity-options-search-thumb {
     height: 38px;
     width: 38px;
-    border-radius: 8px;
+    border-radius: var(--button-border-radius);
     object-fit: cover;
     box-shadow: 0 1px 5px rgba(0,0,0,0.16);
     margin-right: 12px;
   }
+
   .entity-options-search-play {
     min-width: 34px;
     font-size: 1.13em;
     border: none;
-    background: var(--custom-accent, #ff9800);
-    color: #fff !important;
+    background: var(--custom-accent);
+    color: #fff;
     border-radius: 10px;
-    padding: 6px 10px 6px 10px;
+    padding: 6px 10px;
     margin-left: 7px;
     cursor: pointer;
     box-shadow: 0 1px 5px rgba(0,0,0,0.13);
-    transition: background 0.2s, color 0.2s;
+    transition: background var(--transition-normal), color var(--transition-normal);
     text-shadow: 0 2px 8px #0008;
   }
+
   .entity-options-search-play:hover,
   .entity-options-search-play:focus {
     background: #fff;
-    color: var(--custom-accent, #ff9800) !important;
+    color: var(--custom-accent);
   }
+
   .entity-options-search-input {
     border: 1px solid #333;
-    border-radius: 8px;
-    background: var(--card-background-color, #222);
-    color: var(--primary-text-color, #fff);
+    border-radius: var(--button-border-radius);
+    background: var(--card-bg);
+    color: var(--primary-text);
     font-size: 1.12em;
     outline: none;
-    transition: border 0.13s;
+    transition: border var(--transition-fast);
     margin-right: 7px;
-    /* padding removed/overridden below for options sheet */
     box-sizing: border-box;
   }
+
   .entity-options-search-row .entity-options-search-input {
     padding: 4px 10px;
-    height: 32px; 
+    height: 32px;
     min-height: 32px;
     line-height: 1.18;
     box-sizing: border-box;
-    border: 1.5px solid var(--custom-accent, #ff9800) !important;
-    background: #232323 !important;
-    color: #fff !important;
-    transition: border 0.13s, background 0.13s;
-    outline: none !important;
+    border: 1.5px solid var(--custom-accent);
+    background: #232323;
+    color: #fff;
+    transition: border var(--transition-fast), background var(--transition-fast);
+    outline: none;
   }
+
   .entity-options-search-input:focus {
-    border: 1.5px solid var(--custom-accent, #ff9800) !important;
-    background: #232323 !important;
-    color: #fff !important;
-    outline: none !important;
+    border: 1.5px solid var(--custom-accent);
+    background: #232323;
+    color: #fff;
+    outline: none;
   }
+
   .entity-options-search-loading,
   .entity-options-search-error,
   .entity-options-search-empty {
-    padding: 8px 6px 8px 6px;
+    padding: 8px 6px;
     font-size: 1.09em;
     opacity: 0.90;
-    color: var(--primary-text-color, #fff);
+    color: var(--primary-text);
     background: none;
     text-align: left;
   }
+
   .entity-options-search-error {
-    color: #e44747 !important;
+    color: #e44747;
     font-weight: 500;
   }
+
   .entity-options-search-empty {
-    color: #999 !important;
+    color: #999;
     font-style: italic;
   }
+
   .entity-options-search-row .entity-options-item {
     height: 32px;
     min-height: 32px;
@@ -2265,77 +1806,113 @@ const yampCardStyles = i$3`
     align-items: center;
     justify-content: center;
   }
-  /* Style for search filter chips */
+
+  /* Search filter chips */
   .search-filter-chips .chip {
-    color: #fff !important;
+    color: #fff;
   }
+
   .search-filter-chips .chip[selected],
   .search-filter-chips .chip[style*="background: var(--customAccent"],
   .search-filter-chips .chip[style*="background: var(--custom-accent"] {
-    color: #111 !important;
+    color: #111;
   }
 
+  .entity-options-sheet .search-filter-chips .chip:not([selected]) {
+    color: #fff;
+  }
 
-.entity-options-sheet .search-filter-chips .chip:not([selected]) {
-  color: #fff !important;
-}
-.entity-options-sheet .search-filter-chips .chip[selected] {
-  color: #111 !important;
-}
-  
-.entity-options-sheet .search-filter-chips .chip {
-  text-align: center !important;
-  justify-content: center !important;
-}
+  .entity-options-sheet .search-filter-chips .chip[selected] {
+    color: #111;
+  }
 
-.entity-options-sheet .entity-options-search-results {
-  min-height: 210px;   
-  /* Remove max-height and overflow-y */
-}
+  .entity-options-sheet .search-filter-chips .chip {
+    text-align: center;
+    justify-content: center;
+  }
 
+  .entity-options-sheet .search-filter-chips .chip:hover {
+    background: var(--custom-accent);
+    color: #111;
+    opacity: 1;
+  }
 
-  /* Highlight search filter chips on hover in options sheet */
-.entity-options-sheet .search-filter-chips .chip:hover {
-  background: var(--custom-accent, #ff9800) !important;
-  color: #111 !important;
-}
+  .entity-options-sheet .entity-options-search-results {
+    min-height: 210px;
+  }
 
-.entity-options-sheet .search-filter-chips .chip:hover {
-  opacity: 1 !important;
-}
-/* --- Make the search header fixed and results flex --- */
-.entity-options-sheet .entity-options-search {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
+  /* Search layout */
+  .entity-options-sheet .entity-options-search {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
 
-.entity-options-sheet .entity-options-search-row,
-.entity-options-sheet .search-filter-chips {
-  flex: 0 0 auto;          /* never grow/shrink */
-}
+  .entity-options-sheet .entity-options-search-row,
+  .entity-options-sheet .search-filter-chips {
+    flex: 0 0 auto;
+  }
 
-.entity-options-sheet .entity-options-search-results {
-  flex: 1 1 auto;          /* take remaining space */
-  /* keeps earlier min-height */
-}
-/* Invisible placeholder rows (keep height, hide divider) */
-/* Placeholder rows keep layout height even when invisible */
-.entity-options-search-result.placeholder {
-  visibility: hidden;                              /* hide contents */
-  border-bottom: 1px solid transparent !important; /* divider invisible */
-  min-height: 46px;                                /* match real row height */
-  box-sizing: border-box;
-}
-;
+  .entity-options-sheet .entity-options-search-results {
+    flex: 1;
+    overflow-y: auto;
+    margin: 12px 0;
+  }
 
-/* Artist text becomes clickable when it can open a search */
-.clickable-artist {
-  cursor: pointer;
-}
-.clickable-artist:hover {
-  text-decoration: underline;
-}`;
+  .entity-options-resolved-entities {
+    --custom-accent: var(--accent-color, #ff9800);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .entity-options-resolved-entities-list {
+    flex: 1;
+    overflow-y: auto;
+    margin: 12px 0;
+  }
+
+  .entity-options-resolved-entities .entity-options-item {
+    background: none;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.12em;
+    font-weight: 500;
+    margin: 4px 0;
+    padding: 6px 0 8px 0;
+    cursor: pointer;
+    transition: color var(--transition-fast), text-shadow var(--transition-fast);
+    text-align: left;
+    text-shadow: 0 2px 8px #0009;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .entity-options-resolved-entities .entity-options-item:hover,
+  .entity-options-resolved-entities .entity-options-item:focus {
+    color: var(--custom-accent) !important;
+    text-shadow: none !important;
+    background: none !important;
+  }
+
+  .entity-options-resolved-entities .entity-options-item:last-child {
+    border-bottom: none;
+  }
+
+  /* Clickable artist */
+  .clickable-artist {
+    cursor: pointer;
+  }
+
+  .clickable-artist:hover {
+    text-decoration: underline;
+  }
+`;
+
+// import { LitElement, html, css, nothing } from "lit";
 
 /**
  * Renders the search sheet UI for media search.
@@ -2363,8 +1940,8 @@ function renderSearchSheet(_ref) {
     onPlay,
     error
   } = _ref;
-  if (!open) return E;
-  return x`
+  if (!open) return nothing;
+  return html`
     <div class="search-sheet">
       <div class="search-sheet-header">
         <input
@@ -2377,10 +1954,10 @@ function renderSearchSheet(_ref) {
         <button @click=${onSearch} ?disabled=${loading || !query}>Search</button>
         <button @click=${onClose} title="Close Search">✕</button>
       </div>
-      ${loading ? x`<div class="search-sheet-loading">Loading...</div>` : E}
-      ${error ? x`<div class="search-sheet-error">${error}</div>` : E}
+      ${loading ? html`<div class="search-sheet-loading">Loading...</div>` : nothing}
+      ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
       <div class="search-sheet-results">
-        ${(results || []).length === 0 && !loading ? x`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => x`
+        ${(results || []).length === 0 && !loading ? html`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => html`
                 <div class="search-sheet-result">
                   <img
                     class="search-sheet-thumb"
@@ -2398,34 +1975,217 @@ function renderSearchSheet(_ref) {
   `;
 }
 
-// Supported feature flags
-const SUPPORT_PREVIOUS_TRACK = 16;
-const SUPPORT_NEXT_TRACK = 32;
-const SUPPORT_TURN_ON = 128;
-const SUPPORT_TURN_OFF = 256;
-const SUPPORT_STOP = 4096;
-const SUPPORT_SHUFFLE = 32768;
-const SUPPORT_GROUPING = 524288;
-const SUPPORT_REPEAT_SET = 262144;
+// Service helpers to keep search-related logic colocated with the search UI module
+async function searchMedia(hass, entityId, query) {
+  var _res$response;
+  const msg = {
+    type: "call_service",
+    domain: "media_player",
+    service: "search_media",
+    service_data: {
+      entity_id: entityId,
+      search_query: query
+    },
+    return_response: true
+  };
+  const res = await hass.connection.sendMessagePromise(msg);
+  return (res === null || res === void 0 || (_res$response = res.response) === null || _res$response === void 0 || (_res$response = _res$response[entityId]) === null || _res$response === void 0 ? void 0 : _res$response.result) || (res === null || res === void 0 ? void 0 : res.result) || [];
+}
+function playSearchedMedia(hass, entityId, item) {
+  return hass.callService("media_player", "play_media", {
+    entity_id: entityId,
+    media_content_type: item.media_content_type,
+    media_content_id: item.media_content_id
+  });
+}
 
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-class YetAnotherMediaPlayerEditor extends i {
+// Supported feature flags
+const SUPPORT_VOLUME_MUTE = 8;
+const SUPPORT_STOP = 4096;
+const SUPPORT_GROUPING = 524288;
+
+// import Sortable from "sortablejs";
+
+class YampSortable extends LitElement {
+  static get properties() {
+    return {
+      disabled: {
+        type: Boolean
+      },
+      handleSelector: {
+        type: String
+      },
+      draggableSelector: {
+        type: String
+      }
+    };
+  }
+  static get styles() {
+    return css`
+      :host {
+        display: block;
+      }
+      .sortable-fallback {
+        display: none !important;
+      }
+      .sortable-ghost {
+        box-shadow: 0 0 0 2px var(--primary-color);
+        background: rgba(var(--rgb-primary-color), 0.25);
+        border-radius: 4px;
+        opacity: 0.4;
+      }
+      .sortable-drag {
+        border-radius: 4px;
+        opacity: 1;
+        background: var(--card-background-color);
+        box-shadow: 0px 4px 8px 3px #00000026;
+        cursor: grabbing;
+      }
+    `;
+  }
+  constructor() {
+    super();
+    this.disabled = false;
+    this.handleSelector = ".handle";
+    this.draggableSelector = ".sortable-item";
+    this._sortable = null;
+  }
+  createRenderRoot() {
+    return this;
+  }
+  render() {
+    return html`
+      <slot></slot>
+    `;
+  }
+  connectedCallback() {
+    super.connectedCallback();
+    if (!this.disabled) {
+      this._createSortable();
+    }
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._destroySortable();
+  }
+  updated(changedProperties) {
+    if (changedProperties.has("disabled")) {
+      if (this.disabled) {
+        this._destroySortable();
+      } else {
+        this._createSortable();
+      }
+    }
+  }
+  _createSortable() {
+    if (this._sortable) return;
+    const container = this.children[0];
+    if (!container) return;
+    const options = {
+      scroll: true,
+      forceAutoScrollFallback: true,
+      scrollSpeed: 20,
+      animation: 150,
+      draggable: this.draggableSelector,
+      handle: this.handleSelector,
+      onChoose: this._handleChoose.bind(this),
+      onStart: this._handleStart.bind(this),
+      onEnd: this._handleEnd.bind(this),
+      onUpdate: this._handleUpdate.bind(this)
+    };
+    this._sortable = new Sortable(container, options);
+  }
+  _handleUpdate(evt) {
+    this.dispatchEvent(new CustomEvent("item-moved", {
+      detail: {
+        oldIndex: evt.oldIndex,
+        newIndex: evt.newIndex
+      },
+      bubbles: true,
+      composed: true
+    }));
+  }
+  _handleEnd(evt) {
+    // Put back in original location if needed
+    if (evt.item.placeholder) {
+      evt.item.placeholder.replaceWith(evt.item);
+      delete evt.item.placeholder;
+    }
+  }
+  _handleStart() {
+    // Optional: emit drag start event
+  }
+  _handleChoose(evt) {
+    // Create placeholder to maintain layout
+    evt.item.placeholder = document.createComment("sort-placeholder");
+    evt.item.after(evt.item.placeholder);
+  }
+  _destroySortable() {
+    if (!this._sortable) return;
+    this._sortable.destroy();
+    this._sortable = null;
+  }
+}
+customElements.define("yamp-sortable", YampSortable);
+
+class YetAnotherMediaPlayerEditor extends LitElement {
   static get properties() {
     return {
       hass: {},
       _config: {},
       _entityEditorIndex: {
         type: Number
+      },
+      _actionEditorIndex: {
+        type: Number
+      },
+      _actionMode: {
+        type: String
+      },
+      _useTemplate: {
+        type: Boolean
+      },
+      _useVolTemplate: {
+        type: Boolean
       }
     };
   }
   constructor() {
     super();
     this._entityEditorIndex = null;
+    this._actionEditorIndex = null;
+    this._yamlDraft = "";
+    this._parsedYaml = null;
+    this._yamlError = false;
+    this._serviceItems = [];
+    this._useTemplate = null; // auto-detect per entity on open
+    this._useVolTemplate = null; // auto-detect per entity on open
+  }
+  firstUpdated() {
+    this._serviceItems = this._getServiceItems();
   }
   _supportsFeature(stateObj, featureBit) {
     if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
     return (stateObj.attributes.supported_features & featureBit) !== 0;
+  }
+  _getServiceItems() {
+    var _this$hass;
+    if (!((_this$hass = this.hass) !== null && _this$hass !== void 0 && _this$hass.services)) return [];
+    return Object.entries(this.hass.services).flatMap(_ref => {
+      let [domain, services] = _ref;
+      return Object.keys(services).map(svc => ({
+        label: `${domain}.${svc}`,
+        value: `${domain}.${svc}`
+      }));
+    });
+  }
+  _looksLikeTemplate(val) {
+    if (typeof val !== "string") return false;
+    const s = val.trim();
+    return s.includes("{{") || s.includes("{%");
+  }
+  _isEntityId(val) {
+    return typeof val === "string" && /^[a-z_]+\.[a-zA-Z0-9_]+$/.test(val.trim());
   }
   setConfig(config) {
     const rawEntities = config.entities ?? [];
@@ -2451,7 +2211,6 @@ class YetAnotherMediaPlayerEditor extends i {
       composed: true
     }));
   }
-  c;
   _updateEntityProperty(key, value) {
     const entities = [...(this._config.entities ?? [])];
     const idx = this._entityEditorIndex;
@@ -2463,8 +2222,19 @@ class YetAnotherMediaPlayerEditor extends i {
       this._updateConfig("entities", entities);
     }
   }
+  _updateActionProperty(key, value) {
+    const actions = [...(this._config.actions ?? [])];
+    const idx = this._actionEditorIndex;
+    if (actions[idx]) {
+      actions[idx] = {
+        ...actions[idx],
+        [key]: value
+      };
+      this._updateConfig("actions", actions);
+    }
+  }
   static get styles() {
-    return i$3`
+    return css`
         .form-row {
           padding: 12px 16px;
           gap: 8px;
@@ -2484,13 +2254,14 @@ class YetAnotherMediaPlayerEditor extends i {
         .entity-row {
           padding: 6px;
         }
-        /* visually isolate the list of entity controls */
-        .entity-group {
+        /* visually isolate grouped controls */
+        .entity-group, .action-group {
           background: var(--card-background-color, #f7f7f7);
           border: 1px solid var(--divider-color, #ccc);
           border-radius: 6px;
           padding: 12px 16px;
           margin-bottom: 16px;
+          margin-top: 16px;
         }
         /* wraps the entity selector and edit button */
         .entity-row-inner {
@@ -2500,45 +2271,202 @@ class YetAnotherMediaPlayerEditor extends i {
           padding: 6px;
           margin: 0px;
         }
-        /* allow a selector to fill all available space when combined with other elements */
-        .selector-grow {
+        /* wraps the action icon, name textbox and edit button */
+        .action-row-inner {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          padding: 6px;
+          margin: 0px;
+        }
+        .action-row-inner > ha-icon {
+          margin-right: 5px;
+          margin-top: 0px;
+        }
+        /* allow children to fill all available space */
+        .grow-children {
           flex: 1;
           display: flex;
         }
-        .selector-grow ha-selector, .selector-grow ha-entity-picker {
-          width: 100%;
-        } 
-        .entity-editor-header {
+        .grow-children > * {
+          flex: 1;
+          min-width: 0;
+        }
+        .entity-editor-header, .action-editor-header {
           display: flex;
           align-items: center;
           gap: 12px;
           padding: 8px;
         }
-        .entity-editor-title {
+        .entity-editor-title, .action-editor-title {
           font-weight: 500;
           font-size: 1.1em;
-
           line-height: 1;
-          margin-top: 7px; /* tweak to align with icon */
-
+        }
+        .action-icon-placeholder {
+          width: 29px; 
+          height: 24px; 
+          display: inline-block;
         }
         .full-width {
           width: 100%;
+        }
+        .entity-group-header, .action-group-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 0px 6px;
+        }
+        .entity-group-title, action-group-title {
+          font-weight: 500;
+        }
+        .entity-group-actions, action-group-actions {
+          display: flex;
+          align-items: center;
+        }
+        entity-row-actions {
+          display: flex;
+          align-items: center;
+        }
+        .action-row-actions {
+          display: flex;
+          align-items: flex-start;
+        }
+        
+        /* Drag handle styles */
+        .handle {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          cursor: grab;
+          color: var(--secondary-text-color);
+          opacity: 0.7;
+          transition: opacity 0.2s ease;
+        }
+        .handle:hover {
+          opacity: 1;
+        }
+        .handle:active {
+          cursor: grabbing;
+        }
+        .handle-disabled {
+          opacity: 0.3;
+          cursor: default;
+          pointer-events: none;
+        }
+        .handle-disabled:hover {
+          opacity: 0.3;
+        }
+        .action-icon {
+          align-self: flex-start;
+          padding-top: 16px;
+        }
+        .action-handle {
+          align-self: flex-start;
+          padding-top: 18px;
+        }
+        .action-row-actions {
+          padding-top: 2px;
+        }
+        .service-data-editor-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-bottom: 4px;
+        }
+        .service-data-editor-title {
+          font-weight: 500;
+        }
+        .service-data-editor-actions {
+          display: flex;
+          gap: 8px;
+        }
+        .code-editor-wrapper.error {
+          border: 1px solid color: var(--error-color, red);
+          border-radius: 4px;
+          padding: 1px;
+        }
+        .yaml-error-message {
+          color: var(--error-color, red);
+          font-size: 14px;
+          margin: 6px;
+          white-space: pre-wrap;
+          font-family: Consolas, Menlo, Monaco, monospace;
+          line-height: 1.4;
+        }
+        .help-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 8px;
+          font-size: 0.9em;
+        }
+        .help-table th,
+        .help-table td {
+          border: 1px solid var(--divider-color, #444);
+          padding: 8px;
+          text-align: left;
+          vertical-align: top;
+        }
+        .help-table thead {
+          background: var(--card-background-color, #222);
+          font-weight: bold;
+        }
+        .help-title {
+          font-weight: bold;
+          margin-top: 16px;
+          font-size: 1em;
+        }
+        code {
+          font-family: monospace;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 2px 4px;
+          border-radius: 4px;
         } 
+        .icon-button {
+          display: inline-flex;
+          cursor: pointer;
+          position: relative;
+          transition: color 0.2s;
+          align-self: center;
+          align-items: center;
+          padding: 12px;
+        }
+        .icon-button:hover {
+          color: var(--primary-color, #2196f3);
+        }
+        .icon-button-disabled {
+          opacity: 0.4;
+          pointer-events: none;
+        }
+        .help-text {
+          padding: 12px 25px;
+        }
+        .add-action-button-wrapper {
+          display: flex;
+          justify-content: center;
+        }
       `;
   }
   render() {
-    if (!this._config) return x``;
+    if (!this._config) return html``;
     if (this._entityEditorIndex !== null) {
       var _this$_config$entitie;
       const entity = (_this$_config$entitie = this._config.entities) === null || _this$_config$entitie === void 0 ? void 0 : _this$_config$entitie[this._entityEditorIndex];
       return this._renderEntityEditor(entity);
+    } else if (this._actionEditorIndex !== null) {
+      var _this$_config$actions;
+      const action = (_this$_config$actions = this._config.actions) === null || _this$_config$actions === void 0 ? void 0 : _this$_config$actions[this._actionEditorIndex];
+      return this._renderActionEditor(action);
     }
     return this._renderMainEditor();
   }
   _renderMainEditor() {
-    if (!this._config) return x``;
+    if (!this._config) return html``;
     let entities = [...(this._config.entities ?? [])];
+    let actions = [...(this._config.actions ?? [])];
 
     // Append a blank row only for rendering (not saved)
     if (entities.length === 0 || entities[entities.length - 1].entity_id) {
@@ -2546,15 +2474,24 @@ class YetAnotherMediaPlayerEditor extends i {
         entity_id: ""
       });
     }
-    return x`
+    return html`
         <div class="form-row entity-group">
-          Entities*
-          ${entities.map((ent, idx) => {
+          <div class="entity-group-header">
+            <div class="entity-group-title">
+              Entities*
+            </div>
+          </div>
+          <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
+            <div class="sortable-container">
+              ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
-      return x`
-            <div class="entity-row-inner">
-              <div class="selector-grow">
-                ${
+      return html`
+                <div class="entity-row-inner ${idx < entities.length - 1 ? 'sortable-item' : ''}" data-index="${idx}">
+                  <div class="handle ${idx === entities.length - 1 ? 'handle-disabled' : ''}">
+                    <ha-icon icon="mdi:drag"></ha-icon>
+                  </div>
+                  <div class="grow-children">
+                    ${
       /* ha-entity-picker will show "[Object object]" for entities with extra properties,
          so we'll get around that by using ha-selector. However ha-selector always renders 
          as a required field for some reason. This is confusing for the last entity picker, 
@@ -2562,42 +2499,42 @@ class YetAnotherMediaPlayerEditor extends i {
          last entity only, we'll use ha-entity-picker. This entity will never have extra
          properties, because as soon as it's populated, a new blank entity is added below it
       */
-      idx === entities.length - 1 && !ent.entity_id ? x`
-                      <ha-entity-picker
-                        .hass=${this.hass}
-                        .value=${ent.entity_id}
-                        .includeDomains=${["media_player"]}
-
-                        .excludeEntities=${((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2.map(e => e.entity_id)) ?? []}
-
-                        clearable
-                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                      ></ha-entity-picker>
-                    ` : x`
-                      <ha-selector
-                        .hass=${this.hass}
-                        .selector=${{
+      idx === entities.length - 1 && !ent.entity_id ? html`
+                          <ha-entity-picker
+                            .hass=${this.hass}
+                            .value=${ent.entity_id}
+                            .includeDomains=${["media_player"]}
+                            .excludeEntities=${((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2.map(e => e.entity_id)) ?? []}
+                            clearable
+                            @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                          ></ha-entity-picker>
+                        ` : html`
+                          <ha-selector
+                            .hass=${this.hass}
+                            .selector=${{
         entity: {
           domain: "media_player"
         }
       }}
-                        .value=${ent.entity_id}
-
-                        clearable
-                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                      ></ha-selector>
-                    `}
-              </div>
-              <mwc-icon-button
-                .disabled=${!ent.entity_id}
-                title="Edit Entity Settings"
-                @click=${() => this._onEditEntity(idx)}
-              >
-                <ha-icon icon="mdi:pencil"></ha-icon>
-              </mwc-icon-button>
-            </div>
-          `;
+                            .value=${ent.entity_id}
+                            clearable
+                            @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                          ></ha-selector>
+                        `}
+                  </div>
+                  <div class="entity-row-actions">
+                    <ha-icon
+                      class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
+                      icon="mdi:pencil"
+                      title="Edit Entity Settings"
+                      @click=${() => this._onEditEntity(idx)}
+                    ></ha-icon>
+                  </div>
+                </div>
+              `;
     })}
+            </div>
+          </yamp-sortable>
         </div>
   
         <div class="form-row form-row-multi-column">
@@ -2622,9 +2559,9 @@ class YetAnotherMediaPlayerEditor extends i {
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
-              id="collapsed-on-idle-toggle"
-              .checked=${this._config.collapsed_on_idle ?? false}
-              @change=${e => this._updateConfig("collapsed_on_idle", e.target.checked)}
+              id="collapse-on-idle-toggle"
+              .checked=${this._config.collapse_on_idle ?? false}
+              @change=${e => this._updateConfig("collapse_on_idle", e.target.checked)}
             ></ha-switch>
             <span>Collapse on Idle</span>
           </div>
@@ -2636,6 +2573,41 @@ class YetAnotherMediaPlayerEditor extends i {
             ></ha-switch>
             <span>Always Collapsed</span>
           </div>
+          ${this._config.always_collapsed ? html`
+            <div>
+              <ha-switch
+                id="expand-on-search-toggle"
+                .checked=${this._config.expand_on_search ?? false}
+                @change=${e => this._updateConfig("expand_on_search", e.target.checked)}
+              ></ha-switch>
+              <span>Expand on Search</span>
+            </div>
+          ` : nothing}
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+      number: {
+        min: 0,
+        step: 1000,
+        unit_of_measurement: "ms",
+        mode: "box"
+      }
+    }}
+              .value=${this._config.idle_timeout_ms ?? 60000}
+              label="Idle Timeout (ms)"
+              @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
+            ></ha-selector>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
+          ></ha-icon>
         </div>
    
         <div class="form-row">
@@ -2658,6 +2630,33 @@ class YetAnotherMediaPlayerEditor extends i {
             @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
           ></ha-selector>
         </div>
+        ${this._config.volume_mode === "stepper" ? html`
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
+      number: {
+        min: 0.01,
+        max: 1,
+        step: 0.01,
+        unit_of_measurement: "",
+        mode: "box"
+      }
+    }}
+                .value=${this._config.volume_step ?? 0.05}
+                label="Volume Step (0.05 = 5%)"
+                @value-changed=${e => this._updateConfig("volume_step", e.detail.value)}
+              ></ha-selector>
+            </div>
+            <ha-icon
+              class="icon-button"
+              icon="mdi:restore"
+              title="Reset to default"
+              @click=${() => this._updateConfig("volume_step", 0.05)}
+            ></ha-icon>
+          </div>
+        ` : nothing}
 
         <div class="form-row">
           <ha-selector
@@ -2700,17 +2699,82 @@ class YetAnotherMediaPlayerEditor extends i {
             @value-changed=${e => this._updateConfig("idle_image", e.detail.value)}
           ></ha-entity-picker>
         </div>
+
+        <div class="form-row action-group">
+          <div class="action-group-header">
+            <div class="action-group-title">
+              Actions
+            </div>
+          </div>
+          <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
+            <div class="sortable-container">
+              ${actions.map((act, idx) => html`
+                <div class="action-row-inner sortable-item">
+                  <div class="handle action-handle">
+                    <ha-icon icon="mdi:drag"></ha-icon>
+                  </div>
+                  ${act !== null && act !== void 0 && act.icon ? html`
+                    <ha-icon 
+                    class="action-icon"
+                    icon="${act === null || act === void 0 ? void 0 : act.icon}"></ha-icon>
+                  ` : html`
+                    <span class="action-icon-placeholder"></span>
+                  `}
+                  <div class="grow-children">
+                    <ha-textfield
+                      placeholder="(Icon Only)"
+                      .value=${(act === null || act === void 0 ? void 0 : act.name) ?? ""}
+                      helper="${act !== null && act !== void 0 && act.menu_item ? `Open Menu Item: ${act === null || act === void 0 ? void 0 : act.menu_item}` : act !== null && act !== void 0 && act.service ? `Call Service: ${act === null || act === void 0 ? void 0 : act.service}` : `Not Configured`}"
+                      .helperPersistent=${true}
+                      @input=${a => this._onActionChanged(idx, a.target.value)}
+                    ></ha-textfield>
+                  </div>
+                  <div class="action-row-actions">
+                    <ha-icon
+                      class="icon-button"
+                      icon="mdi:pencil"
+                      title="Edit Action Settings"
+                      @click=${() => this._onEditAction(idx)}
+                    ></ha-icon>
+                    <ha-icon
+                      class="icon-button"
+                      icon="mdi:trash-can"
+                      title="Delete Action"
+                      @click=${() => this._removeAction(idx)}
+                    ></ha-icon>
+                  </div>
+                </div>
+              `)}
+            </div>
+          </yamp-sortable>
+          <div class="add-action-button-wrapper">
+            <ha-icon
+              class="icon-button"
+              icon="mdi:plus"
+              title="Add Action"
+              @click=${() => {
+      const newActions = [...(this._config.actions ?? []), {}];
+      const newIndex = newActions.length - 1;
+      this._updateConfig("actions", newActions);
+      this._onEditAction(newIndex);
+    }}
+            ></ha-icon>
+          </div>
+        </div>
+
       `;
   }
   _renderEntityEditor(entity) {
-    var _this$hass;
-    const stateObj = (_this$hass = this.hass) === null || _this$hass === void 0 || (_this$hass = _this$hass.states) === null || _this$hass === void 0 ? void 0 : _this$hass[entity === null || entity === void 0 ? void 0 : entity.entity_id];
+    var _this$hass2;
+    const stateObj = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[entity === null || entity === void 0 ? void 0 : entity.entity_id];
     const showGroupVolume = this._supportsFeature(stateObj, SUPPORT_GROUPING);
-    return x`
+    return html`
         <div class="entity-editor-header">
-          <mwc-icon-button @click=${this._onBackFromEntityEditor} title="Back">
-            <ha-icon icon="mdi:chevron-left"></ha-icon>
-          </mwc-icon-button>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:chevron-left"
+            @click=${this._onBackFromEntityEditor}>
+          </ha-icon>
           <div class="entity-editor-title">Edit Entity</div>
         </div>
 
@@ -2728,7 +2792,6 @@ class YetAnotherMediaPlayerEditor extends i {
           ></ha-selector>
         </div>
 
-
         <div class="form-row">
           <ha-textfield
             class="full-width"
@@ -2738,8 +2801,58 @@ class YetAnotherMediaPlayerEditor extends i {
           ></ha-textfield>
         </div>
 
+<div class="form-row form-row-multi-column">
+  <div>
+    <ha-switch
+      id="ma-template-toggle"
+      .checked=${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)}
+      @change=${e => {
+      this._useTemplate = e.target.checked;
+    }}
+    ></ha-switch>
+    <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
+  </div>
+</div>
 
-        ${showGroupVolume ? x`
+${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? html`
+      <div class="form-row">
+        <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+          <ha-code-editor
+            id="ma-template-editor"
+            label="Music Assistant Entity Template (Jinja)"
+            .hass=${this.hass}
+            mode="jinja2"
+            autocomplete-entities
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? ""}
+            @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+          ></ha-code-editor>
+          <div class="help-text">
+            <ha-icon icon="mdi:information-outline"></ha-icon>
+            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
+            <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
+  media_player.picore_house
+{% else %}
+  media_player.ma_wiim_mini
+{% endif %}</pre>
+           </pre>
+          </div>
+        </div>
+      </div>
+    ` : html`
+      <div class="form-row">
+        <ha-entity-picker
+          .hass=${this.hass}
+          .value=${this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? entity.music_assistant_entity : ""}
+          .includeDomains=${["media_player"]}
+          label="Music Assistant Entity (optional)"
+          helper="Pick a Music Assistant player for search."
+          clearable
+          @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+        ></ha-entity-picker>
+      </div>
+    `}
+
+        ${showGroupVolume ? html`
           <div class="form-row">
             <ha-switch
               id="group-volume-toggle"
@@ -2748,31 +2861,66 @@ class YetAnotherMediaPlayerEditor extends i {
             ></ha-switch>
             <label for="group-volume-toggle">Group Volume</label>
           </div>
-        ` : E}
+        ` : nothing}
 
-        <div class="form-row">
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="vol-template-toggle"
+              .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)}
+              @change=${e => {
+      this._useVolTemplate = e.target.checked;
+    }}
+            ></ha-switch>
+            <label for="vol-template-toggle">Use template for Volume Entity</label>
+          </div>
+        </div>
 
-          <ha-entity-picker
-            .hass=${this.hass}
-            .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
-
-            .includeDomains=${["media_player", "remote"]}
-            label="Volume Entity"
-            clearable
-            @value-changed=${e => {
+        ${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? html`
+              <div class="form-row">
+                <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+                  <ha-code-editor
+                    id="vol-template-editor"
+                    label="Volume Entity Template (Jinja)"
+                    .hass=${this.hass}
+                    mode="jinja2"
+                    autocomplete-entities
+                    .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? ""}
+                    @value-changed=${e => this._updateEntityProperty("volume_entity", e.detail.value)}
+                  ></ha-code-editor>
+                  <div class="help-text">
+                    <ha-icon icon="mdi:information-outline"></ha-icon>
+                    Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).
+                    Example switching volume entity based on a boolean:
+                    <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
+  remote.soundbar
+{% else %}
+  media_player.office_homepod
+{% endif %}</pre>
+                  </div>
+                </div>
+              </div>
+            ` : html`
+              <div class="form-row">
+                <ha-entity-picker
+                  .hass=${this.hass}
+                  .value=${this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
+                  .includeDomains=${["media_player", "remote"]}
+                  label="Volume Entity"
+                  clearable
+                  @value-changed=${e => {
       const value = e.detail.value;
       this._updateEntityProperty("volume_entity", value);
       if (!value || value === entity.entity_id) {
         // sync_power is meaningless in these cases
-
         this._updateEntityProperty("sync_power", false);
       }
     }}
-          ></ha-entity-picker>
-        </div>
+                ></ha-entity-picker>
+              </div>
+            `}
 
-
-        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id ? x`
+        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id ? html`
               <div class="form-row form-row-multi-column">
                 <div>
                   <ha-switch
@@ -2783,9 +2931,229 @@ class YetAnotherMediaPlayerEditor extends i {
                   <label for="sync-power-toggle">Sync Power</label>
                 </div>
               </div>
-            ` : E}
+            ` : nothing}
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="follow-active-toggle"
+              .checked=${(entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false}
+              @change=${e => this._updateEntityProperty("follow_active_volume", e.target.checked)}
+            ></ha-switch>
+            <label for="follow-active-toggle">Volume Entity Follows Active Entity</label>
+          </div>
+        </div>
+
+        ${entity !== null && entity !== void 0 && entity.follow_active_volume ? html`
+          <div class="form-row">
+            <div class="help-text">
+              <ha-icon icon="mdi:information-outline"></ha-icon>
+              When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.
+              <br><br>
+             
+            </div>
+          </div>
+        ` : nothing}
         </div>
       `;
+  }
+  _renderActionEditor(action) {
+    var _action$menu_item, _action$menu_item2;
+    const actionMode = this._actionMode ?? (action !== null && action !== void 0 && (_action$menu_item = action.menu_item) !== null && _action$menu_item !== void 0 && _action$menu_item.trim() ? "menu" : "service");
+    return html`
+        <div class="action-editor-header">
+          <ha-icon
+            class="icon-button"
+            icon="mdi:chevron-left"
+            @click=${this._onBackFromActionEditor}>
+          </ha-icon>
+          <div class="action-editor-title">Edit Action</div>
+        </div>
+
+        <div class="form-row">
+          <ha-textfield
+            class="full-width"
+            label="Name"
+            placeholder="(Icon Only)"
+            .value=${(action === null || action === void 0 ? void 0 : action.name) ?? ""}
+            @input=${e => this._updateActionProperty("name", e.target.value)}
+          ></ha-textfield>
+        </div>
+
+        <div class="form-row">
+          <ha-icon-picker
+            label="Icon"
+            .hass=${this.hass}
+            .value=${(action === null || action === void 0 ? void 0 : action.icon) ?? ""}
+            @value-changed=${e => this._updateActionProperty("icon", e.detail.value)}
+          ></ha-icon-picker>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            label="Action Type"
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "menu",
+          label: "Open a Card Menu Item"
+        }, {
+          value: "service",
+          label: "Call a Service"
+        }]
+      }
+    }}
+            .value=${this._actionMode ?? (action !== null && action !== void 0 && (_action$menu_item2 = action.menu_item) !== null && _action$menu_item2 !== void 0 && _action$menu_item2.trim() ? "menu" : "service")}
+            @value-changed=${e => {
+      const mode = e.detail.value;
+      this._actionMode = mode;
+      if (mode === "service") {
+        this._updateActionProperty("menu_item", undefined);
+      } else if (mode === "menu") {
+        this._updateActionProperty("service", undefined);
+        this._updateActionProperty("service_data", undefined);
+        this._updateActionProperty("script_variable", undefined);
+      }
+    }}
+          ></ha-selector>
+        </div>
+        
+        ${actionMode === "menu" ? html`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              label="Menu Item"
+              .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "",
+          label: ""
+        }, {
+          value: "search",
+          label: "Search"
+        }, {
+          value: "source",
+          label: "Source"
+        }, {
+          value: "more-info",
+          label: "More Info"
+        }, {
+          value: "group-players",
+          label: "Group Players"
+        }]
+      }
+    }}
+              .value=${(action === null || action === void 0 ? void 0 : action.menu_item) ?? ""}
+              @value-changed=${e => this._updateActionProperty("menu_item", e.detail.value || undefined)}
+            ></ha-selector>
+          </div>
+        ` : nothing} 
+        ${actionMode === 'service' ? html`
+          <div class="form-row">
+            <ha-combo-box
+              label="Service"
+              .hass=${this.hass}
+              .value=${action.service ?? ""}
+              .items=${this._serviceItems ?? []}
+              item-value-path="value"
+              item-label-path="label"
+              required
+              @value-changed=${e => this._updateActionProperty("service", e.detail.value)}
+            ></ha-combo-box>
+          </div>
+
+          ${typeof action.service === "string" && action.service.startsWith("script.") ? html`
+            <div class="form-row form-row-multi-column">
+              <div>
+                <ha-switch
+                  id="script-variable-toggle"
+                  .checked=${(action === null || action === void 0 ? void 0 : action.script_variable) ?? false}
+                  @change=${e => this._updateActionProperty("script_variable", e.target.checked)}
+                ></ha-switch>
+                <span>Script Variable (yamp_entity)</span>
+              </div>
+            </div>
+          ` : nothing}
+
+          ${action.service ? html`
+            <div class="help-text">
+              <ha-icon
+                icon="mdi:information-outline"
+              ></ha-icon>
+
+              Use <code>entity_id: current</code> to target the card's currently selected
+              media player entity. The <ha-icon icon="mdi:play-circle-outline"></ha-icon> button
+              below does not work if you use this feature.
+
+            </div>
+            <div class="help-text">
+              <ha-icon
+                icon="mdi:information-outline"
+              ></ha-icon>
+            Changes to the service data below are not committed to the config until 
+            <ha-icon icon="mdi:content-save"></ha-icon> is clicked!
+            </div>
+            <div class="form-row">
+              <div class="service-data-editor-header">
+                <div class="service-data-editor-title">Service Data</div>
+                <div class="service-data-editor-actions">
+                  <ha-icon
+                    class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
+                    icon="mdi:content-save"
+                    title="Save Service Data"
+                    @click=${this._saveYamlEditor}
+                  ></ha-icon>
+                  <ha-icon
+                    class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
+                    icon="mdi:backup-restore"
+                    title="Revert to Saved Service Data"
+                    @click=${this._revertYamlEditor}
+                  ></ha-icon>
+                  <ha-icon
+
+                    class="icon-button ${this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : ""}"
+
+                    icon="mdi:play-circle-outline"
+                    title="Test Action"
+                    @click=${this._testServiceCall}
+                  ></ha-icon>              
+                </div>
+            </div>
+            <div class=${this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+              <ha-code-editor
+                id="service-data-editor"
+                label="Service Data"
+                autocomplete-entities
+                autocomplete-icons
+                .hass=${this.hass}
+                mode="yaml"
+                .value=${action !== null && action !== void 0 && action.service_data ? yaml.dump(action.service_data) : ""}
+                @value-changed=${e => {
+      /* the yaml will be parsed in real time to detect errors, but we will defer 
+        updating the config until the save button above the editor is clicked.
+      */
+      this._yamlDraft = e.detail.value;
+      this._yamlModified = true;
+      try {
+        const parsed = yaml.load(this._yamlDraft);
+        if (parsed && typeof parsed === "object") {
+          this._yamlError = null;
+        } else {
+          this._yamlError = "Invalid YAML";
+        }
+      } catch (err) {
+        this._yamlError = err.message;
+      }
+    }}
+              ></ha-code-editor>
+              ${this._yamlError && this._yamlDraft.trim() !== "" ? html`<div class="yaml-error-message">${this._yamlError}</div>` : nothing}
+            </div>
+          ` : nothing}
+        ` : nothing}
+      </div>`;
   }
   _onEntityChanged(index, newValue) {
     const original = this._config.entities ?? [];
@@ -2804,11 +3172,134 @@ class YetAnotherMediaPlayerEditor extends i {
     const cleaned = updated.filter(e => e.entity_id && e.entity_id.trim() !== "");
     this._updateConfig("entities", cleaned);
   }
+  _onActionChanged(index, newValue) {
+    const original = this._config.actions ?? [];
+    const updated = [...original];
+    updated[index] = {
+      ...updated[index],
+      name: newValue
+    };
+    this._updateConfig("actions", updated);
+  }
   _onEditEntity(index) {
+    var _this$_config$entitie3;
     this._entityEditorIndex = index;
+    const ent = (_this$_config$entitie3 = this._config.entities) === null || _this$_config$entitie3 === void 0 ? void 0 : _this$_config$entitie3[index];
+    const mae = ent === null || ent === void 0 ? void 0 : ent.music_assistant_entity;
+    this._useTemplate = this._looksLikeTemplate(mae) ? true : false;
+    const vol = ent === null || ent === void 0 ? void 0 : ent.volume_entity;
+    this._useVolTemplate = this._looksLikeTemplate(vol) ? true : false;
+  }
+  _onEditAction(index) {
+    var _this$_config$actions2;
+    this._actionEditorIndex = index;
+    const action = (_this$_config$actions2 = this._config.actions) === null || _this$_config$actions2 === void 0 ? void 0 : _this$_config$actions2[index];
+    this._actionMode = action !== null && action !== void 0 && action.menu_item ? "menu" : "service";
   }
   _onBackFromEntityEditor() {
     this._entityEditorIndex = null;
+    this._useTemplate = null; // re-detect next open
+    this._useVolTemplate = null; // re-detect next open
+  }
+  _onBackFromActionEditor() {
+    this._actionEditorIndex = null;
+  }
+  _onEntityMoved(event) {
+    const {
+      oldIndex,
+      newIndex
+    } = event.detail;
+
+    // Don't allow moving the last blank entity
+    const entities = [...this._config.entities];
+    if (oldIndex >= entities.length || newIndex >= entities.length) {
+      return;
+    }
+    const [moved] = entities.splice(oldIndex, 1);
+    entities.splice(newIndex, 0, moved);
+    this._updateConfig("entities", entities);
+  }
+  _onActionMoved(event) {
+    const {
+      oldIndex,
+      newIndex
+    } = event.detail;
+    const actions = [...this._config.actions];
+    if (oldIndex >= actions.length || newIndex >= actions.length) {
+      return;
+    }
+    const [moved] = actions.splice(oldIndex, 1);
+    actions.splice(newIndex, 0, moved);
+    this._updateConfig("actions", actions);
+  }
+  _removeAction(index) {
+    const actions = [...(this._config.actions ?? [])];
+    if (index < 0 || index >= actions.length) return;
+    actions.splice(index, 1);
+    this._updateConfig("actions", actions);
+  }
+  _saveYamlEditor() {
+    try {
+      const parsed = yaml.load(this._yamlDraft);
+      if (!parsed || typeof parsed !== "object") {
+        this._yamlError = "YAML is not a valid object.";
+        return;
+      }
+      this._updateActionProperty("service_data", parsed);
+      this._yamlDraft = yaml.dump(parsed);
+      this._yamlError = null;
+      this._parsedYaml = parsed;
+    } catch (err) {
+      this._yamlError = err.message;
+    }
+  }
+  _revertYamlEditor() {
+    var _this$_config$actions3;
+    const editor = this.shadowRoot.querySelector("#service-data-editor");
+    const currentAction = (_this$_config$actions3 = this._config.actions) === null || _this$_config$actions3 === void 0 ? void 0 : _this$_config$actions3[this._actionEditorIndex];
+    if (!editor || !currentAction) return;
+    const yamlText = currentAction.service_data ? yaml.dump(currentAction.service_data) : "";
+    editor.value = yamlText;
+    this._yamlDraft = yamlText;
+    this._yamlError = null;
+    this._yamlModified = false;
+  }
+  _yamlDraftUsesCurrentEntity() {
+    if (!this._yamlDraft) return false;
+    const regex = /^\s*entity_id\s*:\s*current\s*$/m;
+    let result = regex.test(this._yamlDraft);
+    return result;
+  }
+  async _testServiceCall() {
+    var _this$_yamlDraft, _this$_config$actions4;
+    if (this._yamlError || !((_this$_yamlDraft = this._yamlDraft) !== null && _this$_yamlDraft !== void 0 && _this$_yamlDraft.trim())) {
+      return;
+    }
+    let serviceData;
+    try {
+      serviceData = yaml.load(this._yamlDraft);
+      if (typeof serviceData !== "object" || serviceData === null) {
+        console.error("Service data must be a valid object.");
+        return;
+      }
+    } catch (e) {
+      this._yamlError = e.message;
+      return;
+    }
+    const action = (_this$_config$actions4 = this._config.actions) === null || _this$_config$actions4 === void 0 ? void 0 : _this$_config$actions4[this._actionEditorIndex];
+    const service = action === null || action === void 0 ? void 0 : action.service;
+    if (!service || !this.hass) {
+      return;
+    }
+    const [domain, serviceName] = service.split(".");
+    if (!domain || !serviceName) {
+      return;
+    }
+    try {
+      await this.hass.callService(domain, serviceName, serviceData);
+    } catch (err) {
+      console.error("Failed to call service:", err);
+    }
   }
   _onToggleChanged(e) {
     const newConfig = {
@@ -2823,16 +3314,16 @@ class YetAnotherMediaPlayerEditor extends i {
     }));
   }
 }
-customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
+customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
 
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "yet-another-media-player",
-  name: "Yet Another Media Player",
-  description: "YAMP is a multi-entity media card with custom actions"
+  type: "yet-another-media-player-beta",
+  name: "Yet Another Media Player-beta",
+  description: "YAMP is a multi-entity media card with custom actions",
+  preview: true
 });
-class YetAnotherMediaPlayerCard extends i {
+class YetAnotherMediaPlayerCard extends LitElement {
   _handleChipPointerDown(e, idx) {
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerDown(e, idx);
@@ -2878,19 +3369,9 @@ class YetAnotherMediaPlayerCard extends i {
     const row = (_this$renderRoot = this.renderRoot) === null || _this$renderRoot === void 0 ? void 0 : _this$renderRoot.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
-    const controls = this._countMainControls(stateObj);
+    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f));
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
-  }
-  _countMainControls(stateObj) {
-    let count = 0;
-    if (this._supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
-    count++;
-    if (this._supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
-    if (this._supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
-    if (this._supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
-    if (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
-    return count;
   }
   get sortedEntityIds() {
     return [...this.entityIds].sort((a, b) => {
@@ -2977,13 +3458,19 @@ class YetAnotherMediaPlayerCard extends i {
     this._searchResults = [];
     this._searchError = "";
     this._searchTotalRows = 15; // minimum 15 rows for layout padding
+    // Per-chip linger map to keep MA entity selected briefly after pause
+    this._playbackLingerByIdx = {};
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
-    // Collapse on load if nothing is playing
+    this._showResolvedEntities = false;
+    // Collapse on load if nothing is playing (but respect linger state)
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
+        var _this$_playbackLinger;
         const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
-        if (stateObj && stateObj.state !== "playing") {
+        // Don't go idle if there's an active linger
+        const hasActiveLinger = ((_this$_playbackLinger = this._playbackLingerByIdx) === null || _this$_playbackLinger === void 0 ? void 0 : _this$_playbackLinger[this._selectedIndex]) && this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
+        if (stateObj && stateObj.state !== "playing" && !hasActiveLinger) {
           this._isIdle = true;
           this.requestUpdate();
         }
@@ -3002,7 +3489,182 @@ class YetAnotherMediaPlayerCard extends i {
     this._searchSwipeAttached = false;
     // Snapshot of entities that were playing when manual‑select started.
     this._manualSelectPlayingSet = null;
-  } // ← closes constructor
+    this._idleTimeoutMs = 60000;
+    this._volumeStep = 0.05;
+    // Optimistic playback state after control clicks
+    this._optimisticPlayback = null;
+    // Debounce entity switching to prevent rapid state changes
+    this._lastPlaybackEntityId = null;
+    this._entitySwitchDebounceTimer = null;
+    // Track previous states to detect transitions
+    this._lastMainState = null;
+    this._lastMaState = null;
+    // Cache resolved MA entity per index to use during render without switching chips
+    this._maResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
+    this._maResolveTtlMs = 7000; // refresh every ~7s
+    // Manual select timeout for hold-to-pin functionality
+    this._manualSelectTimeout = null;
+    // Cache resolved Volume entity per index (template or static)
+    this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
+    this._volResolveTtlMs = 7000; // refresh every ~7s
+    // Track the last entity that was playing for better pause/resume behavior
+    this._lastPlayingEntityId = null;
+    // Control focus lock to prefer most-recently controlled entity in brief paused window
+    this._controlFocusEntityId = null;
+  }
+
+  // Resolve and cache the MA entity for a given chip index (template or static)
+  async _ensureResolvedMaForIndex(idx) {
+    var _this$entityObjs;
+    const obj = (_this$entityObjs = this.entityObjs) === null || _this$entityObjs === void 0 ? void 0 : _this$entityObjs[idx];
+    if (!obj) return;
+    const raw = obj.music_assistant_entity;
+    if (!raw || typeof raw !== 'string') {
+      // Clear cache if no MA or not a string
+      delete this._maResolveCache[idx];
+      return;
+    }
+    const looksTemplate = raw.includes('{{') || raw.includes('{%');
+    const now = Date.now();
+    const cached = this._maResolveCache[idx];
+    if (!looksTemplate) {
+      // Static MA — always cache for consistency
+      this._maResolveCache[idx] = {
+        id: raw,
+        ts: now
+      };
+      return;
+    }
+    // For templates, respect TTL to avoid spamming /api/template
+    if (cached && now - cached.ts < this._maResolveTtlMs && cached.id) return;
+    try {
+      const resolved = await this._resolveTemplateAtActionTime(raw, obj.entity_id);
+      if (resolved && typeof resolved === 'string') {
+        // Always cache the resolved entity for service calls
+        // The rendering logic will handle validation separately
+        this._maResolveCache[idx] = {
+          id: resolved,
+          ts: now
+        };
+        // Trigger re-render so artwork/state can use the resolved id
+        this.requestUpdate();
+      }
+    } catch (_) {
+      // Leave existing cache (if any); do not throw
+    }
+  }
+
+  // Resolve and cache the Volume entity for a given chip index (template or static)
+  async _ensureResolvedVolForIndex(idx) {
+    var _this$entityObjs2;
+    const obj = (_this$entityObjs2 = this.entityObjs) === null || _this$entityObjs2 === void 0 ? void 0 : _this$entityObjs2[idx];
+    if (!obj) return;
+
+    // If follow_active_volume is enabled, we don't need to cache a specific volume entity
+    // as it will be determined dynamically based on the active entity
+    if (obj.follow_active_volume) {
+      delete this._volResolveCache[idx];
+      return;
+    }
+    const raw = obj.volume_entity;
+    if (!raw || typeof raw !== 'string') {
+      // Clear cache if no volume entity or not a string
+      delete this._volResolveCache[idx];
+      return;
+    }
+    const looksTemplate = raw.includes('{{') || raw.includes('{%');
+    const now = Date.now();
+    const cached = this._volResolveCache[idx];
+    if (!looksTemplate) {
+      // Static volume entity — always cache for consistency
+      this._volResolveCache[idx] = {
+        id: raw,
+        ts: now
+      };
+      return;
+    }
+    // For templates, respect TTL to avoid spamming /api/template
+    if (cached && now - cached.ts < this._volResolveTtlMs && cached.id) return;
+    try {
+      const resolved = await this._resolveTemplateAtActionTime(raw, obj.entity_id);
+      if (resolved && typeof resolved === 'string') {
+        this._volResolveCache[idx] = {
+          id: resolved,
+          ts: now
+        };
+        this.requestUpdate();
+      }
+    } catch (_) {
+      // Leave existing cache (if any); do not throw
+    }
+  }
+
+  // Get the resolved playback entity id for a chip index, preferring cache
+  _getResolvedPlaybackEntityIdSync(idx) {
+    return this._getEntityForPurpose(idx, 'playback_control');
+  }
+
+  // Get the resolved volume entity id for a chip index, preferring cache
+  _getResolvedVolumeEntityIdSync(idx) {
+    var _this$_volResolveCach;
+    const obj = this.entityObjs[idx];
+    if (!obj) return null;
+
+    // If follow_active_volume is enabled, return the active playback entity
+    if (obj.follow_active_volume) {
+      return this._getActivePlaybackEntityId();
+    }
+    const cached = (_this$_volResolveCach = this._volResolveCache) === null || _this$_volResolveCach === void 0 || (_this$_volResolveCach = _this$_volResolveCach[idx]) === null || _this$_volResolveCach === void 0 ? void 0 : _this$_volResolveCach.id;
+    if (cached && typeof cached === 'string') return cached;
+    const raw = obj.volume_entity;
+    if (raw && typeof raw === 'string') {
+      const looksTemplate = raw.includes('{{') || raw.includes('{%');
+      if (!looksTemplate) return raw;
+    }
+    return obj.entity_id;
+  }
+
+  // Get the actual resolved MA entity for state detection (can be unconfigured entities)
+  _getActualResolvedMaEntityForState(idx) {
+    var _this$_maResolveCache;
+    const obj = this.entityObjs[idx];
+    if (!obj) return null;
+    const cached = (_this$_maResolveCache = this._maResolveCache) === null || _this$_maResolveCache === void 0 || (_this$_maResolveCache = _this$_maResolveCache[idx]) === null || _this$_maResolveCache === void 0 ? void 0 : _this$_maResolveCache.id;
+    if (cached && typeof cached === 'string') {
+      return cached;
+    }
+
+    // No cache - check if we have a static MA entity
+    const rawMaEntity = obj.music_assistant_entity;
+    if (rawMaEntity && typeof rawMaEntity === 'string' && !rawMaEntity.includes('{{') && !rawMaEntity.includes('{%')) {
+      return rawMaEntity;
+    }
+
+    // No MA entity or template - use main entity
+    return obj.entity_id;
+  }
+
+  // Resolve template at action time with fallback to main entity (async)
+  async _resolveTemplateAtActionTime(templateString, fallbackEntityId) {
+    if (!templateString || typeof templateString !== 'string') return fallbackEntityId;
+
+    // Not a template — return as-is
+    if (!templateString.includes('{{') && !templateString.includes('{%')) {
+      return templateString;
+    }
+    try {
+      const res = await this.hass.callApi('POST', 'template', {
+        template: templateString
+      });
+      const out = (res || '').toString().trim();
+      // Basic validation: must look like an entity_id
+      if (out && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(out)) return out;
+      return fallbackEntityId;
+    } catch (error) {
+      console.warn('Failed to resolve template:', error);
+      return fallbackEntityId; // Fallback to main entity
+    }
+  }
 
   /**
    * Attach horizontal swipe on the search‑results area to cycle media‑class filters.
@@ -3014,14 +3676,12 @@ class YetAnotherMediaPlayerCard extends i {
     this._searchSwipeAttached = true;
     const threshold = 40; // px needed to trigger change
 
-    area.addEventListener('touchstart', e => {
+    const touchstartHandler = e => {
       if (e.touches.length === 1) {
         this._swipeStartX = e.touches[0].clientX;
       }
-    }, {
-      passive: true
-    });
-    area.addEventListener('touchend', e => {
+    };
+    const touchendHandler = e => {
       if (this._swipeStartX === null) return;
       const endX = e.changedTouches && e.changedTouches[0].clientX || null;
       if (endX === null) {
@@ -3039,18 +3699,28 @@ class YetAnotherMediaPlayerCard extends i {
         this.requestUpdate();
       }
       this._swipeStartX = null;
-    }, {
+    };
+    area.addEventListener('touchstart', touchstartHandler, {
       passive: true
     });
+    area.addEventListener('touchend', touchendHandler, {
+      passive: true
+    });
+
+    // Store handlers for cleanup
+    area._searchSwipeHandlers = {
+      touchstart: touchstartHandler,
+      touchend: touchendHandler
+    };
   }
 
   /**
-   * Open the search sheet pre‑filled with the current track’s artist and
+   * Open the search sheet pre‑filled with the current track's artist and
    * launch the search immediately (only when media_artist is present).
    */
   _searchArtistFromNowPlaying() {
-    var _this$currentStateObj;
-    const artist = ((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.media_artist) || "";
+    var _ref;
+    const artist = ((_ref = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj) === null || _ref === void 0 || (_ref = _ref.attributes) === null || _ref === void 0 ? void 0 : _ref.media_artist) || "";
     if (!artist) return; // nothing to search
 
     // Open overlay + search sheet
@@ -3075,6 +3745,23 @@ class YetAnotherMediaPlayerCard extends i {
     this._searchQuery = "";
     this._searchAttempted = false;
     this.requestUpdate();
+
+    // Handle focus for expand on search
+    const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
+    setTimeout(() => {
+      const inp = this.renderRoot.querySelector('#search-input-box');
+      if (inp) {
+        inp.focus();
+      } else {
+        // If input not found, try again with a longer delay
+        setTimeout(() => {
+          const retryInp = this.renderRoot.querySelector('#search-input-box');
+          if (retryInp) {
+            retryInp.focus();
+          }
+        }, 200);
+      }
+    }, focusDelay);
   }
   _hideSearchSheetInOptions() {
     this._showSearchInSheet = false;
@@ -3084,6 +3771,10 @@ class YetAnotherMediaPlayerCard extends i {
     this._searchLoading = false;
     this._searchAttempted = false;
     this.requestUpdate();
+    // Force layout update for expand on search
+    setTimeout(() => {
+      this._notifyResize();
+    }, 0);
   }
   // Search sheet methods
   _searchOpenSheet() {
@@ -3109,21 +3800,11 @@ class YetAnotherMediaPlayerCard extends i {
     this._searchResults = [];
     this.requestUpdate();
     try {
-      var _res$response;
-      const msg = {
-        type: "call_service",
-        domain: "media_player",
-        service: "search_media",
-        service_data: {
-          entity_id: this.currentEntityId,
-          search_query: this._searchQuery
-        },
-        return_response: true
-      };
-      const res = await this.hass.connection.sendMessagePromise(msg);
-      const arr = (res === null || res === void 0 || (_res$response = res.response) === null || _res$response === void 0 || (_res$response = _res$response[this.currentEntityId]) === null || _res$response === void 0 ? void 0 : _res$response.result) || (res === null || res === void 0 ? void 0 : res.result) || [];
+      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+      const arr = await searchMedia(this.hass, searchEntityId, this._searchQuery);
       this._searchResults = Array.isArray(arr) ? arr : [];
-      // remember how many rows exist in the full (“All”) set, but keep at least 15 for layout
+      // remember how many rows exist in the full ("All") set, but keep at least 15 for layout
       const rows = Array.isArray(this._searchResults) ? this._searchResults.length : 0;
       this._searchTotalRows = Math.max(15, rows); // keep at least 15
     } catch (e) {
@@ -3134,12 +3815,10 @@ class YetAnotherMediaPlayerCard extends i {
     this._searchLoading = false;
     this.requestUpdate();
   }
-  _playMediaFromSearch(item) {
-    this.hass.callService("media_player", "play_media", {
-      entity_id: this.currentEntityId,
-      media_content_type: item.media_content_type,
-      media_content_id: item.media_content_id
-    });
+  async _playMediaFromSearch(item) {
+    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
+    playSearchedMedia(this.hass, targetEntityId, item);
     // If searching from the bottom sheet, close the entity options overlay.
     if (this._showSearchInSheet) {
       this._closeEntityOptions();
@@ -3209,8 +3888,13 @@ class YetAnotherMediaPlayerCard extends i {
     this._collapseOnIdle = !!config.collapse_on_idle;
     // Force always-collapsed view
     this._alwaysCollapsed = !!config.always_collapsed;
+    // Expand on search option (only available when always_collapsed is true)
+    this._expandOnSearch = !!config.expand_on_search;
     // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
+    // Set idle timeout ms
+    this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
+    this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
     // Do not mutate config.force_chip_row here.
   }
 
@@ -3220,7 +3904,9 @@ class YetAnotherMediaPlayerCard extends i {
       const entity_id = typeof e === "string" ? e : e.entity_id;
       const name = typeof e === "string" ? "" : e.name || "";
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
+      const music_assistant_entity = typeof e === "string" ? undefined : e.music_assistant_entity;
       const sync_power = typeof e === "string" ? false : !!e.sync_power;
+      const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
       let group_volume;
       if (typeof e === "object" && typeof e.group_volume !== "undefined") {
         group_volume = e.group_volume;
@@ -3241,7 +3927,9 @@ class YetAnotherMediaPlayerCard extends i {
         entity_id,
         name,
         volume_entity,
+        music_assistant_entity,
         sync_power,
+        follow_active_volume,
         ...(typeof group_volume !== "undefined" ? {
           group_volume
         } : {})
@@ -3249,21 +3937,225 @@ class YetAnotherMediaPlayerCard extends i {
     });
   }
 
-  // Return volume entity for given index (use override if set)
-  _getVolumeEntity(idx) {
+  // Unified entity resolution system
+  _getEntityForPurpose(idx, purpose) {
+    var _mainState$attributes;
     const obj = this.entityObjs[idx];
-    return obj && obj.volume_entity ? obj.volume_entity : obj.entity_id;
+    if (!obj) return null;
+    switch (purpose) {
+      case 'volume_control':
+        // For volume control: follow active entity if enabled, otherwise use volume_entity or main entity
+        if (obj.follow_active_volume) {
+          return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+        }
+        return this._resolveEntity(obj.volume_entity, obj.entity_id, idx) || obj.entity_id;
+      case 'volume_display':
+        // For volume display: show active entity if follow_active_volume enabled, otherwise show control entity
+        if (obj.follow_active_volume) {
+          return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+        }
+        return this._resolveEntity(obj.volume_entity, obj.entity_id, idx) || obj.entity_id;
+      case 'grouping_control':
+        // For grouping menu: use MA entity (main entity if it's MA, or configured MA entity)
+        // Check if main entity is a Music Assistant entity by checking if it supports grouping
+        const mainState = this.hass.states[obj.entity_id];
+        const mainIsMA = (mainState === null || mainState === void 0 || (_mainState$attributes = mainState.attributes) === null || _mainState$attributes === void 0 ? void 0 : _mainState$attributes.supported_features) && (mainState.attributes.supported_features & SUPPORT_GROUPING) !== 0;
+        if (mainIsMA) {
+          return obj.entity_id;
+        }
+        return this._resolveEntity(obj.music_assistant_entity, obj.entity_id, idx) || obj.entity_id;
+      case 'playback_control':
+        // For playback controls: use the entity that is actually playing
+        return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+      case 'sorting':
+        // For chip sorting: use active playback entity (MA entity if playing, otherwise main entity)
+        return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+      default:
+        return obj.entity_id;
+    }
+  }
+
+  // Helper to resolve template entities
+  _resolveEntity(entityTemplate, fallbackEntityId, idx) {
+    if (!entityTemplate) return null;
+    if (typeof entityTemplate === 'string' && (entityTemplate.includes('{{') || entityTemplate.includes('{%'))) {
+      var _this$_maResolveCache2;
+      // For templates, use cached resolved entity
+      const cached = (_this$_maResolveCache2 = this._maResolveCache) === null || _this$_maResolveCache2 === void 0 || (_this$_maResolveCache2 = _this$_maResolveCache2[idx]) === null || _this$_maResolveCache2 === void 0 ? void 0 : _this$_maResolveCache2.id;
+      return cached || fallbackEntityId;
+    }
+    return entityTemplate;
+  }
+
+  // Get active playback entity for a specific index
+  _getActivePlaybackEntityForIndex(idx) {
+    var _this$hass2, _this$hass3;
+    const obj = this.entityObjs[idx];
+    if (!obj) return null;
+    const mainId = obj.entity_id;
+    const maId = this._resolveEntity(obj.music_assistant_entity, obj.entity_id, idx);
+    const mainState = mainId ? (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[mainId] : null;
+    const maState = maId ? (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[maId] : null;
+    if (maId === mainId) return mainId;
+    return this._getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState);
+  }
+
+  // Internal method to avoid recursion
+  _getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState) {
+    var _this$_playbackLinger2, _this$_lastPlayingEnt2;
+    // Check for linger first - if we recently paused MA, stay on MA unless main entity is playing
+    const linger = (_this$_playbackLinger2 = this._playbackLingerByIdx) === null || _this$_playbackLinger2 === void 0 ? void 0 : _this$_playbackLinger2[idx];
+    const now = Date.now();
+    if (linger && linger.until > now) {
+      var _this$_lastPlayingEnt;
+      // If main entity is playing AND was recently controlled, prioritize it over linger
+      if ((mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing" && ((_this$_lastPlayingEnt = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt === void 0 ? void 0 : _this$_lastPlayingEnt[idx]) === mainId) {
+        return mainId;
+      }
+      // Return the entity that the linger is actually for
+      return linger.entityId;
+    }
+    // Clear expired linger
+    if (linger && linger.until <= now) {
+      delete this._playbackLingerByIdx[idx];
+    }
+
+    // Prioritize the entity that is actually playing
+    // When both are playing, prefer MA entity for better control
+    if ((maState === null || maState === void 0 ? void 0 : maState.state) === "playing") return maId;
+    if ((mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing") return mainId;
+
+    // When neither is playing, check if one was recently controlled for this specific chip
+    const lastPlayingForChip = (_this$_lastPlayingEnt2 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt2 === void 0 ? void 0 : _this$_lastPlayingEnt2[idx];
+    if (lastPlayingForChip === maId) return maId;
+    if (lastPlayingForChip === mainId) return mainId;
+
+    // Default to main entity for consistency
+    return mainId;
+  }
+
+  // Legacy methods for backward compatibility
+  _getVolumeEntity(idx) {
+    return this._getEntityForPurpose(idx, 'volume_control');
+  }
+  _getVolumeEntityForGrouping(idx) {
+    return this._getEntityForPurpose(idx, 'grouping_control');
+  }
+
+  // Prefer Music Assistant entity for search/grouping if configured
+  _getSearchEntityId(idx) {
+    const obj = this.entityObjs[idx];
+    if (!obj || !obj.music_assistant_entity) return obj === null || obj === void 0 ? void 0 : obj.entity_id;
+
+    // Check if it's a template
+    if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+      // For templates, resolve at action time - return template string for now
+      return obj.music_assistant_entity;
+    }
+    return obj.music_assistant_entity;
+  }
+  // Prefer Music Assistant entity for playback controls (play/pause/seek/etc.) if configured
+  _getPlaybackEntityId(idx) {
+    return this._getEntityForPurpose(idx, 'playback_control');
+  }
+  // Choose the active playback target dynamically: prefer the entity that is currently playing
+  _getActivePlaybackEntityId() {
+    var _this$hass4, _this$hass5;
+    const mainId = this.currentEntityId;
+    // Use actual resolved MA entity for active playback detection (can be unconfigured)
+    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    const mainState = mainId ? (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[mainId] : null;
+    const maState = maId ? (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[maId] : null;
+    if (maId === mainId) return mainId;
+
+    // Prioritize the entity that is actually playing
+    if ((mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing") return mainId;
+    if ((maState === null || maState === void 0 ? void 0 : maState.state) === "playing") return maId;
+
+    // When neither is playing, prefer the main entity for consistency
+    return mainId;
+  }
+
+  // Get the active playback entity for a specific entity index (for follow_active_volume)
+  _getActivePlaybackEntityIdForIndex(idx) {
+    var _this$hass6, _this$hass7;
+    const obj = this.entityObjs[idx];
+    if (!obj) return null;
+    const mainId = obj.entity_id;
+    // Use actual resolved MA entity for active playback detection (can be unconfigured)
+    const maId = this._getActualResolvedMaEntityForState(idx);
+    const mainState = mainId ? (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[mainId] : null;
+    const maState = maId ? (_this$hass7 = this.hass) === null || _this$hass7 === void 0 || (_this$hass7 = _this$hass7.states) === null || _this$hass7 === void 0 ? void 0 : _this$hass7[maId] : null;
+    if (maId === mainId) return mainId;
+
+    // Prioritize the entity that is actually playing
+    if ((mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing") return mainId;
+    if ((maState === null || maState === void 0 ? void 0 : maState.state) === "playing") return maId;
+
+    // When neither is playing, prefer the main entity for consistency
+    return mainId;
+  }
+  _getGroupingEntityIdByIndex(idx) {
+    const obj = this.entityObjs[idx];
+    if (!obj || !obj.music_assistant_entity) return obj === null || obj === void 0 ? void 0 : obj.entity_id;
+
+    // Check if it's a template
+    if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+      // Do not return template strings in non-async paths; fall back to main entity
+      return obj.entity_id;
+    }
+    return obj.music_assistant_entity;
+  }
+  _getGroupingEntityIdByEntityId(entityId) {
+    const obj = this.entityObjs.find(o => o.entity_id === entityId);
+    if (!obj) return entityId;
+    const mae = obj.music_assistant_entity;
+    if (typeof mae === 'string' && (mae.includes('{{') || mae.includes('{%'))) {
+      return obj.entity_id; // avoid template strings in sync paths
+    }
+    return mae || obj.entity_id;
+  }
+  _findEntityObjByAnyId(anyId) {
+    return this.entityObjs.find(o => o.entity_id === anyId || o.music_assistant_entity === anyId) || null;
+  }
+
+  // Resolve Jinja template for music_assistant_entity with fallback to main entity
+  _resolveMusicAssistantEntity(idx) {
+    const obj = this.entityObjs[idx];
+    if (!obj || !obj.music_assistant_entity) return obj === null || obj === void 0 ? void 0 : obj.entity_id;
+    try {
+      // Check if it's a template (contains Jinja syntax)
+      if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+        // For now, return the template string - it will be resolved at action time
+        // This allows dynamic switching based on criteria
+        return obj.music_assistant_entity;
+      }
+
+      // Not a template, return as-is
+      return obj.music_assistant_entity;
+    } catch (error) {
+      console.warn('Failed to resolve music_assistant_entity template:', error);
+      return obj.entity_id; // Fallback to main entity
+    }
   }
 
   // Return grouping key
   _getGroupKey(id) {
-    var _this$hass2;
-    const st = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[id];
+    var _this$hass8;
+    // Use the grouping entity (e.g., Music Assistant) for membership
+    const groupingId = this._getGroupingEntityIdByEntityId(id);
+    const st = (_this$hass8 = this.hass) === null || _this$hass8 === void 0 || (_this$hass8 = _this$hass8.states) === null || _this$hass8 === void 0 ? void 0 : _this$hass8[groupingId];
     if (!st) return id;
-    const members = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
-    if (!members.length) return id;
-    const all = [id, ...members].sort();
-    return all[0];
+    const membersRaw = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
+    // Translate raw group member ids (likely MA ids) back to configured entity ids
+    const membersConfigured = this.entityIds.filter(otherId => {
+      if (otherId === id) return false;
+      const otherGroupingId = this._getGroupingEntityIdByEntityId(otherId);
+      return membersRaw.includes(otherGroupingId);
+    });
+    if (!membersConfigured.length) return id;
+    const allConfigured = [id, ...membersConfigured].sort();
+    return allConfigured[0];
   }
   get entityIds() {
     return this.entityObjs.map(e => e.entity_id);
@@ -3284,13 +4176,19 @@ class YetAnotherMediaPlayerCard extends i {
     if (this._lastGroupingMasterId && group.includes(this._lastGroupingMasterId)) {
       return this._lastGroupingMasterId;
     }
-    return group.find(id => {
-      const st = this.hass.states[id];
+    // Evaluate mastery using grouping entities, but return configured entity id
+    const candidate = group.find(id => {
+      const groupingId = this._getGroupingEntityIdByEntityId(id);
+      const st = this.hass.states[groupingId];
       if (!st) return false;
       const members = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
-      // Master should include all other group members in the group
-      return group.every(otherId => otherId === id || members.includes(otherId));
-    }) || group[0];
+      return group.every(otherId => {
+        if (otherId === id) return true;
+        const otherGroupingId = this._getGroupingEntityIdByEntityId(otherId);
+        return members.includes(otherGroupingId);
+      });
+    });
+    return candidate || group[0];
   }
   get currentEntityId() {
     return this.entityIds[this._selectedIndex];
@@ -3299,19 +4197,41 @@ class YetAnotherMediaPlayerCard extends i {
     if (!this.hass || !this.currentEntityId) return null;
     return this.hass.states[this.currentEntityId];
   }
+  get currentPlaybackEntityId() {
+    return this._getPlaybackEntityId(this._selectedIndex);
+  }
+  get currentPlaybackStateObj() {
+    // Use cached resolved MA ID instead of raw template string
+    const resolvedMaId = this._getResolvedPlaybackEntityIdSync(this._selectedIndex);
+    if (!this.hass || !resolvedMaId) {
+      // Fall back to main entity if no resolved MA ID
+      return this.currentStateObj;
+    }
+    return this.hass.states[resolvedMaId];
+  }
+  get currentActivePlaybackEntityId() {
+    return this._getActivePlaybackEntityId();
+  }
+  get currentActivePlaybackStateObj() {
+    var _this$hass9;
+    const id = this.currentActivePlaybackEntityId;
+    return id ? (_this$hass9 = this.hass) === null || _this$hass9 === void 0 || (_this$hass9 = _this$hass9.states) === null || _this$hass9 === void 0 ? void 0 : _this$hass9[id] : null;
+  }
   get currentVolumeStateObj() {
-    const obj = this.entityObjs[this._selectedIndex];
-    const entityId = (obj === null || obj === void 0 ? void 0 : obj.volume_entity) || (obj === null || obj === void 0 ? void 0 : obj.entity_id);
+    const entityId = this._getVolumeEntity(this._selectedIndex);
     return entityId ? this.hass.states[entityId] : null;
   }
   updated(changedProps) {
     var _super$updated;
     if (this.hass && this.entityIds) {
       // Update timestamps for playing entities
-      this.entityIds.forEach(id => {
-        const state = this.hass.states[id];
-        if (state && state.state === "playing") {
-          this._playTimestamps[id] = Date.now();
+      this.entityIds.forEach((id, idx) => {
+        const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
+        if (activeEntityId) {
+          const activeState = this.hass.states[activeEntityId];
+          if (activeState && activeState.state === "playing") {
+            this._playTimestamps[id] = Date.now();
+          }
         }
       });
 
@@ -3347,6 +4267,9 @@ class YetAnotherMediaPlayerCard extends i {
           }
         }
       }
+      // Warm the resolved MA/Volume caches for the selected chip
+      this._ensureResolvedMaForIndex(this._selectedIndex);
+      this._ensureResolvedVolForIndex(this._selectedIndex);
     }
 
     // Restart progress timer
@@ -3355,8 +4278,8 @@ class YetAnotherMediaPlayerCard extends i {
       clearInterval(this._progressTimer);
       this._progressTimer = null;
     }
-    const stateObj = this.currentStateObj;
-    if (stateObj && stateObj.state === "playing" && stateObj.attributes.media_duration) {
+    const playbackState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    if (playbackState && playbackState.state === "playing" && playbackState.attributes.media_duration) {
       this._progressTimer = setInterval(() => {
         this.requestUpdate();
       }, 500);
@@ -3366,6 +4289,18 @@ class YetAnotherMediaPlayerCard extends i {
     this._updateIdleState();
 
     // Notify HA if collapsed state changes
+    // If expand on search is enabled and search is open, force expanded state
+    if (this._alwaysCollapsed && this._expandOnSearch && (this._searchOpen || this._showSearchInSheet)) {
+      const collapsedNow = false;
+      if (this._prevCollapsed !== collapsedNow) {
+        this._prevCollapsed = collapsedNow;
+        // Trigger layout update
+        this._notifyResize();
+      }
+      return;
+    }
+
+    // Otherwise use normal collapse logic
     const collapsedNow = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
     if (this._prevCollapsed !== collapsedNow) {
       this._prevCollapsed = collapsedNow;
@@ -3380,9 +4315,21 @@ class YetAnotherMediaPlayerCard extends i {
 
     // Autofocus the in-sheet search box when opening the search in entity options
     if (this._showSearchInSheet) {
+      // Use a longer delay when expand on search is enabled to allow for card expansion
+      this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
       setTimeout(() => {
         const inp = this.renderRoot.querySelector('#search-input-box');
-        if (inp) inp.focus();
+        if (inp) {
+          inp.focus();
+        } else {
+          // If input not found, try again with a longer delay
+          setTimeout(() => {
+            const retryInp = this.renderRoot.querySelector('#search-input-box');
+            if (retryInp) {
+              retryInp.focus();
+            }
+          }, 200);
+        }
         // Only scroll filter chip row to start if the set of chips has changed
         const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
         const classStr = classes.join(",");
@@ -3407,7 +4354,7 @@ class YetAnotherMediaPlayerCard extends i {
         }
         // attach swipe gesture once
         this._attachSearchSwipe();
-      }, 0);
+      }, 200);
     }
     // When the source‑list sheet opens, make sure the overlay scrolls to the top
     if (this._showSourceList) {
@@ -3495,8 +4442,8 @@ class YetAnotherMediaPlayerCard extends i {
         // Take a snapshot of who is currently playing.
         this._manualSelectPlayingSet = new Set();
         for (const id of this.entityIds) {
-          var _this$hass3;
-          const st = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id];
+          var _this$hass0;
+          const st = (_this$hass0 = this.hass) === null || _this$hass0 === void 0 || (_this$hass0 = _this$hass0.states) === null || _this$hass0 === void 0 ? void 0 : _this$hass0[id];
           if (st && st.state === "playing") {
             this._manualSelectPlayingSet.add(id);
           }
@@ -3523,7 +4470,7 @@ class YetAnotherMediaPlayerCard extends i {
     this._manualSelect = true;
     this.requestUpdate();
   }
-  _onActionChipClick(idx) {
+  async _onActionChipClick(idx) {
     const action = this.config.actions[idx];
     if (!action) return;
     if (action.menu_item) {
@@ -3546,6 +4493,11 @@ class YetAnotherMediaPlayerCard extends i {
           this._searchQuery = "";
           this._searchAttempted = false;
           this.requestUpdate();
+
+          // Force layout update for expand on search
+          setTimeout(() => {
+            this._notifyResize();
+          }, 0);
           break;
         case "source":
           this._showEntityOptions = true;
@@ -3562,47 +4514,119 @@ class YetAnotherMediaPlayerCard extends i {
       ...(action.service_data || {})
     };
     if (domain === "script" && action.script_variable === true) {
-      const currentId = this.currentEntityId;
+      const currentMainId = this.currentEntityId;
+      const currentMaIdTemplate = this._getSearchEntityId(this._selectedIndex);
+      const currentMaId = await this._resolveTemplateAtActionTime(currentMaIdTemplate, currentMainId);
+      const currentPlaybackIdTemplate = this.currentActivePlaybackEntityId || this._getPlaybackEntityId(this._selectedIndex);
+      const currentPlaybackId = await this._resolveTemplateAtActionTime(currentPlaybackIdTemplate, currentMainId);
       if (data.entity_id === "current" || data.entity_id === "$current" || data.entity_id === "this") {
         delete data.entity_id;
       }
-      data.yamp_entity = currentId;
+      // Prefer MA entity when available for script consumers
+      data.yamp_entity = currentMaId || currentMainId;
+      // Also expose main and active playback for advanced scripts
+      data.yamp_main_entity = currentMainId;
+      data.yamp_playback_entity = currentPlaybackId;
     } else if (!(domain === "script" && action.script_variable === true) && (data.entity_id === "current" || data.entity_id === "$current" || data.entity_id === "this" || !data.entity_id)) {
-      data.entity_id = this.currentEntityId;
+      // Resolve 'current' placeholder differently by domain
+      if (domain === "music_assistant") {
+        const maTemplate = this._getSearchEntityId(this._selectedIndex);
+        data.entity_id = await this._resolveTemplateAtActionTime(maTemplate, this.currentEntityId);
+      } else if (domain === "media_player") {
+        const playbackTemplate = this.currentActivePlaybackEntityId || this._getPlaybackEntityId(this._selectedIndex);
+        data.entity_id = await this._resolveTemplateAtActionTime(playbackTemplate, this.currentEntityId);
+      } else {
+        data.entity_id = this.currentEntityId;
+      }
     }
     this.hass.callService(domain, service, data);
   }
-  _onControlClick(action) {
-    const entity = this.currentEntityId;
-    if (!entity) return;
-    const stateObj = this.currentStateObj;
+  async _onControlClick(action) {
+    var _this$hass1;
+    // Use the unified entity resolution system for control actions
+    const targetEntity = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
+    if (!targetEntity) return;
+    const stateObj = ((_this$hass1 = this.hass) === null || _this$hass1 === void 0 || (_this$hass1 = _this$hass1.states) === null || _this$hass1 === void 0 ? void 0 : _this$hass1[targetEntity]) || this.currentStateObj;
     switch (action) {
       case "play_pause":
-        this.hass.callService("media_player", "media_play_pause", {
-          entity_id: entity
-        });
+        if ((stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) === "playing") {
+          this.hass.callService("media_player", "media_pause", {
+            entity_id: targetEntity
+          });
+          // When pausing, set the last playing entity to the one we just paused (per-chip)
+          if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
+          this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
+          // Lock controls to this entity during the paused window
+          this._controlFocusEntityId = targetEntity;
+          // Optimistic toggle to reduce flicker
+          this._optimisticPlayback = {
+            entity_id: targetEntity,
+            state: "paused",
+            ts: Date.now()
+          };
+          this.requestUpdate();
+          setTimeout(() => {
+            this._optimisticPlayback = null;
+            this.requestUpdate();
+          }, 1200);
+        } else {
+          this.hass.callService("media_player", "media_play", {
+            entity_id: targetEntity
+          });
+          // On resume, lock to the target entity immediately (per-chip)
+          if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
+          this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
+          // Maintain focus lock until an entity reports playing
+          this._controlFocusEntityId = targetEntity;
+          // Optimistic toggle to reduce flicker
+          this._optimisticPlayback = {
+            entity_id: targetEntity,
+            state: "playing",
+            ts: Date.now()
+          };
+          this.requestUpdate();
+          setTimeout(() => {
+            this._optimisticPlayback = null;
+            this.requestUpdate();
+          }, 1200);
+        }
         break;
       case "next":
         this.hass.callService("media_player", "media_next_track", {
-          entity_id: entity
+          entity_id: targetEntity
         });
         break;
       case "prev":
         this.hass.callService("media_player", "media_previous_track", {
-          entity_id: entity
+          entity_id: targetEntity
         });
         break;
       case "stop":
         this.hass.callService("media_player", "media_stop", {
-          entity_id: entity
+          entity_id: targetEntity
         });
+        if (stateObj) {
+          // Set optimistic state for the entity we're actually controlling
+          const targetEntityId = targetEntity;
+          this._optimisticPlayback = {
+            entity_id: targetEntityId,
+            state: "idle",
+            ts: Date.now()
+          };
+          // Don't clear debounce on action - let it handle state transitions naturally
+          this.requestUpdate();
+          setTimeout(() => {
+            this._optimisticPlayback = null;
+            this.requestUpdate();
+          }, 1200);
+        }
         break;
       case "shuffle":
         {
           // Toggle shuffle based on current state
           const curr = !!stateObj.attributes.shuffle;
           this.hass.callService("media_player", "shuffle_set", {
-            entity_id: entity,
+            entity_id: targetEntity,
             shuffle: !curr
           });
           break;
@@ -3614,25 +4638,31 @@ class YetAnotherMediaPlayerCard extends i {
           let next;
           if (curr === "off") next = "all";else if (curr === "all") next = "one";else next = "off";
           this.hass.callService("media_player", "repeat_set", {
-            entity_id: entity,
+            entity_id: targetEntity,
             repeat: next
           });
           break;
         }
       case "power":
         {
-          // Toggle between turn_on and turn_off based on current state
-          const svc = stateObj.state === "off" ? "turn_on" : "turn_off";
+          var _this$hass10;
+          // Toggle main entity power (physical power behavior)
+          const mainId = this.currentEntityId;
+          const mainState = ((_this$hass10 = this.hass) === null || _this$hass10 === void 0 || (_this$hass10 = _this$hass10.states) === null || _this$hass10 === void 0 ? void 0 : _this$hass10[mainId]) || stateObj;
+          const svc = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "off" ? "turn_on" : "turn_off";
           this.hass.callService("media_player", svc, {
-            entity_id: entity
+            entity_id: mainId
           });
 
           // Also toggle volume_entity if sync_power is enabled for this entity
           const obj = this.entityObjs[this._selectedIndex];
-          if (obj && obj.sync_power && obj.volume_entity && obj.volume_entity !== obj.entity_id) {
-            this.hass.callService("media_player", svc, {
-              entity_id: obj.volume_entity
-            });
+          if (obj && obj.sync_power) {
+            const volEntityId = this._getVolumeEntity(this._selectedIndex);
+            if (volEntityId && volEntityId !== obj.entity_id) {
+              this.hass.callService("media_player", svc, {
+                entity_id: volEntityId
+              });
+            }
           }
           break;
         }
@@ -3643,13 +4673,13 @@ class YetAnotherMediaPlayerCard extends i {
    * Handles volume change events.
    * With group_volume: false, always sets only the single volume entity, never the group.
    * With group_volume: true/undefined, applies group logic.
-   * Includes debug logs to verify logic.
    */
-  _onVolumeChange(e) {
+  async _onVolumeChange(e) {
     var _state$attributes;
     const idx = this._selectedIndex;
-    const mainEntity = this.entityObjs[idx].entity_id;
-    const state = this.hass.states[mainEntity];
+    const groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
+    const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
+    const state = this.hass.states[groupingEntity];
     const newVol = Number(e.target.value);
     const obj = this.entityObjs[idx];
 
@@ -3666,12 +4696,36 @@ class YetAnotherMediaPlayerCard extends i {
     // Group volume logic: ONLY runs if group_volume is true/undefined
     if (Array.isArray(state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.group_members) && state.attributes.group_members.length) {
       var _this$currentVolumeSt;
+      // Get the main entity and all grouped members
+      const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
       const base = typeof this._groupBaseVolume === "number" ? this._groupBaseVolume : Number(((_this$currentVolumeSt = this.currentVolumeStateObj) === null || _this$currentVolumeSt === void 0 ? void 0 : _this$currentVolumeSt.attributes.volume_level) || 0);
       const delta = newVol - base;
       for (const t of targets) {
-        const obj = this.entityObjs.find(e => e.entity_id === t);
-        const volTarget = obj && obj.volume_entity ? obj.volume_entity : t;
+        for (const obj of this.entityObjs) {
+          let resolvedGroupingId;
+          if (obj.music_assistant_entity) {
+            if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+              // For templates, resolve at action time
+              try {
+                resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
+              } catch (error) {
+                console.warn('Failed to resolve template for volume change:', error);
+                resolvedGroupingId = obj.entity_id;
+              }
+            } else {
+              resolvedGroupingId = obj.music_assistant_entity;
+            }
+          } else {
+            resolvedGroupingId = obj.entity_id;
+          }
+          if (resolvedGroupingId === t) {
+            break;
+          }
+        }
+
+        // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
+        const volTarget = t; // Use the grouping entity directly
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
@@ -3683,13 +4737,14 @@ class YetAnotherMediaPlayerCard extends i {
       }
       this._groupBaseVolume = newVol;
     } else {
+      const volumeEntity = this._getVolumeEntity(idx);
       this.hass.callService("media_player", "volume_set", {
-        entity_id: this._getVolumeEntity(idx),
+        entity_id: volumeEntity,
         volume_level: newVol
       });
     }
   }
-  _onVolumeStep(direction) {
+  async _onVolumeStep(direction) {
     var _state$attributes2;
     const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
@@ -3704,16 +4759,40 @@ class YetAnotherMediaPlayerCard extends i {
       });
       return;
     }
-    const mainEntity = this.entityObjs[idx].entity_id;
-    const state = this.hass.states[mainEntity];
+    const groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
+    const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
+    const state = this.hass.states[groupingEntity];
     if (Array.isArray(state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.group_members) && state.attributes.group_members.length) {
       // Grouped: apply group gain step
+      const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
-      // Fixed step size
-      const step = 0.05 * direction;
+      // Use configurable step size
+      const step = this._volumeStep * direction;
       for (const t of targets) {
-        const obj = this.entityObjs.find(e => e.entity_id === t);
-        const volTarget = obj && obj.volume_entity ? obj.volume_entity : t;
+        for (const obj of this.entityObjs) {
+          let resolvedGroupingId;
+          if (obj.music_assistant_entity) {
+            if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+              // For templates, resolve at action time
+              try {
+                resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
+              } catch (error) {
+                console.warn('Failed to resolve template for volume step:', error);
+                resolvedGroupingId = obj.entity_id;
+              }
+            } else {
+              resolvedGroupingId = obj.music_assistant_entity;
+            }
+          } else {
+            resolvedGroupingId = obj.entity_id;
+          }
+          if (resolvedGroupingId === t) {
+            break;
+          }
+        }
+
+        // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
+        const volTarget = t; // Use the grouping entity directly
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + step;
@@ -3726,11 +4805,127 @@ class YetAnotherMediaPlayerCard extends i {
     } else {
       // Not grouped, set directly
       let current = Number(stateObj.attributes.volume_level || 0);
-      current += direction * 0.05;
+      current += this._volumeStep * direction;
       current = Math.max(0, Math.min(1, current));
       this.hass.callService("media_player", "volume_set", {
         entity_id: entity,
         volume_level: current
+      });
+    }
+  }
+  async _onMuteToggle() {
+    var _state$attributes3;
+    const idx = this._selectedIndex;
+    const entity = this._getVolumeEntity(idx);
+    if (!entity) return;
+    const isRemoteVolumeEntity = entity.startsWith && entity.startsWith("remote.");
+    const stateObj = this.currentVolumeStateObj;
+    if (!stateObj) return;
+    const isMuted = stateObj.attributes.is_volume_muted ?? false;
+    const currentVolume = stateObj.attributes.volume_level ?? 0;
+    if (isRemoteVolumeEntity) {
+      // For remote entities, we can't easily toggle mute, so just set volume to 0 or restore
+      if (isMuted) {
+        // Restore to a reasonable volume if was muted
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: entity,
+          volume_level: 0.5
+        });
+      } else {
+        // Mute by setting volume to 0
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: entity,
+          volume_level: 0
+        });
+      }
+      return;
+    }
+
+    // Check if mute is supported
+    const supportsMute = this._supportsFeature(stateObj, SUPPORT_VOLUME_MUTE);
+    if (!supportsMute) {
+      // If mute is not supported, implement mute by setting volume to 0 and storing previous volume
+      if (currentVolume > 0) {
+        // Store current volume and mute
+        this._previousVolume = currentVolume;
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: entity,
+          volume_level: 0
+        });
+      } else {
+        // Restore previous volume
+        const restoreVolume = this._previousVolume ?? 0.5;
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: entity,
+          volume_level: restoreVolume
+        });
+        this._previousVolume = null;
+      }
+      return;
+    }
+    const groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
+    const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
+    const state = this.hass.states[groupingEntity];
+    if (Array.isArray(state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.group_members) && state.attributes.group_members.length) {
+      // Grouped: apply mute to all group members
+      const mainEntity = this.entityObjs[idx].entity_id;
+      const targets = [mainEntity, ...state.attributes.group_members];
+      for (const t of targets) {
+        for (const obj of this.entityObjs) {
+          let resolvedGroupingId;
+          if (obj.music_assistant_entity) {
+            if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+              // For templates, resolve at action time
+              try {
+                resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
+              } catch (error) {
+                console.warn('Failed to resolve template for mute toggle:', error);
+                resolvedGroupingId = obj.entity_id;
+              }
+            } else {
+              resolvedGroupingId = obj.music_assistant_entity;
+            }
+          } else {
+            resolvedGroupingId = obj.entity_id;
+          }
+          if (resolvedGroupingId === t) {
+            break;
+          }
+        }
+
+        // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
+        const volTarget = t; // Use the grouping entity directly
+        const targetState = this.hass.states[volTarget];
+        const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
+        if (targetSupportsMute) {
+          this.hass.callService("media_player", "volume_mute", {
+            entity_id: volTarget,
+            is_volume_muted: !isMuted
+          });
+        } else {
+          var _targetState$attribut;
+          // For entities that don't support mute, set volume to 0 or restore
+          const targetVolume = (targetState === null || targetState === void 0 || (_targetState$attribut = targetState.attributes) === null || _targetState$attribut === void 0 ? void 0 : _targetState$attribut.volume_level) ?? 0;
+          if (targetVolume > 0) {
+            // Store current volume and mute (simplified - in a real implementation you'd want to store per entity)
+            this.hass.callService("media_player", "volume_set", {
+              entity_id: volTarget,
+              volume_level: 0
+            });
+          } else {
+            // Restore to a reasonable volume
+            this.hass.callService("media_player", "volume_set", {
+              entity_id: volTarget,
+              volume_level: 0.5
+            });
+          }
+        }
+      }
+    } else {
+      // Not grouped, toggle mute directly
+      this.hass.callService("media_player", "volume_mute", {
+        entity_id: entity,
+        is_volume_muted: !isMuted
       });
     }
   }
@@ -3749,12 +4944,14 @@ class YetAnotherMediaPlayerCard extends i {
       entity_id: volumeEntity,
       volume_level: vol
     });
+    this.requestUpdate();
   }
   _onGroupVolumeStep(volumeEntity, direction) {
     this.hass.callService("remote", "send_command", {
       entity_id: volumeEntity,
       command: direction > 0 ? "volume_up" : "volume_down"
     });
+    this.requestUpdate();
   }
   _onSourceChange(e) {
     const entity = this.currentEntityId;
@@ -3774,10 +4971,34 @@ class YetAnotherMediaPlayerCard extends i {
       composed: true
     }));
   }
-  _onProgressBarClick(e) {
-    const entity = this.currentEntityId;
-    const stateObj = this.currentStateObj;
-    if (!entity || !stateObj) return;
+  async _onProgressBarClick(e) {
+    var _this$hass11, _this$hass12, _this$hass13;
+    // For seeking, we want to target the entity that is actually playing
+    const mainId = this.currentEntityId;
+    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    const mainState = mainId ? (_this$hass11 = this.hass) === null || _this$hass11 === void 0 || (_this$hass11 = _this$hass11.states) === null || _this$hass11 === void 0 ? void 0 : _this$hass11[mainId] : null;
+    const maState = maId ? (_this$hass12 = this.hass) === null || _this$hass12 === void 0 || (_this$hass12 = _this$hass12.states) === null || _this$hass12 === void 0 ? void 0 : _this$hass12[maId] : null;
+    let targetEntity;
+    if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
+      targetEntity = this._controlFocusEntityId;
+    } else if ((maState === null || maState === void 0 ? void 0 : maState.state) === "playing") {
+      targetEntity = maId;
+    } else if ((mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing") {
+      targetEntity = mainId;
+    } else {
+      var _this$_lastPlayingEnt3;
+      // When neither is playing, prefer the last playing entity for better resume behavior
+      const lastPlayingForChip = (_this$_lastPlayingEnt3 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt3 === void 0 ? void 0 : _this$_lastPlayingEnt3[this._selectedIndex];
+      if (lastPlayingForChip && (lastPlayingForChip === maId || lastPlayingForChip === mainId)) {
+        targetEntity = lastPlayingForChip;
+      } else {
+        // Fallback to the configured playback entity
+        const entityTemplate = this._getPlaybackEntityId(this._selectedIndex);
+        targetEntity = await this._resolveTemplateAtActionTime(entityTemplate, this.currentEntityId);
+      }
+    }
+    const stateObj = ((_this$hass13 = this.hass) === null || _this$hass13 === void 0 || (_this$hass13 = _this$hass13.states) === null || _this$hass13 === void 0 ? void 0 : _this$hass13[targetEntity]) || this.currentStateObj;
+    if (!targetEntity || !stateObj) return;
     const duration = stateObj.attributes.media_duration;
     if (!duration) return;
     const rect = e.target.getBoundingClientRect();
@@ -3790,19 +5011,19 @@ class YetAnotherMediaPlayerCard extends i {
       this.requestUpdate();
     }
     this.hass.callService("media_player", "media_seek", {
-      entity_id: entity,
+      entity_id: targetEntity,
       seek_position: seekTime
     });
   }
   render() {
-    var _this$currentVolumeSt2, _this$currentStateObj2;
-    if (!this.hass || !this.config) return E;
+    var _this$_optimisticPlay, _this$hass14, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache3, _this$_playbackLinger4, _this$hass15, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$currentVolumeSt3, _this$currentStateObj;
+    if (!this.hass || !this.config) return nothing;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
     }
     const showChipRow = this.config.show_chip_row || "auto";
-    const stateObj = this.currentStateObj;
-    if (!stateObj) return x`<div class="details">Entity not found.</div>`;
+    const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    if (!stateObj) return html`<div class="details">Entity not found.</div>`;
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -3815,29 +5036,105 @@ class YetAnotherMediaPlayerCard extends i {
       idleImageUrl = sensorState.attributes.entity_picture || (sensorState.state && sensorState.state.startsWith("http") ? sensorState.state : null);
     }
     const dimIdleFrame = !!idleImageUrl;
+    const hideControlsNow = this._isIdle;
+    const shouldDimIdle = dimIdleFrame && this._isIdle;
 
-    // Calculate shuffle/repeat state only AFTER confirming stateObj exists
-    const shuffleActive = !!stateObj.attributes.shuffle;
-    const repeatActive = stateObj.attributes.repeat && stateObj.attributes.repeat !== "off";
+    // Calculate shuffle/repeat state from the active playback entity when available
+    const mainStateForPlayback = this.currentStateObj;
+    this.currentPlaybackStateObj;
+    ((_this$_optimisticPlay = this._optimisticPlayback) === null || _this$_optimisticPlay === void 0 ? void 0 : _this$_optimisticPlay.entity_id) || null;
+
+    // --- Fix 2: priority rule for entity selection ---
+    // Keep the currently‑selected entity (even if paused)
+    // unless some other entity is *playing*.
+    // Use cached resolved MA ID instead of raw template string
+    this._getResolvedPlaybackEntityIdSync(this._selectedIndex);
+    // Also get the actual resolved MA entity for state detection (can be unconfigured)
+    const actualResolvedMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    const actualMaState = actualResolvedMaId ? (_this$hass14 = this.hass) === null || _this$hass14 === void 0 || (_this$hass14 = _this$hass14.states) === null || _this$hass14 === void 0 ? void 0 : _this$hass14[actualResolvedMaId] : null;
+
+    // Update state tracking for optimistic playback and set/clear MA linger window
+    const prevMain = this._lastMainState;
+    const prevMa = this._lastMaState;
+    this._lastMainState = mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.state;
+    this._lastMaState = actualMaState === null || actualMaState === void 0 ? void 0 : actualMaState.state;
+    const idx = this._selectedIndex;
+
+    // If MA just transitioned from playing -> not playing, start a linger window (30s)
+    if (prevMa === "playing" && this._lastMaState !== "playing") {
+      this._playbackLingerByIdx[idx] = {
+        entityId: actualResolvedMaId,
+        until: Date.now() + 30000
+      };
+    }
+    // Also set linger when MA entity is paused (regardless of previous state) to ensure UI stays on MA
+
+    // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
+    const shouldSetLinger = prevMa === "playing" && this._lastMaState === "paused" && ((_this$_lastPlayingEnt4 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt4 === void 0 ? void 0 : _this$_lastPlayingEnt4[idx]) === actualResolvedMaId || prevMain === "playing" && this._lastMainState === "paused" && ((_this$_lastPlayingEnt5 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt5 === void 0 ? void 0 : _this$_lastPlayingEnt5[idx]) === (mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.entity_id);
+    if (shouldSetLinger) {
+      // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
+      const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
+      this._playbackLingerByIdx[idx] = {
+        entityId: lingerEntityId,
+        // Use cached MA entity or last controlled entity
+        until: Date.now() + 30000
+      };
+    }
+    // If MA resumed playing, clear linger
+    if (this._lastMaState === "playing" && (_this$_playbackLinger3 = this._playbackLingerByIdx) !== null && _this$_playbackLinger3 !== void 0 && _this$_playbackLinger3[idx]) {
+      delete this._playbackLingerByIdx[idx];
+    }
+    // Only clear linger if main entity is playing AND MA entity is not the last controlled entity
+    const maEntityId = (_this$config$entities = this.config.entities[idx]) === null || _this$config$entities === void 0 ? void 0 : _this$config$entities.music_assistant_entity;
+    const currentResolvedMaId = this._getEntityForPurpose(idx, 'ma_resolve');
+    const lastControlled = (_this$_lastPlayingEnt6 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt6 === void 0 ? void 0 : _this$_lastPlayingEnt6[idx];
+    const cachedResolvedMaId = (_this$_maResolveCache3 = this._maResolveCache) === null || _this$_maResolveCache3 === void 0 || (_this$_maResolveCache3 = _this$_maResolveCache3[idx]) === null || _this$_maResolveCache3 === void 0 ? void 0 : _this$_maResolveCache3.id;
+    const isLastControlledMa = !!(lastControlled && (lastControlled === cachedResolvedMaId || lastControlled === currentResolvedMaId || lastControlled === maEntityId || lastControlled === actualResolvedMaId));
+    if (this._lastMainState === "playing" && (_this$_playbackLinger4 = this._playbackLingerByIdx) !== null && _this$_playbackLinger4 !== void 0 && _this$_playbackLinger4[idx] && !isLastControlledMa) {
+      delete this._playbackLingerByIdx[idx];
+    }
+
+    // Use the unified entity resolution system for playback state
+    const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
+    const playbackStateObj = (_this$hass15 = this.hass) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15.states) === null || _this$hass15 === void 0 ? void 0 : _this$hass15[playbackEntityId];
+
+    // Use the unified entity resolution system for playback state
+    const finalPlaybackStateObj = playbackStateObj;
+
+    // Keep finalEntityId for backward compatibility with existing code
+    const finalEntityId = playbackEntityId;
+    // Blend in optimistic playback state if present
+    let effState = finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 ? void 0 : finalPlaybackStateObj.state;
+    if (this._optimisticPlayback) {
+      // Only apply optimistic state if it matches the current playback entity
+      const optimisticEntityId = this._optimisticPlayback.entity_id;
+      const currentEntityId = finalEntityId;
+      if (optimisticEntityId === currentEntityId) {
+        effState = this._optimisticPlayback.state;
+      }
+    }
+    const shuffleActive = !!finalPlaybackStateObj.attributes.shuffle;
+    const repeatActive = finalPlaybackStateObj.attributes.repeat && finalPlaybackStateObj.attributes.repeat !== "off";
 
     // Artwork and idle logic
-    const isPlaying = !this._isIdle && stateObj.state === "playing";
-    const isRealArtwork = !this._isIdle && isPlaying && (stateObj.attributes.entity_picture || stateObj.attributes.album_art);
-    isRealArtwork ? stateObj.attributes.entity_picture || stateObj.attributes.album_art : null;
+    const isPlaying = !this._isIdle && effState === "playing";
+    // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
+    const mainState = this.currentStateObj;
+    const isRealArtwork = !this._isIdle && isPlaying && (mainState && (mainState.attributes.entity_picture || mainState.attributes.album_art) || playbackStateObj && (playbackStateObj.attributes.entity_picture || playbackStateObj.attributes.album_art));
+    isRealArtwork ? mainState && (mainState.attributes.entity_picture || mainState.attributes.album_art) || playbackStateObj && (playbackStateObj.attributes.entity_picture || playbackStateObj.attributes.album_art) : null;
     // Details
-    const title = isPlaying ? stateObj.attributes.media_title || "" : "";
-    const artist = isPlaying ? stateObj.attributes.media_artist || stateObj.attributes.media_series_title || stateObj.attributes.app_name || "" : "";
-    let pos = stateObj.attributes.media_position || 0;
-    const duration = stateObj.attributes.media_duration || 0;
+    const title = isPlaying ? finalPlaybackStateObj.attributes.media_title || (mainState === null || mainState === void 0 || (_mainState$attributes2 = mainState.attributes) === null || _mainState$attributes2 === void 0 ? void 0 : _mainState$attributes2.media_title) || "" : "";
+    const artist = isPlaying ? finalPlaybackStateObj.attributes.media_artist || finalPlaybackStateObj.attributes.media_series_title || finalPlaybackStateObj.attributes.app_name || (mainState === null || mainState === void 0 || (_mainState$attributes3 = mainState.attributes) === null || _mainState$attributes3 === void 0 ? void 0 : _mainState$attributes3.media_artist) || (mainState === null || mainState === void 0 || (_mainState$attributes4 = mainState.attributes) === null || _mainState$attributes4 === void 0 ? void 0 : _mainState$attributes4.media_series_title) || (mainState === null || mainState === void 0 || (_mainState$attributes5 = mainState.attributes) === null || _mainState$attributes5 === void 0 ? void 0 : _mainState$attributes5.app_name) || "" : "";
+    let pos = finalPlaybackStateObj.attributes.media_position || 0;
+    const duration = finalPlaybackStateObj.attributes.media_duration || 0;
     if (isPlaying) {
-      const updatedAt = stateObj.attributes.media_position_updated_at ? Date.parse(stateObj.attributes.media_position_updated_at) : Date.parse(stateObj.last_changed);
+      const updatedAt = finalPlaybackStateObj.attributes.media_position_updated_at ? Date.parse(finalPlaybackStateObj.attributes.media_position_updated_at) : Date.parse(finalPlaybackStateObj.last_changed);
       const elapsed = (Date.now() - updatedAt) / 1000;
       pos += elapsed;
     }
     const progress = duration ? Math.min(1, pos / duration) : 0;
 
     // Volume entity determination
-    const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
     const isRemoteVolumeEntity = entity && entity.startsWith && entity.startsWith("remote.");
 
@@ -3846,9 +5143,20 @@ class YetAnotherMediaPlayerCard extends i {
     const showSlider = this.config.volume_mode !== "stepper";
 
     // Collapse artwork/details on idle if configured and/or always_collapsed
-    const collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
+    // If expand on search is enabled and search is open, force expanded state
+    let collapsed;
+    if (this._alwaysCollapsed && this._expandOnSearch && (this._searchOpen || this._showSearchInSheet)) {
+      collapsed = false;
+    } else {
+      collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
+    }
     // Use null if idle or no artwork available
-    const artworkUrl = !this._isIdle && stateObj && (stateObj.attributes.entity_picture || stateObj.attributes.album_art) ? stateObj.attributes.entity_picture || stateObj.attributes.album_art : null;
+    let artworkUrl = null;
+    if (!this._isIdle) {
+      const getArt = st => st && (st.attributes.entity_picture || st.attributes.album_art);
+      // Use the unified entity resolution system for artwork
+      artworkUrl = getArt(playbackStateObj) || getArt(mainState) || null;
+    }
 
     // Dominant color extraction for collapsed artwork
     if (collapsed && artworkUrl && artworkUrl !== this._lastArtworkUrl) {
@@ -3858,14 +5166,14 @@ class YetAnotherMediaPlayerCard extends i {
       });
       this._lastArtworkUrl = artworkUrl;
     }
-    return x`
+    return html`
         <ha-card class="yamp-card" style="position:relative;">
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
-            class="${dimIdleFrame ? 'dim-idle' : ''}"
+            class="${shouldDimIdle ? 'dim-idle' : ''}"
           >
-            ${this.entityObjs.length > 1 || showChipRow === "always" ? x`
+            ${this.entityObjs.length > 1 || showChipRow === "always" ? html`
                 <div class="chip-row">
                   ${renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
@@ -3875,9 +5183,65 @@ class YetAnotherMediaPlayerCard extends i {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
+      getIsChipPlaying: (id, isSelected) => {
+        var _this$hass16;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return isSelected ? !this._isIdle : false;
+
+        // Use the unified entity resolution system
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 ? void 0 : _this$hass16[playbackEntityId];
+        const anyPlaying = (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === "playing";
+        return isSelected ? !this._isIdle : anyPlaying;
+      },
+      getChipArt: id => {
+        var _this$hass17, _this$hass18, _playbackState$attrib, _playbackState$attrib2, _mainState$attributes6, _mainState$attributes7;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return null;
+
+        // Use the unified entity resolution system
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass17 = this.hass) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17.states) === null || _this$hass17 === void 0 ? void 0 : _this$hass17[playbackEntityId];
+        const mainState = (_this$hass18 = this.hass) === null || _this$hass18 === void 0 || (_this$hass18 = _this$hass18.states) === null || _this$hass18 === void 0 ? void 0 : _this$hass18[mainId];
+
+        // Prefer playback entity artwork, fallback to main entity
+        return (playbackState === null || playbackState === void 0 || (_playbackState$attrib = playbackState.attributes) === null || _playbackState$attrib === void 0 ? void 0 : _playbackState$attrib.entity_picture) || (playbackState === null || playbackState === void 0 || (_playbackState$attrib2 = playbackState.attributes) === null || _playbackState$attrib2 === void 0 ? void 0 : _playbackState$attrib2.album_art) || (mainState === null || mainState === void 0 || (_mainState$attributes6 = mainState.attributes) === null || _mainState$attributes6 === void 0 ? void 0 : _mainState$attributes6.entity_picture) || (mainState === null || mainState === void 0 || (_mainState$attributes7 = mainState.attributes) === null || _mainState$attributes7 === void 0 ? void 0 : _mainState$attributes7.album_art) || null;
+      },
+      getIsMaActive: id => {
+        var _this$hass19;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return false;
+
+        // Check if there's a configured MA entity
+        const entityObj = this.entityObjs[idx];
+        if (!(entityObj !== null && entityObj !== void 0 && entityObj.music_assistant_entity)) return false;
+
+        // Use the unified entity resolution system
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[playbackEntityId];
+
+        // Check if the playback entity is the MA entity and is playing
+        return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === "playing";
+      },
       isIdle: this._isIdle,
       hass: this.hass,
       onChipClick: idx => this._onChipClick(idx),
+      onIconClick: (idx, e) => {
+        const entityId = this.entityIds[idx];
+        const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+        if (group && group.length > 1) {
+          this._selectedIndex = idx;
+          this._showEntityOptions = true;
+          this._showGrouping = true;
+          this.requestUpdate();
+        }
+      },
       onPinClick: (idx, e) => {
         e.stopPropagation();
         this._onPinClick(e);
@@ -3887,7 +5251,7 @@ class YetAnotherMediaPlayerCard extends i {
       onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
     })}
                 </div>
-            ` : E}
+            ` : nothing}
             ${renderActionChipRow({
       actions: this.config.actions,
       onActionChipClick: idx => this._onActionChipClick(idx)
@@ -3896,7 +5260,7 @@ class YetAnotherMediaPlayerCard extends i {
               <div class="card-lower-content-bg"
                 style="
                   background-image: ${idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none"};
-                  min-height: ${collapsed ? "0px" : "320px"};
+                  min-height: ${collapsed ? hideControlsNow ? "120px" : "0px" : "320px"};
                   background-size: cover;
                   background-position: top center;
                   background-repeat: no-repeat;
@@ -3904,16 +5268,16 @@ class YetAnotherMediaPlayerCard extends i {
                   transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
                 "
               ></div>
-              ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}">
-                ${collapsed && artworkUrl ? x`
+              ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
+                ${collapsed && artworkUrl ? html`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
                     <img class="collapsed-artwork" src="${artworkUrl}" />
                   </div>
-                ` : E}
-                ${!collapsed ? x`<div class="card-artwork-spacer"></div>` : E}
-                ${!collapsed && !artworkUrl && !idleImageUrl ? x`
+                ` : nothing}
+                ${!collapsed ? html`<div class="card-artwork-spacer"></div>` : nothing}
+                ${!collapsed && !artworkUrl && !idleImageUrl ? html`
                   <div class="media-artwork-placeholder"
                     style="
                       position: absolute;
@@ -3932,12 +5296,12 @@ class YetAnotherMediaPlayerCard extends i {
                       <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"/>
                     </svg>
                   </div>
-                ` : E}
+                ` : nothing}
                 <div class="details">
                   <div class="title">
                     ${isPlaying ? title : ""}
                   </div>
-                  ${isPlaying && artist ? x`
+                  ${isPlaying && artist ? html`
                     <div
                       class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
                       @click=${() => {
@@ -3945,7 +5309,7 @@ class YetAnotherMediaPlayerCard extends i {
     }}
                       title=${stateObj.attributes.media_artist ? "Search for this artist" : ""}
                     >${artist}</div>
-                  ` : E}
+                  ` : nothing}
                 </div>
                 ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
@@ -3959,80 +5323,168 @@ class YetAnotherMediaPlayerCard extends i {
       collapsed: false,
       accent: this._customAccent,
       style: "visibility:hidden"
-    }) : E}
+    }) : nothing}
                 ${(collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
       accent: this._customAccent
-    }) : E}
-                ${!dimIdleFrame ? x`
+    }) : nothing}
+                ${!hideControlsNow ? html`
                 ${renderControlsRow({
-      stateObj,
-      showStop: this._shouldShowStopButton(stateObj),
+      stateObj: playbackStateObj,
+      showStop: this._shouldShowStopButton(playbackStateObj),
       shuffleActive,
       repeatActive,
       onControlClick: action => this._onControlClick(action),
       supportsFeature: (state, feature) => this._supportsFeature(state, feature)
     })}
+
                 ${renderVolumeRow({
       isRemoteVolumeEntity,
       showSlider,
       vol,
+      isMuted: ((_this$currentVolumeSt3 = this.currentVolumeStateObj) === null || _this$currentVolumeSt3 === void 0 || (_this$currentVolumeSt3 = _this$currentVolumeSt3.attributes) === null || _this$currentVolumeSt3 === void 0 ? void 0 : _this$currentVolumeSt3.is_volume_muted) ?? false,
+      supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
       onVolumeDragStart: e => this._onVolumeDragStart(e),
       onVolumeDragEnd: e => this._onVolumeDragEnd(e),
       onVolumeChange: e => this._onVolumeChange(e),
       onVolumeStep: dir => this._onVolumeStep(dir),
-      moreInfoMenu: x`
+      onMuteToggle: () => this._onMuteToggle(),
+      moreInfoMenu: html`
                     <div class="more-info-menu">
-                      <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
+                      <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                         <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
                       </button>
                     </div>
                   `
     })}
-                ` : E}
-                ${dimIdleFrame ? x`
+                ` : nothing}
+                ${hideControlsNow ? html`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
-                    <button class="more-info-btn" @click=${() => this._openEntityOptions()}>
+                    <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
                     </button>
                   </div>
-                ` : E}
+                ` : nothing}
               </div>
             </div>
           </div>
-          ${this._showEntityOptions ? x`
+          ${this._showEntityOptions ? html`
           <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
             <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
-              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet ? x`
+              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities ? html`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
                   <button class="entity-options-item" @click=${() => {
-      this._openMoreInfo();
-      this._showEntityOptions = false;
+      const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
+      if (resolvedEntities.length === 1) {
+        this._openMoreInfoForEntity(resolvedEntities[0]);
+        this._showEntityOptions = false;
+      } else {
+        this._showResolvedEntities = true;
+      }
       this.requestUpdate();
     }}>More Info</button>
                   <button class="entity-options-item" @click=${() => {
       this._showSearchSheetInOptions();
     }}>Search</button>
-                  ${Array.isArray((_this$currentStateObj2 = this.currentStateObj) === null || _this$currentStateObj2 === void 0 || (_this$currentStateObj2 = _this$currentStateObj2.attributes) === null || _this$currentStateObj2 === void 0 ? void 0 : _this$currentStateObj2.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
+                  ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? html`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
-                    ` : E}
+                    ` : nothing}
                   ${(() => {
       const totalEntities = this.entityIds.length;
       const groupableCount = this.entityIds.reduce((acc, id) => {
-        const st = this.hass.states[id];
+        var _this$_maResolveCache4;
+        const obj = this.entityObjs.find(e => e.entity_id === id);
+        if (!obj) return acc;
+
+        // Use cached resolved entity for feature checking
+        const idx = this.entityIds.indexOf(id);
+        const cached = (_this$_maResolveCache4 = this._maResolveCache) === null || _this$_maResolveCache4 === void 0 || (_this$_maResolveCache4 = _this$_maResolveCache4[idx]) === null || _this$_maResolveCache4 === void 0 ? void 0 : _this$_maResolveCache4.id;
+        let actualGroupId;
+        if (obj.music_assistant_entity) {
+          if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+            // For templates, use cached resolved entity
+            actualGroupId = cached || obj.entity_id;
+          } else {
+            actualGroupId = obj.music_assistant_entity;
+          }
+        } else {
+          actualGroupId = obj.entity_id;
+        }
+        const st = this.hass.states[actualGroupId];
         return acc + (this._supportsFeature(st, SUPPORT_GROUPING) ? 1 : 0);
       }, 0);
-      if (totalEntities > 1 && groupableCount > 1 && this._supportsFeature(this.currentStateObj, SUPPORT_GROUPING)) {
-        return x`
+
+      // Check current entity's grouping support
+      const currObj = this.entityObjs[this._selectedIndex];
+      let currGroupId;
+      if (currObj !== null && currObj !== void 0 && currObj.music_assistant_entity) {
+        if (typeof currObj.music_assistant_entity === 'string' && (currObj.music_assistant_entity.includes('{{') || currObj.music_assistant_entity.includes('{%'))) {
+          var _this$_maResolveCache5;
+          // For templates, use cached resolved entity
+          const cached = (_this$_maResolveCache5 = this._maResolveCache) === null || _this$_maResolveCache5 === void 0 || (_this$_maResolveCache5 = _this$_maResolveCache5[this._selectedIndex]) === null || _this$_maResolveCache5 === void 0 ? void 0 : _this$_maResolveCache5.id;
+          currGroupId = cached || currObj.entity_id;
+        } else {
+          currGroupId = currObj.music_assistant_entity;
+        }
+      } else {
+        currGroupId = currObj === null || currObj === void 0 ? void 0 : currObj.entity_id;
+      }
+      const currGroupState = this.hass.states[currGroupId];
+      if (totalEntities > 1 && groupableCount > 1 && this._supportsFeature(currGroupState, SUPPORT_GROUPING)) {
+        return html`
                           <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
                         `;
       }
-      return E;
+      return nothing;
     })()}
                   <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
                 </div>
-              ` : this._showSearchInSheet ? x`
+              ` : this._showResolvedEntities ? html`
+                <button class="entity-options-item" @click=${() => {
+      this._showResolvedEntities = false;
+      this.requestUpdate();
+    }} style="margin-bottom:14px;">&larr; Back</button>
+                <div class="entity-options-resolved-entities" style="margin-top:12px;">
+                  <div class="entity-options-title">Select Entity for More Info</div>
+                  <div class="entity-options-resolved-entities-list">
+                    ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
+      var _this$hass20, _state$attributes4, _state$attributes5;
+      const state = (_this$hass20 = this.hass) === null || _this$hass20 === void 0 || (_this$hass20 = _this$hass20.states) === null || _this$hass20 === void 0 ? void 0 : _this$hass20[entityId];
+      const name = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.friendly_name) || entityId;
+      const icon = (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.icon) || "mdi:help-circle";
+
+      // Determine the role of this entity
+      const idx = this._selectedIndex;
+      const obj = this.entityObjs[idx];
+      let role = "Main Entity";
+      if (obj) {
+        const maEntity = this._getActualResolvedMaEntityForState(idx);
+        const volEntity = this._getVolumeEntity(idx);
+        if (entityId === maEntity && maEntity !== obj.entity_id) {
+          role = "Music Assistant Entity";
+        } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
+          role = "Volume Entity";
+        }
+      }
+      return html`
+                        <button class="entity-options-item" @click=${() => {
+        this._openMoreInfoForEntity(entityId);
+        this._showEntityOptions = false;
+        this._showResolvedEntities = false;
+        this.requestUpdate();
+      }}>
+                          <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
+                          <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <div>${name}</div>
+                            <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
+                          </div>
+                        </button>
+                      `;
+    })}
+                  </div>
+                </div>
+              ` : this._showSearchInSheet ? html`
                 <div class="entity-options-search" style="margin-top:12px;">
                   <div class="entity-options-search-row">
                       <input
@@ -4075,8 +5527,8 @@ class YetAnotherMediaPlayerCard extends i {
                   ${(() => {
       const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
       const filter = this._searchMediaClassFilter || "all";
-      if (classes.length < 2) return E;
-      return x`
+      if (classes.length < 2) return nothing;
+      return html`
                       <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center;">
                         <button
                           class="chip"
@@ -4092,7 +5544,7 @@ class YetAnotherMediaPlayerCard extends i {
         this.requestUpdate();
       }}
                         >All</button>
-                        ${classes.map(c => x`
+                        ${classes.map(c => html`
                           <button
                             class="chip"
                             style="
@@ -4113,8 +5565,8 @@ class YetAnotherMediaPlayerCard extends i {
                       </div>
                     `;
     })()}
-                  ${this._searchLoading ? x`<div class="entity-options-search-loading">Loading...</div>` : E}
-                  ${this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
+                  ${this._searchLoading ? html`<div class="entity-options-search-loading">Loading...</div>` : nothing}
+                  ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   <div class="entity-options-search-results">
                     ${(() => {
       const filter = this._searchMediaClassFilter || "all";
@@ -4126,7 +5578,7 @@ class YetAnotherMediaPlayerCard extends i {
         length: Math.max(0, totalRows - filteredResults.length)
       }, () => null)];
       // Always render paddedResults, even before first search
-      return this._searchAttempted && filteredResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty">No results.</div>` : paddedResults.map(item => item ? x`
+      return this._searchAttempted && filteredResults.length === 0 && !this._searchLoading ? html`<div class="entity-options-search-empty">No results.</div>` : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result">
                               <img
@@ -4145,30 +5597,31 @@ class YetAnotherMediaPlayerCard extends i {
                                 ▶
                               </button>
                             </div>
-                          ` : x`
+                          ` : html`
                             <!-- placeholder row keeps height -->
                             <div class="entity-options-search-result placeholder"></div>
                           `);
     })()}
                   </div>
                 </div>
-              ` : this._showGrouping ? x`
-                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">← Back</button>
+              ` : this._showGrouping ? html`
+                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">&larr; Back</button>
                 ${(_masterState$attribut => {
-      const masterState = this.hass.states[this.currentEntityId];
+      const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
+      const masterState = this.hass.states[masterGroupId];
       const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) && masterState.attributes.group_members.length > 0;
-      return x`
+      return html`
                       <div style="display:flex;align-items:center;justify-content:space-between;font-weight:600;margin-bottom:0;">
-                        ${groupedAny ? x`
-                          <button class="group-all-btn"
+                        ${groupedAny ? html`
+                          <button class="entity-options-item"
                             @click=${() => this._syncGroupVolume()}
                             style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 16px 2px 0;">
                             Sync Volume
                           </button>
-                        ` : x`<span></span>`}
-                        <button class="group-all-btn"
+                        ` : html`<span></span>`}
+                        <button class="entity-options-item"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="color:#d22; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
+                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
                           ${groupedAny ? "Ungroup All" : "Group All"}
                         </button>
                       </div>
@@ -4178,22 +5631,93 @@ class YetAnotherMediaPlayerCard extends i {
                 ${(() => {
       // --- Begin new group player rows logic, wrapped in scrollable container ---
       const masterId = this.currentEntityId;
-      const sortedIds = [masterId, ...this.entityIds.filter(id => id !== masterId)];
-      return x`
-                      <div class="group-list-scroll" style="overflow-y: auto; max-height: 340px;">
-                        ${sortedIds.map(id => {
-        var _volumeState$attribut;
-        const st = this.hass.states[id];
-        if (!this._supportsFeature(st, SUPPORT_GROUPING)) return E;
-        const name = this.getChipName(id);
-        const masterState = this.hass.states[masterId];
-        const grouped = id === masterId ? true : Array.isArray(masterState.attributes.group_members) && masterState.attributes.group_members.includes(id);
+
+      // Build list of entities to show in group players menu
+      // Prioritize Music Assistant entities when available, fall back to main entities only if they support grouping
+      const groupPlayerIds = [];
+      for (const id of this.entityIds) {
         const obj = this.entityObjs.find(e => e.entity_id === id);
-        const volumeEntity = obj && obj.volume_entity ? obj.volume_entity : id;
-        const volumeState = this.hass.states[volumeEntity];
-        const isRemoteVol = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
-        const volVal = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) || 0);
-        return x`
+        if (!obj) continue;
+        let entityToCheck = null;
+        let entityName = null;
+
+        // First, check if there's a Music Assistant entity configured
+        if (obj.music_assistant_entity) {
+          let maEntityId;
+          if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+            var _this$_maResolveCache6;
+            // For templates, use the cached resolved entity
+            const idx = this.entityIds.indexOf(id);
+            const cached = (_this$_maResolveCache6 = this._maResolveCache) === null || _this$_maResolveCache6 === void 0 || (_this$_maResolveCache6 = _this$_maResolveCache6[idx]) === null || _this$_maResolveCache6 === void 0 ? void 0 : _this$_maResolveCache6.id;
+            maEntityId = cached || obj.entity_id;
+          } else {
+            maEntityId = obj.music_assistant_entity;
+          }
+          const maState = this.hass.states[maEntityId];
+          if (maState && this._supportsFeature(maState, SUPPORT_GROUPING)) {
+            entityToCheck = maEntityId;
+            entityName = id; // Use main entity name for display
+          }
+        }
+
+        // If no MA entity supports grouping, check main entity
+        if (!entityToCheck) {
+          const mainState = this.hass.states[id];
+          if (mainState && this._supportsFeature(mainState, SUPPORT_GROUPING)) {
+            entityToCheck = id;
+            entityName = id;
+          }
+        }
+
+        // Add to list if we found a valid grouping entity
+        if (entityToCheck && entityName) {
+          groupPlayerIds.push({
+            id: entityName,
+            groupId: entityToCheck
+          });
+        }
+      }
+
+      // Sort with master first
+      const masterFirst = groupPlayerIds.find(item => item.id === masterId);
+      const others = groupPlayerIds.filter(item => item.id !== masterId);
+      const sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
+      return html`
+                      <div class="group-list-scroll" style="overflow-y: auto; max-height: 340px;">
+                        ${sortedGroupIds.map(item => {
+        var _displayVolumeState$a;
+        const id = item.id;
+        const actualGroupId = item.groupId;
+        const obj = this.entityObjs.find(e => e.entity_id === id);
+        if (!obj) return nothing;
+        const name = this.getChipName(id);
+
+        // Get the master's resolved MA entity for proper comparison
+        const masterObj = this.entityObjs[this._selectedIndex];
+        let masterGroupId;
+        if (masterObj !== null && masterObj !== void 0 && masterObj.music_assistant_entity) {
+          if (typeof masterObj.music_assistant_entity === 'string' && (masterObj.music_assistant_entity.includes('{{') || masterObj.music_assistant_entity.includes('{%'))) {
+            var _this$_maResolveCache7;
+            // For templates, use cached resolved entity
+            const cached = (_this$_maResolveCache7 = this._maResolveCache) === null || _this$_maResolveCache7 === void 0 || (_this$_maResolveCache7 = _this$_maResolveCache7[this._selectedIndex]) === null || _this$_maResolveCache7 === void 0 ? void 0 : _this$_maResolveCache7.id;
+            masterGroupId = cached || masterObj.entity_id;
+          } else {
+            masterGroupId = masterObj.music_assistant_entity;
+          }
+        } else {
+          masterGroupId = masterObj === null || masterObj === void 0 ? void 0 : masterObj.entity_id;
+        }
+        const masterState = this.hass.states[masterGroupId];
+        const grouped = actualGroupId === masterGroupId ? true : Array.isArray(masterState.attributes.group_members) && masterState.attributes.group_members.includes(actualGroupId);
+        // Use unified entity resolution for grouping menu
+        const entityIdx = this.entityIds.indexOf(id);
+        const volumeEntity = this._getEntityForPurpose(entityIdx, 'grouping_control');
+        // For group players menu, use the same entity for both control and display
+        const displayEntity = volumeEntity;
+        const displayVolumeState = this.hass.states[displayEntity];
+        const isRemoteVol = displayEntity.startsWith && displayEntity.startsWith("remote.");
+        const volVal = Number((displayVolumeState === null || displayVolumeState === void 0 || (_displayVolumeState$a = displayVolumeState.attributes) === null || _displayVolumeState$a === void 0 ? void 0 : _displayVolumeState$a.volume_level) || 0);
+        return html`
                             <div style="
                               display: flex;
                               align-items: center;
@@ -4209,12 +5733,12 @@ class YetAnotherMediaPlayerCard extends i {
                                 white-space: nowrap;
                               ">${name}</span>
                               <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
-                                ${isRemoteVol ? x`
+                                ${isRemoteVol ? html`
                                         <div class="vol-stepper">
                                           <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
                                           <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
                                         </div>
-                                      ` : x`
+                                      ` : html`
                                         <input
                                           class="vol-slider"
                                           type="range"
@@ -4229,12 +5753,12 @@ class YetAnotherMediaPlayerCard extends i {
                                       `}
                                 <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                               </div>
-                              ${id === masterId ? x`
+                              ${actualGroupId === masterGroupId ? html`
                                       <button class="group-toggle-btn group-toggle-transparent"
                                               disabled
                                               aria-label="Master"
                                               style="margin-left:14px;"></button>
-                                    ` : x`
+                                    ` : html`
                                       <button class="group-toggle-btn"
                                               @click=${() => this._toggleGroup(id)}
                                               title=${grouped ? "Unjoin" : "Join"}
@@ -4249,11 +5773,11 @@ class YetAnotherMediaPlayerCard extends i {
                     `;
       // --- End new group player rows logic ---
     })()}
-              ` : x`
-                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">← Back</button>
+              ` : html`
+                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">&larr; Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
-                    ${sourceList.map(src => x`
+                    ${sourceList.map(src => html`
                       <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
                     `)}
                   </div>
@@ -4266,7 +5790,7 @@ class YetAnotherMediaPlayerCard extends i {
         const dist = Math.abs(hovered - i);
         if (dist === 0) scale = "max";else if (dist === 1) scale = "large";else if (dist === 2) scale = "med";
       }
-      return x`
+      return html`
                       <button
                         class="source-index-letter"
                         data-scale=${scale}
@@ -4288,7 +5812,7 @@ class YetAnotherMediaPlayerCard extends i {
               `}
             </div>
           </div>
-        ` : E}
+        ` : nothing}
           ${this._searchOpen ? renderSearchSheet({
       open: this._searchOpen,
       query: this._searchQuery,
@@ -4302,14 +5826,19 @@ class YetAnotherMediaPlayerCard extends i {
       },
       onSearch: () => this._doSearch(),
       onPlay: item => this._playMediaFromSearch(item)
-    }) : E}
+    }) : nothing}
         </ha-card>
       `;
   }
   _updateIdleState() {
-    const stateObj = this.currentStateObj;
-    // Only start idle timer if not playing
-    if (stateObj && stateObj.state === "playing") {
+    var _this$hass21;
+    // Check if ANY relevant entity (main or MA) is playing
+    const mainState = this.currentStateObj;
+    // Use actual resolved MA entity for state detection (can be unconfigured)
+    const actualMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    const actualMaState = actualMaId ? (_this$hass21 = this.hass) === null || _this$hass21 === void 0 || (_this$hass21 = _this$hass21.states) === null || _this$hass21 === void 0 ? void 0 : _this$hass21[actualMaId] : null;
+    const isAnyPlaying = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing" || (actualMaState === null || actualMaState === void 0 ? void 0 : actualMaState.state) === "playing";
+    if (isAnyPlaying) {
       // Became active, clear timer and set not idle
       if (this._idleTimeout) clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
@@ -4318,13 +5847,16 @@ class YetAnotherMediaPlayerCard extends i {
         this.requestUpdate();
       }
     } else {
-      // Only set timer if not already idle and not already waiting
-      if (!this._isIdle && !this._idleTimeout) {
+      var _this$_playbackLinger5;
+      // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
+      // Also check if there's an active linger - don't go idle if there's a linger
+      const hasActiveLinger = ((_this$_playbackLinger5 = this._playbackLingerByIdx) === null || _this$_playbackLinger5 === void 0 ? void 0 : _this$_playbackLinger5[this._selectedIndex]) && this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
+      if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0 && !hasActiveLinger) {
         this._idleTimeout = setTimeout(() => {
           this._isIdle = true;
           this._idleTimeout = null;
           this.requestUpdate();
-        }, 60000); // 1 minute
+        }, this._idleTimeoutMs);
       }
     }
   }
@@ -4332,7 +5864,12 @@ class YetAnotherMediaPlayerCard extends i {
   // Home assistant layout options
   getGridOptions() {
     // Use the same logic as in render() to know if the card is collapsed.
-    const collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
+    let collapsed;
+    if (this._alwaysCollapsed && this._expandOnSearch && (this._searchOpen || this._showSearchInSheet)) {
+      collapsed = false;
+    } else {
+      collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
+    }
     const minRows = collapsed ? 2 : 4;
     return {
       min_rows: minRows,
@@ -4400,9 +5937,38 @@ class YetAnotherMediaPlayerCard extends i {
       },
       required: false
     }, {
+      name: "expand_on_search",
+      selector: {
+        boolean: {}
+      },
+      required: false
+    }, {
       name: "alternate_progress_bar",
       selector: {
         boolean: {}
+      },
+      required: false
+    }, {
+      name: "idle_timeout_ms",
+      selector: {
+        number: {
+          min: 0,
+          step: 1000,
+          unit_of_measurement: "ms",
+          mode: "box"
+        }
+      },
+      required: false
+    }, {
+      name: "volume_step",
+      selector: {
+        number: {
+          min: 0.01,
+          max: 1,
+          step: 0.01,
+          unit_of_measurement: "",
+          mode: "box"
+        }
       },
       required: false
     }, {
@@ -4457,23 +6023,23 @@ class YetAnotherMediaPlayerCard extends i {
     let startX, scrollLeft;
     // Track drag state to suppress clicks
 
-    row.addEventListener('mousedown', e => {
+    const mousedownHandler = e => {
       isDown = true;
       row._dragged = false;
       row.classList.add('grab-scroll-active');
       startX = e.pageX - row.offsetLeft;
       scrollLeft = row.scrollLeft;
       e.preventDefault();
-    });
-    row.addEventListener('mouseleave', () => {
+    };
+    const mouseleaveHandler = () => {
       isDown = false;
       row.classList.remove('grab-scroll-active');
-    });
-    row.addEventListener('mouseup', () => {
+    };
+    const mouseupHandler = () => {
       isDown = false;
       row.classList.remove('grab-scroll-active');
-    });
-    row.addEventListener('mousemove', e => {
+    };
+    const mousemoveHandler = e => {
       if (!isDown) return;
       const x = e.pageX - row.offsetLeft;
       const walk = x - startX;
@@ -4483,15 +6049,28 @@ class YetAnotherMediaPlayerCard extends i {
       }
       e.preventDefault();
       row.scrollLeft = scrollLeft - walk;
-    });
-    // Suppress click after drag
-    row.addEventListener('click', e => {
+    };
+    const clickHandler = e => {
       if (row._dragged) {
         e.stopPropagation();
         e.preventDefault();
         row._dragged = false;
       }
-    }, true);
+    };
+    row.addEventListener('mousedown', mousedownHandler);
+    row.addEventListener('mouseleave', mouseleaveHandler);
+    row.addEventListener('mouseup', mouseupHandler);
+    row.addEventListener('mousemove', mousemoveHandler);
+    row.addEventListener('click', clickHandler, true);
+
+    // Store handlers for cleanup
+    row._grabScrollHandlers = {
+      mousedown: mousedownHandler,
+      mouseleave: mouseleaveHandler,
+      mouseup: mouseupHandler,
+      mousemove: mousemoveHandler,
+      click: clickHandler
+    };
     row._grabScrollAttached = true;
   }
   _addVerticalGrabScroll(selector) {
@@ -4499,39 +6078,79 @@ class YetAnotherMediaPlayerCard extends i {
     if (!col || col._grabScrollAttached) return;
     let isDown = false;
     let startY, scrollTop;
-    col.addEventListener('mousedown', e => {
+    const mousedownHandler = e => {
       isDown = true;
       col._dragged = false;
       col.classList.add('grab-scroll-active');
       startY = e.pageY - col.getBoundingClientRect().top;
       scrollTop = col.scrollTop;
       e.preventDefault();
-    });
-    col.addEventListener('mouseleave', () => {
+    };
+    const mouseleaveHandler = () => {
       isDown = false;
       col.classList.remove('grab-scroll-active');
-    });
-    col.addEventListener('mouseup', () => {
+    };
+    const mouseupHandler = () => {
       isDown = false;
       col.classList.remove('grab-scroll-active');
-    });
-    col.addEventListener('mousemove', e => {
+    };
+    const mousemoveHandler = e => {
       if (!isDown) return;
       const y = e.pageY - col.getBoundingClientRect().top;
       const walk = y - startY;
       if (Math.abs(walk) > 5) col._dragged = true;
       e.preventDefault();
       col.scrollTop = scrollTop - walk;
-    });
-    // Suppress clicks after drag
-    col.addEventListener('click', e => {
+    };
+    const clickHandler = e => {
       if (col._dragged) {
         e.stopPropagation();
         e.preventDefault();
         col._dragged = false;
       }
-    }, true);
+    };
+    col.addEventListener('mousedown', mousedownHandler);
+    col.addEventListener('mouseleave', mouseleaveHandler);
+    col.addEventListener('mouseup', mouseupHandler);
+    col.addEventListener('mousemove', mousemoveHandler);
+    col.addEventListener('click', clickHandler, true);
+
+    // Store handlers for cleanup
+    col._grabScrollHandlers = {
+      mousedown: mousedownHandler,
+      mouseleave: mouseleaveHandler,
+      mouseup: mouseupHandler,
+      mousemove: mousemoveHandler,
+      click: clickHandler
+    };
     col._grabScrollAttached = true;
+  }
+  _removeGrabScrollHandlers() {
+    // Remove grab scroll handlers from all elements
+    const elements = this.renderRoot.querySelectorAll('[data-grab-scroll]');
+    elements.forEach(el => {
+      if (el._grabScrollHandlers) {
+        const handlers = el._grabScrollHandlers;
+        el.removeEventListener('mousedown', handlers.mousedown);
+        el.removeEventListener('mouseleave', handlers.mouseleave);
+        el.removeEventListener('mouseup', handlers.mouseup);
+        el.removeEventListener('mousemove', handlers.mousemove);
+        el.removeEventListener('click', handlers.click, true);
+        delete el._grabScrollHandlers;
+        el._grabScrollAttached = false;
+      }
+    });
+  }
+  _removeSearchSwipeHandlers() {
+    // Remove search swipe handlers
+    const area = this.renderRoot.querySelector('.entity-options-search-results');
+    if (area && area._searchSwipeHandlers) {
+      const handlers = area._searchSwipeHandlers;
+      area.removeEventListener('touchstart', handlers.touchstart);
+      area.removeEventListener('touchend', handlers.touchend);
+      delete area._searchSwipeHandlers;
+      this._searchSwipeAttached = false;
+    }
   }
   disconnectedCallback() {
     var _super$disconnectedCa;
@@ -4548,7 +6167,16 @@ class YetAnotherMediaPlayerCard extends i {
       clearTimeout(this._debouncedVolumeTimer);
       this._debouncedVolumeTimer = null;
     }
+    if (this._manualSelectTimeout) {
+      clearTimeout(this._manualSelectTimeout);
+      this._manualSelectTimeout = null;
+    }
     this._removeSourceDropdownOutsideHandler();
+    this._removeGrabScrollHandlers();
+    this._removeSearchSwipeHandlers();
+    // Clear tracking properties
+    this._lastPlayingEntityId = null;
+    this._controlFocusEntityId = null;
   }
   // Entity options overlay handlers
   _closeEntityOptions() {
@@ -4573,7 +6201,11 @@ class YetAnotherMediaPlayerCard extends i {
       this.requestUpdate();
     }
   }
-  _openEntityOptions() {
+  async _openEntityOptions() {
+    // Resolve all templates before opening the menu so feature checking works correctly
+    for (let i = 0; i < this.entityObjs.length; i++) {
+      await this._ensureResolvedMaForIndex(i);
+    }
     this._showEntityOptions = true;
     this.requestUpdate();
   }
@@ -4615,21 +6247,49 @@ class YetAnotherMediaPlayerCard extends i {
     // No requestUpdate here; overlay close will handle it.
   }
   async _toggleGroup(targetId) {
-    const masterId = this.currentEntityId;
-    if (!masterId || !targetId) return;
-    const masterState = this.hass.states[masterId];
-    const grouped = Array.isArray(masterState === null || masterState === void 0 ? void 0 : masterState.attributes.group_members) && masterState.attributes.group_members.includes(targetId);
+    // Get the master entity's resolved MA entity for grouping
+    const masterObj = this.entityObjs[this._selectedIndex];
+    if (!masterObj) return;
+    let masterGroupId;
+    if (masterObj.music_assistant_entity) {
+      if (typeof masterObj.music_assistant_entity === 'string' && (masterObj.music_assistant_entity.includes('{{') || masterObj.music_assistant_entity.includes('{%'))) {
+        // For templates, resolve at action time
+        masterGroupId = await this._resolveTemplateAtActionTime(masterObj.music_assistant_entity, this.currentEntityId);
+      } else {
+        masterGroupId = masterObj.music_assistant_entity;
+      }
+    } else {
+      masterGroupId = this.currentEntityId;
+    }
+
+    // Get the target entity's resolved MA entity for grouping
+    const targetObj = this.entityObjs.find(e => e.entity_id === targetId);
+    if (!targetObj) return;
+    let targetGroupId;
+    if (targetObj.music_assistant_entity) {
+      if (typeof targetObj.music_assistant_entity === 'string' && (targetObj.music_assistant_entity.includes('{{') || targetObj.music_assistant_entity.includes('{%'))) {
+        // For templates, resolve at action time
+        targetGroupId = await this._resolveTemplateAtActionTime(targetObj.music_assistant_entity, targetId);
+      } else {
+        targetGroupId = targetObj.music_assistant_entity;
+      }
+    } else {
+      targetGroupId = targetId;
+    }
+    if (!masterGroupId || !targetGroupId) return;
+    const masterState = this.hass.states[masterGroupId];
+    const grouped = Array.isArray(masterState === null || masterState === void 0 ? void 0 : masterState.attributes.group_members) && masterState.attributes.group_members.includes(targetGroupId);
     if (grouped) {
       // Unjoin the target from the group
       await this.hass.callService("media_player", "unjoin", {
-        entity_id: targetId
+        entity_id: targetGroupId
       });
     } else {
       // Join the target player to the master's group
       await this.hass.callService("media_player", "join", {
-        entity_id: masterId,
+        entity_id: masterGroupId,
         // call on the master
-        group_members: [targetId] // player(s) to add
+        group_members: [targetGroupId] // player(s) to add
       });
     }
     // Keep sheet open for more grouping actions
@@ -4637,7 +6297,7 @@ class YetAnotherMediaPlayerCard extends i {
 
   // Card editor support 
   static getConfigElement() {
-    return document.createElement("yet-another-media-player-editor");
+    return document.createElement("yet-another-media-player-editor-beta");
   }
   static getStubConfig(hass, entities) {
     return {
@@ -4647,33 +6307,78 @@ class YetAnotherMediaPlayerCard extends i {
 
   // Group all supported entities to current master
   async _groupAll() {
-    const masterId = this.currentEntityId;
-    if (!masterId) return;
-    const masterState = this.hass.states[masterId];
+    // Get the master entity's resolved MA entity for grouping
+    const masterObj = this.entityObjs[this._selectedIndex];
+    if (!masterObj) return;
+    let masterGroupId;
+    if (masterObj.music_assistant_entity) {
+      if (typeof masterObj.music_assistant_entity === 'string' && (masterObj.music_assistant_entity.includes('{{') || masterObj.music_assistant_entity.includes('{%'))) {
+        // For templates, resolve at action time
+        masterGroupId = await this._resolveTemplateAtActionTime(masterObj.music_assistant_entity, this.currentEntityId);
+      } else {
+        masterGroupId = masterObj.music_assistant_entity;
+      }
+    } else {
+      masterGroupId = this.currentEntityId;
+    }
+    if (!masterGroupId) return;
+    const masterState = this.hass.states[masterGroupId];
     if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
 
     // Get all other entities that support grouping and are not already grouped with master
     const alreadyGrouped = Array.isArray(masterState.attributes.group_members) ? masterState.attributes.group_members : [];
-    const toJoin = this.entityIds.filter(id => id !== masterId).filter(id => {
-      const st = this.hass.states[id];
-      return this._supportsFeature(st, SUPPORT_GROUPING) && !alreadyGrouped.includes(id);
-    });
+
+    // Build list of resolved MA entities to join
+    const toJoin = [];
+    for (const id of this.entityIds) {
+      if (id === this.currentEntityId) continue;
+      const obj = this.entityObjs.find(e => e.entity_id === id);
+      if (!obj) continue;
+      let resolvedGroupId;
+      if (obj.music_assistant_entity) {
+        if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+          // For templates, resolve at action time
+          resolvedGroupId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, id);
+        } else {
+          resolvedGroupId = obj.music_assistant_entity;
+        }
+      } else {
+        resolvedGroupId = id;
+      }
+      const st = this.hass.states[resolvedGroupId];
+      if (this._supportsFeature(st, SUPPORT_GROUPING) && !alreadyGrouped.includes(resolvedGroupId)) {
+        toJoin.push(resolvedGroupId);
+      }
+    }
     if (toJoin.length > 0) {
       await this.hass.callService("media_player", "join", {
-        entity_id: masterId,
+        entity_id: masterGroupId,
         group_members: toJoin
       });
     }
     // After grouping, keep the master set if still valid
-    this._lastGroupingMasterId = masterId;
+    this._lastGroupingMasterId = this.currentEntityId;
     // Remain in grouping sheet
   }
 
   // Ungroup all members from current master
   async _ungroupAll() {
-    const masterId = this.currentEntityId;
-    if (!masterId) return;
-    const masterState = this.hass.states[masterId];
+    // Get the master entity's resolved MA entity for grouping
+    const masterObj = this.entityObjs[this._selectedIndex];
+    if (!masterObj) return;
+    let masterGroupId;
+    if (masterObj.music_assistant_entity) {
+      if (typeof masterObj.music_assistant_entity === 'string' && (masterObj.music_assistant_entity.includes('{{') || masterObj.music_assistant_entity.includes('{%'))) {
+        // For templates, resolve at action time
+        masterGroupId = await this._resolveTemplateAtActionTime(masterObj.music_assistant_entity, this.currentEntityId);
+      } else {
+        masterGroupId = masterObj.music_assistant_entity;
+      }
+    } else {
+      masterGroupId = this.currentEntityId;
+    }
+    if (!masterGroupId) return;
+    const masterState = this.hass.states[masterGroupId];
     if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
     const members = Array.isArray(masterState.attributes.group_members) ? masterState.attributes.group_members : [];
     // Only unjoin those that support grouping
@@ -4688,30 +6393,113 @@ class YetAnotherMediaPlayerCard extends i {
       });
     }
     // After ungrouping, keep the master set if still valid (may now be solo)
-    this._lastGroupingMasterId = masterId;
+    this._lastGroupingMasterId = this.currentEntityId;
     // Remain in grouping sheet
   }
 
   // Synchronize all group member volumes to match the master
   async _syncGroupVolume() {
-    const masterId = this.currentEntityId;
-    if (!masterId) return;
-    const masterState = this.hass.states[masterId];
+    // Get the master entity's resolved MA entity for grouping
+    const masterObj = this.entityObjs[this._selectedIndex];
+    if (!masterObj) return;
+    let masterGroupId;
+    if (masterObj.music_assistant_entity) {
+      if (typeof masterObj.music_assistant_entity === 'string' && (masterObj.music_assistant_entity.includes('{{') || masterObj.music_assistant_entity.includes('{%'))) {
+        // For templates, resolve at action time
+        masterGroupId = await this._resolveTemplateAtActionTime(masterObj.music_assistant_entity, this.currentEntityId);
+      } else {
+        masterGroupId = masterObj.music_assistant_entity;
+      }
+    } else {
+      masterGroupId = this.currentEntityId;
+    }
+    if (!masterGroupId) return;
+    const masterState = this.hass.states[masterGroupId];
     if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
-    const masterObj = this.entityObjs.find(e => e.entity_id === masterId);
-    const masterVolumeEntity = masterObj && masterObj.volume_entity ? masterObj.volume_entity : masterId;
-    const masterVolumeState = this.hass.states[masterVolumeEntity];
+    // For sync volume, use the same entity that's being used for grouping (the MA entity) to get the master volume
+    const masterVolumeEntity = masterGroupId;
+    const masterVolumeState = masterVolumeEntity ? this.hass.states[masterVolumeEntity] : null;
     if (!masterVolumeState) return;
     const masterVol = Number(masterVolumeState.attributes.volume_level || 0);
     const members = Array.isArray(masterState.attributes.group_members) ? masterState.attributes.group_members : [];
-    for (const id of members) {
-      const obj = this.entityObjs.find(e => e.entity_id === id);
-      const volumeEntity = obj && obj.volume_entity ? obj.volume_entity : id;
+    for (const groupedId of members) {
+      // Find the configured entity that has this grouping entity
+      let foundObj = null;
+      for (const obj of this.entityObjs) {
+        let resolvedGroupingId;
+        if (obj.music_assistant_entity) {
+          if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+            // For templates, resolve at action time
+            try {
+              resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
+            } catch (error) {
+              console.warn('Failed to resolve template for sync volume:', error);
+              resolvedGroupingId = obj.entity_id;
+            }
+          } else {
+            resolvedGroupingId = obj.music_assistant_entity;
+          }
+        } else {
+          resolvedGroupingId = obj.entity_id;
+        }
+        if (resolvedGroupingId === groupedId) {
+          foundObj = obj;
+          break;
+        }
+      }
+      if (!foundObj) continue;
+
+      // For sync volume, use the same entity that's being used for grouping (the MA entity)
+      const volumeEntity = groupedId;
       await this.hass.callService("media_player", "volume_set", {
         entity_id: volumeEntity,
         volume_level: masterVol
       });
     }
   }
+
+  // Get all resolved entities for the current chip (main, MA, volume)
+  _getResolvedEntitiesForCurrentChip() {
+    const entities = new Set();
+    const idx = this._selectedIndex;
+    const obj = this.entityObjs[idx];
+    if (!obj) return [];
+
+    // Add main entity
+    entities.add(obj.entity_id);
+
+    // Add resolved MA entity if different from main
+    const maEntity = this._getActualResolvedMaEntityForState(idx);
+    if (maEntity && maEntity !== obj.entity_id) {
+      entities.add(maEntity);
+    }
+
+    // Add resolved volume entity if different from main and MA
+    const volEntity = this._getVolumeEntity(idx);
+    if (volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
+      entities.add(volEntity);
+    }
+    return Array.from(entities);
+  }
+
+  // Open more-info for a specific entity
+  _openMoreInfoForEntity(entityId) {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: {
+        entityId
+      },
+      bubbles: true,
+      composed: true
+    }));
+  }
+  _openMoreInfo() {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: {
+        entityId: this.currentEntityId
+      },
+      bubbles: true,
+      composed: true
+    }));
+  }
 }
-customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
+customElements.define("yet-another-media-player-beta", YetAnotherMediaPlayerCard);
