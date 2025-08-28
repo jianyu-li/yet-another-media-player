@@ -8,7 +8,7 @@ import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
 import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites } from "./search-sheet.js";
-import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
+import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js"; 
 
 import {
   SUPPORT_PAUSE,
