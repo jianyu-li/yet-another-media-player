@@ -1,6 +1,5 @@
-// action-chip-row.js
-import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-// import { html, nothing } from "lit";
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+import { html, nothing } from "lit";
 
 export function renderActionChipRow({ actions, onActionChipClick }) {
   if (!actions?.length) return nothing;

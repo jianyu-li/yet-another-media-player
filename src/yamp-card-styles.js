@@ -1,6 +1,5 @@
-// yamp-card-styles.js
-import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-// import { css } from "lit";
+// import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+import { css } from "lit";
 
 export const yampCardStyles = css`
   /* CSS Custom Properties for consistency */
