@@ -1,0 +1,85 @@
+name: Beta to Main Merge
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_merge:
+        description: 'Type "merge" to confirm beta to main merge'
+        required: true
+        type: string
+
+jobs:
+  merge-beta-to-main:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm_merge == 'merge'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Checkout main branch
+        run: git checkout main
+
+      - name: Pull latest changes
+        run: git pull origin main
+
+      - name: Merge beta branch (no commit)
+        run: git merge beta --no-commit --no-ff
+
+      - name: Remove -beta suffixes and update imports
+        run: |
+          # Remove -beta from custom element type
+          sed -i 's/type: "yet-another-media-player-beta"/type: "yet-another-media-player"/g' src/yet-another-media-player.js
+          
+          # Remove -beta from custom element definition
+          sed -i 's/customElements.define("yet-another-media-player-beta"/customElements.define("yet-another-media-player"/g' src/yet-another-media-player.js
+          
+          # Update any other -beta references in source files only
+          find src/ -name "*.js" -exec sed -i 's/-beta//g' {} \;
+          
+          # Update imports from CDN to local lit
+          find src/ -name "*.js" -exec sed -i 's|import { .* } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module"|import { LitElement, html, css, nothing } from "lit"|g' {} \;
+          find src/ -name "*.js" -exec sed -i 's|import { .* } from "https://unpkg.com/lit@3.3.1/lit.js?module"|import { LitElement, html, css, nothing } from "lit"|g' {} \;
+          
+          # Update js-yaml imports
+          find src/ -name "*.js" -exec sed -i 's|import yaml from "https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm"|import yaml from "js-yaml"|g' {} \;
+          
+          # Update sortablejs imports
+          find src/ -name "*.js" -exec sed -i 's|import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm"|import Sortable from "sortablejs"|g' {} \;
+
+      - name: Stage changes
+        run: git add .
+
+      - name: Commit merge with beta suffix removal
+        run: |
+          git commit -m "Merge beta to main: Remove -beta suffixes and update imports
+
+          - Removed -beta suffix from custom element type and definition
+          - Converted CDN imports to local package imports
+          - Updated all source files to use production naming"
+
+      - name: Push to main
+        run: git push origin main
+
+      - name: Create release tag
+        run: |
+          # Get current version from package.json
+          VERSION=$(node -p "require('./package.json').version")
+          git tag -a "v$VERSION" -m "Release v$VERSION - Beta merge completed"
+          git push origin "v$VERSION"
+
+      - name: Comment on workflow
+        run: |
+          echo "✅ Beta to main merge completed successfully!"
+          echo "📦 Changes made:"
+          echo "   - Removed -beta suffixes from custom elements"
+          echo "   - Updated imports from CDN to local packages"
+          echo "   - Created release tag v$(node -p "require('./package.json').version")"

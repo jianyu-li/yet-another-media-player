@@ -39,3 +39,10 @@ jobs:
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Comment on commit (beta branch only)
+        if: github.ref == 'refs/heads/beta'
+        run: |
+          echo "✅ Beta branch build completed successfully!"
+          echo "📦 Ready for merge to main using automated workflow"
+          echo "🔗 Go to Actions → 'Beta to Main Merge' to proceed"
