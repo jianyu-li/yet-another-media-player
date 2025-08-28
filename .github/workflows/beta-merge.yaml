@@ -31,8 +31,11 @@ jobs:
       - name: Pull latest changes
         run: git pull origin main
 
+      - name: Fetch all branches
+        run: git fetch origin
+
       - name: Merge beta branch (no commit)
-        run: git merge beta --no-commit --no-ff
+        run: git merge origin/beta --no-commit --no-ff
 
       - name: Remove -beta suffixes and update imports
         run: |
