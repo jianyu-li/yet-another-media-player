@@ -13,7 +13,10 @@ export default {
       browser: true,
       extensions: ['.js', '.mjs'],
     }),
-    commonjs(),
+    commonjs({
+      include: ['node_modules/js-yaml/**'],
+      transformMixedEsModules: true,
+    }),
     babel({
       babelHelpers: 'bundled',
       extensions: ['.js', '.mjs'],
@@ -23,6 +26,7 @@ export default {
         'node_modules/lit-element/**/*',
         'node_modules/lit/**/*',
         'node_modules/@lit/**/*',
+        'node_modules/js-yaml/**/*'
       ],
       exclude: [],
     }),
