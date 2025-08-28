@@ -70,17 +70,28 @@ jobs:
       - name: Stage changes
         run: git add .
 
-      - name: Commit beta changes with suffix removal
+      - name: Check for changes and commit
         run: |
-          git commit -m "Apply beta changes to main: Remove -beta suffixes and update imports
+          # Check if there are any staged changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit - files are already up to date"
+          else
+            git commit -m "Apply beta changes to main: Remove -beta suffixes and update imports
 
-          - Applied beta branch changes to main
-          - Removed -beta suffix from custom element type and definition
-          - Converted CDN imports to local package imports
-          - Updated all source files to use production naming"
+            - Applied beta branch changes to main
+            - Removed -beta suffix from custom element type and definition
+            - Converted CDN imports to local package imports
+            - Updated all source files to use production naming"
+          fi
 
       - name: Push to main
-        run: git push origin main
+        run: |
+          # Check if there are any commits to push
+          if git log --oneline origin/main..HEAD | grep -q .; then
+            git push origin main
+          else
+            echo "No new commits to push - main branch is already up to date"
+          fi
 
       - name: Create release tag
         run: |
@@ -102,8 +113,16 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d-%H%M%S)
           TAG_NAME="v$VERSION-beta-merge-$TIMESTAMP"
           
-          echo "✅ Beta to main merge completed successfully!"
-          echo "📦 Changes made:"
-          echo "   - Removed -beta suffixes from custom elements"
-          echo "   - Updated imports from CDN to local packages"
-          echo "   - Created merge tag: $TAG_NAME"
+          # Check if changes were made
+          if git log --oneline origin/main..HEAD | grep -q .; then
+            echo "✅ Beta to main merge completed successfully!"
+            echo "📦 Changes made:"
+            echo "   - Applied beta branch changes to main"
+            echo "   - Removed -beta suffixes from custom elements"
+            echo "   - Updated imports from CDN to local packages"
+            echo "   - Created merge tag: $TAG_NAME"
+          else
+            echo "✅ Beta to main merge completed successfully!"
+            echo "📦 Status: No changes needed - main branch is already up to date"
+            echo "   - Created merge tag: $TAG_NAME"
+          fi
