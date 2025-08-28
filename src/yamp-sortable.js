@@ -1,7 +1,7 @@
-import { LitElement, html, css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-// import { LitElement, html, css, nothing } from "lit";
-import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm";
-// import Sortable from "sortablejs";
+// import { LitElement, html, css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm";
+import { LitElement, html, css, nothing } from "lit";
+import Sortable from "sortablejs";
 
 class YampSortable extends LitElement {
   static get properties() {
