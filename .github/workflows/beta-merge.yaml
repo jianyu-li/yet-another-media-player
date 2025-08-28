@@ -86,13 +86,24 @@ jobs:
         run: |
           # Get current version from package.json
           VERSION=$(node -p "require('./package.json').version")
-          git tag -a "v$VERSION" -m "Release v$VERSION - Beta merge completed"
-          git push origin "v$VERSION"
+          # Create timestamp for unique tag
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          TAG_NAME="v$VERSION-beta-merge-$TIMESTAMP"
+          
+          # Create and push the tag
+          git tag -a "$TAG_NAME" -m "Beta merge completed - $TAG_NAME"
+          git push origin "$TAG_NAME"
+          
+          echo "Created tag: $TAG_NAME"
 
       - name: Comment on workflow
         run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          TAG_NAME="v$VERSION-beta-merge-$TIMESTAMP"
+          
           echo "✅ Beta to main merge completed successfully!"
           echo "📦 Changes made:"
           echo "   - Removed -beta suffixes from custom elements"
           echo "   - Updated imports from CDN to local packages"
-          echo "   - Created release tag v$(node -p "require('./package.json').version")"
+          echo "   - Created merge tag: $TAG_NAME"
