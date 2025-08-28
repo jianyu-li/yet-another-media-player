@@ -7,8 +7,8 @@ This guide explains how to use the automated workflows for managing your beta br
 The project now has automated workflows that handle the beta-to-main merge process, including:
 - Removing `-beta` suffixes from custom element names
 - Converting CDN imports to local package imports
-- Updating README.md examples
 - Creating release tags
+- **Note**: Documentation files (README.md) are left unchanged for manual control
 
 ## Workflows Available
 
@@ -35,7 +35,7 @@ The project now has automated workflows that handle the beta-to-main merge proce
   - `sortablejs@1.15.0/+esm` → `sortablejs`
 - Commits all changes with descriptive message
 - Pushes to main branch
-- Creates a release tag
+- Creates a Git tag (does NOT create GitHub Release or HACS notification)
 
 ### 2. Beta PR Validation (`beta-pr-merge.yaml`)
 **Trigger**: Pull request from beta to main
@@ -53,8 +53,9 @@ The project now has automated workflows that handle the beta-to-main merge proce
 
 **What it does:**
 - Runs rollup build on both branches
-- For beta branch: Provides guidance on next steps
+- For beta branch: Provides guidance on next steps and workflow links
 - For main branch: Standard build and commit
+- Auto-commits built files to the respective branch
 
 ## Workflow Comparison
 
@@ -73,6 +74,22 @@ If you prefer manual control, follow the existing process in `src/Beta Merge Ins
 4. Update imports from CDN to local packages
 5. `git add . && git commit`
 6. `git push origin main`
+
+## Authentication Setup
+
+### SSH Authentication (Recommended)
+The workflows use SSH authentication to avoid Personal Access Token scope restrictions:
+
+```bash
+# Verify SSH setup
+ssh -T git@github.com
+
+# If using HTTPS, switch to SSH
+git remote set-url origin git@github.com:jianyu-li/yet-another-media-player.git
+```
+
+### Personal Access Token (Alternative)
+If using HTTPS, ensure your PAT has the `workflow` scope for pushing workflow files.
 
 ## File Transformations
 
@@ -105,6 +122,13 @@ import Sortable from "sortablejs";
 ### Documentation Files
 **Note**: The workflow only modifies `.js` files in the `src/` directory. Documentation files like `README.md` are left unchanged to preserve your manual documentation control.
 
+### HACS Integration
+**Important**: The workflow creates Git tags but does NOT create GitHub Releases or trigger HACS notifications. To create a HACS release:
+1. Go to GitHub → Releases
+2. Create a new release from the tag
+3. Add release notes
+4. Publish the release
+
 ## Troubleshooting
 
 ### Workflow Fails
@@ -125,6 +149,12 @@ If you get permission errors:
 - Ensure the workflow has write permissions to the repository
 - Check that the `GITHUB_TOKEN` secret is properly configured
 - Verify you have admin access to the repository
+- **For workflow file pushes**: Use SSH authentication or ensure PAT has `workflow` scope
+
+### Push Errors
+If you get "refusing to allow a Personal Access Token to create or update workflow" errors:
+- Switch to SSH: `git remote set-url origin git@github.com:jianyu-li/yet-another-media-player.git`
+- Or update your PAT to include the `workflow` scope
 
 ## Best Practices
 
@@ -132,6 +162,8 @@ If you get permission errors:
 2. **Use descriptive commit messages**: The automated workflow creates good commit messages, but manual commits should be descriptive
 3. **Review the diff**: Even with automation, review the changes before pushing to main
 4. **Tag releases**: The automated workflow creates tags, but you can also create them manually for important releases
+5. **Use SSH authentication**: Avoid PAT scope issues by using SSH keys for GitHub access
+6. **Manual HACS releases**: Create GitHub Releases manually when ready for HACS distribution
 
 ## Support
 
