@@ -84,6 +84,24 @@ jobs:
             - Updated all source files to use production naming"
           fi
 
+      - name: Build and commit rollup output
+        run: |
+          # Set up Node.js and install dependencies
+          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          npm ci
+          
+          # Run rollup build
+          npx rollup -c
+          
+          # Commit the built file if it changed
+          git add yet-another-media-player.js || true
+          if git diff --cached --quiet; then
+            echo "No changes to built file"
+          else
+            git commit -m "Auto-build: rollup output after beta merge"
+          fi
+
       - name: Push to main
         run: |
           # Check if there are any commits to push
