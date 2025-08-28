@@ -1,4 +1,4 @@
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import { LitElement, html, css, nothing } from "lit";
 import { LitElement, html, css, nothing } from "lit";
 
 import { renderChip, renderGroupChip, createHoldToPinHandler, renderChipRow } from "./chip-row.js";
@@ -7,8 +7,8 @@ import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
-import { renderSearchSheet, searchMedia, playSearchedMedia } from "./search-sheet.js";
-import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
+import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites } from "./search-sheet.js";
+import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js"; 
 
 import {
   SUPPORT_PAUSE,
@@ -157,6 +157,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResults = [];
     this._searchError = "";
     this._searchTotalRows = 15;  // minimum 15 rows for layout padding
+    // Cache search results by media type for better performance
+    this._searchResultsByType = {}; // { mediaType: results[] }
+    // Track the current search query for cache invalidation
+    this._currentSearchQuery = "";
+    // Search hierarchy tracking
+    this._searchHierarchy = []; // Array of {type: 'artist'|'album', name: string, query: string}
+    this._searchBreadcrumb = ""; // Display string for current search context
     // Per-chip linger map to keep MA entity selected briefly after pause
     this._playbackLingerByIdx = {};
     // Show search-in-sheet flag for entity options sheet
@@ -359,6 +366,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._searchSwipeAttached) return;
     const area = this.renderRoot.querySelector('.entity-options-search-results');
     if (!area) return;
+    
+    // Disable swipe-to-filter when in a hierarchy (artist -> albums -> tracks)
+    if (this._searchHierarchy.length > 0) {
+      return;
+    }
+    
     this._searchSwipeAttached = true;
 
     const threshold = 40;  // px needed to trigger change
@@ -375,15 +388,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (endX === null) { this._swipeStartX = null; return; }
       const dx = endX - this._swipeStartX;
       if (Math.abs(dx) > threshold) {
-        const classes = Array.from(
-          new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean))
-        );
+        // Get all available media classes from cached results
+        const allClasses = new Set();
+        Object.values(this._searchResultsByType).forEach(results => {
+          results.forEach(item => {
+            if (item.media_class) allClasses.add(item.media_class);
+          });
+        });
+        const classes = Array.from(allClasses);
         const filterOrder = ['all', ...classes];
         const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
         const dir = dx < 0 ? 1 : -1;   // swipe left -> next, right -> prev
         let nextIdx = (currIdx + dir + filterOrder.length) % filterOrder.length;
-        this._searchMediaClassFilter = filterOrder[nextIdx];
-        this.requestUpdate();
+        const nextFilter = filterOrder[nextIdx];
+        this._doSearch(nextFilter === 'all' ? null : nextFilter);
       }
       this._swipeStartX = null;
     };
@@ -415,6 +433,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchError        = "";
     this._searchAttempted    = false;
     this._searchLoading      = false;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = artist; // Set current search query
+    this._searchHierarchy = []; // Clear search hierarchy
+    this._searchBreadcrumb = ""; // Clear breadcrumb
 
     // Render, then run search
     this.requestUpdate();
@@ -427,7 +449,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResults = [];
     this._searchQuery = "";
     this._searchAttempted = false;
+    this._searchResultsByType = {}; // Clear cache when opening new search
+    this._currentSearchQuery = ""; // Reset current search query
+    this._searchHierarchy = []; // Clear search hierarchy
+    this._searchBreadcrumb = ""; // Clear breadcrumb
+    this._usingMusicAssistant = false; // Track if we're using Music Assistant search
+    this._favoritesFilterActive = false; // Track if favorites filter is active
+    this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
     this.requestUpdate();
+    
+    // Trigger search to load favorites when search sheet opens
+    setTimeout(() => {
+      this._doSearch();
+    }, 100);
     
     // Handle focus for expand on search
     const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
@@ -453,6 +487,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchQuery = "";
     this._searchLoading = false;
     this._searchAttempted = false;
+    this._searchResultsByType = {}; // Clear cache when closing
+    this._currentSearchQuery = ""; // Reset current search query
+    this._searchHierarchy = []; // Clear search hierarchy
+    this._searchBreadcrumb = ""; // Clear breadcrumb
     this.requestUpdate();
     // Force layout update for expand on search
     setTimeout(() => {
@@ -473,11 +511,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResults = [];
     this._searchQuery = "";
     this._searchLoading = false;
+    this._searchResultsByType = {}; // Clear cache when closing
+    this._currentSearchQuery = ""; // Reset current search query
+    this._searchHierarchy = []; // Clear search hierarchy
+    this._searchBreadcrumb = ""; // Clear breadcrumb
     this.requestUpdate();
   }
-  async _doSearch() {
+      async _doSearch(mediaType = null, searchParams = {}) {
     this._searchAttempted = true;
-    if (!this._searchQuery) return;
+    
+    // Set the current filter
+    this._searchMediaClassFilter = mediaType || 'all';
+    
+    // Check if search query has changed - if so, clear cache
+    if (this._currentSearchQuery !== this._searchQuery) {
+      this._searchResultsByType = {};
+      this._currentSearchQuery = this._searchQuery;
+    }
+    
+    // Use cached results if available for this media type
+    const cacheKey = mediaType || 'all';
+    if (this._searchResultsByType[cacheKey]) {
+      this._searchResults = this._searchResultsByType[cacheKey];
+      this.requestUpdate();
+      return;
+    }
+    
     this._searchLoading = true;
     this._searchError = "";
     this._searchResults = [];
@@ -485,8 +544,42 @@ class YetAnotherMediaPlayerCard extends LitElement {
     try {
       const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
       const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-      const arr = await searchMedia(this.hass, searchEntityId, this._searchQuery);
+      
+      let searchResponse;
+      
+      // If no search query or explicitly requesting favorites, load favorites
+      if (!this._searchQuery || this._searchQuery.trim() === '' || mediaType === 'favorites') {
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType);
+        // Mark that initial favorites have been loaded
+        if (!this._searchQuery || this._searchQuery.trim() === '') {
+          this._initialFavoritesLoaded = true;
+        }
+      } else {
+        // Perform search - reset initial favorites flag since this is a user search
+        this._initialFavoritesLoaded = false;
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams);
+      }
+      
+      // Handle the new response format
+      const arr = searchResponse.results || [];
+      this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
+      
+      // Only reset favorites filter if this is a completely new search (not just switching filters)
+      const isNewSearch = this._currentSearchQuery !== this._searchQuery;
+      if (isNewSearch) {
+        this._favoritesFilterActive = false;
+      }
+      
       this._searchResults = Array.isArray(arr) ? arr : [];
+      
+      // Apply favorites filter if it was active and we're using cached results (switching filters)
+      if (!isNewSearch && this._favoritesFilterActive) {
+        await this._applyFavoritesFilterIfActive();
+      }
+      
+      // Cache the results for this media type
+      this._searchResultsByType[cacheKey] = this._searchResults;
+      
       // remember how many rows exist in the full ("All") set, but keep at least 15 for layout
       const rows = Array.isArray(this._searchResults) ? this._searchResults.length : 0;
       this._searchTotalRows = Math.max(15, rows);   // keep at least 15
@@ -508,6 +601,324 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._showSearchInSheet = false;
     }
     this._searchCloseSheet();
+  }
+
+  // Handle hierarchical search - search for albums by artist
+  async _searchArtistAlbums(artistName) {
+    this._searchHierarchy.push({ type: 'artist', name: artistName, query: this._searchQuery });
+    this._searchBreadcrumb = `Albums by ${artistName}`;
+    this._searchQuery = artistName;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = artistName;
+    this._searchMediaClassFilter = 'album';
+    
+    // Remove swipe handlers when entering hierarchy
+    this._removeSearchSwipeHandlers();
+    
+    // Use Music Assistant search with artist name for albums
+    await this._doSearch('album');
+  }
+
+  // Handle hierarchical search - search for tracks by album
+  async _searchAlbumTracks(albumName, artistName) {
+    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery });
+    this._searchBreadcrumb = `Tracks from ${albumName}`;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = albumName;
+    this._searchMediaClassFilter = 'track';
+    
+    // Create a more specific search query that includes both artist and album
+    let searchQuery = albumName;
+    if (artistName) {
+      searchQuery = `${artistName} ${albumName}`;
+    }
+    this._searchQuery = searchQuery;
+    
+    // Pass artist and album as search parameters for more precise results
+    const searchParams = { album: albumName };
+    if (artistName) {
+      searchParams.artist = artistName;
+    }
+    
+    // Remove swipe handlers when entering hierarchy
+    this._removeSearchSwipeHandlers();
+    
+    // Use Music Assistant search with specific parameters for tracks
+    await this._doSearch('track', searchParams);
+  }
+
+  // Handle hierarchical search - search for tracks in playlist
+  async _searchPlaylistTracks(playlistName) {
+    this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery });
+    this._searchBreadcrumb = `Tracks in ${playlistName}`;
+    this._searchQuery = playlistName;
+    this._searchMediaClassFilter = 'track';
+    
+    // For now, just search for tracks with the playlist name as a fallback
+    // This is not ideal but will work for some playlists
+
+    await this._doSearch('track');
+  }
+
+  // Go back in search hierarchy
+  _goBackInSearch() {
+    if (this._searchHierarchy.length === 0) return;
+    
+    const previousLevel = this._searchHierarchy.pop();
+    this._searchQuery = previousLevel.query;
+    this._currentSearchQuery = previousLevel.query;
+    this._searchResultsByType = {}; // Clear cache for new search
+    
+    if (this._searchHierarchy.length === 0) {
+      this._searchBreadcrumb = "";
+      this._searchMediaClassFilter = 'all';
+      this._doSearch();
+      
+      // Re-attach swipe handlers when returning to top level
+      setTimeout(() => {
+        this._attachSearchSwipe();
+      }, 100);
+    } else {
+      const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
+      if (currentLevel.type === 'artist') {
+        this._searchBreadcrumb = `Albums by ${currentLevel.name}`;
+        this._searchMediaClassFilter = 'album';
+        this._doSearch('album', { artist: currentLevel.name });
+      } else if (currentLevel.type === 'album') {
+        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
+        this._searchMediaClassFilter = 'track';
+        // Get the artist name from the hierarchy if available
+        const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
+        const searchParams = { album: currentLevel.name };
+        if (artistLevel) {
+          searchParams.artist = artistLevel.name;
+        }
+        this._doSearch('track', searchParams);
+      } else if (currentLevel.type === 'playlist') {
+        this._searchBreadcrumb = `Tracks in ${currentLevel.name}`;
+        this._searchMediaClassFilter = 'track';
+        this._doSearch('track');
+      }
+    }
+  }
+
+  // Check if a search result is clickable for hierarchical navigation
+  _isClickableSearchResult(item) {
+    if (!item || !item.media_class) return false;
+    
+    // Artist results are clickable when we're in the main search (to go to albums)
+    if (item.media_class === 'artist' && this._searchHierarchy.length === 0) {
+      return true;
+    }
+    
+    // Album results are clickable when we're in the main search or viewing artist albums (to go to tracks)
+    if (item.media_class === 'album' && 
+        (this._searchHierarchy.length === 0 || 
+         (this._searchHierarchy.length > 0 && this._searchHierarchy[this._searchHierarchy.length - 1].type === 'artist'))) {
+      return true;
+    }
+    
+    // Playlists are not clickable since track listing doesn't work properly
+    return false;
+  }
+
+  // Handle touch events to prevent accidental clicks during scrolling
+  _handleSearchResultTouch(item, event) {
+    // Only handle touch events on mobile
+    if (!('ontouchstart' in window)) {
+      return;
+    }
+
+    const touch = event.touches[0];
+    const startX = touch.clientX;
+    const startY = touch.clientY;
+    let hasMoved = false;
+    const moveThreshold = 10; // pixels
+
+    const handleTouchMove = (moveEvent) => {
+      const moveTouch = moveEvent.touches[0];
+      const deltaX = Math.abs(moveTouch.clientX - startX);
+      const deltaY = Math.abs(moveTouch.clientY - startY);
+      
+      if (deltaX > moveThreshold || deltaY > moveThreshold) {
+        hasMoved = true;
+      }
+    };
+
+    const handleTouchEnd = (endEvent) => {
+      // Remove event listeners
+      document.removeEventListener('touchmove', handleTouchMove, { passive: true });
+      document.removeEventListener('touchend', handleTouchEnd, { passive: true });
+      
+      // Only trigger click if finger didn't move significantly (not scrolling)
+      if (!hasMoved) {
+        this._handleSearchResultClick(item);
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+  }
+
+
+
+  // Get the tooltip title for clickable search results
+  _getSearchResultClickTitle(item) {
+    if (!this._isClickableSearchResult(item)) return "";
+    
+    if (item.media_class === 'artist') {
+      return `View albums by ${item.title}`;
+    } else if (item.media_class === 'album') {
+      return `View tracks from ${item.title}`;
+    } else if (item.media_class === 'playlist') {
+      return `View tracks in ${item.title}`;
+    }
+    
+    return "";
+  }
+
+  // Toggle favorites filter on current search results
+  async _toggleFavoritesFilter() {
+    this._favoritesFilterActive = !this._favoritesFilterActive;
+    
+    if (this._favoritesFilterActive) {
+      // Get favorites and filter current results
+      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+      
+      try {
+        const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter);
+        const favorites = favoritesResponse.results || [];
+        
+        // Create a set of favorite URIs for quick lookup
+        const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
+        
+        // Filter current results to only show favorites
+        const currentResults = this._searchResults || [];
+        this._searchResults = currentResults.filter(item => favoriteUris.has(item.media_content_id));
+      } catch (error) {
+        // If favorites loading fails, just show current results
+        console.warn('Failed to load favorites for filtering:', error);
+      }
+    } else {
+      // Restore original results from cache
+      const cacheKey = this._searchMediaClassFilter || 'all';
+      this._searchResults = this._searchResultsByType[cacheKey] || [];
+    }
+    
+    this.requestUpdate();
+  }
+
+  // Apply favorites filter to current results (called when switching filter chips)
+  async _applyFavoritesFilterIfActive() {
+    if (!this._favoritesFilterActive) return;
+    
+    const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+    const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+    
+    try {
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter);
+      const favorites = favoritesResponse.results || [];
+      
+      // Create a set of favorite URIs for quick lookup
+      const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
+      
+      // Filter current results to only show favorites
+      const currentResults = this._searchResults || [];
+      this._searchResults = currentResults.filter(item => favoriteUris.has(item.media_content_id));
+    } catch (error) {
+      // If favorites loading fails, just show current results
+      console.warn('Failed to load favorites for filtering:', error);
+    }
+  }
+
+  // Handle clicks on search result titles
+  async _handleSearchResultClick(item, event) {
+    if (!this._isClickableSearchResult(item)) return;
+    
+    // If this is a touch device and we have a touch event, ignore the click
+    // (touch events are handled by _handleSearchResultTouch)
+    if ('ontouchstart' in window && event && event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents) {
+      return;
+    }
+    
+    if (item.media_class === 'artist') {
+      await this._searchArtistAlbums(item.title);
+    } else if (item.media_class === 'album') {
+      // Get artist name from hierarchy if we're viewing artist albums, or from item metadata if available
+      let artistName = null;
+      if (this._searchHierarchy.length > 0 && this._searchHierarchy[this._searchHierarchy.length - 1].type === 'artist') {
+        artistName = this._searchHierarchy[this._searchHierarchy.length - 1].name;
+      } else if (item.artist) {
+        artistName = item.artist;
+      }
+      await this._searchAlbumTracks(item.title, artistName);
+    } else if (item.media_class === 'playlist') {
+      // Playlists are not clickable - just play the playlist directly
+      await this._playMediaFromSearch(item);
+    }
+  }
+  
+    // Show playlist tracks - similar to how the sonos card shows queue
+  async _showPlaylistTracks(playlistItem) {
+    try {
+  
+      
+      // Add to search hierarchy
+      this._searchHierarchy.push({ type: 'playlist', name: playlistItem.title, query: this._searchQuery });
+      this._searchBreadcrumb = `Tracks in ${playlistItem.title}`;
+      
+      // Try to get playlist tracks using media_player.browse_media
+      if (playlistItem.media_content_id) {
+    
+        
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+        
+        const browseMsg = {
+          type: "call_service",
+          domain: "media_player",
+          service: "browse_media",
+          service_data: {
+            entity_id: searchEntityId,
+            media_content_id: playlistItem.media_content_id,
+          },
+          return_response: true,
+        };
+        
+        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
+    
+        
+        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
+        const tracks = browseResult.children || [];
+        
+        if (tracks.length > 0) {
+      
+          
+          // Set the tracks as search results
+          this._searchResults = tracks;
+          this._searchMediaClassFilter = 'track';
+          this._searchTotalRows = Math.max(15, tracks.length);
+          this.requestUpdate();
+          return;
+        }
+      }
+      
+      // Fallback: show a message that playlist tracks aren't available
+  
+      this._searchResults = [];
+      this._searchMediaClassFilter = 'track';
+      this._searchTotalRows = 15;
+      this.requestUpdate();
+    } catch (error) {
+  
+      // Show empty results
+      this._searchResults = [];
+      this._searchMediaClassFilter = 'track';
+      this._searchTotalRows = 15;
+      this.requestUpdate();
+    }
   }
 
 
@@ -1235,7 +1646,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._searchResults = [];
           this._searchQuery = "";
           this._searchAttempted = false;
+          this._searchResultsByType = {}; // Clear cache when opening new search
+          this._currentSearchQuery = ""; // Reset current search query
+          this._searchHierarchy = []; // Clear search hierarchy
+          this._searchBreadcrumb = ""; // Clear breadcrumb
           this.requestUpdate();
+          
+          // Trigger search to load favorites when search sheet opens
+          setTimeout(() => {
+            this._doSearch();
+          }, 100);
           
           // Force layout update for expand on search
           setTimeout(() => {
@@ -2286,6 +2706,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </div>
               ` : this._showSearchInSheet ? html`
                 <div class="entity-options-search" style="margin-top:12px;">
+                  ${this._searchBreadcrumb ? html`
+                    <div class="entity-options-search-breadcrumb">
+                      <button class="entity-options-item" @click=${() => this._goBackInSearch()} style="margin-bottom:8px;">&larr; Back</button>
+                      <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
+                    </div>
+                  ` : nothing}
                   <div class="entity-options-search-row">
                       <input
                         type="text"
@@ -2295,7 +2721,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         .value=${this._searchQuery}
                         @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
                         @keydown=${e => {
-                          if (e.key === "Enter") { e.preventDefault(); this._doSearch(); }
+                          if (e.key === "Enter") { e.preventDefault(); this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); }
                           else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
                         }}
                         placeholder="Search music..."
@@ -2304,8 +2730,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
-                      @click=${() => this._doSearch()}
-                      ?disabled=${this._searchLoading || !this._searchQuery}>
+                      @click=${() => { this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); }}
+                      ?disabled=${this._searchLoading}>
                       Search
                     </button>
                     <button
@@ -2317,11 +2743,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                   <!-- FILTER CHIPS -->
                   ${(() => {
-                    const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
+                    // Get all available media classes from cached results
+                    const allClasses = new Set();
+                    Object.values(this._searchResultsByType).forEach(results => {
+                      results.forEach(item => {
+                        if (item.media_class) allClasses.add(item.media_class);
+                      });
+                    });
+                    const classes = Array.from(allClasses);
                     const filter = this._searchMediaClassFilter || "all";
-                    if (classes.length < 2) return nothing;
+                    
+                    // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
+                    if (this._searchHierarchy.length > 0) return nothing;
+                    
+                    // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
+                    if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
+                    
                     return html`
-                      <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center;">
+                      <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
                         <button
                           class="chip"
                           style="
@@ -2331,7 +2770,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             font-weight: ${filter === 'all' ? 'bold' : 'normal'};
                           "
                           ?selected=${filter === 'all'}
-                          @click=${() => { this._searchMediaClassFilter = "all"; this.requestUpdate(); }}
+                          @click=${() => this._doSearch()}
                         >All</button>
                         ${classes.map(c => html`
                           <button
@@ -2343,7 +2782,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                               font-weight: ${filter === c ? 'bold' : 'normal'};
                             "
                             ?selected=${filter === c}
-                            @click=${() => { this._searchMediaClassFilter = c; this.requestUpdate(); }}
+                            @click=${() => this._doSearch(c)}
                           >
                             ${c.charAt(0).toUpperCase() + c.slice(1)}
                           </button>
@@ -2353,22 +2792,47 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   })()}
                   ${this._searchLoading ? html`<div class="entity-options-search-loading">Loading...</div>` : nothing}
                   ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
+                  
+                  ${this._usingMusicAssistant && !this._searchLoading ? html`
+                    <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px;">
+                                              <button
+                          class="favorites-filter-btn"
+                          style="
+                            background: none;
+                            border: none;
+                            color: ${this._favoritesFilterActive ? '#ff6b6b' : '#999'};
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => this._toggleFavoritesFilter() : null}
+                          title=${this._searchAttempted ? (this._favoritesFilterActive ? 'Show all results' : 'Show only favorites') : 'Showing favorites'}
+                        >
+                                                  <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
+                      </button>
+                      <span style="color: white; font-size: 0.9em;">
+                        ${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'Showing Favorites' : 'Filter Favorites'}
+                      </span>
+                    </div>
+                  ` : nothing}
+                  
                   <div class="entity-options-search-results">
                     ${(() => {
-                      const filter     = this._searchMediaClassFilter || "all";
-                      const allResults = this._searchResults || [];
-                      const filteredResults = filter === "all"
-                        ? allResults
-                        : allResults.filter(item => item.media_class === filter);
+                      const filter = this._searchMediaClassFilter || "all";
+                      const currentResults = this._searchResults || [];
                       // Build padded array so row‑count stays constant
-                      const totalRows = Math.max(15, this._searchTotalRows || allResults.length);
+                      const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
                       const paddedResults = [
-                        ...filteredResults,
-                        ...Array.from({ length: Math.max(0, totalRows - filteredResults.length) }, () => null)
+                        ...currentResults,
+                        ...Array.from({ length: Math.max(0, totalRows - currentResults.length) }, () => null)
                       ];
                       // Always render paddedResults, even before first search
-                      return (this._searchAttempted && filteredResults.length === 0 && !this._searchLoading)
-                        ? html`<div class="entity-options-search-empty">No results.</div>`
+                      return (this._searchAttempted && currentResults.length === 0 && !this._searchLoading)
+                        ? html`<div class="entity-options-search-empty" style="color: white;">No results.</div>`
                         : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result">
@@ -2379,7 +2843,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
                               />
                               <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-                                <span>${item.title}</span>
+                                <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
+                                      @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
+                                      @click=${() => this._handleSearchResultClick(item)}
+                                      title=${this._getSearchResultClickTitle(item)}>
+                                  ${item.title}
+                                </span>
                                 <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
                                   ${item.media_class
                                     ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
@@ -2634,7 +3103,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   this._searchQuery = e.target.value;
                   this.requestUpdate();
                 },
-                onSearch: () => this._doSearch(),
+                onSearch: () => this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter),
                 onPlay: item => this._playMediaFromSearch(item),
               })
             : nothing}

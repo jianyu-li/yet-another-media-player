@@ -1,9 +1,10 @@
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-import { LitElement, html, css, nothing } from "lit";
+// import { LitElement, html, css, nothing } from "lit";
 // import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
+import { LitElement, html, css, nothing } from "lit";
 import yaml from 'js-yaml';
 
 import {SUPPORT_GROUPING} from "./constants.js";
+import "./yamp-sortable.js";
   
 class YetAnotherMediaPlayerEditor extends LitElement {
     static get properties() {
@@ -12,8 +13,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         _config: {},
         _entityEditorIndex: { type: Number },
         _actionEditorIndex: { type: Number },
-        _entityMoveMode: { type: Boolean },
-        _actionMoveMode: { type: Boolean },
         _actionMode: { type: String },
         _useTemplate: { type: Boolean },
         _useVolTemplate: { type: Boolean },
@@ -24,8 +23,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       super();
       this._entityEditorIndex = null;
       this._actionEditorIndex = null;
-      this._entityMoveMode = false;
-      this._actionMoveMode = false;
 
       this._yamlDraft = "";
       this._parsedYaml = null;
@@ -203,11 +200,42 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         .action-row-actions {
           display: flex;
           align-items: flex-start;
-          padding-top: 3px;
+        }
+        .handle {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          cursor: grab;
+          color: var(--secondary-text-color);
+          opacity: 0.7;
+          transition: opacity 0.2s ease;
+        }
+        .handle:hover {
+          opacity: 1;
+        }
+        .handle:active {
+          cursor: grabbing;
+        }
+        .handle-disabled {
+          opacity: 0.3;
+          cursor: default;
+          pointer-events: none;
+        }
+        .handle-disabled:hover {
+          opacity: 0.3;
         }
         .action-icon {
           align-self: flex-start;
           padding-top: 16px;
+        }
+        .action-handle {
+          align-self: flex-start;
+          padding-top: 18px;
+        }
+        .action-row-actions {
+          padding-top: 2px;
         }
         .service-data-editor-header {
           display: flex;
@@ -320,76 +348,57 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <div class="entity-group-title">
               Entities*
             </div>
-            <div class="entity-group-actions">
-              <ha-icon
-                class="icon-button"
-                icon=${this._entityMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}
-                title=${this._entityMoveMode ? "Back to Edit Mode" : "Enable Move Mode"}
-                @mousedown=${(e) => e.preventDefault()}
-                @click=${() => this._toggleEntityMoveMode()}
-              ></ha-icon>
-            </div>
           </div>
-          ${entities.map((ent, idx) => html`
-            <div class="entity-row-inner">
-              <div class="grow-children">
-                ${ 
-                /* ha-entity-picker will show "[Object object]" for entities with extra properties,
-                   so we'll get around that by using ha-selector. However ha-selector always renders 
-                   as a required field for some reason. This is confusing for the last entity picker, 
-                   used to add a new entity, which is always blank and not required. So for the last
-                   last entity only, we'll use ha-entity-picker. This entity will never have extra
-                   properties, because as soon as it's populated, a new blank entity is added below it
-                */
-                idx === entities.length - 1 && !ent.entity_id
-                  ? html`
-                      <ha-entity-picker
-                        .hass=${this.hass}
-                        .value=${ent.entity_id}
-                        .includeDomains=${["media_player"]}
-                        .excludeEntities=${this._config.entities?.map(e => e.entity_id) ?? []}
-                        clearable
-                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                      ></ha-entity-picker>
-                    `
-                  : html`
-                      <ha-selector
-                        .hass=${this.hass}
-                        .selector=${{ entity: { domain: "media_player" } }}
-                        .value=${ent.entity_id}
-                        clearable
-                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                      ></ha-selector>
-                    `
-              }
-              </div>
-              <div class="entity-row-actions">
-                ${!this._entityMoveMode ? html`
-                <ha-icon
-                  class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
-                  icon="mdi:pencil"
-                  title="Edit Entity Settings"
-                  @click=${() => this._onEditEntity(idx)}
-                ></ha-icon>
-                ` : html`
-                  <ha-icon
-                    class="icon-button ${idx === 0 || idx === entities.length - 1 ? "icon-button-disabled" : ""}"
-                    icon="mdi:arrow-up"
-                    title="Move Up"
-                    @mousedown=${(e) => e.preventDefault()}
-                    @click=${(e) => this._moveEntity(idx, -1)}
-                  ></ha-icon>
-                  <ha-icon
-                    class="icon-button ${idx >= entities.length - 2 ? "icon-button-disabled" : ""}"
-                    icon="mdi:arrow-down"
-                    title="Move Down"
-                    @mousedown=${(e) => e.preventDefault()}
-                    @click=${(e) => this._moveEntity(idx, 1)}
-                  ></ha-icon>
-                `}
-              </div>
+          <yamp-sortable @item-moved=${(e) => this._onEntityMoved(e)}>
+            <div class="sortable-container">
+              ${entities.map((ent, idx) => html`
+                <div class="entity-row-inner ${idx < entities.length - 1 ? 'sortable-item' : ''}" data-index="${idx}">
+                  <div class="handle ${idx === entities.length - 1 ? 'handle-disabled' : ''}">
+                    <ha-icon icon="mdi:drag"></ha-icon>
+                  </div>
+                  <div class="grow-children">
+                    ${ 
+                    /* ha-entity-picker will show "[Object object]" for entities with extra properties,
+                       so we'll get around that by using ha-selector. However ha-selector always renders 
+                       as a required field for some reason. This is confusing for the last entity picker, 
+                       used to add a new entity, which is always blank and not required. So for the last
+                       last entity only, we'll use ha-entity-picker. This entity will never have extra
+                       properties, because as soon as it's populated, a new blank entity is added below it
+                    */
+                    idx === entities.length - 1 && !ent.entity_id
+                      ? html`
+                          <ha-entity-picker
+                            .hass=${this.hass}
+                            .value=${ent.entity_id}
+                            .includeDomains=${["media_player"]}
+                            .excludeEntities=${this._config.entities?.map(e => e.entity_id) ?? []}
+                            clearable
+                            @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                          ></ha-entity-picker>
+                        `
+                      : html`
+                          <ha-selector
+                            .hass=${this.hass}
+                            .selector=${{ entity: { domain: "media_player" } }}
+                            .value=${ent.entity_id}
+                            clearable
+                            @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                          ></ha-selector>
+                        `
+                  }
+                  </div>
+                  <div class="entity-row-actions">
+                    <ha-icon
+                      class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
+                      icon="mdi:pencil"
+                      title="Edit Entity Settings"
+                      @click=${() => this._onEditEntity(idx)}
+                    ></ha-icon>
+                  </div>
+                </div>
+              `)}
             </div>
-          `)}
+          </yamp-sortable>
         </div>
   
         <div class="form-row form-row-multi-column">
@@ -548,88 +557,60 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-entity-picker>
         </div>
 
-         <div class="form-row action-group">
+        <div class="form-row action-group">
           <div class="action-group-header">
             <div class="action-group-title">
               Actions
             </div>
-            <div class="action-group-actions">
-              <ha-icon
-                class="icon-button"
-                icon=${this._actionMoveMode ? "mdi:pencil" : "mdi:swap-vertical"}
-                title=${this._actionMoveMode ? "Back to Edit Mode" : "Enable Move Mode"}
-                @mousedown=${(e) => e.preventDefault()}
-                @click=${(e) => {
-                  this._toggleActionMoveMode();
-                  e.currentTarget.blur();
-                }}
-              ></ha-icon>
-            </div>
           </div>
-          ${actions.map((act, idx) => html`
-            <div class="action-row-inner">
-              ${act?.icon ? html`
-                <ha-icon 
-                class="action-icon"
-                icon="${act?.icon}"></ha-icon>
-              ` : html`
-                <span class="action-icon-placeholder"></span>
-              `
-              }
-              <div class="grow-children">
-                <ha-textfield
-                  placeholder="(Icon Only)"
-                  .value=${act?.name ?? ""}
-                  helper="${
-                    act?.menu_item
-                    ? `Open Menu Item: ${act?.menu_item}`
-                    : act?.service 
-                    ? `Call Service: ${act?.service}`
-                    : `Not Configured`
-                  }"
-                  .helperPersistent=${true}
-                  @input=${a => this._onActionChanged(idx, a.target.value)}
-                ></ha-textfield>
-              </div>
-              <div class="action-row-actions">
-               ${!this._actionMoveMode ? html`
-                <ha-icon
-                  class="icon-button"
-                  icon="mdi:pencil"
-                  title="Edit Action Settings"
-                  @click=${() => this._onEditAction(idx)}
-                ></ha-icon>
-                <ha-icon
-                  class="icon-button"
-                  icon="mdi:trash-can"
-                  title="Delete Action"
-                  @click=${() => this._removeAction(idx)}
-                ></ha-icon>
-              ` : html`
-                <ha-icon
-                  class="icon-button ${idx === 0 ? "icon-button-disabled" : ""}"
-                  icon="mdi:arrow-up"
-                  title="Move Up"
-                  @mousedown=${(e) => e.preventDefault()}
-                  @click=${(e) => {
-                    this._moveAction(idx, -1);
-                    e.currentTarget.blur();
-                  }}
-                ></ha-icon>
-                <ha-icon
-                  class="icon-button ${idx >= actions.length - 1 ? "icon-button-disabled" : ""}"
-                  icon="mdi:arrow-down"
-                  title="Move Down"
-                  @mousedown=${(e) => e.preventDefault()}
-                  @click=${(e) => {
-                    this._moveAction(idx, 1);
-                    e.currentTarget.blur();
-                  }}
-                ></ha-icon>
-                `}
-              </div>
+          <yamp-sortable @item-moved=${(e) => this._onActionMoved(e)}>
+            <div class="sortable-container">
+              ${actions.map((act, idx) => html`
+                <div class="action-row-inner sortable-item">
+                  <div class="handle action-handle">
+                    <ha-icon icon="mdi:drag"></ha-icon>
+                  </div>
+                  ${act?.icon ? html`
+                    <ha-icon 
+                    class="action-icon"
+                    icon="${act?.icon}"></ha-icon>
+                  ` : html`
+                    <span class="action-icon-placeholder"></span>
+                  `
+                  }
+                  <div class="grow-children">
+                    <ha-textfield
+                      placeholder="(Icon Only)"
+                      .value=${act?.name ?? ""}
+                      helper="${
+                        act?.menu_item
+                        ? `Open Menu Item: ${act?.menu_item}`
+                        : act?.service 
+                        ? `Call Service: ${act?.service}`
+                        : `Not Configured`
+                      }"
+                      .helperPersistent=${true}
+                      @input=${a => this._onActionChanged(idx, a.target.value)}
+                    ></ha-textfield>
+                  </div>
+                  <div class="action-row-actions">
+                    <ha-icon
+                      class="icon-button"
+                      icon="mdi:pencil"
+                      title="Edit Action Settings"
+                      @click=${() => this._onEditAction(idx)}
+                    ></ha-icon>
+                    <ha-icon
+                      class="icon-button"
+                      icon="mdi:trash-can"
+                      title="Delete Action"
+                      @click=${() => this._removeAction(idx)}
+                    ></ha-icon>
+                  </div>
+                </div>
+              `)}
             </div>
-          `)}
+          </yamp-sortable>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
@@ -1101,41 +1082,36 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
       this._actionEditorIndex = null;
     }
 
-    _toggleEntityMoveMode() {
-      this._entityMoveMode = !this._entityMoveMode;
-    }
-
-    _toggleActionMoveMode() {
-      this._actionMoveMode = !this._actionMoveMode;
-    }
-
-    _moveEntity(idx, offset) {
+    _onEntityMoved(event) {
+      const { oldIndex, newIndex } = event.detail;
+      
+      // Don't allow moving the last blank entity
       const entities = [...this._config.entities];
-      const newIndex = idx + offset;
-    
-      if (newIndex < 0 || newIndex >= entities.length) {
+      if (oldIndex >= entities.length || newIndex >= entities.length) {
         return;
       }
-    
-      const [moved] = entities.splice(idx, 1);
+      
+      const [moved] = entities.splice(oldIndex, 1);
       entities.splice(newIndex, 0, moved);
-    
+      
       this._updateConfig("entities", entities);
     }
-    
-    _moveAction(idx, offset) {
+
+    _onActionMoved(event) {
+      const { oldIndex, newIndex } = event.detail;
       const actions = [...this._config.actions];
-      const newIndex = idx + offset;
-    
-      if (newIndex < 0 || newIndex >= actions.length) {
+      
+      if (oldIndex >= actions.length || newIndex >= actions.length) {
         return;
       }
-    
-      const [moved] = actions.splice(idx, 1);
+      
+      const [moved] = actions.splice(oldIndex, 1);
       actions.splice(newIndex, 0, moved);
-    
+      
       this._updateConfig("actions", actions);
     }
+    
+
 
     _removeAction(index) {
       const actions = [...(this._config.actions ?? [])];

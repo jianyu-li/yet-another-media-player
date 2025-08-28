@@ -1,5 +1,4 @@
-// yamp-card-styles.js
-// import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import { LitElement, html, css, nothing } from "lit";
 import { css } from "lit";
 
 export const yampCardStyles = css`
@@ -1323,6 +1322,10 @@ export const yampCardStyles = css`
     text-align: left;
   }
 
+  .entity-options-search-loading {
+    color: #fff;
+  }
+
   .entity-options-search-error {
     color: #e44747;
     font-weight: 500;
@@ -1450,5 +1453,30 @@ export const yampCardStyles = css`
 
   .clickable-artist:hover {
     text-decoration: underline;
+  }
+
+  /* Clickable search results */
+  .clickable-search-result {
+    cursor: pointer;
+    color: var(--custom-accent);
+    transition: color var(--transition-fast);
+  }
+
+  .clickable-search-result:hover {
+    text-decoration: underline;
+    color: #fff;
+  }
+
+  /* Search breadcrumb */
+  .entity-options-search-breadcrumb {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .entity-options-search-breadcrumb-text {
+    font-size: 0.9em;
+    color: #fff;
+    font-style: italic;
   }
 `;
