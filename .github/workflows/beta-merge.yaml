@@ -1,0 +1,152 @@
+name: Beta to Main Merge
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_merge:
+        description: 'Type "merge" to confirm beta to main merge'
+        required: true
+        type: string
+
+jobs:
+  merge-beta-to-main:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm_merge == 'merge'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Checkout main branch
+        run: git checkout main
+
+      - name: Pull latest changes
+        run: git pull origin main
+
+      - name: Fetch all branches
+        run: git fetch origin
+
+      - name: Reset to clean state and apply beta changes
+        run: |
+          # Reset to clean state
+          git reset --hard HEAD
+          # Create a temporary branch from beta
+          git checkout -b temp-beta origin/beta
+          # Copy only source files from beta to main (preserve config files)
+          git checkout main
+          git checkout temp-beta -- src/ || true
+          # Remove the temporary branch
+          git branch -D temp-beta
+
+      - name: Remove -beta suffixes and update imports
+        run: |
+          # Remove -beta from custom element type
+          sed -i 's/type: "yet-another-media-player-beta"/type: "yet-another-media-player"/g' src/yet-another-media-player.js
+          
+          # Remove -beta from custom element definition
+          sed -i 's/customElements.define("yet-another-media-player-beta"/customElements.define("yet-another-media-player"/g' src/yet-another-media-player.js
+          
+          # Remove -beta from yamp-sortable custom element definition
+          sed -i 's/customElements.define("yamp-sortable-beta"/customElements.define("yamp-sortable"/g' src/yamp-sortable.js
+          
+          # Remove -beta from yamp-editor custom element definition
+          sed -i 's/customElements.define("yet-another-media-player-editor-beta"/customElements.define("yet-another-media-player-editor"/g' src/yamp-editor.js
+          
+          # Update any other -beta references in source files only
+          find src/ -name "*.js" -exec sed -i 's/-beta//g' {} \;
+          
+          # Update imports from CDN to local lit
+          find src/ -name "*.js" -exec sed -i 's|import { .* } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module"|import { LitElement, html, css, nothing } from "lit"|g' {} \;
+          find src/ -name "*.js" -exec sed -i 's|import { .* } from "https://unpkg.com/lit@3.3.1/lit.js?module"|import { LitElement, html, css, nothing } from "lit"|g' {} \;
+          
+          # Update js-yaml imports
+          find src/ -name "*.js" -exec sed -i 's|import yaml from "https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm"|import yaml from "js-yaml"|g' {} \;
+          
+          # Update sortablejs imports
+          find src/ -name "*.js" -exec sed -i 's|import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm"|import Sortable from "sortablejs"|g' {} \;
+
+      - name: Stage changes
+        run: git add .
+
+      - name: Check for changes and commit
+        run: |
+          # Check if there are any staged changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit - files are already up to date"
+          else
+            git commit -m "Apply beta changes to main: Remove -beta suffixes and update imports
+
+            - Applied beta branch changes to main
+            - Removed -beta suffix from custom element type and definition
+            - Converted CDN imports to local package imports
+            - Updated all source files to use production naming"
+          fi
+
+      - name: Build and commit rollup output
+        run: |
+          # Set up Node.js and install dependencies
+          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          npm ci
+          
+          # Run rollup build
+          npx rollup -c
+          
+          # Commit the built file if it changed
+          git add yet-another-media-player.js || true
+          if git diff --cached --quiet; then
+            echo "No changes to built file"
+          else
+            git commit -m "Auto-build: rollup output after beta merge"
+          fi
+
+      - name: Push to main
+        run: |
+          # Check if there are any commits to push
+          if git log --oneline origin/main..HEAD | grep -q .; then
+            git push origin main
+          else
+            echo "No new commits to push - main branch is already up to date"
+          fi
+
+      - name: Create release tag
+        run: |
+          # Get current version from package.json
+          VERSION=$(node -p "require('./package.json').version")
+          # Create timestamp for unique tag
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          TAG_NAME="v$VERSION-beta-merge-$TIMESTAMP"
+          
+          # Create and push the tag
+          git tag -a "$TAG_NAME" -m "Beta merge completed - $TAG_NAME"
+          git push origin "$TAG_NAME"
+          
+          echo "Created tag: $TAG_NAME"
+
+      - name: Comment on workflow
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          TAG_NAME="v$VERSION-beta-merge-$TIMESTAMP"
+          
+          # Check if changes were made
+          if git log --oneline origin/main..HEAD | grep -q .; then
+            echo "✅ Beta to main merge completed successfully!"
+            echo "📦 Changes made:"
+            echo "   - Applied beta branch changes to main"
+            echo "   - Removed -beta suffixes from custom elements"
+            echo "   - Updated imports from CDN to local packages"
+            echo "   - Created merge tag: $TAG_NAME"
+          else
+            echo "✅ Beta to main merge completed successfully!"
+            echo "📦 Status: No changes needed - main branch is already up to date"
+            echo "   - Created merge tag: $TAG_NAME"
+          fi

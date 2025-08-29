@@ -1,0 +1,91 @@
+name: Beta PR Merge
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, ready_for_review]
+
+jobs:
+  validate-beta-pr:
+    runs-on: ubuntu-latest
+    if: github.head_ref == 'beta'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test rollup build
+        run: npx rollup -c
+
+      - name: Check for -beta references
+        run: |
+          echo "Checking for -beta references in source files..."
+          BETA_REFS=$(grep -r "yet-another-media-player-beta" src/ || true)
+          if [ -n "$BETA_REFS" ]; then
+            echo "✅ Found -beta references (expected for beta branch):"
+            echo "$BETA_REFS"
+          else
+            echo "⚠️  No -beta references found in source files"
+          fi
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Beta PR Validation')
+            );
+            
+            const commentBody = `## Beta PR Validation ✅
+            
+            **Build Status**: ✅ Rollup build successful
+            **Branch**: \`beta\` → \`main\`
+            
+            ### Ready for Merge
+            This PR is ready to be merged using the automated workflow:
+            1. Go to Actions → "Beta to Main Merge"
+            2. Click "Run workflow"
+            3. Type "merge" to confirm
+            4. The workflow will automatically:
+               - Remove \`-beta\` suffixes
+               - Update imports from CDN to local packages
+               - Update README.md examples
+               - Create a release tag
+            
+            ### Manual Merge Alternative
+            If you prefer manual merge, follow the instructions in \`src/Beta Merge Instructions.txt\`
+            `;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });
+            }
