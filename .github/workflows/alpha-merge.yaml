@@ -1,0 +1,153 @@
+name: Alpha to Beta Merge
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_merge:
+        description: 'Type "merge" to confirm alpha to beta merge'
+        required: true
+        default: 'merge'
+
+jobs:
+  alpha-to-beta-merge:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm_merge == 'merge'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all branches
+        run: git fetch origin
+
+      - name: Checkout beta branch
+        run: git checkout beta
+
+      - name: Pull latest beta changes
+        run: git pull origin beta
+
+      - name: Create temp-alpha branch from alpha
+        run: git checkout -b temp-alpha origin/alpha
+
+      - name: Copy src files from alpha to beta
+        run: |
+          # Switch back to beta
+          git checkout beta
+          
+          # Copy only the src directory from alpha
+          git checkout temp-alpha -- src/
+          
+          # Check if there are any changes
+          if git diff --quiet; then
+            echo "No source changes to merge from alpha"
+            exit 0
+          fi
+
+      - name: Replace -alpha suffixes with -beta
+        run: |
+          # Replace -alpha with -beta in all source files
+          find src/ -name "*.js" -type f -exec sed -i 's/-alpha/-beta/g' {} \;
+          
+          # Also replace in the main component registration
+          sed -i 's/yet-another-media-player-alpha/yet-another-media-player-beta/g' src/yet-another-media-player.js
+          sed -i 's/yamp-sortable-alpha/yamp-sortable-beta/g' src/yamp-sortable.js
+          sed -i 's/yet-another-media-player-editor-alpha/yet-another-media-player-editor-beta/g' src/yamp-editor.js
+          
+          # Replace in customCards push
+          sed -i 's/"yet-another-media-player-alpha"/"yet-another-media-player-beta"/g' src/yet-another-media-player.js
+          sed -i 's/"Yet Another Media Player-alpha"/"Yet Another Media Player-beta"/g' src/yet-another-media-player.js
+
+      - name: Get current version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Commit alpha changes to beta
+        run: |
+          # Only commit if there are changes
+          if ! git diff --quiet; then
+            git add src/
+            git commit -m "Merge alpha changes to beta: Update source files
+
+            - Merged source files from alpha branch
+            - Replaced -alpha suffixes with -beta suffixes
+            - Updated custom element registrations
+            - Updated customCards configuration
+
+            Auto-merged from alpha branch for testing"
+            echo "✅ Changes committed to beta"
+          else
+            echo "⏭️  No changes to commit"
+          fi
+
+      - name: Push to beta branch
+        run: |
+          # Only push if there are commits to push
+          if git log --oneline origin/beta..HEAD | grep -q "Merge alpha changes to beta"; then
+            git push origin beta
+            echo "✅ Changes pushed to beta branch"
+          else
+            echo "⏭️  No changes to push"
+          fi
+
+      - name: Create timestamped tag
+        run: |
+          # Only create tag if we actually pushed changes
+          if git log --oneline origin/beta..HEAD | grep -q "Merge alpha changes to beta"; then
+            TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+            TAG="v${{ steps.version.outputs.version }}-alpha-merge-$TIMESTAMP"
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "✅ Created tag: $TAG"
+          else
+            echo "⏭️  No tag created - no changes pushed"
+          fi
+
+      - name: Build and commit rollup output
+        run: |
+          # Only build if we actually pushed changes
+          if git log --oneline origin/beta..HEAD | grep -q "Merge alpha changes to beta"; then
+            # Set up Node.js
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            
+            # Install dependencies
+            npm ci
+            
+            # Build with beta branch environment
+            BRANCH=beta npm run build
+            
+            # Commit the built file
+            git add yet-another-media-player-beta.js
+            git commit -m "Auto-build: rollup output for beta branch after alpha merge"
+            git push origin beta
+            
+            echo "✅ Built and committed rollup output"
+          else
+            echo "⏭️  Skipping build - no changes pushed"
+          fi
+
+      - name: Cleanup temp branch
+        if: always()
+        run: |
+          git branch -D temp-alpha || true
+          echo "🧹 Cleaned up temp branch"
+
+      - name: Success message
+        if: success()
+        run: |
+          echo "🎉 Alpha to Beta merge completed successfully!"
+          echo "📦 Beta branch updated with alpha changes"
+          echo "🏷️  Timestamped tag created"
+          echo "🔨 Rollup build completed"
+          echo "✅ Ready for testing in beta environment"
