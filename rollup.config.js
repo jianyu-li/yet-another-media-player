@@ -2,10 +2,14 @@ import resolve from '@rollup/plugin-node-resolve';
 import babel from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 
+// Determine output filename based on branch
+const isBetaBranch = process.env.BRANCH === 'beta' || process.env.GITHUB_REF === 'refs/heads/beta';
+const outputFilename = isBetaBranch ? 'yet-another-media-player-beta.js' : 'yet-another-media-player.js';
+
 export default {
   input: 'src/yet-another-media-player.js',
   output: {
-    file: 'yet-another-media-player.js',
+    file: outputFilename,
     format: 'es',
   },
   plugins: [
