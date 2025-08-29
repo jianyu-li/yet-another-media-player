@@ -1394,11 +1394,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         console.log('yamp: Sorted entities by timestamp:', sortedIds);
         if (sortedIds.length > 0) {
           const mostRecentId = sortedIds[0];
-          const mostRecentState = this.hass.states[mostRecentId];
-          console.log('yamp: Checking most recent entity:', mostRecentId, 'state:', mostRecentState?.state, 'current selected:', this.entityIds[this._selectedIndex]);
+          const mostRecentIdx = this.entityIds.indexOf(mostRecentId);
+          const mostRecentActiveEntity = this._getEntityForPurpose(mostRecentIdx, 'sorting');
+          const mostRecentActiveState = this.hass.states[mostRecentActiveEntity];
+          console.log('yamp: Checking most recent entity:', mostRecentId, 'active entity:', mostRecentActiveEntity, 'state:', mostRecentActiveState?.state, 'current selected:', this.entityIds[this._selectedIndex]);
           if (
-            mostRecentState &&
-            mostRecentState.state === "playing" &&
+            mostRecentActiveState &&
+            mostRecentActiveState.state === "playing" &&
             this.entityIds[this._selectedIndex] !== mostRecentId
           ) {
             console.log('yamp: Switching to most recent entity:', mostRecentId);
