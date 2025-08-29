@@ -8,6 +8,9 @@ on:
     paths:
       - "src/**"
       - "rollup.config.js"
+      - "package.json"
+      - "package-lock.json"
+      - "babel.config.json"
 
 jobs:
   build:
@@ -34,7 +37,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add yet-another-media-player.js || true
+          
+          # Determine which file to add based on branch
+          if [ "${{ github.ref_name }}" = "beta" ]; then
+            git add yet-another-media-player-beta.js || true
+          else
+            git add yet-another-media-player.js || true
+          fi
+          
           git diff --cached --quiet || git commit -m "Auto-build: rollup output"
           git push
         env:
