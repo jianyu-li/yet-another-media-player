@@ -70,3 +70,10 @@ jobs:
           echo "✅ Alpha branch build completed successfully!"
           echo "🧪 Ready for testing and debugging"
           echo "📝 Use this branch for experimental features and testing"
+          
+      - name: Copy alpha file to local config (alpha branch only)
+        if: github.ref == 'refs/heads/alpha'
+        run: |
+          echo "📁 Copying alpha file to local Home Assistant config..."
+          # This step will be handled by a local script that watches for GitHub pushes
+          echo "🔄 Alpha file ready for local copy"
