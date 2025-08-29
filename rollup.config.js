@@ -35,5 +35,26 @@ export default {
       ],
       exclude: [],
     }),
+    // Custom plugin to handle conditional custom element registration
+    {
+      name: 'conditional-custom-elements',
+      transform(code, id) {
+        if (isBetaBranch) {
+          // Replace yamp-sortable custom element registration
+          if (id.includes('yamp-sortable.js')) {
+            code = code.replace(
+              'customElements.define("yamp-sortable", YampSortable);',
+              'customElements.define("yamp-sortable-beta", YampSortable);'
+            );
+          }
+          // Replace yamp-sortable usage in HTML templates
+          if (id.includes('yamp-editor.js')) {
+            code = code.replace(/<yamp-sortable/g, '<yamp-sortable-beta');
+            code = code.replace(/<\/yamp-sortable>/g, '</yamp-sortable-beta>');
+          }
+        }
+        return code;
+      }
+    }
   ],
 };
