@@ -54,6 +54,12 @@ jobs:
           # Remove -beta from custom element definition
           sed -i 's/customElements.define("yet-another-media-player-beta"/customElements.define("yet-another-media-player"/g' src/yet-another-media-player.js
           
+          # Remove -beta from yamp-sortable custom element definition
+          sed -i 's/customElements.define("yamp-sortable-beta"/customElements.define("yamp-sortable"/g' src/yamp-sortable.js
+          
+          # Remove -beta from yamp-editor custom element definition
+          sed -i 's/customElements.define("yet-another-media-player-editor-beta"/customElements.define("yet-another-media-player-editor"/g' src/yamp-editor.js
+          
           # Update any other -beta references in source files only
           find src/ -name "*.js" -exec sed -i 's/-beta//g' {} \;
           
