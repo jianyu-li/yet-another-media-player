@@ -1,0 +1,104 @@
+name: Alpha PR Validation
+
+on:
+  pull_request:
+    branches:
+      - beta
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "rollup.config.js"
+      - "babel.config.json"
+
+jobs:
+  validate-alpha-pr:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test rollup build
+        run: |
+          echo "Testing rollup build with alpha configuration..."
+          BRANCH=alpha npm run build
+          echo "✅ Rollup build successful"
+
+      - name: Check for -alpha references
+        run: |
+          echo "Checking for -alpha references in source files..."
+          ALPHA_REFS=$(grep -r "yet-another-media-player-alpha\|yamp-sortable-alpha\|yet-another-media-player-editor-alpha" src/ || true)
+          if [ -n "$ALPHA_REFS" ]; then
+            echo "✅ Found -alpha references (expected for alpha branch):"
+            echo "$ALPHA_REFS"
+          else
+            echo "❌ No -alpha references found - this may indicate an issue"
+            exit 1
+          fi
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Alpha PR Validation')
+            );
+            
+            const commentBody = `## 🧪 Alpha PR Validation Results
+
+            ✅ **Rollup Build**: Successful
+            ✅ **Alpha References**: Found and validated
+            ✅ **Source Files**: Ready for merge
+
+            ### 📋 Next Steps:
+            1. **Review the changes** in this PR
+            2. **Approve and merge** to beta branch
+            3. **Use the automated workflow** for future alpha→beta merges:
+               - Go to Actions → "Alpha to Beta Merge"
+               - Type "merge" to confirm
+               - This will automatically replace -alpha with -beta suffixes
+
+            ### 🔄 Automated Process:
+            The "Alpha to Beta Merge" workflow will:
+            - Copy source files from alpha to beta
+            - Replace all -alpha suffixes with -beta
+            - Update custom element registrations
+            - Build and commit the beta version
+            - Create a timestamped tag
+
+            ---
+            *This validation ensures your alpha changes are ready for beta testing*`;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
