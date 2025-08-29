@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - beta
+      - alpha
     paths:
       - "src/**"
       - "rollup.config.js"
@@ -12,6 +13,7 @@ on:
       - "babel.config.json"
       - "yet-another-media-player.js"
       - "yet-another-media-player-beta.js"
+      - "yet-another-media-player-alpha.js"
 
 jobs:
   build:
@@ -44,6 +46,8 @@ jobs:
           # Determine which file to add based on branch
           if [ "${{ github.ref_name }}" = "beta" ]; then
             git add yet-another-media-player-beta.js || true
+          elif [ "${{ github.ref_name }}" = "alpha" ]; then
+            git add yet-another-media-player-alpha.js || true
           else
             git add yet-another-media-player.js || true
           fi
@@ -59,3 +63,10 @@ jobs:
           echo "✅ Beta branch build completed successfully!"
           echo "📦 Ready for merge to main using automated workflow"
           echo "🔗 Go to Actions → 'Beta to Main Merge' to proceed"
+          
+      - name: Comment on commit (alpha branch only)
+        if: github.ref == 'refs/heads/alpha'
+        run: |
+          echo "✅ Alpha branch build completed successfully!"
+          echo "🧪 Ready for testing and debugging"
+          echo "📝 Use this branch for experimental features and testing"

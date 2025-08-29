@@ -168,4 +168,4 @@ class YampSortable extends LitElement {
   }
 }
 
-customElements.define("yamp-sortable", YampSortable);
+customElements.define("yamp-sortable-alpha", YampSortable);
