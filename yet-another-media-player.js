@@ -11399,8 +11399,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const sortedIds = this.sortedEntityIds;
         if (sortedIds.length > 0) {
           const mostRecentId = sortedIds[0];
-          const mostRecentState = this.hass.states[mostRecentId];
-          if (mostRecentState && mostRecentState.state === "playing" && this.entityIds[this._selectedIndex] !== mostRecentId) {
+          const mostRecentIdx = this.entityIds.indexOf(mostRecentId);
+          const mostRecentActiveEntity = this._getEntityForPurpose(mostRecentIdx, 'sorting');
+          const mostRecentActiveState = this.hass.states[mostRecentActiveEntity];
+          if (mostRecentActiveState && mostRecentActiveState.state === "playing" && this.entityIds[this._selectedIndex] !== mostRecentId) {
             this._selectedIndex = this.entityIds.indexOf(mostRecentId);
           }
         }
