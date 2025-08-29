@@ -13490,7 +13490,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Card editor support 
   static getConfigElement() {
-    return document.createElement("yet-another-media-player-editor-beta");
+    return document.createElement("yet-another-media-player-editor-alpha");
   }
   static getStubConfig(hass, entities) {
     return {
