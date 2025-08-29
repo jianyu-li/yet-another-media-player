@@ -1390,10 +1390,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const sortedIds = this.sortedEntityIds;
         if (sortedIds.length > 0) {
           const mostRecentId = sortedIds[0];
-          const mostRecentState = this.hass.states[mostRecentId];
+          const mostRecentIdx = this.entityIds.indexOf(mostRecentId);
+          const mostRecentActiveEntity = this._getEntityForPurpose(mostRecentIdx, 'sorting');
+          const mostRecentActiveState = this.hass.states[mostRecentActiveEntity];
           if (
-            mostRecentState &&
-            mostRecentState.state === "playing" &&
+            mostRecentActiveState &&
+            mostRecentActiveState.state === "playing" &&
             this.entityIds[this._selectedIndex] !== mostRecentId
           ) {
             this._selectedIndex = this.entityIds.indexOf(mostRecentId);
