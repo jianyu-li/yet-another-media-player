@@ -72,6 +72,9 @@ jobs:
           
           # Update sortablejs imports
           find src/ -name "*.js" -exec sed -i 's|import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm"|import Sortable from "sortablejs"|g' {} \;
+          
+          # Remove all console.log statements (clean up debug logs)
+          find src/ -name "*.js" -exec sed -i '/console\.log.*yamp:/d' {} \;
 
       - name: Stage changes
         run: git add .
@@ -87,6 +90,7 @@ jobs:
             - Applied beta branch changes to main
             - Removed -beta suffix from custom element type and definition
             - Converted CDN imports to local package imports
+            - Removed debug console.log statements
             - Updated all source files to use production naming"
           fi
 
