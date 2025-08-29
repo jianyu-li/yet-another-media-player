@@ -169,6 +169,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._showResolvedEntities = false;
+    // Queue success message
+    this._showQueueSuccessMessage = false;
     // Collapse on load if nothing is playing (but respect linger state)
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -480,6 +482,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     }, focusDelay);
   }
+
+
+
   _hideSearchSheetInOptions() {
     this._showSearchInSheet = false;
     this._searchError = "";
@@ -601,6 +606,37 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._showSearchInSheet = false;
     }
     this._searchCloseSheet();
+  }
+
+  async _queueMediaFromSearch(item) {
+    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
+    // Use enqueue: next to add to queue
+    this.hass.callService("media_player", "play_media", {
+      entity_id: targetEntityId,
+      media_content_type: item.media_content_type,
+      media_content_id: item.media_content_id,
+      enqueue: "next"
+    });
+    
+    // Show success message
+    console.log('yamp: Showing queue success message');
+    this._showQueueSuccessMessage = true;
+    this.requestUpdate();
+    
+    // Delay closing the search sheet to show the message
+    setTimeout(() => {
+      console.log('yamp: Hiding queue success message');
+      this._showQueueSuccessMessage = false;
+      this.requestUpdate();
+      
+      // Close search sheet after showing message
+      if (this._showSearchInSheet) {
+        this._closeEntityOptions();
+        this._showSearchInSheet = false;
+      }
+      this._searchCloseSheet();
+    }, 3000);
   }
 
   // Handle hierarchical search - search for albums by artist
@@ -2857,9 +2893,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                     : ""}
                                 </span>
                               </div>
-                              <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)}>
-                                ▶
-                              </button>
+                              <div class="entity-options-search-buttons">
+                                <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
+                                  ▶
+                                </button>
+                                <button class="entity-options-search-queue" @click=${() => this._queueMediaFromSearch(item)} title="Add to Queue">
+                                  <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                </button>
+                              </div>
                             </div>
                           ` : html`
                             <!-- placeholder row keeps height -->
@@ -3100,6 +3141,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 loading: this._searchLoading,
                 results: this._searchResults,
                 error: this._searchError,
+                showQueueSuccess: this._showQueueSuccessMessage,
                 onClose: () => this._searchCloseSheet(),
                 onQueryInput: e => {
                   this._searchQuery = e.target.value;
@@ -3107,6 +3149,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 },
                 onSearch: () => this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter),
                 onPlay: item => this._playMediaFromSearch(item),
+                onQueue: item => this._queueMediaFromSearch(item),
               })
             : nothing}
         </ha-card>
