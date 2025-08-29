@@ -11363,15 +11363,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     var _super$updated;
     if (this.hass && this.entityIds) {
       // Update timestamps for playing entities
-      console.log('yamp: Checking all entities for playing state...');
       this.entityIds.forEach((id, idx) => {
         const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
         if (activeEntityId) {
           const activeState = this.hass.states[activeEntityId];
-          console.log('yamp: Entity', id, '-> active entity:', activeEntityId, 'state:', activeState === null || activeState === void 0 ? void 0 : activeState.state);
           if (activeState && activeState.state === "playing") {
             this._playTimestamps[id] = Date.now();
-            console.log('yamp: Updated timestamp for', id, 'based on active entity', activeEntityId, 'state:', activeState.state);
           }
         }
       });
@@ -11400,15 +11397,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (!this._manualSelect) {
         // Switch to most recent if applicable
         const sortedIds = this.sortedEntityIds;
-        console.log('yamp: Sorted entities by timestamp:', sortedIds);
         if (sortedIds.length > 0) {
           const mostRecentId = sortedIds[0];
           const mostRecentIdx = this.entityIds.indexOf(mostRecentId);
           const mostRecentActiveEntity = this._getEntityForPurpose(mostRecentIdx, 'sorting');
           const mostRecentActiveState = this.hass.states[mostRecentActiveEntity];
-          console.log('yamp: Checking most recent entity:', mostRecentId, 'active entity:', mostRecentActiveEntity, 'state:', mostRecentActiveState === null || mostRecentActiveState === void 0 ? void 0 : mostRecentActiveState.state, 'current selected:', this.entityIds[this._selectedIndex]);
           if (mostRecentActiveState && mostRecentActiveState.state === "playing" && this.entityIds[this._selectedIndex] !== mostRecentId) {
-            console.log('yamp: Switching to most recent entity:', mostRecentId);
             this._selectedIndex = this.entityIds.indexOf(mostRecentId);
           }
         }
