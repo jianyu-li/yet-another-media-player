@@ -1354,12 +1354,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
   updated(changedProps) {
     if (this.hass && this.entityIds) {
       // Update timestamps for playing entities
+      console.log('yamp: Checking all entities for playing state...');
       this.entityIds.forEach((id, idx) => {
         const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
         if (activeEntityId) {
           const activeState = this.hass.states[activeEntityId];
+          console.log('yamp: Entity', id, '-> active entity:', activeEntityId, 'state:', activeState?.state);
           if (activeState && activeState.state === "playing") {
             this._playTimestamps[id] = Date.now();
+            console.log('yamp: Updated timestamp for', id, 'based on active entity', activeEntityId, 'state:', activeState.state);
           }
         }
       });
@@ -1388,14 +1391,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!this._manualSelect) {
         // Switch to most recent if applicable
         const sortedIds = this.sortedEntityIds;
+        console.log('yamp: Sorted entities by timestamp:', sortedIds);
         if (sortedIds.length > 0) {
           const mostRecentId = sortedIds[0];
           const mostRecentState = this.hass.states[mostRecentId];
+          console.log('yamp: Checking most recent entity:', mostRecentId, 'state:', mostRecentState?.state, 'current selected:', this.entityIds[this._selectedIndex]);
           if (
             mostRecentState &&
             mostRecentState.state === "playing" &&
             this.entityIds[this._selectedIndex] !== mostRecentId
           ) {
+            console.log('yamp: Switching to most recent entity:', mostRecentId);
             this._selectedIndex = this.entityIds.indexOf(mostRecentId);
           }
         }
