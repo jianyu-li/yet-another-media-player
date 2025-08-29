@@ -4,7 +4,13 @@ import commonjs from '@rollup/plugin-commonjs';
 
 // Determine output filename based on branch
 const isBetaBranch = process.env.BRANCH === 'beta' || process.env.GITHUB_REF === 'refs/heads/beta';
-const outputFilename = isBetaBranch ? 'yet-another-media-player-beta.js' : 'yet-another-media-player.js';
+const isAlphaBranch = process.env.BRANCH === 'alpha' || process.env.GITHUB_REF === 'refs/heads/alpha';
+let outputFilename = 'yet-another-media-player.js';
+if (isBetaBranch) {
+  outputFilename = 'yet-another-media-player-beta.js';
+} else if (isAlphaBranch) {
+  outputFilename = 'yet-another-media-player-alpha.js';
+}
 
 export default {
   input: 'src/yet-another-media-player.js',
@@ -35,26 +41,39 @@ export default {
       ],
       exclude: [],
     }),
-    // Custom plugin to handle conditional custom element registration
-    {
-      name: 'conditional-custom-elements',
-      transform(code, id) {
-        if (isBetaBranch) {
-          // Replace yamp-sortable custom element registration
-          if (id.includes('yamp-sortable.js')) {
-            code = code.replace(
-              'customElements.define("yamp-sortable", YampSortable);',
-              'customElements.define("yamp-sortable-beta", YampSortable);'
-            );
-          }
-          // Replace yamp-sortable usage in HTML templates
-          if (id.includes('yamp-editor.js')) {
-            code = code.replace(/<yamp-sortable/g, '<yamp-sortable-beta');
-            code = code.replace(/<\/yamp-sortable>/g, '</yamp-sortable-beta>');
-          }
-        }
-        return code;
-      }
-    }
+               // Custom plugin to handle conditional custom element registration
+           {
+             name: 'conditional-custom-elements',
+             transform(code, id) {
+               if (isBetaBranch) {
+                 // Replace yamp-sortable custom element registration
+                 if (id.includes('yamp-sortable.js')) {
+                   code = code.replace(
+                     'customElements.define("yamp-sortable", YampSortable);',
+                     'customElements.define("yamp-sortable-beta", YampSortable);'
+                   );
+                 }
+                 // Replace yamp-sortable usage in HTML templates
+                 if (id.includes('yamp-editor.js')) {
+                   code = code.replace(/<yamp-sortable/g, '<yamp-sortable-beta');
+                   code = code.replace(/<\/yamp-sortable>/g, '</yamp-sortable-beta>');
+                 }
+               } else if (isAlphaBranch) {
+                 // Replace yamp-sortable custom element registration
+                 if (id.includes('yamp-sortable.js')) {
+                   code = code.replace(
+                     'customElements.define("yamp-sortable", YampSortable);',
+                     'customElements.define("yamp-sortable-alpha", YampSortable);'
+                   );
+                 }
+                 // Replace yamp-sortable usage in HTML templates
+                 if (id.includes('yamp-editor.js')) {
+                   code = code.replace(/<yamp-sortable/g, '<yamp-sortable-alpha');
+                   code = code.replace(/<\/yamp-sortable>/g, '</yamp-sortable-alpha>');
+                 }
+               }
+               return code;
+             }
+           }
   ],
 };

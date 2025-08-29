@@ -30,8 +30,8 @@ import {
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "yet-another-media-player-beta",
-  name: "Yet Another Media Player-beta",
+  type: "yet-another-media-player-alpha",
+  name: "Yet Another Media Player-alpha",
   description: "YAMP is a multi-entity media card with custom actions",
   preview: true
 });
@@ -3836,4 +3836,4 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 }
 
-customElements.define("yet-another-media-player-beta", YetAnotherMediaPlayerCard);
+customElements.define("yet-another-media-player-alpha", YetAnotherMediaPlayerCard);

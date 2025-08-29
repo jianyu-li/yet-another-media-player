@@ -1207,6 +1207,6 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
     }
   }
 
-  customElements.define("yet-another-media-player-editor-beta", YetAnotherMediaPlayerEditor);
+  customElements.define("yet-another-media-player-editor-alpha", YetAnotherMediaPlayerEditor);
   export { YetAnotherMediaPlayerEditor };
   
