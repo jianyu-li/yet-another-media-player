@@ -2892,7 +2892,11 @@ function renderSearchSheet(_ref) {
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
                       ▶
                     </button>
-                    <button class="search-sheet-queue" @click=${() => onQueue(item)} title="Add to Queue">
+                    <button class="search-sheet-queue" @click=${e => {
+    e.preventDefault();
+    e.stopPropagation();
+    onQueue(item);
+  }} title="Add to Queue">
                       <ha-icon icon="mdi:playlist-play"></ha-icon>
                     </button>
                   </div>
@@ -10393,6 +10397,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._showResolvedEntities = false;
     // Queue success message
     this._showQueueSuccessMessage = false;
+
     // Collapse on load if nothing is playing (but respect linger state)
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -10854,32 +10859,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
 
     // Show success message
-    console.log('yamp: Showing queue success message');
     this._showQueueSuccessMessage = true;
-    console.log('yamp: _showQueueSuccessMessage set to:', this._showQueueSuccessMessage);
     this.requestUpdate();
 
-    // Force immediate update
+    // Show message for 3 seconds but keep search sheet open
     setTimeout(() => {
-      console.log('yamp: Forcing update after 100ms');
-      this.requestUpdate();
-    }, 100);
-
-    // Show message for 2 seconds before closing
-    setTimeout(() => {
-      console.log('yamp: Hiding queue success message');
       this._showQueueSuccessMessage = false;
       this.requestUpdate();
-
-      // Close search sheet after hiding message
-      setTimeout(() => {
-        if (this._showSearchInSheet) {
-          this._closeEntityOptions();
-          this._showSearchInSheet = false;
-        }
-        this._searchCloseSheet();
-      }, 500);
-    }, 2000);
+    }, 3000);
   }
 
   // Handle hierarchical search - search for albums by artist
@@ -11149,7 +11136,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
 
-  // Show playlist tracks - similar to how the sonos card shows queue
+  // Show playlist tracks
   async _showPlaylistTracks(playlistItem) {
     try {
       // Add to search hierarchy
@@ -12774,6 +12761,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   <button class="entity-options-item" @click=${() => {
       this._showSearchSheetInOptions();
     }}>Search</button>
+
                   ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
                     ` : E}
@@ -13030,7 +13018,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                 <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
                                   ▶
                                 </button>
-                                <button class="entity-options-search-queue" @click=${() => this._queueMediaFromSearch(item)} title="Add to Queue">
+                                <button class="entity-options-search-queue" @click=${e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._queueMediaFromSearch(item);
+      }} title="Add to Queue">
                                   <ha-icon icon="mdi:playlist-play"></ha-icon>
                                 </button>
                               </div>
@@ -13257,7 +13249,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
       loading: this._searchLoading,
       results: this._searchResults,
       error: this._searchError,
-      showQueueSuccess: this._showQueueSuccessMessage,
       onClose: () => this._searchCloseSheet(),
       onQueryInput: e => {
         this._searchQuery = e.target.value;
@@ -13265,8 +13256,31 @@ class YetAnotherMediaPlayerCard extends i$1 {
       },
       onSearch: () => this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter),
       onPlay: item => this._playMediaFromSearch(item),
-      onQueue: item => this._queueMediaFromSearch(item)
+      onQueue: item => this._queueMediaFromSearch(item),
+      showQueueSuccess: this._showQueueSuccessMessage
     }) : E}
+          ${this._showQueueSuccessMessage ? x`
+            <div style="
+              color: #4caf50;
+              padding: 20px;
+              text-align: center;
+              font-size: 20px;
+              font-weight: 600;
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              z-index: 99999;
+              min-width: 200px;
+              background: rgba(0, 0, 0, 0.1);
+              border-radius: 8px;
+              box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+              animation: fadeInOut 3s ease-in-out;
+            ">
+              ✅ Added to queue!
+            </div>
+          ` : E}
+
         </ha-card>
       `;
   }

@@ -63,7 +63,7 @@ export function renderSearchSheet({
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
                       ▶
                     </button>
-                    <button class="search-sheet-queue" @click=${() => onQueue(item)} title="Add to Queue">
+                    <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onQueue(item); }} title="Add to Queue">
                       <ha-icon icon="mdi:playlist-play"></ha-icon>
                     </button>
                   </div>
