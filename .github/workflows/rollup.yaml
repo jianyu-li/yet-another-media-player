@@ -12,16 +12,7 @@ on:
       - "babel.config.json"
       - "yet-another-media-player.js"
       - "yet-another-media-player-beta.js"
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to build for'
-        required: true
-        default: 'beta'
-        type: choice
-        options:
-          - beta
-          - main
+
 
 jobs:
   build:
