@@ -8,16 +8,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - "babel.config.json"
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to build for'
-        required: true
-        default: 'beta'
-        type: choice
-        options:
-          - beta
-          - main
+
 
 jobs:
   build:
@@ -40,10 +31,10 @@ jobs:
       - name: Run Rollup
         run: npx rollup -c
         env:
-          BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
+          BRANCH: ${{ github.ref_name }}
 
       - name: Commit & push build (beta branch only)
-        if: github.ref == 'refs/heads/beta' || github.event.inputs.branch == 'beta'
+        if: github.ref == 'refs/heads/beta'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -55,7 +46,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Commit & push build (main branch only)
-        if: github.ref == 'refs/heads/main' || github.event.inputs.branch == 'main'
+        if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -67,7 +58,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Comment on commit (beta branch only)
-        if: github.ref == 'refs/heads/beta' || github.event.inputs.branch == 'beta'
+        if: github.ref == 'refs/heads/beta'
         run: |
           echo "✅ Beta branch build completed successfully!"
           echo "📦 Ready for merge to main using automated workflow"
