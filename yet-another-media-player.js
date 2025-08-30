@@ -2420,7 +2420,14 @@ const yampCardStyles = i$4`
     margin-right: 12px;
   }
 
-  .entity-options-search-play {
+  .entity-options-search-buttons {
+    display: flex;
+    gap: 6px;
+    margin-left: 7px;
+  }
+
+  .entity-options-search-play,
+  .entity-options-search-queue {
     min-width: 34px;
     font-size: 1.13em;
     border: none;
@@ -2428,17 +2435,37 @@ const yampCardStyles = i$4`
     color: #fff;
     border-radius: 10px;
     padding: 6px 10px;
-    margin-left: 7px;
     cursor: pointer;
     box-shadow: 0 1px 5px rgba(0,0,0,0.13);
     transition: background var(--transition-normal), color var(--transition-normal);
     text-shadow: 0 2px 8px #0008;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .entity-options-search-play ha-icon,
+  .entity-options-search-queue ha-icon {
+    width: 16px;
+    height: 16px;
   }
 
   .entity-options-search-play:hover,
   .entity-options-search-play:focus {
     background: #fff;
     color: var(--custom-accent);
+  }
+
+  .entity-options-search-queue {
+    background: #4a4a4a;
+    border: 1px solid #666;
+  }
+
+  .entity-options-search-queue:hover,
+  .entity-options-search-queue:focus {
+    background: #5a5a5a;
+    border-color: #777;
+    color: #fff;
   }
 
   .entity-options-search-input {
@@ -2641,6 +2668,166 @@ const yampCardStyles = i$4`
     color: #fff;
     font-style: italic;
   }
+
+  /* Search sheet styles */
+  .search-sheet {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .search-sheet-header {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .search-sheet-header input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #333;
+    color: #fff;
+    font-size: 16px;
+  }
+
+  .search-sheet-header button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: var(--custom-accent);
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .search-sheet-header button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .search-sheet-loading,
+  .search-sheet-error,
+  .search-sheet-success,
+  .search-sheet-empty {
+    text-align: center;
+    padding: 40px;
+    color: #fff;
+    font-size: 18px;
+  }
+
+  .search-sheet-error {
+    color: #ff6b6b;
+  }
+
+  .search-sheet-success {
+    color: #4caf50;
+    font-weight: 600;
+    background: rgba(76, 175, 80, 0.95);
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px;
+    font-size: 20px;
+    animation: fadeInOut 3s ease-in-out;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    min-width: 200px;
+    text-align: center;
+  }
+
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -60%); }
+    10% { opacity: 1; transform: translate(-50%, -50%); }
+    90% { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, -40%); }
+  }
+
+  .search-sheet-results {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .search-sheet-result {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .search-sheet-result:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .search-sheet-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  .search-sheet-title {
+    flex: 1;
+    color: #fff;
+    font-size: 16px;
+  }
+
+  .search-sheet-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .search-sheet-play,
+  .search-sheet-queue {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: var(--custom-accent);
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+  }
+
+  .search-sheet-play ha-icon,
+  .search-sheet-queue ha-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .search-sheet-play:hover,
+  .search-sheet-queue:hover {
+    background: #e68900;
+  }
+
+  .search-sheet-queue {
+    background: #4a4a4a;
+    border: 1px solid #666;
+  }
+
+  .search-sheet-queue:hover {
+    background: #5a5a5a;
+    border-color: #777;
+  }
 `;
 
 // import { LitElement, html, css, nothing } from "lit";
@@ -2657,7 +2844,9 @@ const yampCardStyles = i$4`
  * @param {boolean} opts.loading - Loading state for search.
  * @param {Array} opts.results - Search result items (array of media items).
  * @param {Function} opts.onPlay - Handler to play a media item.
+ * @param {Function} opts.onQueue - Handler to add a media item to queue.
  * @param {string} [opts.error] - Optional error message.
+ * @param {boolean} [opts.showQueueSuccess] - Whether to show queue success message.
  */
 function renderSearchSheet(_ref) {
   let {
@@ -2669,7 +2858,9 @@ function renderSearchSheet(_ref) {
     loading,
     results,
     onPlay,
-    error
+    onQueue,
+    error,
+    showQueueSuccess
   } = _ref;
   if (!open) return E;
   return x`
@@ -2687,6 +2878,7 @@ function renderSearchSheet(_ref) {
       </div>
       ${loading ? x`<div class="search-sheet-loading">Loading...</div>` : E}
       ${error ? x`<div class="search-sheet-error">${error}</div>` : E}
+      ${showQueueSuccess ? x`<div class="search-sheet-success">✅ Added to queue!</div>` : E}
       <div class="search-sheet-results">
         ${(results || []).length === 0 && !loading ? x`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => x`
                 <div class="search-sheet-result">
@@ -2696,9 +2888,18 @@ function renderSearchSheet(_ref) {
                     alt=${item.title}
                   />
                   <span class="search-sheet-title">${item.title}</span>
-                  <button class="search-sheet-play" @click=${() => onPlay(item)}>
-                    ▶
-                  </button>
+                  <div class="search-sheet-buttons">
+                    <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
+                      ▶
+                    </button>
+                    <button class="search-sheet-queue" @click=${e => {
+    e.preventDefault();
+    e.stopPropagation();
+    onQueue(item);
+  }} title="Add to Queue">
+                      <ha-icon icon="mdi:playlist-play"></ha-icon>
+                    </button>
+                  </div>
                 </div>
               `)}
       </div>
@@ -10194,6 +10395,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._showResolvedEntities = false;
+    // Queue success message
+    this._showQueueSuccessMessage = false;
+
     // Collapse on load if nothing is playing (but respect linger state)
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -10643,6 +10847,27 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     this._searchCloseSheet();
   }
+  async _queueMediaFromSearch(item) {
+    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
+    // Use enqueue: next to add to queue
+    this.hass.callService("media_player", "play_media", {
+      entity_id: targetEntityId,
+      media_content_type: item.media_content_type,
+      media_content_id: item.media_content_id,
+      enqueue: "next"
+    });
+
+    // Show success message
+    this._showQueueSuccessMessage = true;
+    this.requestUpdate();
+
+    // Show message for 3 seconds but keep search sheet open
+    setTimeout(() => {
+      this._showQueueSuccessMessage = false;
+      this.requestUpdate();
+    }, 3000);
+  }
 
   // Handle hierarchical search - search for albums by artist
   async _searchArtistAlbums(artistName) {
@@ -10911,7 +11136,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
 
-  // Show playlist tracks - similar to how the sonos card shows queue
+  // Show playlist tracks
   async _showPlaylistTracks(playlistItem) {
     try {
       // Add to search hierarchy
@@ -12536,6 +12761,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   <button class="entity-options-item" @click=${() => {
       this._showSearchSheetInOptions();
     }}>Search</button>
+
                   ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
                     ` : E}
@@ -12788,9 +13014,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                   ${item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : ""}
                                 </span>
                               </div>
-                              <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)}>
-                                ▶
-                              </button>
+                              <div class="entity-options-search-buttons">
+                                <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
+                                  ▶
+                                </button>
+                                <button class="entity-options-search-queue" @click=${e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._queueMediaFromSearch(item);
+      }} title="Add to Queue">
+                                  <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                </button>
+                              </div>
                             </div>
                           ` : x`
                             <!-- placeholder row keeps height -->
@@ -13020,8 +13255,32 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this.requestUpdate();
       },
       onSearch: () => this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter),
-      onPlay: item => this._playMediaFromSearch(item)
+      onPlay: item => this._playMediaFromSearch(item),
+      onQueue: item => this._queueMediaFromSearch(item),
+      showQueueSuccess: this._showQueueSuccessMessage
     }) : E}
+          ${this._showQueueSuccessMessage ? x`
+            <div style="
+              color: #4caf50;
+              padding: 20px;
+              text-align: center;
+              font-size: 20px;
+              font-weight: 600;
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              z-index: 99999;
+              min-width: 200px;
+              background: rgba(0, 0, 0, 0.1);
+              border-radius: 8px;
+              box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+              animation: fadeInOut 3s ease-in-out;
+            ">
+              ✅ Added to queue!
+            </div>
+          ` : E}
+
         </ha-card>
       `;
   }
