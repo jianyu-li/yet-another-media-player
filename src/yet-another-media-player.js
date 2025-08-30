@@ -622,21 +622,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Show success message
     console.log('yamp: Showing queue success message');
     this._showQueueSuccessMessage = true;
+    console.log('yamp: _showQueueSuccessMessage set to:', this._showQueueSuccessMessage);
     this.requestUpdate();
     
-    // Delay closing the search sheet to show the message
+    // Force immediate update
+    setTimeout(() => {
+      console.log('yamp: Forcing update after 100ms');
+      this.requestUpdate();
+    }, 100);
+    
+    // Show message for 2 seconds before closing
     setTimeout(() => {
       console.log('yamp: Hiding queue success message');
       this._showQueueSuccessMessage = false;
       this.requestUpdate();
       
-      // Close search sheet after showing message
-      if (this._showSearchInSheet) {
-        this._closeEntityOptions();
-        this._showSearchInSheet = false;
-      }
-      this._searchCloseSheet();
-    }, 3000);
+      // Close search sheet after hiding message
+      setTimeout(() => {
+        if (this._showSearchInSheet) {
+          this._closeEntityOptions();
+          this._showSearchInSheet = false;
+        }
+        this._searchCloseSheet();
+      }, 500);
+    }, 2000);
   }
 
   // Handle hierarchical search - search for albums by artist
