@@ -13,7 +13,9 @@ import { LitElement, html, css, nothing } from "lit";
  * @param {boolean} opts.loading - Loading state for search.
  * @param {Array} opts.results - Search result items (array of media items).
  * @param {Function} opts.onPlay - Handler to play a media item.
+ * @param {Function} opts.onQueue - Handler to add a media item to queue.
  * @param {string} [opts.error] - Optional error message.
+ * @param {boolean} [opts.showQueueSuccess] - Whether to show queue success message.
  */
 export function renderSearchSheet({
   open,
@@ -24,7 +26,9 @@ export function renderSearchSheet({
   loading,
   results,
   onPlay,
+  onQueue,
   error,
+  showQueueSuccess,
 }) {
   if (!open) return nothing;
   return html`
@@ -42,6 +46,7 @@ export function renderSearchSheet({
       </div>
       ${loading ? html`<div class="search-sheet-loading">Loading...</div>` : nothing}
       ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
+      ${showQueueSuccess ? html`<div class="search-sheet-success">✅ Added to queue!</div>` : nothing}
       <div class="search-sheet-results">
         ${(results || []).length === 0 && !loading
           ? html`<div class="search-sheet-empty">No results.</div>`
@@ -54,9 +59,14 @@ export function renderSearchSheet({
                     alt=${item.title}
                   />
                   <span class="search-sheet-title">${item.title}</span>
-                  <button class="search-sheet-play" @click=${() => onPlay(item)}>
-                    ▶
-                  </button>
+                  <div class="search-sheet-buttons">
+                    <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
+                      ▶
+                    </button>
+                    <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onQueue(item); }} title="Add to Queue">
+                      <ha-icon icon="mdi:playlist-play"></ha-icon>
+                    </button>
+                  </div>
                 </div>
               `
             )}
