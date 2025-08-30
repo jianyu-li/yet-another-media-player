@@ -1,17 +1,13 @@
-name: Rollup Build
+name: Auto Rollup Build
 
 on:
   push:
-    branches:
-      - beta
     paths:
       - "src/**"
       - "rollup.config.js"
       - "package.json"
       - "package-lock.json"
       - "babel.config.json"
-      - "yet-another-media-player.js"
-      - "yet-another-media-player-beta.js"
   workflow_dispatch:
     inputs:
       branch:
@@ -44,27 +40,34 @@ jobs:
       - name: Run Rollup
         run: npx rollup -c
         env:
-          BRANCH: ${{ github.ref_name }}
+          BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
 
-      - name: Commit & push build
+      - name: Commit & push build (beta branch only)
+        if: github.ref == 'refs/heads/beta' || github.event.inputs.branch == 'beta'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Determine which file to add based on branch
-          if [ "${{ github.ref_name }}" = "beta" ]; then
-            git add yet-another-media-player-beta.js || true
-          else
-            git add yet-another-media-player.js || true
-          fi
+          git add yet-another-media-player-beta.js || true
+          git diff --cached --quiet || git commit -m "Auto-build: beta rollup output"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-          git diff --cached --quiet || git commit -m "Auto-build: rollup output"
+      - name: Commit & push build (main branch only)
+        if: github.ref == 'refs/heads/main' || github.event.inputs.branch == 'main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add yet-another-media-player.js || true
+          git diff --cached --quiet || git commit -m "Auto-build: main rollup output"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Comment on commit (beta branch only)
-        if: github.ref == 'refs/heads/beta'
+        if: github.ref == 'refs/heads/beta' || github.event.inputs.branch == 'beta'
         run: |
           echo "✅ Beta branch build completed successfully!"
           echo "📦 Ready for merge to main using automated workflow"
