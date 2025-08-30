@@ -169,6 +169,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._showResolvedEntities = false;
+    // Queue success message
+    this._showQueueSuccessMessage = false;
+
     // Collapse on load if nothing is playing (but respect linger state)
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
@@ -480,6 +483,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     }, focusDelay);
   }
+
+
+
   _hideSearchSheetInOptions() {
     this._showSearchInSheet = false;
     this._searchError = "";
@@ -517,6 +523,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchBreadcrumb = ""; // Clear breadcrumb
     this.requestUpdate();
   }
+
+
+
+
+
+
+
+
       async _doSearch(mediaType = null, searchParams = {}) {
     this._searchAttempted = true;
     
@@ -601,6 +615,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._showSearchInSheet = false;
     }
     this._searchCloseSheet();
+  }
+
+  async _queueMediaFromSearch(item) {
+    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
+    // Use enqueue: next to add to queue
+    this.hass.callService("media_player", "play_media", {
+      entity_id: targetEntityId,
+      media_content_type: item.media_content_type,
+      media_content_id: item.media_content_id,
+      enqueue: "next"
+    });
+
+    // Show success message
+    this._showQueueSuccessMessage = true;
+    this.requestUpdate();
+    
+    // Show message for 3 seconds but keep search sheet open
+    setTimeout(() => {
+      this._showQueueSuccessMessage = false;
+      this.requestUpdate();
+    }, 3000);
   }
 
   // Handle hierarchical search - search for albums by artist
@@ -860,7 +896,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
   
-    // Show playlist tracks - similar to how the sonos card shows queue
+                // Show playlist tracks
   async _showPlaylistTracks(playlistItem) {
     try {
   
@@ -1354,15 +1390,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
   updated(changedProps) {
     if (this.hass && this.entityIds) {
       // Update timestamps for playing entities
-      console.log('yamp: Checking all entities for playing state...');
       this.entityIds.forEach((id, idx) => {
         const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
         if (activeEntityId) {
           const activeState = this.hass.states[activeEntityId];
-          console.log('yamp: Entity', id, '-> active entity:', activeEntityId, 'state:', activeState?.state);
           if (activeState && activeState.state === "playing") {
             this._playTimestamps[id] = Date.now();
-            console.log('yamp: Updated timestamp for', id, 'based on active entity', activeEntityId, 'state:', activeState.state);
           }
         }
       });
@@ -1391,19 +1424,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!this._manualSelect) {
         // Switch to most recent if applicable
         const sortedIds = this.sortedEntityIds;
-        console.log('yamp: Sorted entities by timestamp:', sortedIds);
         if (sortedIds.length > 0) {
           const mostRecentId = sortedIds[0];
           const mostRecentIdx = this.entityIds.indexOf(mostRecentId);
           const mostRecentActiveEntity = this._getEntityForPurpose(mostRecentIdx, 'sorting');
           const mostRecentActiveState = this.hass.states[mostRecentActiveEntity];
-          console.log('yamp: Checking most recent entity:', mostRecentId, 'active entity:', mostRecentActiveEntity, 'state:', mostRecentActiveState?.state, 'current selected:', this.entityIds[this._selectedIndex]);
           if (
             mostRecentActiveState &&
             mostRecentActiveState.state === "playing" &&
             this.entityIds[this._selectedIndex] !== mostRecentId
           ) {
-            console.log('yamp: Switching to most recent entity:', mostRecentId);
             this._selectedIndex = this.entityIds.indexOf(mostRecentId);
           }
         }
@@ -2603,6 +2633,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     this.requestUpdate(); 
                   }}>More Info</button>
                   <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>Search</button>
+
                   ${Array.isArray(this.currentStateObj?.attributes?.source_list) &&
                     this.currentStateObj.attributes.source_list.length > 0 ? html`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
@@ -2863,9 +2894,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                     : ""}
                                 </span>
                               </div>
-                              <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)}>
-                                ▶
-                              </button>
+                              <div class="entity-options-search-buttons">
+                                <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
+                                  ▶
+                                </button>
+                                <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
+                                  <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                </button>
+                              </div>
                             </div>
                           ` : html`
                             <!-- placeholder row keeps height -->
@@ -3106,6 +3142,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 loading: this._searchLoading,
                 results: this._searchResults,
                 error: this._searchError,
+        
                 onClose: () => this._searchCloseSheet(),
                 onQueryInput: e => {
                   this._searchQuery = e.target.value;
@@ -3113,8 +3150,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 },
                 onSearch: () => this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter),
                 onPlay: item => this._playMediaFromSearch(item),
+                onQueue: item => this._queueMediaFromSearch(item),
+                showQueueSuccess: this._showQueueSuccessMessage,
               })
             : nothing}
+          ${this._showQueueSuccessMessage ? html`
+            <div style="
+              color: #4caf50;
+              padding: 20px;
+              text-align: center;
+              font-size: 20px;
+              font-weight: 600;
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              z-index: 99999;
+              min-width: 200px;
+              background: rgba(0, 0, 0, 0.1);
+              border-radius: 8px;
+              box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+              animation: fadeInOut 3s ease-in-out;
+            ">
+              ✅ Added to queue!
+            </div>
+          ` : nothing}
+
         </ha-card>
       `;
     }
@@ -3517,6 +3578,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     for (let i = 0; i < this.entityObjs.length; i++) {
       await this._ensureResolvedMaForIndex(i);
     }
+    
+
+    
     this._showEntityOptions = true;
     this.requestUpdate();
   }
