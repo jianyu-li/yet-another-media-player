@@ -1258,7 +1258,14 @@ export const yampCardStyles = css`
     margin-right: 12px;
   }
 
-  .entity-options-search-play {
+  .entity-options-search-buttons {
+    display: flex;
+    gap: 6px;
+    margin-left: 7px;
+  }
+
+  .entity-options-search-play,
+  .entity-options-search-queue {
     min-width: 34px;
     font-size: 1.13em;
     border: none;
@@ -1266,17 +1273,37 @@ export const yampCardStyles = css`
     color: #fff;
     border-radius: 10px;
     padding: 6px 10px;
-    margin-left: 7px;
     cursor: pointer;
     box-shadow: 0 1px 5px rgba(0,0,0,0.13);
     transition: background var(--transition-normal), color var(--transition-normal);
     text-shadow: 0 2px 8px #0008;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .entity-options-search-play ha-icon,
+  .entity-options-search-queue ha-icon {
+    width: 16px;
+    height: 16px;
   }
 
   .entity-options-search-play:hover,
   .entity-options-search-play:focus {
     background: #fff;
     color: var(--custom-accent);
+  }
+
+  .entity-options-search-queue {
+    background: #4a4a4a;
+    border: 1px solid #666;
+  }
+
+  .entity-options-search-queue:hover,
+  .entity-options-search-queue:focus {
+    background: #5a5a5a;
+    border-color: #777;
+    color: #fff;
   }
 
   .entity-options-search-input {
@@ -1478,5 +1505,165 @@ export const yampCardStyles = css`
     font-size: 0.9em;
     color: #fff;
     font-style: italic;
+  }
+
+  /* Search sheet styles */
+  .search-sheet {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .search-sheet-header {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .search-sheet-header input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #333;
+    color: #fff;
+    font-size: 16px;
+  }
+
+  .search-sheet-header button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: var(--custom-accent);
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .search-sheet-header button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .search-sheet-loading,
+  .search-sheet-error,
+  .search-sheet-success,
+  .search-sheet-empty {
+    text-align: center;
+    padding: 40px;
+    color: #fff;
+    font-size: 18px;
+  }
+
+  .search-sheet-error {
+    color: #ff6b6b;
+  }
+
+  .search-sheet-success {
+    color: #4caf50;
+    font-weight: 600;
+    background: rgba(76, 175, 80, 0.95);
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px;
+    font-size: 20px;
+    animation: fadeInOut 3s ease-in-out;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    min-width: 200px;
+    text-align: center;
+  }
+
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -60%); }
+    10% { opacity: 1; transform: translate(-50%, -50%); }
+    90% { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, -40%); }
+  }
+
+  .search-sheet-results {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .search-sheet-result {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .search-sheet-result:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .search-sheet-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  .search-sheet-title {
+    flex: 1;
+    color: #fff;
+    font-size: 16px;
+  }
+
+  .search-sheet-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .search-sheet-play,
+  .search-sheet-queue {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: var(--custom-accent);
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+  }
+
+  .search-sheet-play ha-icon,
+  .search-sheet-queue ha-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .search-sheet-play:hover,
+  .search-sheet-queue:hover {
+    background: #e68900;
+  }
+
+  .search-sheet-queue {
+    background: #4a4a4a;
+    border: 1px solid #666;
+  }
+
+  .search-sheet-queue:hover {
+    background: #5a5a5a;
+    border-color: #777;
   }
 `;
