@@ -1,0 +1,227 @@
+name: Alpha to Main Merge
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_merge:
+        description: 'Type "merge" to confirm alpha to main merge'
+        required: true
+        default: 'merge'
+
+jobs:
+  alpha-to-main-merge:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm_merge == 'merge'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all branches
+        run: git fetch origin
+
+      # Step 1: Merge alpha to beta
+      - name: Checkout beta branch
+        run: git checkout beta
+
+      - name: Pull latest beta changes
+        run: git pull origin beta
+
+      - name: Create temp-alpha branch from alpha
+        run: git checkout -b temp-alpha origin/alpha
+
+      - name: Copy src files from alpha to beta
+        run: |
+          # Switch back to beta
+          git checkout beta
+          
+          # Copy only the src directory from alpha
+          git checkout temp-alpha -- src/
+          
+          # Check if there are any changes
+          if git diff --quiet; then
+            echo "No source changes to merge from alpha"
+          else
+            echo "Source changes found from alpha"
+          fi
+
+      - name: Replace -alpha suffixes with -beta
+        run: |
+          # Replace -alpha with -beta in all source files
+          find src/ -name "*.js" -type f -exec sed -i 's/-alpha/-beta/g' {} \;
+          
+          # Also replace in the main component registration
+          sed -i 's/yet-another-media-player-alpha/yet-another-media-player-beta/g' src/yet-another-media-player.js
+          sed -i 's/yamp-sortable-alpha/yamp-sortable-beta/g' src/yamp-sortable.js
+          sed -i 's/yet-another-media-player-editor-alpha/yet-another-media-player-editor-beta/g' src/yamp-editor.js
+          
+          # Replace in customCards push
+          sed -i 's/"yet-another-media-player-alpha"/"yet-another-media-player-beta"/g' src/yet-another-media-player.js
+          sed -i 's/"Yet Another Media Player-alpha"/"Yet Another Media Player-beta"/g' src/yet-another-media-player.js
+
+      - name: Commit alpha changes to beta
+        run: |
+          # Only commit if there are changes
+          if ! git diff --quiet; then
+            git add src/
+            git commit -m "Merge alpha changes to beta: Update source files
+
+            - Merged source files from alpha branch
+            - Replaced -alpha suffixes with -beta suffixes
+            - Updated custom element registrations
+            - Updated customCards configuration
+
+            Auto-merged from alpha branch for testing"
+            echo "✅ Changes committed to beta"
+          else
+            echo "⏭️  No changes to commit"
+          fi
+
+      - name: Push to beta branch
+        run: |
+          # Only push if there are commits to push
+          if git log --oneline origin/beta..HEAD | grep -q "Merge alpha changes to beta"; then
+            git push origin beta
+            echo "✅ Changes pushed to beta branch"
+          else
+            echo "⏭️  No changes to push"
+          fi
+
+      # Step 2: Merge beta to main
+      - name: Checkout main branch
+        run: git checkout main
+
+      - name: Pull latest main changes
+        run: git pull origin main
+
+      - name: Reset to clean state and apply beta changes
+        run: |
+          # Reset to clean state
+          git reset --hard HEAD
+          # Create a temporary branch from beta
+          git checkout -b temp-beta origin/beta
+          # Copy only source files from beta to main (preserve config files)
+          git checkout main
+          git checkout temp-beta -- src/ || true
+          # Remove the temporary branch
+          git branch -D temp-beta
+
+      - name: Remove -beta suffixes and update imports
+        run: |
+          # Remove -beta from custom element type
+          sed -i 's/type: "yet-another-media-player-beta"/type: "yet-another-media-player"/g' src/yet-another-media-player.js
+          
+          # Remove -beta from custom element definition
+          sed -i 's/customElements.define("yet-another-media-player-beta"/customElements.define("yet-another-media-player"/g' src/yet-another-media-player.js
+          
+          # Remove -beta from yamp-sortable custom element definition
+          sed -i 's/customElements.define("yamp-sortable-beta"/customElements.define("yamp-sortable"/g' src/yamp-sortable.js
+          
+          # Remove -beta from yamp-editor custom element definition
+          sed -i 's/customElements.define("yet-another-media-player-editor-beta"/customElements.define("yet-another-media-player-editor"/g' src/yamp-editor.js
+          
+          # Update any other -beta references in source files only
+          find src/ -name "*.js" -exec sed -i 's/-beta//g' {} \;
+          
+          # Update imports from CDN to local lit
+          find src/ -name "*.js" -exec sed -i 's|import { .* } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module"|import { LitElement, html, css, nothing } from "lit"|g' {} \;
+          find src/ -name "*.js" -exec sed -i 's|import { .* } from "https://unpkg.com/lit@3.3.1/lit.js?module"|import { LitElement, html, css, nothing } from "lit"|g' {} \;
+          
+          # Update js-yaml imports
+          find src/ -name "*.js" -exec sed -i 's|import yaml from "https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm"|import yaml from "js-yaml"|g' {} \;
+          
+          # Update sortablejs imports
+          find src/ -name "*.js" -exec sed -i 's|import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm"|import Sortable from "sortablejs"|g' {} \;
+
+      - name: Remove console.log statements
+        run: |
+          # Remove all console.log statements containing yamp:
+          find src/ -name "*.js" -exec sed -i '/console\.log.*yamp:/d' {} \;
+
+      - name: Stage changes
+        run: git add .
+
+      - name: Check for changes and commit
+        run: |
+          # Check if there are any staged changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit - files are already up to date"
+          else
+            git commit -m "Apply alpha changes to main: Remove -beta suffixes and update imports
+
+            - Applied alpha branch changes to main via beta
+            - Removed -beta suffix from custom element type and definition
+            - Converted CDN imports to local package imports
+            - Updated all source files to use production naming
+            - Cleaned up console.log statements"
+          fi
+
+      - name: Build and commit rollup output
+        run: |
+          # Set up Node.js and install dependencies
+          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          npm ci
+          
+          # Run rollup build
+          npm run build
+          
+          # Check if build was successful
+          if [ -f "yet-another-media-player.js" ]; then
+            echo "✅ Rollup build successful"
+          else
+            echo "❌ Rollup build failed"
+            exit 1
+          fi
+
+      - name: Commit built file
+        run: |
+          if git diff --quiet yet-another-media-player.js; then
+            echo "No changes to built file"
+          else
+            git add yet-another-media-player.js
+            git commit -m "Build production version with alpha changes"
+            echo "✅ Built file committed"
+          fi
+
+      - name: Get current version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Create timestamped tag
+        run: |
+          TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+          TAG="v${{ steps.version.outputs.version }}-alpha-merge-$TIMESTAMP"
+          git tag "$TAG"
+          echo "Created tag: $TAG"
+
+      - name: Push to main branch
+        run: |
+          # Only push if there are commits to push
+          if git log --oneline origin/main..HEAD | grep -q "Apply alpha changes to main\|Build production version"; then
+            git push origin main
+            git push origin --tags
+            echo "✅ Changes pushed to main branch"
+          else
+            echo "⏭️  No changes to push"
+          fi
+
+      - name: Summary
+        run: |
+          echo "🎉 Alpha to Main Merge Complete!"
+          echo "✅ Alpha → Beta: Source files merged and -alpha → -beta"
+          echo "✅ Beta → Main: Source files merged and -beta → production"
+          echo "✅ Console logs cleaned up"
+          echo "✅ Production build created"
+          echo "✅ Tag created: v${{ steps.version.outputs.version }}-alpha-merge-$(date +"%Y%m%d-%H%M%S")"
