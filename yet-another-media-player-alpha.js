@@ -1166,7 +1166,7 @@ function renderProgressBar(_ref) {
 const yampCardStyles = i$4`
   /* CSS Custom Properties for consistency */
   :host {
-    --custom-accent: var(--accent-color, #ff9800);
+    --custom-accent: #ff9800;
     --card-bg: var(--card-background-color, #222);
     --primary-text: var(--primary-text-color, #fff);
     --secondary-text: var(--secondary-text-color, #aaa);
@@ -1183,7 +1183,44 @@ const yampCardStyles = i$4`
   }
 
   :host([data-match-theme="false"]) {
-    --custom-accent: #ff9800;
+    --custom-accent: #ff9800 !important;
+    
+    /* Search sheet default theme variables when match_theme is false */
+    --search-overlay-bg: rgba(0, 0, 0, 0.8);
+    --search-input-bg: #333;
+    --search-input-text: #fff;
+    --search-text: #fff;
+    --search-error: #ff6b6b;
+    --search-success: #4caf50;
+    --search-success-bg: rgba(76, 175, 80, 0.95);
+    --search-border: rgba(255, 255, 255, 0.1);
+    --search-hover-bg: rgba(255, 255, 255, 0.1);
+    --search-play-hover: #e68900;
+    --search-queue-bg: #4a4a4a;
+    --search-queue-border: #666;
+    --search-queue-hover: #5a5a5a;
+    --search-queue-hover-border: #777;
+  }
+  
+  :host([data-match-theme="true"]) {
+    /* Override custom-accent to use theme accent when match_theme is true */
+    --custom-accent: var(--accent-color, #ff9800);
+    
+    /* Search sheet theme-aware variables */
+    --search-overlay-bg: var(--ha-card-background, rgba(0, 0, 0, 0.8));
+    --search-input-bg: var(--ha-card-background, #333);
+    --search-input-text: var(--primary-text-color, #fff);
+    --search-text: var(--primary-text-color, #fff);
+    --search-error: var(--error-color, #ff6b6b);
+    --search-success: var(--success-color, #4caf50);
+    --search-success-bg: var(--success-color, rgba(76, 175, 80, 0.95));
+    --search-border: var(--divider-color, rgba(255, 255, 255, 0.1));
+    --search-hover-bg: var(--divider-color, rgba(255, 255, 255, 0.1));
+    --search-play-hover: var(--accent-color, #e68900);
+    --search-queue-bg: var(--ha-card-background, #4a4a4a);
+    --search-queue-border: var(--divider-color, #666);
+    --search-queue-hover: var(--secondary-background-color, #5a5a5a);
+    --search-queue-hover-border: var(--divider-color, #777);
   }
 
   /* Base card styles - set once, inherit everywhere */
@@ -1509,6 +1546,12 @@ const yampCardStyles = i$4`
     transform: scale(0.96);
     box-shadow: none;
     text-shadow: none;
+  }
+
+  /* Override action chip colors when match_theme is false */
+  :host([data-match-theme="false"]) .action-chip:hover,
+  :host([data-match-theme="false"]) .action-chip:active {
+    background: #ff9800 !important;
   }
 
   /* Main chips */
@@ -2077,6 +2120,8 @@ const yampCardStyles = i$4`
   .vol-stepper span {
     color: #fff;
   }
+  
+
 
   /* Media artwork placeholder */
   .media-artwork-placeholder ha-icon {
@@ -2197,7 +2242,30 @@ const yampCardStyles = i$4`
     -ms-overflow-style: none;
   }
 
+  /* Ensure entity-options-sheet honors match_theme for accent color */
+  :host([data-match-theme="false"]) .entity-options-sheet {
+    --custom-accent: #ff9800 !important;
+  }
+  :host([data-match-theme="true"]) .entity-options-sheet {
+    --custom-accent: var(--accent-color, #ff9800) !important;
+  }
+
   .entity-options-sheet::-webkit-scrollbar {
+    display: none;
+  }
+
+  .entity-options-sheet {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* Hide scrollbar for group list scroll container */
+  .group-list-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .group-list-scroll::-webkit-scrollbar {
     display: none;
   }
 
@@ -2570,6 +2638,25 @@ const yampCardStyles = i$4`
     opacity: 1;
   }
 
+  /* Override filter chip hover text color when match_theme is false */
+  :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:hover {
+    color: #fff !important;
+  }
+
+  /* Add hover effect for inactive filter chips when match_theme is false */
+  :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
+    background: var(--custom-accent) !important;
+    color: #fff !important;
+    opacity: 1;
+  }
+
+  /* Add hover effect for inactive filter chips when match_theme is true */
+  :host([data-match-theme="true"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
+    background: var(--custom-accent) !important;
+    color: #111 !important;
+    opacity: 1;
+  }
+
   .entity-options-sheet .entity-options-search-results {
     min-height: 210px;
   }
@@ -2828,6 +2915,175 @@ const yampCardStyles = i$4`
     background: #5a5a5a;
     border-color: #777;
   }
+
+  /* Override styles when match_theme is false - force default colors */
+  .search-sheet[data-match-theme="false"] {
+    background: rgba(0, 0, 0, 0.8) !important;
+    
+    /* Define CSS custom properties directly on the search sheet when match_theme is false */
+    --custom-accent: #ff9800 !important;
+    --search-overlay-bg: rgba(0, 0, 0, 0.8) !important;
+    --search-input-bg: #333 !important;
+    --search-input-text: #fff !important;
+    --search-text: #fff !important;
+    --search-error: #ff6b6b !important;
+    --search-success: #4caf50 !important;
+    --search-success-bg: rgba(76, 175, 80, 0.95) !important;
+    --search-border: rgba(255, 255, 255, 0.1) !important;
+    --search-hover-bg: rgba(255, 255, 255, 0.1) !important;
+    --search-play-hover: #e68900 !important;
+    --search-queue-bg: #4a4a4a !important;
+    --search-queue-border: #666 !important;
+    --search-queue-hover: #5a5a5a !important;
+    --search-queue-hover-border: #777 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-header input {
+    background: #333 !important;
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-header button {
+    background: #ff9800 !important;
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-loading,
+  .search-sheet[data-match-theme="false"] .search-sheet-error,
+  .search-sheet[data-match-theme="false"] .search-sheet-success,
+  .search-sheet[data-match-theme="false"] .search-sheet-empty {
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-error {
+    color: #ff6b6b !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-success {
+    color: #4caf50 !important;
+    background: rgba(76, 175, 80, 0.95) !important;
+    border: 2px solid #4caf50 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-result {
+    color: #fff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-result:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-title {
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-play {
+    background: var(--custom-accent) !important;
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-play:hover {
+    background: #e68900 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-queue {
+    background: #4a4a4a !important;
+    color: #fff !important;
+    border: 1px solid #666 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-queue:hover {
+    background: #5a5a5a !important;
+    border-color: #777 !important;
+  }
+
+  /* Additional overrides for search sheet elements that might inherit theme colors */
+  .search-sheet[data-match-theme="false"] .clickable-search-result {
+    color: #ff9800 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
+    color: #fff !important;
+  }
+
+  /* Override the base clickable-search-result styles when match_theme is false */
+  .search-sheet[data-match-theme="false"] .clickable-search-result,
+  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
+    color: #ff9800 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
+    color: #fff !important;
+  }
+
+  /* Override any other elements that might be using theme variables */
+  .search-sheet[data-match-theme="false"] * {
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .clickable-search-result {
+    color: #ff9800 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-play,
+  .search-sheet[data-match-theme="false"] .search-sheet-queue {
+    color: #fff !important;
+  }
+
+  /* Force all text to be white when match_theme is false */
+  .search-sheet[data-match-theme="false"] .search-sheet-title,
+  .search-sheet[data-match-theme="false"] .search-sheet-loading,
+  .search-sheet[data-match-theme="false"] .search-sheet-empty {
+    color: #fff !important;
+  }
+
+  /* Nuclear option: Override ALL elements that might be using --custom-accent or theme colors */
+  .search-sheet[data-match-theme="false"] *[style*="color"] {
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] *[style*="background"] {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* Force override any CSS custom properties that might be inherited */
+  .search-sheet[data-match-theme="false"] {
+    --custom-accent: #ff9800 !important;
+    --accent-color: #ff9800 !important;
+    --primary-color: #ff9800 !important;
+    --ha-accent-color: #ff9800 !important;
+  }
+
+  /* Also redefine --custom-accent locally in the search sheet, just like entity-options-resolved-entities does */
+  .search-sheet[data-match-theme="false"] {
+    --custom-accent: #ff9800 !important;
+  }
+
+  /* Also override at the root level when match_theme is false */
+  yet-another-media-player-alpha[data-match-theme="false"] {
+    --custom-accent: #ff9800 !important;
+    --accent-color: #ff9800 !important;
+    --primary-color: #ff9800 !important;
+    --ha-accent-color: #ff9800 !important;
+  }
+
+  /* Override any elements that might be using CSS custom properties */
+  .search-sheet[data-match-theme="false"] .search-sheet-play,
+  .search-sheet[data-match-theme="false"] .search-sheet-header button,
+  .search-sheet[data-match-theme="false"] *[style*="background: var(--custom-accent)"],
+  .search-sheet[data-match-theme="false"] *[style*="background: var(--accent-color)"],
+  .search-sheet[data-match-theme="false"] *[style*="background: var(--primary-color)"] {
+    background: #ff9800 !important;
+    color: #fff !important;
+  }
+
+  /* Override any elements that might be using CSS custom properties for color */
+  .search-sheet[data-match-theme="false"] *[style*="color: var(--custom-accent)"],
+  .search-sheet[data-match-theme="false"] *[style*="color: var(--accent-color)"],
+  .search-sheet[data-match-theme="false"] *[style*="color: var(--primary-color)"] {
+    color: #ff9800 !important;
+  }
 `;
 
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
@@ -2847,6 +3103,7 @@ const yampCardStyles = i$4`
  * @param {Function} opts.onQueue - Handler to add a media item to queue.
  * @param {string} [opts.error] - Optional error message.
  * @param {boolean} [opts.showQueueSuccess] - Whether to show queue success message.
+ * @param {boolean} [opts.matchTheme] - Whether to match the theme of the parent.
  */
 function renderSearchSheet(_ref) {
   let {
@@ -2860,11 +3117,12 @@ function renderSearchSheet(_ref) {
     onPlay,
     onQueue,
     error,
-    showQueueSuccess
+    showQueueSuccess,
+    matchTheme = false // Add matchTheme parameter
   } = _ref;
   if (!open) return E;
   return x`
-    <div class="search-sheet">
+    <div class="search-sheet" data-match-theme="${matchTheme}">
       <div class="search-sheet-header">
         <input
           type="text"
@@ -12188,7 +12446,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
   async _onMuteToggle() {
-    var _state$attributes3;
+    var _state;
     const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
     if (!entity) return;
@@ -12237,36 +12495,19 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
       return;
     }
-    const groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
-    const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
-    const state = this.hass.states[groupingEntity];
-    if (Array.isArray(state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.group_members) && state.attributes.group_members.length) {
+    let groupingEntityTemplate, groupingEntity, state;
+    try {
+      groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
+      groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
+      state = this.hass.states[groupingEntity];
+    } catch (error) {
+      console.error('yamp: Error in grouping detection:', error);
+    }
+    if (Array.isArray((_state = state) === null || _state === void 0 || (_state = _state.attributes) === null || _state === void 0 ? void 0 : _state.group_members) && state.attributes.group_members.length) {
       // Grouped: apply mute to all group members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
       for (const t of targets) {
-        for (const obj of this.entityObjs) {
-          let resolvedGroupingId;
-          if (obj.music_assistant_entity) {
-            if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-              // For templates, resolve at action time
-              try {
-                resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
-              } catch (error) {
-                console.warn('Failed to resolve template for mute toggle:', error);
-                resolvedGroupingId = obj.entity_id;
-              }
-            } else {
-              resolvedGroupingId = obj.music_assistant_entity;
-            }
-          } else {
-            resolvedGroupingId = obj.entity_id;
-          }
-          if (resolvedGroupingId === t) {
-            break;
-          }
-        }
-
         // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
         const volTarget = t; // Use the grouping entity directly
         const targetState = this.hass.states[volTarget];
@@ -12824,10 +13065,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
                     ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
-      var _this$hass20, _state$attributes4, _state$attributes5;
+      var _this$hass20, _state$attributes3, _state$attributes4;
       const state = (_this$hass20 = this.hass) === null || _this$hass20 === void 0 || (_this$hass20 = _this$hass20.states) === null || _this$hass20 === void 0 ? void 0 : _this$hass20[entityId];
-      const name = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.friendly_name) || entityId;
-      const icon = (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.icon) || "mdi:help-circle";
+      const name = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.friendly_name) || entityId;
+      const icon = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.icon) || "mdi:help-circle";
 
       // Determine the role of this entity
       const idx = this._selectedIndex;
@@ -13249,6 +13490,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       loading: this._searchLoading,
       results: this._searchResults,
       error: this._searchError,
+      matchTheme: this._config.match_theme,
+      // Add matchTheme parameter
       onClose: () => this._searchCloseSheet(),
       onQueryInput: e => {
         this._searchQuery = e.target.value;

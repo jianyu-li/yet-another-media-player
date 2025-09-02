@@ -2045,43 +2045,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    const groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
-    const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
-    const state = this.hass.states[groupingEntity];
+    let groupingEntityTemplate, groupingEntity, state;
+    try {
+      groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
+      groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
+      state = this.hass.states[groupingEntity];
+    } catch (error) {
+      console.error('yamp: Error in grouping detection:', error);
+    }
 
     if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
       // Grouped: apply mute to all group members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
       
+
+      
       for (const t of targets) {
-        // Find the configured entity that has this grouping entity
-        let foundObj = null;
-        for (const obj of this.entityObjs) {
-          let resolvedGroupingId;
-          if (obj.music_assistant_entity) {
-            if (typeof obj.music_assistant_entity === 'string' && 
-                (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-              // For templates, resolve at action time
-              try {
-                resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
-              } catch (error) {
-                console.warn('Failed to resolve template for mute toggle:', error);
-                resolvedGroupingId = obj.entity_id;
-              }
-            } else {
-              resolvedGroupingId = obj.music_assistant_entity;
-            }
-          } else {
-            resolvedGroupingId = obj.entity_id;
-          }
-          
-          if (resolvedGroupingId === t) {
-            foundObj = obj;
-            break;
-          }
-        }
-        
         // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
         const volTarget = t; // Use the grouping entity directly
         const targetState = this.hass.states[volTarget];
@@ -3142,7 +3122,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 loading: this._searchLoading,
                 results: this._searchResults,
                 error: this._searchError,
-        
+                matchTheme: this._config.match_theme, // Add matchTheme parameter
                 onClose: () => this._searchCloseSheet(),
                 onQueryInput: e => {
                   this._searchQuery = e.target.value;
