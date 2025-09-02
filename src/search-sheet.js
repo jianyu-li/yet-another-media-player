@@ -16,6 +16,7 @@ import { LitElement, html, css, nothing } from "lit";
  * @param {Function} opts.onQueue - Handler to add a media item to queue.
  * @param {string} [opts.error] - Optional error message.
  * @param {boolean} [opts.showQueueSuccess] - Whether to show queue success message.
+ * @param {boolean} [opts.matchTheme] - Whether to match the theme of the parent.
  */
 export function renderSearchSheet({
   open,
@@ -29,10 +30,11 @@ export function renderSearchSheet({
   onQueue,
   error,
   showQueueSuccess,
+  matchTheme = false, // Add matchTheme parameter
 }) {
   if (!open) return nothing;
   return html`
-    <div class="search-sheet">
+    <div class="search-sheet" data-match-theme="${matchTheme}">
       <div class="search-sheet-header">
         <input
           type="text"
