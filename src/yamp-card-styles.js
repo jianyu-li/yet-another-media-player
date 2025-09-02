@@ -4,7 +4,7 @@ import { css } from "lit";
 export const yampCardStyles = css`
   /* CSS Custom Properties for consistency */
   :host {
-    --custom-accent: var(--accent-color, #ff9800);
+    --custom-accent: #ff9800;
     --card-bg: var(--card-background-color, #222);
     --primary-text: var(--primary-text-color, #fff);
     --secondary-text: var(--secondary-text-color, #aaa);
@@ -21,7 +21,44 @@ export const yampCardStyles = css`
   }
 
   :host([data-match-theme="false"]) {
-    --custom-accent: #ff9800;
+    --custom-accent: #ff9800 !important;
+    
+    /* Search sheet default theme variables when match_theme is false */
+    --search-overlay-bg: rgba(0, 0, 0, 0.8);
+    --search-input-bg: #333;
+    --search-input-text: #fff;
+    --search-text: #fff;
+    --search-error: #ff6b6b;
+    --search-success: #4caf50;
+    --search-success-bg: rgba(76, 175, 80, 0.95);
+    --search-border: rgba(255, 255, 255, 0.1);
+    --search-hover-bg: rgba(255, 255, 255, 0.1);
+    --search-play-hover: #e68900;
+    --search-queue-bg: #4a4a4a;
+    --search-queue-border: #666;
+    --search-queue-hover: #5a5a5a;
+    --search-queue-hover-border: #777;
+  }
+  
+  :host([data-match-theme="true"]) {
+    /* Override custom-accent to use theme accent when match_theme is true */
+    --custom-accent: var(--accent-color, #ff9800);
+    
+    /* Search sheet theme-aware variables */
+    --search-overlay-bg: var(--ha-card-background, rgba(0, 0, 0, 0.8));
+    --search-input-bg: var(--ha-card-background, #333);
+    --search-input-text: var(--primary-text-color, #fff);
+    --search-text: var(--primary-text-color, #fff);
+    --search-error: var(--error-color, #ff6b6b);
+    --search-success: var(--success-color, #4caf50);
+    --search-success-bg: var(--success-color, rgba(76, 175, 80, 0.95));
+    --search-border: var(--divider-color, rgba(255, 255, 255, 0.1));
+    --search-hover-bg: var(--divider-color, rgba(255, 255, 255, 0.1));
+    --search-play-hover: var(--accent-color, #e68900);
+    --search-queue-bg: var(--ha-card-background, #4a4a4a);
+    --search-queue-border: var(--divider-color, #666);
+    --search-queue-hover: var(--secondary-background-color, #5a5a5a);
+    --search-queue-hover-border: var(--divider-color, #777);
   }
 
   /* Base card styles - set once, inherit everywhere */
@@ -347,6 +384,12 @@ export const yampCardStyles = css`
     transform: scale(0.96);
     box-shadow: none;
     text-shadow: none;
+  }
+
+  /* Override action chip colors when match_theme is false */
+  :host([data-match-theme="false"]) .action-chip:hover,
+  :host([data-match-theme="false"]) .action-chip:active {
+    background: #ff9800 !important;
   }
 
   /* Main chips */
@@ -915,6 +958,8 @@ export const yampCardStyles = css`
   .vol-stepper span {
     color: #fff;
   }
+  
+
 
   /* Media artwork placeholder */
   .media-artwork-placeholder ha-icon {
@@ -1035,7 +1080,30 @@ export const yampCardStyles = css`
     -ms-overflow-style: none;
   }
 
+  /* Ensure entity-options-sheet honors match_theme for accent color */
+  :host([data-match-theme="false"]) .entity-options-sheet {
+    --custom-accent: #ff9800 !important;
+  }
+  :host([data-match-theme="true"]) .entity-options-sheet {
+    --custom-accent: var(--accent-color, #ff9800) !important;
+  }
+
   .entity-options-sheet::-webkit-scrollbar {
+    display: none;
+  }
+
+  .entity-options-sheet {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* Hide scrollbar for group list scroll container */
+  .group-list-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .group-list-scroll::-webkit-scrollbar {
     display: none;
   }
 
@@ -1408,6 +1476,25 @@ export const yampCardStyles = css`
     opacity: 1;
   }
 
+  /* Override filter chip hover text color when match_theme is false */
+  :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:hover {
+    color: #fff !important;
+  }
+
+  /* Add hover effect for inactive filter chips when match_theme is false */
+  :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
+    background: var(--custom-accent) !important;
+    color: #fff !important;
+    opacity: 1;
+  }
+
+  /* Add hover effect for inactive filter chips when match_theme is true */
+  :host([data-match-theme="true"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
+    background: var(--custom-accent) !important;
+    color: #111 !important;
+    opacity: 1;
+  }
+
   .entity-options-sheet .entity-options-search-results {
     min-height: 210px;
   }
@@ -1665,5 +1752,174 @@ export const yampCardStyles = css`
   .search-sheet-queue:hover {
     background: #5a5a5a;
     border-color: #777;
+  }
+
+  /* Override styles when match_theme is false - force default colors */
+  .search-sheet[data-match-theme="false"] {
+    background: rgba(0, 0, 0, 0.8) !important;
+    
+    /* Define CSS custom properties directly on the search sheet when match_theme is false */
+    --custom-accent: #ff9800 !important;
+    --search-overlay-bg: rgba(0, 0, 0, 0.8) !important;
+    --search-input-bg: #333 !important;
+    --search-input-text: #fff !important;
+    --search-text: #fff !important;
+    --search-error: #ff6b6b !important;
+    --search-success: #4caf50 !important;
+    --search-success-bg: rgba(76, 175, 80, 0.95) !important;
+    --search-border: rgba(255, 255, 255, 0.1) !important;
+    --search-hover-bg: rgba(255, 255, 255, 0.1) !important;
+    --search-play-hover: #e68900 !important;
+    --search-queue-bg: #4a4a4a !important;
+    --search-queue-border: #666 !important;
+    --search-queue-hover: #5a5a5a !important;
+    --search-queue-hover-border: #777 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-header input {
+    background: #333 !important;
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-header button {
+    background: #ff9800 !important;
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-loading,
+  .search-sheet[data-match-theme="false"] .search-sheet-error,
+  .search-sheet[data-match-theme="false"] .search-sheet-success,
+  .search-sheet[data-match-theme="false"] .search-sheet-empty {
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-error {
+    color: #ff6b6b !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-success {
+    color: #4caf50 !important;
+    background: rgba(76, 175, 80, 0.95) !important;
+    border: 2px solid #4caf50 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-result {
+    color: #fff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-result:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-title {
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-play {
+    background: var(--custom-accent) !important;
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-play:hover {
+    background: #e68900 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-queue {
+    background: #4a4a4a !important;
+    color: #fff !important;
+    border: 1px solid #666 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-queue:hover {
+    background: #5a5a5a !important;
+    border-color: #777 !important;
+  }
+
+  /* Additional overrides for search sheet elements that might inherit theme colors */
+  .search-sheet[data-match-theme="false"] .clickable-search-result {
+    color: #ff9800 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
+    color: #fff !important;
+  }
+
+  /* Override the base clickable-search-result styles when match_theme is false */
+  .search-sheet[data-match-theme="false"] .clickable-search-result,
+  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
+    color: #ff9800 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
+    color: #fff !important;
+  }
+
+  /* Override any other elements that might be using theme variables */
+  .search-sheet[data-match-theme="false"] * {
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .clickable-search-result {
+    color: #ff9800 !important;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-play,
+  .search-sheet[data-match-theme="false"] .search-sheet-queue {
+    color: #fff !important;
+  }
+
+  /* Force all text to be white when match_theme is false */
+  .search-sheet[data-match-theme="false"] .search-sheet-title,
+  .search-sheet[data-match-theme="false"] .search-sheet-loading,
+  .search-sheet[data-match-theme="false"] .search-sheet-empty {
+    color: #fff !important;
+  }
+
+  /* Nuclear option: Override ALL elements that might be using --custom-accent or theme colors */
+  .search-sheet[data-match-theme="false"] *[style*="color"] {
+    color: #fff !important;
+  }
+
+  .search-sheet[data-match-theme="false"] *[style*="background"] {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* Force override any CSS custom properties that might be inherited */
+  .search-sheet[data-match-theme="false"] {
+    --custom-accent: #ff9800 !important;
+    --accent-color: #ff9800 !important;
+    --primary-color: #ff9800 !important;
+    --ha-accent-color: #ff9800 !important;
+  }
+
+  /* Also redefine --custom-accent locally in the search sheet, just like entity-options-resolved-entities does */
+  .search-sheet[data-match-theme="false"] {
+    --custom-accent: #ff9800 !important;
+  }
+
+  /* Also override at the root level when match_theme is false */
+  yet-another-media-player[data-match-theme="false"] {
+    --custom-accent: #ff9800 !important;
+    --accent-color: #ff9800 !important;
+    --primary-color: #ff9800 !important;
+    --ha-accent-color: #ff9800 !important;
+  }
+
+  /* Override any elements that might be using CSS custom properties */
+  .search-sheet[data-match-theme="false"] .search-sheet-play,
+  .search-sheet[data-match-theme="false"] .search-sheet-header button,
+  .search-sheet[data-match-theme="false"] *[style*="background: var(--custom-accent)"],
+  .search-sheet[data-match-theme="false"] *[style*="background: var(--accent-color)"],
+  .search-sheet[data-match-theme="false"] *[style*="background: var(--primary-color)"] {
+    background: #ff9800 !important;
+    color: #fff !important;
+  }
+
+  /* Override any elements that might be using CSS custom properties for color */
+  .search-sheet[data-match-theme="false"] *[style*="color: var(--custom-accent)"],
+  .search-sheet[data-match-theme="false"] *[style*="color: var(--accent-color)"],
+  .search-sheet[data-match-theme="false"] *[style*="color: var(--primary-color)"] {
+    color: #ff9800 !important;
   }
 `;
