@@ -46,7 +46,7 @@ jobs:
           # Remove the temporary branch
           git branch -D temp-beta
 
-      - name: Remove -beta suffixes and update imports
+      - name: Remove -beta suffixes
         run: |
           # Remove -beta from custom element type
           sed -i 's/type: "yet-another-media-player-beta"/type: "yet-another-media-player"/g' src/yet-another-media-player.js
@@ -63,16 +63,6 @@ jobs:
           # Update any other -beta references in source files only
           find src/ -name "*.js" -exec sed -i 's/-beta//g' {} \;
           
-          # Update imports from CDN to local lit
-          find src/ -name "*.js" -exec sed -i 's|import { .* } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module"|import { LitElement, html, css, nothing } from "lit"|g' {} \;
-          find src/ -name "*.js" -exec sed -i 's|import { .* } from "https://unpkg.com/lit@3.3.1/lit.js?module"|import { LitElement, html, css, nothing } from "lit"|g' {} \;
-          
-          # Update js-yaml imports
-          find src/ -name "*.js" -exec sed -i 's|import yaml from "https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm"|import yaml from "js-yaml"|g' {} \;
-          
-          # Update sortablejs imports
-          find src/ -name "*.js" -exec sed -i 's|import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm"|import Sortable from "sortablejs"|g' {} \;
-          
           # Remove all console.log statements (clean up debug logs)
           find src/ -name "*.js" -exec sed -i '/console\.log.*yamp:/d' {} \;
 
@@ -85,11 +75,10 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit - files are already up to date"
           else
-            git commit -m "Apply beta changes to main: Remove -beta suffixes and update imports
+            git commit -m "Apply beta changes to main: Remove -beta suffixes
 
             - Applied beta branch changes to main
             - Removed -beta suffix from custom element type and definition
-            - Converted CDN imports to local package imports
             - Removed debug console.log statements
             - Updated all source files to use production naming"
           fi
@@ -147,7 +136,6 @@ jobs:
             echo "📦 Changes made:"
             echo "   - Applied beta branch changes to main"
             echo "   - Removed -beta suffixes from custom elements"
-            echo "   - Updated imports from CDN to local packages"
             echo "   - Created merge tag: $TAG_NAME"
           else
             echo "✅ Beta to main merge completed successfully!"
