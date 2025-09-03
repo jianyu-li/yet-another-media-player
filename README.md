@@ -34,12 +34,12 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 
 ## Screenshots
 
-![Preview Image](/Preview/largepreview.png)
-![Preview Image Collapsed](/Preview/collapsed.png)
-![Preview Image Search](/Preview/search.png)
-![Preview Image Grouping](/Preview/group-player-menu.png)
-![Preview Image Movie](/Preview/movie.png)
-![Preview Image No Icon](/Preview/NoIcons.png)
+![preview Image](/preview/largepreview.png)
+![preview Image Collapsed](/preview/collapsed.png)
+![preview Image Search](/preview/search.png)
+![preview Image Grouping](/preview/group-player-menu.png)
+![preview Image Movie](/preview/movie.png)
+![preview Image No Icon](/preview/NoIcons.png)
 
 
 ---
@@ -86,7 +86,7 @@ Player entities can be grouped together for supported entities. Access the hambu
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
 - Bonus Bonus Tip: On mobile, swipe left or right to rotate through the media type to quickly filter results.
-![Preview Image Search](/Preview/search.png)
+![preview Image Search](/preview/search.png)
 
 
 ## Config Examples
