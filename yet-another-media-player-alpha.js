@@ -10114,7 +10114,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
               `}
         ` : E}
 
-        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id ? x`
+        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
               <div class="form-row form-row-multi-column">
                 <div>
                   <ha-switch
