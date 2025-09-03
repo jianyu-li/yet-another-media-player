@@ -733,64 +733,77 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
-              id="vol-template-toggle"
-              .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity?.volume_entity)}
-              @change=${(e) => {
-                this._useVolTemplate = e.target.checked;
-              }}
+              id="follow-active-toggle"
+              .checked=${entity?.follow_active_volume ?? false}
+              @change=${(e) =>
+                this._updateEntityProperty("follow_active_volume", e.target.checked)}
             ></ha-switch>
-            <label for="vol-template-toggle">Use template for Volume Entity</label>
+            <label for="follow-active-toggle">Volume Entity Follows Active Entity</label>
           </div>
+          ${!(entity?.follow_active_volume ?? false) ? html`
+            <div>
+              <ha-switch
+                id="vol-template-toggle"
+                .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity?.volume_entity)}
+                @change=${(e) => {
+                  this._useVolTemplate = e.target.checked;
+                }}
+              ></ha-switch>
+              <label for="vol-template-toggle">Use template for Volume Entity</label>
+            </div>
+          ` : nothing}
         </div>
 
-        ${ (this._useVolTemplate ?? this._looksLikeTemplate(entity?.volume_entity))
-          ? html`
-              <div class="form-row">
-                <div class=${this._yamlError && (entity?.volume_entity ?? "").trim() !== "" 
-                  ? "code-editor-wrapper error" 
-                  : "code-editor-wrapper"}>
-                  <ha-code-editor
-                    id="vol-template-editor"
-                    label="Volume Entity Template (Jinja)"
-                    .hass=${this.hass}
-                    mode="jinja2"
-                    autocomplete-entities
-                    .value=${entity?.volume_entity ?? ""}
-                    @value-changed=${(e) => this._updateEntityProperty("volume_entity", e.detail.value)}
-                  ></ha-code-editor>
-                  <div class="help-text">
-                    <ha-icon icon="mdi:information-outline"></ha-icon>
-                    Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).
-                    Example switching volume entity based on a boolean:
-                    <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
+        ${ !(entity?.follow_active_volume ?? false) ? html`
+          ${ (this._useVolTemplate ?? this._looksLikeTemplate(entity?.volume_entity))
+            ? html`
+                <div class="form-row">
+                  <div class=${this._yamlError && (entity?.volume_entity ?? "").trim() !== "" 
+                    ? "code-editor-wrapper error" 
+                    : "code-editor-wrapper"}>
+                    <ha-code-editor
+                      id="vol-template-editor"
+                      label="Volume Entity Template (Jinja)"
+                      .hass=${this.hass}
+                      mode="jinja2"
+                      autocomplete-entities
+                      .value=${entity?.volume_entity ?? ""}
+                      @value-changed=${(e) => this._updateEntityProperty("volume_entity", e.detail.value)}
+                    ></ha-code-editor>
+                    <div class="help-text">
+                      <ha-icon icon="mdi:information-outline"></ha-icon>
+                      Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).
+                      Example switching volume entity based on a boolean:
+                      <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
   remote.soundbar
 {% else %}
   media_player.office_homepod
 {% endif %}</pre>
+                    </div>
                   </div>
                 </div>
-              </div>
-            `
-          : html`
-              <div class="form-row">
-                <ha-entity-picker
-                  .hass=${this.hass}
-                  .value=${this._isEntityId(entity?.volume_entity) ? entity.volume_entity : (entity?.entity_id ?? "")}
-                  .includeDomains=${["media_player","remote"]}
-                  label="Volume Entity"
-                  clearable
-                  @value-changed=${(e) => {
-                    const value = e.detail.value;
-                    this._updateEntityProperty("volume_entity", value);
+              `
+            : html`
+                <div class="form-row">
+                  <ha-entity-picker
+                    .hass=${this.hass}
+                    .value=${this._isEntityId(entity?.volume_entity) ? entity.volume_entity : (entity?.entity_id ?? "")}
+                    .includeDomains=${["media_player","remote"]}
+                    label="Volume Entity"
+                    clearable
+                    @value-changed=${(e) => {
+                      const value = e.detail.value;
+                      this._updateEntityProperty("volume_entity", value);
 
-                    if (!value || value === entity.entity_id) {
-                      // sync_power is meaningless in these cases
-                      this._updateEntityProperty("sync_power", false);
-                    }
-                  }}
-                ></ha-entity-picker>
-              </div>
-            `}
+                      if (!value || value === entity.entity_id) {
+                        // sync_power is meaningless in these cases
+                        this._updateEntityProperty("sync_power", false);
+                      }
+                    }}
+                  ></ha-entity-picker>
+                </div>
+              `}
+        ` : nothing}
 
         ${entity?.volume_entity && entity.volume_entity !== entity.entity_id
 
@@ -808,18 +821,6 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
               </div>
             `
           : nothing}
-
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="follow-active-toggle"
-              .checked=${entity?.follow_active_volume ?? false}
-              @change=${(e) =>
-                this._updateEntityProperty("follow_active_volume", e.target.checked)}
-            ></ha-switch>
-            <label for="follow-active-toggle">Volume Entity Follows Active Entity</label>
-          </div>
-        </div>
 
         ${entity?.follow_active_volume ? html`
           <div class="form-row">
