@@ -9872,14 +9872,47 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           </div>
         </div>   
         <div class="form-row">
-          <ha-entity-picker
-            .hass=${this.hass}
-            .value=${this._config.idle_image ?? ""}
-             .includeDomains=${["camera", "image"]}
-            label="Idle Image Entity"
-            clearable
-            @value-changed=${e => this._updateConfig("idle_image", e.detail.value)}
-          ></ha-entity-picker>
+          <label style="margin-bottom: 8px;">Idle Image</label>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+            <ha-switch
+              id="idle-image-url-toggle"
+              .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
+              @change=${e => {
+      this._useIdleImageUrl = e.target.checked;
+      // Clear the value when switching modes to avoid confusion
+      if (e.target.checked) {
+        this._updateConfig("idle_image", "");
+      } else {
+        // Also clear when switching back to entity mode to avoid invalid values
+        this._updateConfig("idle_image", "");
+      }
+    }}
+            ></ha-switch>
+            <label for="idle-image-url-toggle">Use URL or Path</label>
+          </div>
+          <div style="flex: 2;">
+            ${this._useIdleImageUrl ? x`
+              <ha-textfield
+                class="full-width"
+                placeholder="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                .value=${this._config.idle_image ?? ""}
+                @input=${e => this._updateConfig("idle_image", e.target.value)}
+                helper="Enter a direct URL to an image or a local file path"
+                .helperPersistent=${true}
+              ></ha-textfield>
+            ` : x`
+              <ha-entity-picker
+                class="full-width"
+                .hass=${this.hass}
+                .value=${this._config.idle_image ?? ""}
+                .includeDomains=${["camera", "image"]}
+                clearable
+                @value-changed=${e => this._updateConfig("idle_image", e.detail.value)}
+              ></ha-entity-picker>
+            `}
+          </div>
         </div>
 
         <div class="form-row action-group">
@@ -10495,6 +10528,10 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
         config: newConfig
       }
     }));
+  }
+  _looksLikeUrlOrPath(value) {
+    if (!value) return false;
+    return value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/') || value.includes('.jpg') || value.includes('.jpeg') || value.includes('.png') || value.includes('.gif') || value.includes('.webp');
   }
 }
 customElements.define("yet-another-media-player-editor-alpha", YetAnotherMediaPlayerEditor);
@@ -12647,9 +12684,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // Idle image "picture frame" mode when idle
     let idleImageUrl = null;
-    if (this.config.idle_image && this._isIdle && this.hass.states[this.config.idle_image]) {
-      const sensorState = this.hass.states[this.config.idle_image];
-      idleImageUrl = sensorState.attributes.entity_picture || (sensorState.state && sensorState.state.startsWith("http") ? sensorState.state : null);
+    if (this.config.idle_image && this._isIdle) {
+      // Check if it's an entity ID
+      if (this.hass.states[this.config.idle_image]) {
+        const sensorState = this.hass.states[this.config.idle_image];
+        idleImageUrl = sensorState.attributes.entity_picture || (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
+      }
+      // Check if it's a direct URL or file path
+      else if (this.config.idle_image.startsWith("http") || this.config.idle_image.startsWith("/")) {
+        idleImageUrl = this.config.idle_image;
+      }
     }
     const dimIdleFrame = !!idleImageUrl;
     const hideControlsNow = this._isIdle;

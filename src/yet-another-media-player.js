@@ -2204,15 +2204,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // Idle image "picture frame" mode when idle
       let idleImageUrl = null;
-      if (
-        this.config.idle_image &&
-        this._isIdle &&
-        this.hass.states[this.config.idle_image]
-      ) {
-        const sensorState = this.hass.states[this.config.idle_image];
-        idleImageUrl =
-          sensorState.attributes.entity_picture ||
-          (sensorState.state && sensorState.state.startsWith("http") ? sensorState.state : null);
+      if (this.config.idle_image && this._isIdle) {
+        // Check if it's an entity ID
+        if (this.hass.states[this.config.idle_image]) {
+          const sensorState = this.hass.states[this.config.idle_image];
+          idleImageUrl =
+            sensorState.attributes.entity_picture ||
+            (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
+        }
+        // Check if it's a direct URL or file path
+        else if (this.config.idle_image.startsWith("http") || this.config.idle_image.startsWith("/")) {
+          idleImageUrl = this.config.idle_image;
+        }
       }
       const dimIdleFrame = !!idleImageUrl;
       const hideControlsNow = this._isIdle;
