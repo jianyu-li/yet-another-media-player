@@ -805,7 +805,7 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
               `}
         ` : nothing}
 
-        ${entity?.volume_entity && entity.volume_entity !== entity.entity_id
+        ${entity?.volume_entity && entity.volume_entity !== entity.entity_id && !(entity?.follow_active_volume ?? false)
 
           ? html`
               <div class="form-row form-row-multi-column">
