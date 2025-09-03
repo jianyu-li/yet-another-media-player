@@ -714,7 +714,7 @@ o === null || o === void 0 || o({
 });
 (s.litElementVersions ??= []).push("4.2.0");
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
 // Helper to render a single chip
 function renderChip(_ref) {
@@ -953,7 +953,7 @@ function renderChipRow(_ref4) {
   `;
 }
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderActionChipRow(_ref) {
   let {
     actions,
@@ -972,7 +972,7 @@ function renderActionChipRow(_ref) {
   `;
 }
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderControlsRow(_ref) {
   let {
     stateObj,
@@ -1054,7 +1054,7 @@ function countMainControls(stateObj, supportsFeature) {
   return count;
 }
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderVolumeRow(_ref) {
   let {
     isRemoteVolumeEntity,
@@ -1123,7 +1123,7 @@ function renderVolumeRow(_ref) {
   `;
 }
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderProgressBar(_ref) {
   let {
     progress,
@@ -1162,7 +1162,7 @@ function renderProgressBar(_ref) {
   `;
 }
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 const yampCardStyles = i$4`
   /* CSS Custom Properties for consistency */
   :host {
@@ -3086,7 +3086,7 @@ const yampCardStyles = i$4`
   }
 `;
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
 /**
  * Renders the search sheet UI for media search.
@@ -9154,8 +9154,8 @@ _extends(Remove, {
 Sortable.mount(new AutoScrollPlugin());
 Sortable.mount(Remove, Revert);
 
-// import { LitElement, html, css, nothing } from "lit";
-// import Sortable from "sortablejs";
+// import { LitElement, html, css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm";
 class YampSortable extends i$1 {
   static get properties() {
     return {
@@ -9310,7 +9310,7 @@ class YampSortable extends i$1 {
 }
 customElements.define("yamp-sortable", YampSortable);
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 // import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
 class YetAnotherMediaPlayerEditor extends i$1 {
   static get properties() {
@@ -10048,49 +10048,60 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
-              id="vol-template-toggle"
-              .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)}
-              @change=${e => {
+              id="follow-active-toggle"
+              .checked=${(entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false}
+              @change=${e => this._updateEntityProperty("follow_active_volume", e.target.checked)}
+            ></ha-switch>
+            <label for="follow-active-toggle">Volume Entity Follows Active Entity</label>
+          </div>
+          ${!((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
+            <div>
+              <ha-switch
+                id="vol-template-toggle"
+                .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)}
+                @change=${e => {
       this._useVolTemplate = e.target.checked;
     }}
-            ></ha-switch>
-            <label for="vol-template-toggle">Use template for Volume Entity</label>
-          </div>
+              ></ha-switch>
+              <label for="vol-template-toggle">Use template for Volume Entity</label>
+            </div>
+          ` : E}
         </div>
 
-        ${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? x`
-              <div class="form-row">
-                <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
-                  <ha-code-editor
-                    id="vol-template-editor"
-                    label="Volume Entity Template (Jinja)"
-                    .hass=${this.hass}
-                    mode="jinja2"
-                    autocomplete-entities
-                    .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? ""}
-                    @value-changed=${e => this._updateEntityProperty("volume_entity", e.detail.value)}
-                  ></ha-code-editor>
-                  <div class="help-text">
-                    <ha-icon icon="mdi:information-outline"></ha-icon>
-                    Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).
-                    Example switching volume entity based on a boolean:
-                    <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
+        ${!((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
+          ${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? x`
+                <div class="form-row">
+                  <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+                    <ha-code-editor
+                      id="vol-template-editor"
+                      label="Volume Entity Template (Jinja)"
+                      .hass=${this.hass}
+                      mode="jinja2"
+                      autocomplete-entities
+                      .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? ""}
+                      @value-changed=${e => this._updateEntityProperty("volume_entity", e.detail.value)}
+                    ></ha-code-editor>
+                    <div class="help-text">
+                      <ha-icon icon="mdi:information-outline"></ha-icon>
+                      Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).
+                      Example switching volume entity based on a boolean:
+                      <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
   remote.soundbar
 {% else %}
   media_player.office_homepod
 {% endif %}</pre>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ` : x`
-              <div class="form-row">
-                <ha-entity-picker
-                  .hass=${this.hass}
-                  .value=${this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
-                  .includeDomains=${["media_player", "remote"]}
-                  label="Volume Entity"
-                  clearable
-                  @value-changed=${e => {
+              ` : x`
+                <div class="form-row">
+                  <ha-entity-picker
+                    .hass=${this.hass}
+                    .value=${this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
+                    .includeDomains=${["media_player", "remote"]}
+                    label="Volume Entity"
+                    clearable
+                    @value-changed=${e => {
       const value = e.detail.value;
       this._updateEntityProperty("volume_entity", value);
       if (!value || value === entity.entity_id) {
@@ -10098,9 +10109,10 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
         this._updateEntityProperty("sync_power", false);
       }
     }}
-                ></ha-entity-picker>
-              </div>
-            `}
+                  ></ha-entity-picker>
+                </div>
+              `}
+        ` : E}
 
         ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id ? x`
               <div class="form-row form-row-multi-column">
@@ -10114,17 +10126,6 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
                 </div>
               </div>
             ` : E}
-
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="follow-active-toggle"
-              .checked=${(entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false}
-              @change=${e => this._updateEntityProperty("follow_active_volume", e.target.checked)}
-            ></ha-switch>
-            <label for="follow-active-toggle">Volume Entity Follows Active Entity</label>
-          </div>
-        </div>
 
         ${entity !== null && entity !== void 0 && entity.follow_active_volume ? x`
           <div class="form-row">
@@ -10498,7 +10499,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
 }
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 
-// import { LitElement, html, css, nothing } from "lit";
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
