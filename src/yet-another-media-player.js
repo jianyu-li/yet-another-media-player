@@ -537,14 +537,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Set the current filter
     this._searchMediaClassFilter = mediaType || 'all';
     
+    // Respect favorites toggle across chip changes
+    const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive);
+    
     // Check if search query has changed - if so, clear cache
     if (this._currentSearchQuery !== this._searchQuery) {
       this._searchResultsByType = {};
       this._currentSearchQuery = this._searchQuery;
     }
     
-    // Use cached results if available for this media type
-    const cacheKey = mediaType || 'all';
+    // Use cached results if available for this media type and search params
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
       this._searchResults = this._searchResultsByType[cacheKey];
       this.requestUpdate();
@@ -568,15 +571,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
         }
+        this._lastSearchUsedServerFavorites = true;
+      } else if (isFavorites) {
+        // Ask backend (Music Assistant) to filter favorites at source with the current query
+        this._initialFavoritesLoaded = false;
+        searchResponse = await searchMedia(
+          this.hass,
+          searchEntityId,
+          this._searchQuery,
+          mediaType,
+          { ...searchParams, favorites: true }
+        );
+        this._lastSearchUsedServerFavorites = true;
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams);
+        this._lastSearchUsedServerFavorites = false;
       }
       
       // Handle the new response format
       const arr = searchResponse.results || [];
       this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
+      
       
       // Only reset favorites filter if this is a completely new search (not just switching filters)
       const isNewSearch = this._currentSearchQuery !== this._searchQuery;
@@ -586,12 +603,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       this._searchResults = Array.isArray(arr) ? arr : [];
       
-      // Apply favorites filter if it was active and we're using cached results (switching filters)
-      if (!isNewSearch && this._favoritesFilterActive) {
+      // Apply local favorites filter ONLY when needed (e.g., switching filter chips with cached results)
+      if (!isNewSearch && this._favoritesFilterActive && !this._lastSearchUsedServerFavorites) {
         await this._applyFavoritesFilterIfActive();
       }
       
-      // Cache the results for this media type
+      // Cache the results for this media type and search params
       this._searchResultsByType[cacheKey] = this._searchResults;
       
       // remember how many rows exist in the full ("All") set, but keep at least 15 for layout
@@ -814,36 +831,46 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return "";
   }
 
-  // Toggle favorites filter on current search results
+  // Toggle favorites filter - use existing _doSearch method with favorites parameter
   async _toggleFavoritesFilter() {
     this._favoritesFilterActive = !this._favoritesFilterActive;
     
     if (this._favoritesFilterActive) {
-      // Get favorites and filter current results
-      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+      // Use the existing _doSearch method with favorites parameter
+      // This aligns with how initial favorites loading works
+      const currentMediaType = this._searchMediaClassFilter;
       
-      try {
-        const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter);
-        const favorites = favoritesResponse.results || [];
-        
-        // Create a set of favorite URIs for quick lookup
-        const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
-        
-        // Filter current results to only show favorites
-        const currentResults = this._searchResults || [];
-        this._searchResults = currentResults.filter(item => favoriteUris.has(item.media_content_id));
-      } catch (error) {
-        // If favorites loading fails, just show current results
-        console.warn('Failed to load favorites for filtering:', error);
+      
+      // Try to search with favorites parameter first
+      if (this._searchQuery && this._searchQuery.trim() !== '') {
+        // Search for favorites matching the query
+        try {
+          await this._doSearch(currentMediaType, { favorites: true });
+        } catch (error) {
+          console.error('yamp: Error searching favorites:', error);
+        }
+      } else {
+        // No search query - load all favorites (same as initial load)
+        try {
+          await this._doSearch('favorites');
+        } catch (error) {
+          console.error('yamp: Error loading favorites:', error);
+        }
       }
     } else {
-      // Restore original results from cache
-      const cacheKey = this._searchMediaClassFilter || 'all';
-      this._searchResults = this._searchResultsByType[cacheKey] || [];
+      // Restore original search results
+      
+      if (this._searchQuery && this._searchQuery.trim() !== '') {
+        // Resubmit the original search without favorites filter
+        const currentMediaType = this._searchMediaClassFilter;
+        await this._doSearch(currentMediaType);
+      } else {
+        // Restore from cache
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        this._searchResults = this._searchResultsByType[cacheKey] || [];
+        this.requestUpdate();
+      }
     }
-    
-    this.requestUpdate();
   }
 
   // Apply favorites filter to current results (called when switching filter chips)
@@ -961,6 +988,94 @@ class YetAnotherMediaPlayerCard extends LitElement {
    // Notify Home Assistant to recalculate layout
   _notifyResize() {
     this.dispatchEvent(new Event("iron-resize", { bubbles: true, composed: true }));
+  }
+
+  // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
+  _getArtworkUrl(state) {
+    if (!state || !state.attributes) return null;
+    
+    const attrs = state.attributes;
+    const appId = attrs.app_id;
+    const prefix = this.config?.artwork_hostname || '';
+    
+    let artworkUrl = null;
+    let sizePercentage = null;
+    
+    // Check for media artwork overrides first
+    const overrides = this.config?.media_artwork_overrides;
+    if (overrides && Array.isArray(overrides)) {
+      const {
+        media_title,
+        media_artist,
+        media_album_name,
+        media_content_id,
+        media_channel
+      } = attrs;
+      
+      // Find matching override
+      let override = overrides.find(override => 
+        (media_title && media_title === override.media_title_equals) ||
+        (media_artist && media_artist === override.media_artist_equals) ||
+        (media_album_name && media_album_name === override.media_album_name_equals) ||
+        (media_content_id && media_content_id === override.media_content_id_equals) ||
+        (media_channel && media_channel === override.media_channel_equals)
+      );
+      
+      // If no specific match found, check for fallback when no artwork
+      if (!override) {
+        const hasArtwork = attrs.entity_picture || attrs.album_art || 
+                          (appId === 'music_assistant' && attrs.entity_picture_local);
+        if (!hasArtwork) {
+          override = overrides.find(override => override.if_missing);
+        }
+      }
+      
+      if (override?.image_url) {
+        artworkUrl = override.image_url;
+        sizePercentage = override?.size_percentage;
+      }
+    }
+    
+    // If no override found, use standard artwork
+    if (!artworkUrl) {
+      // For Music Assistant, prefer entity_picture_local
+      if (appId === 'music_assistant' && attrs.entity_picture_local) {
+        artworkUrl = attrs.entity_picture_local;
+      } else {
+        // Fallback to standard artwork attributes
+        artworkUrl = attrs.entity_picture || attrs.album_art || null;
+      }
+    }
+    
+    // If still no artwork, check for configured fallback artwork
+    if (!artworkUrl) {
+      const fallbackArtwork = this.config?.fallback_artwork;
+      if (fallbackArtwork) {
+        // Check if it's a smart fallback (TV vs Music)
+        if (fallbackArtwork === 'smart') {
+          // Use TV icon for TV content, music icon for everything else
+          const isTV = attrs.media_title === 'TV' || attrs.media_channel || 
+                      attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
+          if (isTV) {
+            // TV icon
+            artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvcj4KPHJlY3QgeD0iNjgiIHk9IjEyMCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPHJlY3QgeD0iODAiIHk9IjEzMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPC9zdmc+Cg==';
+          } else {
+            // Music icon (equalizer bars)
+            artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjM2IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjYyIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjY4IiB5PSI1OCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjEwMCIgeT0iNzAiIHdpZHRoPSIyMiIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSIxMzIiIHk9IjQyIiB3aWR0aD0iMjIiIGhlaWdodD0iMTA2IiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo=';
+          }
+        } else if (typeof fallbackArtwork === 'string') {
+          // Direct URL or base64 image
+          artworkUrl = fallbackArtwork;
+        }
+      }
+    }
+    
+    // Apply hostname prefix if configured and artwork URL is relative
+    if (artworkUrl && prefix && !artworkUrl.startsWith('http')) {
+      artworkUrl = prefix + artworkUrl;
+    }
+    
+    return { url: artworkUrl, sizePercentage };
   }
 
   // Extract dominant color from image
@@ -2313,14 +2428,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const isPlaying = !this._isIdle && effState === "playing";
       // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
       const mainState = this.currentStateObj;
-      const isRealArtwork = !this._isIdle && isPlaying && (
-        (mainState && (mainState.attributes.entity_picture || mainState.attributes.album_art)) ||
-        (playbackStateObj && (playbackStateObj.attributes.entity_picture || playbackStateObj.attributes.album_art))
-      );
-      const art = isRealArtwork
-        ? ((mainState && (mainState.attributes.entity_picture || mainState.attributes.album_art))
-            || (playbackStateObj && (playbackStateObj.attributes.entity_picture || playbackStateObj.attributes.album_art)))
-        : null;
+      const mainArtwork = this._getArtworkUrl(mainState);
+      const playbackArtwork = this._getArtworkUrl(playbackStateObj);
+      const isRealArtwork = !this._isIdle && isPlaying && (mainArtwork?.url || playbackArtwork?.url);
+      const art = isRealArtwork ? (mainArtwork?.url || playbackArtwork?.url) : null;
       // Details
       const title = isPlaying ? ((finalPlaybackStateObj.attributes.media_title || mainState?.attributes?.media_title || "")) : "";
       const artist = isPlaying
@@ -2365,10 +2476,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       // Use null if idle or no artwork available
       let artworkUrl = null;
+      let artworkSizePercentage = null;
       if (!this._isIdle) {
-        const getArt = (st) => st && (st.attributes.entity_picture || st.attributes.album_art);
         // Use the unified entity resolution system for artwork
-        artworkUrl = getArt(playbackStateObj) || getArt(mainState) || null;
+        const playbackArtwork = this._getArtworkUrl(playbackStateObj);
+        const mainArtwork = this._getArtworkUrl(mainState);
+        const artwork = playbackArtwork || mainArtwork;
+        artworkUrl = artwork?.url || null;
+        artworkSizePercentage = artwork?.sizePercentage;
       }
 
       // Dominant color extraction for collapsed artwork
@@ -2397,6 +2512,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     holdToPin: this._holdToPin,
                     getChipName: (id) => this.getChipName(id),
                     getActualGroupMaster: (group) => this._getActualGroupMaster(group),
+                    artworkHostname: this.config?.artwork_hostname || '',
+                    mediaArtworkOverrides: this.config?.media_artwork_overrides || [],
+                    fallbackArtwork: this.config?.fallback_artwork || null,
                     getIsChipPlaying: (id, isSelected) => {
                       const obj = this._findEntityObjByAnyId(id);
                       const mainId = obj?.entity_id || id;
@@ -2421,10 +2539,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       const mainState = this.hass?.states?.[mainId];
                       
                       // Prefer playback entity artwork, fallback to main entity
-                      return playbackState?.attributes?.entity_picture || 
-                             playbackState?.attributes?.album_art || 
-                             mainState?.attributes?.entity_picture || 
-                             mainState?.attributes?.album_art || null;
+                      const playbackArtwork = this._getArtworkUrl(playbackState);
+                      const mainArtwork = this._getArtworkUrl(mainState);
+                      return (playbackArtwork || mainArtwork)?.url || null;
                     },
                     getIsMaActive: (id) => {
                       const obj = this._findEntityObjByAnyId(id);
@@ -2480,7 +2597,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         : "none"
                   };
                   min-height: ${collapsed ? (hideControlsNow ? "120px" : "0px") : "320px"};
-                  background-size: cover;
+                  background-size: ${artworkSizePercentage ? `${artworkSizePercentage}%` : 'cover'};
                   background-position: top center;
                   background-repeat: no-repeat;
                   filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
@@ -2817,6 +2934,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   
                   ${this._usingMusicAssistant && !this._searchLoading ? html`
                     <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px;">
+                      ${(() => {
+                        return nothing;
+                      })()}
                                               <button
                           class="favorites-filter-btn"
                           style="
@@ -2831,7 +2951,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             margin-right: 8px;
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
-                          @click=${this._searchAttempted ? () => this._toggleFavoritesFilter() : null}
+                          @click=${this._searchAttempted ? () => {
+                            this._toggleFavoritesFilter();
+                          } : () => {}}
                           title=${this._searchAttempted ? (this._favoritesFilterActive ? 'Show all results' : 'Show only favorites') : 'Showing favorites'}
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
