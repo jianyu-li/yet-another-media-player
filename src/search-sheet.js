@@ -101,6 +101,47 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
     try {
     
       
+      // If favorites are requested, use Music Assistant get_library with favorite + search
+      if (searchParams.favorites) {
+        const mediaTypes = (mediaType && mediaType !== 'all')
+          ? [mediaType]
+          : ['artist', 'album', 'track', 'playlist', 'radio', 'audiobook', 'podcast'];
+        const flatResultsFav = [];
+        await Promise.all(
+          mediaTypes.map(async (mt) => {
+            const message = {
+              type: "call_service",
+              domain: "music_assistant",
+              service: "get_library",
+              service_data: {
+                config_entry_id: configEntryId,
+                media_type: mt,
+                favorite: true,
+                search: query,
+                limit: mt === 'all' ? 8 : 20,
+              },
+              return_response: true,
+            };
+            const favRes = await hass.connection.sendMessagePromise(message);
+            const favResponse = favRes?.response;
+            const items = favResponse?.items || [];
+            items.forEach(item => {
+              const transformedItem = {
+                title: item.name,
+                media_content_id: item.uri,
+                media_content_type: item.media_type,
+                media_class: item.media_type,
+                thumbnail: item.image,
+                ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
+                ...(item.album && { album: item.album.name })
+              };
+              flatResultsFav.push(transformedItem);
+            });
+          })
+        );
+        return { results: flatResultsFav, usedMusicAssistant: true };
+      }
+
       const serviceData = {
         name: query,
         config_entry_id: configEntryId,
@@ -120,9 +161,8 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
         serviceData.album = searchParams.album;
       }
       
-
       
-    
+      
       
       const msg = {
         type: "call_service",
@@ -175,7 +215,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
   }
   
   // Fallback to media_player search
-  const fallbackResults = await fallbackToMediaPlayerSearch(hass, entityId, query, mediaType);
+  const fallbackResults = await fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, searchParams);
   return { results: fallbackResults, usedMusicAssistant: false };
 }
 
@@ -315,7 +355,7 @@ export async function getFavorites(hass, entityId, mediaType = null) {
  }
 
 // Fallback function for media_player search
-async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType) {
+async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, searchParams = {}) {
   const fallbackData = {
     entity_id: entityId,
     search_query: query,
@@ -324,6 +364,9 @@ async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType) {
   if (mediaType && mediaType !== 'all') {
     fallbackData.media_content_type = mediaType;
   }
+  
+  // Note: Standard media_player search doesn't support advanced filtering
+  // This would need to be handled by filtering results after the search
   
   const fallbackMsg = {
     type: "call_service",
