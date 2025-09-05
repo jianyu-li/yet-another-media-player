@@ -716,6 +716,85 @@ o === null || o === void 0 || o({
 
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
+// Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
+function getArtworkUrl(state) {
+  let hostname = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+  let overrides = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+  let fallbackArtwork = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+  if (!state || !state.attributes) return null;
+  const attrs = state.attributes;
+  const appId = attrs.app_id;
+  let artworkUrl = null;
+  let sizePercentage = null;
+
+  // Check for media artwork overrides first
+  if (overrides && Array.isArray(overrides)) {
+    var _override;
+    const {
+      media_title,
+      media_artist,
+      media_album_name,
+      media_content_id,
+      media_channel
+    } = attrs;
+
+    // Find matching override
+    let override = overrides.find(override => media_title && media_title === override.media_title_equals || media_artist && media_artist === override.media_artist_equals || media_album_name && media_album_name === override.media_album_name_equals || media_content_id && media_content_id === override.media_content_id_equals || media_channel && media_channel === override.media_channel_equals);
+
+    // If no specific match found, check for fallback when no artwork
+    if (!override) {
+      const hasArtwork = attrs.entity_picture || attrs.album_art || appId === 'music_assistant' && attrs.entity_picture_local;
+      if (!hasArtwork) {
+        override = overrides.find(override => override.if_missing);
+      }
+    }
+    if ((_override = override) !== null && _override !== void 0 && _override.image_url) {
+      var _override2;
+      artworkUrl = override.image_url;
+      sizePercentage = (_override2 = override) === null || _override2 === void 0 ? void 0 : _override2.size_percentage;
+    }
+  }
+
+  // If no override found, use standard artwork
+  if (!artworkUrl) {
+    // For Music Assistant, prefer entity_picture_local
+    if (appId === 'music_assistant' && attrs.entity_picture_local) {
+      artworkUrl = attrs.entity_picture_local;
+    } else {
+      // Fallback to standard artwork attributes
+      artworkUrl = attrs.entity_picture || attrs.album_art || null;
+    }
+  }
+
+  // If still no artwork, check for configured fallback artwork
+  if (!artworkUrl && fallbackArtwork) {
+    // Check if it's a smart fallback (TV vs Music)
+    if (fallbackArtwork === 'smart') {
+      // Use TV icon for TV content, music icon for everything else
+      const isTV = attrs.media_title === 'TV' || attrs.media_channel || attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
+      if (isTV) {
+        // TV icon
+        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI2OCIgeT0iMTIwIiB3aWR0aD0iNDgiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI4MCIgeT0iMTMwIiB3aWR0aD0iMjQiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8L3N2Zz4K';
+      } else {
+        // Music icon (equalizer bars)
+        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjM2IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjYyIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjY4IiB5PSI1OCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjEwMCIgeT0iNzAiIHdpZHRoPSIyMiIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSIxMzIiIHk9IjQyIiB3aWR0aD0iMjIiIGhlaWdodD0iMTA2IiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo=';
+      }
+    } else if (typeof fallbackArtwork === 'string') {
+      // Direct URL or base64 image
+      artworkUrl = fallbackArtwork;
+    }
+  }
+
+  // Apply hostname prefix if configured and artwork URL is relative
+  if (artworkUrl && hostname && !artworkUrl.startsWith('http')) {
+    artworkUrl = hostname + artworkUrl;
+  }
+  return {
+    url: artworkUrl,
+    sizePercentage
+  };
+}
+
 // Helper to render a single chip
 function renderChip(_ref) {
   let {
@@ -888,6 +967,9 @@ function renderChipRow(_ref4) {
     getIsMaActive,
     isIdle,
     hass,
+    artworkHostname = '',
+    mediaArtworkOverrides = [],
+    fallbackArtwork = null,
     onChipClick,
     onIconClick,
     onPinClick,
@@ -900,12 +982,12 @@ function renderChipRow(_ref4) {
     ${groupedSortedEntityIds.map(group => {
     // If it's a group (more than one entity)
     if (group.length > 1) {
-      var _hass$states, _state$attributes, _state$attributes2, _state$attributes3;
+      var _hass$states, _getArtworkUrl, _state$attributes;
       const id = getActualGroupMaster(group);
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states = hass.states) === null || _hass$states === void 0 ? void 0 : _hass$states[id];
-      const art = typeof getChipArt === "function" ? getChipArt(id) : (state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art) || null;
-      const icon = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.icon) || "mdi:cast";
+      const art = typeof getChipArt === "function" ? getChipArt(id) : (_getArtworkUrl = getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)) === null || _getArtworkUrl === void 0 ? void 0 : _getArtworkUrl.url;
+      const icon = (state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.icon) || "mdi:cast";
       const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
       return renderGroupChip({
         idx,
@@ -923,15 +1005,15 @@ function renderChipRow(_ref4) {
         onPointerUp: e => onPointerUp(e, idx)
       });
     } else {
-      var _hass$states2, _state$attributes4, _state$attributes5, _state$attributes6;
+      var _hass$states2, _getArtworkUrl2, _state$attributes2;
       // Single chip
       const id = group[0];
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states2 = hass.states) === null || _hass$states2 === void 0 ? void 0 : _hass$states2[id];
       const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
-      const artSource = typeof getChipArt === "function" ? getChipArt(id) : (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.entity_picture) || (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.album_art) || null;
+      const artSource = typeof getChipArt === "function" ? getChipArt(id) : (_getArtworkUrl2 = getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)) === null || _getArtworkUrl2 === void 0 ? void 0 : _getArtworkUrl2.url;
       const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
-      const icon = (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.icon) || "mdi:cast";
+      const icon = (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.icon) || "mdi:cast";
       const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
       return renderChip({
         idx,
@@ -3183,6 +3265,49 @@ async function searchMedia(hass, entityId, query) {
   // Try Music Assistant search if we have a config entry
   if (configEntryId) {
     try {
+      // If favorites are requested, use Music Assistant get_library with favorite + search
+      if (searchParams.favorites) {
+        const mediaTypes = mediaType && mediaType !== 'all' ? [mediaType] : ['artist', 'album', 'track', 'playlist', 'radio', 'audiobook', 'podcast'];
+        const flatResultsFav = [];
+        await Promise.all(mediaTypes.map(async mt => {
+          const message = {
+            type: "call_service",
+            domain: "music_assistant",
+            service: "get_library",
+            service_data: {
+              config_entry_id: configEntryId,
+              media_type: mt,
+              favorite: true,
+              search: query,
+              limit: mt === 'all' ? 8 : 20
+            },
+            return_response: true
+          };
+          const favRes = await hass.connection.sendMessagePromise(message);
+          const favResponse = favRes === null || favRes === void 0 ? void 0 : favRes.response;
+          const items = (favResponse === null || favResponse === void 0 ? void 0 : favResponse.items) || [];
+          items.forEach(item => {
+            const transformedItem = {
+              title: item.name,
+              media_content_id: item.uri,
+              media_content_type: item.media_type,
+              media_class: item.media_type,
+              thumbnail: item.image,
+              ...(item.artists && {
+                artist: item.artists.map(a => a.name).join(', ')
+              }),
+              ...(item.album && {
+                album: item.album.name
+              })
+            };
+            flatResultsFav.push(transformedItem);
+          });
+        }));
+        return {
+          results: flatResultsFav,
+          usedMusicAssistant: true
+        };
+      }
       const serviceData = {
         name: query,
         config_entry_id: configEntryId,
@@ -3383,6 +3508,10 @@ async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType) {
   if (mediaType && mediaType !== 'all') {
     fallbackData.media_content_type = mediaType;
   }
+
+  // Note: Standard media_player search doesn't support advanced filtering
+  // This would need to be handled by filtering results after the search
+
   const fallbackMsg = {
     type: "call_service",
     domain: "media_player",
@@ -11067,14 +11196,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set the current filter
     this._searchMediaClassFilter = mediaType || 'all';
 
+    // Respect favorites toggle across chip changes
+    const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive);
+
     // Check if search query has changed - if so, clear cache
     if (this._currentSearchQuery !== this._searchQuery) {
       this._searchResultsByType = {};
       this._currentSearchQuery = this._searchQuery;
     }
 
-    // Use cached results if available for this media type
-    const cacheKey = mediaType || 'all';
+    // Use cached results if available for this media type and search params
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
       this._searchResults = this._searchResultsByType[cacheKey];
       this.requestUpdate();
@@ -11096,10 +11228,20 @@ class YetAnotherMediaPlayerCard extends i$1 {
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
         }
+        this._lastSearchUsedServerFavorites = true;
+      } else if (isFavorites) {
+        // Ask backend (Music Assistant) to filter favorites at source with the current query
+        this._initialFavoritesLoaded = false;
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
+          ...searchParams,
+          favorites: true
+        });
+        this._lastSearchUsedServerFavorites = true;
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams);
+        this._lastSearchUsedServerFavorites = false;
       }
 
       // Handle the new response format
@@ -11113,12 +11255,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
       this._searchResults = Array.isArray(arr) ? arr : [];
 
-      // Apply favorites filter if it was active and we're using cached results (switching filters)
-      if (!isNewSearch && this._favoritesFilterActive) {
+      // Apply local favorites filter ONLY when needed (e.g., switching filter chips with cached results)
+      if (!isNewSearch && this._favoritesFilterActive && !this._lastSearchUsedServerFavorites) {
         await this._applyFavoritesFilterIfActive();
       }
 
-      // Cache the results for this media type
+      // Cache the results for this media type and search params
       this._searchResultsByType[cacheKey] = this._searchResults;
 
       // remember how many rows exist in the full ("All") set, but keep at least 15 for layout
@@ -11356,33 +11498,46 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return "";
   }
 
-  // Toggle favorites filter on current search results
+  // Toggle favorites filter - use existing _doSearch method with favorites parameter
   async _toggleFavoritesFilter() {
     this._favoritesFilterActive = !this._favoritesFilterActive;
     if (this._favoritesFilterActive) {
-      // Get favorites and filter current results
-      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-      try {
-        const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter);
-        const favorites = favoritesResponse.results || [];
+      // Use the existing _doSearch method with favorites parameter
+      // This aligns with how initial favorites loading works
+      const currentMediaType = this._searchMediaClassFilter;
 
-        // Create a set of favorite URIs for quick lookup
-        const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
-
-        // Filter current results to only show favorites
-        const currentResults = this._searchResults || [];
-        this._searchResults = currentResults.filter(item => favoriteUris.has(item.media_content_id));
-      } catch (error) {
-        // If favorites loading fails, just show current results
-        console.warn('Failed to load favorites for filtering:', error);
+      // Try to search with favorites parameter first
+      if (this._searchQuery && this._searchQuery.trim() !== '') {
+        // Search for favorites matching the query
+        try {
+          await this._doSearch(currentMediaType, {
+            favorites: true
+          });
+        } catch (error) {
+          console.error('yamp: Error searching favorites:', error);
+        }
+      } else {
+        // No search query - load all favorites (same as initial load)
+        try {
+          await this._doSearch('favorites');
+        } catch (error) {
+          console.error('yamp: Error loading favorites:', error);
+        }
       }
     } else {
-      // Restore original results from cache
-      const cacheKey = this._searchMediaClassFilter || 'all';
-      this._searchResults = this._searchResultsByType[cacheKey] || [];
+      // Restore original search results
+
+      if (this._searchQuery && this._searchQuery.trim() !== '') {
+        // Resubmit the original search without favorites filter
+        const currentMediaType = this._searchMediaClassFilter;
+        await this._doSearch(currentMediaType);
+      } else {
+        // Restore from cache
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        this._searchResults = this._searchResultsByType[cacheKey] || [];
+        this.requestUpdate();
+      }
     }
-    this.requestUpdate();
   }
 
   // Apply favorites filter to current results (called when switching filter chips)
@@ -11492,6 +11647,89 @@ class YetAnotherMediaPlayerCard extends i$1 {
       bubbles: true,
       composed: true
     }));
+  }
+
+  // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
+  _getArtworkUrl(state) {
+    var _this$config, _this$config2;
+    if (!state || !state.attributes) return null;
+    const attrs = state.attributes;
+    const appId = attrs.app_id;
+    const prefix = ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.artwork_hostname) || '';
+    let artworkUrl = null;
+    let sizePercentage = null;
+
+    // Check for media artwork overrides first
+    const overrides = (_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.media_artwork_overrides;
+    if (overrides && Array.isArray(overrides)) {
+      var _override;
+      const {
+        media_title,
+        media_artist,
+        media_album_name,
+        media_content_id,
+        media_channel
+      } = attrs;
+
+      // Find matching override
+      let override = overrides.find(override => media_title && media_title === override.media_title_equals || media_artist && media_artist === override.media_artist_equals || media_album_name && media_album_name === override.media_album_name_equals || media_content_id && media_content_id === override.media_content_id_equals || media_channel && media_channel === override.media_channel_equals);
+
+      // If no specific match found, check for fallback when no artwork
+      if (!override) {
+        const hasArtwork = attrs.entity_picture || attrs.album_art || appId === 'music_assistant' && attrs.entity_picture_local;
+        if (!hasArtwork) {
+          override = overrides.find(override => override.if_missing);
+        }
+      }
+      if ((_override = override) !== null && _override !== void 0 && _override.image_url) {
+        var _override2;
+        artworkUrl = override.image_url;
+        sizePercentage = (_override2 = override) === null || _override2 === void 0 ? void 0 : _override2.size_percentage;
+      }
+    }
+
+    // If no override found, use standard artwork
+    if (!artworkUrl) {
+      // For Music Assistant, prefer entity_picture_local
+      if (appId === 'music_assistant' && attrs.entity_picture_local) {
+        artworkUrl = attrs.entity_picture_local;
+      } else {
+        // Fallback to standard artwork attributes
+        artworkUrl = attrs.entity_picture || attrs.album_art || null;
+      }
+    }
+
+    // If still no artwork, check for configured fallback artwork
+    if (!artworkUrl) {
+      var _this$config3;
+      const fallbackArtwork = (_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.fallback_artwork;
+      if (fallbackArtwork) {
+        // Check if it's a smart fallback (TV vs Music)
+        if (fallbackArtwork === 'smart') {
+          // Use TV icon for TV content, music icon for everything else
+          const isTV = attrs.media_title === 'TV' || attrs.media_channel || attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
+          if (isTV) {
+            // TV icon
+            artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvcj4KPHJlY3QgeD0iNjgiIHk9IjEyMCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPHJlY3QgeD0iODAiIHk9IjEzMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPC9zdmc+Cg==';
+          } else {
+            // Music icon (equalizer bars)
+            artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjM2IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjYyIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjY4IiB5PSI1OCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjEwMCIgeT0iNzAiIHdpZHRoPSIyMiIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSIxMzIiIHk9IjQyIiB3aWR0aD0iMjIiIGhlaWdodD0iMTA2IiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo=';
+          }
+        } else if (typeof fallbackArtwork === 'string') {
+          // Direct URL or base64 image
+          artworkUrl = fallbackArtwork;
+        }
+      }
+    }
+
+    // Apply hostname prefix if configured and artwork URL is relative
+    if (artworkUrl && prefix && !artworkUrl.startsWith('http')) {
+      artworkUrl = prefix + artworkUrl;
+    }
+    return {
+      url: artworkUrl,
+      sizePercentage
+    };
   }
 
   // Extract dominant color from image
@@ -12669,7 +12907,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass14, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache3, _this$_playbackLinger4, _this$hass15, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$currentVolumeSt3, _this$currentStateObj;
+    var _this$_optimisticPlay, _this$hass14, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache3, _this$_playbackLinger4, _this$hass15, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config4, _this$config5, _this$config6, _this$currentVolumeSt3, _this$currentStateObj;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -12780,8 +13018,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const isPlaying = !this._isIdle && effState === "playing";
     // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
     const mainState = this.currentStateObj;
-    const isRealArtwork = !this._isIdle && isPlaying && (mainState && (mainState.attributes.entity_picture || mainState.attributes.album_art) || playbackStateObj && (playbackStateObj.attributes.entity_picture || playbackStateObj.attributes.album_art));
-    isRealArtwork ? mainState && (mainState.attributes.entity_picture || mainState.attributes.album_art) || playbackStateObj && (playbackStateObj.attributes.entity_picture || playbackStateObj.attributes.album_art) : null;
+    const mainArtwork = this._getArtworkUrl(mainState);
+    const playbackArtwork = this._getArtworkUrl(playbackStateObj);
+    const isRealArtwork = !this._isIdle && isPlaying && ((mainArtwork === null || mainArtwork === void 0 ? void 0 : mainArtwork.url) || (playbackArtwork === null || playbackArtwork === void 0 ? void 0 : playbackArtwork.url));
+    isRealArtwork ? (mainArtwork === null || mainArtwork === void 0 ? void 0 : mainArtwork.url) || (playbackArtwork === null || playbackArtwork === void 0 ? void 0 : playbackArtwork.url) : null;
     // Details
     const title = isPlaying ? finalPlaybackStateObj.attributes.media_title || (mainState === null || mainState === void 0 || (_mainState$attributes2 = mainState.attributes) === null || _mainState$attributes2 === void 0 ? void 0 : _mainState$attributes2.media_title) || "" : "";
     const artist = isPlaying ? finalPlaybackStateObj.attributes.media_artist || finalPlaybackStateObj.attributes.media_series_title || finalPlaybackStateObj.attributes.app_name || (mainState === null || mainState === void 0 || (_mainState$attributes3 = mainState.attributes) === null || _mainState$attributes3 === void 0 ? void 0 : _mainState$attributes3.media_artist) || (mainState === null || mainState === void 0 || (_mainState$attributes4 = mainState.attributes) === null || _mainState$attributes4 === void 0 ? void 0 : _mainState$attributes4.media_series_title) || (mainState === null || mainState === void 0 || (_mainState$attributes5 = mainState.attributes) === null || _mainState$attributes5 === void 0 ? void 0 : _mainState$attributes5.app_name) || "" : "";
@@ -12812,10 +13052,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     // Use null if idle or no artwork available
     let artworkUrl = null;
+    let artworkSizePercentage = null;
     if (!this._isIdle) {
-      const getArt = st => st && (st.attributes.entity_picture || st.attributes.album_art);
       // Use the unified entity resolution system for artwork
-      artworkUrl = getArt(playbackStateObj) || getArt(mainState) || null;
+      const playbackArtwork = this._getArtworkUrl(playbackStateObj);
+      const mainArtwork = this._getArtworkUrl(mainState);
+      const artwork = playbackArtwork || mainArtwork;
+      artworkUrl = (artwork === null || artwork === void 0 ? void 0 : artwork.url) || null;
+      artworkSizePercentage = artwork === null || artwork === void 0 ? void 0 : artwork.sizePercentage;
     }
 
     // Dominant color extraction for collapsed artwork
@@ -12843,6 +13087,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
+      artworkHostname: ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass16;
         const obj = this._findEntityObjByAnyId(id);
@@ -12857,7 +13104,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass17, _this$hass18, _playbackState$attrib, _playbackState$attrib2, _mainState$attributes6, _mainState$attributes7;
+        var _this$hass17, _this$hass18, _ref2;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -12869,7 +13116,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const mainState = (_this$hass18 = this.hass) === null || _this$hass18 === void 0 || (_this$hass18 = _this$hass18.states) === null || _this$hass18 === void 0 ? void 0 : _this$hass18[mainId];
 
         // Prefer playback entity artwork, fallback to main entity
-        return (playbackState === null || playbackState === void 0 || (_playbackState$attrib = playbackState.attributes) === null || _playbackState$attrib === void 0 ? void 0 : _playbackState$attrib.entity_picture) || (playbackState === null || playbackState === void 0 || (_playbackState$attrib2 = playbackState.attributes) === null || _playbackState$attrib2 === void 0 ? void 0 : _playbackState$attrib2.album_art) || (mainState === null || mainState === void 0 || (_mainState$attributes6 = mainState.attributes) === null || _mainState$attributes6 === void 0 ? void 0 : _mainState$attributes6.entity_picture) || (mainState === null || mainState === void 0 || (_mainState$attributes7 = mainState.attributes) === null || _mainState$attributes7 === void 0 ? void 0 : _mainState$attributes7.album_art) || null;
+        const playbackArtwork = this._getArtworkUrl(playbackState);
+        const mainArtwork = this._getArtworkUrl(mainState);
+        return ((_ref2 = playbackArtwork || mainArtwork) === null || _ref2 === void 0 ? void 0 : _ref2.url) || null;
       },
       getIsMaActive: id => {
         var _this$hass19;
@@ -12921,7 +13170,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 style="
                   background-image: ${idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none"};
                   min-height: ${collapsed ? hideControlsNow ? "120px" : "0px" : "320px"};
-                  background-size: cover;
+                  background-size: ${artworkSizePercentage ? `${artworkSizePercentage}%` : 'cover'};
                   background-position: top center;
                   background-repeat: no-repeat;
                   filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
@@ -13245,6 +13494,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   
                   ${this._usingMusicAssistant && !this._searchLoading ? x`
                     <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px;">
+                      ${(() => {
+      return E;
+    })()}
                                               <button
                           class="favorites-filter-btn"
                           style="
@@ -13259,7 +13511,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
                             margin-right: 8px;
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
-                          @click=${this._searchAttempted ? () => this._toggleFavoritesFilter() : null}
+                          @click=${this._searchAttempted ? () => {
+      this._toggleFavoritesFilter();
+    } : () => {}}
                           title=${this._searchAttempted ? this._favoritesFilterActive ? 'Show all results' : 'Show only favorites' : 'Showing favorites'}
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
