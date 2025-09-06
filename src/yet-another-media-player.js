@@ -172,14 +172,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Queue success message
     this._showQueueSuccessMessage = false;
 
-    // Collapse on load if nothing is playing (but respect linger state)
+    // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
         const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
-        // Don't go idle if there's an active linger
+        // Don't go idle if there's an active linger or if idle_timeout_ms is 0
         const hasActiveLinger = this._playbackLingerByIdx?.[this._selectedIndex] && 
                                this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
-        if (stateObj && stateObj.state !== "playing" && !hasActiveLinger) {
+        if (stateObj && stateObj.state !== "playing" && !hasActiveLinger && this._idleTimeoutMs > 0) {
           this._isIdle = true;
           this.requestUpdate();
         }
@@ -3312,6 +3312,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
             this._idleTimeout = null;
             this.requestUpdate();
           }, this._idleTimeoutMs);
+        }
+        
+        // If idle_timeout_ms is 0, ensure we're never idle
+        if (this._idleTimeoutMs === 0 && this._isIdle) {
+          this._isIdle = false;
+          this.requestUpdate();
         }
       }
     }
