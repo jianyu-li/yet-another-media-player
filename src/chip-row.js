@@ -1,6 +1,89 @@
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { html, nothing } from "lit";
 
+// Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
+function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = null) {
+  if (!state || !state.attributes) return null;
+  
+  const attrs = state.attributes;
+  const appId = attrs.app_id;
+  
+  let artworkUrl = null;
+  let sizePercentage = null;
+  
+  // Check for media artwork overrides first
+  if (overrides && Array.isArray(overrides)) {
+    const {
+      media_title,
+      media_artist,
+      media_album_name,
+      media_content_id,
+      media_channel
+    } = attrs;
+    
+    // Find matching override
+    let override = overrides.find(override => 
+      (media_title && media_title === override.media_title_equals) ||
+      (media_artist && media_artist === override.media_artist_equals) ||
+      (media_album_name && media_album_name === override.media_album_name_equals) ||
+      (media_content_id && media_content_id === override.media_content_id_equals) ||
+      (media_channel && media_channel === override.media_channel_equals)
+    );
+    
+    // If no specific match found, check for fallback when no artwork
+    if (!override) {
+      const hasArtwork = attrs.entity_picture || attrs.album_art || 
+                        (appId === 'music_assistant' && attrs.entity_picture_local);
+      if (!hasArtwork) {
+        override = overrides.find(override => override.if_missing);
+      }
+    }
+    
+    if (override?.image_url) {
+      artworkUrl = override.image_url;
+      sizePercentage = override?.size_percentage;
+    }
+  }
+  
+  // If no override found, use standard artwork
+  if (!artworkUrl) {
+    // For Music Assistant, prefer entity_picture_local
+    if (appId === 'music_assistant' && attrs.entity_picture_local) {
+      artworkUrl = attrs.entity_picture_local;
+    } else {
+      // Fallback to standard artwork attributes
+      artworkUrl = attrs.entity_picture || attrs.album_art || null;
+    }
+  }
+  
+  // If still no artwork, check for configured fallback artwork
+  if (!artworkUrl && fallbackArtwork) {
+    // Check if it's a smart fallback (TV vs Music)
+    if (fallbackArtwork === 'smart') {
+      // Use TV icon for TV content, music icon for everything else
+      const isTV = attrs.media_title === 'TV' || attrs.media_channel || 
+                  attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
+      if (isTV) {
+        // TV icon
+        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI2OCIgeT0iMTIwIiB3aWR0aD0iNDgiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI4MCIgeT0iMTMwIiB3aWR0aD0iMjQiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8L3N2Zz4K';
+      } else {
+        // Music icon (equalizer bars)
+        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjM2IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjYyIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjY4IiB5PSI1OCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjEwMCIgeT0iNzAiIHdpZHRoPSIyMiIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSIxMzIiIHk9IjQyIiB3aWR0aD0iMjIiIGhlaWdodD0iMTA2IiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo=';
+      }
+    } else if (typeof fallbackArtwork === 'string') {
+      // Direct URL or base64 image
+      artworkUrl = fallbackArtwork;
+    }
+  }
+  
+  // Apply hostname prefix if configured and artwork URL is relative
+  if (artworkUrl && hostname && !artworkUrl.startsWith('http')) {
+    artworkUrl = hostname + artworkUrl;
+  }
+  
+  return { url: artworkUrl, sizePercentage };
+}
+
 // Helper to render a single chip
 export function renderChip({
   idx,
@@ -176,6 +259,9 @@ export function renderChipRow({
   getIsMaActive,
   isIdle,
   hass,
+  artworkHostname = '',
+  mediaArtworkOverrides = [],
+  fallbackArtwork = null,
   onChipClick,
   onIconClick,
   onPinClick,
@@ -194,7 +280,7 @@ export function renderChipRow({
         const state = hass?.states?.[id];
         const art = (typeof getChipArt === "function")
           ? getChipArt(id)
-          : (state?.attributes?.entity_picture || state?.attributes?.album_art || null);
+          : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)?.url;
         const icon = state?.attributes?.icon || "mdi:cast";
         const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
         return renderGroupChip({
@@ -223,7 +309,7 @@ export function renderChipRow({
           : (selectedEntityId === id ? !isIdle : state?.state === "playing");
         const artSource = (typeof getChipArt === "function")
           ? getChipArt(id)
-          : (state?.attributes?.entity_picture || state?.attributes?.album_art || null);
+          : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)?.url;
         const art = selectedEntityId === id ? (!isIdle && artSource) : (isChipPlaying && artSource);
         const icon = state?.attributes?.icon || "mdi:cast";
         const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
