@@ -716,6 +716,85 @@ o === null || o === void 0 || o({
 
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
+// Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
+function getArtworkUrl(state) {
+  let hostname = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+  let overrides = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+  let fallbackArtwork = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+  if (!state || !state.attributes) return null;
+  const attrs = state.attributes;
+  const appId = attrs.app_id;
+  let artworkUrl = null;
+  let sizePercentage = null;
+
+  // Check for media artwork overrides first
+  if (overrides && Array.isArray(overrides)) {
+    var _override;
+    const {
+      media_title,
+      media_artist,
+      media_album_name,
+      media_content_id,
+      media_channel
+    } = attrs;
+
+    // Find matching override
+    let override = overrides.find(override => media_title && media_title === override.media_title_equals || media_artist && media_artist === override.media_artist_equals || media_album_name && media_album_name === override.media_album_name_equals || media_content_id && media_content_id === override.media_content_id_equals || media_channel && media_channel === override.media_channel_equals);
+
+    // If no specific match found, check for fallback when no artwork
+    if (!override) {
+      const hasArtwork = attrs.entity_picture || attrs.album_art || appId === 'music_assistant' && attrs.entity_picture_local;
+      if (!hasArtwork) {
+        override = overrides.find(override => override.if_missing);
+      }
+    }
+    if ((_override = override) !== null && _override !== void 0 && _override.image_url) {
+      var _override2;
+      artworkUrl = override.image_url;
+      sizePercentage = (_override2 = override) === null || _override2 === void 0 ? void 0 : _override2.size_percentage;
+    }
+  }
+
+  // If no override found, use standard artwork
+  if (!artworkUrl) {
+    // For Music Assistant, prefer entity_picture_local
+    if (appId === 'music_assistant' && attrs.entity_picture_local) {
+      artworkUrl = attrs.entity_picture_local;
+    } else {
+      // Fallback to standard artwork attributes
+      artworkUrl = attrs.entity_picture || attrs.album_art || null;
+    }
+  }
+
+  // If still no artwork, check for configured fallback artwork
+  if (!artworkUrl && fallbackArtwork) {
+    // Check if it's a smart fallback (TV vs Music)
+    if (fallbackArtwork === 'smart') {
+      // Use TV icon for TV content, music icon for everything else
+      const isTV = attrs.media_title === 'TV' || attrs.media_channel || attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
+      if (isTV) {
+        // TV icon
+        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI2OCIgeT0iMTIwIiB3aWR0aD0iNDgiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI4MCIgeT0iMTMwIiB3aWR0aD0iMjQiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8L3N2Zz4K';
+      } else {
+        // Music icon (equalizer bars)
+        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjM2IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjYyIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjY4IiB5PSI1OCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjEwMCIgeT0iNzAiIHdpZHRoPSIyMiIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSIxMzIiIHk9IjQyIiB3aWR0aD0iMjIiIGhlaWdodD0iMTA2IiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo=';
+      }
+    } else if (typeof fallbackArtwork === 'string') {
+      // Direct URL or base64 image
+      artworkUrl = fallbackArtwork;
+    }
+  }
+
+  // Apply hostname prefix if configured and artwork URL is relative
+  if (artworkUrl && hostname && !artworkUrl.startsWith('http')) {
+    artworkUrl = hostname + artworkUrl;
+  }
+  return {
+    url: artworkUrl,
+    sizePercentage
+  };
+}
+
 // Helper to render a single chip
 function renderChip(_ref) {
   let {
@@ -888,6 +967,9 @@ function renderChipRow(_ref4) {
     getIsMaActive,
     isIdle,
     hass,
+    artworkHostname = '',
+    mediaArtworkOverrides = [],
+    fallbackArtwork = null,
     onChipClick,
     onIconClick,
     onPinClick,
@@ -900,12 +982,12 @@ function renderChipRow(_ref4) {
     ${groupedSortedEntityIds.map(group => {
     // If it's a group (more than one entity)
     if (group.length > 1) {
-      var _hass$states, _state$attributes, _state$attributes2, _state$attributes3;
+      var _hass$states, _getArtworkUrl, _state$attributes;
       const id = getActualGroupMaster(group);
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states = hass.states) === null || _hass$states === void 0 ? void 0 : _hass$states[id];
-      const art = typeof getChipArt === "function" ? getChipArt(id) : (state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.entity_picture) || (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.album_art) || null;
-      const icon = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.icon) || "mdi:cast";
+      const art = typeof getChipArt === "function" ? getChipArt(id) : (_getArtworkUrl = getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)) === null || _getArtworkUrl === void 0 ? void 0 : _getArtworkUrl.url;
+      const icon = (state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.icon) || "mdi:cast";
       const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
       return renderGroupChip({
         idx,
@@ -923,15 +1005,15 @@ function renderChipRow(_ref4) {
         onPointerUp: e => onPointerUp(e, idx)
       });
     } else {
-      var _hass$states2, _state$attributes4, _state$attributes5, _state$attributes6;
+      var _hass$states2, _getArtworkUrl2, _state$attributes2;
       // Single chip
       const id = group[0];
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states2 = hass.states) === null || _hass$states2 === void 0 ? void 0 : _hass$states2[id];
       const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
-      const artSource = typeof getChipArt === "function" ? getChipArt(id) : (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.entity_picture) || (state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.album_art) || null;
+      const artSource = typeof getChipArt === "function" ? getChipArt(id) : (_getArtworkUrl2 = getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)) === null || _getArtworkUrl2 === void 0 ? void 0 : _getArtworkUrl2.url;
       const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
-      const icon = (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.icon) || "mdi:cast";
+      const icon = (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.icon) || "mdi:cast";
       const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
       return renderChip({
         idx,
@@ -9743,7 +9825,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               Entities*
             </div>
           </div>
-          <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
+          <yamp-sortable-alpha @item-moved=${e => this._onEntityMoved(e)}>
             <div class="sortable-container">
               ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
@@ -9796,7 +9878,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               `;
     })}
             </div>
-          </yamp-sortable>
+          </yamp-sortable-alpha>
         </div>
   
         <div class="form-row form-row-multi-column">
@@ -10001,7 +10083,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               Actions
             </div>
           </div>
-          <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
+          <yamp-sortable-alpha @item-moved=${e => this._onActionMoved(e)}>
             <div class="sortable-container">
               ${actions.map((act, idx) => x`
                 <div class="action-row-inner sortable-item">
@@ -10041,7 +10123,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                 </div>
               `)}
             </div>
-          </yamp-sortable>
+          </yamp-sortable-alpha>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
