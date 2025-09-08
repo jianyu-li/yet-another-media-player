@@ -2425,16 +2425,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const repeatActive = finalPlaybackStateObj.attributes.repeat && finalPlaybackStateObj.attributes.repeat !== "off";
 
       // Artwork and idle logic
-      const isPlaying = !this._isIdle && effState === "playing";
+      // When idle_timeout_ms=0, always show content regardless of idle state
+      const isPlaying = this._idleTimeoutMs === 0 ? (effState === "playing") : (!this._isIdle && effState === "playing");
       // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
       const mainState = this.currentStateObj;
       const mainArtwork = this._getArtworkUrl(mainState);
       const playbackArtwork = this._getArtworkUrl(playbackStateObj);
-      const isRealArtwork = !this._isIdle && isPlaying && (mainArtwork?.url || playbackArtwork?.url);
+      const isRealArtwork = this._idleTimeoutMs === 0 ? (isPlaying && (mainArtwork?.url || playbackArtwork?.url)) : (!this._isIdle && isPlaying && (mainArtwork?.url || playbackArtwork?.url));
       const art = isRealArtwork ? (mainArtwork?.url || playbackArtwork?.url) : null;
       // Details
-      const title = isPlaying ? ((finalPlaybackStateObj.attributes.media_title || mainState?.attributes?.media_title || "")) : "";
-      const artist = isPlaying
+      // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
+      const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
+      const title = shouldShowDetails ? ((finalPlaybackStateObj.attributes.media_title || mainState?.attributes?.media_title || "")) : "";
+      const artist = shouldShowDetails
         ? (
             finalPlaybackStateObj.attributes.media_artist ||
             finalPlaybackStateObj.attributes.media_series_title ||
@@ -2638,9 +2641,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 ` : nothing}
                 <div class="details">
                   <div class="title">
-                    ${isPlaying ? title : ""}
+                    ${shouldShowDetails ? title : ""}
                   </div>
-                  ${isPlaying && artist ? html`
+                  ${shouldShowDetails && artist ? html`
                     <div
                       class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
                       @click=${() => {
