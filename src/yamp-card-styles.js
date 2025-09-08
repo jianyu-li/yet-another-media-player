@@ -982,13 +982,13 @@ export const yampCardStyles = css`
   .card-lower-content.collapsed .collapsed-artwork-container {
     position: absolute;
     top: 10px;
-    right: 18px;
-    width: 110px;
+    right: 4px;
+    width: 80px;
     height: calc(100% - 120px);
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
-    z-index: 5;
+    z-index: 2;
     background: transparent;
     pointer-events: none;
     box-shadow: none;
@@ -997,9 +997,9 @@ export const yampCardStyles = css`
   }
 
   .card-lower-content.collapsed .collapsed-artwork {
-    width: 98px;
-    height: 98px;
-    border-radius: 14px;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
     object-fit: cover;
     background: transparent;
     box-shadow: 0 1px 6px rgba(0,0,0,0.22);
@@ -1009,26 +1009,59 @@ export const yampCardStyles = css`
     margin: 2px;
   }
 
-  .card-lower-content.collapsed .controls-row {
-    max-width: calc(100% - 120px);
-    margin-right: 110px;
+  .card-lower-content.collapsed.has-artwork .controls-row {
+    max-width: calc(100% - 90px);
+    margin-right: 85px;
   }
 
+  /* Medium screens */
+  @media (max-width: 600px) {
+    .card-lower-content.collapsed.has-artwork .controls-row {
+      max-width: calc(100% - 85px);
+      margin-right: 80px;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork-container {
+      width: 75px;
+      right: 3px;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork {
+      width: 68px;
+      height: 68px;
+    }
+  }
+
+  /* Small screens */
   @media (max-width: 420px) {
-    .card-lower-content.collapsed .controls-row {
+    .card-lower-content.collapsed.has-artwork .controls-row {
       max-width: 100%;
       margin-right: 0;
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 70px;
-      height: 70px;
-      right: 10px;
+      width: 60px;
+      height: 60px;
+      right: 2px;
     }
 
     .card-lower-content.collapsed .collapsed-artwork {
-      width: 62px;
-      height: 62px;
+      width: 56px;
+      height: 56px;
+    }
+  }
+
+  /* Very small screens */
+  @media (max-width: 320px) {
+    .card-lower-content.collapsed .collapsed-artwork-container {
+      width: 50px;
+      height: 50px;
+      right: 1px;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork {
+      width: 46px;
+      height: 46px;
     }
   }
 

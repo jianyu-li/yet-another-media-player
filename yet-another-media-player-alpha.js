@@ -2144,13 +2144,13 @@ const yampCardStyles = i$4`
   .card-lower-content.collapsed .collapsed-artwork-container {
     position: absolute;
     top: 10px;
-    right: 18px;
-    width: 110px;
+    right: 4px;
+    width: 80px;
     height: calc(100% - 120px);
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
-    z-index: 5;
+    z-index: 2;
     background: transparent;
     pointer-events: none;
     box-shadow: none;
@@ -2159,9 +2159,9 @@ const yampCardStyles = i$4`
   }
 
   .card-lower-content.collapsed .collapsed-artwork {
-    width: 98px;
-    height: 98px;
-    border-radius: 14px;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
     object-fit: cover;
     background: transparent;
     box-shadow: 0 1px 6px rgba(0,0,0,0.22);
@@ -2171,26 +2171,59 @@ const yampCardStyles = i$4`
     margin: 2px;
   }
 
-  .card-lower-content.collapsed .controls-row {
-    max-width: calc(100% - 120px);
-    margin-right: 110px;
+  .card-lower-content.collapsed.has-artwork .controls-row {
+    max-width: calc(100% - 90px);
+    margin-right: 85px;
   }
 
+  /* Medium screens */
+  @media (max-width: 600px) {
+    .card-lower-content.collapsed.has-artwork .controls-row {
+      max-width: calc(100% - 85px);
+      margin-right: 80px;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork-container {
+      width: 75px;
+      right: 3px;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork {
+      width: 68px;
+      height: 68px;
+    }
+  }
+
+  /* Small screens */
   @media (max-width: 420px) {
-    .card-lower-content.collapsed .controls-row {
+    .card-lower-content.collapsed.has-artwork .controls-row {
       max-width: 100%;
       margin-right: 0;
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 70px;
-      height: 70px;
-      right: 10px;
+      width: 60px;
+      height: 60px;
+      right: 2px;
     }
 
     .card-lower-content.collapsed .collapsed-artwork {
-      width: 62px;
-      height: 62px;
+      width: 56px;
+      height: 56px;
+    }
+  }
+
+  /* Very small screens */
+  @media (max-width: 320px) {
+    .card-lower-content.collapsed .collapsed-artwork-container {
+      width: 50px;
+      height: 50px;
+      right: 1px;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork {
+      width: 46px;
+      height: 46px;
     }
   }
 
@@ -9710,7 +9743,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               Entities*
             </div>
           </div>
-          <yamp-sortable-alpha @item-moved=${e => this._onEntityMoved(e)}>
+          <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
             <div class="sortable-container">
               ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
@@ -9763,7 +9796,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               `;
     })}
             </div>
-          </yamp-sortable-alpha>
+          </yamp-sortable>
         </div>
   
         <div class="form-row form-row-multi-column">
@@ -9968,7 +10001,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               Actions
             </div>
           </div>
-          <yamp-sortable-alpha @item-moved=${e => this._onActionMoved(e)}>
+          <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
             <div class="sortable-container">
               ${actions.map((act, idx) => x`
                 <div class="action-row-inner sortable-item">
@@ -10008,7 +10041,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                 </div>
               `)}
             </div>
-          </yamp-sortable-alpha>
+          </yamp-sortable>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
@@ -10741,14 +10774,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Queue success message
     this._showQueueSuccessMessage = false;
 
-    // Collapse on load if nothing is playing (but respect linger state)
+    // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
         var _this$_playbackLinger;
         const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
-        // Don't go idle if there's an active linger
+        // Don't go idle if there's an active linger or if idle_timeout_ms is 0
         const hasActiveLinger = ((_this$_playbackLinger = this._playbackLingerByIdx) === null || _this$_playbackLinger === void 0 ? void 0 : _this$_playbackLinger[this._selectedIndex]) && this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
-        if (stateObj && stateObj.state !== "playing" && !hasActiveLinger) {
+        if (stateObj && stateObj.state !== "playing" && !hasActiveLinger && this._idleTimeoutMs > 0) {
           this._isIdle = true;
           this.requestUpdate();
         }
@@ -12933,16 +12966,19 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const repeatActive = finalPlaybackStateObj.attributes.repeat && finalPlaybackStateObj.attributes.repeat !== "off";
 
     // Artwork and idle logic
-    const isPlaying = !this._isIdle && effState === "playing";
+    // When idle_timeout_ms=0, always show content regardless of idle state
+    const isPlaying = this._idleTimeoutMs === 0 ? effState === "playing" : !this._isIdle && effState === "playing";
     // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
     const mainState = this.currentStateObj;
     const mainArtwork = this._getArtworkUrl(mainState);
     const playbackArtwork = this._getArtworkUrl(playbackStateObj);
-    const isRealArtwork = !this._isIdle && isPlaying && ((mainArtwork === null || mainArtwork === void 0 ? void 0 : mainArtwork.url) || (playbackArtwork === null || playbackArtwork === void 0 ? void 0 : playbackArtwork.url));
+    const isRealArtwork = this._idleTimeoutMs === 0 ? isPlaying && ((mainArtwork === null || mainArtwork === void 0 ? void 0 : mainArtwork.url) || (playbackArtwork === null || playbackArtwork === void 0 ? void 0 : playbackArtwork.url)) : !this._isIdle && isPlaying && ((mainArtwork === null || mainArtwork === void 0 ? void 0 : mainArtwork.url) || (playbackArtwork === null || playbackArtwork === void 0 ? void 0 : playbackArtwork.url));
     isRealArtwork ? (mainArtwork === null || mainArtwork === void 0 ? void 0 : mainArtwork.url) || (playbackArtwork === null || playbackArtwork === void 0 ? void 0 : playbackArtwork.url) : null;
     // Details
-    const title = isPlaying ? finalPlaybackStateObj.attributes.media_title || (mainState === null || mainState === void 0 || (_mainState$attributes2 = mainState.attributes) === null || _mainState$attributes2 === void 0 ? void 0 : _mainState$attributes2.media_title) || "" : "";
-    const artist = isPlaying ? finalPlaybackStateObj.attributes.media_artist || finalPlaybackStateObj.attributes.media_series_title || finalPlaybackStateObj.attributes.app_name || (mainState === null || mainState === void 0 || (_mainState$attributes3 = mainState.attributes) === null || _mainState$attributes3 === void 0 ? void 0 : _mainState$attributes3.media_artist) || (mainState === null || mainState === void 0 || (_mainState$attributes4 = mainState.attributes) === null || _mainState$attributes4 === void 0 ? void 0 : _mainState$attributes4.media_series_title) || (mainState === null || mainState === void 0 || (_mainState$attributes5 = mainState.attributes) === null || _mainState$attributes5 === void 0 ? void 0 : _mainState$attributes5.app_name) || "" : "";
+    // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
+    const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
+    const title = shouldShowDetails ? finalPlaybackStateObj.attributes.media_title || (mainState === null || mainState === void 0 || (_mainState$attributes2 = mainState.attributes) === null || _mainState$attributes2 === void 0 ? void 0 : _mainState$attributes2.media_title) || "" : "";
+    const artist = shouldShowDetails ? finalPlaybackStateObj.attributes.media_artist || finalPlaybackStateObj.attributes.media_series_title || finalPlaybackStateObj.attributes.app_name || (mainState === null || mainState === void 0 || (_mainState$attributes3 = mainState.attributes) === null || _mainState$attributes3 === void 0 ? void 0 : _mainState$attributes3.media_artist) || (mainState === null || mainState === void 0 || (_mainState$attributes4 = mainState.attributes) === null || _mainState$attributes4 === void 0 ? void 0 : _mainState$attributes4.media_series_title) || (mainState === null || mainState === void 0 || (_mainState$attributes5 = mainState.attributes) === null || _mainState$attributes5 === void 0 ? void 0 : _mainState$attributes5.app_name) || "" : "";
     let pos = finalPlaybackStateObj.attributes.media_position || 0;
     const duration = finalPlaybackStateObj.attributes.media_duration || 0;
     if (isPlaying) {
@@ -13126,9 +13162,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 ` : E}
                 <div class="details">
                   <div class="title">
-                    ${isPlaying ? title : ""}
+                    ${shouldShowDetails ? title : ""}
                   </div>
-                  ${isPlaying && artist ? x`
+                  ${shouldShowDetails && artist ? x`
                     <div
                       class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
                       @click=${() => {
@@ -13771,6 +13807,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
           this._idleTimeout = null;
           this.requestUpdate();
         }, this._idleTimeoutMs);
+      }
+
+      // If idle_timeout_ms is 0, ensure we're never idle
+      if (this._idleTimeoutMs === 0 && this._isIdle) {
+        this._isIdle = false;
+        this.requestUpdate();
       }
     }
   }
