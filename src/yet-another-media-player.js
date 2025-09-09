@@ -1,4 +1,3 @@
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { LitElement, html, css, nothing } from "lit";
 
 import { renderChip, renderGroupChip, createHoldToPinHandler, renderChipRow } from "./chip-row.js";
@@ -7,7 +6,7 @@ import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
-import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites } from "./search-sheet.js";
+import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites, isTrackFavorited } from "./search-sheet.js";
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js"; 
 
 import {
@@ -37,6 +36,7 @@ window.customCards.push({
 });
 
 class YetAnotherMediaPlayerCard extends LitElement {
+
   _handleChipPointerDown(e, idx) {
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerDown(e, idx);
@@ -61,6 +61,174 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
 
+  // Find button entities associated with a Music Assistant entity
+  _findAssociatedButtonEntities(maEntityId) {
+    if (!this.hass?.states || !maEntityId) return [];
+    
+    const buttonEntities = [];
+    const maEntity = this.hass.states[maEntityId];
+    if (!maEntity) return [];
+    
+    // Look for button entities that might be associated with this MA entity
+    // Common patterns: device_id matching, friendly_name similarity, or device_class
+    const maDeviceId = maEntity.attributes?.device_id;
+    const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
+    
+    // Search through all button entities
+    for (const [entityId, state] of Object.entries(this.hass.states)) {
+      if (entityId.startsWith('button.') && state.attributes) {
+        const buttonDeviceId = state.attributes.device_id;
+        const buttonFriendlyName = state.attributes.friendly_name || entityId;
+        
+        // Check if this button is associated with the same device
+        if (maDeviceId && buttonDeviceId === maDeviceId) {
+          buttonEntities.push({
+            entity_id: entityId,
+            friendly_name: buttonFriendlyName,
+            device_class: state.attributes.device_class,
+            reason: 'same_device'
+          });
+        }
+        // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
+        else if (buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) ||
+                 maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())) {
+          buttonEntities.push({
+            entity_id: entityId,
+            friendly_name: buttonFriendlyName,
+            device_class: state.attributes.device_class,
+            reason: 'name_similarity'
+          });
+        }
+      }
+    }
+    
+    return buttonEntities;
+  }
+
+  // Get the favorite button entity for the current Music Assistant entity
+  _getFavoriteButtonEntity() {
+    const obj = this.entityObjs[this._selectedIndex];
+    if (!obj) return null;
+    
+    // Get the active entity (the one currently playing/selected)
+    const activeEntityId = this._getActivePlaybackEntityId();
+    if (!activeEntityId) return null;
+    
+    // Check if the active entity is a Music Assistant entity
+    const activeState = this.hass?.states?.[activeEntityId];
+    if (!activeState || activeState.attributes?.app_id !== 'music_assistant') {
+      return null;
+    }
+    
+    // Active entity is Music Assistant, find its favorite button
+    const buttonEntities = this._findAssociatedButtonEntities(activeEntityId);
+    const favoriteButton = buttonEntities.find(btn => 
+      btn.friendly_name.toLowerCase().includes('favorite') ||
+      btn.friendly_name.toLowerCase().includes('like') ||
+      btn.device_class === 'favorite' ||
+      btn.entity_id.toLowerCase().includes('favorite')
+    );
+    return favoriteButton?.entity_id || null;
+  }
+
+  // Get the current Music Assistant state
+  _getMusicAssistantState() {
+    const obj = this.entityObjs[this._selectedIndex];
+    if (!obj) return null;
+    
+    // Get the active entity (the one currently playing/selected)
+    const activeEntityId = this._getActivePlaybackEntityId();
+    if (!activeEntityId) return null;
+    
+    // Check if the active entity is a Music Assistant entity
+    const activeState = this.hass?.states?.[activeEntityId];
+    if (!activeState || activeState.attributes?.app_id !== 'music_assistant') {
+      return null;
+    }
+    
+    return activeState;
+  }
+
+  // Check if the currently playing track is favorited
+  _isCurrentTrackFavorited() {
+    const obj = this.entityObjs[this._selectedIndex];
+    if (!obj) return false;
+    
+    // Get the Music Assistant state (either main entity or configured MA entity)
+    const maState = this._getMusicAssistantState();
+    if (!maState) return false;
+    
+    // Check favorite status
+    const mediaContentId = maState.attributes?.media_content_id;
+    if (!mediaContentId) return false;
+    
+    // Check if Music Assistant provides favorite status in entity attributes
+    if (typeof maState.attributes?.is_favorite === 'boolean') {
+      return maState.attributes.is_favorite;
+    }
+    
+    // Use cached result if available
+    if (this._favoriteStatusCache && this._favoriteStatusCache[mediaContentId] !== undefined) {
+      const cached = this._favoriteStatusCache[mediaContentId];
+      if (typeof cached === 'object' && cached.isFavorited !== undefined) {
+        return cached.isFavorited;
+      } else if (typeof cached === 'boolean') {
+        return cached;
+      }
+    }
+    
+    // Query Music Assistant for favorite status asynchronously (only if not already checking)
+    if (!this._checkingFavorites || this._checkingFavorites !== mediaContentId) {
+      this._checkingFavorites = mediaContentId;
+      this._checkFavoriteStatusAsync(mediaContentId);
+    }
+    
+    // Return false initially, will update when async check completes
+    return false;
+  }
+
+  // Asynchronously check favorite status and cache the result
+  async _checkFavoriteStatusAsync(mediaContentId) {
+    if (!mediaContentId || !this.hass) {
+      return;
+    }
+    
+    try {
+      // Get the current Music Assistant entity ID
+      const maState = this._getMusicAssistantState();
+      const entityId = maState?.entity_id;
+      
+      const trackName = maState.attributes?.media_title;
+      const artistName = maState.attributes?.media_artist;
+      
+      
+      const isFavorited = await isTrackFavorited(this.hass, mediaContentId, entityId, trackName, artistName);
+      
+      // Initialize cache if needed
+      if (!this._favoriteStatusCache) {
+        this._favoriteStatusCache = {};
+      }
+      
+      // Cache the result
+      this._favoriteStatusCache[mediaContentId] = {
+        isFavorited
+      };
+      
+      // Clear the checking flag
+      this._checkingFavorites = null;
+      
+      // Trigger a re-render to update the heart icon
+      this.requestUpdate();
+      
+    } catch (error) {
+      this._checkingFavorites = null;
+    }
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+  }
+
   // Scroll to first source option starting with the given letter
   _scrollToSourceLetter(letter) {
     // Find the options sheet (source list) in the shadow DOM
@@ -80,7 +248,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const row = this.renderRoot?.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
-    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f));
+    const showFavorite = !!this._getFavoriteButtonEntity();
+    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite);
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
@@ -124,6 +293,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._selectedIndex = 0;
     this._lastPlaying = null;
     this._manualSelect = false;
+    this._lastActiveEntityId = null;
     this._playTimestamps = {};
     this._showSourceMenu = false;
     this._shouldDropdownOpenUp = false;
@@ -172,14 +342,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Queue success message
     this._showQueueSuccessMessage = false;
 
-    // Collapse on load if nothing is playing (but respect linger state)
+    // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
         const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
-        // Don't go idle if there's an active linger
+        // Don't go idle if there's an active linger or if idle_timeout_ms is 0
         const hasActiveLinger = this._playbackLingerByIdx?.[this._selectedIndex] && 
                                this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
-        if (stateObj && stateObj.state !== "playing" && !hasActiveLinger) {
+        if (stateObj && stateObj.state !== "playing" && !hasActiveLinger && this._idleTimeoutMs > 0) {
           this._isIdle = true;
           this.requestUpdate();
         }
@@ -1115,6 +1285,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     this._selectedIndex = 0;
     this._lastPlaying = null;
+    this._lastActiveEntityId = null;
     // Set accent color
     
     if (this.config.match_theme === true) {
@@ -1333,11 +1504,60 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     if (maId === mainId) return mainId;
     
-    // Prioritize the entity that is actually playing
-    if (mainState?.state === "playing") return mainId;
-    if (maState?.state === "playing") return maId;
+    // Prioritize the Music Assistant entity when it's playing (for favorite button functionality)
+    if (maState?.state === "playing") {
+      // Clear paused entity tracking when MA entity starts playing (but not if we just paused it)
+      if (this._lastPlayingEntityIdByChip) {
+        const pauseTime = this._pauseTimestamps?.[this._selectedIndex];
+        const timeSincePause = pauseTime ? Date.now() - pauseTime : Infinity;
+        // Only clear if we didn't just pause this entity (within last 5 seconds)
+        if (timeSincePause > 5000) {
+        delete this._lastPlayingEntityIdByChip[this._selectedIndex];
+        if (this._pauseTimestamps) delete this._pauseTimestamps[this._selectedIndex];
+      }
+      }
+      // Track the last active entity when idle_timeout_ms is 0
+      if (this._idleTimeoutMs === 0) {
+        this._lastActiveEntityId = maId;
+      }
+      return maId;
+    }
+    if (mainState?.state === "playing") {
+      // Check if we have a paused entity that should take priority when idle_timeout_ms is 0
+      if (this._idleTimeoutMs === 0) {
+        const pausedEntity = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
+        if (pausedEntity && (pausedEntity === maId || pausedEntity === mainId)) {
+          return pausedEntity;
+        }
+      }
+      
+      // Clear paused entity tracking when main entity starts playing (and MA is not playing)
+      if (maState?.state !== "playing" && this._lastPlayingEntityIdByChip) {
+        delete this._lastPlayingEntityIdByChip[this._selectedIndex];
+      }
+      
+      // Only track main entity if MA entity is not also playing (to avoid conflicts)
+      if (this._idleTimeoutMs === 0 && maState?.state !== "playing") {
+        this._lastActiveEntityId = mainId;
+      }
+      return mainId;
+    }
     
-    // When neither is playing, prefer the main entity for consistency
+    // When neither is playing, check if we should maintain the last active entity
+    if (this._idleTimeoutMs === 0) {
+      // First check if we have a paused entity tracked for this chip
+      const pausedEntity = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
+      if (pausedEntity && (pausedEntity === maId || pausedEntity === mainId)) {
+        return pausedEntity;
+      }
+      
+      // Fallback to last active entity tracking
+      if (this._lastActiveEntityId && (this._lastActiveEntityId === maId || this._lastActiveEntityId === mainId)) {
+        return this._lastActiveEntityId;
+      }
+    }
+    
+    // Default to main entity for consistency
     return mainId;
   }
 
@@ -1733,6 +1953,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Select the tapped chip.
     this._selectedIndex = idx;
+    // Reset last active entity when switching chips
+    this._lastActiveEntityId = null;
 
     clearTimeout(this._manualSelectTimeout);
 
@@ -1887,6 +2109,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
           // When pausing, set the last playing entity to the one we just paused (per-chip)
           if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
           this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
+          // Track when we paused to prevent immediate clearing due to state delay
+          if (!this._pauseTimestamps) this._pauseTimestamps = {};
+          this._pauseTimestamps[this._selectedIndex] = Date.now();
           // Lock controls to this entity during the paused window
           this._controlFocusEntityId = targetEntity;
           // Optimistic toggle to reduce flicker
@@ -1895,10 +2120,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
           setTimeout(() => { this._optimisticPlayback = null; this.requestUpdate(); }, 1200);
         } else {
           this.hass.callService("media_player", "media_play", { entity_id: targetEntity });
-          // On resume, lock to the target entity immediately (per-chip)
-          if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
-          this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
-          // Maintain focus lock until an entity reports playing
+          // On resume, clear the paused entity tracking since we're now playing
+          if (this._lastPlayingEntityIdByChip) {
+            delete this._lastPlayingEntityIdByChip[this._selectedIndex];
+          }
+          if (this._pauseTimestamps) {
+            delete this._pauseTimestamps[this._selectedIndex];
+          }
+          // Lock to the target entity immediately (per-chip)
           this._controlFocusEntityId = targetEntity;
           // Optimistic toggle to reduce flicker
           this._optimisticPlayback = { entity_id: targetEntity, state: "playing", ts: Date.now() };
@@ -1953,6 +2182,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
           if (volEntityId && volEntityId !== obj.entity_id) {
             this.hass.callService("media_player", svc, { entity_id: volEntityId });
           }
+        }
+        break;
+      }
+      case "favorite": {
+        // Press the associated favorite button entity
+        const favoriteButtonEntity = this._getFavoriteButtonEntity();
+        if (favoriteButtonEntity) {
+          this.hass.callService("button", "press", { entity_id: favoriteButtonEntity });
+          
+          // Clear favorite status cache for current track to force re-check
+          const maState = this.hass?.states?.[targetEntity];
+          if (maState?.attributes?.media_content_id) {
+            if (this._favoriteStatusCache) {
+              delete this._favoriteStatusCache[maState.attributes.media_content_id];
+            }
+            // Clear the checking flag to allow immediate re-check
+            this._checkingFavorites = null;
+          }
+          
+          // Re-check favorite status after a short delay
+          setTimeout(() => {
+            if (maState?.attributes?.media_content_id) {
+              this._checkFavoriteStatusAsync(maState.attributes.media_content_id);
+            }
+          }, 1000);
         }
         break;
       }
@@ -2425,16 +2679,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const repeatActive = finalPlaybackStateObj.attributes.repeat && finalPlaybackStateObj.attributes.repeat !== "off";
 
       // Artwork and idle logic
-      const isPlaying = !this._isIdle && effState === "playing";
+      // When idle_timeout_ms=0, always show content regardless of idle state
+      const isPlaying = this._idleTimeoutMs === 0 ? (effState === "playing") : (!this._isIdle && effState === "playing");
       // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
       const mainState = this.currentStateObj;
       const mainArtwork = this._getArtworkUrl(mainState);
       const playbackArtwork = this._getArtworkUrl(playbackStateObj);
-      const isRealArtwork = !this._isIdle && isPlaying && (mainArtwork?.url || playbackArtwork?.url);
+      const isRealArtwork = this._idleTimeoutMs === 0 ? (isPlaying && (mainArtwork?.url || playbackArtwork?.url)) : (!this._isIdle && isPlaying && (mainArtwork?.url || playbackArtwork?.url));
       const art = isRealArtwork ? (mainArtwork?.url || playbackArtwork?.url) : null;
       // Details
-      const title = isPlaying ? ((finalPlaybackStateObj.attributes.media_title || mainState?.attributes?.media_title || "")) : "";
-      const artist = isPlaying
+      // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
+      const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
+      const title = shouldShowDetails ? ((finalPlaybackStateObj.attributes.media_title || mainState?.attributes?.media_title || "")) : "";
+      const artist = shouldShowDetails
         ? (
             finalPlaybackStateObj.attributes.media_artist ||
             finalPlaybackStateObj.attributes.media_series_title ||
@@ -2605,7 +2862,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 "
               ></div>
               ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
                 ${collapsed && artworkUrl ? html`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
@@ -2638,9 +2895,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 ` : nothing}
                 <div class="details">
                   <div class="title">
-                    ${isPlaying ? title : ""}
+                    ${shouldShowDetails ? title : ""}
                   </div>
-                  ${isPlaying && artist ? html`
+                  ${shouldShowDetails && artist ? html`
                     <div
                       class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
                       @click=${() => {
@@ -2684,7 +2941,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   shuffleActive,
                   repeatActive,
                   onControlClick: (action) => this._onControlClick(action),
-                  supportsFeature: (state, feature) => this._supportsFeature(state, feature)
+                  supportsFeature: (state, feature) => this._supportsFeature(state, feature),
+                  showFavorite: !!this._getFavoriteButtonEntity(),
+                  favoriteActive: this._isCurrentTrackFavorited()
                 })}
 
                 ${renderVolumeRow({
@@ -3312,6 +3571,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
             this._idleTimeout = null;
             this.requestUpdate();
           }, this._idleTimeoutMs);
+        }
+        
+        // If idle_timeout_ms is 0, ensure we're never idle
+        if (this._idleTimeoutMs === 0 && this._isIdle) {
+          this._isIdle = false;
+          this.requestUpdate();
         }
       }
     }
