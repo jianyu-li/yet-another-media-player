@@ -1522,6 +1522,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       return maId;
     }
+    
+    // If MA entity is paused and we recently paused it, prioritize it over main entity
+    if (maState?.state === "paused" && this._lastPlayingEntityIdByChip?.[this._selectedIndex] === maId) {
+      const pauseTime = this._pauseTimestamps?.[this._selectedIndex];
+      const timeSincePause = pauseTime ? Date.now() - pauseTime : Infinity;
+      // If we paused it within the last 30 seconds, prioritize the paused MA entity
+      if (timeSincePause < 30000) {
+        return maId;
+      }
+    }
     if (mainState?.state === "playing") {
       // Check if we have a paused entity that should take priority when idle_timeout_ms is 0
       if (this._idleTimeoutMs === 0) {
