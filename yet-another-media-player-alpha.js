@@ -9983,7 +9983,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               Entities*
             </div>
           </div>
-          <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
+          <yamp-sortable-alpha @item-moved=${e => this._onEntityMoved(e)}>
             <div class="sortable-container">
               ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
@@ -10036,7 +10036,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               `;
     })}
             </div>
-          </yamp-sortable>
+          </yamp-sortable-alpha>
         </div>
   
         <div class="form-row form-row-multi-column">
@@ -10241,7 +10241,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               Actions
             </div>
           </div>
-          <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
+          <yamp-sortable-alpha @item-moved=${e => this._onActionMoved(e)}>
             <div class="sortable-container">
               ${actions.map((act, idx) => x`
                 <div class="action-row-inner sortable-item">
@@ -10281,7 +10281,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                 </div>
               `)}
             </div>
-          </yamp-sortable>
+          </yamp-sortable-alpha>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
