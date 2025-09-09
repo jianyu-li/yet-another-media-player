@@ -7,7 +7,7 @@ import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
-import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites } from "./search-sheet.js";
+import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites, isTrackFavorited } from "./search-sheet.js";
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js"; 
 
 import {
@@ -61,6 +61,196 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
 
+  // Find button entities associated with a Music Assistant entity
+  _findAssociatedButtonEntities(maEntityId) {
+    if (!this.hass?.states || !maEntityId) return [];
+    
+    const buttonEntities = [];
+    const maEntity = this.hass.states[maEntityId];
+    if (!maEntity) return [];
+    
+    // Look for button entities that might be associated with this MA entity
+    // Common patterns: device_id matching, friendly_name similarity, or device_class
+    const maDeviceId = maEntity.attributes?.device_id;
+    const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
+    
+    // Search through all button entities
+    for (const [entityId, state] of Object.entries(this.hass.states)) {
+      if (entityId.startsWith('button.') && state.attributes) {
+        const buttonDeviceId = state.attributes.device_id;
+        const buttonFriendlyName = state.attributes.friendly_name || entityId;
+        
+        // Check if this button is associated with the same device
+        if (maDeviceId && buttonDeviceId === maDeviceId) {
+          buttonEntities.push({
+            entity_id: entityId,
+            friendly_name: buttonFriendlyName,
+            device_class: state.attributes.device_class,
+            reason: 'same_device'
+          });
+        }
+        // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
+        else if (buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) ||
+                 maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())) {
+          buttonEntities.push({
+            entity_id: entityId,
+            friendly_name: buttonFriendlyName,
+            device_class: state.attributes.device_class,
+            reason: 'name_similarity'
+          });
+        }
+      }
+    }
+    
+    return buttonEntities;
+  }
+
+  // Get the favorite button entity for the current Music Assistant entity
+  _getFavoriteButtonEntity() {
+    const obj = this.entityObjs[this._selectedIndex];
+    if (!obj) return null;
+    
+    // Check if the main entity is a Music Assistant entity
+    const mainEntityId = obj.entity_id;
+    const mainState = this.hass?.states?.[mainEntityId];
+    if (mainState?.attributes?.app_id === 'music_assistant') {
+      // Main entity is Music Assistant, find its favorite button
+      const buttonEntities = this._findAssociatedButtonEntities(mainEntityId);
+      const favoriteButton = buttonEntities.find(btn => 
+        btn.friendly_name.toLowerCase().includes('favorite') ||
+        btn.friendly_name.toLowerCase().includes('like') ||
+        btn.device_class === 'favorite' ||
+        btn.entity_id.toLowerCase().includes('favorite')
+      );
+      return favoriteButton?.entity_id || null;
+    }
+    
+    // Check if there's a configured music_assistant_entity
+    if (!obj.music_assistant_entity) return null;
+    
+    const maEntityId = this._resolveEntity(obj.music_assistant_entity, obj.entity_id, this._selectedIndex);
+    if (!maEntityId) return null;
+    
+    const maState = this.hass?.states?.[maEntityId];
+    if (!maState || maState.attributes?.app_id !== 'music_assistant') return null;
+    
+    // MA entity is Music Assistant, find its favorite button
+    const buttonEntities = this._findAssociatedButtonEntities(maEntityId);
+    const favoriteButton = buttonEntities.find(btn => 
+      btn.friendly_name.toLowerCase().includes('favorite') ||
+      btn.friendly_name.toLowerCase().includes('like') ||
+      btn.device_class === 'favorite' ||
+      btn.entity_id.toLowerCase().includes('favorite')
+    );
+    return favoriteButton?.entity_id || null;
+  }
+
+  // Get the current Music Assistant state
+  _getMusicAssistantState() {
+    const obj = this.entityObjs[this._selectedIndex];
+    if (!obj) return null;
+    
+    // Check if the main entity is a Music Assistant entity
+    const mainEntityId = obj.entity_id;
+    const mainState = this.hass?.states?.[mainEntityId];
+    if (mainState?.attributes?.app_id === 'music_assistant') {
+      return mainState;
+    }
+    
+    // Check if there's a configured music_assistant_entity
+    if (!obj.music_assistant_entity) return null;
+    
+    const maEntityId = this._resolveEntity(obj.music_assistant_entity, obj.entity_id, this._selectedIndex);
+    if (!maEntityId) return null;
+    
+    const maState = this.hass?.states?.[maEntityId];
+    if (!maState || maState.attributes?.app_id !== 'music_assistant') {
+      return null;
+    }
+    
+    return maState;
+  }
+
+  // Check if the currently playing track is favorited
+  _isCurrentTrackFavorited() {
+    const obj = this.entityObjs[this._selectedIndex];
+    if (!obj) return false;
+    
+    // Get the Music Assistant state (either main entity or configured MA entity)
+    const maState = this._getMusicAssistantState();
+    if (!maState) return false;
+    
+    // Check favorite status
+    const mediaContentId = maState.attributes?.media_content_id;
+    if (!mediaContentId) return false;
+    
+    // Check if Music Assistant provides favorite status in entity attributes
+    if (typeof maState.attributes?.is_favorite === 'boolean') {
+      return maState.attributes.is_favorite;
+    }
+    
+    // Use cached result if available
+    if (this._favoriteStatusCache && this._favoriteStatusCache[mediaContentId] !== undefined) {
+      const cached = this._favoriteStatusCache[mediaContentId];
+      if (typeof cached === 'object' && cached.isFavorited !== undefined) {
+        return cached.isFavorited;
+      } else if (typeof cached === 'boolean') {
+        return cached;
+      }
+    }
+    
+    // Query Music Assistant for favorite status asynchronously (only if not already checking)
+    if (!this._checkingFavorites || this._checkingFavorites !== mediaContentId) {
+      this._checkingFavorites = mediaContentId;
+      this._checkFavoriteStatusAsync(mediaContentId);
+    }
+    
+    // Return false initially, will update when async check completes
+    return false;
+  }
+
+  // Asynchronously check favorite status and cache the result
+  async _checkFavoriteStatusAsync(mediaContentId) {
+    if (!mediaContentId || !this.hass) {
+      return;
+    }
+    
+    try {
+      // Get the current Music Assistant entity ID
+      const maState = this._getMusicAssistantState();
+      const entityId = maState?.entity_id;
+      
+      const trackName = maState.attributes?.media_title;
+      const artistName = maState.attributes?.media_artist;
+      
+      
+      const isFavorited = await isTrackFavorited(this.hass, mediaContentId, entityId, trackName, artistName);
+      
+      // Initialize cache if needed
+      if (!this._favoriteStatusCache) {
+        this._favoriteStatusCache = {};
+      }
+      
+      // Cache the result
+      this._favoriteStatusCache[mediaContentId] = {
+        isFavorited
+      };
+      
+      // Clear the checking flag
+      this._checkingFavorites = null;
+      
+      // Trigger a re-render to update the heart icon
+      this.requestUpdate();
+      
+    } catch (error) {
+      this._checkingFavorites = null;
+    }
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+  }
+
   // Scroll to first source option starting with the given letter
   _scrollToSourceLetter(letter) {
     // Find the options sheet (source list) in the shadow DOM
@@ -80,7 +270,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const row = this.renderRoot?.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
-    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f));
+    const showFavorite = !!this._getFavoriteButtonEntity();
+    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite);
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
@@ -1956,6 +2147,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
         break;
       }
+      case "favorite": {
+        // Press the associated favorite button entity
+        const favoriteButtonEntity = this._getFavoriteButtonEntity();
+        if (favoriteButtonEntity) {
+          this.hass.callService("button", "press", { entity_id: favoriteButtonEntity });
+          
+          // Clear favorite status cache for current track to force re-check
+          const maState = this.hass?.states?.[targetEntity];
+          if (maState?.attributes?.media_content_id) {
+            if (this._favoriteStatusCache) {
+              delete this._favoriteStatusCache[maState.attributes.media_content_id];
+            }
+            // Clear the checking flag to allow immediate re-check
+            this._checkingFavorites = null;
+          }
+          
+          // Re-check favorite status after a short delay
+          setTimeout(() => {
+            if (maState?.attributes?.media_content_id) {
+              this._checkFavoriteStatusAsync(maState.attributes.media_content_id);
+            }
+          }, 1000);
+        }
+        break;
+      }
     }
   }
 
@@ -2687,7 +2903,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   shuffleActive,
                   repeatActive,
                   onControlClick: (action) => this._onControlClick(action),
-                  supportsFeature: (state, feature) => this._supportsFeature(state, feature)
+                  supportsFeature: (state, feature) => this._supportsFeature(state, feature),
+                  showFavorite: !!this._getFavoriteButtonEntity(),
+                  favoriteActive: this._isCurrentTrackFavorited()
                 })}
 
                 ${renderVolumeRow({
