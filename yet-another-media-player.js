@@ -10856,7 +10856,6 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
 }
 customElements.define("yet-another-media-player-editor-alpha", YetAnotherMediaPlayerEditor);
 
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player-alpha",
