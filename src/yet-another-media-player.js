@@ -293,6 +293,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._selectedIndex = 0;
     this._lastPlaying = null;
     this._manualSelect = false;
+    this._lastActiveEntityId = null;
     this._playTimestamps = {};
     this._showSourceMenu = false;
     this._shouldDropdownOpenUp = false;
@@ -1284,6 +1285,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     this._selectedIndex = 0;
     this._lastPlaying = null;
+    this._lastActiveEntityId = null;
     // Set accent color
     
     if (this.config.match_theme === true) {
@@ -1503,10 +1505,44 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (maId === mainId) return mainId;
     
     // Prioritize the Music Assistant entity when it's playing (for favorite button functionality)
-    if (maState?.state === "playing") return maId;
-    if (mainState?.state === "playing") return mainId;
+    if (maState?.state === "playing") {
+      // Track the last active entity when idle_timeout_ms is 0
+      if (this._idleTimeoutMs === 0) {
+        this._lastActiveEntityId = maId;
+      }
+      return maId;
+    }
+    if (mainState?.state === "playing") {
+      // Check if we have a paused entity that should take priority when idle_timeout_ms is 0
+      if (this._idleTimeoutMs === 0) {
+        const pausedEntity = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
+        if (pausedEntity && (pausedEntity === maId || pausedEntity === mainId)) {
+          return pausedEntity;
+        }
+      }
+      
+      // Only track main entity if MA entity is not also playing (to avoid conflicts)
+      if (this._idleTimeoutMs === 0 && maState?.state !== "playing") {
+        this._lastActiveEntityId = mainId;
+      }
+      return mainId;
+    }
     
-    // When neither is playing, prefer the main entity for consistency
+    // When neither is playing, check if we should maintain the last active entity
+    if (this._idleTimeoutMs === 0) {
+      // First check if we have a paused entity tracked for this chip
+      const pausedEntity = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
+      if (pausedEntity && (pausedEntity === maId || pausedEntity === mainId)) {
+        return pausedEntity;
+      }
+      
+      // Fallback to last active entity tracking
+      if (this._lastActiveEntityId && (this._lastActiveEntityId === maId || this._lastActiveEntityId === mainId)) {
+        return this._lastActiveEntityId;
+      }
+    }
+    
+    // Default to main entity for consistency
     return mainId;
   }
 
@@ -1902,6 +1938,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Select the tapped chip.
     this._selectedIndex = idx;
+    // Reset last active entity when switching chips
+    this._lastActiveEntityId = null;
 
     clearTimeout(this._manualSelectTimeout);
 
@@ -2064,10 +2102,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
           setTimeout(() => { this._optimisticPlayback = null; this.requestUpdate(); }, 1200);
         } else {
           this.hass.callService("media_player", "media_play", { entity_id: targetEntity });
-          // On resume, lock to the target entity immediately (per-chip)
-          if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
-          this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
-          // Maintain focus lock until an entity reports playing
+          // On resume, clear the paused entity tracking since we're now playing
+          if (this._lastPlayingEntityIdByChip) {
+            delete this._lastPlayingEntityIdByChip[this._selectedIndex];
+          }
+          // Lock to the target entity immediately (per-chip)
           this._controlFocusEntityId = targetEntity;
           // Optimistic toggle to reduce flicker
           this._optimisticPlayback = { entity_id: targetEntity, state: "playing", ts: Date.now() };
