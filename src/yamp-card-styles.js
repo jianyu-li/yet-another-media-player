@@ -592,6 +592,12 @@ export const yampCardStyles = css`
     padding: 4px 16px;
   }
 
+  /* Tighter spacing for collapsed mode with artwork */
+  .card-lower-content.collapsed.has-artwork .controls-row {
+    gap: 8px;
+    padding: 4px 12px 4px 16px;
+  }
+
   .button {
     background: none;
     border: none;
@@ -981,10 +987,10 @@ export const yampCardStyles = css`
   /* Collapsed artwork */
   .card-lower-content.collapsed .collapsed-artwork-container {
     position: absolute;
-    top: 10px;
-    right: 4px;
-    width: 80px;
-    height: calc(100% - 120px);
+    top: 16px;
+    right: 6px;
+    width: 110px;
+    height: calc(100% - 60px);
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
@@ -997,9 +1003,9 @@ export const yampCardStyles = css`
   }
 
   .card-lower-content.collapsed .collapsed-artwork {
-    width: 72px;
-    height: 72px;
-    border-radius: 10px;
+    width: 102px;
+    height: 102px;
+    border-radius: 16px;
     object-fit: cover;
     background: transparent;
     box-shadow: 0 1px 6px rgba(0,0,0,0.22);
@@ -1010,58 +1016,68 @@ export const yampCardStyles = css`
   }
 
   .card-lower-content.collapsed.has-artwork .controls-row {
-    max-width: calc(100% - 90px);
-    margin-right: 85px;
+    max-width: calc(100% - 120px) !important;
+    margin-right: 115px !important;
+    width: auto !important;
   }
 
   /* Medium screens */
   @media (max-width: 600px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 85px);
-      margin-right: 80px;
+      max-width: calc(100% - 115px) !important;
+      margin-right: 110px !important;
+      width: auto !important;
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 75px;
-      right: 3px;
+      width: 105px;
+      right: 4px;
+      top: 14px;
     }
 
     .card-lower-content.collapsed .collapsed-artwork {
-      width: 68px;
-      height: 68px;
+      width: 98px;
+      height: 98px;
     }
   }
 
   /* Small screens */
   @media (max-width: 420px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: 100%;
-      margin-right: 0;
+      max-width: calc(100% - 90px) !important;
+      margin-right: 85px !important;
+      width: auto !important;
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 60px;
-      height: 60px;
-      right: 2px;
+      width: 90px;
+      right: 3px;
+      top: 12px;
     }
 
     .card-lower-content.collapsed .collapsed-artwork {
-      width: 56px;
-      height: 56px;
+      width: 84px;
+      height: 84px;
     }
   }
 
   /* Very small screens */
   @media (max-width: 320px) {
+    .card-lower-content.collapsed.has-artwork .controls-row {
+      max-width: calc(100% - 80px) !important;
+      margin-right: 75px !important;
+      width: auto !important;
+    }
+
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 50px;
-      height: 50px;
-      right: 1px;
+      width: 80px;
+      right: 2px;
+      top: 10px;
     }
 
     .card-lower-content.collapsed .collapsed-artwork {
-      width: 46px;
-      height: 46px;
+      width: 74px;
+      height: 74px;
     }
   }
 

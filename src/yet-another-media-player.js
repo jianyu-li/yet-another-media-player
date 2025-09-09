@@ -110,32 +110,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const obj = this.entityObjs[this._selectedIndex];
     if (!obj) return null;
     
-    // Check if the main entity is a Music Assistant entity
-    const mainEntityId = obj.entity_id;
-    const mainState = this.hass?.states?.[mainEntityId];
-    if (mainState?.attributes?.app_id === 'music_assistant') {
-      // Main entity is Music Assistant, find its favorite button
-      const buttonEntities = this._findAssociatedButtonEntities(mainEntityId);
-      const favoriteButton = buttonEntities.find(btn => 
-        btn.friendly_name.toLowerCase().includes('favorite') ||
-        btn.friendly_name.toLowerCase().includes('like') ||
-        btn.device_class === 'favorite' ||
-        btn.entity_id.toLowerCase().includes('favorite')
-      );
-      return favoriteButton?.entity_id || null;
+    // Get the active entity (the one currently playing/selected)
+    const activeEntityId = this._getActivePlaybackEntityId();
+    if (!activeEntityId) return null;
+    
+    // Check if the active entity is a Music Assistant entity
+    const activeState = this.hass?.states?.[activeEntityId];
+    if (!activeState || activeState.attributes?.app_id !== 'music_assistant') {
+      return null;
     }
     
-    // Check if there's a configured music_assistant_entity
-    if (!obj.music_assistant_entity) return null;
-    
-    const maEntityId = this._resolveEntity(obj.music_assistant_entity, obj.entity_id, this._selectedIndex);
-    if (!maEntityId) return null;
-    
-    const maState = this.hass?.states?.[maEntityId];
-    if (!maState || maState.attributes?.app_id !== 'music_assistant') return null;
-    
-    // MA entity is Music Assistant, find its favorite button
-    const buttonEntities = this._findAssociatedButtonEntities(maEntityId);
+    // Active entity is Music Assistant, find its favorite button
+    const buttonEntities = this._findAssociatedButtonEntities(activeEntityId);
     const favoriteButton = buttonEntities.find(btn => 
       btn.friendly_name.toLowerCase().includes('favorite') ||
       btn.friendly_name.toLowerCase().includes('like') ||
@@ -150,25 +136,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const obj = this.entityObjs[this._selectedIndex];
     if (!obj) return null;
     
-    // Check if the main entity is a Music Assistant entity
-    const mainEntityId = obj.entity_id;
-    const mainState = this.hass?.states?.[mainEntityId];
-    if (mainState?.attributes?.app_id === 'music_assistant') {
-      return mainState;
-    }
+    // Get the active entity (the one currently playing/selected)
+    const activeEntityId = this._getActivePlaybackEntityId();
+    if (!activeEntityId) return null;
     
-    // Check if there's a configured music_assistant_entity
-    if (!obj.music_assistant_entity) return null;
-    
-    const maEntityId = this._resolveEntity(obj.music_assistant_entity, obj.entity_id, this._selectedIndex);
-    if (!maEntityId) return null;
-    
-    const maState = this.hass?.states?.[maEntityId];
-    if (!maState || maState.attributes?.app_id !== 'music_assistant') {
+    // Check if the active entity is a Music Assistant entity
+    const activeState = this.hass?.states?.[activeEntityId];
+    if (!activeState || activeState.attributes?.app_id !== 'music_assistant') {
       return null;
     }
     
-    return maState;
+    return activeState;
   }
 
   // Check if the currently playing track is favorited
@@ -1524,9 +1502,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     if (maId === mainId) return mainId;
     
-    // Prioritize the entity that is actually playing
-    if (mainState?.state === "playing") return mainId;
+    // Prioritize the Music Assistant entity when it's playing (for favorite button functionality)
     if (maState?.state === "playing") return maId;
+    if (mainState?.state === "playing") return mainId;
     
     // When neither is playing, prefer the main entity for consistency
     return mainId;
@@ -2824,7 +2802,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 "
               ></div>
               ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
                 ${collapsed && artworkUrl ? html`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
