@@ -12318,6 +12318,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // Prioritize the Music Assistant entity when it's playing (for favorite button functionality)
     if ((maState === null || maState === void 0 ? void 0 : maState.state) === "playing") {
+      // Clear paused entity tracking when MA entity starts playing (but not if we just paused it)
+      if (this._lastPlayingEntityIdByChip) {
+        var _this$_pauseTimestamp;
+        const pauseTime = (_this$_pauseTimestamp = this._pauseTimestamps) === null || _this$_pauseTimestamp === void 0 ? void 0 : _this$_pauseTimestamp[this._selectedIndex];
+        const timeSincePause = pauseTime ? Date.now() - pauseTime : Infinity;
+        // Only clear if we didn't just pause this entity (within last 5 seconds)
+        if (timeSincePause > 5000) {
+          delete this._lastPlayingEntityIdByChip[this._selectedIndex];
+          if (this._pauseTimestamps) delete this._pauseTimestamps[this._selectedIndex];
+        }
+      }
       // Track the last active entity when idle_timeout_ms is 0
       if (this._idleTimeoutMs === 0) {
         this._lastActiveEntityId = maId;
@@ -12332,6 +12343,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
         if (pausedEntity && (pausedEntity === maId || pausedEntity === mainId)) {
           return pausedEntity;
         }
+      }
+
+      // Clear paused entity tracking when main entity starts playing (and MA is not playing)
+      if ((maState === null || maState === void 0 ? void 0 : maState.state) !== "playing" && this._lastPlayingEntityIdByChip) {
+        delete this._lastPlayingEntityIdByChip[this._selectedIndex];
       }
 
       // Only track main entity if MA entity is not also playing (to avoid conflicts)
@@ -12853,6 +12869,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
           // When pausing, set the last playing entity to the one we just paused (per-chip)
           if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
           this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
+          // Track when we paused to prevent immediate clearing due to state delay
+          if (!this._pauseTimestamps) this._pauseTimestamps = {};
+          this._pauseTimestamps[this._selectedIndex] = Date.now();
           // Lock controls to this entity during the paused window
           this._controlFocusEntityId = targetEntity;
           // Optimistic toggle to reduce flicker
@@ -12873,6 +12892,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
           // On resume, clear the paused entity tracking since we're now playing
           if (this._lastPlayingEntityIdByChip) {
             delete this._lastPlayingEntityIdByChip[this._selectedIndex];
+          }
+          if (this._pauseTimestamps) {
+            delete this._pauseTimestamps[this._selectedIndex];
           }
           // Lock to the target entity immediately (per-chip)
           this._controlFocusEntityId = targetEntity;
