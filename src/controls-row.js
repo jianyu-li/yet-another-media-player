@@ -8,6 +8,8 @@ export function renderControlsRow({
   repeatActive,
   onControlClick,
   supportsFeature,
+  showFavorite,
+  favoriteActive,
 }) {
   if (!stateObj) return nothing;
   
@@ -59,6 +61,11 @@ export function renderControlsRow({
           }></ha-icon>
         </button>
       ` : nothing}
+      ${showFavorite ? html`
+        <button class="button${favoriteActive ? ' active' : ''}" @click=${() => onControlClick("favorite")} title="Favorite">
+          <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
+        </button>
+      ` : nothing}
       ${
         (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON))
           ? html`
@@ -77,7 +84,7 @@ export function renderControlsRow({
 }
 
 // Export a small helper used by the card for layout decisions
-export function countMainControls(stateObj, supportsFeature) {
+export function countMainControls(stateObj, supportsFeature, showFavorite = false) {
   const SUPPORT_PREVIOUS_TRACK = 16;
   const SUPPORT_NEXT_TRACK = 32;
   const SUPPORT_SHUFFLE = 32768;
@@ -91,6 +98,7 @@ export function countMainControls(stateObj, supportsFeature) {
   if (supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
   if (supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
   if (supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
+  if (showFavorite) count++; // favorite button
   if (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
   return count;
 }
