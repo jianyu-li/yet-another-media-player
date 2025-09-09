@@ -391,6 +391,139 @@ export function playSearchedMedia(hass, entityId, item) {
   });
 }
 
+// Check if a track is favorited in Music Assistant
+export async function isTrackFavorited(hass, mediaContentId, entityId = null, trackName = null, artistName = null) {
+  if (!mediaContentId) {
+    return false;
+  }
+
+  try {
+    // Get Music Assistant config entry ID
+    const entries = await hass.callApi("GET", "config/config_entries/entry");
+    const maEntries = entries.filter(entry => entry.domain === "music_assistant");
+    const entry = maEntries.find(entry => entry.state === "loaded");
+    
+    if (!entry) {
+      return false;
+    }
+
+    const configEntryId = entry.entry_id;
+
+    // Use the provided entityId or try to find a Music Assistant entity
+    let targetEntityId = entityId;
+    if (!targetEntityId) {
+      // Try to find a Music Assistant entity
+      const states = Object.values(hass.states);
+      const maEntity = states.find(state => 
+        state.attributes?.app_id === 'music_assistant' && 
+        state.entity_id.startsWith('media_player.')
+      );
+      if (maEntity) {
+        targetEntityId = maEntity.entity_id;
+      } else {
+        return false;
+      }
+    }
+
+    // First try: Direct MA search by title/artist and inspect item's own favorite flag
+    if (trackName || artistName) {
+      try {
+        const serviceData = {
+          name: trackName || artistName,
+          config_entry_id: configEntryId,
+          limit: 20,
+          media_type: 'track',
+        };
+        if (artistName) {
+          serviceData.artist = artistName;
+        }
+        const searchMsg = {
+          type: 'call_service',
+          domain: 'music_assistant',
+          service: 'search',
+          service_data: serviceData,
+          return_response: true,
+        };
+        const searchRes = await hass.connection.sendMessagePromise(searchMsg);
+        const searchResponse = searchRes?.response;
+        let searchItems = [];
+        if (Array.isArray(searchResponse)) {
+          searchItems = searchResponse;
+        } else if (searchResponse && typeof searchResponse === 'object') {
+          Object.values(searchResponse).forEach((val) => {
+            if (Array.isArray(val)) {
+              searchItems.push(...val);
+            }
+          });
+        }
+        if (searchItems.length) {
+          const idPart = (mediaContentId.split('/').pop() || '').trim();
+          const byUri = searchItems.find((it) => it?.uri === mediaContentId);
+          const byId = !byUri && /^\d+$/.test(idPart)
+            ? searchItems.find((it) => typeof it?.uri === 'string' && it.uri.endsWith(`/${idPart}`))
+            : null;
+          const foundItem = byUri || byId || null;
+          if (foundItem && typeof foundItem.favorite === 'boolean') {
+            return !!foundItem.favorite;
+          }
+        }
+      } catch (e) {
+        // Continue to next strategies
+      }
+
+      // Second try: Precise search with track name only (faster and simpler)
+      if (trackName) {
+        try {
+          const message = {
+            type: "call_service",
+            domain: "music_assistant",
+            service: "get_library",
+            service_data: {
+              config_entry_id: configEntryId,
+              media_type: "track",
+              favorite: true,
+              search: trackName.trim(),
+              limit: 20, // Back to 20 results since we're less specific
+            },
+            return_response: true,
+          };
+          const response = await hass.connection.sendMessagePromise(message);
+          const favoriteTracks = response?.response?.items || [];
+          if (favoriteTracks.some(track => track.uri === mediaContentId)) {
+            return true;
+          }
+        } catch (e) {
+          // Continue to fallback
+        }
+      }
+    }
+
+    // Fallback: Just get first 100 favorites (much faster than pagination)
+    try {
+      const message = {
+        type: "call_service",
+        domain: "music_assistant",
+        service: "get_library",
+        service_data: {
+          config_entry_id: configEntryId,
+          media_type: "track",
+          favorite: true,
+          limit: 100, // Just check first 100 favorites
+        },
+        return_response: true,
+      };
+      const response = await hass.connection.sendMessagePromise(message);
+      const favoriteTracks = response?.response?.items || [];
+      return favoriteTracks.some(t => t.uri === mediaContentId);
+    } catch (getLibraryError) {
+      // Fallback to false if get_library fails
+    }
+    return false;
+  } catch (error) {
+    return false;
+  }
+}
+
 // Get playlist tracks - similar to how the sonos card gets queue contents
 export async function getPlaylistTracks(hass, entityId, playlistId) {
   try {
