@@ -58,7 +58,8 @@ Below you will find a list of all configuration options.
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing                                          |
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
-| `idle_image`               | image/camera | No           | —           | Background image when player is idle                                                            |
+| `idle_image`               | image/camera/url | No           | —           | Background image when player is idle (supports local files, cameras, or URLs)                   |
+| `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |
 |                                                                                                 |
 | **Entity Options**         |              |              |             |                                                                                                 |
@@ -84,6 +85,8 @@ Player entities can be grouped together for supported entities. Access the hambu
 
 # Search
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
+- **Favorites Filter**: Toggle the favorites button to show only favorited tracks
+- **Enqueue**: Use the enqueue button (playlist icon) to add tracks to your queue
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
 - Bonus Bonus Tip: On mobile, swipe left or right to rotate through the media type to quickly filter results.
 ![preview Image Search](/preview/search.png)
@@ -129,6 +132,7 @@ collapse_on_idle: true
 always_collapsed: false
 alternate_progress_bar: false
 idle_image: camera.family_slideshow
+idle_timeout_ms: 30000
   ```
 
 ### Expand on Search Example
@@ -171,6 +175,8 @@ You can associate a Music Assistant entity with any media player to enable searc
 
 This is also particularly useful for Universal Media Player (UMP) setups where you want physical control (amp power, source switching) through the main entity while using Music Assistant for advanced media features. When the card is actively using the music assistant entity, the chip will have an indicator outline.
 
+**Favorite Button**: When using a Music Assistant entity, a favorite button (heart icon) will appear in the controls, allowing you to favorite the currently playing track. The button will only appear if you have a button entity configured with "favorite" or "like" in its name (e.g., `button.favorite_track` or `button.like_song`).
+
 ### Basic Example
 ```yaml
 type: custom:yet-another-media-player
@@ -203,6 +209,8 @@ You can use a separate `volume_entity` for volume display and control. This can 
 ### Follow Active Entity
 
 You can also enable `follow_active_volume` to make the volume entity automatically follow the active playback entity. This is useful when you want volume controls to always target the entity that is currently playing, regardless of which chip is selected.
+
+**Note**: When `follow_active_volume` is enabled, the sync power toggle will be automatically hidden in the config editor since it's not applicable in this mode.
 
 ```yaml
 type: custom:yet-another-media-player
