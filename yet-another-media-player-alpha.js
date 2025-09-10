@@ -9983,7 +9983,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               Entities*
             </div>
           </div>
-          <yamp-sortable-alpha @item-moved=${e => this._onEntityMoved(e)}>
+          <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
             <div class="sortable-container">
               ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
@@ -10036,7 +10036,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               `;
     })}
             </div>
-          </yamp-sortable-alpha>
+          </yamp-sortable>
         </div>
   
         <div class="form-row form-row-multi-column">
@@ -10241,7 +10241,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               Actions
             </div>
           </div>
-          <yamp-sortable-alpha @item-moved=${e => this._onActionMoved(e)}>
+          <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
             <div class="sortable-container">
               ${actions.map((act, idx) => x`
                 <div class="action-row-inner sortable-item">
@@ -10281,7 +10281,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                 </div>
               `)}
             </div>
-          </yamp-sortable-alpha>
+          </yamp-sortable>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
@@ -13086,23 +13086,35 @@ class YetAnotherMediaPlayerCard extends i$1 {
               entity_id: favoriteButtonEntity
             });
 
-            // Clear favorite status cache for current track to force re-check
+            // Immediately mark as favorited when button is pressed
             const maState = (_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 ? void 0 : _this$hass16[targetEntity];
             if (maState !== null && maState !== void 0 && (_maState$attributes5 = maState.attributes) !== null && _maState$attributes5 !== void 0 && _maState$attributes5.media_content_id) {
-              if (this._favoriteStatusCache) {
-                delete this._favoriteStatusCache[maState.attributes.media_content_id];
+              // Initialize cache if needed
+              if (!this._favoriteStatusCache) {
+                this._favoriteStatusCache = {};
               }
-              // Clear the checking flag to allow immediate re-check
-              this._checkingFavorites = null;
-            }
 
-            // Re-check favorite status after a delay to allow Music Assistant to update
-            setTimeout(() => {
-              var _maState$attributes6;
-              if (maState !== null && maState !== void 0 && (_maState$attributes6 = maState.attributes) !== null && _maState$attributes6 !== void 0 && _maState$attributes6.media_content_id) {
-                this._checkFavoriteStatusAsync(maState.attributes.media_content_id);
+              // Immediately set as favorited
+              this._favoriteStatusCache[maState.attributes.media_content_id] = {
+                isFavorited: true
+              };
+
+              // Clear the checking flag
+              this._checkingFavorites = null;
+
+              // Clear search results cache to ensure favorites filter reflects changes
+              if (this._searchResultsByType) {
+                // Clear favorites-related cache entries
+                Object.keys(this._searchResultsByType).forEach(key => {
+                  if (key.includes('_favorites') || key === 'favorites') {
+                    delete this._searchResultsByType[key];
+                  }
+                });
               }
-            }, 3000);
+
+              // Trigger immediate re-render to update UI
+              this.requestUpdate();
+            }
           }
           break;
         }

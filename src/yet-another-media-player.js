@@ -2282,22 +2282,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (favoriteButtonEntity) {
           this.hass.callService("button", "press", { entity_id: favoriteButtonEntity });
           
-          // Clear favorite status cache for current track to force re-check
+          // Immediately mark as favorited when button is pressed
           const maState = this.hass?.states?.[targetEntity];
           if (maState?.attributes?.media_content_id) {
-            if (this._favoriteStatusCache) {
-              delete this._favoriteStatusCache[maState.attributes.media_content_id];
+            // Initialize cache if needed
+            if (!this._favoriteStatusCache) {
+              this._favoriteStatusCache = {};
             }
-            // Clear the checking flag to allow immediate re-check
+            
+            // Immediately set as favorited
+            this._favoriteStatusCache[maState.attributes.media_content_id] = {
+              isFavorited: true
+            };
+            
+            // Clear the checking flag
             this._checkingFavorites = null;
-          }
-          
-          // Re-check favorite status after a delay to allow Music Assistant to update
-          setTimeout(() => {
-            if (maState?.attributes?.media_content_id) {
-              this._checkFavoriteStatusAsync(maState.attributes.media_content_id);
+            
+            // Clear search results cache to ensure favorites filter reflects changes
+            if (this._searchResultsByType) {
+              // Clear favorites-related cache entries
+              Object.keys(this._searchResultsByType).forEach(key => {
+                if (key.includes('_favorites') || key === 'favorites') {
+                  delete this._searchResultsByType[key];
+                }
+              });
             }
-          }, 3000);
+            
+            // Trigger immediate re-render to update UI
+            this.requestUpdate();
+          }
         }
         break;
       }
