@@ -1160,6 +1160,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.dispatchEvent(new Event("iron-resize", { bubbles: true, composed: true }));
   }
 
+  // Get style for collapsed artwork based on mobile and control count
+  _getCollapsedArtworkStyle() {
+    if (this._alwaysCollapsed) {
+      const showFavorite = !!this._getFavoriteButtonEntity();
+      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite);
+      if (controls > 6) {
+        // Check if we're on a mobile screen (width <= 768px is typical mobile breakpoint)
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+          // Make artwork smaller on mobile when there are many controls
+          return "width: 60px; height: 60px; object-fit: cover; border-radius: 8px;";
+        }
+      }
+    }
+    return ""; // Default style (no additional styling)
+  }
+
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
     if (!state || !state.attributes) return null;
@@ -1463,8 +1480,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (lastPlayingForChip === maId) return maId;
     if (lastPlayingForChip === mainId) return mainId;
     
-    // Default to main entity for consistency
-    return mainId;
+    // Default to Music Assistant entity if configured, otherwise main entity
+    if (maId && maId !== mainId) {
+      return maId;
+    } else {
+      return mainId;
+    }
   }
 
   // Legacy methods for backward compatibility
@@ -1502,6 +1523,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const mainState = mainId ? this.hass?.states?.[mainId] : null;
     const maState = maId ? this.hass?.states?.[maId] : null;
     
+    return this._getActivePlaybackEntityIdInternal(mainId, maId, mainState, maState);
+  }
+
+  _getActivePlaybackEntityIdInternal(mainId, maId, mainState, maState) {
+    
     if (maId === mainId) return mainId;
     
     // Prioritize the Music Assistant entity when it's playing (for favorite button functionality)
@@ -1520,24 +1546,52 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this._idleTimeoutMs === 0) {
         this._lastActiveEntityId = maId;
       }
+      // Always track the currently playing entity as the last active entity
+      this._lastActiveEntityId = maId;
       return maId;
     }
     
     // If MA entity is paused and we recently paused it, prioritize it over main entity
     if (maState?.state === "paused" && this._lastPlayingEntityIdByChip?.[this._selectedIndex] === maId) {
-      const pauseTime = this._pauseTimestamps?.[this._selectedIndex];
-      const timeSincePause = pauseTime ? Date.now() - pauseTime : Infinity;
-      // If we paused it within the last 30 seconds, prioritize the paused MA entity
-      if (timeSincePause < 30000) {
+      // Track this as the last active entity and always prioritize it
+      this._lastActiveEntityId = maId;
+      return maId;
+    }
+    
+    // If MA entity is paused (regardless of tracking), prioritize it over main entity that's playing
+    if (maState?.state === "paused" && mainState?.state === "playing") {
+      // Track this as the last active entity
+      this._lastActiveEntityId = maId;
+      return maId;
+    }
+    
+    // When card is idle, don't switch entities based on playing state - stay on last active entity
+    if (this._isIdle) {
+      // Return the last active entity if available, otherwise default to MA entity
+      const lastActiveEntity = this._lastActiveEntityId || this._lastPlayingEntityIdByChip?.[this._selectedIndex];
+      if (lastActiveEntity && (lastActiveEntity === maId || lastActiveEntity === mainId)) {
+        return lastActiveEntity;
+      }
+      // Default to MA entity if configured when idle
+      if (maId && maId !== mainId) {
         return maId;
       }
+      return mainId;
     }
+    
     if (mainState?.state === "playing") {
-      // Check if we have a paused entity that should take priority when idle_timeout_ms is 0
-      if (this._idleTimeoutMs === 0) {
-        const pausedEntity = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
-        if (pausedEntity && (pausedEntity === maId || pausedEntity === mainId)) {
-          return pausedEntity;
+      // Check if we have a paused entity that should take priority (regardless of idle_timeout_ms)
+      const pausedEntity = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
+      if (pausedEntity && (pausedEntity === maId || pausedEntity === mainId)) {
+        return pausedEntity;
+      }
+      
+      // Check if we have an active linger that should take priority
+      const activeLinger = this._playbackLingerByIdx?.[this._selectedIndex];
+      if (activeLinger && activeLinger.until > Date.now()) {
+        const lingerEntityId = activeLinger.entityId;
+        if (lingerEntityId && (lingerEntityId === maId || lingerEntityId === mainId)) {
+          return lingerEntityId;
         }
       }
       
@@ -1550,6 +1604,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this._idleTimeoutMs === 0 && maState?.state !== "playing") {
         this._lastActiveEntityId = mainId;
       }
+      // Always track the currently playing entity as the last active entity
+      this._lastActiveEntityId = mainId;
       return mainId;
     }
     
@@ -1565,10 +1621,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this._lastActiveEntityId && (this._lastActiveEntityId === maId || this._lastActiveEntityId === mainId)) {
         return this._lastActiveEntityId;
       }
+    } else {
+      // When idle_timeout_ms > 0, maintain the most recently active entity during idle timeout
+      // This prevents transitions back to main entity that cause idle timeout issues
+      const pausedEntity = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
+      if (pausedEntity && (pausedEntity === maId || pausedEntity === mainId)) {
+        return pausedEntity;
+      }
+      
+      // Fallback to last active entity tracking
+      if (this._lastActiveEntityId && (this._lastActiveEntityId === maId || this._lastActiveEntityId === mainId)) {
+        return this._lastActiveEntityId;
+      }
     }
     
-    // Default to main entity for consistency
-    return mainId;
+    // Default to Music Assistant entity if configured, otherwise main entity
+    if (maId && maId !== mainId) {
+      return maId;
+    } else {
+      return mainId;
+    }
   }
 
   // Get the active playback entity for a specific entity index (for follow_active_volume)
@@ -1719,7 +1791,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   get currentActivePlaybackEntityId() {
-    return this._getActivePlaybackEntityId();
+    // Cache the result to prevent continuous re-calling during renders
+    // Only recalculate if the cache is invalid or if key state has changed
+    const cacheKey = `${this._selectedIndex}-${this.hass?.states?.[this.currentEntityId]?.state}-${this.hass?.states?.[this._getSearchEntityId(this._selectedIndex)]?.state}`;
+    
+    if (this._cachedActivePlaybackEntityId === undefined || this._cachedActivePlaybackEntityKey !== cacheKey) {
+      this._cachedActivePlaybackEntityId = this._getActivePlaybackEntityId();
+      this._cachedActivePlaybackEntityKey = cacheKey;
+    }
+    return this._cachedActivePlaybackEntityId;
   }
 
   get currentActivePlaybackStateObj() {
@@ -1734,6 +1814,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   updated(changedProps) {
     if (this.hass && this.entityIds) {
+      
       // Update timestamps for playing entities
       this.entityIds.forEach((id, idx) => {
         const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
@@ -2211,12 +2292,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
             this._checkingFavorites = null;
           }
           
-          // Re-check favorite status after a short delay
+          // Re-check favorite status after a delay to allow Music Assistant to update
           setTimeout(() => {
             if (maState?.attributes?.media_content_id) {
               this._checkFavoriteStatusAsync(maState.attributes.media_content_id);
             }
-          }, 1000);
+          }, 3000);
         }
         break;
       }
@@ -2624,11 +2705,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const idx = this._selectedIndex;
         
 
-      // If MA just transitioned from playing -> not playing, start a linger window (30s)
+      // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
       if (prevMa === "playing" && this._lastMaState !== "playing") {
         this._playbackLingerByIdx[idx] = {
           entityId: actualResolvedMaId,
-          until: Date.now() + 30000,
+          until: Date.now() + 86400000, // 24 hours - effectively permanent
         };
         
       }
@@ -2643,7 +2724,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
           this._playbackLingerByIdx[idx] = {
             entityId: lingerEntityId, // Use cached MA entity or last controlled entity
-            until: Date.now() + 30000,
+            until: Date.now() + 86400000, // 24 hours - effectively permanent
           };
         }
               // If MA resumed playing, clear linger
@@ -2751,6 +2832,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const artwork = playbackArtwork || mainArtwork;
         artworkUrl = artwork?.url || null;
         artworkSizePercentage = artwork?.sizePercentage;
+        
       }
 
       // Dominant color extraction for collapsed artwork
@@ -2763,7 +2845,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       return html`
-        <ha-card class="yamp-card" style="position:relative;">
+        <ha-card class="yamp-card">
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
@@ -2864,7 +2946,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         : "none"
                   };
                   min-height: ${collapsed ? (hideControlsNow ? "120px" : "0px") : "320px"};
-                  background-size: ${artworkSizePercentage ? `${artworkSizePercentage}%` : 'cover'};
+                  background-size: cover;
                   background-position: top center;
                   background-repeat: no-repeat;
                   filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
@@ -2876,7 +2958,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 ${collapsed && artworkUrl ? html`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
-                    <img class="collapsed-artwork" src="${artworkUrl}" />
+                    <img class="collapsed-artwork" src="${artworkUrl}" 
+                         style="${this._getCollapsedArtworkStyle()}" />
                   </div>
                 ` : nothing}
                 ${!collapsed
@@ -3555,12 +3638,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     
     _updateIdleState() {
-      // Check if ANY relevant entity (main or MA) is playing
-      const mainState = this.currentStateObj;
-      // Use actual resolved MA entity for state detection (can be unconfigured)
-      const actualMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-      const actualMaState = actualMaId ? this.hass?.states?.[actualMaId] : null;
-      const isAnyPlaying = (mainState?.state === "playing") || (actualMaState?.state === "playing");
+      // Check if the active playback entity is playing (not just main entity)
+      const activePlaybackEntityId = this._getActivePlaybackEntityId();
+      const activePlaybackState = activePlaybackEntityId ? this.hass?.states?.[activePlaybackEntityId] : null;
+      const isAnyPlaying = activePlaybackState?.state === "playing";
       
       if (isAnyPlaying) {
         // Became active, clear timer and set not idle
@@ -3572,10 +3653,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       } else {
         // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
-        // Also check if there's an active linger - don't go idle if there's a linger
-        const hasActiveLinger = this._playbackLingerByIdx?.[this._selectedIndex] && 
-                               this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
-        if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0 && !hasActiveLinger) {
+        // Don't check for linger here - linger should not prevent idle timeout
+        if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
           this._idleTimeout = setTimeout(() => {
             this._isIdle = true;
             this._idleTimeout = null;
