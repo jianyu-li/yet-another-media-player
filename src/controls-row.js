@@ -15,7 +15,8 @@ export function renderControlsRow({
   if (!stateObj) return nothing;
 
   // NOTE: If any new controls are added or removed here, the dropdown options 
-  // in src/yamp-editor.js must also be updated to match.
+  // in src/yamp-editor.js must also be updated to match, and the README.md
+  // documentation in the "Available Control Names" section should be updated.
   
 
 
