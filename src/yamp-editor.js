@@ -724,8 +724,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
-        
-
 <div class="form-row form-row-multi-column">
   <div>
     <ha-switch
@@ -867,8 +865,6 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
                 </div>
               `}
         ` : nothing}
-
-        
 
         ${entity?.volume_entity && entity.volume_entity !== entity.entity_id && !(entity?.follow_active_volume ?? false)
 
