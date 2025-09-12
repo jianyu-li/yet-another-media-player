@@ -85,7 +85,7 @@ export function renderControlsRow({
 }
 
 // Export a small helper used by the card for layout decisions
-export function countMainControls(stateObj, supportsFeature, showFavorite = false, hiddenControls = {}) {
+export function countMainControls(stateObj, supportsFeature, showFavorite = false, hiddenControls = {}, showStop = false) {
   const SUPPORT_PREVIOUS_TRACK = 16;
   const SUPPORT_NEXT_TRACK = 32;
   const SUPPORT_SHUFFLE = 32768;
@@ -96,6 +96,7 @@ export function countMainControls(stateObj, supportsFeature, showFavorite = fals
   let count = 0;
   if (!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
   if (!hiddenControls.play_pause) count++; // play/pause button always present if row exists
+  if (!hiddenControls.stop && showStop) count++;
   if (!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
   if (!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
   if (!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
