@@ -1064,7 +1064,8 @@ function renderControlsRow(_ref) {
     onControlClick,
     supportsFeature,
     showFavorite,
-    favoriteActive
+    favoriteActive,
+    hiddenControls = {}
   } = _ref;
   if (!stateObj) return E;
   const SUPPORT_PAUSE = 1;
@@ -1077,42 +1078,42 @@ function renderControlsRow(_ref) {
   const SUPPORT_PLAY = 16384;
   return x`
     <div class="controls-row">
-      ${supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
+      ${!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
         <button class="button" @click=${() => onControlClick("prev")} title="Previous">
           <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
         </button>
       ` : E}
-      ${supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY) ? x`
+      ${!hiddenControls.play_pause && (supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY)) ? x`
         <button class="button" @click=${() => onControlClick("play_pause")} title="Play/Pause">
           <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
         </button>
       ` : E}
-      ${showStop ? x`
+      ${!hiddenControls.stop && showStop ? x`
         <button class="button" @click=${() => onControlClick("stop")} title="Stop">
           <ha-icon .icon=${"mdi:stop"}></ha-icon>
         </button>
       ` : E}
-      ${supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
+      ${!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
         <button class="button" @click=${() => onControlClick("next")} title="Next">
           <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
         </button>
       ` : E}
-      ${supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
+      ${!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
         <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="Shuffle">
           <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
         </button>
       ` : E}
-      ${supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
+      ${!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
         <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
           <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
         </button>
       ` : E}
-      ${showFavorite ? x`
+      ${!hiddenControls.favorite && showFavorite ? x`
         <button class="button${favoriteActive ? ' active' : ''}" @click=${() => onControlClick("favorite")} title="Favorite">
           <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
         </button>
       ` : E}
-      ${supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON) ? x`
+      ${!hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON)) ? x`
             <button
               class="button${stateObj.state !== "off" ? " active" : ""}"
               @click=${() => onControlClick("power")}
@@ -1128,6 +1129,7 @@ function renderControlsRow(_ref) {
 // Export a small helper used by the card for layout decisions
 function countMainControls(stateObj, supportsFeature) {
   let showFavorite = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  let hiddenControls = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
   const SUPPORT_PREVIOUS_TRACK = 16;
   const SUPPORT_NEXT_TRACK = 32;
   const SUPPORT_SHUFFLE = 32768;
@@ -1135,13 +1137,13 @@ function countMainControls(stateObj, supportsFeature) {
   const SUPPORT_TURN_ON = 128;
   const SUPPORT_TURN_OFF = 256;
   let count = 0;
-  if (supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
-  count++; // play/pause button always present if row exists
-  if (supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
-  if (supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
-  if (supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
-  if (showFavorite) count++; // favorite button
-  if (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
+  if (!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
+  if (!hiddenControls.play_pause) count++; // play/pause button always present if row exists
+  if (!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
+  if (!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
+  if (!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
+  if (!hiddenControls.favorite && showFavorite) count++; // favorite button
+  if (!hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON))) count++;
   return count;
 }
 
@@ -10111,6 +10113,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
           ></ha-icon>
         </div>
+
    
         <div class="form-row">
           <ha-selector
@@ -10466,6 +10469,47 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
                 </div>
               `}
         ` : E}
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        multiple: true,
+        options: [{
+          value: "previous",
+          label: "Previous Track"
+        }, {
+          value: "play_pause",
+          label: "Play/Pause"
+        }, {
+          value: "stop",
+          label: "Stop"
+        }, {
+          value: "next",
+          label: "Next Track"
+        }, {
+          value: "shuffle",
+          label: "Shuffle"
+        }, {
+          value: "repeat",
+          label: "Repeat"
+        }, {
+          value: "favorite",
+          label: "Favorite"
+        }, {
+          value: "power",
+          label: "Power"
+        }]
+      }
+    }}
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ?? []}
+            label="Hidden Controls"
+            helper="Select which controls to hide for this entity (all are shown by default)"
+            @value-changed=${e => this._updateEntityProperty("hidden_controls", e.detail.value)}
+          ></ha-selector>
+        </div>
 
         ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
               <div class="form-row form-row-multi-column">
@@ -11067,8 +11111,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const row = (_this$renderRoot = this.renderRoot) === null || _this$renderRoot === void 0 ? void 0 : _this$renderRoot.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
-    const showFavorite = !!this._getFavoriteButtonEntity();
-    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite);
+    const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
+    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity());
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
@@ -12002,8 +12046,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
   // Get style for collapsed artwork based on mobile and control count
   _getCollapsedArtworkStyle() {
     if (this._alwaysCollapsed) {
-      const showFavorite = !!this._getFavoriteButtonEntity();
-      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite);
+      const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
+      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity());
       if (controls > 6) {
         // Check if we're on a mobile screen (width <= 768px is typical mobile breakpoint)
         const isMobile = window.innerWidth <= 768;
@@ -12172,6 +12216,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const music_assistant_entity = typeof e === "string" ? undefined : e.music_assistant_entity;
       const sync_power = typeof e === "string" ? false : !!e.sync_power;
       const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
+      const hidden_controls = typeof e === "string" ? undefined : e.hidden_controls;
       let group_volume;
       if (typeof e === "object" && typeof e.group_volume !== "undefined") {
         group_volume = e.group_volume;
@@ -12195,6 +12240,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         music_assistant_entity,
         sync_power,
         follow_active_volume,
+        hidden_controls,
         ...(typeof group_volume !== "undefined" ? {
           group_volume
         } : {})
@@ -12456,6 +12502,26 @@ class YetAnotherMediaPlayerCard extends i$1 {
     } else {
       return mainId;
     }
+  }
+
+  // Get hidden controls configuration for the current entity
+  _getHiddenControlsForCurrentEntity() {
+    const currentEntityObj = this.entityObjs[this._selectedIndex];
+    if (!(currentEntityObj !== null && currentEntityObj !== void 0 && currentEntityObj.hidden_controls)) {
+      return {};
+    }
+
+    // Convert array format to object format for compatibility
+    const hiddenControls = {};
+    if (Array.isArray(currentEntityObj.hidden_controls)) {
+      currentEntityObj.hidden_controls.forEach(control => {
+        hiddenControls[control] = true;
+      });
+    } else if (typeof currentEntityObj.hidden_controls === 'object') {
+      // Handle object format as well
+      Object.assign(hiddenControls, currentEntityObj.hidden_controls);
+    }
+    return hiddenControls;
   }
 
   // Get the active playback entity for a specific entity index (for follow_active_volume)
@@ -13793,8 +13859,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       repeatActive,
       onControlClick: action => this._onControlClick(action),
       supportsFeature: (state, feature) => this._supportsFeature(state, feature),
-      showFavorite: !!this._getFavoriteButtonEntity(),
-      favoriteActive: this._isCurrentTrackFavorited()
+      showFavorite: !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite,
+      favoriteActive: this._isCurrentTrackFavorited(),
+      hiddenControls: this._getHiddenControlsForCurrentEntity()
     })}
 
                 ${renderVolumeRow({

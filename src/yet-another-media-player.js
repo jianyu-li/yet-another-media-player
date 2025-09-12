@@ -249,7 +249,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
     const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
-    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity());
+    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity(), true);
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
@@ -1164,7 +1164,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getCollapsedArtworkStyle() {
     if (this._alwaysCollapsed) {
       const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
-      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity());
+      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity(), true);
       if (controls > 6) {
         // Check if we're on a mobile screen (width <= 768px is typical mobile breakpoint)
         const isMobile = window.innerWidth <= 768;
