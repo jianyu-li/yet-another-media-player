@@ -92,6 +92,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       }
     }
 
+
     _updateActionProperty(key, value) {
       const actions = [...(this._config.actions ?? [])];
       const idx = this._actionEditorIndex;
@@ -473,6 +474,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
           ></ha-icon>
         </div>
+
    
         <div class="form-row">
           <ha-selector
@@ -837,6 +839,32 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
                 </div>
               `}
         ` : nothing}
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                multiple: true,
+                options: [
+                  { value: "previous", label: "Previous Track" },
+                  { value: "play_pause", label: "Play/Pause" },
+                  { value: "stop", label: "Stop" },
+                  { value: "next", label: "Next Track" },
+                  { value: "shuffle", label: "Shuffle" },
+                  { value: "repeat", label: "Repeat" },
+                  { value: "favorite", label: "Favorite" },
+                  { value: "power", label: "Power" }
+                ]
+              }
+            }}
+            .value=${entity?.hidden_controls ?? []}
+            label="Hidden Controls"
+            helper="Select which controls to hide for this entity (all are shown by default)"
+            @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
+          ></ha-selector>
+        </div>
 
         ${entity?.volume_entity && entity.volume_entity !== entity.entity_id && !(entity?.follow_active_volume ?? false)
 
