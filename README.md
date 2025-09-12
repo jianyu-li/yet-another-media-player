@@ -68,6 +68,7 @@ Below you will find a list of all configuration options.
 | `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping (supports Jinja templates)                            |
 | `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
+| `hidden_controls`          | array        | No           | `[]`        | Array of control names to hide for this specific entity         |
 |                                                                                                 |
 | **Action Chip Options**    |              |              |             | (Each chip/action can have any/all of the below)                                                |
 | `name`                     | string       | No           | —           | Name for the action chip                                                                        |
@@ -114,6 +115,9 @@ entities:
   - entity_id: media_player.office_homepod
     name: Office
     follow_active_volume: true
+    hidden_controls:
+      - favorite
+      - shuffle
 actions:
   - icon: mdi:magnify
     menu_item: search
@@ -247,6 +251,43 @@ entities:
       {% endif %}
     sync_power: true
 ```
+
+## Hidden Controls Configuration
+
+You can hide specific media player controls on a per-entity basis using the `hidden_controls` option. This is useful when you want to simplify the interface for certain entities or hide controls that aren't supported or needed.
+
+**Important**: The entity must still support the control for it to be visible in the first place. Hidden controls only hide controls that would normally be displayed based on the entity's capabilities.
+
+### Available Control Names
+- `previous` - Previous Track button
+- `play_pause` - Play/Pause button  
+- `stop` - Stop button
+- `next` - Next Track button
+- `shuffle` - Shuffle button
+- `repeat` - Repeat button
+- `favorite` - Favorite button (requires Music Assistant entity)
+- `power` - Power on/off button
+
+### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+    hidden_controls:
+      - favorite
+      - shuffle
+      - repeat
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    hidden_controls:
+      - power
+```
+
+In this example:
+- The Living Room entity will hide the favorite, shuffle, and repeat buttons
+- The Kitchen entity will hide only the power button
+- All other controls will remain visible (if supported by the entity)
 
 ## Passing Current Entity to a Script
 
