@@ -13,6 +13,9 @@ export function renderControlsRow({
   hiddenControls = {},
 }) {
   if (!stateObj) return nothing;
+
+  // NOTE: If any new controls are added or removed here, the dropdown options 
+  // in src/yamp-editor.js must also be updated to match.
   
 
 
