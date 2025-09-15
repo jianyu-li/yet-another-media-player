@@ -1068,6 +1068,11 @@ function renderControlsRow(_ref) {
     hiddenControls = {}
   } = _ref;
   if (!stateObj) return E;
+
+  // NOTE: If any new controls are added or removed here, the dropdown options 
+  // in src/yamp-editor.js must also be updated to match, and the README.md
+  // documentation in the "Available Control Names" section should be updated.
+
   const SUPPORT_PAUSE = 1;
   const SUPPORT_PREVIOUS_TRACK = 16;
   const SUPPORT_NEXT_TRACK = 32;
@@ -1130,6 +1135,7 @@ function renderControlsRow(_ref) {
 function countMainControls(stateObj, supportsFeature) {
   let showFavorite = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
   let hiddenControls = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+  let showStop = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
   const SUPPORT_PREVIOUS_TRACK = 16;
   const SUPPORT_NEXT_TRACK = 32;
   const SUPPORT_SHUFFLE = 32768;
@@ -1139,6 +1145,7 @@ function countMainControls(stateObj, supportsFeature) {
   let count = 0;
   if (!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
   if (!hiddenControls.play_pause) count++; // play/pause button always present if row exists
+  if (!hiddenControls.stop && showStop) count++;
   if (!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
   if (!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
   if (!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
@@ -10339,6 +10346,47 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           ></ha-textfield>
         </div>
 
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        multiple: true,
+        options: [{
+          value: "previous",
+          label: "Previous Track"
+        }, {
+          value: "play_pause",
+          label: "Play/Pause"
+        }, {
+          value: "stop",
+          label: "Stop"
+        }, {
+          value: "next",
+          label: "Next Track"
+        }, {
+          value: "shuffle",
+          label: "Shuffle"
+        }, {
+          value: "repeat",
+          label: "Repeat"
+        }, {
+          value: "favorite",
+          label: "Favorite"
+        }, {
+          value: "power",
+          label: "Power"
+        }]
+      }
+    }}
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ?? []}
+            label="Hidden Controls"
+            helper="Select which controls to hide for this entity (all are shown by default)"
+            @value-changed=${e => this._updateEntityProperty("hidden_controls", e.detail.value)}
+          ></ha-selector>
+        </div>
+
 <div class="form-row form-row-multi-column">
   <div>
     <ha-switch
@@ -10469,47 +10517,6 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
                 </div>
               `}
         ` : E}
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-      select: {
-        mode: "dropdown",
-        multiple: true,
-        options: [{
-          value: "previous",
-          label: "Previous Track"
-        }, {
-          value: "play_pause",
-          label: "Play/Pause"
-        }, {
-          value: "stop",
-          label: "Stop"
-        }, {
-          value: "next",
-          label: "Next Track"
-        }, {
-          value: "shuffle",
-          label: "Shuffle"
-        }, {
-          value: "repeat",
-          label: "Repeat"
-        }, {
-          value: "favorite",
-          label: "Favorite"
-        }, {
-          value: "power",
-          label: "Power"
-        }]
-      }
-    }}
-            .value=${(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ?? []}
-            label="Hidden Controls"
-            helper="Select which controls to hide for this entity (all are shown by default)"
-            @value-changed=${e => this._updateEntityProperty("hidden_controls", e.detail.value)}
-          ></ha-selector>
-        </div>
 
         ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
               <div class="form-row form-row-multi-column">
@@ -11112,7 +11119,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
     const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
-    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity());
+    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity(), true);
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
@@ -12047,7 +12054,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
   _getCollapsedArtworkStyle() {
     if (this._alwaysCollapsed) {
       const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
-      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity());
+      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity(), true);
       if (controls > 6) {
         // Check if we're on a mobile screen (width <= 768px is typical mobile breakpoint)
         const isMobile = window.innerWidth <= 768;
