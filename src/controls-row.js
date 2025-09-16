@@ -10,8 +10,13 @@ export function renderControlsRow({
   supportsFeature,
   showFavorite,
   favoriteActive,
+  hiddenControls = {},
 }) {
   if (!stateObj) return nothing;
+
+  // NOTE: If any new controls are added or removed here, the dropdown options 
+  // in src/yamp-editor.js must also be updated to match, and the README.md
+  // documentation in the "Available Control Names" section should be updated.
   
 
 
@@ -27,32 +32,32 @@ export function renderControlsRow({
 
   return html`
     <div class="controls-row">
-      ${supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
+      ${!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
         <button class="button" @click=${() => onControlClick("prev")} title="Previous">
           <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
         </button>
       ` : nothing}
-      ${(supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY)) ? html`
+      ${!hiddenControls.play_pause && (supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY)) ? html`
         <button class="button" @click=${() => onControlClick("play_pause")} title="Play/Pause">
           <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
         </button>
       ` : nothing}
-      ${showStop ? html`
+      ${!hiddenControls.stop && showStop ? html`
         <button class="button" @click=${() => onControlClick("stop")} title="Stop">
           <ha-icon .icon=${"mdi:stop"}></ha-icon>
         </button>
       ` : nothing}
-      ${supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? html`
+      ${!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? html`
         <button class="button" @click=${() => onControlClick("next")} title="Next">
           <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
         </button>
       ` : nothing}
-      ${supportsFeature(stateObj, SUPPORT_SHUFFLE) ? html`
+      ${!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE) ? html`
         <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="Shuffle">
           <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
         </button>
       ` : nothing}
-      ${supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? html`
+      ${!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? html`
         <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
           <ha-icon .icon=${
             stateObj.attributes.repeat === "one"
@@ -61,13 +66,13 @@ export function renderControlsRow({
           }></ha-icon>
         </button>
       ` : nothing}
-      ${showFavorite ? html`
+      ${!hiddenControls.favorite && showFavorite ? html`
         <button class="button${favoriteActive ? ' active' : ''}" @click=${() => onControlClick("favorite")} title="Favorite">
           <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
         </button>
       ` : nothing}
       ${
-        (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON))
+        !hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON))
           ? html`
             <button
               class="button${stateObj.state !== "off" ? " active" : ""}"
@@ -84,7 +89,7 @@ export function renderControlsRow({
 }
 
 // Export a small helper used by the card for layout decisions
-export function countMainControls(stateObj, supportsFeature, showFavorite = false) {
+export function countMainControls(stateObj, supportsFeature, showFavorite = false, hiddenControls = {}, showStop = false) {
   const SUPPORT_PREVIOUS_TRACK = 16;
   const SUPPORT_NEXT_TRACK = 32;
   const SUPPORT_SHUFFLE = 32768;
@@ -93,12 +98,13 @@ export function countMainControls(stateObj, supportsFeature, showFavorite = fals
   const SUPPORT_TURN_OFF = 256;
 
   let count = 0;
-  if (supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
-  count++; // play/pause button always present if row exists
-  if (supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
-  if (supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
-  if (supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
-  if (showFavorite) count++; // favorite button
-  if (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON)) count++;
+  if (!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
+  if (!hiddenControls.play_pause) count++; // play/pause button always present if row exists
+  if (!hiddenControls.stop && showStop) count++;
+  if (!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
+  if (!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
+  if (!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
+  if (!hiddenControls.favorite && showFavorite) count++; // favorite button
+  if (!hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON))) count++;
   return count;
 }
