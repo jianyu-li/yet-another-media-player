@@ -248,8 +248,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const row = this.renderRoot?.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
-    const showFavorite = !!this._getFavoriteButtonEntity();
-    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite);
+    const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
+    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity(), true);
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
@@ -1163,8 +1163,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Get style for collapsed artwork based on mobile and control count
   _getCollapsedArtworkStyle() {
     if (this._alwaysCollapsed) {
-      const showFavorite = !!this._getFavoriteButtonEntity();
-      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite);
+      const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
+      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity(), true);
       if (controls > 6) {
         // Check if we're on a mobile screen (width <= 768px is typical mobile breakpoint)
         const isMobile = window.innerWidth <= 768;
@@ -1339,6 +1339,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const music_assistant_entity = typeof e === "string" ? undefined : e.music_assistant_entity;
       const sync_power = typeof e === "string" ? false : !!e.sync_power;
       const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
+      const hidden_controls = typeof e === "string" ? undefined : e.hidden_controls;
       let group_volume;
 
       if (typeof e === "object" && typeof e.group_volume !== "undefined") {
@@ -1365,6 +1366,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         music_assistant_entity,
         sync_power,
         follow_active_volume,
+        hidden_controls,
         ...(typeof group_volume !== "undefined" ? { group_volume } : {})
       };
     });
@@ -1641,6 +1643,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       return mainId;
     }
+  }
+
+  // Get hidden controls configuration for the current entity
+  _getHiddenControlsForCurrentEntity() {
+    const currentEntityObj = this.entityObjs[this._selectedIndex];
+    
+    if (!currentEntityObj?.hidden_controls) {
+      return {};
+    }
+    
+    // Convert array format to object format for compatibility
+    const hiddenControls = {};
+    if (Array.isArray(currentEntityObj.hidden_controls)) {
+      currentEntityObj.hidden_controls.forEach(control => {
+        hiddenControls[control] = true;
+      });
+    } else if (typeof currentEntityObj.hidden_controls === 'object') {
+      // Handle object format as well
+      Object.assign(hiddenControls, currentEntityObj.hidden_controls);
+    }
+    
+    return hiddenControls;
   }
 
   // Get the active playback entity for a specific entity index (for follow_active_volume)
@@ -2282,22 +2306,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (favoriteButtonEntity) {
           this.hass.callService("button", "press", { entity_id: favoriteButtonEntity });
           
-          // Clear favorite status cache for current track to force re-check
+          // Immediately mark as favorited when button is pressed
           const maState = this.hass?.states?.[targetEntity];
           if (maState?.attributes?.media_content_id) {
-            if (this._favoriteStatusCache) {
-              delete this._favoriteStatusCache[maState.attributes.media_content_id];
+            // Initialize cache if needed
+            if (!this._favoriteStatusCache) {
+              this._favoriteStatusCache = {};
             }
-            // Clear the checking flag to allow immediate re-check
+            
+            // Immediately set as favorited
+            this._favoriteStatusCache[maState.attributes.media_content_id] = {
+              isFavorited: true
+            };
+            
+            // Clear the checking flag
             this._checkingFavorites = null;
-          }
-          
-          // Re-check favorite status after a delay to allow Music Assistant to update
-          setTimeout(() => {
-            if (maState?.attributes?.media_content_id) {
-              this._checkFavoriteStatusAsync(maState.attributes.media_content_id);
+            
+            // Clear search results cache to ensure favorites filter reflects changes
+            if (this._searchResultsByType) {
+              // Clear favorites-related cache entries
+              Object.keys(this._searchResultsByType).forEach(key => {
+                if (key.includes('_favorites') || key === 'favorites') {
+                  delete this._searchResultsByType[key];
+                }
+              });
             }
-          }, 3000);
+            
+            // Trigger immediate re-render to update UI
+            this.requestUpdate();
+          }
         }
         break;
       }
@@ -3035,8 +3072,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   repeatActive,
                   onControlClick: (action) => this._onControlClick(action),
                   supportsFeature: (state, feature) => this._supportsFeature(state, feature),
-                  showFavorite: !!this._getFavoriteButtonEntity(),
-                  favoriteActive: this._isCurrentTrackFavorited()
+                  showFavorite: !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite,
+                  favoriteActive: this._isCurrentTrackFavorited(),
+                  hiddenControls: this._getHiddenControlsForCurrentEntity()
                 })}
 
                 ${renderVolumeRow({
