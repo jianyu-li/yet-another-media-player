@@ -309,11 +309,6 @@ entities:
     name: Kitchen
 ```
 
-### Smart Limiting Behavior
-- **"All" searches**: Shows up to 8 results per media type (tracks, albums, artists, etc.) or your configured limit, whichever is smaller
-- **Specific type searches**: Shows up to your configured limit for that specific type
-- **Favorites matching**: Uses at least 100 results for better accuracy when matching tracks
-
 ## Passing Current Entity to a Script
 
 ### Example YAML config
