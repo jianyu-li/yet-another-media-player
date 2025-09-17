@@ -7,7 +7,13 @@ import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
 import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites, isTrackFavorited } from "./search-sheet.js";
-import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js"; 
+import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
+import { 
+  resolveTemplateAtActionTime, 
+  findAssociatedButtonEntities, 
+  getMusicAssistantState, 
+  getSearchResultClickTitle
+} from "./yamp-utils.js"; 
 
 import {
   SUPPORT_PAUSE,
@@ -63,46 +69,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Find button entities associated with a Music Assistant entity
   _findAssociatedButtonEntities(maEntityId) {
-    if (!this.hass?.states || !maEntityId) return [];
-    
-    const buttonEntities = [];
-    const maEntity = this.hass.states[maEntityId];
-    if (!maEntity) return [];
-    
-    // Look for button entities that might be associated with this MA entity
-    // Common patterns: device_id matching, friendly_name similarity, or device_class
-    const maDeviceId = maEntity.attributes?.device_id;
-    const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
-    
-    // Search through all button entities
-    for (const [entityId, state] of Object.entries(this.hass.states)) {
-      if (entityId.startsWith('button.') && state.attributes) {
-        const buttonDeviceId = state.attributes.device_id;
-        const buttonFriendlyName = state.attributes.friendly_name || entityId;
-        
-        // Check if this button is associated with the same device
-        if (maDeviceId && buttonDeviceId === maDeviceId) {
-          buttonEntities.push({
-            entity_id: entityId,
-            friendly_name: buttonFriendlyName,
-            device_class: state.attributes.device_class,
-            reason: 'same_device'
-          });
-        }
-        // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
-        else if (buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) ||
-                 maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())) {
-          buttonEntities.push({
-            entity_id: entityId,
-            friendly_name: buttonFriendlyName,
-            device_class: state.attributes.device_class,
-            reason: 'name_similarity'
-          });
-        }
-      }
-    }
-    
-    return buttonEntities;
+    return findAssociatedButtonEntities(this.hass, maEntityId);
   }
 
   // Get the favorite button entity for the current Music Assistant entity
@@ -133,20 +100,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Get the current Music Assistant state
   _getMusicAssistantState() {
-    const obj = this.entityObjs[this._selectedIndex];
-    if (!obj) return null;
-    
-    // Get the active entity (the one currently playing/selected)
     const activeEntityId = this._getActivePlaybackEntityId();
     if (!activeEntityId) return null;
     
-    // Check if the active entity is a Music Assistant entity
-    const activeState = this.hass?.states?.[activeEntityId];
-    if (!activeState || activeState.attributes?.app_id !== 'music_assistant') {
-      return null;
-    }
-    
-    return activeState;
+    return getMusicAssistantState(this.hass, activeEntityId);
   }
 
   // Check if the currently playing track is favorited
@@ -513,23 +470,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Resolve template at action time with fallback to main entity (async)
   async _resolveTemplateAtActionTime(templateString, fallbackEntityId) {
-    if (!templateString || typeof templateString !== 'string') return fallbackEntityId;
-
-    // Not a template — return as-is
-    if (!templateString.includes('{{') && !templateString.includes('{%')) {
-      return templateString;
-    }
-
-    try {
-      const res = await this.hass.callApi('POST', 'template', { template: templateString });
-      const out = (res || '').toString().trim();
-      // Basic validation: must look like an entity_id
-      if (out && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(out)) return out;
-      return fallbackEntityId;
-    } catch (error) {
-      console.warn('Failed to resolve template:', error);
-      return fallbackEntityId; // Fallback to main entity
-    }
+    return resolveTemplateAtActionTime(this.hass, templateString, fallbackEntityId);
   }
 
   /**
@@ -991,15 +932,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getSearchResultClickTitle(item) {
     if (!this._isClickableSearchResult(item)) return "";
     
-    if (item.media_class === 'artist') {
-      return `View albums by ${item.title}`;
-    } else if (item.media_class === 'album') {
-      return `View tracks from ${item.title}`;
-    } else if (item.media_class === 'playlist') {
-      return `View tracks in ${item.title}`;
-    }
-    
-    return "";
+    return getSearchResultClickTitle(item);
   }
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
@@ -3329,11 +3262,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         return nothing;
                       })()}
                                               <button
-                          class="favorites-filter-btn"
+                          class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
                           style="
                             background: none;
                             border: none;
-                            color: ${this._favoritesFilterActive ? '#ff6b6b' : '#999'};
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
                             padding: 4px;
@@ -3349,9 +3281,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
                       </button>
-                      <span style="color: white; font-size: 0.9em;">
-                        ${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'Showing Favorites' : 'Filter Favorites'}
-                      </span>
                     </div>
                   ` : nothing}
                   
