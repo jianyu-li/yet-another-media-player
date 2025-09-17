@@ -289,6 +289,31 @@ In this example:
 - The Kitchen entity will hide only the power button
 - All other controls will remain visible (if supported by the entity)
 
+## Search Results Limit Configuration
+
+You can configure the maximum number of search results to display using the `search_results_limit` option. This is a global setting that affects all search operations including favorites, recently played, and regular searches across all entities.
+
+### Configuration Options
+- **Default**: 20 results
+- **Range**: 1-100 results
+- **Scope**: Global setting that applies to all entities and search types
+
+### Example Configuration
+```yaml
+type: custom:yet-another-media-player-alpha
+search_results_limit: 50
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+```
+
+### Smart Limiting Behavior
+- **"All" searches**: Shows up to 8 results per media type (tracks, albums, artists, etc.) or your configured limit, whichever is smaller
+- **Specific type searches**: Shows up to your configured limit for that specific type
+- **Favorites matching**: Uses at least 100 results for better accuracy when matching tracks
+
 ## Passing Current Entity to a Script
 
 ### Example YAML config

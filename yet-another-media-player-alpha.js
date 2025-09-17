@@ -3318,6 +3318,7 @@ function renderSearchSheet(_ref) {
 async function searchMedia(hass, entityId, query) {
   let mediaType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
   let searchParams = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+  let searchResultsLimit = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 20;
   // Try to get Music Assistant config entry ID
   let configEntryId = null;
   try {
@@ -3346,7 +3347,7 @@ async function searchMedia(hass, entityId, query) {
               media_type: mt,
               favorite: true,
               search: query,
-              limit: mt === 'all' ? 8 : 20
+              limit: mt === 'all' ? Math.min(8, searchResultsLimit) : searchResultsLimit
             },
             return_response: true
           };
@@ -3378,7 +3379,7 @@ async function searchMedia(hass, entityId, query) {
       const serviceData = {
         name: query,
         config_entry_id: configEntryId,
-        limit: mediaType === "all" ? 8 : 20 // Use 20 limit for filtered searches
+        limit: mediaType === "all" ? Math.min(8, searchResultsLimit) : searchResultsLimit // Use configurable limit for filtered searches
       };
 
       // Add media_type if specified and not "all"
@@ -3448,6 +3449,7 @@ async function searchMedia(hass, entityId, query) {
 // Get favorites from Music Assistant
 async function getFavorites(hass, entityId) {
   let mediaType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  let searchResultsLimit = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 20;
   // Try to get Music Assistant config entry ID
   let configEntryId = null;
   try {
@@ -3493,7 +3495,7 @@ async function getFavorites(hass, entityId) {
           config_entry_id: configEntryId,
           media_type: mediaType,
           favorite: true,
-          limit: mediaType === "all" ? 8 : 20
+          limit: mediaType === "all" ? Math.min(8, searchResultsLimit) : searchResultsLimit
         },
         return_response: true
       };
@@ -3638,7 +3640,7 @@ async function isTrackFavorited(hass, mediaContentId) {
         const serviceData = {
           name: trackName || artistName,
           config_entry_id: configEntryId,
-          limit: 20,
+          limit: searchResultsLimit,
           media_type: 'track'
         };
         if (artistName) {
@@ -3689,7 +3691,7 @@ async function isTrackFavorited(hass, mediaContentId) {
               media_type: "track",
               favorite: true,
               search: trackName.trim(),
-              limit: 20 // Back to 20 results since we're less specific
+              limit: searchResultsLimit // Use configurable limit
             },
             return_response: true
           };
@@ -3715,7 +3717,7 @@ async function isTrackFavorited(hass, mediaContentId) {
           config_entry_id: configEntryId,
           media_type: "track",
           favorite: true,
-          limit: 100 // Just check first 100 favorites
+          limit: Math.max(100, searchResultsLimit) // Check at least 100 favorites for better matching
         },
         return_response: true
       };
@@ -10200,7 +10202,32 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             ></ha-switch>
             <span>Hold to Pin</span>
           </div>
-        </div>   
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector-number
+              .selector=${{
+      number: {
+        min: 1,
+        max: 100,
+        step: 1,
+        mode: "box"
+      }
+    }}
+              .value=${this._config.search_results_limit ?? 20}
+              label="Search Results Limit"
+              helper="Maximum number of search results to display (1-100, default: 20)"
+              @value-changed=${e => this._updateConfig("search_results_limit", e.detail.value)}
+            ></ha-selector-number>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("search_results_limit", 20)}
+          ></ha-icon>
+        </div>
         <div class="form-row">
           <label style="margin-bottom: 8px;">Idle Image</label>
         </div>
@@ -11624,24 +11651,27 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
       // If no search query or explicitly requesting favorites, load favorites
       if (!this._searchQuery || this._searchQuery.trim() === '' || mediaType === 'favorites') {
-        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType);
+        var _this$config;
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_limit) || 20);
         // Mark that initial favorites have been loaded
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
         }
         this._lastSearchUsedServerFavorites = true;
       } else if (isFavorites) {
+        var _this$config2;
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
           ...searchParams,
           favorites: true
-        });
+        }, ((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = true;
       } else {
+        var _this$config3;
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams);
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, ((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
       }
 
@@ -11947,7 +11977,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
     try {
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter);
+      var _this$config4;
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.search_results_limit) || 20);
       const favorites = favoritesResponse.results || [];
 
       // Create a set of favorite URIs for quick lookup
@@ -12069,16 +12100,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config, _this$config2;
+    var _this$config5, _this$config6;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
     const appId = attrs.app_id;
-    const prefix = ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.artwork_hostname) || '';
+    const prefix = ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
 
     // Check for media artwork overrides first
-    const overrides = (_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.media_artwork_overrides;
+    const overrides = (_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.media_artwork_overrides;
     if (overrides && Array.isArray(overrides)) {
       var _override;
       const {
@@ -12119,8 +12150,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config3;
-      const fallbackArtwork = (_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.fallback_artwork;
+      var _this$config7;
+      const fallbackArtwork = (_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -13524,7 +13555,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass20, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass21, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config4, _this$config5, _this$config6, _this$currentVolumeSt3, _this$currentStateObj;
+    var _this$_optimisticPlay, _this$hass20, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass21, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config8, _this$config9, _this$config0, _this$currentVolumeSt3, _this$currentStateObj;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -13706,9 +13737,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.fallback_artwork) || null,
+      artworkHostname: ((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass22;
         const obj = this._findEntityObjByAnyId(id);
