@@ -3435,7 +3435,9 @@ async function searchMedia(hass, entityId, query) {
           usedMusicAssistant: true
         };
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error('yamp: Error in searchMedia:', error);
+    }
   }
 
   // Fallback to media_player search
@@ -3447,6 +3449,129 @@ async function searchMedia(hass, entityId, query) {
 }
 
 // Get favorites from Music Assistant
+async function getRecentlyPlayed(hass, entityId) {
+  let mediaType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  let searchResultsLimit = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 20;
+  console.log('yamp: getRecentlyPlayed called with mediaType:', mediaType, 'limit:', searchResultsLimit);
+
+  // Try to get Music Assistant config entry ID
+  let configEntryId = null;
+  try {
+    const entries = await hass.callApi("GET", "config/config_entries/entry");
+    const maEntries = entries.filter(entry => entry.domain === "music_assistant");
+    const entry = maEntries.find(entry => entry.state === "loaded");
+    if (entry) {
+      configEntryId = entry.entry_id;
+    }
+  } catch (error) {
+    console.error('yamp: Error getting Music Assistant config entry:', error);
+  }
+  if (!configEntryId) {
+    console.log('yamp: No Music Assistant config entry found');
+    return {
+      results: [],
+      usedMusicAssistant: false
+    };
+  }
+  console.log('yamp: getRecentlyPlayed found', configEntryId, 'Music Assistant entries');
+  console.log('yamp: getRecentlyPlayed using config entry:', configEntryId);
+  try {
+    // Handle "all" media type by getting multiple types and combining
+    if (mediaType === 'all') {
+      const mediaTypes = ['track', 'album', 'artist', 'playlist'];
+      const allResults = [];
+      await Promise.all(mediaTypes.map(async mt => {
+        var _response$response;
+        const message = {
+          type: "call_service",
+          domain: "music_assistant",
+          service: "get_library",
+          service_data: {
+            config_entry_id: configEntryId,
+            media_type: mt,
+            order_by: "last_played_desc",
+            limit: Math.min(5, searchResultsLimit) // Limit each type to avoid too many results
+          },
+          return_response: true
+        };
+        const response = await hass.connection.sendMessagePromise(message);
+        const items = (response === null || response === void 0 || (_response$response = response.response) === null || _response$response === void 0 ? void 0 : _response$response.items) || [];
+        allResults.push(...items);
+      }));
+
+      // Transform Music Assistant format to media_player format
+      const transformedResults = allResults.map(item => ({
+        title: item.name,
+        media_content_id: item.uri,
+        media_content_type: item.media_type,
+        media_class: item.media_type,
+        thumbnail: item.image,
+        // Add artist info if available
+        ...(item.artists && {
+          artist: item.artists.map(a => a.name).join(', ')
+        }),
+        // Add album info if available
+        ...(item.album && {
+          album: item.album.name
+        })
+      }));
+      console.log('yamp: getRecentlyPlayed API returned', (allResults === null || allResults === void 0 ? void 0 : allResults.length) || 0, 'items (all types)');
+      console.log('yamp: Sample recently played item:', allResults === null || allResults === void 0 ? void 0 : allResults[0]);
+      console.log('yamp: Sample transformed item:', transformedResults === null || transformedResults === void 0 ? void 0 : transformedResults[0]);
+      return {
+        results: transformedResults || [],
+        usedMusicAssistant: true
+      };
+    } else {
+      var _response$response2;
+      // Single media type
+      const message = {
+        type: "call_service",
+        domain: "music_assistant",
+        service: "get_library",
+        service_data: {
+          config_entry_id: configEntryId,
+          media_type: mediaType || "track",
+          order_by: "last_played_desc",
+          limit: searchResultsLimit
+        },
+        return_response: true
+      };
+      const response = await hass.connection.sendMessagePromise(message);
+      const items = (response === null || response === void 0 || (_response$response2 = response.response) === null || _response$response2 === void 0 ? void 0 : _response$response2.items) || [];
+
+      // Transform Music Assistant format to media_player format
+      const transformedResults = items.map(item => ({
+        title: item.name,
+        media_content_id: item.uri,
+        media_content_type: item.media_type,
+        media_class: item.media_type,
+        thumbnail: item.image,
+        // Add artist info if available
+        ...(item.artists && {
+          artist: item.artists.map(a => a.name).join(', ')
+        }),
+        // Add album info if available
+        ...(item.album && {
+          album: item.album.name
+        })
+      }));
+      console.log('yamp: getRecentlyPlayed API returned', (items === null || items === void 0 ? void 0 : items.length) || 0, 'items');
+      console.log('yamp: Sample recently played item:', items === null || items === void 0 ? void 0 : items[0]);
+      console.log('yamp: Sample transformed item:', transformedResults === null || transformedResults === void 0 ? void 0 : transformedResults[0]);
+      return {
+        results: transformedResults || [],
+        usedMusicAssistant: true
+      };
+    }
+  } catch (error) {
+    console.error('yamp: Error getting recently played from Music Assistant:', error);
+    return {
+      results: [],
+      usedMusicAssistant: false
+    };
+  }
+}
 async function getFavorites(hass, entityId) {
   let mediaType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   let searchResultsLimit = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 20;
@@ -3605,6 +3730,7 @@ async function isTrackFavorited(hass, mediaContentId) {
   let entityId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   let trackName = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
   let artistName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
+  let searchResultsLimit = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 100;
   if (!mediaContentId) {
     return false;
   }
@@ -3681,7 +3807,7 @@ async function isTrackFavorited(hass, mediaContentId) {
       // Second try: Precise search with track name only (faster and simpler)
       if (trackName) {
         try {
-          var _response$response;
+          var _response$response3;
           const message = {
             type: "call_service",
             domain: "music_assistant",
@@ -3696,7 +3822,7 @@ async function isTrackFavorited(hass, mediaContentId) {
             return_response: true
           };
           const response = await hass.connection.sendMessagePromise(message);
-          const favoriteTracks = (response === null || response === void 0 || (_response$response = response.response) === null || _response$response === void 0 ? void 0 : _response$response.items) || [];
+          const favoriteTracks = (response === null || response === void 0 || (_response$response3 = response.response) === null || _response$response3 === void 0 ? void 0 : _response$response3.items) || [];
           if (favoriteTracks.some(track => track.uri === mediaContentId)) {
             return true;
           }
@@ -3708,7 +3834,7 @@ async function isTrackFavorited(hass, mediaContentId) {
 
     // Fallback: Just get first 100 favorites (much faster than pagination)
     try {
-      var _response$response2;
+      var _response$response4;
       const message = {
         type: "call_service",
         domain: "music_assistant",
@@ -3722,7 +3848,7 @@ async function isTrackFavorited(hass, mediaContentId) {
         return_response: true
       };
       const response = await hass.connection.sendMessagePromise(message);
-      const favoriteTracks = (response === null || response === void 0 || (_response$response2 = response.response) === null || _response$response2 === void 0 ? void 0 : _response$response2.items) || [];
+      const favoriteTracks = (response === null || response === void 0 || (_response$response4 = response.response) === null || _response$response4 === void 0 ? void 0 : _response$response4.items) || [];
       return favoriteTracks.some(t => t.uri === mediaContentId);
     } catch (getLibraryError) {
       // Fallback to false if get_library fails
@@ -11182,7 +11308,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const entityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
       const trackName = (_maState$attributes3 = maState.attributes) === null || _maState$attributes3 === void 0 ? void 0 : _maState$attributes3.media_title;
       const artistName = (_maState$attributes4 = maState.attributes) === null || _maState$attributes4 === void 0 ? void 0 : _maState$attributes4.media_artist;
-      const isFavorited = await isTrackFavorited(this.hass, mediaContentId, entityId, trackName, artistName);
+      const isFavorited = await isTrackFavorited(this.hass, mediaContentId, entityId, trackName, artistName, 200);
 
       // Initialize cache if needed
       if (!this._favoriteStatusCache) {
@@ -11603,6 +11729,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
 
+    // Clear filter states to ensure accurate artist search results
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._initialFavoritesLoaded = false;
+
     // Render, then run search
     this.requestUpdate();
     this.updateComplete.then(() => this._doSearch());
@@ -11620,6 +11751,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchBreadcrumb = ""; // Clear breadcrumb
     this._usingMusicAssistant = false; // Track if we're using Music Assistant search
     this._favoritesFilterActive = false; // Track if favorites filter is active
+    this._recentlyPlayedFilterActive = false; // Track if recently played filter is active
     this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
     this.requestUpdate();
 
@@ -11687,11 +11819,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     let searchParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     this._searchAttempted = true;
 
-    // Set the current filter
-    this._searchMediaClassFilter = mediaType || 'all';
+    // Set the current filter - but don't use "favorites" as a media type
+    this._searchMediaClassFilter = mediaType && mediaType !== 'favorites' ? mediaType : 'all';
 
     // Respect favorites toggle across chip changes
     const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive);
+    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || this._recentlyPlayedFilterActive);
 
     // Check if search query has changed - if so, clear cache
     if (this._currentSearchQuery !== this._searchQuery) {
@@ -11700,7 +11833,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
 
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}`;
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
       this._searchResults = this._searchResultsByType[cacheKey];
       this.requestUpdate();
@@ -11715,17 +11848,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
       let searchResponse;
 
-      // If no search query or explicitly requesting favorites, load favorites
-      if (!this._searchQuery || this._searchQuery.trim() === '' || mediaType === 'favorites') {
+      // Check for recently played first (highest priority)
+      if (isRecentlyPlayed) {
         var _this$config;
-        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_limit) || 20);
-        // Mark that initial favorites have been loaded
-        if (!this._searchQuery || this._searchQuery.trim() === '') {
-          this._initialFavoritesLoaded = true;
-        }
-        this._lastSearchUsedServerFavorites = true;
+        // Load recently played items
+        console.log('yamp: _doSearch taking recently played path');
+        this._initialFavoritesLoaded = false;
+        searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_limit) || 20);
+        this._lastSearchUsedServerFavorites = false;
       } else if (isFavorites) {
         var _this$config2;
+        console.log('yamp: _doSearch taking favorites filter path');
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
@@ -11733,11 +11866,21 @@ class YetAnotherMediaPlayerCard extends i$1 {
           favorites: true
         }, ((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = true;
-      } else {
+      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
         var _this$config3;
+        console.log('yamp: _doSearch taking favorites path (no query and no active filters)');
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, ((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit) || 20);
+        // Mark that initial favorites have been loaded
+        if (!this._searchQuery || this._searchQuery.trim() === '') {
+          this._initialFavoritesLoaded = true;
+        }
+        this._lastSearchUsedServerFavorites = true;
+      } else {
+        var _this$config4;
+        console.log('yamp: _doSearch taking regular search path');
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, ((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit) || 20);
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
       }
 
@@ -11745,10 +11888,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const arr = searchResponse.results || [];
       this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
 
-      // Only reset favorites filter if this is a completely new search (not just switching filters)
+      // Only reset filter states if this is a completely new search (not just switching filters)
       const isNewSearch = this._currentSearchQuery !== this._searchQuery;
       if (isNewSearch) {
         this._favoritesFilterActive = false;
+        this._recentlyPlayedFilterActive = false;
+        this._initialFavoritesLoaded = false;
       }
       this._searchResults = Array.isArray(arr) ? arr : [];
 
@@ -11816,6 +11961,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchResultsByType = {}; // Clear cache for new search
     this._currentSearchQuery = artistName;
     this._searchMediaClassFilter = 'album';
+
+    // Clear filter states to ensure accurate artist search results
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._initialFavoritesLoaded = false;
 
     // Remove swipe handlers when entering hierarchy
     this._removeSearchSwipeHandlers();
@@ -11990,15 +12140,25 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
   async _toggleFavoritesFilter() {
+    console.log('yamp: _toggleFavoritesFilter called, current state:', this._favoritesFilterActive);
     this._favoritesFilterActive = !this._favoritesFilterActive;
+    console.log('yamp: _toggleFavoritesFilter new state:', this._favoritesFilterActive);
+
+    // Make mutually exclusive with recently played filter
+    if (this._favoritesFilterActive) {
+      this._recentlyPlayedFilterActive = false;
+      console.log('yamp: Cleared recently played state for favorites');
+    }
     if (this._favoritesFilterActive) {
       // Use the existing _doSearch method with favorites parameter
       // This aligns with how initial favorites loading works
       const currentMediaType = this._searchMediaClassFilter;
+      console.log('yamp: Loading favorites for media type:', currentMediaType, 'searchQuery:', this._searchQuery);
 
       // Try to search with favorites parameter first
       if (this._searchQuery && this._searchQuery.trim() !== '') {
         // Search for favorites matching the query
+        console.log('yamp: Searching favorites with query');
         try {
           await this._doSearch(currentMediaType, {
             favorites: true
@@ -12008,8 +12168,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
         }
       } else {
         // No search query - load all favorites (same as initial load)
+        console.log('yamp: Loading all favorites (no query)');
         try {
+          // Reset the favorites filter state temporarily to use the default favorites path
+          const tempFavoritesActive = this._favoritesFilterActive;
+          this._favoritesFilterActive = false;
           await this._doSearch('favorites');
+          this._favoritesFilterActive = tempFavoritesActive;
         } catch (error) {
           console.error('yamp: Error loading favorites:', error);
         }
@@ -12030,14 +12195,59 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
 
+  // Toggle recently played filter
+  async _toggleRecentlyPlayedFilter() {
+    console.log('yamp: _toggleRecentlyPlayedFilter called, current state:', this._recentlyPlayedFilterActive);
+    this._recentlyPlayedFilterActive = !this._recentlyPlayedFilterActive;
+    console.log('yamp: _toggleRecentlyPlayedFilter new state:', this._recentlyPlayedFilterActive);
+
+    // Make mutually exclusive with favorites filter
+    if (this._recentlyPlayedFilterActive) {
+      this._favoritesFilterActive = false;
+      this._initialFavoritesLoaded = false; // Clear the initial favorites state
+      console.log('yamp: Cleared favorites state for recently played');
+    }
+    if (this._recentlyPlayedFilterActive) {
+      // Clear search box since it's not used in recently played mode
+      this._searchQuery = '';
+      // Load recently played items - always use "all" for recently played
+      console.log('yamp: Loading recently played items for media type: all (was:', this._searchMediaClassFilter, ')');
+      try {
+        await this._doSearch('all', {
+          isRecentlyPlayed: true
+        });
+        console.log('yamp: _doSearch completed for recently played');
+      } catch (error) {
+        console.error('yamp: Error in _doSearch for recently played:', error);
+      }
+    } else {
+      // Restore original search results
+      if (this._searchQuery && this._searchQuery.trim() !== '') {
+        // Resubmit the original search without recently played filter
+        const currentMediaType = this._searchMediaClassFilter;
+        await this._doSearch(currentMediaType);
+      } else {
+        // Restore from cache or load favorites if no search query
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        if (this._searchResultsByType[cacheKey]) {
+          this._searchResults = this._searchResultsByType[cacheKey];
+          this.requestUpdate();
+        } else {
+          // No cache, load favorites as default
+          await this._doSearch('favorites');
+        }
+      }
+    }
+  }
+
   // Apply favorites filter to current results (called when switching filter chips)
   async _applyFavoritesFilterIfActive() {
     if (!this._favoritesFilterActive) return;
     const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
     try {
-      var _this$config4;
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.search_results_limit) || 20);
+      var _this$config5;
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.search_results_limit) || 20);
       const favorites = favoritesResponse.results || [];
 
       // Create a set of favorite URIs for quick lookup
@@ -12159,16 +12369,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config5, _this$config6;
+    var _this$config6, _this$config7;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
     const appId = attrs.app_id;
-    const prefix = ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.artwork_hostname) || '';
+    const prefix = ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
 
     // Check for media artwork overrides first
-    const overrides = (_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.media_artwork_overrides;
+    const overrides = (_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.media_artwork_overrides;
     if (overrides && Array.isArray(overrides)) {
       var _override;
       const {
@@ -12209,8 +12419,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config7;
-      const fallbackArtwork = (_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.fallback_artwork;
+      var _this$config8;
+      const fallbackArtwork = (_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -13614,7 +13824,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config8, _this$config9, _this$config0, _this$currentVolumeSt3, _this$currentStateObj;
+    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config9, _this$config0, _this$config1, _this$currentVolumeSt3, _this$currentStateObj;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -13796,9 +14006,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.fallback_artwork) || null,
+      artworkHostname: ((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass20;
         const obj = this._findEntityObjByAnyId(id);
@@ -14129,6 +14339,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
                         @keydown=${e => {
       if (e.key === "Enter") {
         e.preventDefault();
+        // Clear recently played filter when user initiates search
+        this._recentlyPlayedFilterActive = false;
         this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
       } else if (e.key === "Escape") {
         e.preventDefault();
@@ -14142,6 +14354,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
                       class="entity-options-item"
                       style="min-width:80px;"
                       @click=${() => {
+      // Clear recently played filter when user initiates search
+      this._recentlyPlayedFilterActive = false;
       this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
     }}
                       ?disabled=${this._searchLoading}>
@@ -14226,9 +14440,29 @@ class YetAnotherMediaPlayerCard extends i$1 {
                           @click=${this._searchAttempted ? () => {
       this._toggleFavoritesFilter();
     } : () => {}}
-                          title=${this._searchAttempted ? this._favoritesFilterActive ? 'Show all results' : 'Show only favorites' : 'Showing favorites'}
+                          title="Favorites"
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
+                      </button>
+                      <button
+                          class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
+                          style="
+                            background: none;
+                            border: none;
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => {
+      this._toggleRecentlyPlayedFilter();
+    } : () => {}}
+                          title="Recently Played"
+                        >
+                          <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
                       </button>
                     </div>
                   ` : E}
@@ -14505,7 +14739,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._searchQuery = e.target.value;
         this.requestUpdate();
       },
-      onSearch: () => this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter),
+      onSearch: () => {
+        // Clear recently played filter when user initiates search
+        this._recentlyPlayedFilterActive = false;
+        this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
+      },
       onPlay: item => this._playMediaFromSearch(item),
       onQueue: item => this._queueMediaFromSearch(item),
       showQueueSuccess: this._showQueueSuccessMessage
