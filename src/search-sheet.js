@@ -208,7 +208,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
       
 
     } catch (error) {
-
+      console.error('yamp: Error in searchMedia:', error);
     }
   } else {
 
@@ -220,6 +220,116 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
 }
 
 // Get favorites from Music Assistant
+export async function getRecentlyPlayed(hass, entityId, mediaType = null, searchResultsLimit = 20) {
+  console.log('yamp: getRecentlyPlayed called with mediaType:', mediaType, 'limit:', searchResultsLimit);
+  
+  // Try to get Music Assistant config entry ID
+  let configEntryId = null;
+  try {
+    const entries = await hass.callApi("GET", "config/config_entries/entry");
+    const maEntries = entries.filter(entry => entry.domain === "music_assistant");
+    const entry = maEntries.find(entry => entry.state === "loaded");
+    if (entry) {
+      configEntryId = entry.entry_id;
+    }
+  } catch (error) {
+    console.error('yamp: Error getting Music Assistant config entry:', error);
+  }
+  
+  if (!configEntryId) {
+    console.log('yamp: No Music Assistant config entry found');
+    return { results: [], usedMusicAssistant: false };
+  }
+  
+  console.log('yamp: getRecentlyPlayed found', configEntryId, 'Music Assistant entries');
+  console.log('yamp: getRecentlyPlayed using config entry:', configEntryId);
+  
+  try {
+    // Handle "all" media type by getting multiple types and combining
+    if (mediaType === 'all') {
+      const mediaTypes = ['track', 'album', 'artist', 'playlist'];
+      const allResults = [];
+      
+      await Promise.all(
+        mediaTypes.map(async (mt) => {
+          const message = {
+            type: "call_service",
+            domain: "music_assistant",
+            service: "get_library",
+            service_data: {
+              config_entry_id: configEntryId,
+              media_type: mt,
+              order_by: "last_played_desc",
+              limit: Math.min(5, searchResultsLimit), // Limit each type to avoid too many results
+            },
+            return_response: true,
+          };
+          
+          const response = await hass.connection.sendMessagePromise(message);
+          const items = response?.response?.items || [];
+          allResults.push(...items);
+        })
+      );
+      
+      // Transform Music Assistant format to media_player format
+      const transformedResults = allResults.map(item => ({
+        title: item.name,
+        media_content_id: item.uri,
+        media_content_type: item.media_type,
+        media_class: item.media_type,
+        thumbnail: item.image,
+        // Add artist info if available
+        ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
+        // Add album info if available
+        ...(item.album && { album: item.album.name })
+      }));
+      
+      console.log('yamp: getRecentlyPlayed API returned', allResults?.length || 0, 'items (all types)');
+      console.log('yamp: Sample recently played item:', allResults?.[0]);
+      console.log('yamp: Sample transformed item:', transformedResults?.[0]);
+      return { results: transformedResults || [], usedMusicAssistant: true };
+    } else {
+      // Single media type
+      const message = {
+        type: "call_service",
+        domain: "music_assistant",
+        service: "get_library",
+        service_data: {
+          config_entry_id: configEntryId,
+          media_type: mediaType || "track",
+          order_by: "last_played_desc",
+          limit: searchResultsLimit,
+        },
+        return_response: true,
+      };
+      
+      const response = await hass.connection.sendMessagePromise(message);
+      const items = response?.response?.items || [];
+      
+      // Transform Music Assistant format to media_player format
+      const transformedResults = items.map(item => ({
+        title: item.name,
+        media_content_id: item.uri,
+        media_content_type: item.media_type,
+        media_class: item.media_type,
+        thumbnail: item.image,
+        // Add artist info if available
+        ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
+        // Add album info if available
+        ...(item.album && { album: item.album.name })
+      }));
+      
+      console.log('yamp: getRecentlyPlayed API returned', items?.length || 0, 'items');
+      console.log('yamp: Sample recently played item:', items?.[0]);
+      console.log('yamp: Sample transformed item:', transformedResults?.[0]);
+      return { results: transformedResults || [], usedMusicAssistant: true };
+    }
+  } catch (error) {
+    console.error('yamp: Error getting recently played from Music Assistant:', error);
+    return { results: [], usedMusicAssistant: false };
+  }
+}
+
 export async function getFavorites(hass, entityId, mediaType = null, searchResultsLimit = 20) {
 
   
@@ -392,7 +502,7 @@ export function playSearchedMedia(hass, entityId, item) {
 }
 
 // Check if a track is favorited in Music Assistant
-export async function isTrackFavorited(hass, mediaContentId, entityId = null, trackName = null, artistName = null) {
+export async function isTrackFavorited(hass, mediaContentId, entityId = null, trackName = null, artistName = null, searchResultsLimit = 100) {
   if (!mediaContentId) {
     return false;
   }
