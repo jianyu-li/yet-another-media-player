@@ -736,7 +736,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       // If no search query or explicitly requesting favorites, load favorites
       if (!this._searchQuery || this._searchQuery.trim() === '' || mediaType === 'favorites') {
-        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType);
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this.config?.search_results_limit || 20);
         // Mark that initial favorites have been loaded
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
@@ -750,13 +750,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
           searchEntityId,
           this._searchQuery,
           mediaType,
-          { ...searchParams, favorites: true }
+          { ...searchParams, favorites: true },
+          this.config?.search_results_limit || 20
         );
         this._lastSearchUsedServerFavorites = true;
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams);
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this.config?.search_results_limit || 20);
         this._lastSearchUsedServerFavorites = false;
       }
       
@@ -1051,7 +1052,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
     
     try {
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter);
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, this.config?.search_results_limit || 20);
       const favorites = favoritesResponse.results || [];
       
       // Create a set of favorite URIs for quick lookup

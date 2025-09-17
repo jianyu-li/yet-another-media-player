@@ -78,7 +78,7 @@ export function renderSearchSheet({
 }
 
 // Service helpers to keep search-related logic colocated with the search UI module
-export async function searchMedia(hass, entityId, query, mediaType = null, searchParams = {}) {
+export async function searchMedia(hass, entityId, query, mediaType = null, searchParams = {}, searchResultsLimit = 20) {
 
   
   // Try to get Music Assistant config entry ID
@@ -118,7 +118,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
                 media_type: mt,
                 favorite: true,
                 search: query,
-                limit: mt === 'all' ? 8 : 20,
+                limit: mt === 'all' ? Math.min(8, searchResultsLimit) : searchResultsLimit,
               },
               return_response: true,
             };
@@ -145,7 +145,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
       const serviceData = {
         name: query,
         config_entry_id: configEntryId,
-        limit: mediaType === "all" ? 8 : 20, // Use 20 limit for filtered searches
+        limit: mediaType === "all" ? Math.min(8, searchResultsLimit) : searchResultsLimit, // Use configurable limit for filtered searches
       };
       
       // Add media_type if specified and not "all"
@@ -220,7 +220,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
 }
 
 // Get favorites from Music Assistant
-export async function getFavorites(hass, entityId, mediaType = null) {
+export async function getFavorites(hass, entityId, mediaType = null, searchResultsLimit = 20) {
 
   
   // Try to get Music Assistant config entry ID
@@ -276,7 +276,7 @@ export async function getFavorites(hass, entityId, mediaType = null) {
           config_entry_id: configEntryId,
           media_type: mediaType,
           favorite: true,
-          limit: mediaType === "all" ? 8 : 20,
+          limit: mediaType === "all" ? Math.min(8, searchResultsLimit) : searchResultsLimit,
         },
         return_response: true,
       };
@@ -431,7 +431,7 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
         const serviceData = {
           name: trackName || artistName,
           config_entry_id: configEntryId,
-          limit: 20,
+          limit: searchResultsLimit,
           media_type: 'track',
         };
         if (artistName) {
@@ -483,7 +483,7 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
               media_type: "track",
               favorite: true,
               search: trackName.trim(),
-              limit: 20, // Back to 20 results since we're less specific
+              limit: searchResultsLimit, // Use configurable limit
             },
             return_response: true,
           };
@@ -508,7 +508,7 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
           config_entry_id: configEntryId,
           media_type: "track",
           favorite: true,
-          limit: 100, // Just check first 100 favorites
+          limit: Math.max(100, searchResultsLimit), // Check at least 100 favorites for better matching
         },
         return_response: true,
       };
@@ -537,7 +537,7 @@ export async function getPlaylistTracks(hass, entityId, playlistId) {
       service_data: {
         media_type: "track",
         search: playlistId,
-        limit: 100
+        limit: Math.max(100, searchResultsLimit)
       },
       return_response: true,
     };
