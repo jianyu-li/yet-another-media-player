@@ -10934,6 +10934,137 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
 }
 customElements.define("yet-another-media-player-editor-alpha", YetAnotherMediaPlayerEditor);
 
+// Utility functions for Yet Another Media Player
+
+/**
+ * Resolve a Jinja template string at runtime
+ * @param {Object} hass - Home Assistant object
+ * @param {string} templateString - The template string to resolve
+ * @param {string} fallbackEntityId - Fallback entity ID if template resolution fails
+ * @returns {Promise<string>} Resolved entity ID
+ */
+async function resolveTemplateAtActionTime(hass, templateString, fallbackEntityId) {
+  if (!templateString || typeof templateString !== 'string') return fallbackEntityId;
+
+  // Not a template — return as-is
+  if (!templateString.includes('{{') && !templateString.includes('{%')) {
+    return templateString;
+  }
+  try {
+    const res = await hass.callApi('POST', 'template', {
+      template: templateString
+    });
+    const out = (res || '').toString().trim();
+    // Basic validation: must look like an entity_id
+    if (out && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(out)) return out;
+    return fallbackEntityId;
+  } catch (error) {
+    console.warn('Failed to resolve template:', error);
+    return fallbackEntityId; // Fallback to main entity
+  }
+}
+
+/**
+ * Find button entities associated with a Music Assistant entity
+ * @param {Object} hass - Home Assistant object
+ * @param {string} maEntityId - Music Assistant entity ID
+ * @returns {Array} Array of associated button entities
+ */
+function findAssociatedButtonEntities(hass, maEntityId) {
+  var _maEntity$attributes, _maEntity$attributes2;
+  if (!(hass !== null && hass !== void 0 && hass.states) || !maEntityId) return [];
+  const buttonEntities = [];
+  const maEntity = hass.states[maEntityId];
+  if (!maEntity) return [];
+
+  // Look for button entities that might be associated with this MA entity
+  // Common patterns: device_id matching, friendly_name similarity, or device_class
+  const maDeviceId = (_maEntity$attributes = maEntity.attributes) === null || _maEntity$attributes === void 0 ? void 0 : _maEntity$attributes.device_id;
+  const maFriendlyName = ((_maEntity$attributes2 = maEntity.attributes) === null || _maEntity$attributes2 === void 0 ? void 0 : _maEntity$attributes2.friendly_name) || maEntityId;
+
+  // Search through all button entities
+  for (const [entityId, state] of Object.entries(hass.states)) {
+    if (entityId.startsWith('button.') && state.attributes) {
+      const buttonDeviceId = state.attributes.device_id;
+      const buttonFriendlyName = state.attributes.friendly_name || entityId;
+
+      // Check if this button is associated with the same device
+      if (maDeviceId && buttonDeviceId === maDeviceId) {
+        buttonEntities.push({
+          entity_id: entityId,
+          friendly_name: buttonFriendlyName,
+          device_class: state.attributes.device_class,
+          reason: 'same_device'
+        });
+      }
+      // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
+      else if (buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) || maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())) {
+        buttonEntities.push({
+          entity_id: entityId,
+          friendly_name: buttonFriendlyName,
+          device_class: state.attributes.device_class,
+          reason: 'name_similarity'
+        });
+      }
+    }
+  }
+  return buttonEntities;
+}
+
+/**
+ * Get Music Assistant state for a given entity
+ * @param {Object} hass - Home Assistant object
+ * @param {string} entityId - Entity ID to get MA state for
+ * @returns {Object|null} Music Assistant state object or null
+ */
+function getMusicAssistantState(hass, entityId) {
+  if (!(hass !== null && hass !== void 0 && hass.states) || !entityId) return null;
+  const state = hass.states[entityId];
+  if (!state) return null;
+
+  // Check if this entity has Music Assistant attributes
+  const hasMaAttributes = state.attributes && (state.attributes.media_content_id || state.attributes.media_content_type || state.attributes.media_album_name || state.attributes.media_artist || state.attributes.media_title);
+  return hasMaAttributes ? state : null;
+}
+
+/**
+ * Get search result click title for an item
+ * @param {Object} item - Search result item
+ * @returns {string} Title to display
+ */
+function getSearchResultClickTitle(item) {
+  if (!item) return '';
+
+  // For tracks, show "Track Name - Artist"
+  if (item.media_type === 'track') {
+    var _item$artists;
+    const title = item.name || item.media_title || 'Unknown Track';
+    const artist = ((_item$artists = item.artists) === null || _item$artists === void 0 ? void 0 : _item$artists[0]) || item.media_artist || 'Unknown Artist';
+    return `${title} - ${artist}`;
+  }
+
+  // For albums, show "Album Name - Artist"
+  if (item.media_type === 'album') {
+    var _item$artists2;
+    const title = item.name || item.media_album_name || 'Unknown Album';
+    const artist = ((_item$artists2 = item.artists) === null || _item$artists2 === void 0 ? void 0 : _item$artists2[0]) || item.media_artist || 'Unknown Artist';
+    return `${title} - ${artist}`;
+  }
+
+  // For artists, just show the name
+  if (item.media_type === 'artist') {
+    return item.name || 'Unknown Artist';
+  }
+
+  // For playlists, show the name
+  if (item.media_type === 'playlist') {
+    return item.name || 'Unknown Playlist';
+  }
+
+  // Default fallback
+  return item.name || item.media_title || 'Unknown';
+}
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player-alpha",
@@ -10968,49 +11099,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Find button entities associated with a Music Assistant entity
   _findAssociatedButtonEntities(maEntityId) {
-    var _this$hass, _maEntity$attributes, _maEntity$attributes2;
-    if (!((_this$hass = this.hass) !== null && _this$hass !== void 0 && _this$hass.states) || !maEntityId) return [];
-    const buttonEntities = [];
-    const maEntity = this.hass.states[maEntityId];
-    if (!maEntity) return [];
-
-    // Look for button entities that might be associated with this MA entity
-    // Common patterns: device_id matching, friendly_name similarity, or device_class
-    const maDeviceId = (_maEntity$attributes = maEntity.attributes) === null || _maEntity$attributes === void 0 ? void 0 : _maEntity$attributes.device_id;
-    const maFriendlyName = ((_maEntity$attributes2 = maEntity.attributes) === null || _maEntity$attributes2 === void 0 ? void 0 : _maEntity$attributes2.friendly_name) || maEntityId;
-
-    // Search through all button entities
-    for (const [entityId, state] of Object.entries(this.hass.states)) {
-      if (entityId.startsWith('button.') && state.attributes) {
-        const buttonDeviceId = state.attributes.device_id;
-        const buttonFriendlyName = state.attributes.friendly_name || entityId;
-
-        // Check if this button is associated with the same device
-        if (maDeviceId && buttonDeviceId === maDeviceId) {
-          buttonEntities.push({
-            entity_id: entityId,
-            friendly_name: buttonFriendlyName,
-            device_class: state.attributes.device_class,
-            reason: 'same_device'
-          });
-        }
-        // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
-        else if (buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) || maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())) {
-          buttonEntities.push({
-            entity_id: entityId,
-            friendly_name: buttonFriendlyName,
-            device_class: state.attributes.device_class,
-            reason: 'name_similarity'
-          });
-        }
-      }
-    }
-    return buttonEntities;
+    return findAssociatedButtonEntities(this.hass, maEntityId);
   }
 
   // Get the favorite button entity for the current Music Assistant entity
   _getFavoriteButtonEntity() {
-    var _this$hass2, _activeState$attribut;
+    var _this$hass, _activeState$attribut;
     const obj = this.entityObjs[this._selectedIndex];
     if (!obj) return null;
 
@@ -11019,7 +11113,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (!activeEntityId) return null;
 
     // Check if the active entity is a Music Assistant entity
-    const activeState = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[activeEntityId];
+    const activeState = (_this$hass = this.hass) === null || _this$hass === void 0 || (_this$hass = _this$hass.states) === null || _this$hass === void 0 ? void 0 : _this$hass[activeEntityId];
     if (!activeState || ((_activeState$attribut = activeState.attributes) === null || _activeState$attribut === void 0 ? void 0 : _activeState$attribut.app_id) !== 'music_assistant') {
       return null;
     }
@@ -11032,20 +11126,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get the current Music Assistant state
   _getMusicAssistantState() {
-    var _this$hass3, _activeState$attribut2;
-    const obj = this.entityObjs[this._selectedIndex];
-    if (!obj) return null;
-
-    // Get the active entity (the one currently playing/selected)
     const activeEntityId = this._getActivePlaybackEntityId();
     if (!activeEntityId) return null;
-
-    // Check if the active entity is a Music Assistant entity
-    const activeState = (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[activeEntityId];
-    if (!activeState || ((_activeState$attribut2 = activeState.attributes) === null || _activeState$attribut2 === void 0 ? void 0 : _activeState$attribut2.app_id) !== 'music_assistant') {
-      return null;
-    }
-    return activeState;
+    return getMusicAssistantState(this.hass, activeEntityId);
   }
 
   // Check if the currently playing track is favorited
@@ -11434,24 +11517,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Resolve template at action time with fallback to main entity (async)
   async _resolveTemplateAtActionTime(templateString, fallbackEntityId) {
-    if (!templateString || typeof templateString !== 'string') return fallbackEntityId;
-
-    // Not a template — return as-is
-    if (!templateString.includes('{{') && !templateString.includes('{%')) {
-      return templateString;
-    }
-    try {
-      const res = await this.hass.callApi('POST', 'template', {
-        template: templateString
-      });
-      const out = (res || '').toString().trim();
-      // Basic validation: must look like an entity_id
-      if (out && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(out)) return out;
-      return fallbackEntityId;
-    } catch (error) {
-      console.warn('Failed to resolve template:', error);
-      return fallbackEntityId; // Fallback to main entity
-    }
+    return resolveTemplateAtActionTime(this.hass, templateString, fallbackEntityId);
   }
 
   /**
@@ -11919,14 +11985,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
   // Get the tooltip title for clickable search results
   _getSearchResultClickTitle(item) {
     if (!this._isClickableSearchResult(item)) return "";
-    if (item.media_class === 'artist') {
-      return `View albums by ${item.title}`;
-    } else if (item.media_class === 'album') {
-      return `View tracks from ${item.title}`;
-    } else if (item.media_class === 'playlist') {
-      return `View tracks in ${item.title}`;
-    }
-    return "";
+    return getSearchResultClickTitle(item);
   }
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
@@ -12259,9 +12318,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (typeof e === "object" && typeof e.group_volume !== "undefined") {
         group_volume = e.group_volume;
       } else {
-        var _this$hass4;
+        var _this$hass2;
         // Determine group_volume default
-        const state = (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[entity_id];
+        const state = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[entity_id];
         if (state && Array.isArray(state.attributes.group_members) && state.attributes.group_members.length > 0) {
           // Are any group members in entityIds?
           const otherMembers = state.attributes.group_members.filter(id => id !== entity_id);
@@ -12338,13 +12397,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get active playback entity for a specific index
   _getActivePlaybackEntityForIndex(idx) {
-    var _this$hass5, _this$hass6;
+    var _this$hass3, _this$hass4;
     const obj = this.entityObjs[idx];
     if (!obj) return null;
     const mainId = obj.entity_id;
     const maId = this._resolveEntity(obj.music_assistant_entity, obj.entity_id, idx);
-    const mainState = mainId ? (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[mainId] : null;
-    const maState = maId ? (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[maId] : null;
+    const mainState = mainId ? (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[mainId] : null;
+    const maState = maId ? (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[maId] : null;
     if (maId === mainId) return mainId;
     return this._getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState);
   }
@@ -12413,12 +12472,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
   }
   // Choose the active playback target dynamically: prefer the entity that is currently playing
   _getActivePlaybackEntityId() {
-    var _this$hass7, _this$hass8;
+    var _this$hass5, _this$hass6;
     const mainId = this.currentEntityId;
     // Use actual resolved MA entity for active playback detection (can be unconfigured)
     const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const mainState = mainId ? (_this$hass7 = this.hass) === null || _this$hass7 === void 0 || (_this$hass7 = _this$hass7.states) === null || _this$hass7 === void 0 ? void 0 : _this$hass7[mainId] : null;
-    const maState = maId ? (_this$hass8 = this.hass) === null || _this$hass8 === void 0 || (_this$hass8 = _this$hass8.states) === null || _this$hass8 === void 0 ? void 0 : _this$hass8[maId] : null;
+    const mainState = mainId ? (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[mainId] : null;
+    const maState = maId ? (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[maId] : null;
     return this._getActivePlaybackEntityIdInternal(mainId, maId, mainState, maState);
   }
   _getActivePlaybackEntityIdInternal(mainId, maId, mainState, maState) {
@@ -12564,14 +12623,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get the active playback entity for a specific entity index (for follow_active_volume)
   _getActivePlaybackEntityIdForIndex(idx) {
-    var _this$hass9, _this$hass0;
+    var _this$hass7, _this$hass8;
     const obj = this.entityObjs[idx];
     if (!obj) return null;
     const mainId = obj.entity_id;
     // Use actual resolved MA entity for active playback detection (can be unconfigured)
     const maId = this._getActualResolvedMaEntityForState(idx);
-    const mainState = mainId ? (_this$hass9 = this.hass) === null || _this$hass9 === void 0 || (_this$hass9 = _this$hass9.states) === null || _this$hass9 === void 0 ? void 0 : _this$hass9[mainId] : null;
-    const maState = maId ? (_this$hass0 = this.hass) === null || _this$hass0 === void 0 || (_this$hass0 = _this$hass0.states) === null || _this$hass0 === void 0 ? void 0 : _this$hass0[maId] : null;
+    const mainState = mainId ? (_this$hass7 = this.hass) === null || _this$hass7 === void 0 || (_this$hass7 = _this$hass7.states) === null || _this$hass7 === void 0 ? void 0 : _this$hass7[mainId] : null;
+    const maState = maId ? (_this$hass8 = this.hass) === null || _this$hass8 === void 0 || (_this$hass8 = _this$hass8.states) === null || _this$hass8 === void 0 ? void 0 : _this$hass8[maId] : null;
     if (maId === mainId) return mainId;
 
     // Prioritize the entity that is actually playing
@@ -12627,10 +12686,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Return grouping key
   _getGroupKey(id) {
-    var _this$hass1;
+    var _this$hass9;
     // Use the grouping entity (e.g., Music Assistant) for membership
     const groupingId = this._getGroupingEntityIdByEntityId(id);
-    const st = (_this$hass1 = this.hass) === null || _this$hass1 === void 0 || (_this$hass1 = _this$hass1.states) === null || _this$hass1 === void 0 ? void 0 : _this$hass1[groupingId];
+    const st = (_this$hass9 = this.hass) === null || _this$hass9 === void 0 || (_this$hass9 = _this$hass9.states) === null || _this$hass9 === void 0 ? void 0 : _this$hass9[groupingId];
     if (!st) return id;
     const membersRaw = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
     // Translate raw group member ids (likely MA ids) back to configured entity ids
@@ -12696,10 +12755,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return this.hass.states[resolvedMaId];
   }
   get currentActivePlaybackEntityId() {
-    var _this$hass10, _this$hass11;
+    var _this$hass0, _this$hass1;
     // Cache the result to prevent continuous re-calling during renders
     // Only recalculate if the cache is invalid or if key state has changed
-    const cacheKey = `${this._selectedIndex}-${(_this$hass10 = this.hass) === null || _this$hass10 === void 0 || (_this$hass10 = _this$hass10.states) === null || _this$hass10 === void 0 || (_this$hass10 = _this$hass10[this.currentEntityId]) === null || _this$hass10 === void 0 ? void 0 : _this$hass10.state}-${(_this$hass11 = this.hass) === null || _this$hass11 === void 0 || (_this$hass11 = _this$hass11.states) === null || _this$hass11 === void 0 || (_this$hass11 = _this$hass11[this._getSearchEntityId(this._selectedIndex)]) === null || _this$hass11 === void 0 ? void 0 : _this$hass11.state}`;
+    const cacheKey = `${this._selectedIndex}-${(_this$hass0 = this.hass) === null || _this$hass0 === void 0 || (_this$hass0 = _this$hass0.states) === null || _this$hass0 === void 0 || (_this$hass0 = _this$hass0[this.currentEntityId]) === null || _this$hass0 === void 0 ? void 0 : _this$hass0.state}-${(_this$hass1 = this.hass) === null || _this$hass1 === void 0 || (_this$hass1 = _this$hass1.states) === null || _this$hass1 === void 0 || (_this$hass1 = _this$hass1[this._getSearchEntityId(this._selectedIndex)]) === null || _this$hass1 === void 0 ? void 0 : _this$hass1.state}`;
     if (this._cachedActivePlaybackEntityId === undefined || this._cachedActivePlaybackEntityKey !== cacheKey) {
       this._cachedActivePlaybackEntityId = this._getActivePlaybackEntityId();
       this._cachedActivePlaybackEntityKey = cacheKey;
@@ -12707,9 +12766,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return this._cachedActivePlaybackEntityId;
   }
   get currentActivePlaybackStateObj() {
-    var _this$hass12;
+    var _this$hass10;
     const id = this.currentActivePlaybackEntityId;
-    return id ? (_this$hass12 = this.hass) === null || _this$hass12 === void 0 || (_this$hass12 = _this$hass12.states) === null || _this$hass12 === void 0 ? void 0 : _this$hass12[id] : null;
+    return id ? (_this$hass10 = this.hass) === null || _this$hass10 === void 0 || (_this$hass10 = _this$hass10.states) === null || _this$hass10 === void 0 ? void 0 : _this$hass10[id] : null;
   }
   get currentVolumeStateObj() {
     const entityId = this._getVolumeEntity(this._selectedIndex);
@@ -12940,8 +12999,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
         // Take a snapshot of who is currently playing.
         this._manualSelectPlayingSet = new Set();
         for (const id of this.entityIds) {
-          var _this$hass13;
-          const st = (_this$hass13 = this.hass) === null || _this$hass13 === void 0 || (_this$hass13 = _this$hass13.states) === null || _this$hass13 === void 0 ? void 0 : _this$hass13[id];
+          var _this$hass11;
+          const st = (_this$hass11 = this.hass) === null || _this$hass11 === void 0 || (_this$hass11 = _this$hass11.states) === null || _this$hass11 === void 0 ? void 0 : _this$hass11[id];
           if (st && st.state === "playing") {
             this._manualSelectPlayingSet.add(id);
           }
@@ -13049,11 +13108,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this.hass.callService(domain, service, data);
   }
   async _onControlClick(action) {
-    var _this$hass14;
+    var _this$hass12;
     // Use the unified entity resolution system for control actions
     const targetEntity = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     if (!targetEntity) return;
-    const stateObj = ((_this$hass14 = this.hass) === null || _this$hass14 === void 0 || (_this$hass14 = _this$hass14.states) === null || _this$hass14 === void 0 ? void 0 : _this$hass14[targetEntity]) || this.currentStateObj;
+    const stateObj = ((_this$hass12 = this.hass) === null || _this$hass12 === void 0 || (_this$hass12 = _this$hass12.states) === null || _this$hass12 === void 0 ? void 0 : _this$hass12[targetEntity]) || this.currentStateObj;
     switch (action) {
       case "play_pause":
         if ((stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) === "playing") {
@@ -13159,10 +13218,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
         }
       case "power":
         {
-          var _this$hass15;
+          var _this$hass13;
           // Toggle main entity power (physical power behavior)
           const mainId = this.currentEntityId;
-          const mainState = ((_this$hass15 = this.hass) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15.states) === null || _this$hass15 === void 0 ? void 0 : _this$hass15[mainId]) || stateObj;
+          const mainState = ((_this$hass13 = this.hass) === null || _this$hass13 === void 0 || (_this$hass13 = _this$hass13.states) === null || _this$hass13 === void 0 ? void 0 : _this$hass13[mainId]) || stateObj;
           const svc = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "off" ? "turn_on" : "turn_off";
           this.hass.callService("media_player", svc, {
             entity_id: mainId
@@ -13185,13 +13244,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
           // Press the associated favorite button entity
           const favoriteButtonEntity = this._getFavoriteButtonEntity();
           if (favoriteButtonEntity) {
-            var _this$hass16, _maState$attributes5;
+            var _this$hass14, _maState$attributes5;
             this.hass.callService("button", "press", {
               entity_id: favoriteButtonEntity
             });
 
             // Immediately mark as favorited when button is pressed
-            const maState = (_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 ? void 0 : _this$hass16[targetEntity];
+            const maState = (_this$hass14 = this.hass) === null || _this$hass14 === void 0 || (_this$hass14 = _this$hass14.states) === null || _this$hass14 === void 0 ? void 0 : _this$hass14[targetEntity];
             if (maState !== null && maState !== void 0 && (_maState$attributes5 = maState.attributes) !== null && _maState$attributes5 !== void 0 && _maState$attributes5.media_content_id) {
               // Initialize cache if needed
               if (!this._favoriteStatusCache) {
@@ -13511,12 +13570,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }));
   }
   async _onProgressBarClick(e) {
-    var _this$hass17, _this$hass18, _this$hass19;
+    var _this$hass15, _this$hass16, _this$hass17;
     // For seeking, we want to target the entity that is actually playing
     const mainId = this.currentEntityId;
     const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const mainState = mainId ? (_this$hass17 = this.hass) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17.states) === null || _this$hass17 === void 0 ? void 0 : _this$hass17[mainId] : null;
-    const maState = maId ? (_this$hass18 = this.hass) === null || _this$hass18 === void 0 || (_this$hass18 = _this$hass18.states) === null || _this$hass18 === void 0 ? void 0 : _this$hass18[maId] : null;
+    const mainState = mainId ? (_this$hass15 = this.hass) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15.states) === null || _this$hass15 === void 0 ? void 0 : _this$hass15[mainId] : null;
+    const maState = maId ? (_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 ? void 0 : _this$hass16[maId] : null;
     let targetEntity;
     if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
       targetEntity = this._controlFocusEntityId;
@@ -13536,7 +13595,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         targetEntity = await this._resolveTemplateAtActionTime(entityTemplate, this.currentEntityId);
       }
     }
-    const stateObj = ((_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[targetEntity]) || this.currentStateObj;
+    const stateObj = ((_this$hass17 = this.hass) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17.states) === null || _this$hass17 === void 0 ? void 0 : _this$hass17[targetEntity]) || this.currentStateObj;
     if (!targetEntity || !stateObj) return;
     const duration = stateObj.attributes.media_duration;
     if (!duration) return;
@@ -13555,7 +13614,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass20, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass21, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config8, _this$config9, _this$config0, _this$currentVolumeSt3, _this$currentStateObj;
+    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config8, _this$config9, _this$config0, _this$currentVolumeSt3, _this$currentStateObj;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -13597,7 +13656,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._getResolvedPlaybackEntityIdSync(this._selectedIndex);
     // Also get the actual resolved MA entity for state detection (can be unconfigured)
     const actualResolvedMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const actualMaState = actualResolvedMaId ? (_this$hass20 = this.hass) === null || _this$hass20 === void 0 || (_this$hass20 = _this$hass20.states) === null || _this$hass20 === void 0 ? void 0 : _this$hass20[actualResolvedMaId] : null;
+    const actualMaState = actualResolvedMaId ? (_this$hass18 = this.hass) === null || _this$hass18 === void 0 || (_this$hass18 = _this$hass18.states) === null || _this$hass18 === void 0 ? void 0 : _this$hass18[actualResolvedMaId] : null;
 
     // Update state tracking for optimistic playback and set/clear MA linger window
     const prevMain = this._lastMainState;
@@ -13642,7 +13701,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // Use the unified entity resolution system for playback state
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
-    const playbackStateObj = (_this$hass21 = this.hass) === null || _this$hass21 === void 0 || (_this$hass21 = _this$hass21.states) === null || _this$hass21 === void 0 ? void 0 : _this$hass21[playbackEntityId];
+    const playbackStateObj = (_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[playbackEntityId];
 
     // Use the unified entity resolution system for playback state
     const finalPlaybackStateObj = playbackStateObj;
@@ -13741,7 +13800,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       mediaArtworkOverrides: ((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.media_artwork_overrides) || [],
       fallbackArtwork: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
-        var _this$hass22;
+        var _this$hass20;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -13749,12 +13808,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
         // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[playbackEntityId];
+        const playbackState = (_this$hass20 = this.hass) === null || _this$hass20 === void 0 || (_this$hass20 = _this$hass20.states) === null || _this$hass20 === void 0 ? void 0 : _this$hass20[playbackEntityId];
         const anyPlaying = (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === "playing";
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass23, _this$hass24, _ref2;
+        var _this$hass21, _this$hass22, _ref2;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -13762,8 +13821,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
         // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[playbackEntityId];
-        const mainState = (_this$hass24 = this.hass) === null || _this$hass24 === void 0 || (_this$hass24 = _this$hass24.states) === null || _this$hass24 === void 0 ? void 0 : _this$hass24[mainId];
+        const playbackState = (_this$hass21 = this.hass) === null || _this$hass21 === void 0 || (_this$hass21 = _this$hass21.states) === null || _this$hass21 === void 0 ? void 0 : _this$hass21[playbackEntityId];
+        const mainState = (_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[mainId];
 
         // Prefer playback entity artwork, fallback to main entity
         const playbackArtwork = this._getArtworkUrl(playbackState);
@@ -13771,7 +13830,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return ((_ref2 = playbackArtwork || mainArtwork) === null || _ref2 === void 0 ? void 0 : _ref2.url) || null;
       },
       getIsMaActive: id => {
-        var _this$hass25;
+        var _this$hass23;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -13783,7 +13842,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
         // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[playbackEntityId];
+        const playbackState = (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[playbackEntityId];
 
         // Check if the playback entity is the MA entity and is playing
         return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === "playing";
@@ -14013,8 +14072,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
                     ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
-      var _this$hass26, _state$attributes3, _state$attributes4;
-      const state = (_this$hass26 = this.hass) === null || _this$hass26 === void 0 || (_this$hass26 = _this$hass26.states) === null || _this$hass26 === void 0 ? void 0 : _this$hass26[entityId];
+      var _this$hass24, _state$attributes3, _state$attributes4;
+      const state = (_this$hass24 = this.hass) === null || _this$hass24 === void 0 || (_this$hass24 = _this$hass24.states) === null || _this$hass24 === void 0 ? void 0 : _this$hass24[entityId];
       const name = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.friendly_name) || entityId;
       const icon = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.icon) || "mdi:help-circle";
 
@@ -14152,11 +14211,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return E;
     })()}
                                               <button
-                          class="favorites-filter-btn"
+                          class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
                           style="
                             background: none;
                             border: none;
-                            color: ${this._favoritesFilterActive ? '#ff6b6b' : '#999'};
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
                             padding: 4px;
@@ -14172,9 +14230,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
                       </button>
-                      <span style="color: white; font-size: 0.9em;">
-                        ${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'Showing Favorites' : 'Filter Favorites'}
-                      </span>
                     </div>
                   ` : E}
                   
@@ -14481,10 +14536,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
       `;
   }
   _updateIdleState() {
-    var _this$hass27;
+    var _this$hass25;
     // Check if the active playback entity is playing (not just main entity)
     const activePlaybackEntityId = this._getActivePlaybackEntityId();
-    const activePlaybackState = activePlaybackEntityId ? (_this$hass27 = this.hass) === null || _this$hass27 === void 0 || (_this$hass27 = _this$hass27.states) === null || _this$hass27 === void 0 ? void 0 : _this$hass27[activePlaybackEntityId] : null;
+    const activePlaybackState = activePlaybackEntityId ? (_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[activePlaybackEntityId] : null;
     const isAnyPlaying = (activePlaybackState === null || activePlaybackState === void 0 ? void 0 : activePlaybackState.state) === "playing";
     if (isAnyPlaying) {
       // Became active, clear timer and set not idle
