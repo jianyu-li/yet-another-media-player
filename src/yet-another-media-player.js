@@ -6,8 +6,14 @@ import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
-import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites, isTrackFavorited } from "./search-sheet.js";
-import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js"; 
+import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites, getRecentlyPlayed, isTrackFavorited } from "./search-sheet.js";
+import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
+import { 
+  resolveTemplateAtActionTime, 
+  findAssociatedButtonEntities, 
+  getMusicAssistantState, 
+  getSearchResultClickTitle
+} from "./yamp-utils.js"; 
 
 import {
   SUPPORT_PAUSE,
@@ -63,46 +69,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Find button entities associated with a Music Assistant entity
   _findAssociatedButtonEntities(maEntityId) {
-    if (!this.hass?.states || !maEntityId) return [];
-    
-    const buttonEntities = [];
-    const maEntity = this.hass.states[maEntityId];
-    if (!maEntity) return [];
-    
-    // Look for button entities that might be associated with this MA entity
-    // Common patterns: device_id matching, friendly_name similarity, or device_class
-    const maDeviceId = maEntity.attributes?.device_id;
-    const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
-    
-    // Search through all button entities
-    for (const [entityId, state] of Object.entries(this.hass.states)) {
-      if (entityId.startsWith('button.') && state.attributes) {
-        const buttonDeviceId = state.attributes.device_id;
-        const buttonFriendlyName = state.attributes.friendly_name || entityId;
-        
-        // Check if this button is associated with the same device
-        if (maDeviceId && buttonDeviceId === maDeviceId) {
-          buttonEntities.push({
-            entity_id: entityId,
-            friendly_name: buttonFriendlyName,
-            device_class: state.attributes.device_class,
-            reason: 'same_device'
-          });
-        }
-        // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
-        else if (buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) ||
-                 maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())) {
-          buttonEntities.push({
-            entity_id: entityId,
-            friendly_name: buttonFriendlyName,
-            device_class: state.attributes.device_class,
-            reason: 'name_similarity'
-          });
-        }
-      }
-    }
-    
-    return buttonEntities;
+    return findAssociatedButtonEntities(this.hass, maEntityId);
   }
 
   // Get the favorite button entity for the current Music Assistant entity
@@ -133,20 +100,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Get the current Music Assistant state
   _getMusicAssistantState() {
-    const obj = this.entityObjs[this._selectedIndex];
-    if (!obj) return null;
-    
-    // Get the active entity (the one currently playing/selected)
     const activeEntityId = this._getActivePlaybackEntityId();
     if (!activeEntityId) return null;
     
-    // Check if the active entity is a Music Assistant entity
-    const activeState = this.hass?.states?.[activeEntityId];
-    if (!activeState || activeState.attributes?.app_id !== 'music_assistant') {
-      return null;
-    }
-    
-    return activeState;
+    return getMusicAssistantState(this.hass, activeEntityId);
   }
 
   // Check if the currently playing track is favorited
@@ -202,7 +159,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const artistName = maState.attributes?.media_artist;
       
       
-      const isFavorited = await isTrackFavorited(this.hass, mediaContentId, entityId, trackName, artistName);
+      const isFavorited = await isTrackFavorited(this.hass, mediaContentId, entityId, trackName, artistName, 200);
       
       // Initialize cache if needed
       if (!this._favoriteStatusCache) {
@@ -513,23 +470,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Resolve template at action time with fallback to main entity (async)
   async _resolveTemplateAtActionTime(templateString, fallbackEntityId) {
-    if (!templateString || typeof templateString !== 'string') return fallbackEntityId;
-
-    // Not a template — return as-is
-    if (!templateString.includes('{{') && !templateString.includes('{%')) {
-      return templateString;
-    }
-
-    try {
-      const res = await this.hass.callApi('POST', 'template', { template: templateString });
-      const out = (res || '').toString().trim();
-      // Basic validation: must look like an entity_id
-      if (out && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(out)) return out;
-      return fallbackEntityId;
-    } catch (error) {
-      console.warn('Failed to resolve template:', error);
-      return fallbackEntityId; // Fallback to main entity
-    }
+    return resolveTemplateAtActionTime(this.hass, templateString, fallbackEntityId);
   }
 
   /**
@@ -610,6 +551,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._currentSearchQuery = artist; // Set current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    
+    // Clear filter states to ensure accurate artist search results
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._initialFavoritesLoaded = false;
 
     // Render, then run search
     this.requestUpdate();
@@ -628,6 +574,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchBreadcrumb = ""; // Clear breadcrumb
     this._usingMusicAssistant = false; // Track if we're using Music Assistant search
     this._favoritesFilterActive = false; // Track if favorites filter is active
+    this._recentlyPlayedFilterActive = false; // Track if recently played filter is active
     this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
     this.requestUpdate();
     
@@ -704,11 +651,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       async _doSearch(mediaType = null, searchParams = {}) {
     this._searchAttempted = true;
     
-    // Set the current filter
-    this._searchMediaClassFilter = mediaType || 'all';
+    // Set the current filter - but don't use "favorites" as a media type
+    this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
     
     // Respect favorites toggle across chip changes
     const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive);
+    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || this._recentlyPlayedFilterActive);
     
     // Check if search query has changed - if so, clear cache
     if (this._currentSearchQuery !== this._searchQuery) {
@@ -717,7 +665,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}`;
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
       this._searchResults = this._searchResultsByType[cacheKey];
       this.requestUpdate();
@@ -734,14 +682,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       let searchResponse;
       
-      // If no search query or explicitly requesting favorites, load favorites
-      if (!this._searchQuery || this._searchQuery.trim() === '' || mediaType === 'favorites') {
-        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType);
-        // Mark that initial favorites have been loaded
-        if (!this._searchQuery || this._searchQuery.trim() === '') {
-          this._initialFavoritesLoaded = true;
-        }
-        this._lastSearchUsedServerFavorites = true;
+      // Check for recently played first (highest priority)
+      if (isRecentlyPlayed) {
+        // Load recently played items
+        this._initialFavoritesLoaded = false;
+        searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, this.config?.search_results_limit || 20);
+        this._lastSearchUsedServerFavorites = false;
       } else if (isFavorites) {
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
@@ -750,13 +696,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
           searchEntityId,
           this._searchQuery,
           mediaType,
-          { ...searchParams, favorites: true }
+          { ...searchParams, favorites: true },
+          this.config?.search_results_limit || 20
         );
+        this._lastSearchUsedServerFavorites = true;
+      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this.config?.search_results_limit || 20);
+        // Mark that initial favorites have been loaded
+        if (!this._searchQuery || this._searchQuery.trim() === '') {
+          this._initialFavoritesLoaded = true;
+        }
         this._lastSearchUsedServerFavorites = true;
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams);
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this.config?.search_results_limit || 20);
         this._lastSearchUsedServerFavorites = false;
       }
       
@@ -765,10 +719,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
       
       
-      // Only reset favorites filter if this is a completely new search (not just switching filters)
+      // Only reset filter states if this is a completely new search (not just switching filters)
       const isNewSearch = this._currentSearchQuery !== this._searchQuery;
       if (isNewSearch) {
         this._favoritesFilterActive = false;
+        this._recentlyPlayedFilterActive = false;
+        this._initialFavoritesLoaded = false;
       }
       
       this._searchResults = Array.isArray(arr) ? arr : [];
@@ -834,6 +790,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResultsByType = {}; // Clear cache for new search
     this._currentSearchQuery = artistName;
     this._searchMediaClassFilter = 'album';
+    
+    // Clear filter states to ensure accurate artist search results
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._initialFavoritesLoaded = false;
     
     // Remove swipe handlers when entering hierarchy
     this._removeSearchSwipeHandlers();
@@ -990,26 +951,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getSearchResultClickTitle(item) {
     if (!this._isClickableSearchResult(item)) return "";
     
-    if (item.media_class === 'artist') {
-      return `View albums by ${item.title}`;
-    } else if (item.media_class === 'album') {
-      return `View tracks from ${item.title}`;
-    } else if (item.media_class === 'playlist') {
-      return `View tracks in ${item.title}`;
-    }
-    
-    return "";
+    return getSearchResultClickTitle(item);
   }
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
   async _toggleFavoritesFilter() {
     this._favoritesFilterActive = !this._favoritesFilterActive;
     
+    // Make mutually exclusive with recently played filter
+    if (this._favoritesFilterActive) {
+      this._recentlyPlayedFilterActive = false;
+    }
+    
     if (this._favoritesFilterActive) {
       // Use the existing _doSearch method with favorites parameter
       // This aligns with how initial favorites loading works
       const currentMediaType = this._searchMediaClassFilter;
-      
       
       // Try to search with favorites parameter first
       if (this._searchQuery && this._searchQuery.trim() !== '') {
@@ -1022,7 +979,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else {
         // No search query - load all favorites (same as initial load)
         try {
+          // Reset the favorites filter state temporarily to use the default favorites path
+          const tempFavoritesActive = this._favoritesFilterActive;
+          this._favoritesFilterActive = false;
           await this._doSearch('favorites');
+          this._favoritesFilterActive = tempFavoritesActive;
         } catch (error) {
           console.error('yamp: Error loading favorites:', error);
         }
@@ -1043,6 +1004,45 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
+  // Toggle recently played filter
+  async _toggleRecentlyPlayedFilter() {
+    this._recentlyPlayedFilterActive = !this._recentlyPlayedFilterActive;
+    
+    // Make mutually exclusive with favorites filter
+    if (this._recentlyPlayedFilterActive) {
+      this._favoritesFilterActive = false;
+      this._initialFavoritesLoaded = false; // Clear the initial favorites state
+    }
+    
+    if (this._recentlyPlayedFilterActive) {
+      // Clear search box since it's not used in recently played mode
+      this._searchQuery = '';
+      // Load recently played items - always use "all" for recently played
+      try {
+        await this._doSearch('all', { isRecentlyPlayed: true });
+      } catch (error) {
+        console.error('yamp: Error in _doSearch for recently played:', error);
+      }
+    } else {
+      // Restore original search results
+      if (this._searchQuery && this._searchQuery.trim() !== '') {
+        // Resubmit the original search without recently played filter
+        const currentMediaType = this._searchMediaClassFilter;
+        await this._doSearch(currentMediaType);
+      } else {
+        // Restore from cache or load favorites if no search query
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        if (this._searchResultsByType[cacheKey]) {
+          this._searchResults = this._searchResultsByType[cacheKey];
+          this.requestUpdate();
+        } else {
+          // No cache, load favorites as default
+          await this._doSearch('favorites');
+        }
+      }
+    }
+  }
+
   // Apply favorites filter to current results (called when switching filter chips)
   async _applyFavoritesFilterIfActive() {
     if (!this._favoritesFilterActive) return;
@@ -1051,7 +1051,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
     
     try {
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter);
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, this.config?.search_results_limit || 20);
       const favorites = favoritesResponse.results || [];
       
       // Create a set of favorite URIs for quick lookup
@@ -1062,7 +1062,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._searchResults = currentResults.filter(item => favoriteUris.has(item.media_content_id));
     } catch (error) {
       // If favorites loading fails, just show current results
-      console.warn('Failed to load favorites for filtering:', error);
     }
   }
 
@@ -1730,7 +1729,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Not a template, return as-is
       return obj.music_assistant_entity;
     } catch (error) {
-      console.warn('Failed to resolve music_assistant_entity template:', error);
       return obj.entity_id; // Fallback to main entity
     }
   }
@@ -2387,7 +2385,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
               try {
                 resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
               } catch (error) {
-                console.warn('Failed to resolve template for volume change:', error);
                 resolvedGroupingId = obj.entity_id;
               }
             } else {
@@ -2456,7 +2453,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 try {
                   resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
                 } catch (error) {
-                  console.warn('Failed to resolve template for volume step:', error);
                   resolvedGroupingId = obj.entity_id;
                 }
               } else {
@@ -3250,7 +3246,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         .value=${this._searchQuery}
                         @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
                         @keydown=${e => {
-                          if (e.key === "Enter") { e.preventDefault(); this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); }
+                          if (e.key === "Enter") { 
+                            e.preventDefault(); 
+                            // Clear recently played filter when user initiates search
+                            this._recentlyPlayedFilterActive = false;
+                            this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); 
+                          }
                           else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
                         }}
                         placeholder="Search music..."
@@ -3259,7 +3260,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
-                      @click=${() => { this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); }}
+                      @click=${() => { 
+                        // Clear recently played filter when user initiates search
+                        this._recentlyPlayedFilterActive = false;
+                        this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); 
+                      }}
                       ?disabled=${this._searchLoading}>
                       Search
                     </button>
@@ -3328,11 +3333,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         return nothing;
                       })()}
                                               <button
-                          class="favorites-filter-btn"
+                          class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
                           style="
                             background: none;
                             border: none;
-                            color: ${this._favoritesFilterActive ? '#ff6b6b' : '#999'};
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
                             padding: 4px;
@@ -3344,13 +3348,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           @click=${this._searchAttempted ? () => {
                             this._toggleFavoritesFilter();
                           } : () => {}}
-                          title=${this._searchAttempted ? (this._favoritesFilterActive ? 'Show all results' : 'Show only favorites') : 'Showing favorites'}
+                          title="Favorites"
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
                       </button>
-                      <span style="color: white; font-size: 0.9em;">
-                        ${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'Showing Favorites' : 'Filter Favorites'}
-                      </span>
+                      <button
+                          class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
+                          style="
+                            background: none;
+                            border: none;
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => {
+                            this._toggleRecentlyPlayedFilter();
+                          } : () => {}}
+                          title="Recently Played"
+                        >
+                          <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
+                      </button>
                     </div>
                   ` : nothing}
                   
@@ -3643,7 +3664,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   this._searchQuery = e.target.value;
                   this.requestUpdate();
                 },
-                onSearch: () => this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter),
+                onSearch: () => {
+                  // Clear recently played filter when user initiates search
+                  this._recentlyPlayedFilterActive = false;
+                  this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
+                },
                 onPlay: item => this._playMediaFromSearch(item),
                 onQueue: item => this._queueMediaFromSearch(item),
                 showQueueSuccess: this._showQueueSuccessMessage,
@@ -4333,7 +4358,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
             try {
               resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
             } catch (error) {
-              console.warn('Failed to resolve template for sync volume:', error);
               resolvedGroupingId = obj.entity_id;
             }
           } else {
