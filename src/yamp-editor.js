@@ -547,7 +547,32 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-switch>
             <span>Hold to Pin</span>
           </div>
-        </div>   
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector-number
+              .selector=${{
+                number: {
+                  min: 1,
+                  max: 100,
+                  step: 1,
+                  mode: "box"
+                }
+              }}
+              .value=${this._config.search_results_limit ?? 20}
+              label="Search Results Limit"
+              helper="Maximum number of search results to display (1-100, default: 20)"
+              @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
+            ></ha-selector-number>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("search_results_limit", 20)}
+          ></ha-icon>
+        </div>
         <div class="form-row">
           <label style="margin-bottom: 8px;">Idle Image</label>
         </div>
