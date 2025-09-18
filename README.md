@@ -87,6 +87,7 @@ Player entities can be grouped together for supported entities. Access the hambu
 # Search
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
 - **Favorites Filter**: Toggle the favorites button to show only favorited tracks
+- **Recently Played Filter**: Toggle the recently played button to show your most recently played items. When enabled, results are fetched from Music Assistant ordered by most recently played. Only items that are part of your library will appear. You can still use the media-type chips to narrow the list. Submitting a new search query will start a normal search and turn off filters.
 - **Enqueue**: Use the enqueue button (playlist icon) to add tracks to your queue
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
 - Bonus Bonus Tip: On mobile, swipe left or right to rotate through the media type to quickly filter results.
@@ -288,6 +289,26 @@ In this example:
 - The Living Room entity will hide the favorite, shuffle, and repeat buttons
 - The Kitchen entity will hide only the power button
 - All other controls will remain visible (if supported by the entity)
+
+## Search Results Limit Configuration
+
+You can configure the maximum number of search results to display using the `search_results_limit` option. This is a global setting that affects all search operations including favorites, recently played, and regular searches across all entities.
+
+### Configuration Options
+- **Default**: 20 results
+- **Range**: 1-100 results
+- **Scope**: Global setting that applies to all entities and search types
+
+### Example Configuration
+```yaml
+type: custom:yet-another-media-player-alpha
+search_results_limit: 50
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+```
 
 ## Passing Current Entity to a Script
 
