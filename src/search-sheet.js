@@ -221,7 +221,6 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
 
 // Get favorites from Music Assistant
 export async function getRecentlyPlayed(hass, entityId, mediaType = null, searchResultsLimit = 20) {
-  console.log('yamp: getRecentlyPlayed called with mediaType:', mediaType, 'limit:', searchResultsLimit);
   
   // Try to get Music Assistant config entry ID
   let configEntryId = null;
@@ -237,12 +236,8 @@ export async function getRecentlyPlayed(hass, entityId, mediaType = null, search
   }
   
   if (!configEntryId) {
-    console.log('yamp: No Music Assistant config entry found');
     return { results: [], usedMusicAssistant: false };
   }
-  
-  console.log('yamp: getRecentlyPlayed found', configEntryId, 'Music Assistant entries');
-  console.log('yamp: getRecentlyPlayed using config entry:', configEntryId);
   
   try {
     // Handle "all" media type by getting multiple types and combining
@@ -283,10 +278,6 @@ export async function getRecentlyPlayed(hass, entityId, mediaType = null, search
         // Add album info if available
         ...(item.album && { album: item.album.name })
       }));
-      
-      console.log('yamp: getRecentlyPlayed API returned', allResults?.length || 0, 'items (all types)');
-      console.log('yamp: Sample recently played item:', allResults?.[0]);
-      console.log('yamp: Sample transformed item:', transformedResults?.[0]);
       return { results: transformedResults || [], usedMusicAssistant: true };
     } else {
       // Single media type
@@ -318,10 +309,6 @@ export async function getRecentlyPlayed(hass, entityId, mediaType = null, search
         // Add album info if available
         ...(item.album && { album: item.album.name })
       }));
-      
-      console.log('yamp: getRecentlyPlayed API returned', items?.length || 0, 'items');
-      console.log('yamp: Sample recently played item:', items?.[0]);
-      console.log('yamp: Sample transformed item:', transformedResults?.[0]);
       return { results: transformedResults || [], usedMusicAssistant: true };
     }
   } catch (error) {
@@ -635,52 +622,3 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
 }
 
 // Get playlist tracks - similar to how the sonos card gets queue contents
-export async function getPlaylistTracks(hass, entityId, playlistId) {
-  try {
-  
-    
-    // Try to get playlist tracks using Music Assistant service
-    const msg = {
-      type: "call_service",
-      domain: "music_assistant",
-      service: "get_library",
-      service_data: {
-        media_type: "track",
-        search: playlistId,
-        limit: Math.max(100, searchResultsLimit)
-      },
-      return_response: true,
-    };
-    
-    const res = await hass.connection.sendMessagePromise(msg);
-    
-    
-    const result = res?.response || res?.result || {};
-    return result.items || [];
-  } catch (error) {
-    
-    
-    // Fallback: try to browse the playlist
-    try {
-      const browseMsg = {
-        type: "call_service",
-        domain: "media_player",
-        service: "browse_media",
-        service_data: {
-          entity_id: entityId,
-          media_content_id: playlistId,
-        },
-        return_response: true,
-      };
-      
-      const browseRes = await hass.connection.sendMessagePromise(browseMsg);
-
-      
-      const browseResult = browseRes?.response?.[entityId]?.result || browseRes?.result || {};
-      return browseResult.children || [];
-    } catch (browseError) {
-
-      return [];
-    }
-  }
-}

@@ -22,7 +22,6 @@ export async function resolveTemplateAtActionTime(hass, templateString, fallback
     if (out && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(out)) return out;
     return fallbackEntityId;
   } catch (error) {
-    console.warn('Failed to resolve template:', error);
     return fallbackEntityId; // Fallback to main entity
   }
 }
