@@ -11812,9 +11812,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = mediaType && mediaType !== 'favorites' ? mediaType : 'all';
 
-    // Respect favorites toggle across chip changes
-    const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive);
-    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || this._recentlyPlayedFilterActive);
+    // Respect favorites toggle across chip changes, but allow explicit filter clearing
+    const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive && !searchParams.clearFilters);
+    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || this._recentlyPlayedFilterActive && !searchParams.clearFilters);
 
     // Check if search query has changed - if so, clear cache
     if (this._currentSearchQuery !== this._searchQuery) {
@@ -11956,8 +11956,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Remove swipe handlers when entering hierarchy
     this._removeSearchSwipeHandlers();
 
-    // Use Music Assistant search with artist name for albums
-    await this._doSearch('album');
+    // Use Music Assistant search with artist name for albums (explicitly clear filters)
+    await this._doSearch('album', {
+      clearFilters: true
+    });
   }
 
   // Handle hierarchical search - search for tracks by album
@@ -11979,9 +11981,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     this._searchQuery = searchQuery;
 
+    // Clear filter states to ensure accurate album search results
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._initialFavoritesLoaded = false;
+
     // Pass artist and album as search parameters for more precise results
     const searchParams = {
-      album: albumName
+      album: albumName,
+      clearFilters: true
     };
     if (artistName) {
       searchParams.artist = artistName;
