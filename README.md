@@ -87,7 +87,7 @@ Player entities can be grouped together for supported entities. Access the hambu
 # Search
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
 - **Favorites Filter**: Toggle the favorites button to show only favorited tracks
-- **Recently Played Filter**: Toggle the recently played button to show your most recently played items. This is mutually exclusive with the Favorites filter (turning one on turns the other off). When enabled, results are fetched from Music Assistant ordered by most recently played. You can still use the media-type chips to narrow the list. Submitting a new search query will start a normal search and turn off filters.
+- **Recently Played Filter**: Toggle the recently played button to show your most recently played items. When enabled, results are fetched from Music Assistant ordered by most recently played. Only items that are part of your library will appear. You can still use the media-type chips to narrow the list. Submitting a new search query will start a normal search and turn off filters.
 - **Enqueue**: Use the enqueue button (playlist icon) to add tracks to your queue
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
 - Bonus Bonus Tip: On mobile, swipe left or right to rotate through the media type to quickly filter results.
