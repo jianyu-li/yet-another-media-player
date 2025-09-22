@@ -298,6 +298,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showResolvedEntities = false;
     // Queue success message
     this._showQueueSuccessMessage = false;
+    // Quick-dismiss mode for action-triggered menu items
+    this._quickMenuInvoke = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -614,6 +616,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    if (this._quickMenuInvoke) {
+      this._showEntityOptions = false;
+      this._quickMenuInvoke = false;
+    }
     this.requestUpdate();
     // Force layout update for expand on search
     setTimeout(() => {
@@ -638,6 +644,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    if (this._quickMenuInvoke) {
+      this._showEntityOptions = false;
+      this._showSearchInSheet = false;
+      this._quickMenuInvoke = false;
+    }
     this.requestUpdate();
   }
 
@@ -654,9 +665,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
     
-    // Respect favorites toggle across chip changes
-    const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive);
-    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || this._recentlyPlayedFilterActive);
+    // Respect favorites toggle across chip changes, but allow explicit filter clearing
+    const isFavorites = !!(searchParams.favorites || (this._favoritesFilterActive && !searchParams.clearFilters));
+    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || (this._recentlyPlayedFilterActive && !searchParams.clearFilters));
     
     // Check if search query has changed - if so, clear cache
     if (this._currentSearchQuery !== this._searchQuery) {
@@ -799,8 +810,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Remove swipe handlers when entering hierarchy
     this._removeSearchSwipeHandlers();
     
-    // Use Music Assistant search with artist name for albums
-    await this._doSearch('album');
+    // Use Music Assistant search with artist name for albums (explicitly clear filters)
+    await this._doSearch('album', { clearFilters: true });
   }
 
   // Handle hierarchical search - search for tracks by album
@@ -818,8 +829,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     this._searchQuery = searchQuery;
     
+    // Clear filter states to ensure accurate album search results
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._initialFavoritesLoaded = false;
+    
     // Pass artist and album as search parameters for more precise results
-    const searchParams = { album: albumName };
+    const searchParams = { album: albumName, clearFilters: true };
     if (artistName) {
       searchParams.artist = artistName;
     }
@@ -1559,11 +1575,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return maId;
     }
     
-    // If MA entity is paused (regardless of tracking), prioritize it over main entity that's playing
+    // If MA entity is paused and main entity is playing, prioritize the main entity
     if (maState?.state === "paused" && mainState?.state === "playing") {
-      // Track this as the last active entity
-      this._lastActiveEntityId = maId;
-      return maId;
+      this._lastActiveEntityId = mainId;
+      return mainId;
     }
     
     // When card is idle, don't switch entities based on playing state - stay on last active entity
@@ -2116,6 +2131,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const action = this.config.actions[idx];
     if (!action) return;
     if (action.menu_item) {
+      // Enable quick-dismiss mode for menu_item actions
+      this._quickMenuInvoke = true;
       switch (action.menu_item) {
         case "more-info":
           this._openMoreInfo();
@@ -3233,7 +3250,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 <div class="entity-options-search" style="margin-top:12px;">
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
-                      <button class="entity-options-item" @click=${() => this._goBackInSearch()} style="margin-bottom:8px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._showEntityOptions = false; this._showSearchInSheet = false; this._quickMenuInvoke = false; this.requestUpdate(); } else { this._goBackInSearch(); } }} style="margin-bottom:8px;">&larr; Back</button>
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
                   ` : nothing}
@@ -3271,7 +3288,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
-                      @click=${() => this._hideSearchSheetInOptions()}>
+                      @click=${() => { if (this._quickMenuInvoke) { this._showEntityOptions = false; this._showSearchInSheet = false; this._quickMenuInvoke = false; this.requestUpdate(); } else { this._hideSearchSheetInOptions(); } }}>
                       Cancel
                     </button>
                   </div>
@@ -3427,7 +3444,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 </div>
               ` : this._showGrouping ? html`
-                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._showEntityOptions = false; this._showGrouping = false; this._quickMenuInvoke = false; this.requestUpdate(); } else { this._closeGrouping(); } }} style="margin-bottom:14px;">&larr; Back</button>
                 ${
                   (() => {
                     const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
@@ -3616,7 +3633,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   })()
                 }
               ` : html`
-                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._showEntityOptions = false; this._showSourceList = false; this._quickMenuInvoke = false; this.requestUpdate(); } else { this._closeSourceList(); } }} style="margin-bottom:14px;">&larr; Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => html`
@@ -3701,10 +3718,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     
     _updateIdleState() {
-      // Check if the active playback entity is playing (not just main entity)
-      const activePlaybackEntityId = this._getActivePlaybackEntityId();
-      const activePlaybackState = activePlaybackEntityId ? this.hass?.states?.[activePlaybackEntityId] : null;
-      const isAnyPlaying = activePlaybackState?.state === "playing";
+      // Consider both main and Music Assistant entities so we can wake from idle
+      // even if the active selection is frozen while idle.
+      const mainId = this.currentEntityId;
+      const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+      const mainState = mainId ? this.hass?.states?.[mainId] : null;
+      const maState = maId ? this.hass?.states?.[maId] : null;
+      const isAnyPlaying = (mainState?.state === "playing") || (maState?.state === "playing");
       
       if (isAnyPlaying) {
         // Became active, clear timer and set not idle
@@ -4093,6 +4113,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._showSourceList = false;
       this.requestUpdate();
     }
+    // Clear quick menu flag on any overlay close
+    this._quickMenuInvoke = false;
   }
 
   async _openEntityOptions() {
