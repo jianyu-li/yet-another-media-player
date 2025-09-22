@@ -511,7 +511,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             if (item.media_class) allClasses.add(item.media_class);
           });
         });
-        const classes = Array.from(allClasses);
+        const hiddenSet = new Set(this.config?.hidden_filter_chips || []);
+        const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
         const filterOrder = ['all', ...classes];
         const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
         const dir = dx < 0 ? 1 : -1;   // swipe left -> next, right -> prev
@@ -3298,10 +3299,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     const allClasses = new Set();
                     Object.values(this._searchResultsByType).forEach(results => {
                       results.forEach(item => {
-                        if (item.media_class) allClasses.add(item.media_class);
+                        if (item && item.media_class) {
+                          allClasses.add(item.media_class);
+                        }
                       });
                     });
-                    const classes = Array.from(allClasses);
+                    const hiddenSet = new Set(this.config?.hidden_filter_chips || []);
+                    const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
                     const filter = this._searchMediaClassFilter || "all";
                     
                     // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
