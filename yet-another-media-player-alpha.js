@@ -11449,6 +11449,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._showResolvedEntities = false;
     // Queue success message
     this._showQueueSuccessMessage = false;
+    // Quick-dismiss mode for action-triggered menu items
+    this._quickMenuInvoke = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -11778,6 +11780,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    if (this._quickMenuInvoke) {
+      this._showEntityOptions = false;
+      this._quickMenuInvoke = false;
+    }
     this.requestUpdate();
     // Force layout update for expand on search
     setTimeout(() => {
@@ -11802,6 +11808,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    if (this._quickMenuInvoke) {
+      this._showEntityOptions = false;
+      this._showSearchInSheet = false;
+      this._quickMenuInvoke = false;
+    }
     this.requestUpdate();
   }
   async _doSearch() {
@@ -13221,6 +13232,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const action = this.config.actions[idx];
     if (!action) return;
     if (action.menu_item) {
+      // Enable quick-dismiss mode for menu_item actions
+      this._quickMenuInvoke = true;
       switch (action.menu_item) {
         case "more-info":
           this._openMoreInfo();
@@ -14299,7 +14312,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 <div class="entity-options-search" style="margin-top:12px;">
                   ${this._searchBreadcrumb ? x`
                     <div class="entity-options-search-breadcrumb">
-                      <button class="entity-options-item" @click=${() => this._goBackInSearch()} style="margin-bottom:8px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => {
+      if (this._quickMenuInvoke) {
+        this._showEntityOptions = false;
+        this._showSearchInSheet = false;
+        this._quickMenuInvoke = false;
+        this.requestUpdate();
+      } else {
+        this._goBackInSearch();
+      }
+    }} style="margin-bottom:8px;">&larr; Back</button>
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
                   ` : E}
@@ -14342,7 +14364,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
-                      @click=${() => this._hideSearchSheetInOptions()}>
+                      @click=${() => {
+      if (this._quickMenuInvoke) {
+        this._showEntityOptions = false;
+        this._showSearchInSheet = false;
+        this._quickMenuInvoke = false;
+        this.requestUpdate();
+      } else {
+        this._hideSearchSheetInOptions();
+      }
+    }}>
                       Cancel
                     </button>
                   </div>
@@ -14496,7 +14527,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   </div>
                 </div>
               ` : this._showGrouping ? x`
-                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => {
+      if (this._quickMenuInvoke) {
+        this._showEntityOptions = false;
+        this._showGrouping = false;
+        this._quickMenuInvoke = false;
+        this.requestUpdate();
+      } else {
+        this._closeGrouping();
+      }
+    }} style="margin-bottom:14px;">&larr; Back</button>
                 ${(_masterState$attribut => {
       const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
       const masterState = this.hass.states[masterGroupId];
@@ -14665,7 +14705,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // --- End new group player rows logic ---
     })()}
               ` : x`
-                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => {
+      if (this._quickMenuInvoke) {
+        this._showEntityOptions = false;
+        this._showSourceList = false;
+        this._quickMenuInvoke = false;
+        this.requestUpdate();
+      } else {
+        this._closeSourceList();
+      }
+    }} style="margin-bottom:14px;">&larr; Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => x`
@@ -15126,6 +15175,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._showSourceList = false;
       this.requestUpdate();
     }
+    // Clear quick menu flag on any overlay close
+    this._quickMenuInvoke = false;
   }
   async _openEntityOptions() {
     // Resolve all templates before opening the menu so feature checking works correctly
