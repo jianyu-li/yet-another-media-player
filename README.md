@@ -69,6 +69,7 @@ Below you will find a list of all configuration options.
 | `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array        | No           | `[]`        | Array of control names to hide for this specific entity         |
+| `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 |                                                                                                 |
 | **Action Chip Options**    |              |              |             | (Each chip/action can have any/all of the below)                                                |
 | `name`                     | string       | No           | —           | Name for the action chip                                                                        |
@@ -289,6 +290,33 @@ In this example:
 - The Living Room entity will hide the favorite, shuffle, and repeat buttons
 - The Kitchen entity will hide only the power button
 - All other controls will remain visible (if supported by the entity)
+
+## Hidden Search Filter Chips (Per-Entity)
+
+You can hide specific search filter chips on a per-entity basis using `hidden_filter_chips`. This only affects the chip UI; it does not change the underlying search results or API calls. It’s useful for focusing the search UI on the media types you care about.
+
+### Available Chip Names
+- `artist`
+- `album`
+- `track`
+- `playlist`
+- `radio`
+- `podcast`
+- `episode`
+
+### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.office_homepod
+    name: Office
+    music_assistant_entity: media_player.office_homepod_2
+    hidden_filter_chips:
+      - artist
+      - album
+      - track
+      - podcast
+```
 
 ## Search Results Limit Configuration
 
