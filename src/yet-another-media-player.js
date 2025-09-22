@@ -511,7 +511,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             if (item.media_class) allClasses.add(item.media_class);
           });
         });
-        const hiddenSet = new Set(this.config?.hidden_filter_chips || []);
+        const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
+        const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
         const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
         const filterOrder = ['all', ...classes];
         const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
@@ -1383,6 +1384,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         sync_power,
         follow_active_volume,
         hidden_controls,
+        hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
         ...(typeof group_volume !== "undefined" ? { group_volume } : {})
       };
     });
@@ -3304,7 +3306,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         }
                       });
                     });
-                    const hiddenSet = new Set(this.config?.hidden_filter_chips || []);
+                    const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
+                    const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
                     const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
                     const filter = this._searchMediaClassFilter || "all";
                     

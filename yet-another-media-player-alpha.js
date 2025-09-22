@@ -10531,6 +10531,44 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           ></ha-selector>
         </div>
 
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        multiple: true,
+        options: [{
+          value: "artist",
+          label: "Artist"
+        }, {
+          value: "album",
+          label: "Album"
+        }, {
+          value: "track",
+          label: "Track"
+        }, {
+          value: "playlist",
+          label: "Playlist"
+        }, {
+          value: "radio",
+          label: "Radio"
+        }, {
+          value: "podcast",
+          label: "Podcast"
+        }, {
+          value: "episode",
+          label: "Episode"
+        }]
+      }
+    }}
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ?? []}
+            label="Hidden Search Filter Chips"
+            helper="Hide specific search filter chips for this entity"
+            @value-changed=${e => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
+          ></ha-selector>
+        </div>
+
 <div class="form-row form-row-multi-column">
   <div>
     <ha-switch
@@ -11667,7 +11705,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
       const dx = endX - this._swipeStartX;
       if (Math.abs(dx) > threshold) {
-        var _this$config;
+        var _this$entityObjs3;
         // Get all available media classes from cached results
         const allClasses = new Set();
         Object.values(this._searchResultsByType).forEach(results => {
@@ -11675,7 +11713,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
             if (item.media_class) allClasses.add(item.media_class);
           });
         });
-        const hiddenSet = new Set(((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.hidden_filter_chips) || []);
+        const currEntityObj = ((_this$entityObjs3 = this.entityObjs) === null || _this$entityObjs3 === void 0 ? void 0 : _this$entityObjs3[this._selectedIndex]) || null;
+        const hiddenSet = new Set((currEntityObj === null || currEntityObj === void 0 ? void 0 : currEntityObj.hidden_filter_chips) || []);
         const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
         const filterOrder = ['all', ...classes];
         const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
@@ -11853,33 +11892,33 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
       // Check for recently played first (highest priority)
       if (isRecentlyPlayed) {
-        var _this$config2;
+        var _this$config;
         // Load recently played items
         this._initialFavoritesLoaded = false;
-        searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, ((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit) || 20);
+        searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
       } else if (isFavorites) {
-        var _this$config3;
+        var _this$config2;
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
           ...searchParams,
           favorites: true
-        }, ((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit) || 20);
+        }, ((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
-        var _this$config4;
-        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.search_results_limit) || 20);
+        var _this$config3;
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, ((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit) || 20);
         // Mark that initial favorites have been loaded
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
         }
         this._lastSearchUsedServerFavorites = true;
       } else {
-        var _this$config5;
+        var _this$config4;
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.search_results_limit) || 20);
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
       }
 
@@ -12242,8 +12281,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
     try {
-      var _this$config6;
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.search_results_limit) || 20);
+      var _this$config5;
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.search_results_limit) || 20);
       const favorites = favoritesResponse.results || [];
 
       // Create a set of favorite URIs for quick lookup
@@ -12364,16 +12403,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config7, _this$config8;
+    var _this$config6, _this$config7;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
     const appId = attrs.app_id;
-    const prefix = ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.artwork_hostname) || '';
+    const prefix = ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
 
     // Check for media artwork overrides first
-    const overrides = (_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.media_artwork_overrides;
+    const overrides = (_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.media_artwork_overrides;
     if (overrides && Array.isArray(overrides)) {
       var _override;
       const {
@@ -12414,8 +12453,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config9;
-      const fallbackArtwork = (_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.fallback_artwork;
+      var _this$config8;
+      const fallbackArtwork = (_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -12543,6 +12582,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         sync_power,
         follow_active_volume,
         hidden_controls,
+        hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
         ...(typeof group_volume !== "undefined" ? {
           group_volume
         } : {})
@@ -13817,7 +13857,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config0, _this$config1, _this$config10, _this$currentVolumeSt3, _this$currentStateObj;
+    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config9, _this$config0, _this$config1, _this$currentVolumeSt3, _this$currentStateObj;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -13999,9 +14039,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.fallback_artwork) || null,
+      artworkHostname: ((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass20;
         const obj = this._findEntityObjByAnyId(id);
@@ -14380,7 +14420,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     </button>
                   </div>
                   <!-- FILTER CHIPS -->
-                  ${(_this$config11 => {
+                  ${(_this$entityObjs4 => {
       // Get all available media classes from cached results
       const allClasses = new Set();
       Object.values(this._searchResultsByType).forEach(results => {
@@ -14390,7 +14430,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
           }
         });
       });
-      const hiddenSet = new Set(((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.hidden_filter_chips) || []);
+      const currEntityObj = ((_this$entityObjs4 = this.entityObjs) === null || _this$entityObjs4 === void 0 ? void 0 : _this$entityObjs4[this._selectedIndex]) || null;
+      const hiddenSet = new Set((currEntityObj === null || currEntityObj === void 0 ? void 0 : currEntityObj.hidden_filter_chips) || []);
       const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
       const filter = this._searchMediaClassFilter || "all";
 

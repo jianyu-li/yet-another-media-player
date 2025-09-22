@@ -749,6 +749,31 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                multiple: true,
+                options: [
+                  { value: "artist", label: "Artist" },
+                  { value: "album", label: "Album" },
+                  { value: "track", label: "Track" },
+                  { value: "playlist", label: "Playlist" },
+                  { value: "radio", label: "Radio" },
+                  { value: "podcast", label: "Podcast" },
+                  { value: "episode", label: "Episode" }
+                ]
+              }
+            }}
+            .value=${entity?.hidden_filter_chips ?? []}
+            label="Hidden Search Filter Chips"
+            helper="Hide specific search filter chips for this entity"
+            @value-changed=${(e) => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
+          ></ha-selector>
+        </div>
+
 <div class="form-row form-row-multi-column">
   <div>
     <ha-switch
