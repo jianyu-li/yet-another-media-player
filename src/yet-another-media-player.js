@@ -1564,11 +1564,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return maId;
     }
     
-    // If MA entity is paused (regardless of tracking), prioritize it over main entity that's playing
+    // If MA entity is paused and main entity is playing, prioritize the main entity
     if (maState?.state === "paused" && mainState?.state === "playing") {
-      // Track this as the last active entity
-      this._lastActiveEntityId = maId;
-      return maId;
+      this._lastActiveEntityId = mainId;
+      return mainId;
     }
     
     // When card is idle, don't switch entities based on playing state - stay on last active entity
@@ -3706,10 +3705,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     
     _updateIdleState() {
-      // Check if the active playback entity is playing (not just main entity)
-      const activePlaybackEntityId = this._getActivePlaybackEntityId();
-      const activePlaybackState = activePlaybackEntityId ? this.hass?.states?.[activePlaybackEntityId] : null;
-      const isAnyPlaying = activePlaybackState?.state === "playing";
+      // Consider both main and Music Assistant entities so we can wake from idle
+      // even if the active selection is frozen while idle.
+      const mainId = this.currentEntityId;
+      const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+      const mainState = mainId ? this.hass?.states?.[mainId] : null;
+      const maState = maId ? this.hass?.states?.[maId] : null;
+      const isAnyPlaying = (mainState?.state === "playing") || (maState?.state === "playing");
       
       if (isAnyPlaying) {
         // Became active, clear timer and set not idle

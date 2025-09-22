@@ -12705,11 +12705,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return maId;
     }
 
-    // If MA entity is paused (regardless of tracking), prioritize it over main entity that's playing
+    // If MA entity is paused and main entity is playing, prioritize the main entity
     if ((maState === null || maState === void 0 ? void 0 : maState.state) === "paused" && (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing") {
-      // Track this as the last active entity
-      this._lastActiveEntityId = maId;
-      return maId;
+      this._lastActiveEntityId = mainId;
+      return mainId;
     }
 
     // When card is idle, don't switch entities based on playing state - stay on last active entity
@@ -14753,11 +14752,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
       `;
   }
   _updateIdleState() {
-    var _this$hass25;
-    // Check if the active playback entity is playing (not just main entity)
-    const activePlaybackEntityId = this._getActivePlaybackEntityId();
-    const activePlaybackState = activePlaybackEntityId ? (_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[activePlaybackEntityId] : null;
-    const isAnyPlaying = (activePlaybackState === null || activePlaybackState === void 0 ? void 0 : activePlaybackState.state) === "playing";
+    var _this$hass25, _this$hass26;
+    // Consider both main and Music Assistant entities so we can wake from idle
+    // even if the active selection is frozen while idle.
+    const mainId = this.currentEntityId;
+    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    const mainState = mainId ? (_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[mainId] : null;
+    const maState = maId ? (_this$hass26 = this.hass) === null || _this$hass26 === void 0 || (_this$hass26 = _this$hass26.states) === null || _this$hass26 === void 0 ? void 0 : _this$hass26[maId] : null;
+    const isAnyPlaying = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing" || (maState === null || maState === void 0 ? void 0 : maState.state) === "playing";
     if (isAnyPlaying) {
       // Became active, clear timer and set not idle
       if (this._idleTimeout) clearTimeout(this._idleTimeout);
