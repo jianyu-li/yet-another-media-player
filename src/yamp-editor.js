@@ -742,52 +742,61 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 ]
               }
             }}
-            .value=${entity?.hidden_controls ?? []}
+            .value=${Array.isArray(entity?.hidden_controls) ? entity.hidden_controls : []}
+            .required=${false}
+            .invalid=${false}
             label="Hidden Controls"
             helper="Select which controls to hide for this entity (all are shown by default)"
             @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
           ></ha-selector>
         </div>
 
-        <div class="form-row">
-          <ha-selector
+        ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity))
+  ? html`
+      <div class="form-row">
+        <div class=${this._yamlError && (entity?.music_assistant_entity ?? "").trim() !== "" 
+          ? "code-editor-wrapper error" 
+          : "code-editor-wrapper"}>
+          <ha-code-editor
+            id="ma-template-editor"
+            label="Music Assistant Entity Template (Jinja)"
             .hass=${this.hass}
-            .selector=${{
-              select: {
-                mode: "dropdown",
-                multiple: true,
-                options: [
-                  { value: "artist", label: "Artist" },
-                  { value: "album", label: "Album" },
-                  { value: "track", label: "Track" },
-                  { value: "playlist", label: "Playlist" },
-                  { value: "radio", label: "Radio" },
-                  { value: "podcast", label: "Podcast" },
-                  { value: "episode", label: "Episode" }
-                ]
-              }
-            }}
-            .value=${entity?.hidden_filter_chips ?? []}
-            label="Hidden Search Filter Chips"
-            helper="Hide specific search filter chips for this entity"
-            @value-changed=${(e) => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
-          ></ha-selector>
+            mode="jinja2"
+            autocomplete-entities
+            .value=${entity?.music_assistant_entity ?? ""}
+            @value-changed=${(e) => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+          ></ha-code-editor>
+          <div class="help-text">
+            <ha-icon icon="mdi:information-outline"></ha-icon>
+            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
+            <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
+  media_player.picore_house
+{% else %}
+  media_player.ma_wiim_mini
+{% endif %}</pre>
+           </pre>
+          </div>
+        </div>
+      </div>
+    `
+  : nothing}
+
+ 
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="ma-template-toggle"
+              .checked=${this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)}
+              @change=${(e) => {
+                this._useTemplate = e.target.checked;
+              }}
+            ></ha-switch>
+            <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
+          </div>
         </div>
 
-<div class="form-row form-row-multi-column">
-  <div>
-    <ha-switch
-      id="ma-template-toggle"
-      .checked=${this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)}
-      @change=${(e) => {
-        this._useTemplate = e.target.checked;
-      }}
-    ></ha-switch>
-    <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
-  </div>
-</div>
-
-${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity))
+        ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity))
   ? html`
       <div class="form-row">
         <div class=${this._yamlError && (entity?.music_assistant_entity ?? "").trim() !== "" 
@@ -827,7 +836,50 @@ ${ (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)
           @value-changed=${(e) => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
         ></ha-entity-picker>
       </div>
+      ${(() => {
+        const mainId = entity?.entity_id;
+        const mainState = mainId ? this.hass?.states?.[mainId] : undefined;
+        const mainIsMA = !!(mainState && mainState.attributes?.app_id === 'music_assistant');
+        const rawMa = entity?.music_assistant_entity;
+        const isTemplate = this._looksLikeTemplate?.(rawMa);
+        const maId = (typeof rawMa === 'string' && !isTemplate) ? rawMa : undefined;
+        const maState = maId ? this.hass?.states?.[maId] : undefined;
+        const maIsMA = !!(maState && maState.attributes?.app_id === 'music_assistant');
+        // Only show under the dropdown (non-template path)
+        const showHiddenFilterChips = mainIsMA || maIsMA;
+        if (!showHiddenFilterChips) return nothing;
+        return html`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+                select: {
+                  mode: "dropdown",
+                  multiple: true,
+                  options: [
+                    { value: "artist", label: "Artist" },
+                    { value: "album", label: "Album" },
+                    { value: "track", label: "Track" },
+                    { value: "playlist", label: "Playlist" },
+                    { value: "radio", label: "Radio" },
+                    { value: "podcast", label: "Podcast" },
+                    { value: "episode", label: "Episode" }
+                  ]
+                }
+              }}
+              .value=${Array.isArray(entity?.hidden_filter_chips) ? entity.hidden_filter_chips : []}
+              .required=${false}
+              .invalid=${false}
+              label="Hidden Search Filter Chips"
+              helper="Hide specific search filter chips for this entity"
+              @value-changed=${(e) => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
+            ></ha-selector>
+          </div>
+        `;
+      })()}
     `}
+
+ 
 
         ${showGroupVolume ? html`
           <div class="form-row">
