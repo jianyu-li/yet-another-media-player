@@ -10524,27 +10524,57 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         }]
       }
     }}
-            .value=${(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ?? []}
+            .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ? entity.hidden_controls : []}
+            .required=${false}
+            .invalid=${false}
             label="Hidden Controls"
             helper="Select which controls to hide for this entity (all are shown by default)"
             @value-changed=${e => this._updateEntityProperty("hidden_controls", e.detail.value)}
           ></ha-selector>
         </div>
 
-<div class="form-row form-row-multi-column">
-  <div>
-    <ha-switch
-      id="ma-template-toggle"
-      .checked=${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)}
-      @change=${e => {
+        ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
+      <div class="form-row">
+        <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+          <ha-code-editor
+            id="ma-template-editor"
+            label="Music Assistant Entity Template (Jinja)"
+            .hass=${this.hass}
+            mode="jinja2"
+            autocomplete-entities
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? ""}
+            @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+          ></ha-code-editor>
+          <div class="help-text">
+            <ha-icon icon="mdi:information-outline"></ha-icon>
+            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
+            <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
+  media_player.picore_house
+{% else %}
+  media_player.ma_wiim_mini
+{% endif %}</pre>
+           </pre>
+          </div>
+        </div>
+      </div>
+    ` : E}
+
+ 
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="ma-template-toggle"
+              .checked=${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)}
+              @change=${e => {
       this._useTemplate = e.target.checked;
     }}
-    ></ha-switch>
-    <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
-  </div>
-</div>
+            ></ha-switch>
+            <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
+          </div>
+        </div>
 
-${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
+        ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
       <div class="form-row">
         <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
           <ha-code-editor
@@ -10580,7 +10610,63 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
           @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
         ></ha-entity-picker>
       </div>
+      ${((_this$hass3, _mainState$attributes, _this$_looksLikeTempl, _this$hass4, _maState$attributes) => {
+      const mainId = entity === null || entity === void 0 ? void 0 : entity.entity_id;
+      const mainState = mainId ? (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[mainId] : undefined;
+      const mainIsMA = !!(mainState && ((_mainState$attributes = mainState.attributes) === null || _mainState$attributes === void 0 ? void 0 : _mainState$attributes.app_id) === 'music_assistant');
+      const rawMa = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity;
+      const isTemplate = (_this$_looksLikeTempl = this._looksLikeTemplate) === null || _this$_looksLikeTempl === void 0 ? void 0 : _this$_looksLikeTempl.call(this, rawMa);
+      const maId = typeof rawMa === 'string' && !isTemplate ? rawMa : undefined;
+      const maState = maId ? (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[maId] : undefined;
+      const maIsMA = !!(maState && ((_maState$attributes = maState.attributes) === null || _maState$attributes === void 0 ? void 0 : _maState$attributes.app_id) === 'music_assistant');
+      // Only show under the dropdown (non-template path)
+      const showHiddenFilterChips = mainIsMA || maIsMA;
+      if (!showHiddenFilterChips) return E;
+      return x`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+        select: {
+          mode: "dropdown",
+          multiple: true,
+          options: [{
+            value: "artist",
+            label: "Artist"
+          }, {
+            value: "album",
+            label: "Album"
+          }, {
+            value: "track",
+            label: "Track"
+          }, {
+            value: "playlist",
+            label: "Playlist"
+          }, {
+            value: "radio",
+            label: "Radio"
+          }, {
+            value: "podcast",
+            label: "Podcast"
+          }, {
+            value: "episode",
+            label: "Episode"
+          }]
+        }
+      }}
+              .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ? entity.hidden_filter_chips : []}
+              .required=${false}
+              .invalid=${false}
+              label="Hidden Search Filter Chips"
+              helper="Hide specific search filter chips for this entity"
+              @value-changed=${e => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
+            ></ha-selector>
+          </div>
+        `;
+    })()}
     `}
+
+ 
 
         ${showGroupVolume ? x`
           <div class="form-row">
@@ -11667,6 +11753,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
       const dx = endX - this._swipeStartX;
       if (Math.abs(dx) > threshold) {
+        var _this$entityObjs3;
         // Get all available media classes from cached results
         const allClasses = new Set();
         Object.values(this._searchResultsByType).forEach(results => {
@@ -11674,7 +11761,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
             if (item.media_class) allClasses.add(item.media_class);
           });
         });
-        const classes = Array.from(allClasses);
+        const currEntityObj = ((_this$entityObjs3 = this.entityObjs) === null || _this$entityObjs3 === void 0 ? void 0 : _this$entityObjs3[this._selectedIndex]) || null;
+        const hiddenSet = new Set((currEntityObj === null || currEntityObj === void 0 ? void 0 : currEntityObj.hidden_filter_chips) || []);
+        const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
         const filterOrder = ['all', ...classes];
         const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
         const dir = dx < 0 ? 1 : -1; // swipe left -> next, right -> prev
@@ -12541,6 +12630,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         sync_power,
         follow_active_volume,
         hidden_controls,
+        hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
         ...(typeof group_volume !== "undefined" ? {
           group_volume
         } : {})
@@ -14378,15 +14468,19 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     </button>
                   </div>
                   <!-- FILTER CHIPS -->
-                  ${(() => {
+                  ${(_this$entityObjs4 => {
       // Get all available media classes from cached results
       const allClasses = new Set();
       Object.values(this._searchResultsByType).forEach(results => {
         results.forEach(item => {
-          if (item.media_class) allClasses.add(item.media_class);
+          if (item && item.media_class) {
+            allClasses.add(item.media_class);
+          }
         });
       });
-      const classes = Array.from(allClasses);
+      const currEntityObj = ((_this$entityObjs4 = this.entityObjs) === null || _this$entityObjs4 === void 0 ? void 0 : _this$entityObjs4[this._selectedIndex]) || null;
+      const hiddenSet = new Set((currEntityObj === null || currEntityObj === void 0 ? void 0 : currEntityObj.hidden_filter_chips) || []);
+      const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
       const filter = this._searchMediaClassFilter || "all";
 
       // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
