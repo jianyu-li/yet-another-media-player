@@ -11,6 +11,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       return {
         hass: {},
         _config: {},
+        _activeTab: { type: String },
         _entityEditorIndex: { type: Number },
         _actionEditorIndex: { type: Number },
         _actionMode: { type: String },
@@ -21,6 +22,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
   
     constructor() {
       super();
+      this._activeTab = "Entities";
       this._entityEditorIndex = null;
       this._actionEditorIndex = null;
 
@@ -107,6 +109,44 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         .form-row {
           padding: 12px 16px;
           gap: 8px;
+        }
+        .tabs {
+          display: flex;
+          gap: 4px;
+          padding: 8px 8px 0 8px;
+          border-bottom: 1px solid var(--divider-color, #444);
+        }
+        .tab {
+          background: transparent;
+          border: none;
+          color: var(--primary-text-color, #fff);
+          cursor: pointer;
+          padding: 9px 14px;
+          border-radius: 8px 8px 0 0;
+          font-weight: 500;
+          opacity: 0.85;
+          border-bottom: 3px solid transparent;
+          transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);
+          font-size: 1.06em;
+        }
+        .tab:hover {
+          opacity: 1;
+          color: var(--custom-accent, var(--accent-color, #ff9800));
+          background: rgba(255,255,255,0.06);
+        }
+        .tab[selected] {
+          background: rgba(255,255,255,0.10);
+          color: var(--primary-text-color, #fff);
+          opacity: 1;
+          border-bottom-color: var(--custom-accent, var(--accent-color, #ff9800));
+          box-shadow: 0 2px 0 0 var(--custom-accent, var(--accent-color, #ff9800)) inset;
+        }
+        .tab:focus-visible {
+          outline: 2px solid var(--custom-accent, var(--accent-color, #ff9800));
+          outline-offset: 2px;
+        }
+        .tab-content {
+          padding-top: 4px;
         }
         /* add to rows with multiple elements to align the elements horizontally */
         .form-row-multi-column {
@@ -320,35 +360,63 @@ class YetAnotherMediaPlayerEditor extends LitElement {
   
     render() {
       if (!this._config) return html``;
-    
-      if (this._entityEditorIndex !== null) {
-        const entity = this._config.entities?.[this._entityEditorIndex];
-        return this._renderEntityEditor(entity);
-      } else if (this._actionEditorIndex !== null) {
-        const action = this._config.actions?.[this._actionEditorIndex];
-        return this._renderActionEditor(action);
+
+      // When editing an entity/action, keep tabs visible but show editor content
+      const editingEntity = this._entityEditorIndex !== null;
+      const editingAction = this._actionEditorIndex !== null;
+
+      return html`
+        <div class="tabs">
+          ${["Entities","Behavior","Look and Feel","Actions"].map((name) => html`
+            <button
+              class="tab" ${this._activeTab === name ? 'selected' : ''}
+              @click=${() => { 
+                this._activeTab = name; 
+                // Exit any sub-editor when switching tabs
+                this._entityEditorIndex = null;
+                this._actionEditorIndex = null;
+                this._useTemplate = null;
+                this._useVolTemplate = null;
+              }}
+              ?selected=${this._activeTab === name}
+            >${name}</button>
+          `)}
+        </div>
+        <div class="tab-content">
+          ${editingEntity
+            ? this._renderEntityEditor(this._config.entities?.[this._entityEditorIndex])
+            : editingAction
+            ? this._renderActionEditor(this._config.actions?.[this._actionEditorIndex])
+            : this._renderActiveTab()}
+        </div>
+      `;
+    }
+
+    _renderActiveTab() {
+      switch (this._activeTab) {
+        case "Entities":
+          return this._renderEntitiesTab();
+        case "Behavior":
+          return this._renderBehaviorTab();
+        case "Look and Feel":
+          return this._renderVisualTab();
+        case "Actions":
+          return this._renderActionsTab();
+        default:
+          return this._renderEntitiesTab();
       }
-    
-      return this._renderMainEditor();
     }
   
-    _renderMainEditor() {
+    _renderEntitiesTab() {
       if (!this._config) return html``;
-  
       let entities = [...(this._config.entities ?? [])];
-      let actions = [...(this._config.actions ?? [])];
-  
-      // Append a blank row only for rendering (not saved)
       if (entities.length === 0 || entities[entities.length - 1].entity_id) {
         entities.push({ entity_id: "" });
       }
-   
       return html`
         <div class="form-row entity-group">
           <div class="entity-group-header">
-            <div class="entity-group-title">
-              Entities*
-            </div>
+            <div class="entity-group-title">Entities*</div>
           </div>
           <yamp-sortable @item-moved=${(e) => this._onEntityMoved(e)}>
             <div class="sortable-container">
@@ -358,15 +426,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-icon icon="mdi:drag"></ha-icon>
                   </div>
                   <div class="grow-children">
-                    ${ 
-                    /* ha-entity-picker will show "[Object object]" for entities with extra properties,
-                       so we'll get around that by using ha-selector. However ha-selector always renders 
-                       as a required field for some reason. This is confusing for the last entity picker, 
-                       used to add a new entity, which is always blank and not required. So for the last
-                       last entity only, we'll use ha-entity-picker. This entity will never have extra
-                       properties, because as soon as it's populated, a new blank entity is added below it
-                    */
-                    idx === entities.length - 1 && !ent.entity_id
+                    ${idx === entities.length - 1 && !ent.entity_id
                       ? html`
                           <ha-entity-picker
                             .hass=${this.hass}
@@ -385,8 +445,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                             clearable
                             @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
                           ></ha-selector>
-                        `
-                  }
+                        `}
                   </div>
                   <div class="entity-row-actions">
                     <ha-icon
@@ -401,26 +460,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
           </yamp-sortable>
         </div>
-  
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="match-theme-toggle"
-              .checked=${this._config.match_theme ?? false}
-              @change=${(e) => this._updateConfig("match_theme", e.target.checked)}
-            ></ha-switch>
-            <span>Match Theme</span>
-          </div>
-          <div>
-            <ha-switch
-              id="alternate-progress-bar-toggle"
-              .checked=${this._config.alternate_progress_bar ?? false}
-              @change=${(e) => this._updateConfig("alternate_progress_bar", e.target.checked)}
-            ></ha-switch>
-            <span>Alternate Progress Bar</span>
-          </div>
-        </div>
+      `;
+    }
 
+    _renderBehaviorTab() {
+      return html`
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
@@ -455,12 +499,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-                number: {
-                  min: 0,
-                  step: 1000,
-                  unit_of_measurement: "ms",
-                  mode: "box"
-                }
+                number: { min: 0, step: 1000, unit_of_measurement: "ms", mode: "box" }
               }}
               .value=${this._config.idle_timeout_ms ?? 60000}
               label="Idle Timeout (ms)"
@@ -475,62 +514,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-icon>
         </div>
 
-   
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
-              select: {
-                mode: "dropdown",
-                options: [
-                  { value: "slider", label: "Slider" },
-                  { value: "stepper", label: "Stepper" },
-                ],
-              },
-            }}
-            .value=${this._config.volume_mode ?? "slider"}
-            label="Volume Mode"
-            @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
-          ></ha-selector>
-        </div>
-        ${this._config.volume_mode === "stepper" ? html`
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                .selector=${{
-                  number: {
-                    min: 0.01,
-                    max: 1,
-                    step: 0.01,
-                    unit_of_measurement: "",
-                    mode: "box"
-                  }
-                }}
-                .value=${this._config.volume_step ?? 0.05}
-                label="Volume Step (0.05 = 5%)"
-                @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
-              ></ha-selector>
-            </div>
-            <ha-icon
-              class="icon-button"
-              icon="mdi:restore"
-              title="Reset to default"
-              @click=${() => this._updateConfig("volume_step", 0.05)}
-            ></ha-icon>
-          </div>
-        ` : nothing}
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-              select: {
-                mode: "dropdown",
-                options: [
-                  { value: "auto", label: "Auto" },
-                  { value: "always", label: "Always" }                ],
-              },
+              select: { mode: "dropdown", options: [
+                { value: "auto", label: "Auto" },
+                { value: "always", label: "Always" }
+              ]}
             }}
             .value=${this._config.show_chip_row ?? "auto"}
             label="Show Chip Row"
@@ -552,14 +543,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <ha-selector-number
-              .selector=${{
-                number: {
-                  min: 1,
-                  max: 100,
-                  step: 1,
-                  mode: "box"
-                }
-              }}
+              .selector=${{ number: { min: 1, max: 100, step: 1, mode: "box" } }}
               .value=${this._config.search_results_limit ?? 20}
               label="Search Results Limit"
               helper="Maximum number of search results to display (1-100, default: 20)"
@@ -573,6 +557,62 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @click=${() => this._updateConfig("search_results_limit", 20)}
           ></ha-icon>
         </div>
+      `;
+    }
+
+    _renderVisualTab() {
+      return html`
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="match-theme-toggle"
+              .checked=${this._config.match_theme ?? false}
+              @change=${(e) => this._updateConfig("match_theme", e.target.checked)}
+            ></ha-switch>
+            <span>Match Theme</span>
+          </div>
+          <div>
+            <ha-switch
+              id="alternate-progress-bar-toggle"
+              .checked=${this._config.alternate_progress_bar ?? false}
+              @change=${(e) => this._updateConfig("alternate_progress_bar", e.target.checked)}
+            ></ha-switch>
+            <span>Alternate Progress Bar</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{ select: { mode: "dropdown", options: [
+              { value: "slider", label: "Slider" },
+              { value: "stepper", label: "Stepper" },
+            ]}}}
+            .value=${this._config.volume_mode ?? "slider"}
+            label="Volume Mode"
+            @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
+          ></ha-selector>
+        </div>
+        ${this._config.volume_mode === "stepper" ? html`
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{ number: { min: 0.01, max: 1, step: 0.01, unit_of_measurement: "", mode: "box" } }}
+                .value=${this._config.volume_step ?? 0.05}
+                label="Volume Step (0.05 = 5%)"
+                @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
+              ></ha-selector>
+            </div>
+            <ha-icon
+              class="icon-button"
+              icon="mdi:restore"
+              title="Reset to default"
+              @click=${() => this._updateConfig("volume_step", 0.05)}
+            ></ha-icon>
+          </div>
+        ` : nothing}
+
         <div class="form-row">
           <label style="margin-bottom: 8px;">Idle Image</label>
         </div>
@@ -583,11 +623,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
               @change=${(e) => {
                 this._useIdleImageUrl = e.target.checked;
-                // Clear the value when switching modes to avoid confusion
                 if (e.target.checked) {
                   this._updateConfig("idle_image", "");
                 } else {
-                  // Also clear when switching back to entity mode to avoid invalid values
                   this._updateConfig("idle_image", "");
                 }
               }}
@@ -616,12 +654,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             `}
           </div>
         </div>
+      `;
+    }
 
+    _renderActionsTab() {
+      let actions = [...(this._config.actions ?? [])];
+      return html`
         <div class="form-row action-group">
           <div class="action-group-header">
-            <div class="action-group-title">
-              Actions
-            </div>
+            <div class="action-group-title">Actions</div>
           </div>
           <yamp-sortable @item-moved=${(e) => this._onActionMoved(e)}>
             <div class="sortable-container">
@@ -631,24 +672,13 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-icon icon="mdi:drag"></ha-icon>
                   </div>
                   ${act?.icon ? html`
-                    <ha-icon 
-                    class="action-icon"
-                    icon="${act?.icon}"></ha-icon>
-                  ` : html`
-                    <span class="action-icon-placeholder"></span>
-                  `
-                  }
+                    <ha-icon class="action-icon" icon="${act?.icon}"></ha-icon>
+                  ` : html`<span class="action-icon-placeholder"></span>`}
                   <div class="grow-children">
                     <ha-textfield
                       placeholder="(Icon Only)"
                       .value=${act?.name ?? ""}
-                      helper="${
-                        act?.menu_item
-                        ? `Open Menu Item: ${act?.menu_item}`
-                        : act?.service 
-                        ? `Call Service: ${act?.service}`
-                        : `Not Configured`
-                      }"
+                      helper="${act?.menu_item ? `Open Menu Item: ${act?.menu_item}` : act?.service ? `Call Service: ${act?.service}` : `Not Configured`}"
                       .helperPersistent=${true}
                       @input=${a => this._onActionChanged(idx, a.target.value)}
                     ></ha-textfield>
@@ -685,7 +715,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-icon>
           </div>
         </div>
-
       `;
     }
   
