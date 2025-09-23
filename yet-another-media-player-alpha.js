@@ -9894,6 +9894,17 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);
           font-size: 1.06em;
         }
+        .tab-mobile-label {
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .tab-desktop-label {
+            display: none;
+          }
+          .tab-mobile-label {
+            display: inline;
+          }
+        }
         .tab:hover {
           opacity: 1;
           color: var(--custom-accent, var(--accent-color, #ff9800));
@@ -10143,7 +10154,10 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       this._useVolTemplate = null;
     }}
               ?selected=${this._activeTab === name}
-            >${name}</button>
+            >${name === "Look and Feel" ? x`
+              <span class="tab-desktop-label">Look and Feel</span>
+              <span class="tab-mobile-label">Visual</span>
+            ` : name}</button>
           `)}
         </div>
         <div class="tab-content">
