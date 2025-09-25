@@ -595,6 +595,19 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ` : nothing}
         </div>
 
+        ${!this._config.always_collapsed ? html`
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="hide-menu-player-toggle"
+                .checked=${this._config.hide_menu_player ?? false}
+                @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
+              ></ha-switch>
+              <span>Hide Menu Player</span>
+            </div>
+          </div>
+        ` : nothing}
+
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
