@@ -1488,6 +1488,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
     }
     // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
@@ -2860,6 +2861,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this.shadowRoot && this.shadowRoot.host) {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
         this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
+        this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
       }
       
       const showChipRow = this.config.show_chip_row || "auto";
