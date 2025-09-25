@@ -1104,30 +1104,143 @@ export const yampCardStyles = css`
     z-index: 30;
     background: rgba(15,18,30,0.70);
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: center;
+  }
+
+  .entity-options-container {
+    width: 98%;
+    max-width: 430px;
+    margin: 2% auto;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(96% - 70px);
+    min-height: 90px;
+    position: relative;
+  }
+
+  /* Persistent Media Controls */
+  .persistent-media-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: none;
+    flex-shrink: 0;
+    position: absolute;
+    bottom: 1%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(98% - 24px);
+    max-width: calc(430px - 24px);
+    z-index: 1001;
+  }
+
+  .persistent-controls-artwork {
+    flex-shrink: 0;
+  }
+
+  .persistent-artwork {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .persistent-artwork-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .persistent-artwork-placeholder ha-icon {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+  }
+
+  .persistent-controls-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-start;
+    padding-left: 99px;
+  }
+
+  .persistent-control-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #fff;
+  }
+
+  .persistent-control-btn:hover {
+    background: var(--custom-accent);
+    border-color: var(--custom-accent);
+    transform: scale(1.05);
+  }
+
+  .persistent-control-btn:active {
+    transform: scale(0.95);
+  }
+
+  .persistent-control-btn ha-icon {
+    font-size: 16px;
+    color: inherit;
   }
 
   .entity-options-sheet {
     --custom-accent: var(--accent-color, #ff9800);
     background: none;
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    border-radius: var(--border-radius);
     box-shadow: none;
-    width: 98%;
-    max-width: 430px;
-    margin-bottom: 1.5%;
-    padding: 18px 8px 8px 8px;
+    width: 100%;
+    padding: 18px 8px 70px 8px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    max-height: 85%;
-    min-height: 90px;
+    flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
+
+  /* Main menu specific styling - move options down toward center */
+  .entity-options-sheet .entity-options-menu {
+    margin-top: 150px;
+    margin-bottom: 20px;
+  }
+
+  /* When always collapsed is enabled, keep menu at top */
+  :host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
+    margin-top: 0px;
+  }
+
+  /* Remove spacing between menu items */
+  .entity-options-sheet .entity-options-menu .entity-options-item {
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+
 
   /* Ensure entity-options-sheet honors match_theme for accent color */
   :host([data-match-theme="false"]) .entity-options-sheet {
@@ -1334,7 +1447,7 @@ export const yampCardStyles = css`
 
   /* Search functionality */
   .entity-options-search {
-    padding: 2px 0 4px 0;
+    padding: 2px 0 80px 0;
   }
 
   .entity-options-search-row {
@@ -1564,6 +1677,7 @@ export const yampCardStyles = css`
     flex: 1;
     overflow-y: auto;
     margin: 12px 0;
+    padding-bottom: 80px;
   }
 
   .entity-options-resolved-entities {

@@ -480,35 +480,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     _renderBehaviorTab() {
       return html`
         <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="collapse-on-idle-toggle"
-              .checked=${this._config.collapse_on_idle ?? false}
-              @change=${(e) => this._updateConfig("collapse_on_idle", e.target.checked)}
-            ></ha-switch>
-            <span>Collapse on Idle</span>
-          </div>
-          <div>
-            <ha-switch
-              id="always-collapsed-toggle"
-              .checked=${this._config.always_collapsed ?? false}
-              @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
-            ></ha-switch>
-            <span>Always Collapsed</span>
-          </div>
-          ${this._config.always_collapsed ? html`
-            <div>
-              <ha-switch
-                id="expand-on-search-toggle"
-                .checked=${this._config.expand_on_search ?? false}
-                @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
-              ></ha-switch>
-              <span>Expand on Search</span>
-            </div>
-          ` : nothing}
-        </div>
-
-        <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
@@ -593,6 +564,35 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-switch>
             <span>Alternate Progress Bar</span>
           </div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="collapse-on-idle-toggle"
+              .checked=${this._config.collapse_on_idle ?? false}
+              @change=${(e) => this._updateConfig("collapse_on_idle", e.target.checked)}
+            ></ha-switch>
+            <span>Collapse on Idle</span>
+          </div>
+          <div>
+            <ha-switch
+              id="always-collapsed-toggle"
+              .checked=${this._config.always_collapsed ?? false}
+              @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
+            ></ha-switch>
+            <span>Always Collapsed</span>
+          </div>
+          ${this._config.always_collapsed ? html`
+            <div>
+              <ha-switch
+                id="expand-on-search-toggle"
+                .checked=${this._config.expand_on_search ?? false}
+                @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
+              ></ha-switch>
+              <span>Expand on Search</span>
+            </div>
+          ` : nothing}
         </div>
 
         <div class="form-row">
