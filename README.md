@@ -58,6 +58,7 @@ Below you will find a list of all configuration options.
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing                                          |
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
+| `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `idle_image`               | image/camera/url | No           | —           | Background image when player is idle (supports local files, cameras, or URLs)                   |
 | `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
@@ -90,6 +91,7 @@ Player entities can be grouped together for supported entities. Access the hambu
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
 - **Favorites Filter**: Toggle the favorites button to show only favorited tracks
 - **Recently Played Filter**: Toggle the recently played button to show your most recently played items. When enabled, results are fetched from Music Assistant ordered by most recently played. Only items that are part of your library will appear. You can still use the media-type chips to narrow the list. Submitting a new search query will start a normal search and turn off filters.
+- **Next Up Filter**: Toggle the next up button to show the upcoming track in your queue. 
 - **Enqueue**: Use the enqueue button (playlist icon) to add tracks to your queue
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
 - Bonus Bonus Tip: On mobile, swipe left or right to rotate through the media type to quickly filter results.
