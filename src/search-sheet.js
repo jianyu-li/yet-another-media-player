@@ -31,6 +31,7 @@ export function renderSearchSheet({
   error,
   showQueueSuccess,
   matchTheme = false, // Add matchTheme parameter
+  upcomingFilterActive = false, // Add upcoming filter parameter
 }) {
   if (!open) return nothing;
   return html`
@@ -65,9 +66,11 @@ export function renderSearchSheet({
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
                       ▶
                     </button>
-                    <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onQueue(item); }} title="Add to Queue">
-                      <ha-icon icon="mdi:playlist-play"></ha-icon>
-                    </button>
+                    ${!(upcomingFilterActive && item.queue_item_id) ? html`
+                      <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onQueue(item); }} title="Add to Queue">
+                        <ha-icon icon="mdi:playlist-play"></ha-icon>
+                      </button>
+                    ` : nothing}
                   </div>
                 </div>
               `
