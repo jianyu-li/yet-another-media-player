@@ -11715,6 +11715,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._manualSelect = false;
     this._lastActiveEntityId = null;
     this._playTimestamps = {};
+    this._lastMediaTitle = null;
     this._showSourceMenu = false;
     this._shouldDropdownOpenUp = false;
     this._collapsedArtDominantColor = "#444";
@@ -12587,6 +12588,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (this._upcomingFilterActive) {
       // Clear search box since it's not used in upcoming mode
       this._searchQuery = '';
+      // Clear cache to force fresh fetch
+      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+      delete this._searchResultsByType[cacheKey];
       // Load upcoming queue items - always use "all" for upcoming
       try {
         await this._doSearch('all', {
@@ -13472,6 +13476,29 @@ class YetAnotherMediaPlayerCard extends i$1 {
   updated(changedProps) {
     var _super$updated;
     if (this.hass && this.entityIds) {
+      // Check if currently playing track has changed and refresh "Next Up" if active
+      if (this._upcomingFilterActive) {
+        const currentPlaybackEntity = this.currentActivePlaybackEntityId;
+        if (currentPlaybackEntity) {
+          var _currentState$attribu;
+          const currentState = this.hass.states[currentPlaybackEntity];
+          const currentMediaTitle = currentState === null || currentState === void 0 || (_currentState$attribu = currentState.attributes) === null || _currentState$attribu === void 0 ? void 0 : _currentState$attribu.media_title;
+          if (currentMediaTitle && currentMediaTitle !== this._lastMediaTitle) {
+            console.log('yamp: Media title changed, refreshing upcoming queue with 4s delay');
+            this._lastMediaTitle = currentMediaTitle;
+            // Show loading state immediately
+            this._searchLoading = true;
+            this.requestUpdate();
+            // Clear cache and refresh with 4 second delay
+            const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+            delete this._searchResultsByType[cacheKey];
+            setTimeout(() => {
+              this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
+            }, 4000);
+          }
+        }
+      }
+
       // Update timestamps for playing entities
       this.entityIds.forEach((id, idx) => {
         const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
