@@ -3426,11 +3426,18 @@ function renderSearchSheet(_ref) {
       <div class="search-sheet-results">
         ${(results || []).length === 0 && !loading ? x`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => x`
                 <div class="search-sheet-result">
-                  <img
-                    class="search-sheet-thumb"
-                    src=${item.thumbnail}
-                    alt=${item.title}
-                  />
+                  ${item.thumbnail ? x`
+                    <img
+                      class="search-sheet-thumb"
+                      src=${item.thumbnail}
+                      alt=${item.title}
+                      onerror="this.style.display='none'"
+                    />
+                  ` : x`
+                    <div class="search-sheet-thumb-placeholder">
+                      <ha-icon icon="mdi:music"></ha-icon>
+                    </div>
+                  `}
                   <span class="search-sheet-title">${item.title}</span>
                   <div class="search-sheet-buttons">
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
@@ -10331,7 +10338,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           <div class="entity-group-header">
             <div class="entity-group-title">Entities*</div>
           </div>
-          <yamp-sortable-alpha @item-moved=${e => this._onEntityMoved(e)}>
+          <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
             <div class="sortable-container">
               ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
@@ -10376,7 +10383,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               `;
     })}
             </div>
-          </yamp-sortable-alpha>
+          </yamp-sortable>
         </div>
       `;
   }
@@ -10626,7 +10633,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           <div class="action-group-header">
             <div class="action-group-title">Actions</div>
           </div>
-          <yamp-sortable-alpha @item-moved=${e => this._onActionMoved(e)}>
+          <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
             <div class="sortable-container">
               ${actions.map((act, idx) => x`
                 <div class="action-row-inner sortable-item">
@@ -10662,7 +10669,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                 </div>
               `)}
             </div>
-          </yamp-sortable-alpha>
+          </yamp-sortable>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
@@ -12926,10 +12933,37 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (artworkUrl && prefix && !artworkUrl.startsWith('http')) {
       artworkUrl = prefix + artworkUrl;
     }
+
+    // Validate artwork URL to prevent proxy errors
+    if (artworkUrl && !this._isValidArtworkUrl(artworkUrl)) {
+      artworkUrl = null;
+    }
     return {
       url: artworkUrl,
       sizePercentage
     };
+  }
+
+  // Validate artwork URL to prevent proxy errors
+  _isValidArtworkUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+
+    // Skip validation for data URLs and base64 images
+    if (url.startsWith('data:')) return true;
+
+    // Skip validation for localhost and relative URLs
+    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) return true;
+
+    // Check for obviously invalid URLs
+    if (url.includes('undefined') || url.includes('null') || url.trim() === '') return false;
+
+    // Check for valid URL format
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Extract dominant color from image
@@ -14605,11 +14639,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
               ></div>
               ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
-                ${collapsed && artworkUrl ? x`
+                ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
                     <img class="collapsed-artwork" src="${artworkUrl}" 
-                         style="${this._getCollapsedArtworkStyle()}" />
+                         style="${this._getCollapsedArtworkStyle()}" 
+                         onerror="this.style.display='none'" />
                   </div>
                 ` : E}
                 ${!collapsed ? x`<div class="card-artwork-spacer"></div>` : E}
@@ -15032,12 +15067,20 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result">
-                              <img
-                                class="entity-options-search-thumb"
-                                src=${item.thumbnail}
-                                alt=${item.title}
-                                style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
-                              />
+                              ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) ? x`
+                                <img
+                                  class="entity-options-search-thumb"
+                                  src=${item.thumbnail}
+                                  alt=${item.title}
+                                  style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
+                                  onerror="this.style.display='none'"
+                                />
+                              ` : x`
+                                <div class="entity-options-search-thumb-placeholder" 
+                                     style="height:38px;width:38px;border-radius:5px;margin-right:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
+                                  <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
+                                </div>
+                              `}
                               <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
                                       @touchstart=${e => this._handleSearchResultTouch(item, e)}
@@ -15305,8 +15348,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const playbackStateObj = this.currentPlaybackStateObj;
       const mainState = this.currentStateObj;
       const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
-      return artwork !== null && artwork !== void 0 && artwork.url ? x`
-                    <img src="${artwork.url}" alt="Album Art" class="persistent-artwork">
+      return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x`
+                    <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
                   ` : x`
                     <div class="persistent-artwork-placeholder">
                       <ha-icon icon="mdi:music"></ha-icon>
