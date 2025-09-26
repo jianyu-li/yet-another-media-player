@@ -129,6 +129,17 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);
           font-size: 1.06em;
         }
+        .tab-mobile-label {
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .tab-desktop-label {
+            display: none;
+          }
+          .tab-mobile-label {
+            display: inline;
+          }
+        }
         .tab:hover {
           opacity: 1;
           color: var(--custom-accent, var(--accent-color, #ff9800));
@@ -379,7 +390,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 this._useVolTemplate = null;
               }}
               ?selected=${this._activeTab === name}
-            >${name}</button>
+            >${name === "Look and Feel" ? html`
+              <span class="tab-desktop-label">Look and Feel</span>
+              <span class="tab-mobile-label">Visual</span>
+            ` : name}</button>
           `)}
         </div>
         <div class="tab-content">
@@ -466,35 +480,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     _renderBehaviorTab() {
       return html`
         <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="collapse-on-idle-toggle"
-              .checked=${this._config.collapse_on_idle ?? false}
-              @change=${(e) => this._updateConfig("collapse_on_idle", e.target.checked)}
-            ></ha-switch>
-            <span>Collapse on Idle</span>
-          </div>
-          <div>
-            <ha-switch
-              id="always-collapsed-toggle"
-              .checked=${this._config.always_collapsed ?? false}
-              @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
-            ></ha-switch>
-            <span>Always Collapsed</span>
-          </div>
-          ${this._config.always_collapsed ? html`
-            <div>
-              <ha-switch
-                id="expand-on-search-toggle"
-                .checked=${this._config.expand_on_search ?? false}
-                @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
-              ></ha-switch>
-              <span>Expand on Search</span>
-            </div>
-          ` : nothing}
-        </div>
-
-        <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
@@ -580,6 +565,48 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <span>Alternate Progress Bar</span>
           </div>
         </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="collapse-on-idle-toggle"
+              .checked=${this._config.collapse_on_idle ?? false}
+              @change=${(e) => this._updateConfig("collapse_on_idle", e.target.checked)}
+            ></ha-switch>
+            <span>Collapse on Idle</span>
+          </div>
+          <div>
+            <ha-switch
+              id="always-collapsed-toggle"
+              .checked=${this._config.always_collapsed ?? false}
+              @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
+            ></ha-switch>
+            <span>Always Collapsed</span>
+          </div>
+          ${this._config.always_collapsed ? html`
+            <div>
+              <ha-switch
+                id="expand-on-search-toggle"
+                .checked=${this._config.expand_on_search ?? false}
+                @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
+              ></ha-switch>
+              <span>Expand on Search</span>
+            </div>
+          ` : nothing}
+        </div>
+
+        ${!this._config.always_collapsed ? html`
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="hide-menu-player-toggle"
+                .checked=${this._config.hide_menu_player ?? false}
+                @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
+              ></ha-switch>
+              <span>Hide Menu Player</span>
+            </div>
+          </div>
+        ` : nothing}
 
         <div class="form-row">
           <ha-selector
