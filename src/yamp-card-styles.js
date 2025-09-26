@@ -1193,8 +1193,9 @@ export const yampCardStyles = css`
     align-items: center;
     gap: 8px;
     flex: 1;
-    justify-content: flex-start;
-    padding-left: 99px;
+    justify-content: center;
+    position: relative;
+    margin-left: -9%; /* Percentage-based offset to align with menu text */
   }
 
   .persistent-control-btn {

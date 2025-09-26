@@ -2455,8 +2455,9 @@ const yampCardStyles = i$4`
     align-items: center;
     gap: 8px;
     flex: 1;
-    justify-content: flex-start;
-    padding-left: 99px;
+    justify-content: center;
+    position: relative;
+    margin-left: -9%; /* Percentage-based offset to align with menu text */
   }
 
   .persistent-control-btn {
@@ -3401,7 +3402,9 @@ function renderSearchSheet(_ref) {
     onQueue,
     error,
     showQueueSuccess,
-    matchTheme = false // Add matchTheme parameter
+    matchTheme = false,
+    // Add matchTheme parameter
+    upcomingFilterActive = false // Add upcoming filter parameter
   } = _ref;
   if (!open) return E;
   return x`
@@ -3433,13 +3436,15 @@ function renderSearchSheet(_ref) {
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
                       ▶
                     </button>
-                    <button class="search-sheet-queue" @click=${e => {
+                    ${!(upcomingFilterActive && item.queue_item_id) ? x`
+                      <button class="search-sheet-queue" @click=${e => {
     e.preventDefault();
     e.stopPropagation();
     onQueue(item);
   }} title="Add to Queue">
-                      <ha-icon icon="mdi:playlist-play"></ha-icon>
-                    </button>
+                        <ha-icon icon="mdi:playlist-play"></ha-icon>
+                      </button>
+                    ` : E}
                   </div>
                 </div>
               `)}
@@ -12236,7 +12241,19 @@ class YetAnotherMediaPlayerCard extends i$1 {
   async _playMediaFromSearch(item) {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
-    playSearchedMedia(this.hass, targetEntityId, item);
+
+    // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter
+    if (item.queue_item_id && this._upcomingFilterActive) {
+      // For queue items in the "Next Up" filter, just advance to the next track
+      console.log('yamp: Queue item in Next Up filter - advancing to next track');
+      await this.hass.callService("media_player", "media_next_track", {
+        entity_id: targetEntityId
+      });
+    } else {
+      // For regular search results, use the normal play method
+      playSearchedMedia(this.hass, targetEntityId, item);
+    }
+
     // If searching from the bottom sheet, close the entity options overlay.
     if (this._showSearchInSheet) {
       this._closeEntityOptions();
@@ -14821,6 +14838,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         e.preventDefault();
         // Clear recently played filter when user initiates search
         this._recentlyPlayedFilterActive = false;
+        this._upcomingFilterActive = false;
         this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
       } else if (e.key === "Escape") {
         e.preventDefault();
@@ -14836,6 +14854,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                       @click=${() => {
       // Clear recently played filter when user initiates search
       this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
       this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
     }}
                       ?disabled=${this._searchLoading}>
@@ -15014,13 +15033,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                 <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
                                   ▶
                                 </button>
-                                <button class="entity-options-search-queue" @click=${e => {
+                                ${!(this._upcomingFilterActive && item.queue_item_id) ? x`
+                                  <button class="entity-options-search-queue" @click=${e => {
         e.preventDefault();
         e.stopPropagation();
         this._queueMediaFromSearch(item);
       }} title="Add to Queue">
-                                  <ha-icon icon="mdi:playlist-play"></ha-icon>
-                                </button>
+                                    <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                  </button>
+                                ` : E}
                               </div>
                             </div>
                           ` : x`
@@ -15303,11 +15324,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
       onSearch: () => {
         // Clear recently played filter when user initiates search
         this._recentlyPlayedFilterActive = false;
+        this._upcomingFilterActive = false;
         this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
       },
       onPlay: item => this._playMediaFromSearch(item),
       onQueue: item => this._queueMediaFromSearch(item),
-      showQueueSuccess: this._showQueueSuccessMessage
+      showQueueSuccess: this._showQueueSuccessMessage,
+      upcomingFilterActive: this._upcomingFilterActive
     }) : E}
           ${this._showQueueSuccessMessage ? x`
             <div style="
