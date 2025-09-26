@@ -775,13 +775,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     
-    // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter
-    if (item.queue_item_id && this._upcomingFilterActive) {
-      // For queue items in the "Next Up" filter, just advance to the next track
-      console.log('yamp: Queue item in Next Up filter - advancing to next track');
-      await this.hass.callService("media_player", "media_next_track", {
-        entity_id: targetEntityId
-      });
+        // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter
+        if (item.queue_item_id && this._upcomingFilterActive) {
+          // For queue items in the "Next Up" filter, just advance to the next track
+          await this.hass.callService("media_player", "media_next_track", {
+            entity_id: targetEntityId
+          });
     } else {
       // For regular search results, use the normal play method
       playSearchedMedia(this.hass, targetEntityId, item);
@@ -1132,7 +1131,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Get next track from Music Assistant (limited by Music Assistant API)
   async _getUpcomingQueue(hass, entityId, limit = 20) {
     try {
-      console.log('yamp: Getting next track for entity:', entityId);
       // Get the queue metadata first to get the queue_id
       const message = {
         type: "call_service",
@@ -1145,10 +1143,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       };
       
       const response = await hass.connection.sendMessagePromise(message);
-      console.log('yamp: Queue response:', response);
 
       const queueData = response?.response?.[entityId];
-      console.log('yamp: Queue data structure:', queueData);
       
       if (!queueData) {
         return { results: [], usedMusicAssistant: true };
@@ -1164,7 +1160,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Try to get more queue items using the queue_id
       if (queueData.queue_id) {
         try {
-          console.log('yamp: Trying to get queue items for queue_id:', queueData.queue_id);
           const queueItemsMessage = {
             type: "call_service",
             domain: "music_assistant",
@@ -1176,7 +1171,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
           };
           
           const queueItemsResponse = await hass.connection.sendMessagePromise(queueItemsMessage);
-          console.log('yamp: Queue items response:', queueItemsResponse);
           
           const queueItems = queueItemsResponse?.response;
           if (Array.isArray(queueItems) && queueItems.length > 0) {
@@ -1200,7 +1194,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             });
           }
         } catch (error) {
-          console.log('yamp: get_queue_items not available, using next_item only:', error);
+          // Fallback to using just the next_item
         }
       }
       
@@ -2035,7 +2029,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const currentState = this.hass.states[currentPlaybackEntity];
           const currentMediaTitle = currentState?.attributes?.media_title;
           if (currentMediaTitle && currentMediaTitle !== this._lastMediaTitle) {
-            console.log('yamp: Media title changed, refreshing upcoming queue with 4s delay');
             this._lastMediaTitle = currentMediaTitle;
             // Show loading state immediately
             this._searchLoading = true;
