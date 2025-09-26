@@ -559,6 +559,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Clear filter states to ensure accurate artist search results
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
+    this._upcomingFilterActive = false;
     this._initialFavoritesLoaded = false;
 
     // Render, then run search
@@ -579,6 +580,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._usingMusicAssistant = false; // Track if we're using Music Assistant search
     this._favoritesFilterActive = false; // Track if favorites filter is active
     this._recentlyPlayedFilterActive = false; // Track if recently played filter is active
+    this._upcomingFilterActive = false; // Track if upcoming queue filter is active
     this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
     this.requestUpdate();
     
@@ -670,6 +672,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Respect favorites toggle across chip changes, but allow explicit filter clearing
     const isFavorites = !!(searchParams.favorites || (this._favoritesFilterActive && !searchParams.clearFilters));
     const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || (this._recentlyPlayedFilterActive && !searchParams.clearFilters));
+    const isUpcoming = !!(searchParams.isUpcoming || (this._upcomingFilterActive && !searchParams.clearFilters));
     
     // Check if search query has changed - if so, clear cache
     if (this._currentSearchQuery !== this._searchQuery) {
@@ -678,7 +681,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}`;
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
       this._searchResults = this._searchResultsByType[cacheKey];
       this.requestUpdate();
@@ -700,6 +703,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Load recently played items
         this._initialFavoritesLoaded = false;
         searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, this.config?.search_results_limit || 20);
+        this._lastSearchUsedServerFavorites = false;
+      } else if (isUpcoming) {
+        // Load upcoming queue items
+        this._initialFavoritesLoaded = false;
+        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, this.config?.search_results_limit || 20);
         this._lastSearchUsedServerFavorites = false;
       } else if (isFavorites) {
         // Ask backend (Music Assistant) to filter favorites at source with the current query
@@ -737,6 +745,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (isNewSearch) {
         this._favoritesFilterActive = false;
         this._recentlyPlayedFilterActive = false;
+        this._upcomingFilterActive = false;
         this._initialFavoritesLoaded = false;
       }
       
@@ -764,7 +773,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
   async _playMediaFromSearch(item) {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
-    playSearchedMedia(this.hass, targetEntityId, item);
+    
+    // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter
+    if (item.queue_item_id && this._upcomingFilterActive) {
+      // For queue items in the "Next Up" filter, just advance to the next track
+      await this.hass.callService("media_player", "media_next_track", {
+        entity_id: targetEntityId
+      });
+    } else {
+      // For regular search results, use the normal play method
+      playSearchedMedia(this.hass, targetEntityId, item);
+    }
+    
     // If searching from the bottom sheet, close the entity options overlay.
     if (this._showSearchInSheet) {
       this._closeEntityOptions();
@@ -807,6 +827,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Clear filter states to ensure accurate artist search results
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
+    this._upcomingFilterActive = false;
     this._initialFavoritesLoaded = false;
     
     // Remove swipe handlers when entering hierarchy
@@ -976,9 +997,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   async _toggleFavoritesFilter() {
     this._favoritesFilterActive = !this._favoritesFilterActive;
     
-    // Make mutually exclusive with recently played filter
+    // Make mutually exclusive with other filters
     if (this._favoritesFilterActive) {
       this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
     }
     
     if (this._favoritesFilterActive) {
@@ -1026,9 +1048,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   async _toggleRecentlyPlayedFilter() {
     this._recentlyPlayedFilterActive = !this._recentlyPlayedFilterActive;
     
-    // Make mutually exclusive with favorites filter
+    // Make mutually exclusive with other filters
     if (this._recentlyPlayedFilterActive) {
       this._favoritesFilterActive = false;
+      this._upcomingFilterActive = false;
       this._initialFavoritesLoaded = false; // Clear the initial favorites state
     }
     
@@ -1058,6 +1081,143 @@ class YetAnotherMediaPlayerCard extends LitElement {
           await this._doSearch('favorites');
         }
       }
+    }
+  }
+
+  // Toggle upcoming queue filter
+  async _toggleUpcomingFilter() {
+    this._upcomingFilterActive = !this._upcomingFilterActive;
+    
+    // Make mutually exclusive with other filters
+    if (this._upcomingFilterActive) {
+      this._favoritesFilterActive = false;
+      this._recentlyPlayedFilterActive = false;
+      this._initialFavoritesLoaded = false; // Clear the initial favorites state
+    }
+    
+    if (this._upcomingFilterActive) {
+      // Clear search box since it's not used in upcoming mode
+      this._searchQuery = '';
+      // Load upcoming queue items - always use "all" for upcoming
+      try {
+        await this._doSearch('all', { isUpcoming: true });
+      } catch (error) {
+        console.error('yamp: Error in _doSearch for upcoming queue:', error);
+      }
+    } else {
+      // Restore original search results
+      if (this._searchQuery && this._searchQuery.trim() !== '') {
+        // Resubmit the original search without upcoming filter
+        const currentMediaType = this._searchMediaClassFilter;
+        await this._doSearch(currentMediaType);
+      } else {
+        // Restore from cache or load favorites if no search query
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        if (this._searchResultsByType[cacheKey]) {
+          this._searchResults = this._searchResultsByType[cacheKey];
+          this.requestUpdate();
+        } else {
+          // No cache, load favorites as default
+          await this._doSearch('favorites');
+        }
+      }
+    }
+  }
+
+  // Get next track from Music Assistant (limited by Music Assistant API)
+  async _getUpcomingQueue(hass, entityId, limit = 20) {
+    try {
+      // Get the queue metadata first to get the queue_id
+      const message = {
+        type: "call_service",
+        domain: "music_assistant",
+        service: "get_queue",
+        service_data: {
+          entity_id: entityId
+        },
+        return_response: true,
+      };
+      
+      const response = await hass.connection.sendMessagePromise(message);
+
+      const queueData = response?.response?.[entityId];
+      
+      if (!queueData) {
+        return { results: [], usedMusicAssistant: true };
+      }
+
+      // Build results array from the queue data structure
+      const results = [];
+      
+      if (!queueData) {
+        return { results: [], usedMusicAssistant: true };
+      }
+
+      // Try to get more queue items using the queue_id
+      if (queueData.queue_id) {
+        try {
+          const queueItemsMessage = {
+            type: "call_service",
+            domain: "music_assistant",
+            service: "get_queue_items",
+            service_data: {
+              queue_id: queueData.queue_id
+            },
+            return_response: true,
+          };
+          
+          const queueItemsResponse = await hass.connection.sendMessagePromise(queueItemsMessage);
+          
+          const queueItems = queueItemsResponse?.response;
+          if (Array.isArray(queueItems) && queueItems.length > 0) {
+            // Get upcoming items (skip current and get next items)
+            const currentIndex = queueData.current_index || 0;
+            const upcomingItems = queueItems.slice(currentIndex + 1, currentIndex + 1 + limit);
+            
+            upcomingItems.forEach((item, index) => {
+              results.push({
+                media_content_id: item.media_item?.uri || `queue_${index}`,
+                media_content_type: item.media_item?.media_type || 'track',
+                media_class: 'track',
+                title: item.name || item.media_item?.name || 'Unknown Track',
+                artist: item.media_item?.artists?.[0]?.name || 'Unknown Artist',
+                album: item.media_item?.album?.name || 'Unknown Album',
+                thumbnail: item.media_item?.image || null,
+                duration: item.duration || null,
+                position: currentIndex + 2 + index, // Position in queue
+                queue_item_id: item.queue_item_id || null
+              });
+            });
+          }
+        } catch (error) {
+        }
+      }
+      
+      // Fallback to just the next item if we couldn't get the full queue
+      if (results.length === 0 && queueData.next_item) {
+        const item = queueData.next_item;
+        results.push({
+          media_content_id: item.media_item?.uri || `queue_next`,
+          media_content_type: item.media_item?.media_type || 'track',
+          media_class: 'track',
+          title: item.name || item.media_item?.name || 'Unknown Track',
+          artist: item.media_item?.artists?.[0]?.name || 'Unknown Artist',
+          album: item.media_item?.album?.name || 'Unknown Album',
+          thumbnail: item.media_item?.image || null,
+          duration: item.duration || null,
+          position: 1, // Next item
+          queue_item_id: item.queue_item_id || null
+        });
+      }
+
+      return { 
+        results, 
+        usedMusicAssistant: true,
+        total: results.length
+      };
+    } catch (error) {
+      console.error('yamp: Error getting upcoming queue:', error);
+      return { results: [], usedMusicAssistant: false };
     }
   }
 
@@ -1332,6 +1492,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
+      this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
     }
     // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
@@ -2703,6 +2865,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       if (this.shadowRoot && this.shadowRoot.host) {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
+        this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
+        this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
       }
       
       const showChipRow = this.config.show_chip_row || "auto";
@@ -3125,9 +3289,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           </div>
           ${this._showEntityOptions ? html`
           <div class="entity-options-overlay" @click=${(e) => this._closeEntityOptions(e)}>
-            <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
+            <div class="entity-options-container">
+              <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
               ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities) ? html`
-                <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
+                <div class="entity-options-menu" style="display:flex; flex-direction:column;">
                   <button class="entity-options-item" @click=${() => { 
                     const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
                     if (resolvedEntities.length === 1) {
@@ -3270,6 +3435,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             e.preventDefault(); 
                             // Clear recently played filter when user initiates search
                             this._recentlyPlayedFilterActive = false;
+                            this._upcomingFilterActive = false;
                             this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); 
                           }
                           else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
@@ -3283,6 +3449,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       @click=${() => { 
                         // Clear recently played filter when user initiates search
                         this._recentlyPlayedFilterActive = false;
+                        this._upcomingFilterActive = false;
                         this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); 
                       }}
                       ?disabled=${this._searchLoading}>
@@ -3396,6 +3563,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
                       </button>
+                      <button
+                          class="button${this._upcomingFilterActive ? ' active' : ''}"
+                          style="
+                            background: none;
+                            border: none;
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => {
+                            this._toggleUpcomingFilter();
+                          } : () => {}}
+                          title="Next Up"
+                        >
+                          <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+                      </button>
                     </div>
                   ` : nothing}
                   
@@ -3438,9 +3625,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
                                   ▶
                                 </button>
-                                <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
-                                  <ha-icon icon="mdi:playlist-play"></ha-icon>
-                                </button>
+                                ${!(this._upcomingFilterActive && item.queue_item_id) ? html`
+                                  <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
+                                    <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                  </button>
+                                ` : nothing}
                               </div>
                             </div>
                           ` : html`
@@ -3533,7 +3722,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     const sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
                     
                     return html`
-                      <div class="group-list-scroll" style="overflow-y: auto; max-height: 340px;">
+                      <div class="group-list-scroll">
                         ${sortedGroupIds.map(item => {
                           const id = item.id;
                           const actualGroupId = item.groupId;
@@ -3672,6 +3861,36 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   })}
                 </div>
               `}
+              </div>
+            </div>
+            <!-- Persistent Media Controls Section - Outside Scrollable Area -->
+            <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
+              <div class="persistent-controls-artwork">
+                ${(() => {
+                  // Use the same entity resolution as the main card
+                  const playbackStateObj = this.currentPlaybackStateObj;
+                  const mainState = this.currentStateObj;
+                  const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
+                  return artwork?.url ? html`
+                    <img src="${artwork.url}" alt="Album Art" class="persistent-artwork">
+                  ` : html`
+                    <div class="persistent-artwork-placeholder">
+                      <ha-icon icon="mdi:music"></ha-icon>
+                    </div>
+                  `;
+                })()}
+              </div>
+              <div class="persistent-controls-buttons">
+                <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
+                  <ha-icon icon="mdi:skip-previous"></ha-icon>
+                </button>
+                <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
+                  <ha-icon icon=${this.currentPlaybackStateObj?.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+                </button>
+                <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
+                  <ha-icon icon="mdi:skip-next"></ha-icon>
+                </button>
+              </div>
             </div>
           </div>
         ` : nothing}
@@ -3691,11 +3910,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 onSearch: () => {
                   // Clear recently played filter when user initiates search
                   this._recentlyPlayedFilterActive = false;
+                  this._upcomingFilterActive = false;
                   this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
                 },
                 onPlay: item => this._playMediaFromSearch(item),
                 onQueue: item => this._queueMediaFromSearch(item),
                 showQueueSuccess: this._showQueueSuccessMessage,
+                upcomingFilterActive: this._upcomingFilterActive,
               })
             : nothing}
           ${this._showQueueSuccessMessage ? html`
