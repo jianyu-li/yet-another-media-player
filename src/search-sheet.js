@@ -56,11 +56,18 @@ export function renderSearchSheet({
           : (results || []).map(
               (item) => html`
                 <div class="search-sheet-result">
-                  <img
-                    class="search-sheet-thumb"
-                    src=${item.thumbnail}
-                    alt=${item.title}
-                  />
+                  ${item.thumbnail ? html`
+                    <img
+                      class="search-sheet-thumb"
+                      src=${item.thumbnail}
+                      alt=${item.title}
+                      onerror="this.style.display='none'"
+                    />
+                  ` : html`
+                    <div class="search-sheet-thumb-placeholder">
+                      <ha-icon icon="mdi:music"></ha-icon>
+                    </div>
+                  `}
                   <span class="search-sheet-title">${item.title}</span>
                   <div class="search-sheet-buttons">
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">

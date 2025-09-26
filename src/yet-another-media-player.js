@@ -775,12 +775,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     
-    // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter
-    if (item.queue_item_id && this._upcomingFilterActive) {
-      // For queue items in the "Next Up" filter, just advance to the next track
-      await this.hass.callService("media_player", "media_next_track", {
-        entity_id: targetEntityId
-      });
+        // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter
+        if (item.queue_item_id && this._upcomingFilterActive) {
+          // For queue items in the "Next Up" filter, just advance to the next track
+          await this.hass.callService("media_player", "media_next_track", {
+            entity_id: targetEntityId
+          });
     } else {
       // For regular search results, use the normal play method
       playSearchedMedia(this.hass, targetEntityId, item);
@@ -1194,6 +1194,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             });
           }
         } catch (error) {
+          // Fallback to using just the next_item
         }
       }
       
@@ -1443,7 +1444,34 @@ class YetAnotherMediaPlayerCard extends LitElement {
       artworkUrl = prefix + artworkUrl;
     }
     
+    // Validate artwork URL to prevent proxy errors
+    if (artworkUrl && !this._isValidArtworkUrl(artworkUrl)) {
+      artworkUrl = null;
+    }
+    
     return { url: artworkUrl, sizePercentage };
+  }
+
+  // Validate artwork URL to prevent proxy errors
+  _isValidArtworkUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    
+    // Skip validation for data URLs and base64 images
+    if (url.startsWith('data:')) return true;
+    
+    // Skip validation for localhost and relative URLs
+    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) return true;
+    
+    // Check for obviously invalid URLs
+    if (url.includes('undefined') || url.includes('null') || url.trim() === '') return false;
+    
+    // Check for valid URL format
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Extract dominant color from image
@@ -3197,11 +3225,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ></div>
               ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
-                ${collapsed && artworkUrl ? html`
+                ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? html`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
                     <img class="collapsed-artwork" src="${artworkUrl}" 
-                         style="${this._getCollapsedArtworkStyle()}" />
+                         style="${this._getCollapsedArtworkStyle()}" 
+                         onerror="this.style.display='none'" />
                   </div>
                 ` : nothing}
                 ${!collapsed
@@ -3627,12 +3656,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result">
-                              <img
-                                class="entity-options-search-thumb"
-                                src=${item.thumbnail}
-                                alt=${item.title}
-                                style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
-                              />
+                              ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) ? html`
+                                <img
+                                  class="entity-options-search-thumb"
+                                  src=${item.thumbnail}
+                                  alt=${item.title}
+                                  style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
+                                  onerror="this.style.display='none'"
+                                />
+                              ` : html`
+                                <div class="entity-options-search-thumb-placeholder" 
+                                     style="height:38px;width:38px;border-radius:5px;margin-right:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
+                                  <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
+                                </div>
+                              `}
                               <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
                                       @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
@@ -3896,8 +3933,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   const playbackStateObj = this.currentPlaybackStateObj;
                   const mainState = this.currentStateObj;
                   const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
-                  return artwork?.url ? html`
-                    <img src="${artwork.url}" alt="Album Art" class="persistent-artwork">
+                  return artwork?.url && this._isValidArtworkUrl(artwork.url) ? html`
+                    <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
                   ` : html`
                     <div class="persistent-artwork-placeholder">
                       <ha-icon icon="mdi:music"></ha-icon>
