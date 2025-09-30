@@ -1244,6 +1244,212 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
+  // Queue reordering methods
+  async _moveQueueItemUp(queueItemId) {
+    try {
+      console.log('yamp: Moving queue item up:', queueItemId);
+      
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState?.entity_id;
+      
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+      
+      // Update UI immediately (like companion card does)
+      this._moveQueueItemInUI(queueItemId, 'up');
+      
+      // Then call the service
+      await this.hass.callService("mass_queue", "move_queue_item_up", {
+        entity: maEntityId,
+        queue_item_id: queueItemId
+      });
+    } catch (error) {
+      console.error('yamp: Error moving queue item up:', error);
+      // Revert UI change on error
+      this._refreshQueue();
+      this._showQueueError('Failed to move item up. Make sure you\'re using a Music Assistant entity.');
+    }
+  }
+
+  async _moveQueueItemDown(queueItemId) {
+    try {
+      console.log('yamp: Moving queue item down:', queueItemId);
+      
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState?.entity_id;
+      
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+      
+      // Update UI immediately
+      this._moveQueueItemInUI(queueItemId, 'down');
+      
+      // Then call the service
+      await this.hass.callService("mass_queue", "move_queue_item_down", {
+        entity: maEntityId,
+        queue_item_id: queueItemId
+      });
+    } catch (error) {
+      console.error('yamp: Error moving queue item down:', error);
+      // Revert UI change on error
+      this._refreshQueue();
+      this._showQueueError('Failed to move item down. Make sure you\'re using a Music Assistant entity.');
+    }
+  }
+
+  async _moveQueueItemNext(queueItemId) {
+    try {
+      console.log('yamp: Moving queue item to next:', queueItemId);
+      
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState?.entity_id;
+      
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+      
+      // Update UI immediately
+      this._moveQueueItemInUI(queueItemId, 'next');
+      
+      // Then call the service
+      await this.hass.callService("mass_queue", "move_queue_item_next", {
+        entity: maEntityId,
+        queue_item_id: queueItemId
+      });
+    } catch (error) {
+      console.error('yamp: Error moving queue item to next:', error);
+      // Revert UI change on error
+      this._refreshQueue();
+      this._showQueueError('Failed to move item to next. Make sure you\'re using a Music Assistant entity.');
+    }
+  }
+
+  async _removeQueueItem(queueItemId) {
+    try {
+      console.log('yamp: Removing queue item:', queueItemId);
+      
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState?.entity_id;
+      
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+      
+      // Update UI immediately
+      this._removeQueueItemFromUI(queueItemId);
+      
+      // Then call the service
+      await this.hass.callService("mass_queue", "remove_queue_item", {
+        entity: maEntityId,
+        queue_item_id: queueItemId
+      });
+    } catch (error) {
+      console.error('yamp: Error removing queue item:', error);
+      // Revert UI change on error
+      this._refreshQueue();
+      this._showQueueError('Failed to remove item. Make sure you\'re using a Music Assistant entity.');
+    }
+  }
+
+  // Show queue error message
+  _showQueueError(message) {
+    // For now, just log the error. In the future, we could show a toast notification
+    console.error('yamp: Queue operation failed:', message);
+    // You could implement a toast notification here if desired
+  }
+
+  // Update queue items in UI immediately (like companion card does)
+  _moveQueueItemInUI(queueItemId, direction) {
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const currentResults = this._searchResultsByType[cacheKey];
+    
+    if (!currentResults || !Array.isArray(currentResults.results)) {
+      return;
+    }
+
+    const itemIndex = currentResults.results.findIndex(item => item.queue_item_id === queueItemId);
+    if (itemIndex === -1) return;
+
+    let newIndex;
+    switch (direction) {
+      case 'up':
+        newIndex = Math.max(0, itemIndex - 1);
+        break;
+      case 'down':
+        newIndex = Math.min(currentResults.results.length - 1, itemIndex + 1);
+        break;
+      case 'next':
+        newIndex = 0; // Move to next position (first in upcoming queue)
+        break;
+      default:
+        return;
+    }
+
+    // Move item in array (like companion card's moveQueueItem)
+    const item = currentResults.results.splice(itemIndex, 1)[0];
+    currentResults.results.splice(newIndex, 0, item);
+
+    // Trigger UI update
+    this.requestUpdate();
+  }
+
+  // Remove queue item from UI immediately
+  _removeQueueItemFromUI(queueItemId) {
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const currentResults = this._searchResultsByType[cacheKey];
+    
+    if (!currentResults || !Array.isArray(currentResults.results)) {
+      return;
+    }
+
+    // Remove item from array
+    currentResults.results = currentResults.results.filter(item => item.queue_item_id !== queueItemId);
+    
+    // Trigger UI update
+    this.requestUpdate();
+  }
+
+  // Check if current entity is a Music Assistant entity
+  _isMusicAssistantEntity() {
+    // Get the Music Assistant state for the current chip
+    const maState = this._getMusicAssistantState();
+    if (!maState) return false;
+    
+    // Debug: log Music Assistant entity attributes
+    console.log('yamp: Music Assistant entity:', maState.entity_id);
+    console.log('yamp: MA entity attributes:', maState.attributes);
+    
+    // Check if the Music Assistant entity has the right attributes
+    const hasMassAttributes = maState.attributes?.app_id === "music_assistant" ||
+                             maState.attributes?.mass_player_id ||
+                             maState.attributes?.active_queue ||
+                             // If we're in upcoming mode and getting queue items, assume it's MA
+                             (this._upcomingFilterActive && this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming`]?.results?.some(item => item.queue_item_id));
+    
+    console.log('yamp: MA Entity check - ID:', maState.entity_id, 'app_id:', maState.attributes?.app_id, 'hasMassAttributes:', hasMassAttributes);
+    
+    return hasMassAttributes;
+  }
+
+  // Refresh the queue display
+  _refreshQueue() {
+    if (this._upcomingFilterActive) {
+      // Clear cache to force fresh fetch
+      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+      delete this._searchResultsByType[cacheKey];
+      // Reload upcoming queue items
+      this._doSearch('all', { isUpcoming: true }).catch(error => {
+        console.error('yamp: Error refreshing queue:', error);
+      });
+    }
+  }
+
   // Original method for getting queue (fallback)
   async _getUpcomingQueueOriginal(hass, entityId, limit = 20) {
     try {
@@ -3763,11 +3969,33 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
                                   ▶
                                 </button>
-                                ${!(this._upcomingFilterActive && item.queue_item_id) ? html`
+                                ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity()) ? html`
                                   <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
                                     <ha-icon icon="mdi:playlist-play"></ha-icon>
                                   </button>
-                                ` : nothing}
+                                ` : html`
+                                  <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities) -->
+                                  ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() ? html`
+                                    <div class="queue-controls">
+                                      <button class="queue-btn queue-btn-up" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }} title="Move Up">
+                                        <ha-icon icon="mdi:arrow-up"></ha-icon>
+                                      </button>
+                                      <button class="queue-btn queue-btn-down" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }} title="Move Down">
+                                        <ha-icon icon="mdi:arrow-down"></ha-icon>
+                                      </button>
+                                      <button class="queue-btn queue-btn-next" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }} title="Move to Next">
+                                        <ha-icon icon="mdi:skip-next"></ha-icon>
+                                      </button>
+                                      <button class="queue-btn queue-btn-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }} title="Remove from Queue">
+                                        <ha-icon icon="mdi:close"></ha-icon>
+                                      </button>
+                                    </div>
+                                  ` : html`
+                                    <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
+                                      <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                    </button>
+                                  `}
+                                `}
                               </div>
                             </div>
                           ` : html`

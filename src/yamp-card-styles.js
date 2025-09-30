@@ -1557,6 +1557,58 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
+  /* Queue control buttons */
+  .queue-controls {
+    display: flex;
+    gap: 4px;
+  }
+
+  .queue-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.9em;
+    border: none;
+    background: #4a4a4a;
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.13);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .queue-btn ha-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .queue-btn-up:hover,
+  .queue-btn-up:focus {
+    background: #2e7d32;
+    color: #fff;
+  }
+
+  .queue-btn-down:hover,
+  .queue-btn-down:focus {
+    background: #2e7d32;
+    color: #fff;
+  }
+
+  .queue-btn-next:hover,
+  .queue-btn-next:focus {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .queue-btn-remove:hover,
+  .queue-btn-remove:focus {
+    background: #d32f2f;
+    color: #fff;
+  }
+
   .entity-options-search-input {
     border: 1px solid #333;
     border-radius: var(--button-border-radius);
