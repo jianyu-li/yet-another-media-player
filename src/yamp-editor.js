@@ -542,6 +542,24 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @click=${() => this._updateConfig("search_results_limit", 20)}
           ></ha-icon>
         </div>
+
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector-number
+              .selector=${{ number: { min: 20, max: 500, step: 10, mode: "box" } }}
+              .value=${this._config.queue_limit ?? 500}
+              label="Queue Limit"
+              helper="Maximum queue items to load in 'Next Up' section (requires mass_queue integration, 20-500, default: 500)"
+              @value-changed=${(e) => this._updateConfig("queue_limit", e.detail.value)}
+            ></ha-selector-number>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("queue_limit", 500)}
+          ></ha-icon>
+        </div>
       `;
     }
 

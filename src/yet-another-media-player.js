@@ -1131,6 +1131,94 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Get next track from Music Assistant (limited by Music Assistant API)
   async _getUpcomingQueue(hass, entityId, limit = 20) {
     try {
+      // First, check if the mass_queue integration is available
+      if (await this._isMassQueueIntegrationAvailable(hass)) {
+        return await this._getUpcomingQueueWithMassQueue(hass, entityId, limit);
+      }
+
+      // Fallback to the original method
+      return await this._getUpcomingQueueOriginal(hass, entityId, limit);
+    } catch (error) {
+      console.error('yamp: Error getting upcoming queue:', error);
+      return { results: [], usedMusicAssistant: false };
+    }
+  }
+
+  // Check if mass_queue integration is available
+  async _isMassQueueIntegrationAvailable(hass) {
+    try {
+      // Check if the mass_queue domain is available in services
+      const services = await hass.callWS({
+        type: "get_services"
+      });
+      
+      // Handle different response formats
+      if (Array.isArray(services)) {
+        return services.some(service => service.domain === "mass_queue");
+      } else if (services && typeof services === 'object') {
+        // Check if mass_queue exists as a key in the services object
+        return services.hasOwnProperty("mass_queue") || Object.keys(services).some(key => key === "mass_queue");
+      }
+      
+      return false;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Get queue using mass_queue integration
+  async _getUpcomingQueueWithMassQueue(hass, entityId, limit = 20) {
+    try {
+      const queueLimit = this.config?.queue_limit || 500;
+      
+      const message = {
+        type: "call_service",
+        domain: "mass_queue",
+        service: "get_queue_items",
+        service_data: {
+          entity: entityId,
+          limit: Math.min(queueLimit, 500),
+          limit_after: Math.min(queueLimit, 500),
+          limit_before: 0
+        },
+        return_response: true,
+      };
+      
+      const response = await hass.connection.sendMessagePromise(message);
+      const queueItems = response?.response?.[entityId];
+      
+      if (!Array.isArray(queueItems)) {
+        throw new Error('Invalid response from mass_queue');
+      }
+
+      // Transform mass_queue format to our expected format
+      const results = queueItems.slice(1, limit + 1).map((item, index) => ({
+        media_content_id: item.media_content_id || `queue_${index}`,
+        media_content_type: 'track',
+        media_class: 'track',
+        title: item.media_title || 'Unknown Track',
+        artist: item.media_artist || 'Unknown Artist',
+        album: item.media_album_name || 'Unknown Album',
+        thumbnail: item.media_image || null,
+        duration: null, // Not provided by mass_queue
+        position: index + 2, // Position in queue (skip current)
+        queue_item_id: item.queue_item_id || null
+      }));
+      
+      return { 
+        results, 
+        usedMusicAssistant: true,
+        total: results.length,
+        source: 'mass_queue'
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Original method for getting queue (fallback)
+  async _getUpcomingQueueOriginal(hass, entityId, limit = 20) {
+    try {
       // Get the queue metadata first to get the queue_id
       const message = {
         type: "call_service",
@@ -1157,49 +1245,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         return { results: [], usedMusicAssistant: true };
       }
 
-      // Try to get more queue items using the queue_id
-      if (queueData.queue_id) {
-        try {
-          const queueItemsMessage = {
-            type: "call_service",
-            domain: "music_assistant",
-            service: "get_queue_items",
-            service_data: {
-              queue_id: queueData.queue_id
-            },
-            return_response: true,
-          };
-          
-          const queueItemsResponse = await hass.connection.sendMessagePromise(queueItemsMessage);
-          
-          const queueItems = queueItemsResponse?.response;
-          if (Array.isArray(queueItems) && queueItems.length > 0) {
-            // Get upcoming items (skip current and get next items)
-            const currentIndex = queueData.current_index || 0;
-            const upcomingItems = queueItems.slice(currentIndex + 1, currentIndex + 1 + limit);
-            
-            upcomingItems.forEach((item, index) => {
-              results.push({
-                media_content_id: item.media_item?.uri || `queue_${index}`,
-                media_content_type: item.media_item?.media_type || 'track',
-                media_class: 'track',
-                title: item.name || item.media_item?.name || 'Unknown Track',
-                artist: item.media_item?.artists?.[0]?.name || 'Unknown Artist',
-                album: item.media_item?.album?.name || 'Unknown Album',
-                thumbnail: item.media_item?.image || null,
-                duration: item.duration || null,
-                position: currentIndex + 2 + index, // Position in queue
-                queue_item_id: item.queue_item_id || null
-              });
-            });
-          }
-        } catch (error) {
-          // Fallback to using just the next_item
-        }
-      }
-      
-      // Fallback to just the next item if we couldn't get the full queue
-      if (results.length === 0 && queueData.next_item) {
+      // Fallback to just the next item
+      if (queueData.next_item) {
         const item = queueData.next_item;
         results.push({
           media_content_id: item.media_item?.uri || `queue_next`,
@@ -1218,11 +1265,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return { 
         results, 
         usedMusicAssistant: true,
-        total: results.length
+        total: results.length,
+        source: 'music_assistant'
       };
     } catch (error) {
-      console.error('yamp: Error getting upcoming queue:', error);
-      return { results: [], usedMusicAssistant: false };
+      console.error('yamp: Error in original queue method:', error);
+      throw error;
     }
   }
 
