@@ -12654,8 +12654,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
   async _getUpcomingQueue(hass, entityId) {
     let limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 20;
     try {
-      // First, check if the mass_queue integration is available
-      if (await this._isMassQueueIntegrationAvailable(hass)) {
+      // Always check for mass_queue integration (don't cache this)
+      const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
+      if (hasMassQueue) {
         return await this._getUpcomingQueueWithMassQueue(hass, entityId, limit);
       }
 
@@ -12695,17 +12696,23 @@ class YetAnotherMediaPlayerCard extends i$1 {
   async _getUpcomingQueueWithMassQueue(hass, entityId) {
     let limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 20;
     try {
-      var _this$config6, _response$response;
-      const queueLimit = ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.queue_limit) || 500;
+      var _playerState$attribut, _response$response;
+      // Get the currently playing track's media_content_id
+      const playerState = hass.states[entityId];
+      const currentTrackId = playerState === null || playerState === void 0 || (_playerState$attribut = playerState.attributes) === null || _playerState$attribut === void 0 ? void 0 : _playerState$attribut.media_content_id;
+
+      // Use limit_before and limit_after like the companion card does
+      // limit_before: 5 means get 5 items before the current track (to include current track)
+      // limit_after: limit means get up to 'limit' upcoming items
       const message = {
         type: "call_service",
         domain: "mass_queue",
         service: "get_queue_items",
         service_data: {
           entity: entityId,
-          limit: Math.min(queueLimit, 500),
-          limit_after: Math.min(queueLimit, 500),
-          limit_before: 0
+          limit_before: 5,
+          // Get items before current track to include current track
+          limit_after: Math.max(limit, 100) // Get enough items to ensure we have upcoming items
         },
         return_response: true
       };
@@ -12714,9 +12721,23 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (!Array.isArray(queueItems)) {
         throw new Error('Invalid response from mass_queue');
       }
+      console.log('yamp: Raw mass_queue response (first 10):', queueItems.slice(0, 10).map(item => ({
+        title: item.media_title,
+        artist: item.media_artist,
+        position: item.queue_item_id,
+        media_content_id: item.media_content_id
+      })));
 
-      // Transform mass_queue format to our expected format
-      const results = queueItems.slice(1, limit + 1).map((item, index) => ({
+      // Find the currently playing track's index in the queue
+      const currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
+      console.log('yamp: Current track ID:', currentTrackId);
+      console.log('yamp: Current track index in queue:', currentTrackIndex);
+
+      // Get upcoming items (items after the current track)
+      const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
+
+      // Process the upcoming items like the companion card does
+      const results = upcomingItems.slice(0, limit).map((item, index) => ({
         media_content_id: item.media_content_id || `queue_${index}`,
         media_content_type: 'track',
         media_class: 'track',
@@ -12725,11 +12746,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
         album: item.media_album_name || 'Unknown Album',
         thumbnail: item.media_image || null,
         duration: null,
-        // Not provided by mass_queue
-        position: index + 2,
-        // Position in queue (skip current)
+        position: index + 1,
         queue_item_id: item.queue_item_id || null
       }));
+      console.log('yamp: Upcoming items (first 3):', results.slice(0, 3).map(item => ({
+        title: item.title,
+        artist: item.artist
+      })));
       return {
         results,
         usedMusicAssistant: true,
@@ -12737,6 +12760,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         source: 'mass_queue'
       };
     } catch (error) {
+      console.error('yamp: mass_queue service call failed:', error);
       throw error;
     }
   }
@@ -12809,8 +12833,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
     try {
-      var _this$config7;
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.search_results_limit) || 20);
+      var _this$config6;
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.search_results_limit) || 20);
       const favorites = favoritesResponse.results || [];
 
       // Create a set of favorite URIs for quick lookup
@@ -12931,16 +12955,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config8, _this$config9;
+    var _this$config7, _this$config8;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
     const appId = attrs.app_id;
-    const prefix = ((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.artwork_hostname) || '';
+    const prefix = ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
 
     // Check for media artwork overrides first
-    const overrides = (_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.media_artwork_overrides;
+    const overrides = (_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.media_artwork_overrides;
     if (overrides && Array.isArray(overrides)) {
       var _override;
       const {
@@ -12981,8 +13005,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config0;
-      const fallbackArtwork = (_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.fallback_artwork;
+      var _this$config9;
+      const fallbackArtwork = (_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -14436,7 +14460,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config1, _this$config10, _this$config11, _this$currentVolumeSt3, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config0, _this$config1, _this$config10, _this$currentVolumeSt3, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -14620,9 +14644,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.fallback_artwork) || null,
+      artworkHostname: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass20;
         const obj = this._findEntityObjByAnyId(id);

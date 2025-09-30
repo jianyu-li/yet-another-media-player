@@ -1131,8 +1131,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Get next track from Music Assistant (limited by Music Assistant API)
   async _getUpcomingQueue(hass, entityId, limit = 20) {
     try {
-      // First, check if the mass_queue integration is available
-      if (await this._isMassQueueIntegrationAvailable(hass)) {
+      // Always check for mass_queue integration (don't cache this)
+      const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
+      
+      if (hasMassQueue) {
         return await this._getUpcomingQueueWithMassQueue(hass, entityId, limit);
       }
 
@@ -1169,17 +1171,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Get queue using mass_queue integration
   async _getUpcomingQueueWithMassQueue(hass, entityId, limit = 20) {
     try {
-      const queueLimit = this.config?.queue_limit || 500;
+      // Get the currently playing track's media_content_id
+      const playerState = hass.states[entityId];
+      const currentTrackId = playerState?.attributes?.media_content_id;
       
+      // Use limit_before and limit_after like the companion card does
+      // limit_before: 5 means get 5 items before the current track (to include current track)
+      // limit_after: limit means get up to 'limit' upcoming items
       const message = {
         type: "call_service",
         domain: "mass_queue",
         service: "get_queue_items",
         service_data: {
           entity: entityId,
-          limit: Math.min(queueLimit, 500),
-          limit_after: Math.min(queueLimit, 500),
-          limit_before: 0
+          limit_before: 5,  // Get items before current track to include current track
+          limit_after: Math.max(limit, 100)  // Get enough items to ensure we have upcoming items
         },
         return_response: true,
       };
@@ -1191,8 +1197,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
         throw new Error('Invalid response from mass_queue');
       }
 
-      // Transform mass_queue format to our expected format
-      const results = queueItems.slice(1, limit + 1).map((item, index) => ({
+      console.log('yamp: Raw mass_queue response (first 10):', queueItems.slice(0, 10).map(item => ({
+        title: item.media_title,
+        artist: item.media_artist,
+        position: item.queue_item_id,
+        media_content_id: item.media_content_id
+      })));
+
+      // Find the currently playing track's index in the queue
+      const currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
+      
+      console.log('yamp: Current track ID:', currentTrackId);
+      console.log('yamp: Current track index in queue:', currentTrackIndex);
+      
+      // Get upcoming items (items after the current track)
+      const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
+      
+      // Process the upcoming items like the companion card does
+      const results = upcomingItems.slice(0, limit).map((item, index) => ({
         media_content_id: item.media_content_id || `queue_${index}`,
         media_content_type: 'track',
         media_class: 'track',
@@ -1200,10 +1222,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
         artist: item.media_artist || 'Unknown Artist',
         album: item.media_album_name || 'Unknown Album',
         thumbnail: item.media_image || null,
-        duration: null, // Not provided by mass_queue
-        position: index + 2, // Position in queue (skip current)
+        duration: null,
+        position: index + 1,
         queue_item_id: item.queue_item_id || null
       }));
+      
+      console.log('yamp: Upcoming items (first 3):', results.slice(0, 3).map(item => ({
+        title: item.title,
+        artist: item.artist
+      })));
       
       return { 
         results, 
@@ -1212,6 +1239,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         source: 'mass_queue'
       };
     } catch (error) {
+      console.error('yamp: mass_queue service call failed:', error);
       throw error;
     }
   }
