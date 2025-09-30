@@ -1520,14 +1520,14 @@ export const yampCardStyles = css`
     min-width: 34px;
     font-size: 1.13em;
     border: none;
-    background: var(--custom-accent);
-    color: #fff;
+    background: transparent;
+    color: var(--custom-accent);
     border-radius: 10px;
     padding: 6px 10px;
     cursor: pointer;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.13);
+    box-shadow: none;
     transition: background var(--transition-normal), color var(--transition-normal);
-    text-shadow: 0 2px 8px #0008;
+    text-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1541,20 +1541,23 @@ export const yampCardStyles = css`
 
   .entity-options-search-play:hover,
   .entity-options-search-play:focus {
-    background: #fff;
+    background: transparent;
     color: var(--custom-accent);
+    opacity: 0.8;
   }
 
   .entity-options-search-queue {
-    background: #4a4a4a;
-    border: 1px solid #666;
+    background: transparent;
+    border: none;
+    color: #666;
   }
 
   .entity-options-search-queue:hover,
   .entity-options-search-queue:focus {
-    background: #5a5a5a;
-    border-color: #777;
-    color: #fff;
+    background: transparent;
+    border: none;
+    color: var(--custom-accent);
+    opacity: 0.8;
   }
 
   /* Queue control buttons */
@@ -1568,12 +1571,12 @@ export const yampCardStyles = css`
     height: 28px;
     font-size: 0.9em;
     border: none;
-    background: #4a4a4a;
+    background: transparent;
     color: #fff;
     border-radius: 6px;
     padding: 4px;
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.13);
+    box-shadow: none;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
@@ -1587,26 +1590,38 @@ export const yampCardStyles = css`
 
   .queue-btn-up:hover,
   .queue-btn-up:focus {
-    background: #2e7d32;
-    color: #fff;
+    background: transparent;
+    color: #4caf50;
   }
 
   .queue-btn-down:hover,
   .queue-btn-down:focus {
-    background: #2e7d32;
-    color: #fff;
+    background: transparent;
+    color: #4caf50;
   }
 
   .queue-btn-next:hover,
   .queue-btn-next:focus {
-    background: var(--custom-accent);
-    color: #fff;
+    background: transparent;
+    color: var(--custom-accent);
   }
 
   .queue-btn-remove:hover,
   .queue-btn-remove:focus {
-    background: #d32f2f;
-    color: #fff;
+    background: transparent;
+    color: #f44336;
+  }
+
+  /* Visual feedback for moved queue items */
+  .entity-options-search-result.just-moved {
+    background: rgba(76, 175, 80, 0.2) !important;
+    border-left: 3px solid #4caf50 !important;
+    animation: queueMoveHighlight 1s ease-out;
+  }
+
+  @keyframes queueMoveHighlight {
+    0% { background: rgba(76, 175, 80, 0.4); transform: scale(1.02); }
+    100% { background: rgba(76, 175, 80, 0.2); transform: scale(1); }
   }
 
   .entity-options-search-input {

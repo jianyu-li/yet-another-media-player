@@ -1102,6 +1102,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Clear cache to force fresh fetch
       const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
       delete this._searchResultsByType[cacheKey];
+      // Subscribe to queue update events
+      await this._subscribeToQueueUpdates();
       // Load upcoming queue items - always use "all" for upcoming
       try {
         await this._doSearch('all', { isUpcoming: true });
@@ -1109,6 +1111,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         console.error('yamp: Error in _doSearch for upcoming queue:', error);
       }
     } else {
+      // Unsubscribe from queue update events
+      this._unsubscribeFromQueueUpdates();
       // Restore original search results
       if (this._searchQuery && this._searchQuery.trim() !== '') {
         // Resubmit the original search without upcoming filter
@@ -1197,18 +1201,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         throw new Error('Invalid response from mass_queue');
       }
 
-      console.log('yamp: Raw mass_queue response (first 10):', queueItems.slice(0, 10).map(item => ({
-        title: item.media_title,
-        artist: item.media_artist,
-        position: item.queue_item_id,
-        media_content_id: item.media_content_id
-      })));
-
       // Find the currently playing track's index in the queue
       const currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
-      
-      console.log('yamp: Current track ID:', currentTrackId);
-      console.log('yamp: Current track index in queue:', currentTrackIndex);
       
       // Get upcoming items (items after the current track)
       const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
@@ -1227,10 +1221,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         queue_item_id: item.queue_item_id || null
       }));
       
-      console.log('yamp: Upcoming items (first 3):', results.slice(0, 3).map(item => ({
-        title: item.title,
-        artist: item.artist
-      })));
       
       return { 
         results, 
@@ -1247,8 +1237,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Queue reordering methods
   async _moveQueueItemUp(queueItemId) {
     try {
-      console.log('yamp: Moving queue item up:', queueItemId);
-      
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
       const maEntityId = maState?.entity_id;
@@ -1266,17 +1254,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         queue_item_id: queueItemId
       });
     } catch (error) {
-      console.error('yamp: Error moving queue item up:', error);
       // Revert UI change on error
       this._refreshQueue();
-      this._showQueueError('Failed to move item up. Make sure you\'re using a Music Assistant entity.');
     }
   }
 
   async _moveQueueItemDown(queueItemId) {
     try {
-      console.log('yamp: Moving queue item down:', queueItemId);
-      
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
       const maEntityId = maState?.entity_id;
@@ -1294,17 +1278,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         queue_item_id: queueItemId
       });
     } catch (error) {
-      console.error('yamp: Error moving queue item down:', error);
       // Revert UI change on error
       this._refreshQueue();
-      this._showQueueError('Failed to move item down. Make sure you\'re using a Music Assistant entity.');
     }
   }
 
   async _moveQueueItemNext(queueItemId) {
     try {
-      console.log('yamp: Moving queue item to next:', queueItemId);
-      
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
       const maEntityId = maState?.entity_id;
@@ -1322,17 +1302,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         queue_item_id: queueItemId
       });
     } catch (error) {
-      console.error('yamp: Error moving queue item to next:', error);
       // Revert UI change on error
       this._refreshQueue();
-      this._showQueueError('Failed to move item to next. Make sure you\'re using a Music Assistant entity.');
     }
   }
 
   async _removeQueueItem(queueItemId) {
     try {
-      console.log('yamp: Removing queue item:', queueItemId);
-      
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
       const maEntityId = maState?.entity_id;
@@ -1350,10 +1326,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         queue_item_id: queueItemId
       });
     } catch (error) {
-      console.error('yamp: Error removing queue item:', error);
       // Revert UI change on error
       this._refreshQueue();
-      this._showQueueError('Failed to remove item. Make sure you\'re using a Music Assistant entity.');
     }
   }
 
@@ -1391,12 +1365,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
         return;
     }
 
+    // Get the item being moved
+    const item = currentResults.results[itemIndex];
+    
     // Move item in array (like companion card's moveQueueItem)
-    const item = currentResults.results.splice(itemIndex, 1)[0];
-    currentResults.results.splice(newIndex, 0, item);
+    const movedItem = currentResults.results.splice(itemIndex, 1)[0];
+    currentResults.results.splice(newIndex, 0, movedItem);
+
+    // Update position numbers for visual feedback
+    currentResults.results.forEach((item, index) => {
+      item.position = index + 1;
+    });
+
+    // Add visual feedback - temporarily highlight the moved item
+    movedItem._justMoved = true;
+    setTimeout(() => {
+      delete movedItem._justMoved;
+      this.requestUpdate();
+    }, 1000);
 
     // Trigger UI update
     this.requestUpdate();
+    
   }
 
   // Remove queue item from UI immediately
@@ -1421,18 +1411,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const maState = this._getMusicAssistantState();
     if (!maState) return false;
     
-    // Debug: log Music Assistant entity attributes
-    console.log('yamp: Music Assistant entity:', maState.entity_id);
-    console.log('yamp: MA entity attributes:', maState.attributes);
-    
     // Check if the Music Assistant entity has the right attributes
     const hasMassAttributes = maState.attributes?.app_id === "music_assistant" ||
                              maState.attributes?.mass_player_id ||
                              maState.attributes?.active_queue ||
                              // If we're in upcoming mode and getting queue items, assume it's MA
                              (this._upcomingFilterActive && this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming`]?.results?.some(item => item.queue_item_id));
-    
-    console.log('yamp: MA Entity check - ID:', maState.entity_id, 'app_id:', maState.attributes?.app_id, 'hasMassAttributes:', hasMassAttributes);
     
     return hasMassAttributes;
   }
@@ -1447,6 +1431,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._doSearch('all', { isUpcoming: true }).catch(error => {
         console.error('yamp: Error refreshing queue:', error);
       });
+    }
+  }
+
+  // Subscribe to queue update events (like companion card)
+  async _subscribeToQueueUpdates() {
+    if (this._queueEventSubscription) return; // Already subscribed
+    
+    try {
+      this._queueEventSubscription = await this.hass.connection.subscribeEvents((event) => {
+        const eventData = event.data;
+        if (eventData.type === "queue_updated") {
+          // Refresh queue when it's updated
+          this._refreshQueue();
+        }
+      }, "mass_queue");
+    } catch (error) {
+      console.error('yamp: Failed to subscribe to queue updates:', error);
+    }
+  }
+
+  // Unsubscribe from queue update events
+  _unsubscribeFromQueueUpdates() {
+    if (this._queueEventSubscription) {
+      this._queueEventSubscription();
+      this._queueEventSubscription = null;
     }
   }
 
@@ -3937,7 +3946,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         ? html`<div class="entity-options-search-empty" style="color: white;">No results.</div>`
                         : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
-                            <div class="entity-options-search-result">
+                            <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''}">
                               ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) ? html`
                                 <img
                                   class="entity-options-search-thumb"
@@ -4662,6 +4671,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
     }
+    // Unsubscribe from queue update events
+    this._unsubscribeFromQueueUpdates();
     super.disconnectedCallback?.();
     if (this._progressTimer) {
       clearInterval(this._progressTimer);

@@ -2782,14 +2782,14 @@ const yampCardStyles = i$4`
     min-width: 34px;
     font-size: 1.13em;
     border: none;
-    background: var(--custom-accent);
-    color: #fff;
+    background: transparent;
+    color: var(--custom-accent);
     border-radius: 10px;
     padding: 6px 10px;
     cursor: pointer;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.13);
+    box-shadow: none;
     transition: background var(--transition-normal), color var(--transition-normal);
-    text-shadow: 0 2px 8px #0008;
+    text-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2803,20 +2803,23 @@ const yampCardStyles = i$4`
 
   .entity-options-search-play:hover,
   .entity-options-search-play:focus {
-    background: #fff;
+    background: transparent;
     color: var(--custom-accent);
+    opacity: 0.8;
   }
 
   .entity-options-search-queue {
-    background: #4a4a4a;
-    border: 1px solid #666;
+    background: transparent;
+    border: none;
+    color: #666;
   }
 
   .entity-options-search-queue:hover,
   .entity-options-search-queue:focus {
-    background: #5a5a5a;
-    border-color: #777;
-    color: #fff;
+    background: transparent;
+    border: none;
+    color: var(--custom-accent);
+    opacity: 0.8;
   }
 
   /* Queue control buttons */
@@ -2830,12 +2833,12 @@ const yampCardStyles = i$4`
     height: 28px;
     font-size: 0.9em;
     border: none;
-    background: #4a4a4a;
+    background: transparent;
     color: #fff;
     border-radius: 6px;
     padding: 4px;
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.13);
+    box-shadow: none;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
@@ -2849,26 +2852,38 @@ const yampCardStyles = i$4`
 
   .queue-btn-up:hover,
   .queue-btn-up:focus {
-    background: #2e7d32;
-    color: #fff;
+    background: transparent;
+    color: #4caf50;
   }
 
   .queue-btn-down:hover,
   .queue-btn-down:focus {
-    background: #2e7d32;
-    color: #fff;
+    background: transparent;
+    color: #4caf50;
   }
 
   .queue-btn-next:hover,
   .queue-btn-next:focus {
-    background: var(--custom-accent);
-    color: #fff;
+    background: transparent;
+    color: var(--custom-accent);
   }
 
   .queue-btn-remove:hover,
   .queue-btn-remove:focus {
-    background: #d32f2f;
-    color: #fff;
+    background: transparent;
+    color: #f44336;
+  }
+
+  /* Visual feedback for moved queue items */
+  .entity-options-search-result.just-moved {
+    background: rgba(76, 175, 80, 0.2) !important;
+    border-left: 3px solid #4caf50 !important;
+    animation: queueMoveHighlight 1s ease-out;
+  }
+
+  @keyframes queueMoveHighlight {
+    0% { background: rgba(76, 175, 80, 0.4); transform: scale(1.02); }
+    100% { background: rgba(76, 175, 80, 0.2); transform: scale(1); }
   }
 
   .entity-options-search-input {
@@ -12674,6 +12689,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Clear cache to force fresh fetch
       const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
       delete this._searchResultsByType[cacheKey];
+      // Subscribe to queue update events
+      await this._subscribeToQueueUpdates();
       // Load upcoming queue items - always use "all" for upcoming
       try {
         await this._doSearch('all', {
@@ -12683,6 +12700,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
         console.error('yamp: Error in _doSearch for upcoming queue:', error);
       }
     } else {
+      // Unsubscribe from queue update events
+      this._unsubscribeFromQueueUpdates();
       // Restore original search results
       if (this._searchQuery && this._searchQuery.trim() !== '') {
         // Resubmit the original search without upcoming filter
@@ -12773,17 +12792,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (!Array.isArray(queueItems)) {
         throw new Error('Invalid response from mass_queue');
       }
-      console.log('yamp: Raw mass_queue response (first 10):', queueItems.slice(0, 10).map(item => ({
-        title: item.media_title,
-        artist: item.media_artist,
-        position: item.queue_item_id,
-        media_content_id: item.media_content_id
-      })));
 
       // Find the currently playing track's index in the queue
       const currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
-      console.log('yamp: Current track ID:', currentTrackId);
-      console.log('yamp: Current track index in queue:', currentTrackIndex);
 
       // Get upcoming items (items after the current track)
       const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
@@ -12801,10 +12812,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
         position: index + 1,
         queue_item_id: item.queue_item_id || null
       }));
-      console.log('yamp: Upcoming items (first 3):', results.slice(0, 3).map(item => ({
-        title: item.title,
-        artist: item.artist
-      })));
       return {
         results,
         usedMusicAssistant: true,
@@ -12820,8 +12827,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
   // Queue reordering methods
   async _moveQueueItemUp(queueItemId) {
     try {
-      console.log('yamp: Moving queue item up:', queueItemId);
-
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
       const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
@@ -12838,16 +12843,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
         queue_item_id: queueItemId
       });
     } catch (error) {
-      console.error('yamp: Error moving queue item up:', error);
       // Revert UI change on error
       this._refreshQueue();
-      this._showQueueError('Failed to move item up. Make sure you\'re using a Music Assistant entity.');
     }
   }
   async _moveQueueItemDown(queueItemId) {
     try {
-      console.log('yamp: Moving queue item down:', queueItemId);
-
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
       const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
@@ -12864,16 +12865,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
         queue_item_id: queueItemId
       });
     } catch (error) {
-      console.error('yamp: Error moving queue item down:', error);
       // Revert UI change on error
       this._refreshQueue();
-      this._showQueueError('Failed to move item down. Make sure you\'re using a Music Assistant entity.');
     }
   }
   async _moveQueueItemNext(queueItemId) {
     try {
-      console.log('yamp: Moving queue item to next:', queueItemId);
-
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
       const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
@@ -12890,16 +12887,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
         queue_item_id: queueItemId
       });
     } catch (error) {
-      console.error('yamp: Error moving queue item to next:', error);
       // Revert UI change on error
       this._refreshQueue();
-      this._showQueueError('Failed to move item to next. Make sure you\'re using a Music Assistant entity.');
     }
   }
   async _removeQueueItem(queueItemId) {
     try {
-      console.log('yamp: Removing queue item:', queueItemId);
-
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
       const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
@@ -12916,10 +12909,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
         queue_item_id: queueItemId
       });
     } catch (error) {
-      console.error('yamp: Error removing queue item:', error);
       // Revert UI change on error
       this._refreshQueue();
-      this._showQueueError('Failed to remove item. Make sure you\'re using a Music Assistant entity.');
     }
   }
 
@@ -12954,9 +12945,24 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return;
     }
 
+    // Get the item being moved
+    currentResults.results[itemIndex];
+
     // Move item in array (like companion card's moveQueueItem)
-    const item = currentResults.results.splice(itemIndex, 1)[0];
-    currentResults.results.splice(newIndex, 0, item);
+    const movedItem = currentResults.results.splice(itemIndex, 1)[0];
+    currentResults.results.splice(newIndex, 0, movedItem);
+
+    // Update position numbers for visual feedback
+    currentResults.results.forEach((item, index) => {
+      item.position = index + 1;
+    });
+
+    // Add visual feedback - temporarily highlight the moved item
+    movedItem._justMoved = true;
+    setTimeout(() => {
+      delete movedItem._justMoved;
+      this.requestUpdate();
+    }, 1000);
 
     // Trigger UI update
     this.requestUpdate();
@@ -12979,20 +12985,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Check if current entity is a Music Assistant entity
   _isMusicAssistantEntity() {
-    var _maState$attributes5, _maState$attributes6, _maState$attributes7, _this$_searchResultsB, _maState$attributes8;
+    var _maState$attributes5, _maState$attributes6, _maState$attributes7, _this$_searchResultsB;
     // Get the Music Assistant state for the current chip
     const maState = this._getMusicAssistantState();
     if (!maState) return false;
-
-    // Debug: log Music Assistant entity attributes
-    console.log('yamp: Music Assistant entity:', maState.entity_id);
-    console.log('yamp: MA entity attributes:', maState.attributes);
 
     // Check if the Music Assistant entity has the right attributes
     const hasMassAttributes = ((_maState$attributes5 = maState.attributes) === null || _maState$attributes5 === void 0 ? void 0 : _maState$attributes5.app_id) === "music_assistant" || ((_maState$attributes6 = maState.attributes) === null || _maState$attributes6 === void 0 ? void 0 : _maState$attributes6.mass_player_id) || ((_maState$attributes7 = maState.attributes) === null || _maState$attributes7 === void 0 ? void 0 : _maState$attributes7.active_queue) ||
     // If we're in upcoming mode and getting queue items, assume it's MA
     this._upcomingFilterActive && ((_this$_searchResultsB = this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming`]) === null || _this$_searchResultsB === void 0 || (_this$_searchResultsB = _this$_searchResultsB.results) === null || _this$_searchResultsB === void 0 ? void 0 : _this$_searchResultsB.some(item => item.queue_item_id));
-    console.log('yamp: MA Entity check - ID:', maState.entity_id, 'app_id:', (_maState$attributes8 = maState.attributes) === null || _maState$attributes8 === void 0 ? void 0 : _maState$attributes8.app_id, 'hasMassAttributes:', hasMassAttributes);
     return hasMassAttributes;
   }
 
@@ -13008,6 +13009,31 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }).catch(error => {
         console.error('yamp: Error refreshing queue:', error);
       });
+    }
+  }
+
+  // Subscribe to queue update events (like companion card)
+  async _subscribeToQueueUpdates() {
+    if (this._queueEventSubscription) return; // Already subscribed
+
+    try {
+      this._queueEventSubscription = await this.hass.connection.subscribeEvents(event => {
+        const eventData = event.data;
+        if (eventData.type === "queue_updated") {
+          // Refresh queue when it's updated
+          this._refreshQueue();
+        }
+      }, "mass_queue");
+    } catch (error) {
+      console.error('yamp: Failed to subscribe to queue updates:', error);
+    }
+  }
+
+  // Unsubscribe from queue update events
+  _unsubscribeFromQueueUpdates() {
+    if (this._queueEventSubscription) {
+      this._queueEventSubscription();
+      this._queueEventSubscription = null;
     }
   }
 
@@ -14338,14 +14364,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
           // Press the associated favorite button entity
           const favoriteButtonEntity = this._getFavoriteButtonEntity();
           if (favoriteButtonEntity) {
-            var _this$hass14, _maState$attributes9;
+            var _this$hass14, _maState$attributes8;
             this.hass.callService("button", "press", {
               entity_id: favoriteButtonEntity
             });
 
             // Immediately mark as favorited when button is pressed
             const maState = (_this$hass14 = this.hass) === null || _this$hass14 === void 0 || (_this$hass14 = _this$hass14.states) === null || _this$hass14 === void 0 ? void 0 : _this$hass14[targetEntity];
-            if (maState !== null && maState !== void 0 && (_maState$attributes9 = maState.attributes) !== null && _maState$attributes9 !== void 0 && _maState$attributes9.media_content_id) {
+            if (maState !== null && maState !== void 0 && (_maState$attributes8 = maState.attributes) !== null && _maState$attributes8 !== void 0 && _maState$attributes8.media_content_id) {
               // Initialize cache if needed
               if (!this._favoriteStatusCache) {
                 this._favoriteStatusCache = {};
@@ -15409,7 +15435,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Always render paddedResults, even before first search
       return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
                             <!-- EXISTING non‑placeholder row markup -->
-                            <div class="entity-options-search-result">
+                            <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''}">
                               ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) ? x`
                                 <img
                                   class="entity-options-search-thumb"
@@ -16138,6 +16164,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
     }
+    // Unsubscribe from queue update events
+    this._unsubscribeFromQueueUpdates();
     (_super$disconnectedCa = super.disconnectedCallback) === null || _super$disconnectedCa === void 0 || _super$disconnectedCa.call(this);
     if (this._progressTimer) {
       clearInterval(this._progressTimer);
