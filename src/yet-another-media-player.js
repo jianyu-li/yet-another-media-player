@@ -775,14 +775,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     
-        // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter
-        if (item.queue_item_id && this._upcomingFilterActive) {
-          // For queue items in the "Next Up" filter, just advance to the next track
-          await this.hass.callService("media_player", "media_next_track", {
-            entity_id: targetEntityId
+    // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter with working mass_queue
+    if (item.queue_item_id && this._upcomingFilterActive && this._isMusicAssistantEntity() && this._massQueueAvailable) {
+      // For queue items in the "Next Up" filter, play the specific queue item
+      try {
+        const maState = this._getMusicAssistantState();
+        const maEntityId = maState?.entity_id;
+        
+        if (maEntityId) {
+          // Use mass_queue to play the specific queue item
+          await this.hass.callService("mass_queue", "play_queue_item", {
+            entity: maEntityId,
+            queue_item_id: item.queue_item_id
           });
+        }
+      } catch (error) {
+        console.error('yamp: Error playing queue item:', error);
+        // Fallback to next track if service call fails
+        await this.hass.callService("media_player", "media_next_track", {
+          entity_id: targetEntityId
+        });
+      }
     } else {
-      // For regular search results, use the normal play method
+      // For regular search results or fallback mode, use the normal play method
       playSearchedMedia(this.hass, targetEntityId, item);
     }
     
@@ -1138,35 +1153,59 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Always check for mass_queue integration (don't cache this)
       const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
       
+      // Cache the result for UI rendering
+      this._massQueueAvailable = hasMassQueue;
+      
       if (hasMassQueue) {
-        return await this._getUpcomingQueueWithMassQueue(hass, entityId, limit);
+        try {
+          const massQueueResult = await this._getUpcomingQueueWithMassQueue(hass, entityId, limit);
+          
+          // If mass_queue returns 0 results, fall back to original method
+          if (!massQueueResult.results || massQueueResult.results.length === 0) {
+            this._massQueueAvailable = false; // Hide queue management buttons
+            return await this._getUpcomingQueueOriginal(hass, entityId, limit);
+          }
+          
+          return massQueueResult;
+        } catch (error) {
+          this._massQueueAvailable = false; // Hide queue management buttons
+          return await this._getUpcomingQueueOriginal(hass, entityId, limit);
+        }
       }
 
       // Fallback to the original method
       return await this._getUpcomingQueueOriginal(hass, entityId, limit);
     } catch (error) {
       console.error('yamp: Error getting upcoming queue:', error);
+      this._massQueueAvailable = false;
       return { results: [], usedMusicAssistant: false };
     }
   }
 
-  // Check if mass_queue integration is available
+  // Check if mass_queue integration is available and enabled
   async _isMassQueueIntegrationAvailable(hass) {
     try {
-      // Check if the mass_queue domain is available in services
+      // First check if the mass_queue domain is available in services
       const services = await hass.callWS({
         type: "get_services"
       });
       
+      let hasServices = false;
       // Handle different response formats
       if (Array.isArray(services)) {
-        return services.some(service => service.domain === "mass_queue");
+        hasServices = services.some(service => service.domain === "mass_queue");
       } else if (services && typeof services === 'object') {
         // Check if mass_queue exists as a key in the services object
-        return services.hasOwnProperty("mass_queue") || Object.keys(services).some(key => key === "mass_queue");
+        hasServices = services.hasOwnProperty("mass_queue") || Object.keys(services).some(key => key === "mass_queue");
       }
       
-      return false;
+      if (!hasServices) {
+        return false;
+      }
+      
+      // If services are available, assume integration is working
+      // The companion card works, so this should be sufficient
+      return true;
     } catch (error) {
       return false;
     }
@@ -3978,13 +4017,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
                                   ▶
                                 </button>
-                                ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity()) ? html`
+                                ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
                                   <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
                                     <ha-icon icon="mdi:playlist-play"></ha-icon>
                                   </button>
                                 ` : html`
-                                  <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities) -->
-                                  ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() ? html`
+                                  <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->
+                                  ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? html`
                                     <div class="queue-controls">
                                       <button class="queue-btn queue-btn-up" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }} title="Move Up">
                                         <ha-icon icon="mdi:arrow-up"></ha-icon>
@@ -3993,7 +4032,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                         <ha-icon icon="mdi:arrow-down"></ha-icon>
                                       </button>
                                       <button class="queue-btn queue-btn-next" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }} title="Move to Next">
-                                        <ha-icon icon="mdi:skip-next"></ha-icon>
+                                        <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
                                       </button>
                                       <button class="queue-btn queue-btn-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }} title="Remove from Queue">
                                         <ha-icon icon="mdi:close"></ha-icon>
