@@ -1521,7 +1521,7 @@ export const yampCardStyles = css`
     font-size: 1.13em;
     border: none;
     background: transparent;
-    color: var(--custom-accent);
+    color: #fff;
     border-radius: 10px;
     padding: 6px 10px;
     cursor: pointer;
@@ -1766,6 +1766,14 @@ export const yampCardStyles = css`
     overflow-y: auto;
     margin: 12px 0;
     padding-bottom: 80px;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
+  .entity-options-sheet .entity-options-search-results::-webkit-scrollbar {
+    display: none;
   }
 
   .entity-options-resolved-entities {
@@ -1779,6 +1787,13 @@ export const yampCardStyles = css`
     flex: 1;
     overflow-y: auto;
     margin: 12px 0;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  .entity-options-resolved-entities-list::-webkit-scrollbar {
+    display: none;
   }
 
   .entity-options-resolved-entities .entity-options-item {
@@ -1934,6 +1949,13 @@ export const yampCardStyles = css`
   .search-sheet-results {
     flex: 1;
     overflow-y: auto;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  .search-sheet-results::-webkit-scrollbar {
+    display: none;
   }
 
   .search-sheet-result {
