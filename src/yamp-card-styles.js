@@ -1108,6 +1108,95 @@ export const yampCardStyles = css`
     justify-content: center;
   }
 
+  /* Opening animations for hamburger menu */
+  @keyframes overlayFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes containerSlideIn {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sheetSlideIn {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .entity-options-overlay-opening {
+    animation: overlayFadeIn 0.2s ease-out;
+  }
+
+  .entity-options-container-opening {
+    animation: containerSlideIn 0.3s ease-out;
+  }
+
+  .entity-options-sheet-opening {
+    animation: sheetSlideIn 0.25s ease-out 0.05s both;
+  }
+
+  /* Closing animations for hamburger menu */
+  @keyframes overlayFadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes containerSlideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes sheetSlideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+  }
+
+  .entity-options-overlay-closing {
+    animation: overlayFadeOut 0.15s ease-in forwards;
+    pointer-events: none;
+  }
+
+  .entity-options-container-closing {
+    animation: containerSlideOut 0.2s ease-in forwards;
+  }
+
+  .entity-options-sheet-closing {
+    animation: sheetSlideOut 0.15s ease-in 0.05s both forwards;
+  }
+
   .entity-options-container {
     width: 98%;
     max-width: 430px;
