@@ -4004,8 +4004,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 </span>
                                 <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
                                   ${(() => {
-                                    // Show artist name if filtering on "track" or "album"
-                                    if ((this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album') && item.artist) {
+                                    // Prefer artist when available for tracks/albums and special filters
+                                    const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
+                                    const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
+                                    const isUpcoming = !!this._upcomingFilterActive;
+                                    if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming) && item.artist) {
                                       return item.artist;
                                     }
                                     // Otherwise show media class as before
