@@ -32,8 +32,7 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
     
     // If no specific match found, check for fallback when no artwork
     if (!override) {
-      const hasArtwork = attrs.entity_picture || attrs.album_art || 
-                        (appId === 'music_assistant' && attrs.entity_picture_local);
+      const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
       if (!hasArtwork) {
         override = overrides.find(override => override.if_missing);
       }
@@ -47,13 +46,8 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
   
   // If no override found, use standard artwork
   if (!artworkUrl) {
-    // For Music Assistant, prefer entity_picture_local
-    if (appId === 'music_assistant' && attrs.entity_picture_local) {
-      artworkUrl = attrs.entity_picture_local;
-    } else {
-      // Fallback to standard artwork attributes
-      artworkUrl = attrs.entity_picture || attrs.album_art || null;
-    }
+    // Always check entity_picture_local first, then entity_picture
+    artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
   }
   
   // If still no artwork, check for configured fallback artwork

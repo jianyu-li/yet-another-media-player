@@ -914,9 +914,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._doSearch();
       
       // Re-attach swipe handlers when returning to top level
-      setTimeout(() => {
-        this._attachSearchSwipe();
-      }, 100);
+      // setTimeout(() => {
+      //   this._attachSearchSwipe(); // Disabled on mobile due to false positives
+      // }, 100);
     } else {
       const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
       if (currentLevel.type === 'artist') {
@@ -1228,7 +1228,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         service_data: {
           entity: entityId,
           limit_before: 5,  // Get items before current track to include current track
-          limit_after: Math.max(limit, 100)  // Get enough items to ensure we have upcoming items
+          limit_after: Math.max(limit, this.config?.search_results_limit || 20)  // Use config search_results_limit
         },
         return_response: true,
       };
@@ -1722,8 +1722,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       // If no specific match found, check for fallback when no artwork
       if (!override) {
-        const hasArtwork = attrs.entity_picture || attrs.album_art || 
-                          (appId === 'music_assistant' && attrs.entity_picture_local);
+        const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
         if (!hasArtwork) {
           override = overrides.find(override => override.if_missing);
         }
@@ -1737,13 +1736,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     // If no override found, use standard artwork
     if (!artworkUrl) {
-      // For Music Assistant, prefer entity_picture_local
-      if (appId === 'music_assistant' && attrs.entity_picture_local) {
-        artworkUrl = attrs.entity_picture_local;
-      } else {
-        // Fallback to standard artwork attributes
-        artworkUrl = attrs.entity_picture || attrs.album_art || null;
-      }
+      // Always check entity_picture_local first, then entity_picture
+      artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
     }
     
     // If still no artwork, check for configured fallback artwork
@@ -2542,7 +2536,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }
         }
         // attach swipe gesture once
-        this._attachSearchSwipe();
+        // this._attachSearchSwipe(); // Disabled on mobile due to false positives
       }, 200);
     }
     // When the source‑list sheet opens, make sure the overlay scrolls to the top
@@ -3269,6 +3263,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (this.hass.states[this.config.idle_image]) {
           const sensorState = this.hass.states[this.config.idle_image];
           idleImageUrl =
+            sensorState.attributes.entity_picture_local ||
             sensorState.attributes.entity_picture ||
             (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
         }
@@ -4008,9 +4003,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                   ${item.title}
                                 </span>
                                 <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
-                                  ${item.media_class
-                                    ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
-                                    : ""}
+                                  ${(() => {
+                                    // Show artist name if filtering on "track" or "album"
+                                    if ((this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album') && item.artist) {
+                                      return item.artist;
+                                    }
+                                    // Otherwise show media class as before
+                                    return item.media_class
+                                      ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
+                                      : "";
+                                  })()}
                                 </span>
                               </div>
                               <div class="entity-options-search-buttons">
