@@ -15701,7 +15701,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                         ` : x`<span></span>`}
                         <button class="entity-options-item"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
+                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 12px 2px 8px;">
                           ${groupedAny ? "Ungroup All" : "Group All"}
                         </button>
                       </div>
