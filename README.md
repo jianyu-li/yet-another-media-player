@@ -494,7 +494,7 @@ For enhanced queue controls in the Search sheet (e.g., viewing and reordering th
 - Repository link: [droans/mass_queue](https://github.com/droans/mass_queue)
 
 Once installed and configured, YAMP will automatically detect the integration and enable:
-- Fetching the upcoming queue with `mass_queue.get_queue_items` (supports `limit_before` and `limit_after`)
+- Fetching the upcoming queue with `mass_queue.get_queue_items` (the existing ```search_results_limit``` will be used for this)
 - Queue item reordering: move up, move down, move next
 - Queue item removal
 
