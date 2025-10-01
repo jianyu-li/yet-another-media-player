@@ -56,7 +56,7 @@ export function renderSearchSheet({
           : (results || []).map(
               (item) => html`
                 <div class="search-sheet-result">
-                  ${item.thumbnail ? html`
+                  ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? html`
                     <img
                       class="search-sheet-thumb"
                       src=${item.thumbnail}

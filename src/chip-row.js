@@ -109,7 +109,7 @@ export function renderChip({
             style="display:flex;align-items:center;justify-content:space-between;">
       <span class="chip-icon">
         ${art
-          ? html`<img class="chip-mini-art" src="${art}" />`
+          ? html`<img class="chip-mini-art" src="${art}" onerror="this.style.display='none'" />`
           : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
       </span>
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
@@ -166,6 +166,7 @@ export function renderGroupChip({
           ? html`<img class="chip-mini-art"
                       src="${art}"
                       style="cursor:pointer;"
+                      onerror="this.style.display='none'"
                       @click=${e => {
                         e.stopPropagation();
                         if (onIconClick) {
