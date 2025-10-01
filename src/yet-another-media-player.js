@@ -3671,9 +3671,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
             </div>
           </div>
           ${this._showEntityOptions ? html`
-          <div class="entity-options-overlay" @click=${(e) => this._closeEntityOptions(e)}>
-            <div class="entity-options-container">
-              <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
+          <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
+            <div class="entity-options-container entity-options-container-opening">
+              <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
               ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities) ? html`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column;">
                   <button class="entity-options-item" @click=${() => { 
@@ -3801,7 +3801,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 <div class="entity-options-search" style="margin-top:12px;">
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._showEntityOptions = false; this._showSearchInSheet = false; this._quickMenuInvoke = false; this.requestUpdate(); } else { this._goBackInSearch(); } }} style="margin-bottom:8px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._goBackInSearch(); } }} style="margin-bottom:8px;">&larr; Back</button>
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
                   ` : nothing}
@@ -3841,7 +3841,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
-                      @click=${() => { if (this._quickMenuInvoke) { this._showEntityOptions = false; this._showSearchInSheet = false; this._quickMenuInvoke = false; this.requestUpdate(); } else { this._hideSearchSheetInOptions(); } }}>
+                      @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
                       Cancel
                     </button>
                   </div>
@@ -4063,7 +4063,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 </div>
               ` : this._showGrouping ? html`
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._showEntityOptions = false; this._showGrouping = false; this._quickMenuInvoke = false; this.requestUpdate(); } else { this._closeGrouping(); } }} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }} style="margin-bottom:14px;">&larr; Back</button>
                 ${
                   (() => {
                     const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
@@ -4252,7 +4252,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   })()
                 }
               ` : html`
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._showEntityOptions = false; this._showSourceList = false; this._quickMenuInvoke = false; this.requestUpdate(); } else { this._closeSourceList(); } }} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }} style="margin-bottom:14px;">&larr; Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => html`
@@ -4744,30 +4744,72 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
   }
-  // Entity options overlay handlers
-  _closeEntityOptions() {
-    if (this._showGrouping) {
-      // Close the grouping sheet and the overlay
-      this._showGrouping = false;
-      this._showEntityOptions = false;
-      // Auto-select the chip for the group just created (same as _closeGrouping logic)
-      const groups = this.groupedSortedEntityIds;
-      const curId = this.currentEntityId;
-      const group = groups.find(g => g.includes(curId));
-      if (group && group.length > 1) {
-        const master = this._getActualGroupMaster(group);
-        const idx = this.entityIds.indexOf(master);
-        if (idx >= 0) this._selectedIndex = idx;
-      }
-      this.requestUpdate();
-    } else {
+  // Helper method to apply closing animations
+  _applyClosingAnimations() {
+    const overlay = this.renderRoot.querySelector('.entity-options-overlay');
+    const container = this.renderRoot.querySelector('.entity-options-container');
+    const sheet = this.renderRoot.querySelector('.entity-options-sheet');
+    
+    if (overlay) {
+      overlay.classList.remove('entity-options-overlay-opening');
+      overlay.classList.add('entity-options-overlay-closing');
+    }
+    if (container) {
+      container.classList.remove('entity-options-container-opening');
+      container.classList.add('entity-options-container-closing');
+    }
+    if (sheet) {
+      sheet.classList.remove('entity-options-sheet-opening');
+      sheet.classList.add('entity-options-sheet-closing');
+    }
+  }
+
+  // Helper method for immediate dismissals with animation
+  _dismissWithAnimation() {
+    this._applyClosingAnimations();
+    setTimeout(() => {
       this._showEntityOptions = false;
       this._showGrouping = false;
       this._showSourceList = false;
+      this._showSearchInSheet = false;
+      this._showResolvedEntities = false;
+      this._quickMenuInvoke = false;
       this.requestUpdate();
-    }
-    // Clear quick menu flag on any overlay close
-    this._quickMenuInvoke = false;
+    }, 200);
+  }
+
+  // Entity options overlay handlers
+  _closeEntityOptions() {
+    // Apply closing animations
+    this._applyClosingAnimations();
+    
+    // Wait for animation to complete before hiding
+    setTimeout(() => {
+      if (this._showGrouping) {
+        // Close the grouping sheet and the overlay
+        this._showGrouping = false;
+        this._showEntityOptions = false;
+        // Auto-select the chip for the group just created (same as _closeGrouping logic)
+        const groups = this.groupedSortedEntityIds;
+        const curId = this.currentEntityId;
+        const group = groups.find(g => g.includes(curId));
+        if (group && group.length > 1) {
+          const master = this._getActualGroupMaster(group);
+          const idx = this.entityIds.indexOf(master);
+          if (idx >= 0) this._selectedIndex = idx;
+        }
+        this.requestUpdate();
+      } else {
+        this._showEntityOptions = false;
+        this._showGrouping = false;
+        this._showSourceList = false;
+        this._showSearchInSheet = false;
+        this._showResolvedEntities = false;
+        this.requestUpdate();
+      }
+      // Clear quick menu flag on any overlay close
+      this._quickMenuInvoke = false;
+    }, 200); // Match the longest animation duration
   }
 
   async _openEntityOptions() {
