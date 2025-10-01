@@ -615,31 +615,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
   _hideSearchSheetInOptions() {
-    // Apply closing animations
-    this._applyClosingAnimations();
-    
-    // Wait for animation to complete before hiding
+    this._showSearchInSheet = false;
+    this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
+    this._searchLoading = false;
+    this._searchAttempted = false;
+    this._searchResultsByType = {}; // Clear cache when closing
+    this._currentSearchQuery = ""; // Reset current search query
+    this._searchHierarchy = []; // Clear search hierarchy
+    this._searchBreadcrumb = ""; // Clear breadcrumb
+    if (this._quickMenuInvoke) {
+      this._showEntityOptions = false;
+      this._quickMenuInvoke = false;
+    }
+    this.requestUpdate();
+    // Force layout update for expand on search
     setTimeout(() => {
-      this._showSearchInSheet = false;
-      this._searchError = "";
-      this._searchResults = [];
-      this._searchQuery = "";
-      this._searchLoading = false;
-      this._searchAttempted = false;
-      this._searchResultsByType = {}; // Clear cache when closing
-      this._currentSearchQuery = ""; // Reset current search query
-      this._searchHierarchy = []; // Clear search hierarchy
-      this._searchBreadcrumb = ""; // Clear breadcrumb
-      if (this._quickMenuInvoke) {
-        this._showEntityOptions = false;
-        this._quickMenuInvoke = false;
-      }
-      this.requestUpdate();
-      // Force layout update for expand on search
-      setTimeout(() => {
-        this._notifyResize();
-      }, 0);
-    }, 200); // Match the longest animation duration
+      this._notifyResize();
+    }, 0);
   }
   // Search sheet methods
   _searchOpenSheet() {
@@ -4851,34 +4845,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _closeSourceList() {
-    // Apply closing animations
-    this._applyClosingAnimations();
-    
-    // Wait for animation to complete before hiding
-    setTimeout(() => {
-      this._showSourceList = false;
-      this.requestUpdate();
-    }, 200); // Match the longest animation duration
+    this._showSourceList = false;
+    this.requestUpdate();
   }
   _closeGrouping() {
-    // Apply closing animations
-    this._applyClosingAnimations();
-    
-    // Wait for animation to complete before hiding
-    setTimeout(() => {
-      this._showGrouping = false;
-      // After closing, try to keep the master chip selected if still valid
-      const groups = this.groupedSortedEntityIds;
-      let masterId = this._lastGroupingMasterId;
-      // Find the group that contains the last grouping master, if any
-      const group = groups.find(g => masterId && g.includes(masterId));
-      if (group && group.length > 1) {
-        const master = this._getActualGroupMaster(group);
-        const idx = this.entityIds.indexOf(master);
-        if (idx >= 0) this._selectedIndex = idx;
-      }
-      // No requestUpdate here; overlay close will handle it.
-    }, 200); // Match the longest animation duration
+    this._showGrouping = false;
+    // After closing, try to keep the master chip selected if still valid
+    const groups = this.groupedSortedEntityIds;
+    let masterId = this._lastGroupingMasterId;
+    // Find the group that contains the last grouping master, if any
+    const group = groups.find(g => masterId && g.includes(masterId));
+    if (group && group.length > 1) {
+      const master = this._getActualGroupMaster(group);
+      const idx = this.entityIds.indexOf(master);
+      if (idx >= 0) this._selectedIndex = idx;
+    }
+    // No requestUpdate here; overlay close will handle it.
   }
   async _toggleGroup(targetId) {
     // Get the master entity's resolved MA entity for grouping
