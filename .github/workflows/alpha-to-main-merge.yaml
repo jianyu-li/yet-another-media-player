@@ -11,6 +11,8 @@ on:
 jobs:
   alpha-to-main-merge:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: github.event.inputs.confirm_merge == 'merge'
     
     steps:
