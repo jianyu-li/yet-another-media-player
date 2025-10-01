@@ -542,6 +542,24 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @click=${() => this._updateConfig("search_results_limit", 20)}
           ></ha-icon>
         </div>
+
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector-number
+              .selector=${{ number: { min: 20, max: 500, step: 10, mode: "box" } }}
+              .value=${this._config.queue_limit ?? 500}
+              label="Queue Limit"
+              helper="Maximum queue items to load in 'Next Up' section (requires mass_queue integration, 20-500, default: 500)"
+              @value-changed=${(e) => this._updateConfig("queue_limit", e.detail.value)}
+            ></ha-selector-number>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("queue_limit", 500)}
+          ></ha-icon>
+        </div>
       `;
     }
 
@@ -1391,7 +1409,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       try {
         serviceData = yaml.load(this._yamlDraft);
         if (typeof serviceData !== "object" || serviceData === null) {
-          console.error("Service data must be a valid object.");
+          console.error("yamp: Service data must be a valid object.");
           return;
         }
       } catch (e) {
@@ -1413,7 +1431,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       try {
         await this.hass.callService(domain, serviceName, serviceData);
       } catch (err) {
-        console.error("Failed to call service:", err);
+        console.error("yamp: Failed to call service:", err);
       }
     }
 
