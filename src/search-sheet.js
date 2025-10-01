@@ -69,6 +69,11 @@ export function renderSearchSheet({
                     </div>
                   `}
                   <span class="search-sheet-title">${item.title}</span>
+                  ${item.artist ? html`
+                    <span class="search-sheet-subtitle" style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;">
+                      ${item.artist}
+                    </span>
+                  ` : nothing}
                   <div class="search-sheet-buttons">
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
                       ▶

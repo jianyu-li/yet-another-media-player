@@ -3524,6 +3524,11 @@ function renderSearchSheet(_ref) {
                     </div>
                   `}
                   <span class="search-sheet-title">${item.title}</span>
+                  ${item.artist ? x`
+                    <span class="search-sheet-subtitle" style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;">
+                      ${item.artist}
+                    </span>
+                  ` : E}
                   <div class="search-sheet-buttons">
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
                       ▶
@@ -15508,8 +15513,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                 </span>
                                 <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
                                   ${(() => {
-        // Show artist name if filtering on "track" or "album"
-        if ((this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album') && item.artist) {
+        // Prefer artist when available for tracks/albums and special filters
+        const isTrackOrAlbum = this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album';
+        const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
+        const isUpcoming = !!this._upcomingFilterActive;
+        if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming) && item.artist) {
           return item.artist;
         }
         // Otherwise show media class as before
