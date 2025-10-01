@@ -38,6 +38,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 ![preview Image Collapsed](/preview/collapsed.png)
 ![preview Image Search](/preview/search.png)
 ![preview Image Grouping](/preview/group-player-menu.png)
+![preview Queue](/preview/up-next.png)
 ![preview Image Idle Image](/preview/idle-image-preview.png)
 ![preview Image Movie](/preview/movie.png)
 ![preview Image No Icon](/preview/NoIcons.png)
@@ -480,6 +481,24 @@ card_mod:
 - When an entity is manually selected it will be pinned in place and will not auto-switch to the more recently playing entity for that session. Tap or click the pin icon that appears to unpin the entity.
 - Actions can run any home assistant service, not just media services. Specifying "current" in the entity_id field will target the currently selected entity. 
 - Grouping players only works on supported entities, if the entity is not supported the option will not be visible
+
+
+---
+
+## Optional: Music Assistant Queue Actions (mass_queue)
+
+For enhanced queue controls in the Search sheet (e.g., viewing and reordering the upcoming queue, moving items up/down/next, and removing items), you can optionally install the community integration that adds Music Assistant queue services.
+
+- Integration: `mass_queue` — Actions to control player queues for Music Assistant
+- Install via HACS or manual install as described in the integration’s README
+- Repository link: [droans/mass_queue](https://github.com/droans/mass_queue)
+
+Once installed and configured, YAMP will automatically detect the integration and enable:
+- Fetching the upcoming queue with `mass_queue.get_queue_items` (supports `limit_before` and `limit_after`)
+- Queue item reordering: move up, move down, move next
+- Queue item removal
+
+These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
 
 
 
