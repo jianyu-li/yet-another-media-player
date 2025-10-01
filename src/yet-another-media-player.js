@@ -2495,6 +2495,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Add grab scroll to chip rows after update/render
     this._addGrabScroll('.chip-row');
     this._addGrabScroll('.action-chip-row');
+    this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
 
     // Autofocus the in-sheet search box when opening the search in entity options
