@@ -819,7 +819,7 @@ function renderChip(_ref) {
             @pointerleave=${onPointerUp}
             style="display:flex;align-items:center;justify-content:space-between;">
       <span class="chip-icon">
-        ${art ? x`<img class="chip-mini-art" src="${art}" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+        ${art ? x`<img class="chip-mini-art" src="${art}" onerror="this.style.display='none'" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
       </span>
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${name}
@@ -874,6 +874,7 @@ function renderGroupChip(_ref2) {
         ${art ? x`<img class="chip-mini-art"
                       src="${art}"
                       style="cursor:pointer;"
+                      onerror="this.style.display='none'"
                       @click=${e => {
     e.stopPropagation();
     if (onIconClick) {
@@ -3511,7 +3512,7 @@ function renderSearchSheet(_ref) {
       <div class="search-sheet-results">
         ${(results || []).length === 0 && !loading ? x`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => x`
                 <div class="search-sheet-result">
-                  ${item.thumbnail ? x`
+                  ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x`
                     <img
                       class="search-sheet-thumb"
                       src=${item.thumbnail}
@@ -12167,7 +12168,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // Render, then run search
     this.requestUpdate();
-    this.updateComplete.then(() => this._doSearch());
+    this.updateComplete.then(() => this._doSearch()).catch(error => {
+      console.error('yamp: updateComplete _doSearch rejected:', error);
+    });
   }
   // Show search sheet inside entity options
   _showSearchSheetInOptions() {
@@ -15490,7 +15493,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''}">
-                              ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) ? x`
+                              ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x`
                                 <img
                                   class="entity-options-search-thumb"
                                   src=${item.thumbnail}

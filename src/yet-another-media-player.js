@@ -565,7 +565,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Render, then run search
     this.requestUpdate();
-    this.updateComplete.then(() => this._doSearch());
+    this.updateComplete
+      .then(() => this._doSearch())
+      .catch((error) => {
+        console.error('yamp: updateComplete _doSearch rejected:', error);
+      });
   }
   // Show search sheet inside entity options
   _showSearchSheetInOptions() {
@@ -3981,7 +3985,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''}">
-                              ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) ? html`
+                              ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
                                 <img
                                   class="entity-options-search-thumb"
                                   src=${item.thumbnail}
