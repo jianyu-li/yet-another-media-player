@@ -32,8 +32,7 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
     
     // If no specific match found, check for fallback when no artwork
     if (!override) {
-      const hasArtwork = attrs.entity_picture || attrs.album_art || 
-                        (appId === 'music_assistant' && attrs.entity_picture_local);
+      const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
       if (!hasArtwork) {
         override = overrides.find(override => override.if_missing);
       }
@@ -47,13 +46,8 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
   
   // If no override found, use standard artwork
   if (!artworkUrl) {
-    // For Music Assistant, prefer entity_picture_local
-    if (appId === 'music_assistant' && attrs.entity_picture_local) {
-      artworkUrl = attrs.entity_picture_local;
-    } else {
-      // Fallback to standard artwork attributes
-      artworkUrl = attrs.entity_picture || attrs.album_art || null;
-    }
+    // Always check entity_picture_local first, then entity_picture
+    artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
   }
   
   // If still no artwork, check for configured fallback artwork
@@ -115,7 +109,7 @@ export function renderChip({
             style="display:flex;align-items:center;justify-content:space-between;">
       <span class="chip-icon">
         ${art
-          ? html`<img class="chip-mini-art" src="${art}" />`
+          ? html`<img class="chip-mini-art" src="${art}" onerror="this.style.display='none'" />`
           : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
       </span>
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
@@ -172,6 +166,7 @@ export function renderGroupChip({
           ? html`<img class="chip-mini-art"
                       src="${art}"
                       style="cursor:pointer;"
+                      onerror="this.style.display='none'"
                       @click=${e => {
                         e.stopPropagation();
                         if (onIconClick) {
