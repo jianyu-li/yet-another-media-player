@@ -1564,6 +1564,7 @@ export const yampCardStyles = css`
   .queue-controls {
     display: flex;
     gap: 4px;
+    padding-right: 8px; /* Add padding to prevent cutoff on mobile */
   }
 
   .queue-btn {

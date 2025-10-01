@@ -1409,7 +1409,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       try {
         serviceData = yaml.load(this._yamlDraft);
         if (typeof serviceData !== "object" || serviceData === null) {
-          console.error("Service data must be a valid object.");
+          console.error("yamp: Service data must be a valid object.");
           return;
         }
       } catch (e) {
@@ -1431,7 +1431,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       try {
         await this.hass.callService(domain, serviceName, serviceData);
       } catch (err) {
-        console.error("Failed to call service:", err);
+        console.error("yamp: Failed to call service:", err);
       }
     }
 

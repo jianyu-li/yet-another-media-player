@@ -723,7 +723,7 @@ function getArtworkUrl(state) {
   let fallbackArtwork = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
   if (!state || !state.attributes) return null;
   const attrs = state.attributes;
-  const appId = attrs.app_id;
+  attrs.app_id;
   let artworkUrl = null;
   let sizePercentage = null;
 
@@ -743,7 +743,7 @@ function getArtworkUrl(state) {
 
     // If no specific match found, check for fallback when no artwork
     if (!override) {
-      const hasArtwork = attrs.entity_picture || attrs.album_art || appId === 'music_assistant' && attrs.entity_picture_local;
+      const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
       if (!hasArtwork) {
         override = overrides.find(override => override.if_missing);
       }
@@ -757,13 +757,8 @@ function getArtworkUrl(state) {
 
   // If no override found, use standard artwork
   if (!artworkUrl) {
-    // For Music Assistant, prefer entity_picture_local
-    if (appId === 'music_assistant' && attrs.entity_picture_local) {
-      artworkUrl = attrs.entity_picture_local;
-    } else {
-      // Fallback to standard artwork attributes
-      artworkUrl = attrs.entity_picture || attrs.album_art || null;
-    }
+    // Always check entity_picture_local first, then entity_picture
+    artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
   }
 
   // If still no artwork, check for configured fallback artwork
@@ -2826,6 +2821,7 @@ const yampCardStyles = i$4`
   .queue-controls {
     display: flex;
     gap: 4px;
+    padding-right: 8px; /* Add padding to prevent cutoff on mobile */
   }
 
   .queue-btn {
@@ -11443,7 +11439,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     try {
       serviceData = jsYaml.load(this._yamlDraft);
       if (typeof serviceData !== "object" || serviceData === null) {
-        console.error("Service data must be a valid object.");
+        console.error("yamp: Service data must be a valid object.");
         return;
       }
     } catch (e) {
@@ -11462,7 +11458,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     try {
       await this.hass.callService(domain, serviceName, serviceData);
     } catch (err) {
-      console.error("Failed to call service:", err);
+      console.error("yamp: Failed to call service:", err);
     }
   }
   _onToggleChanged(e) {
@@ -12517,9 +12513,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._doSearch();
 
       // Re-attach swipe handlers when returning to top level
-      setTimeout(() => {
-        this._attachSearchSwipe();
-      }, 100);
+      // setTimeout(() => {
+      //   this._attachSearchSwipe(); // Disabled on mobile due to false positives
+      // }, 100);
     } else {
       const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
       if (currentLevel.type === 'artist') {
@@ -12825,7 +12821,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
   async _getUpcomingQueueWithMassQueue(hass, entityId) {
     let limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 20;
     try {
-      var _playerState$attribut, _response$response;
+      var _playerState$attribut, _this$config6, _response$response;
       // Get the currently playing track's media_content_id
       const playerState = hass.states[entityId];
       const currentTrackId = playerState === null || playerState === void 0 || (_playerState$attribut = playerState.attributes) === null || _playerState$attribut === void 0 ? void 0 : _playerState$attribut.media_content_id;
@@ -12841,7 +12837,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
           entity: entityId,
           limit_before: 5,
           // Get items before current track to include current track
-          limit_after: Math.max(limit, 100) // Get enough items to ensure we have upcoming items
+          limit_after: Math.max(limit, ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.search_results_limit) || 20) // Use config search_results_limit
         },
         return_response: true
       };
@@ -13163,8 +13159,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
     try {
-      var _this$config6;
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.search_results_limit) || 20);
+      var _this$config7;
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.search_results_limit) || 20);
       const favorites = favoritesResponse.results || [];
 
       // Create a set of favorite URIs for quick lookup
@@ -13285,16 +13281,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config7, _this$config8;
+    var _this$config8, _this$config9;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
-    const appId = attrs.app_id;
-    const prefix = ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.artwork_hostname) || '';
+    attrs.app_id;
+    const prefix = ((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
 
     // Check for media artwork overrides first
-    const overrides = (_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.media_artwork_overrides;
+    const overrides = (_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.media_artwork_overrides;
     if (overrides && Array.isArray(overrides)) {
       var _override;
       const {
@@ -13310,7 +13306,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
       // If no specific match found, check for fallback when no artwork
       if (!override) {
-        const hasArtwork = attrs.entity_picture || attrs.album_art || appId === 'music_assistant' && attrs.entity_picture_local;
+        const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
         if (!hasArtwork) {
           override = overrides.find(override => override.if_missing);
         }
@@ -13324,19 +13320,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If no override found, use standard artwork
     if (!artworkUrl) {
-      // For Music Assistant, prefer entity_picture_local
-      if (appId === 'music_assistant' && attrs.entity_picture_local) {
-        artworkUrl = attrs.entity_picture_local;
-      } else {
-        // Fallback to standard artwork attributes
-        artworkUrl = attrs.entity_picture || attrs.album_art || null;
-      }
+      // Always check entity_picture_local first, then entity_picture
+      artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
     }
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config9;
-      const fallbackArtwork = (_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.fallback_artwork;
+      var _this$config0;
+      const fallbackArtwork = (_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -14084,7 +14075,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
           }
         }
         // attach swipe gesture once
-        this._attachSearchSwipe();
+        // this._attachSearchSwipe(); // Disabled on mobile due to false positives
       }, 200);
     }
     // When the source‑list sheet opens, make sure the overlay scrolls to the top
@@ -14790,7 +14781,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config0, _this$config1, _this$config10, _this$currentVolumeSt3, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config1, _this$config10, _this$config11, _this$currentVolumeSt3, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -14811,7 +14802,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Check if it's an entity ID
       if (this.hass.states[this.config.idle_image]) {
         const sensorState = this.hass.states[this.config.idle_image];
-        idleImageUrl = sensorState.attributes.entity_picture || (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
+        idleImageUrl = sensorState.attributes.entity_picture_local || sensorState.attributes.entity_picture || (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
       }
       // Check if it's a direct URL or file path
       else if (this.config.idle_image.startsWith("http") || this.config.idle_image.startsWith("/")) {
@@ -14974,9 +14965,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.fallback_artwork) || null,
+      artworkHostname: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass20;
         const obj = this._findEntityObjByAnyId(id);
@@ -15516,7 +15507,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                   ${item.title}
                                 </span>
                                 <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
-                                  ${item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : ""}
+                                  ${(() => {
+        // Show artist name if filtering on "track" or "album"
+        if ((this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album') && item.artist) {
+          return item.artist;
+        }
+        // Otherwise show media class as before
+        return item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : "";
+      })()}
                                 </span>
                               </div>
                               <div class="entity-options-search-buttons">
