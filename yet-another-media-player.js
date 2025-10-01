@@ -2366,6 +2366,95 @@ const yampCardStyles = i$4`
     justify-content: center;
   }
 
+  /* Opening animations for hamburger menu */
+  @keyframes overlayFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes containerSlideIn {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sheetSlideIn {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .entity-options-overlay-opening {
+    animation: overlayFadeIn 0.2s ease-out;
+  }
+
+  .entity-options-container-opening {
+    animation: containerSlideIn 0.3s ease-out;
+  }
+
+  .entity-options-sheet-opening {
+    animation: sheetSlideIn 0.25s ease-out 0.05s both;
+  }
+
+  /* Closing animations for hamburger menu */
+  @keyframes overlayFadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes containerSlideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes sheetSlideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+  }
+
+  .entity-options-overlay-closing {
+    animation: overlayFadeOut 0.15s ease-in forwards;
+    pointer-events: none;
+  }
+
+  .entity-options-container-closing {
+    animation: containerSlideOut 0.2s ease-in forwards;
+  }
+
+  .entity-options-sheet-closing {
+    animation: sheetSlideOut 0.15s ease-in 0.05s both forwards;
+  }
+
   .entity-options-container {
     width: 98%;
     max-width: 430px;
@@ -15170,9 +15259,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
             </div>
           </div>
           ${this._showEntityOptions ? x`
-          <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
-            <div class="entity-options-container">
-              <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
+          <div class="entity-options-overlay entity-options-overlay-opening" @click=${e => this._closeEntityOptions(e)}>
+            <div class="entity-options-container entity-options-container-opening">
+              <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
               ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities ? x`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column;">
                   <button class="entity-options-item" @click=${() => {
@@ -15292,10 +15381,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     <div class="entity-options-search-breadcrumb">
                 <button class="entity-options-item" @click=${() => {
       if (this._quickMenuInvoke) {
-        this._showEntityOptions = false;
-        this._showSearchInSheet = false;
-        this._quickMenuInvoke = false;
-        this.requestUpdate();
+        this._dismissWithAnimation();
       } else {
         this._goBackInSearch();
       }
@@ -15346,10 +15432,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                       style="min-width:80px;"
                       @click=${() => {
       if (this._quickMenuInvoke) {
-        this._showEntityOptions = false;
-        this._showSearchInSheet = false;
-        this._quickMenuInvoke = false;
-        this.requestUpdate();
+        this._dismissWithAnimation();
       } else {
         this._hideSearchSheetInOptions();
       }
@@ -15595,10 +15678,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
               ` : this._showGrouping ? x`
                 <button class="entity-options-item" @click=${() => {
       if (this._quickMenuInvoke) {
-        this._showEntityOptions = false;
-        this._showGrouping = false;
-        this._quickMenuInvoke = false;
-        this.requestUpdate();
+        this._dismissWithAnimation();
       } else {
         this._closeGrouping();
       }
@@ -15773,10 +15853,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
               ` : x`
                 <button class="entity-options-item" @click=${() => {
       if (this._quickMenuInvoke) {
-        this._showEntityOptions = false;
-        this._showSourceList = false;
-        this._quickMenuInvoke = false;
-        this.requestUpdate();
+        this._dismissWithAnimation();
       } else {
         this._closeSourceList();
       }
@@ -16253,30 +16330,71 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
   }
-  // Entity options overlay handlers
-  _closeEntityOptions() {
-    if (this._showGrouping) {
-      // Close the grouping sheet and the overlay
-      this._showGrouping = false;
-      this._showEntityOptions = false;
-      // Auto-select the chip for the group just created (same as _closeGrouping logic)
-      const groups = this.groupedSortedEntityIds;
-      const curId = this.currentEntityId;
-      const group = groups.find(g => g.includes(curId));
-      if (group && group.length > 1) {
-        const master = this._getActualGroupMaster(group);
-        const idx = this.entityIds.indexOf(master);
-        if (idx >= 0) this._selectedIndex = idx;
-      }
-      this.requestUpdate();
-    } else {
+  // Helper method to apply closing animations
+  _applyClosingAnimations() {
+    const overlay = this.renderRoot.querySelector('.entity-options-overlay');
+    const container = this.renderRoot.querySelector('.entity-options-container');
+    const sheet = this.renderRoot.querySelector('.entity-options-sheet');
+    if (overlay) {
+      overlay.classList.remove('entity-options-overlay-opening');
+      overlay.classList.add('entity-options-overlay-closing');
+    }
+    if (container) {
+      container.classList.remove('entity-options-container-opening');
+      container.classList.add('entity-options-container-closing');
+    }
+    if (sheet) {
+      sheet.classList.remove('entity-options-sheet-opening');
+      sheet.classList.add('entity-options-sheet-closing');
+    }
+  }
+
+  // Helper method for immediate dismissals with animation
+  _dismissWithAnimation() {
+    this._applyClosingAnimations();
+    setTimeout(() => {
       this._showEntityOptions = false;
       this._showGrouping = false;
       this._showSourceList = false;
+      this._showSearchInSheet = false;
+      this._showResolvedEntities = false;
+      this._quickMenuInvoke = false;
       this.requestUpdate();
-    }
-    // Clear quick menu flag on any overlay close
-    this._quickMenuInvoke = false;
+    }, 200);
+  }
+
+  // Entity options overlay handlers
+  _closeEntityOptions() {
+    // Apply closing animations
+    this._applyClosingAnimations();
+
+    // Wait for animation to complete before hiding
+    setTimeout(() => {
+      if (this._showGrouping) {
+        // Close the grouping sheet and the overlay
+        this._showGrouping = false;
+        this._showEntityOptions = false;
+        // Auto-select the chip for the group just created (same as _closeGrouping logic)
+        const groups = this.groupedSortedEntityIds;
+        const curId = this.currentEntityId;
+        const group = groups.find(g => g.includes(curId));
+        if (group && group.length > 1) {
+          const master = this._getActualGroupMaster(group);
+          const idx = this.entityIds.indexOf(master);
+          if (idx >= 0) this._selectedIndex = idx;
+        }
+        this.requestUpdate();
+      } else {
+        this._showEntityOptions = false;
+        this._showGrouping = false;
+        this._showSourceList = false;
+        this._showSearchInSheet = false;
+        this._showResolvedEntities = false;
+        this.requestUpdate();
+      }
+      // Clear quick menu flag on any overlay close
+      this._quickMenuInvoke = false;
+    }, 200); // Match the longest animation duration
   }
   async _openEntityOptions() {
     // Resolve all templates before opening the menu so feature checking works correctly
