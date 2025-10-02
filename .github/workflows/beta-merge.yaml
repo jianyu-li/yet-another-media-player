@@ -1,4 +1,6 @@
 name: Beta to Main Merge
+permissions:
+  contents: write
 
 on:
   workflow_dispatch:
