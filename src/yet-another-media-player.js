@@ -3601,65 +3601,69 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     >${artist}</div>
                   ` : nothing}
                 </div>
-                ${(!collapsed && !this._alternateProgressBar && !this._showEntityOptions)
+                ${(!collapsed && !this._alternateProgressBar)
                   ? (isPlaying && duration
                       ? renderProgressBar({
                           progress,
                           seekEnabled: true,
                           onSeek: (e) => this._onProgressBarClick(e),
                           collapsed: false,
-                          accent: this._customAccent
+                           accent: this._customAccent,
+                           style: this._showEntityOptions ? "visibility:hidden" : ""
                         })
                       : renderProgressBar({
                           progress: 0,
                           seekEnabled: false,
                           collapsed: false,
                           accent: this._customAccent,
-                          style: "visibility:hidden"
+                           style: "visibility:hidden"
                         })
                     )
                   : nothing
                 }
-                ${(collapsed || this._alternateProgressBar) && isPlaying && duration && !this._showEntityOptions
+                ${(collapsed || this._alternateProgressBar) && isPlaying && duration
                   ? renderProgressBar({
                       progress,
                       collapsed: true,
-                      accent: this._customAccent
+                       accent: this._customAccent,
+                       style: this._showEntityOptions ? "visibility:hidden" : ""
                     })
                   : nothing
                 }
-                ${(!hideControlsNow && !this._showEntityOptions) ? html`
-                ${renderControlsRow({
-                  stateObj: playbackStateObj,
-                  showStop: this._shouldShowStopButton(playbackStateObj),
-                  shuffleActive,
-                  repeatActive,
-                  onControlClick: (action) => this._onControlClick(action),
-                  supportsFeature: (state, feature) => this._supportsFeature(state, feature),
-                  showFavorite: !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite,
-                  favoriteActive: this._isCurrentTrackFavorited(),
-                  hiddenControls: this._getHiddenControlsForCurrentEntity()
-                })}
+                ${!hideControlsNow ? html`
+                  <div style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
+                    ${renderControlsRow({
+                      stateObj: playbackStateObj,
+                      showStop: this._shouldShowStopButton(playbackStateObj),
+                      shuffleActive,
+                      repeatActive,
+                      onControlClick: (action) => this._onControlClick(action),
+                      supportsFeature: (state, feature) => this._supportsFeature(state, feature),
+                      showFavorite: !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite,
+                      favoriteActive: this._isCurrentTrackFavorited(),
+                      hiddenControls: this._getHiddenControlsForCurrentEntity()
+                    })}
 
-                ${renderVolumeRow({
-                  isRemoteVolumeEntity,
-                  showSlider,
-                  vol,
-                  isMuted: this.currentVolumeStateObj?.attributes?.is_volume_muted ?? false,
-                  supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
-                  onVolumeDragStart: (e) => this._onVolumeDragStart(e),
-                  onVolumeDragEnd: (e) => this._onVolumeDragEnd(e),
-                  onVolumeChange: (e) => this._onVolumeChange(e),
-                  onVolumeStep: (dir) => this._onVolumeStep(dir),
-                  onMuteToggle: () => this._onMuteToggle(),
-                  moreInfoMenu: html`
-                    <div class="more-info-menu">
-                      <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                        <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
-                      </button>
-                    </div>
-                  `,
-                })}
+                    ${renderVolumeRow({
+                      isRemoteVolumeEntity,
+                      showSlider,
+                      vol,
+                      isMuted: this.currentVolumeStateObj?.attributes?.is_volume_muted ?? false,
+                      supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
+                      onVolumeDragStart: (e) => this._onVolumeDragStart(e),
+                      onVolumeDragEnd: (e) => this._onVolumeDragEnd(e),
+                      onVolumeChange: (e) => this._onVolumeChange(e),
+                      onVolumeStep: (dir) => this._onVolumeStep(dir),
+                      onMuteToggle: () => this._onMuteToggle(),
+                      moreInfoMenu: html`
+                        <div class="more-info-menu">
+                          <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                            <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                          </button>
+                        </div>
+                      `,
+                    })}
+                  </div>
                 ` : nothing}
                 ${(hideControlsNow && !this._showEntityOptions) ? html`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
