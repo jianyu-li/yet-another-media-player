@@ -3601,7 +3601,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     >${artist}</div>
                   ` : nothing}
                 </div>
-                ${(!collapsed && !this._alternateProgressBar)
+                ${(!collapsed && !this._alternateProgressBar && !this._showEntityOptions)
                   ? (isPlaying && duration
                       ? renderProgressBar({
                           progress,
@@ -3620,7 +3620,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     )
                   : nothing
                 }
-                ${(collapsed || this._alternateProgressBar) && isPlaying && duration
+                ${(collapsed || this._alternateProgressBar) && isPlaying && duration && !this._showEntityOptions
                   ? renderProgressBar({
                       progress,
                       collapsed: true,
@@ -3628,7 +3628,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     })
                   : nothing
                 }
-                ${!hideControlsNow ? html`
+                ${(!hideControlsNow && !this._showEntityOptions) ? html`
                 ${renderControlsRow({
                   stateObj: playbackStateObj,
                   showStop: this._shouldShowStopButton(playbackStateObj),
@@ -3661,7 +3661,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   `,
                 })}
                 ` : nothing}
-                ${hideControlsNow ? html`
+                ${(hideControlsNow && !this._showEntityOptions) ? html`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                     <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
