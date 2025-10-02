@@ -1555,12 +1555,14 @@ const yampCardStyles = i$4`
 
   /* Chip rows */
   .chip-row.grab-scroll-active,
-  .action-chip-row.grab-scroll-active {
+  .action-chip-row.grab-scroll-active,
+  .search-filter-chips.grab-scroll-active {
     cursor: grabbing;
   }
 
   .chip-row,
-  .action-chip-row {
+  .action-chip-row,
+  .search-filter-chips {
     cursor: grab;
   }
 
@@ -10651,30 +10653,6 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           ></ha-icon>
         </div>
 
-        <div class="form-row form-row-multi-column">
-          <div class="grow-children">
-            <ha-selector-number
-              .selector=${{
-      number: {
-        min: 20,
-        max: 500,
-        step: 10,
-        mode: "box"
-      }
-    }}
-              .value=${this._config.queue_limit ?? 500}
-              label="Queue Limit"
-              helper="Maximum queue items to load in 'Next Up' section (requires mass_queue integration, 20-500, default: 500)"
-              @value-changed=${e => this._updateConfig("queue_limit", e.detail.value)}
-            ></ha-selector-number>
-          </div>
-          <ha-icon
-            class="icon-button"
-            icon="mdi:restore"
-            title="Reset to default"
-            @click=${() => this._updateConfig("queue_limit", 500)}
-          ></ha-icon>
-        </div>
       `;
   }
   _renderVisualTab() {
@@ -14130,6 +14108,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Add grab scroll to chip rows after update/render
     this._addGrabScroll('.chip-row');
     this._addGrabScroll('.action-chip-row');
+    this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
 
     // Autofocus the in-sheet search box when opening the search in entity options
@@ -15698,7 +15677,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                         ` : x`<span></span>`}
                         <button class="entity-options-item"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
+                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 12px 2px 8px;">
                           ${groupedAny ? "Ungroup All" : "Group All"}
                         </button>
                       </div>
