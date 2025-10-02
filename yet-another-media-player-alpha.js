@@ -2176,12 +2176,7 @@ const yampCardStyles = i$4`
     inset: 0;
     pointer-events: none;
     z-index: 1;
-    background: linear-gradient(
-      to bottom,
-      rgba(0,0,0,0.0) 0%,
-      rgba(0,0,0,0.40) 55%,
-      rgba(0,0,0,0.92) 100%
-    );
+    background: none;
   }
 
   .card-lower-content {
