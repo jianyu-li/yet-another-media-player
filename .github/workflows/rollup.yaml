@@ -1,4 +1,6 @@
 name: Rollup Build
+permissions:
+  contents: write
 
 on:
   push:
