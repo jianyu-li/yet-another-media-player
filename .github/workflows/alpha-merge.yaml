@@ -10,6 +10,8 @@ on:
 
 jobs:
   alpha-to-beta-merge:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     if: github.event.inputs.confirm_merge == 'merge'
     
