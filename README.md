@@ -93,9 +93,9 @@ Initiate a search using the hamburger menu and selecting `search`. Press Enter o
 - **Favorites Filter**: Toggle the favorites button to show only favorited tracks
 - **Recently Played Filter**: Toggle the recently played button to show your most recently played items. When enabled, results are fetched from Music Assistant ordered by most recently played. Only items that are part of your library will appear. You can still use the media-type chips to narrow the list. Submitting a new search query will start a normal search and turn off filters.
 - **Next Up Filter**: Toggle the next up button to show the upcoming track in your queue. 
+  - Install mass_queue to see and manage the entire upcoming queue! See documentation for Music Assistant Queue Actions below. 
 - **Enqueue**: Use the enqueue button (playlist icon) to add tracks to your queue
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
-- Bonus Bonus Tip: On mobile, swipe left or right to rotate through the media type to quickly filter results.
 ![preview Image Search](/preview/search.png)
 
 
