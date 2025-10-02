@@ -297,12 +297,14 @@ export const yampCardStyles = css`
 
   /* Chip rows */
   .chip-row.grab-scroll-active,
-  .action-chip-row.grab-scroll-active {
+  .action-chip-row.grab-scroll-active,
+  .search-filter-chips.grab-scroll-active {
     cursor: grabbing;
   }
 
   .chip-row,
-  .action-chip-row {
+  .action-chip-row,
+  .search-filter-chips {
     cursor: grab;
   }
 
