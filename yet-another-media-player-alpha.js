@@ -15162,7 +15162,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     </svg>
                   </div>
                 ` : E}
-                <div class="details">
+                <div class="details" style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
                   <div class="title">
                     ${shouldShowDetails ? title : ""}
                   </div>

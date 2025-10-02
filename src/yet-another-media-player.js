@@ -3587,7 +3587,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     </svg>
                   </div>
                 ` : nothing}
-                <div class="details">
+                <div class="details" style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
                   <div class="title">
                     ${shouldShowDetails ? title : ""}
                   </div>
