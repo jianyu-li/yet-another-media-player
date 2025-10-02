@@ -15176,7 +15176,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     >${artist}</div>
                   ` : E}
                 </div>
-                ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
+                ${!collapsed && !this._alternateProgressBar && !this._showEntityOptions ? isPlaying && duration ? renderProgressBar({
       progress,
       seekEnabled: true,
       onSeek: e => this._onProgressBarClick(e),
@@ -15189,12 +15189,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
       accent: this._customAccent,
       style: "visibility:hidden"
     }) : E}
-                ${(collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
+                ${(collapsed || this._alternateProgressBar) && isPlaying && duration && !this._showEntityOptions ? renderProgressBar({
       progress,
       collapsed: true,
       accent: this._customAccent
     }) : E}
-                ${!hideControlsNow ? x`
+                ${!hideControlsNow && !this._showEntityOptions ? x`
                 ${renderControlsRow({
       stateObj: playbackStateObj,
       showStop: this._shouldShowStopButton(playbackStateObj),
@@ -15227,7 +15227,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   `
     })}
                 ` : E}
-                ${hideControlsNow ? x`
+                ${hideControlsNow && !this._showEntityOptions ? x`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                     <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
