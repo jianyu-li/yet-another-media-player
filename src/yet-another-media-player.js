@@ -2495,6 +2495,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Add grab scroll to chip rows after update/render
     this._addGrabScroll('.chip-row');
     this._addGrabScroll('.action-chip-row');
+    this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
 
     // Autofocus the in-sheet search box when opening the search in entity options
@@ -4080,7 +4081,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         ` : html`<span></span>`}
                         <button class="entity-options-item"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
+                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 12px 2px 8px;">
                           ${groupedAny ? "Ungroup All" : "Group All"}
                         </button>
                       </div>
