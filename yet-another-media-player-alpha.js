@@ -2899,6 +2899,8 @@ const yampCardStyles = i$4`
     background: transparent;
     border: none;
     color: #666;
+    padding-right: 20px; /* Add right padding to prevent cutoff on mobile */
+    padding-bottom: 12px;
   }
 
   .entity-options-search-queue:hover,
