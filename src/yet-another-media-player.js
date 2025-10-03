@@ -697,6 +697,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchError = "";
     this._searchResults = [];
     this.requestUpdate();
+    
     try {
       const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
       const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
