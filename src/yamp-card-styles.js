@@ -92,6 +92,12 @@ export const yampCardStyles = css`
     transition: opacity 0.5s;
   }
 
+  /* Improve selected chip readability while idle */
+  .dim-idle .chip[selected] {
+    color: rgba(255,255,255,0.94);
+    text-shadow: 0 0 6px rgba(0,0,0,0.35);
+  }
+
   /* More info menu */
   .more-info-menu {
     display: flex;

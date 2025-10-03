@@ -3951,26 +3951,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
                       </button>
-                      <button
-                          class="button${this._upcomingFilterActive ? ' active' : ''}"
-                          style="
-                            background: none;
-                            border: none;
-                            font-size: 1.2em;
-                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px;
-                            border-radius: 50%;
-                            transition: all 0.2s ease;
-                            margin-right: 8px;
-                            opacity: ${this._searchAttempted ? '1' : '0.5'};
-                          "
-                          @click=${this._searchAttempted ? () => {
-                            this._toggleUpcomingFilter();
-                          } : () => {}}
-                          title="Next Up"
-                        >
-                          <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
-                      </button>
+                      ${this._isMusicAssistantEntity() ? html`
+                        <button
+                            class="button${this._upcomingFilterActive ? ' active' : ''}"
+                            style="
+                              background: none;
+                              border: none;
+                              font-size: 1.2em;
+                              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                              padding: 4px;
+                              border-radius: 50%;
+                              transition: all 0.2s ease;
+                              margin-right: 8px;
+                              opacity: ${this._searchAttempted ? '1' : '0.5'};
+                            "
+                            @click=${this._searchAttempted ? () => {
+                              this._toggleUpcomingFilter();
+                            } : () => {}}
+                            title="Next Up"
+                          >
+                            <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+                        </button>
+                      ` : nothing}
                     </div>
                   ` : nothing}
                   

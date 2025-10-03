@@ -1350,6 +1350,12 @@ const yampCardStyles = i$4`
     transition: opacity 0.5s;
   }
 
+  /* Improve selected chip readability while idle */
+  .dim-idle .chip[selected] {
+    color: rgba(255,255,255,0.94);
+    text-shadow: 0 0 6px rgba(0,0,0,0.35);
+  }
+
   /* More info menu */
   .more-info-menu {
     display: flex;
@@ -15525,26 +15531,28 @@ class YetAnotherMediaPlayerCard extends i$1 {
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
                       </button>
-                      <button
-                          class="button${this._upcomingFilterActive ? ' active' : ''}"
-                          style="
-                            background: none;
-                            border: none;
-                            font-size: 1.2em;
-                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px;
-                            border-radius: 50%;
-                            transition: all 0.2s ease;
-                            margin-right: 8px;
-                            opacity: ${this._searchAttempted ? '1' : '0.5'};
-                          "
-                          @click=${this._searchAttempted ? () => {
+                      ${this._isMusicAssistantEntity() ? x`
+                        <button
+                            class="button${this._upcomingFilterActive ? ' active' : ''}"
+                            style="
+                              background: none;
+                              border: none;
+                              font-size: 1.2em;
+                              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                              padding: 4px;
+                              border-radius: 50%;
+                              transition: all 0.2s ease;
+                              margin-right: 8px;
+                              opacity: ${this._searchAttempted ? '1' : '0.5'};
+                            "
+                            @click=${this._searchAttempted ? () => {
       this._toggleUpcomingFilter();
     } : () => {}}
-                          title="Next Up"
-                        >
-                          <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
-                      </button>
+                            title="Next Up"
+                          >
+                            <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+                        </button>
+                      ` : E}
                     </div>
                   ` : E}
                   
