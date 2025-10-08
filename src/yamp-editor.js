@@ -170,6 +170,13 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           align-items: center;
           gap: 8px;
         }
+        .config-subtitle {
+          font-size: 0.85em;
+          color: var(--secondary-text-color, #888);
+          margin-top: 4px;
+          line-height: 1.3;
+          font-style: italic;
+        }
         /* reduced padding for entity selection subrows */
         .entity-row {
           padding: 6px;
@@ -490,6 +497,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               label="Idle Timeout (ms)"
               @value-changed=${(e) => this._updateConfig("idle_timeout_ms", e.detail.value)}
             ></ha-selector>
+            <div class="config-subtitle">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>
           </div>
           <ha-icon
             class="icon-button"
@@ -512,6 +520,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             label="Show Chip Row"
             @value-changed=${(e) => this._updateConfig("show_chip_row", e.detail.value)}
           ></ha-selector>
+          <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured.</div>
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -523,6 +532,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-switch>
             <span>Hold to Pin</span>
           </div>
+          <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -576,6 +586,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-switch>
             <span>Collapse on Idle</span>
           </div>
+          ${!this._config.always_collapsed ? html`
+            <div>
+              <ha-switch
+                id="hide-menu-player-toggle"
+                .checked=${this._config.hide_menu_player ?? false}
+                @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
+              ></ha-switch>
+              <span>Hide Menu Player</span>
+            </div>
+          ` : nothing}
+        </div>
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="always-collapsed-toggle"
@@ -595,19 +617,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
           ` : nothing}
         </div>
-
-        ${!this._config.always_collapsed ? html`
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="hide-menu-player-toggle"
-                .checked=${this._config.hide_menu_player ?? false}
-                @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
-              ></ha-switch>
-              <span>Hide Menu Player</span>
-            </div>
-          </div>
-        ` : nothing}
+        <div class="form-row">
+          <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
+        </div>
 
         <div class="form-row">
           <ha-selector
