@@ -301,7 +301,7 @@ export function renderChipRow({
         const state = hass?.states?.[id];
         const isChipPlaying = (typeof getIsChipPlaying === "function")
           ? getIsChipPlaying(id, selectedEntityId === id)
-          : (selectedEntityId === id ? !isIdle : state?.state === "playing");
+          : (state?.state === "playing");
         const artSource = (typeof getChipArt === "function")
           ? getChipArt(id)
           : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)?.url;
