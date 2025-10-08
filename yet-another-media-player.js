@@ -1006,7 +1006,7 @@ function renderChipRow(_ref4) {
       const id = group[0];
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states2 = hass.states) === null || _hass$states2 === void 0 ? void 0 : _hass$states2[id];
-      const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+      const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : (state === null || state === void 0 ? void 0 : state.state) === "playing";
       const artSource = typeof getChipArt === "function" ? getChipArt(id) : (_getArtworkUrl2 = getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)) === null || _getArtworkUrl2 === void 0 ? void 0 : _getArtworkUrl2.url;
       const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
       const icon = (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.icon) || "mdi:cast";
@@ -1350,6 +1350,12 @@ const yampCardStyles = i$4`
     transition: opacity 0.5s;
   }
 
+  /* Improve selected chip readability while idle */
+  .dim-idle .chip[selected] {
+    color: rgba(255,255,255,0.94);
+    text-shadow: 0 0 6px rgba(0,0,0,0.35);
+  }
+
   /* More info menu */
   .more-info-menu {
     display: flex;
@@ -1538,6 +1544,10 @@ const yampCardStyles = i$4`
 
   .chip[selected] .chip-icon ha-icon {
     color: #fff;
+  }
+
+  .chip[selected][playing] .chip-icon ha-icon {
+    color: var(--custom-accent);
   }
 
   .chip:hover .chip-icon ha-icon {
@@ -2899,6 +2909,8 @@ const yampCardStyles = i$4`
     background: transparent;
     border: none;
     color: #666;
+    padding-right: 20px; /* Add right padding to prevent cutoff on mobile */
+    padding-bottom: 12px;
   }
 
   .entity-options-search-queue:hover,
@@ -10263,6 +10275,13 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           align-items: center;
           gap: 8px;
         }
+        .config-subtitle {
+          font-size: 0.85em;
+          color: var(--secondary-text-color, #888);
+          margin-top: 4px;
+          line-height: 1.3;
+          font-style: italic;
+        }
         /* reduced padding for entity selection subrows */
         .entity-row {
           padding: 6px;
@@ -10587,6 +10606,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               label="Idle Timeout (ms)"
               @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
             ></ha-selector>
+            <div class="config-subtitle">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>
           </div>
           <ha-icon
             class="icon-button"
@@ -10615,6 +10635,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             label="Show Chip Row"
             @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
           ></ha-selector>
+          <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured.</div>
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -10626,6 +10647,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             ></ha-switch>
             <span>Hold to Pin</span>
           </div>
+          <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -10685,6 +10707,18 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             ></ha-switch>
             <span>Collapse on Idle</span>
           </div>
+          ${!this._config.always_collapsed ? x`
+            <div>
+              <ha-switch
+                id="hide-menu-player-toggle"
+                .checked=${this._config.hide_menu_player ?? false}
+                @change=${e => this._updateConfig("hide_menu_player", e.target.checked)}
+              ></ha-switch>
+              <span>Hide Menu Player</span>
+            </div>
+          ` : E}
+        </div>
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="always-collapsed-toggle"
@@ -10704,19 +10738,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             </div>
           ` : E}
         </div>
-
-        ${!this._config.always_collapsed ? x`
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="hide-menu-player-toggle"
-                .checked=${this._config.hide_menu_player ?? false}
-                @change=${e => this._updateConfig("hide_menu_player", e.target.checked)}
-              ></ha-switch>
-              <span>Hide Menu Player</span>
-            </div>
-          </div>
-        ` : E}
+        <div class="form-row">
+          <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
+        </div>
 
         <div class="form-row">
           <ha-selector
@@ -15162,7 +15186,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     </svg>
                   </div>
                 ` : E}
-                <div class="details">
+                <div class="details" style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
                   <div class="title">
                     ${shouldShowDetails ? title : ""}
                   </div>
@@ -15181,7 +15205,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       seekEnabled: true,
       onSeek: e => this._onProgressBarClick(e),
       collapsed: false,
-      accent: this._customAccent
+      accent: this._customAccent,
+      style: this._showEntityOptions ? "visibility:hidden" : ""
     }) : renderProgressBar({
       progress: 0,
       seekEnabled: false,
@@ -15192,10 +15217,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 ${(collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
-      accent: this._customAccent
+      accent: this._customAccent,
+      style: this._showEntityOptions ? "visibility:hidden" : ""
     }) : E}
                 ${!hideControlsNow ? x`
-                ${renderControlsRow({
+                  <div style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
+                    ${renderControlsRow({
       stateObj: playbackStateObj,
       showStop: this._shouldShowStopButton(playbackStateObj),
       shuffleActive,
@@ -15207,7 +15234,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       hiddenControls: this._getHiddenControlsForCurrentEntity()
     })}
 
-                ${renderVolumeRow({
+                    ${renderVolumeRow({
       isRemoteVolumeEntity,
       showSlider,
       vol,
@@ -15219,15 +15246,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
       onVolumeStep: dir => this._onVolumeStep(dir),
       onMuteToggle: () => this._onMuteToggle(),
       moreInfoMenu: x`
-                    <div class="more-info-menu">
-                      <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                        <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
-                      </button>
-                    </div>
-                  `
+                        <div class="more-info-menu">
+                          <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                            <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                          </button>
+                        </div>
+                      `
     })}
+                  </div>
                 ` : E}
-                ${hideControlsNow ? x`
+                ${hideControlsNow && !this._showEntityOptions ? x`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                     <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
@@ -15519,26 +15547,28 @@ class YetAnotherMediaPlayerCard extends i$1 {
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
                       </button>
-                      <button
-                          class="button${this._upcomingFilterActive ? ' active' : ''}"
-                          style="
-                            background: none;
-                            border: none;
-                            font-size: 1.2em;
-                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px;
-                            border-radius: 50%;
-                            transition: all 0.2s ease;
-                            margin-right: 8px;
-                            opacity: ${this._searchAttempted ? '1' : '0.5'};
-                          "
-                          @click=${this._searchAttempted ? () => {
+                      ${this._isMusicAssistantEntity() ? x`
+                        <button
+                            class="button${this._upcomingFilterActive ? ' active' : ''}"
+                            style="
+                              background: none;
+                              border: none;
+                              font-size: 1.2em;
+                              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                              padding: 4px;
+                              border-radius: 50%;
+                              transition: all 0.2s ease;
+                              margin-right: 8px;
+                              opacity: ${this._searchAttempted ? '1' : '0.5'};
+                            "
+                            @click=${this._searchAttempted ? () => {
       this._toggleUpcomingFilter();
     } : () => {}}
-                          title="Next Up"
-                        >
-                          <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
-                      </button>
+                            title="Next Up"
+                          >
+                            <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+                        </button>
+                      ` : E}
                     </div>
                   ` : E}
                   
