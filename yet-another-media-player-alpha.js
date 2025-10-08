@@ -1006,7 +1006,7 @@ function renderChipRow(_ref4) {
       const id = group[0];
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states2 = hass.states) === null || _hass$states2 === void 0 ? void 0 : _hass$states2[id];
-      const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+      const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : (state === null || state === void 0 ? void 0 : state.state) === "playing";
       const artSource = typeof getChipArt === "function" ? getChipArt(id) : (_getArtworkUrl2 = getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)) === null || _getArtworkUrl2 === void 0 ? void 0 : _getArtworkUrl2.url;
       const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
       const icon = (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.icon) || "mdi:cast";
@@ -1544,6 +1544,10 @@ const yampCardStyles = i$4`
 
   .chip[selected] .chip-icon ha-icon {
     color: #fff;
+  }
+
+  .chip[selected][playing] .chip-icon ha-icon {
+    color: var(--custom-accent);
   }
 
   .chip:hover .chip-icon ha-icon {
@@ -10271,6 +10275,13 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           align-items: center;
           gap: 8px;
         }
+        .config-subtitle {
+          font-size: 0.85em;
+          color: var(--secondary-text-color, #888);
+          margin-top: 4px;
+          line-height: 1.3;
+          font-style: italic;
+        }
         /* reduced padding for entity selection subrows */
         .entity-row {
           padding: 6px;
@@ -10595,6 +10606,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               label="Idle Timeout (ms)"
               @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
             ></ha-selector>
+            <div class="config-subtitle">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>
           </div>
           <ha-icon
             class="icon-button"
@@ -10623,6 +10635,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             label="Show Chip Row"
             @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
           ></ha-selector>
+          <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured.</div>
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -10634,6 +10647,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             ></ha-switch>
             <span>Hold to Pin</span>
           </div>
+          <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -10693,6 +10707,18 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             ></ha-switch>
             <span>Collapse on Idle</span>
           </div>
+          ${!this._config.always_collapsed ? x`
+            <div>
+              <ha-switch
+                id="hide-menu-player-toggle"
+                .checked=${this._config.hide_menu_player ?? false}
+                @change=${e => this._updateConfig("hide_menu_player", e.target.checked)}
+              ></ha-switch>
+              <span>Hide Menu Player</span>
+            </div>
+          ` : E}
+        </div>
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="always-collapsed-toggle"
@@ -10712,19 +10738,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             </div>
           ` : E}
         </div>
-
-        ${!this._config.always_collapsed ? x`
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="hide-menu-player-toggle"
-                .checked=${this._config.hide_menu_player ?? false}
-                @change=${e => this._updateConfig("hide_menu_player", e.target.checked)}
-              ></ha-switch>
-              <span>Hide Menu Player</span>
-            </div>
-          </div>
-        ` : E}
+        <div class="form-row">
+          <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
+        </div>
 
         <div class="form-row">
           <ha-selector

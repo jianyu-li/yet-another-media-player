@@ -288,6 +288,10 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
+  .chip[selected][playing] .chip-icon ha-icon {
+    color: var(--custom-accent);
+  }
+
   .chip:hover .chip-icon ha-icon {
     color: #fff;
   }
