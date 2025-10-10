@@ -14881,7 +14881,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config1, _this$config10, _this$config11, _this$currentVolumeSt3, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _finalPlaybackStateOb4, _mainState$attributes4, _finalPlaybackStateOb5, _finalPlaybackStateOb6, _finalPlaybackStateOb7, _mainState$attributes5, _mainState$attributes6, _mainState$attributes7, _finalPlaybackStateOb8, _finalPlaybackStateOb9, _this$currentVolumeSt2, _this$config1, _this$config10, _this$config11, _this$currentVolumeSt3, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -14971,9 +14971,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Use the unified entity resolution system for playback state
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     const playbackStateObj = (_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[playbackEntityId];
+    const mainState = this.currentStateObj;
 
-    // Use the unified entity resolution system for playback state
-    const finalPlaybackStateObj = playbackStateObj;
+    // For display purposes, prefer the entity with actual content
+    // If main entity has media info, use it; otherwise use the playback entity (fixes #87 and display issues)
+    const mainHasContent = (mainState === null || mainState === void 0 || (_mainState$attributes2 = mainState.attributes) === null || _mainState$attributes2 === void 0 ? void 0 : _mainState$attributes2.media_title) || (mainState === null || mainState === void 0 || (_mainState$attributes3 = mainState.attributes) === null || _mainState$attributes3 === void 0 ? void 0 : _mainState$attributes3.media_artist);
+    const finalPlaybackStateObj = (mainHasContent ? mainState : playbackStateObj) || mainState;
 
     // Keep finalEntityId for backward compatibility with existing code
     const finalEntityId = playbackEntityId;
@@ -14987,14 +14990,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
         effState = this._optimisticPlayback.state;
       }
     }
-    const shuffleActive = !!finalPlaybackStateObj.attributes.shuffle;
-    const repeatActive = finalPlaybackStateObj.attributes.repeat && finalPlaybackStateObj.attributes.repeat !== "off";
+    const shuffleActive = !!(finalPlaybackStateObj !== null && finalPlaybackStateObj !== void 0 && (_finalPlaybackStateOb = finalPlaybackStateObj.attributes) !== null && _finalPlaybackStateOb !== void 0 && _finalPlaybackStateOb.shuffle);
+    const repeatActive = (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb2 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb2 === void 0 ? void 0 : _finalPlaybackStateOb2.repeat) && (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb3 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb3 === void 0 ? void 0 : _finalPlaybackStateOb3.repeat) !== "off";
 
     // Artwork and idle logic
     // When idle_timeout_ms=0, always show content regardless of idle state
     const isPlaying = this._idleTimeoutMs === 0 ? effState === "playing" : !this._isIdle && effState === "playing";
     // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
-    const mainState = this.currentStateObj;
     const mainArtwork = this._getArtworkUrl(mainState);
     const playbackArtwork = this._getArtworkUrl(playbackStateObj);
     const isRealArtwork = this._idleTimeoutMs === 0 ? isPlaying && ((mainArtwork === null || mainArtwork === void 0 ? void 0 : mainArtwork.url) || (playbackArtwork === null || playbackArtwork === void 0 ? void 0 : playbackArtwork.url)) : !this._isIdle && isPlaying && ((mainArtwork === null || mainArtwork === void 0 ? void 0 : mainArtwork.url) || (playbackArtwork === null || playbackArtwork === void 0 ? void 0 : playbackArtwork.url));
@@ -15002,12 +15004,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Details
     // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
     const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
-    const title = shouldShowDetails ? finalPlaybackStateObj.attributes.media_title || (mainState === null || mainState === void 0 || (_mainState$attributes2 = mainState.attributes) === null || _mainState$attributes2 === void 0 ? void 0 : _mainState$attributes2.media_title) || "" : "";
-    const artist = shouldShowDetails ? finalPlaybackStateObj.attributes.media_artist || finalPlaybackStateObj.attributes.media_series_title || finalPlaybackStateObj.attributes.app_name || (mainState === null || mainState === void 0 || (_mainState$attributes3 = mainState.attributes) === null || _mainState$attributes3 === void 0 ? void 0 : _mainState$attributes3.media_artist) || (mainState === null || mainState === void 0 || (_mainState$attributes4 = mainState.attributes) === null || _mainState$attributes4 === void 0 ? void 0 : _mainState$attributes4.media_series_title) || (mainState === null || mainState === void 0 || (_mainState$attributes5 = mainState.attributes) === null || _mainState$attributes5 === void 0 ? void 0 : _mainState$attributes5.app_name) || "" : "";
-    let pos = finalPlaybackStateObj.attributes.media_position || 0;
-    const duration = finalPlaybackStateObj.attributes.media_duration || 0;
-    if (isPlaying) {
-      const updatedAt = finalPlaybackStateObj.attributes.media_position_updated_at ? Date.parse(finalPlaybackStateObj.attributes.media_position_updated_at) : Date.parse(finalPlaybackStateObj.last_changed);
+    const title = shouldShowDetails ? (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb4 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb4 === void 0 ? void 0 : _finalPlaybackStateOb4.media_title) || (mainState === null || mainState === void 0 || (_mainState$attributes4 = mainState.attributes) === null || _mainState$attributes4 === void 0 ? void 0 : _mainState$attributes4.media_title) || "" : "";
+    const artist = shouldShowDetails ? (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb5 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb5 === void 0 ? void 0 : _finalPlaybackStateOb5.media_artist) || (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb6 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb6 === void 0 ? void 0 : _finalPlaybackStateOb6.media_series_title) || (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb7 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb7 === void 0 ? void 0 : _finalPlaybackStateOb7.app_name) || (mainState === null || mainState === void 0 || (_mainState$attributes5 = mainState.attributes) === null || _mainState$attributes5 === void 0 ? void 0 : _mainState$attributes5.media_artist) || (mainState === null || mainState === void 0 || (_mainState$attributes6 = mainState.attributes) === null || _mainState$attributes6 === void 0 ? void 0 : _mainState$attributes6.media_series_title) || (mainState === null || mainState === void 0 || (_mainState$attributes7 = mainState.attributes) === null || _mainState$attributes7 === void 0 ? void 0 : _mainState$attributes7.app_name) || "" : "";
+    let pos = (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb8 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb8 === void 0 ? void 0 : _finalPlaybackStateOb8.media_position) || 0;
+    const duration = (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb9 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb9 === void 0 ? void 0 : _finalPlaybackStateOb9.media_duration) || 0;
+    if (isPlaying && finalPlaybackStateObj) {
+      var _finalPlaybackStateOb0;
+      const updatedAt = (_finalPlaybackStateOb0 = finalPlaybackStateObj.attributes) !== null && _finalPlaybackStateOb0 !== void 0 && _finalPlaybackStateOb0.media_position_updated_at ? Date.parse(finalPlaybackStateObj.attributes.media_position_updated_at) : Date.parse(finalPlaybackStateObj.last_changed);
       const elapsed = (Date.now() - updatedAt) / 1000;
       pos += elapsed;
     }
