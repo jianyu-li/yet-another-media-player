@@ -3349,16 +3349,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       
              // Use the unified entity resolution system for playback state
-       const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
-       const playbackStateObj = this.hass?.states?.[playbackEntityId];
-       
-       // Use the unified entity resolution system for playback state
-       const finalPlaybackStateObj = playbackStateObj;
-       
-              // Keep finalEntityId for backward compatibility with existing code
-       const finalEntityId = playbackEntityId;
-       // Blend in optimistic playback state if present
-       let effState = finalPlaybackStateObj?.state;
+      const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
+      const playbackStateObj = this.hass?.states?.[playbackEntityId];
+      const mainState = this.currentStateObj;
+      
+      // For display purposes, prefer the entity with actual content
+      // If main entity has media info, use it; otherwise use the playback entity (fixes #87 and display issues)
+      const mainHasContent = mainState?.attributes?.media_title || mainState?.attributes?.media_artist;
+      const finalPlaybackStateObj = (mainHasContent ? mainState : playbackStateObj) || mainState;
+      
+             // Keep finalEntityId for backward compatibility with existing code
+      const finalEntityId = playbackEntityId;
+      // Blend in optimistic playback state if present
+      let effState = finalPlaybackStateObj?.state;
       if (this._optimisticPlayback) {
         // Only apply optimistic state if it matches the current playback entity
         const optimisticEntityId = this._optimisticPlayback.entity_id;
@@ -3367,14 +3370,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
           effState = this._optimisticPlayback.state;
         }
       }
-      const shuffleActive = !!finalPlaybackStateObj.attributes.shuffle;
-      const repeatActive = finalPlaybackStateObj.attributes.repeat && finalPlaybackStateObj.attributes.repeat !== "off";
+      const shuffleActive = !!finalPlaybackStateObj?.attributes?.shuffle;
+      const repeatActive = finalPlaybackStateObj?.attributes?.repeat && finalPlaybackStateObj?.attributes?.repeat !== "off";
 
       // Artwork and idle logic
       // When idle_timeout_ms=0, always show content regardless of idle state
       const isPlaying = this._idleTimeoutMs === 0 ? (effState === "playing") : (!this._isIdle && effState === "playing");
       // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
-      const mainState = this.currentStateObj;
       const mainArtwork = this._getArtworkUrl(mainState);
       const playbackArtwork = this._getArtworkUrl(playbackStateObj);
       const isRealArtwork = this._idleTimeoutMs === 0 ? (isPlaying && (mainArtwork?.url || playbackArtwork?.url)) : (!this._isIdle && isPlaying && (mainArtwork?.url || playbackArtwork?.url));
@@ -3382,22 +3384,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Details
       // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
       const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
-      const title = shouldShowDetails ? ((finalPlaybackStateObj.attributes.media_title || mainState?.attributes?.media_title || "")) : "";
+      const title = shouldShowDetails ? ((finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title || "")) : "";
       const artist = shouldShowDetails
         ? (
-            finalPlaybackStateObj.attributes.media_artist ||
-            finalPlaybackStateObj.attributes.media_series_title ||
-            finalPlaybackStateObj.attributes.app_name ||
+            finalPlaybackStateObj?.attributes?.media_artist ||
+            finalPlaybackStateObj?.attributes?.media_series_title ||
+            finalPlaybackStateObj?.attributes?.app_name ||
             mainState?.attributes?.media_artist ||
             mainState?.attributes?.media_series_title ||
             mainState?.attributes?.app_name ||
             ""
           )
         : "";
-      let pos = finalPlaybackStateObj.attributes.media_position || 0;
-      const duration = finalPlaybackStateObj.attributes.media_duration || 0;
-      if (isPlaying) {
-        const updatedAt = finalPlaybackStateObj.attributes.media_position_updated_at
+      let pos = finalPlaybackStateObj?.attributes?.media_position || 0;
+      const duration = finalPlaybackStateObj?.attributes?.media_duration || 0;
+      if (isPlaying && finalPlaybackStateObj) {
+        const updatedAt = finalPlaybackStateObj.attributes?.media_position_updated_at
           ? Date.parse(finalPlaybackStateObj.attributes.media_position_updated_at)
           : Date.parse(finalPlaybackStateObj.last_changed);
         const elapsed = (Date.now() - updatedAt) / 1000;
