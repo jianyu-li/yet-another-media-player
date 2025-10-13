@@ -3308,9 +3308,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
       if (prevMa === "playing" && this._lastMaState !== "playing") {
+        const ttl = Math.max(Number(this._idleTimeoutMs || this.config?.idle_timeout_ms || 60000), 500);
         this._playbackLingerByIdx[idx] = {
           entityId: actualResolvedMaId,
-          until: Date.now() + 86400000, // 24 hours - effectively permanent
+          until: Date.now() + ttl,
         };
         
       }
@@ -3323,9 +3324,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (shouldSetLinger) {
           // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
           const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
+          const ttl = Math.max(Number(this._idleTimeoutMs || this.config?.idle_timeout_ms || 60000), 500);
           this._playbackLingerByIdx[idx] = {
             entityId: lingerEntityId, // Use cached MA entity or last controlled entity
-            until: Date.now() + 86400000, // 24 hours - effectively permanent
+            until: Date.now() + ttl,
           };
         }
               // If MA resumed playing, clear linger
@@ -3367,8 +3369,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           effState = this._optimisticPlayback.state;
         }
       }
-      const shuffleActive = !!finalPlaybackStateObj.attributes.shuffle;
-      const repeatActive = finalPlaybackStateObj.attributes.repeat && finalPlaybackStateObj.attributes.repeat !== "off";
+      const shuffleActive = !!finalPlaybackStateObj?.attributes?.shuffle;
+      const repeatActive = finalPlaybackStateObj?.attributes?.repeat && finalPlaybackStateObj?.attributes?.repeat !== "off";
 
       // Artwork and idle logic
       // When idle_timeout_ms=0, always show content regardless of idle state
@@ -3382,24 +3384,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Details
       // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
       const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
-      const title = shouldShowDetails ? ((finalPlaybackStateObj.attributes.media_title || mainState?.attributes?.media_title || "")) : "";
+      // For display-only fields, fall back to mainState when playback state is unavailable
+      const displaySource = finalPlaybackStateObj || mainState;
+      const title = shouldShowDetails ? ((displaySource?.attributes?.media_title || "")) : "";
       const artist = shouldShowDetails
         ? (
-            finalPlaybackStateObj.attributes.media_artist ||
-            finalPlaybackStateObj.attributes.media_series_title ||
-            finalPlaybackStateObj.attributes.app_name ||
-            mainState?.attributes?.media_artist ||
-            mainState?.attributes?.media_series_title ||
-            mainState?.attributes?.app_name ||
+            displaySource?.attributes?.media_artist ||
+            displaySource?.attributes?.media_series_title ||
+            displaySource?.attributes?.app_name ||
             ""
           )
         : "";
-      let pos = finalPlaybackStateObj.attributes.media_position || 0;
-      const duration = finalPlaybackStateObj.attributes.media_duration || 0;
-      if (isPlaying) {
-        const updatedAt = finalPlaybackStateObj.attributes.media_position_updated_at
-          ? Date.parse(finalPlaybackStateObj.attributes.media_position_updated_at)
-          : Date.parse(finalPlaybackStateObj.last_changed);
+      let pos = displaySource?.attributes?.media_position || 0;
+      const duration = displaySource?.attributes?.media_duration || 0;
+      if (isPlaying && displaySource) {
+        const updatedAt = displaySource.attributes?.media_position_updated_at
+          ? Date.parse(displaySource.attributes.media_position_updated_at)
+          : (displaySource.last_changed ? Date.parse(displaySource.last_changed) : Date.now());
         const elapsed = (Date.now() - updatedAt) / 1000;
         pos += elapsed;
       }
