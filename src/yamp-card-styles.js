@@ -1521,32 +1521,23 @@ export const yampCardStyles = css`
   /* Group toggle buttons */
   .group-toggle-btn {
     background: none;
-    border: 1px solid currentColor;
+    border: none;
     border-radius: 50%;
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.15em;
-    line-height: 1;
+    font-size: 1.2em;
     margin-right: 10px;
     cursor: pointer;
-    transition: background 0.15s;
-    position: relative;
-    overflow: hidden;
+    transition: background 0.15s ease;
     color: #fff;
-    border-color: #fff;
   }
 
-  .group-toggle-btn span,
-  .group-toggle-btn .group-toggle-fix {
-    position: relative;
-    left: 0.5px;
-  }
-
-  .group-toggle-btn:hover {
-    background: rgba(255,255,255,0.15);
+  .group-toggle-btn ha-icon {
+    width: 22px;
+    height: 22px;
   }
 
   .group-toggle-transparent {
