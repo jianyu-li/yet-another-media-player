@@ -274,6 +274,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showGrouping = false;
     // Overlay state for source list sheet
     this._showSourceList = false;
+    // Overlay state for transfer queue sheet
+    this._showTransferQueue = false;
+    this._transferQueuePendingTarget = null;
+    this._transferQueueStatus = null;
+    this._hasTransferQueueForCurrent = false;
+    this._transferQueueAutoCloseTimer = null;
     // Alternate progress‑bar mode
     this._alternateProgressBar = false;
     // Group base volume for group gain logic
@@ -1465,6 +1471,253 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return hasMassAttributes;
   }
 
+  _looksLikeMusicAssistantState(state) {
+    if (!state) return false;
+    return state.attributes?.app_id === "music_assistant" ||
+           !!state.attributes?.mass_player_id ||
+           !!state.attributes?.active_queue;
+  }
+
+  _getTransferQueueTargets() {
+    if (!this.hass?.services?.music_assistant?.transfer_queue) return [];
+    const currentIdx = this._selectedIndex;
+    if (currentIdx === null || currentIdx === undefined || currentIdx < 0) return [];
+    
+    const sourceMaId = this._getActualResolvedMaEntityForState(currentIdx);
+    if (!sourceMaId) return [];
+    
+    const seen = new Set([sourceMaId]);
+    const targets = [];
+    
+    for (let idx = 0; idx < this.entityObjs.length; idx++) {
+      const obj = this.entityObjs[idx];
+      if (!obj) continue;
+      
+      const maEntityId = this._getActualResolvedMaEntityForState(idx);
+      if (!maEntityId || seen.has(maEntityId)) continue;
+      
+      const maState = this.hass?.states?.[maEntityId];
+      const mainState = this.hass?.states?.[obj.entity_id];
+      if (!this._looksLikeMusicAssistantState(maState) && !this._looksLikeMusicAssistantState(mainState)) {
+        continue;
+      }
+      
+      seen.add(maEntityId);
+      
+      const displayState = maState || mainState;
+      const configuredName = obj?.name;
+      const displayName = configuredName ||
+                          mainState?.attributes?.friendly_name ||
+                          maState?.attributes?.friendly_name ||
+                          obj.entity_id;
+      
+      targets.push({
+        index: idx,
+        entityId: obj.entity_id,
+        maEntityId,
+        name: displayName,
+        subtitle: maEntityId !== obj.entity_id ? maEntityId : obj.entity_id,
+        state: displayState?.state,
+        icon: displayState?.attributes?.icon || "mdi:music",
+      });
+    }
+    
+    return targets;
+  }
+
+  _hasQueueInState(maState) {
+    if (!maState) return false;
+    const attrs = maState.attributes || {};
+    
+    const arrayKeys = ["queue_items", "queue", "media_queue", "mass_queue_items"];
+    for (const key of arrayKeys) {
+      const value = attrs[key];
+      if (Array.isArray(value) && value.length > 0) return true;
+    }
+    
+    const numericKeys = ["queue_length", "queue_size", "queue_total_items", "queue_pending", "queue_remaining", "items_in_queue"];
+    for (const key of numericKeys) {
+      const value = attrs[key];
+      if (typeof value === "number" && value > 0) return true;
+    }
+    
+    if (attrs.next_item || attrs.current_queue_item || attrs.queue_item_id) {
+      return true;
+    }
+    
+    if (attrs.media_content_id) {
+      return true;
+    }
+    
+    // Fall back to cached upcoming results if we've loaded them
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const cached = this._searchResultsByType?.[cacheKey];
+    if (cached && Array.isArray(cached.results) && cached.results.length > 0) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  async _updateTransferQueueAvailability({ refresh = false } = {}) {
+    const maState = this._getMusicAssistantState();
+    const looksLikeMa = this._looksLikeMusicAssistantState(maState);
+    
+    if (!maState || !looksLikeMa) {
+      if (this._hasTransferQueueForCurrent) {
+        this._hasTransferQueueForCurrent = false;
+        this.requestUpdate();
+      }
+      return false;
+    }
+    
+    let hasQueue = this._hasQueueInState(maState);
+    
+    if (!hasQueue && refresh && this.hass) {
+      const entityId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+      if (entityId) {
+        try {
+          const queueInfo = await this._getUpcomingQueue(this.hass, entityId, 2);
+          if (Array.isArray(queueInfo?.results) && queueInfo.results.length > 0) {
+            hasQueue = true;
+          } else if (maState.state === "playing" || maState.state === "paused" || maState.attributes?.media_content_id) {
+            hasQueue = true;
+          }
+        } catch (error) {
+          // Ignore errors; fall back to heuristic result
+        }
+      }
+    }
+    
+    if (this._hasTransferQueueForCurrent !== hasQueue) {
+      this._hasTransferQueueForCurrent = hasQueue;
+      this.requestUpdate();
+    }
+    
+    return hasQueue;
+  }
+
+  _canShowTransferQueueOption() {
+    if (!this._hasTransferQueueForCurrent) return false;
+    return this._getTransferQueueTargets().length > 0;
+  }
+
+  _openTransferQueue() {
+    this._showEntityOptions = true;
+    this._showTransferQueue = true;
+    this._showGrouping = false;
+    this._showSourceList = false;
+    this._showSearchInSheet = false;
+    this._showResolvedEntities = false;
+    this._transferQueuePendingTarget = null;
+    this._transferQueueStatus = null;
+    if (this._transferQueueAutoCloseTimer) {
+      clearTimeout(this._transferQueueAutoCloseTimer);
+      this._transferQueueAutoCloseTimer = null;
+    }
+    this.requestUpdate();
+  }
+
+  _closeTransferQueue() {
+    this._showTransferQueue = false;
+    this._transferQueuePendingTarget = null;
+    this._transferQueueStatus = null;
+    if (this._transferQueueAutoCloseTimer) {
+      clearTimeout(this._transferQueueAutoCloseTimer);
+      this._transferQueueAutoCloseTimer = null;
+    }
+    this.requestUpdate();
+  }
+
+  async _transferQueueTo(target) {
+    if (!target) return;
+    
+    const sourceMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    if (!sourceMaId) return;
+    
+    this._transferQueuePendingTarget = target.maEntityId;
+    this._transferQueueStatus = null;
+    this.requestUpdate();
+    
+    try {
+      const payload = this._buildTransferQueuePayload(sourceMaId, target.maEntityId);
+      await this.hass.callService("music_assistant", "transfer_queue", payload);
+      this._transferQueueStatus = {
+        type: "success",
+        message: `Queue sent to ${target.name}.`
+      };
+      await this._updateTransferQueueAvailability({ refresh: true });
+      if (this._transferQueueAutoCloseTimer) {
+        clearTimeout(this._transferQueueAutoCloseTimer);
+      }
+      this._transferQueueAutoCloseTimer = setTimeout(() => {
+        this._transferQueueAutoCloseTimer = null;
+        if (this._showEntityOptions && this._showTransferQueue) {
+          this._dismissWithAnimation();
+        }
+      }, 2000);
+    } catch (error) {
+      console.error("yamp: Error transferring queue:", error);
+      this._transferQueueStatus = {
+        type: "error",
+        message: error?.message || "Failed to transfer queue."
+      };
+      if (this._transferQueueAutoCloseTimer) {
+        clearTimeout(this._transferQueueAutoCloseTimer);
+        this._transferQueueAutoCloseTimer = null;
+      }
+    } finally {
+      this._transferQueuePendingTarget = null;
+      this.requestUpdate();
+    }
+  }
+
+  _buildTransferQueuePayload(sourceId, targetId) {
+    const serviceMeta = this.hass?.services?.music_assistant?.transfer_queue;
+    const fields = serviceMeta?.fields || {};
+    const payload = {};
+    const assignField = (candidateKeys, value) => {
+      for (const key of candidateKeys) {
+        if (fields[key] !== undefined) {
+          payload[key] = value;
+          return true;
+        }
+      }
+      return false;
+    };
+    
+    // Prefer explicit source fields, fall back to legacy names if metadata missing
+    const sourceAssigned = assignField(
+      ["source_player", "source_player_id", "player_id", "source"],
+      sourceId
+    );
+    
+    const targetAssigned = assignField(
+      ["target_player", "target_player_id", "target", "entity_id"],
+      targetId
+    );
+    
+    if (!sourceAssigned) {
+      // Avoid clobbering target assignment when metadata is missing
+      const fallbackKey = targetAssigned ? "source_player" : "entity_id";
+      payload[fallbackKey] = sourceId;
+    }
+    
+    if (!targetAssigned) {
+      // If entity_id already used for source, use a more specific key
+      if (payload.entity_id === sourceId) {
+        payload.entity_id = targetId;
+        payload.source_player = sourceId;
+      } else if (payload.source_player === sourceId) {
+        payload.entity_id = targetId;
+      } else {
+        payload.entity_id = targetId;
+      }
+    }
+    
+    return payload;
+  }
+
   // Refresh the queue display
   _refreshQueue() {
     if (this._upcomingFilterActive) {
@@ -2376,6 +2629,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   updated(changedProps) {
+    if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
+      void this._updateTransferQueueAvailability({ refresh: false });
+    }
+
     if (this.hass && this.entityIds) {
       
       // Check if currently playing track has changed and refresh "Next Up" if active
@@ -2720,6 +2977,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._showSourceList = true;
           this._showGrouping = false;
           this.requestUpdate();
+          break;
+        case "transfer-queue":
+          this._showEntityOptions = true;
+          this._openTransferQueue();
           break;
         default:
           // Do nothing for unknown menu_item
@@ -3681,7 +3942,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
             <div class="entity-options-container entity-options-container-opening">
               <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
-              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities) ? html`
+              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? html`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column;">
                   <button class="entity-options-item" @click=${() => { 
                     const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
@@ -3699,6 +3960,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     this.currentStateObj.attributes.source_list.length > 0 ? html`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
                     ` : nothing}
+                  ${this._canShowTransferQueueOption() ? html`
+                    <button class="entity-options-item" @click=${() => this._openTransferQueue()}>Transfer Queue</button>
+                  ` : nothing}
                   ${
                     (() => {
                       const totalEntities = this.entityIds.length;
@@ -3758,6 +4022,48 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   }
                   <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
                 </div>
+              ` : this._showTransferQueue ? html`
+                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }} style="margin-bottom:14px;">&larr; Back</button>
+                <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
+                ${
+                  (() => {
+                    const targets = this._getTransferQueueTargets();
+                    if (!targets.length) {
+                      return html`<div style="padding: 12px; opacity: 0.75;">No other Music Assistant players available.</div>`;
+                    }
+                    return html`
+                      <div style="display:flex;flex-direction:column;gap:8px;">
+                        ${targets.map(target => html`
+                          <button
+                            class="entity-options-item"
+                            ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
+                            @click=${() => this._transferQueueTo(target)}
+                            style="display:flex;align-items:center;justify-content:flex-start;gap:12px;${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
+                            <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
+                            <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                              <div>${target.name}</div>
+                              <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
+                            </div>
+                            ${target.state ? html`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : nothing}
+                          </button>
+                        `)}
+                      </div>
+                    `;
+                  })()
+                }
+                ${this._transferQueueStatus ? html`
+                  <div style="
+                    margin-top: 14px;
+                    padding: 10px 12px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    text-align: center;
+                    background: ${this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)'};
+                    color: ${this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a'};
+                  ">
+                    ${this._transferQueueStatus.message}
+                  </div>
+                ` : nothing}
               ` : this._showResolvedEntities ? html`
                 <button class="entity-options-item" @click=${() => {
                   this._showResolvedEntities = false;
@@ -4776,12 +5082,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Helper method for immediate dismissals with animation
   _dismissWithAnimation() {
     this._applyClosingAnimations();
+    if (this._transferQueueAutoCloseTimer) {
+      clearTimeout(this._transferQueueAutoCloseTimer);
+      this._transferQueueAutoCloseTimer = null;
+    }
     setTimeout(() => {
       this._showEntityOptions = false;
       this._showGrouping = false;
       this._showSourceList = false;
       this._showSearchInSheet = false;
       this._showResolvedEntities = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
       this._quickMenuInvoke = false;
       this.requestUpdate();
     }, 200);
@@ -4791,9 +5104,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _closeEntityOptions() {
     // Apply closing animations
     this._applyClosingAnimations();
+    if (this._transferQueueAutoCloseTimer) {
+      clearTimeout(this._transferQueueAutoCloseTimer);
+      this._transferQueueAutoCloseTimer = null;
+    }
     
     // Wait for animation to complete before hiding
     setTimeout(() => {
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
       if (this._showGrouping) {
         // Close the grouping sheet and the overlay
         this._showGrouping = false;
@@ -4826,7 +5146,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     for (let i = 0; i < this.entityObjs.length; i++) {
       await this._ensureResolvedMaForIndex(i);
     }
-    
+
+    await this._updateTransferQueueAvailability({ refresh: true });
 
     
     this._showEntityOptions = true;
