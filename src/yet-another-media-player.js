@@ -4384,32 +4384,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
                     const masterState = this.hass.states[masterGroupId];
                     const groupedAny = Array.isArray(masterState?.attributes?.group_members) && masterState.attributes.group_members.length > 0;
-                    return html`
-                      <div style="display:flex;align-items:center;justify-content:space-between;font-weight:600;margin-bottom:0;">
-                        ${groupedAny ? html`
-                          <button class="entity-options-item"
-                            @click=${() => this._syncGroupVolume()}
-                            style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 16px 2px 0;">
-                            Sync Volume
-                          </button>
-                        ` : html`<span></span>`}
-                        <button class="entity-options-item"
-                          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 12px 2px 8px;">
-                          ${groupedAny ? "Ungroup All" : "Group All"}
-                        </button>
-                      </div>
-                    `;
-                  })()
-                }
-                <hr style="margin:8px 0 2px 0;opacity:0.19;border:0;border-top:1px solid #fff;" />
-                ${
-                  (() => {
-                    // --- Begin new group player rows logic, wrapped in scrollable container ---
+                    const masterName = this.getChipName(this.currentEntityId);
                     const masterId = this.currentEntityId;
-                    
-                    // Build list of entities to show in group players menu
-                    // Prioritize Music Assistant entities when available, fall back to main entities only if they support grouping
                     const groupPlayerIds = [];
                     
                     for (const id of this.entityIds) {
@@ -4419,12 +4395,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       let entityToCheck = null;
                       let entityName = null;
                       
-                      // First, check if there's a Music Assistant entity configured
                       if (obj.music_assistant_entity) {
                         let maEntityId;
                         if (typeof obj.music_assistant_entity === 'string' && 
                             (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-                          // For templates, use the cached resolved entity
                           const idx = this.entityIds.indexOf(id);
                           const cached = this._maResolveCache?.[idx]?.id;
                           maEntityId = cached || obj.entity_id;
@@ -4435,11 +4409,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         const maState = this.hass.states[maEntityId];
                         if (maState && this._supportsFeature(maState, SUPPORT_GROUPING)) {
                           entityToCheck = maEntityId;
-                          entityName = id; // Use main entity name for display
+                          entityName = id;
                         }
                       }
                       
-                      // If no MA entity supports grouping, check main entity
                       if (!entityToCheck) {
                         const mainState = this.hass.states[id];
                         if (mainState && this._supportsFeature(mainState, SUPPORT_GROUPING)) {
@@ -4448,20 +4421,37 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         }
                       }
                       
-                      // Add to list if we found a valid grouping entity
                       if (entityToCheck && entityName) {
                         groupPlayerIds.push({ id: entityName, groupId: entityToCheck });
                       }
                     }
                     
-                    // Sort with master first
                     const masterFirst = groupPlayerIds.find(item => item.id === masterId);
                     const others = groupPlayerIds.filter(item => item.id !== masterId);
                     const sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
                     
                     return html`
+                      <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
+                      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                        ${groupedAny ? html`
+                          <button class="entity-options-item"
+                            @click=${() => this._syncGroupVolume()}
+                            style="flex:0 0 auto; min-width:140px; text-align:center;">
+                            Sync Volume
+                          </button>
+                        ` : nothing}
+                        <button class="entity-options-item"
+                          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
+                          style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
+                          ${groupedAny ? "Ungroup All" : "Group All"}
+                        </button>
+                      </div>
                       <div class="group-list-scroll">
-                        ${sortedGroupIds.map(item => {
+                        ${sortedGroupIds.length === 0 ? html`
+                          <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
+                            No group-capable players.
+                          </div>
+                        ` : sortedGroupIds.map(item => {
                           const id = item.id;
                           const actualGroupId = item.groupId;
                           const obj = this.entityObjs.find(e => e.entity_id === id);
@@ -4499,30 +4489,33 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           const displayEntity = volumeEntity;
                           const displayVolumeState = this.hass.states[displayEntity];
                           
-                          const isRemoteVol = displayEntity.startsWith && displayEntity.startsWith("remote.");
+                          const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
                           const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
+                          const isMaster = actualGroupId === masterGroupId;
+                          const stateLabel = isMaster ? "Master" : (grouped ? "Joined" : "Available");
                           return html`
-                            <div style="
-                              display: flex;
-                              align-items: center;
-                              padding: 6px 4px;
+                            <div class="entity-options-item group-player-row" style="
+                              display:flex;
+                              align-items:center;
+                              gap:6px;
+                              padding:4px 8px;
+                              margin-bottom:1px;
                             ">
-                              <span style="
-                                display:inline-block;
-                                width: 140px;
-                                min-width: 100px;
-                                max-width: 160px;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                white-space: nowrap;
-                              ">${name}</span>
-                              <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
+                              <div style="flex:1; min-width:120px;">
+                                <div style="font-weight:600; text-align:left;">${name}</div>
+                                <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
+                              </div>
+                              <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
                                 ${
                                   isRemoteVol
                                     ? html`
-                                        <div class="vol-stepper">
-                                          <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
-                                          <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
+                                        <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
+                                          <button @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                                            <ha-icon icon="mdi:minus"></ha-icon>
+                                          </button>
+                                          <button @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                                            <ha-icon icon="mdi:plus"></ha-icon>
+                                          </button>
                                         </div>
                                       `
                                     : html`
@@ -4539,33 +4532,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                         />
                                       `
                                 }
-                                <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
+                                <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                               </div>
-                              ${
-                                actualGroupId === masterGroupId
-                                  ? html`
-                                      <button class="group-toggle-btn group-toggle-transparent"
-                                              disabled
-                                              aria-label="Master"
-                                              style="margin-left:14px;"></button>
-                                    `
-                                  : html`
-                                      <button class="group-toggle-btn"
-                                              @click=${() => this._toggleGroup(id)}
-                                              title=${grouped ? "Unjoin" : "Join"}
-                                              style="margin-left:14px;">
-                                        <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
-                                      </button>
-                                    `
-                              }
+                              ${isMaster
+                                ? html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
+                                : html`
+                                    <button class="group-toggle-btn"
+                                            @click=${() => this._toggleGroup(id)}
+                                            title=${grouped ? "Unjoin" : "Join"}
+                                            style="margin-left:4px;">
+                                      <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
+                                    </button>
+                                  `}
                             </div>
                           `;
                         })}
                       </div>
                     `;
                     // --- End new group player rows logic ---
-                  })()
-                }
+                  })()}
               ` : html`
                 <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }} style="margin-bottom:14px;">&larr; Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
