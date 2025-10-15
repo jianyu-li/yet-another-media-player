@@ -1646,6 +1646,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
         type: "success",
         message: `Queue sent to ${target.name}.`
       };
+      const targetIdx = typeof target.index === "number" ? target.index : this.entityIds.indexOf(target.entityId);
+      if (targetIdx !== undefined && targetIdx !== null && targetIdx >= 0) {
+        const pinnedIdx = this._pinnedIndex;
+        if (pinnedIdx === null || pinnedIdx === targetIdx) {
+          this._selectedIndex = targetIdx;
+          this._manualSelect = true;
+          this._manualSelectPlayingSet = null;
+          if (pinnedIdx === targetIdx) {
+            this._pinnedIndex = targetIdx;
+          }
+          const lingerEntity = target.maEntityId || this.entityObjs[targetIdx]?.entity_id;
+          if (lingerEntity) {
+            if (!this._playbackLingerByIdx) this._playbackLingerByIdx = {};
+            this._playbackLingerByIdx[targetIdx] = {
+              entityId: lingerEntity,
+              until: Date.now() + 5000
+            };
+            if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
+            this._lastPlayingEntityIdByChip[targetIdx] = lingerEntity;
+          }
+          this._ensureResolvedMaForIndex(targetIdx);
+          this._ensureResolvedVolForIndex(targetIdx);
+        }
+      }
       await this._updateTransferQueueAvailability({ refresh: true });
       if (this._transferQueueAutoCloseTimer) {
         clearTimeout(this._transferQueueAutoCloseTimer);
