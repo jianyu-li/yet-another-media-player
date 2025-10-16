@@ -274,6 +274,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showGrouping = false;
     // Overlay state for source list sheet
     this._showSourceList = false;
+    // Overlay state for transfer queue sheet
+    this._showTransferQueue = false;
+    this._transferQueuePendingTarget = null;
+    this._transferQueueStatus = null;
+    this._hasTransferQueueForCurrent = false;
+    this._transferQueueAutoCloseTimer = null;
     // Alternate progress‑bar mode
     this._alternateProgressBar = false;
     // Group base volume for group gain logic
@@ -1465,6 +1471,277 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return hasMassAttributes;
   }
 
+  _looksLikeMusicAssistantState(state) {
+    if (!state) return false;
+    return state.attributes?.app_id === "music_assistant" ||
+           !!state.attributes?.mass_player_id ||
+           !!state.attributes?.active_queue;
+  }
+
+  _getTransferQueueTargets() {
+    if (!this.hass?.services?.music_assistant?.transfer_queue) return [];
+    const currentIdx = this._selectedIndex;
+    if (currentIdx === null || currentIdx === undefined || currentIdx < 0) return [];
+    
+    const sourceMaId = this._getActualResolvedMaEntityForState(currentIdx);
+    if (!sourceMaId) return [];
+    
+    const seen = new Set([sourceMaId]);
+    const targets = [];
+    
+    for (let idx = 0; idx < this.entityObjs.length; idx++) {
+      const obj = this.entityObjs[idx];
+      if (!obj) continue;
+      
+      const maEntityId = this._getActualResolvedMaEntityForState(idx);
+      if (!maEntityId || seen.has(maEntityId)) continue;
+      
+      const maState = this.hass?.states?.[maEntityId];
+      const mainState = this.hass?.states?.[obj.entity_id];
+      if (!this._looksLikeMusicAssistantState(maState) && !this._looksLikeMusicAssistantState(mainState)) {
+        continue;
+      }
+      
+      seen.add(maEntityId);
+      
+      const displayState = maState || mainState;
+      const configuredName = obj?.name;
+      const displayName = configuredName ||
+                          mainState?.attributes?.friendly_name ||
+                          maState?.attributes?.friendly_name ||
+                          obj.entity_id;
+      
+      targets.push({
+        index: idx,
+        entityId: obj.entity_id,
+        maEntityId,
+        name: displayName,
+        subtitle: maEntityId !== obj.entity_id ? maEntityId : obj.entity_id,
+        state: displayState?.state,
+        icon: displayState?.attributes?.icon || "mdi:music",
+      });
+    }
+    
+    return targets;
+  }
+
+  _hasQueueInState(maState) {
+    if (!maState) return false;
+    const attrs = maState.attributes || {};
+    
+    const arrayKeys = ["queue_items", "queue", "media_queue", "mass_queue_items"];
+    for (const key of arrayKeys) {
+      const value = attrs[key];
+      if (Array.isArray(value) && value.length > 0) return true;
+    }
+    
+    const numericKeys = ["queue_length", "queue_size", "queue_total_items", "queue_pending", "queue_remaining", "items_in_queue"];
+    for (const key of numericKeys) {
+      const value = attrs[key];
+      if (typeof value === "number" && value > 0) return true;
+    }
+    
+    if (attrs.next_item || attrs.current_queue_item || attrs.queue_item_id) {
+      return true;
+    }
+    
+    if (attrs.media_content_id) {
+      return true;
+    }
+    
+    // Fall back to cached upcoming results if we've loaded them
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const cached = this._searchResultsByType?.[cacheKey];
+    if (cached && Array.isArray(cached.results) && cached.results.length > 0) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  async _updateTransferQueueAvailability({ refresh = false } = {}) {
+    const maState = this._getMusicAssistantState();
+    const looksLikeMa = this._looksLikeMusicAssistantState(maState);
+    
+    if (!maState || !looksLikeMa) {
+      if (this._hasTransferQueueForCurrent) {
+        this._hasTransferQueueForCurrent = false;
+        this.requestUpdate();
+      }
+      return false;
+    }
+    
+    let hasQueue = this._hasQueueInState(maState);
+    
+    if (!hasQueue && refresh && this.hass) {
+      const entityId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+      if (entityId) {
+        try {
+          const queueInfo = await this._getUpcomingQueue(this.hass, entityId, 2);
+          if (Array.isArray(queueInfo?.results) && queueInfo.results.length > 0) {
+            hasQueue = true;
+          } else if (maState.state === "playing" || maState.state === "paused" || maState.attributes?.media_content_id) {
+            hasQueue = true;
+          }
+        } catch (error) {
+          // Ignore errors; fall back to heuristic result
+        }
+      }
+    }
+    
+    if (this._hasTransferQueueForCurrent !== hasQueue) {
+      this._hasTransferQueueForCurrent = hasQueue;
+      this.requestUpdate();
+    }
+    
+    return hasQueue;
+  }
+
+  _canShowTransferQueueOption() {
+    if (!this._hasTransferQueueForCurrent) return false;
+    return this._getTransferQueueTargets().length > 0;
+  }
+
+  _openTransferQueue() {
+    this._showEntityOptions = true;
+    this._showTransferQueue = true;
+    this._showGrouping = false;
+    this._showSourceList = false;
+    this._showSearchInSheet = false;
+    this._showResolvedEntities = false;
+    this._transferQueuePendingTarget = null;
+    this._transferQueueStatus = null;
+    if (this._transferQueueAutoCloseTimer) {
+      clearTimeout(this._transferQueueAutoCloseTimer);
+      this._transferQueueAutoCloseTimer = null;
+    }
+    this.requestUpdate();
+  }
+
+  _closeTransferQueue() {
+    this._showTransferQueue = false;
+    this._transferQueuePendingTarget = null;
+    this._transferQueueStatus = null;
+    if (this._transferQueueAutoCloseTimer) {
+      clearTimeout(this._transferQueueAutoCloseTimer);
+      this._transferQueueAutoCloseTimer = null;
+    }
+    this.requestUpdate();
+  }
+
+  async _transferQueueTo(target) {
+    if (!target) return;
+    
+    const sourceMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    if (!sourceMaId) return;
+    
+    this._transferQueuePendingTarget = target.maEntityId;
+    this._transferQueueStatus = null;
+    this.requestUpdate();
+    
+    try {
+      const payload = this._buildTransferQueuePayload(sourceMaId, target.maEntityId);
+      await this.hass.callService("music_assistant", "transfer_queue", payload);
+      this._transferQueueStatus = {
+        type: "success",
+        message: `Queue sent to ${target.name}.`
+      };
+      const targetIdx = typeof target.index === "number" ? target.index : this.entityIds.indexOf(target.entityId);
+      if (targetIdx !== undefined && targetIdx !== null && targetIdx >= 0) {
+        const pinnedIdx = this._pinnedIndex;
+        if (pinnedIdx === null || pinnedIdx === targetIdx) {
+          this._selectedIndex = targetIdx;
+          this._manualSelect = true;
+          this._manualSelectPlayingSet = null;
+          if (pinnedIdx === targetIdx) {
+            this._pinnedIndex = targetIdx;
+          }
+          const lingerEntity = target.maEntityId || this.entityObjs[targetIdx]?.entity_id;
+          if (lingerEntity) {
+            if (!this._playbackLingerByIdx) this._playbackLingerByIdx = {};
+            this._playbackLingerByIdx[targetIdx] = {
+              entityId: lingerEntity,
+              until: Date.now() + 5000
+            };
+            if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
+            this._lastPlayingEntityIdByChip[targetIdx] = lingerEntity;
+          }
+          this._ensureResolvedMaForIndex(targetIdx);
+          this._ensureResolvedVolForIndex(targetIdx);
+        }
+      }
+      await this._updateTransferQueueAvailability({ refresh: true });
+      if (this._transferQueueAutoCloseTimer) {
+        clearTimeout(this._transferQueueAutoCloseTimer);
+      }
+      this._transferQueueAutoCloseTimer = setTimeout(() => {
+        this._transferQueueAutoCloseTimer = null;
+        if (this._showEntityOptions && this._showTransferQueue) {
+          this._dismissWithAnimation();
+        }
+      }, 2000);
+    } catch (error) {
+      console.error("yamp: Error transferring queue:", error);
+      this._transferQueueStatus = {
+        type: "error",
+        message: error?.message || "Failed to transfer queue."
+      };
+      if (this._transferQueueAutoCloseTimer) {
+        clearTimeout(this._transferQueueAutoCloseTimer);
+        this._transferQueueAutoCloseTimer = null;
+      }
+    } finally {
+      this._transferQueuePendingTarget = null;
+      this.requestUpdate();
+    }
+  }
+
+  _buildTransferQueuePayload(sourceId, targetId) {
+    const serviceMeta = this.hass?.services?.music_assistant?.transfer_queue;
+    const fields = serviceMeta?.fields || {};
+    const payload = {};
+    const assignField = (candidateKeys, value) => {
+      for (const key of candidateKeys) {
+        if (fields[key] !== undefined) {
+          payload[key] = value;
+          return true;
+        }
+      }
+      return false;
+    };
+    
+    // Prefer explicit source fields, fall back to legacy names if metadata missing
+    const sourceAssigned = assignField(
+      ["source_player", "source_player_id", "player_id", "source"],
+      sourceId
+    );
+    
+    const targetAssigned = assignField(
+      ["target_player", "target_player_id", "target", "entity_id"],
+      targetId
+    );
+    
+    if (!sourceAssigned) {
+      // Avoid clobbering target assignment when metadata is missing
+      const fallbackKey = targetAssigned ? "source_player" : "entity_id";
+      payload[fallbackKey] = sourceId;
+    }
+    
+    if (!targetAssigned) {
+      // If entity_id already used for source, use a more specific key
+      if (payload.entity_id === sourceId) {
+        payload.entity_id = targetId;
+        payload.source_player = sourceId;
+      } else if (payload.source_player === sourceId) {
+        payload.entity_id = targetId;
+      } else {
+        payload.entity_id = targetId;
+      }
+    }
+    
+    return payload;
+  }
+
   // Refresh the queue display
   _refreshQueue() {
     if (this._upcomingFilterActive) {
@@ -2376,6 +2653,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   updated(changedProps) {
+    if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
+      void this._updateTransferQueueAvailability({ refresh: false });
+    }
+
     if (this.hass && this.entityIds) {
       
       // Check if currently playing track has changed and refresh "Next Up" if active
@@ -2720,6 +3001,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._showSourceList = true;
           this._showGrouping = false;
           this.requestUpdate();
+          break;
+        case "transfer-queue":
+          this._showEntityOptions = true;
+          this._openTransferQueue();
           break;
         default:
           // Do nothing for unknown menu_item
@@ -3681,8 +3966,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
             <div class="entity-options-container entity-options-container-opening">
               <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
-              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities) ? html`
+              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? html`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column;">
+                  <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
+                    Close
+                  </button>
+                  <div class="entity-options-divider"></div>
                   <button class="entity-options-item" @click=${() => { 
                     const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
                     if (resolvedEntities.length === 1) {
@@ -3699,6 +3988,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     this.currentStateObj.attributes.source_list.length > 0 ? html`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
                     ` : nothing}
+                  ${this._canShowTransferQueueOption() ? html`
+                    <button class="entity-options-item" @click=${() => this._openTransferQueue()}>Transfer Queue</button>
+                  ` : nothing}
                   ${
                     (() => {
                       const totalEntities = this.entityIds.length;
@@ -3756,13 +4048,60 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       return nothing;
                     })()
                   }
-                  <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
                 </div>
+              ` : this._showTransferQueue ? html`
+                <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }}>
+                  Back
+                </button>
+                <div class="entity-options-divider"></div>
+                <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
+                ${
+                  (() => {
+                    const targets = this._getTransferQueueTargets();
+                    if (!targets.length) {
+                      return html`<div style="padding: 12px; opacity: 0.75;">No other Music Assistant players available.</div>`;
+                    }
+                    return html`
+                      <div style="display:flex;flex-direction:column;gap:8px;">
+                        ${targets.map(target => html`
+                          <button
+                            class="entity-options-item"
+                            ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
+                            @click=${() => this._transferQueueTo(target)}
+                            style="display:flex;align-items:center;justify-content:flex-start;gap:12px;${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
+                            <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
+                            <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                              <div>${target.name}</div>
+                              <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
+                            </div>
+                            ${target.state ? html`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : nothing}
+                          </button>
+                        `)}
+                      </div>
+                    `;
+                  })()
+                }
+                ${this._transferQueueStatus ? html`
+                  <div style="
+                    margin-top: 14px;
+                    padding: 10px 12px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    text-align: center;
+                    background: ${this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)'};
+                    color: ${this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a'};
+                  ">
+                    ${this._transferQueueStatus.message}
+                  </div>
+                ` : nothing}
               ` : this._showResolvedEntities ? html`
-                <button class="entity-options-item" @click=${() => {
+                <button class="entity-options-item close-item" @click=${() => {
                   this._showResolvedEntities = false;
                   this.requestUpdate();
-                }} style="margin-bottom:14px;">&larr; Back</button>
+                }}>
+                  Back
+                </button>
+                <div class="entity-options-divider"></div>
                 <div class="entity-options-resolved-entities" style="margin-top:12px;">
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
@@ -3806,9 +4145,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </div>
               ` : this._showSearchInSheet ? html`
                 <div class="entity-options-search" style="margin-top:12px;">
+                  ${this._searchHierarchy.length > 0 ? html`
+                    <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._goBackInSearch(); } }}>
+                      Back
+                    </button>
+                    <div class="entity-options-divider"></div>
+                  ` : nothing}
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._goBackInSearch(); } }} style="margin-bottom:8px;">&larr; Back</button>
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
                   ` : nothing}
@@ -4072,38 +4416,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 </div>
               ` : this._showGrouping ? html`
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }} style="margin-bottom:14px;">&larr; Back</button>
+                <div class="grouping-header">
+                  <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
+                    Back
+                  </button>
+                </div>
                 ${
                   (() => {
                     const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
                     const masterState = this.hass.states[masterGroupId];
                     const groupedAny = Array.isArray(masterState?.attributes?.group_members) && masterState.attributes.group_members.length > 0;
-                    return html`
-                      <div style="display:flex;align-items:center;justify-content:space-between;font-weight:600;margin-bottom:0;">
-                        ${groupedAny ? html`
-                          <button class="entity-options-item"
-                            @click=${() => this._syncGroupVolume()}
-                            style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 16px 2px 0;">
-                            Sync Volume
-                          </button>
-                        ` : html`<span></span>`}
-                        <button class="entity-options-item"
-                          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 12px 2px 8px;">
-                          ${groupedAny ? "Ungroup All" : "Group All"}
-                        </button>
-                      </div>
-                    `;
-                  })()
-                }
-                <hr style="margin:8px 0 2px 0;opacity:0.19;border:0;border-top:1px solid #fff;" />
-                ${
-                  (() => {
-                    // --- Begin new group player rows logic, wrapped in scrollable container ---
+                    const masterName = this.getChipName(this.currentEntityId);
                     const masterId = this.currentEntityId;
-                    
-                    // Build list of entities to show in group players menu
-                    // Prioritize Music Assistant entities when available, fall back to main entities only if they support grouping
                     const groupPlayerIds = [];
                     
                     for (const id of this.entityIds) {
@@ -4113,12 +4437,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       let entityToCheck = null;
                       let entityName = null;
                       
-                      // First, check if there's a Music Assistant entity configured
                       if (obj.music_assistant_entity) {
                         let maEntityId;
                         if (typeof obj.music_assistant_entity === 'string' && 
                             (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-                          // For templates, use the cached resolved entity
                           const idx = this.entityIds.indexOf(id);
                           const cached = this._maResolveCache?.[idx]?.id;
                           maEntityId = cached || obj.entity_id;
@@ -4129,11 +4451,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         const maState = this.hass.states[maEntityId];
                         if (maState && this._supportsFeature(maState, SUPPORT_GROUPING)) {
                           entityToCheck = maEntityId;
-                          entityName = id; // Use main entity name for display
+                          entityName = id;
                         }
                       }
                       
-                      // If no MA entity supports grouping, check main entity
                       if (!entityToCheck) {
                         const mainState = this.hass.states[id];
                         if (mainState && this._supportsFeature(mainState, SUPPORT_GROUPING)) {
@@ -4142,20 +4463,37 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         }
                       }
                       
-                      // Add to list if we found a valid grouping entity
                       if (entityToCheck && entityName) {
                         groupPlayerIds.push({ id: entityName, groupId: entityToCheck });
                       }
                     }
                     
-                    // Sort with master first
                     const masterFirst = groupPlayerIds.find(item => item.id === masterId);
                     const others = groupPlayerIds.filter(item => item.id !== masterId);
                     const sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
                     
                     return html`
+                      <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
+                      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                        ${groupedAny ? html`
+                          <button class="entity-options-item"
+                            @click=${() => this._syncGroupVolume()}
+                            style="flex:0 0 auto; min-width:140px; text-align:center;">
+                            Sync Volume
+                          </button>
+                        ` : nothing}
+                        <button class="entity-options-item"
+                          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
+                          style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
+                          ${groupedAny ? "Ungroup All" : "Group All"}
+                        </button>
+                      </div>
                       <div class="group-list-scroll">
-                        ${sortedGroupIds.map(item => {
+                        ${sortedGroupIds.length === 0 ? html`
+                          <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
+                            No group-capable players.
+                          </div>
+                        ` : sortedGroupIds.map(item => {
                           const id = item.id;
                           const actualGroupId = item.groupId;
                           const obj = this.entityObjs.find(e => e.entity_id === id);
@@ -4193,30 +4531,33 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           const displayEntity = volumeEntity;
                           const displayVolumeState = this.hass.states[displayEntity];
                           
-                          const isRemoteVol = displayEntity.startsWith && displayEntity.startsWith("remote.");
+                          const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
                           const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
+                          const isMaster = actualGroupId === masterGroupId;
+                          const stateLabel = isMaster ? "Master" : (grouped ? "Joined" : "Available");
                           return html`
-                            <div style="
-                              display: flex;
-                              align-items: center;
-                              padding: 6px 4px;
+                            <div class="entity-options-item group-player-row" style="
+                              display:flex;
+                              align-items:center;
+                              gap:6px;
+                              padding:4px 8px;
+                              margin-bottom:1px;
                             ">
-                              <span style="
-                                display:inline-block;
-                                width: 140px;
-                                min-width: 100px;
-                                max-width: 160px;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                white-space: nowrap;
-                              ">${name}</span>
-                              <div style="flex:1;display:flex;align-items:center;gap:9px;margin:0 10px;">
+                              <div style="flex:1; min-width:120px;">
+                                <div style="font-weight:600; text-align:left;">${name}</div>
+                                <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
+                              </div>
+                              <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
                                 ${
                                   isRemoteVol
                                     ? html`
-                                        <div class="vol-stepper">
-                                          <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down">–</button>
-                                          <button class="button" @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up">+</button>
+                                        <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
+                                          <button @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                                            <ha-icon icon="mdi:minus"></ha-icon>
+                                          </button>
+                                          <button @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                                            <ha-icon icon="mdi:plus"></ha-icon>
+                                          </button>
                                         </div>
                                       `
                                     : html`
@@ -4233,35 +4574,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                         />
                                       `
                                 }
-                                <span style="min-width:34px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
+                                <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                               </div>
-                              ${
-                                actualGroupId === masterGroupId
-                                  ? html`
-                                      <button class="group-toggle-btn group-toggle-transparent"
-                                              disabled
-                                              aria-label="Master"
-                                              style="margin-left:14px;"></button>
-                                    `
-                                  : html`
-                                      <button class="group-toggle-btn"
-                                              @click=${() => this._toggleGroup(id)}
-                                              title=${grouped ? "Unjoin" : "Join"}
-                                              style="margin-left:14px;">
-                                        <span class="group-toggle-fix">${grouped ? "–" : "+"}</span>
-                                      </button>
-                                    `
-                              }
+                              ${isMaster
+                                ? html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
+                                : html`
+                                    <button class="group-toggle-btn"
+                                            @click=${() => this._toggleGroup(id)}
+                                            title=${grouped ? "Unjoin" : "Join"}
+                                            style="margin-left:4px;">
+                                      <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
+                                    </button>
+                                  `}
                             </div>
                           `;
                         })}
                       </div>
                     `;
                     // --- End new group player rows logic ---
-                  })()
-                }
+                  })()}
               ` : html`
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
+                  Back
+                </button>
+                <div class="entity-options-divider"></div>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => html`
@@ -4776,12 +5112,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Helper method for immediate dismissals with animation
   _dismissWithAnimation() {
     this._applyClosingAnimations();
+    if (this._transferQueueAutoCloseTimer) {
+      clearTimeout(this._transferQueueAutoCloseTimer);
+      this._transferQueueAutoCloseTimer = null;
+    }
     setTimeout(() => {
       this._showEntityOptions = false;
       this._showGrouping = false;
       this._showSourceList = false;
       this._showSearchInSheet = false;
       this._showResolvedEntities = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
       this._quickMenuInvoke = false;
       this.requestUpdate();
     }, 200);
@@ -4791,9 +5134,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _closeEntityOptions() {
     // Apply closing animations
     this._applyClosingAnimations();
+    if (this._transferQueueAutoCloseTimer) {
+      clearTimeout(this._transferQueueAutoCloseTimer);
+      this._transferQueueAutoCloseTimer = null;
+    }
     
     // Wait for animation to complete before hiding
     setTimeout(() => {
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
       if (this._showGrouping) {
         // Close the grouping sheet and the overlay
         this._showGrouping = false;
@@ -4826,7 +5176,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     for (let i = 0; i < this.entityObjs.length; i++) {
       await this._ensureResolvedMaForIndex(i);
     }
-    
+
+    await this._updateTransferQueueAvailability({ refresh: true });
 
     
     this._showEntityOptions = true;

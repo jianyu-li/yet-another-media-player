@@ -1143,7 +1143,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                     { value: "search", label: "Search" },
                     { value: "source", label: "Source" },
                     { value: "more-info", label: "More Info" },
-                    { value: "group-players", label: "Group Players" }
+                    { value: "group-players", label: "Group Players" },
+                    { value: "transfer-queue", label: "Transfer Queue" }
                   ]
                 }
               }}
