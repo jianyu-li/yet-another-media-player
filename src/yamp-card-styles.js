@@ -1346,10 +1346,10 @@ export const yampCardStyles = css`
     -ms-overflow-style: none;
   }
 
-  /* Main menu specific styling - move options down toward center */
+  /* Main menu specific styling - move options down, adapt to card height */
   .entity-options-sheet .entity-options-menu {
-    margin-top: 150px;
-    margin-bottom: 20px;
+    margin-top: clamp(36px, 12vh, 150px);
+    margin-bottom: 16px;
   }
 
   /* When always collapsed is enabled, keep menu at top */
@@ -1420,6 +1420,32 @@ export const yampCardStyles = css`
     color: var(--custom-accent, #ff9800);
     text-shadow: none;
     background: none;
+  }
+
+  .entity-options-item.close-item {
+    font-weight: 600;
+    margin: 1px 0;
+    padding: 4px 0 5px 0;
+    display: block;
+    width: 100%;
+  }
+
+  .entity-options-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.28);
+    margin: 1px 0 8px 0;
+    width: 100%;
+    display: block;
+  }
+
+  /* Ensure Group Players header always shows a single divider */
+  .grouping-header {
+    width: 100%;
+  }
+  .grouping-header .entity-options-item.close-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+    margin-bottom: 6px;
+    padding-bottom: 6px;
   }
 
   /* Source index */

@@ -2604,10 +2604,10 @@ const yampCardStyles = i$4`
     -ms-overflow-style: none;
   }
 
-  /* Main menu specific styling - move options down toward center */
+  /* Main menu specific styling - move options down, adapt to card height */
   .entity-options-sheet .entity-options-menu {
-    margin-top: 150px;
-    margin-bottom: 20px;
+    margin-top: clamp(36px, 12vh, 150px);
+    margin-bottom: 16px;
   }
 
   /* When always collapsed is enabled, keep menu at top */
@@ -2678,6 +2678,32 @@ const yampCardStyles = i$4`
     color: var(--custom-accent, #ff9800);
     text-shadow: none;
     background: none;
+  }
+
+  .entity-options-item.close-item {
+    font-weight: 600;
+    margin: 1px 0;
+    padding: 4px 0 5px 0;
+    display: block;
+    width: 100%;
+  }
+
+  .entity-options-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.28);
+    margin: 1px 0 8px 0;
+    width: 100%;
+    display: block;
+  }
+
+  /* Ensure Group Players header always shows a single divider */
+  .grouping-header {
+    width: 100%;
+  }
+  .grouping-header .entity-options-item.close-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+    margin-bottom: 6px;
+    padding-bottom: 6px;
   }
 
   /* Source index */
@@ -15524,6 +15550,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
               <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
               ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue ? x`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column;">
+                  <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
+                    Close
+                  </button>
+                  <div class="entity-options-divider"></div>
                   <button class="entity-options-item" @click=${() => {
       const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
       if (resolvedEntities.length === 1) {
@@ -15592,16 +15622,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
       return E;
     })()}
-                  <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
                 </div>
               ` : this._showTransferQueue ? x`
-                <button class="entity-options-item" @click=${() => {
+                <button class="entity-options-item close-item" @click=${() => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeTransferQueue();
       }
-    }} style="margin-bottom:14px;">&larr; Back</button>
+    }}>
+                  Back
+                </button>
+                <div class="entity-options-divider"></div>
                 <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
                 ${(() => {
       const targets = this._getTransferQueueTargets();
@@ -15641,10 +15673,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   </div>
                 ` : E}
               ` : this._showResolvedEntities ? x`
-                <button class="entity-options-item" @click=${() => {
+                <button class="entity-options-item close-item" @click=${() => {
       this._showResolvedEntities = false;
       this.requestUpdate();
-    }} style="margin-bottom:14px;">&larr; Back</button>
+    }}>
+                  Back
+                </button>
+                <div class="entity-options-divider"></div>
                 <div class="entity-options-resolved-entities" style="margin-top:12px;">
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
@@ -15686,15 +15721,20 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 </div>
               ` : this._showSearchInSheet ? x`
                 <div class="entity-options-search" style="margin-top:12px;">
-                  ${this._searchBreadcrumb ? x`
-                    <div class="entity-options-search-breadcrumb">
-                <button class="entity-options-item" @click=${() => {
+                  ${this._searchHierarchy.length > 0 ? x`
+                    <button class="entity-options-item close-item" @click=${() => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._goBackInSearch();
       }
-    }} style="margin-bottom:8px;">&larr; Back</button>
+    }}>
+                      Back
+                    </button>
+                    <div class="entity-options-divider"></div>
+                  ` : E}
+                  ${this._searchBreadcrumb ? x`
+                    <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
                   ` : E}
@@ -15987,13 +16027,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   </div>
                 </div>
               ` : this._showGrouping ? x`
-                <button class="entity-options-item" @click=${() => {
+                <div class="grouping-header">
+                  <button class="entity-options-item close-item" @click=${() => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeGrouping();
       }
-    }} style="margin-bottom:14px;">&larr; Back</button>
+    }}>
+                    Back
+                  </button>
+                </div>
                 ${(_masterState$attribut => {
       const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
       const masterState = this.hass.states[masterGroupId];
@@ -16148,13 +16192,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // --- End new group player rows logic ---
     })()}
               ` : x`
-                <button class="entity-options-item" @click=${() => {
+                <button class="entity-options-item close-item" @click=${() => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeSourceList();
       }
-    }} style="margin-bottom:14px;">&larr; Back</button>
+    }}>
+                  Back
+                </button>
+                <div class="entity-options-divider"></div>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => x`
