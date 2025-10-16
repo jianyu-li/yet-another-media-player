@@ -723,7 +723,7 @@ function getArtworkUrl(state) {
   let fallbackArtwork = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
   if (!state || !state.attributes) return null;
   const attrs = state.attributes;
-  const appId = attrs.app_id;
+  attrs.app_id;
   let artworkUrl = null;
   let sizePercentage = null;
 
@@ -743,7 +743,7 @@ function getArtworkUrl(state) {
 
     // If no specific match found, check for fallback when no artwork
     if (!override) {
-      const hasArtwork = attrs.entity_picture || attrs.album_art || appId === 'music_assistant' && attrs.entity_picture_local;
+      const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
       if (!hasArtwork) {
         override = overrides.find(override => override.if_missing);
       }
@@ -757,13 +757,8 @@ function getArtworkUrl(state) {
 
   // If no override found, use standard artwork
   if (!artworkUrl) {
-    // For Music Assistant, prefer entity_picture_local
-    if (appId === 'music_assistant' && attrs.entity_picture_local) {
-      artworkUrl = attrs.entity_picture_local;
-    } else {
-      // Fallback to standard artwork attributes
-      artworkUrl = attrs.entity_picture || attrs.album_art || null;
-    }
+    // Always check entity_picture_local first, then entity_picture
+    artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
   }
 
   // If still no artwork, check for configured fallback artwork
@@ -824,7 +819,7 @@ function renderChip(_ref) {
             @pointerleave=${onPointerUp}
             style="display:flex;align-items:center;justify-content:space-between;">
       <span class="chip-icon">
-        ${art ? x`<img class="chip-mini-art" src="${art}" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+        ${art ? x`<img class="chip-mini-art" src="${art}" onerror="this.style.display='none'" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
       </span>
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${name}
@@ -879,6 +874,7 @@ function renderGroupChip(_ref2) {
         ${art ? x`<img class="chip-mini-art"
                       src="${art}"
                       style="cursor:pointer;"
+                      onerror="this.style.display='none'"
                       @click=${e => {
     e.stopPropagation();
     if (onIconClick) {
@@ -1010,7 +1006,7 @@ function renderChipRow(_ref4) {
       const id = group[0];
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states2 = hass.states) === null || _hass$states2 === void 0 ? void 0 : _hass$states2[id];
-      const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : selectedEntityId === id ? !isIdle : (state === null || state === void 0 ? void 0 : state.state) === "playing";
+      const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : (state === null || state === void 0 ? void 0 : state.state) === "playing";
       const artSource = typeof getChipArt === "function" ? getChipArt(id) : (_getArtworkUrl2 = getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)) === null || _getArtworkUrl2 === void 0 ? void 0 : _getArtworkUrl2.url;
       const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
       const icon = (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.icon) || "mdi:cast";
@@ -1354,6 +1350,12 @@ const yampCardStyles = i$4`
     transition: opacity 0.5s;
   }
 
+  /* Improve selected chip readability while idle */
+  .dim-idle .chip[selected] {
+    color: rgba(255,255,255,0.94);
+    text-shadow: 0 0 6px rgba(0,0,0,0.35);
+  }
+
   /* More info menu */
   .more-info-menu {
     display: flex;
@@ -1544,6 +1546,10 @@ const yampCardStyles = i$4`
     color: #fff;
   }
 
+  .chip[selected][playing] .chip-icon ha-icon {
+    color: var(--custom-accent);
+  }
+
   .chip:hover .chip-icon ha-icon {
     color: #fff;
   }
@@ -1559,12 +1565,14 @@ const yampCardStyles = i$4`
 
   /* Chip rows */
   .chip-row.grab-scroll-active,
-  .action-chip-row.grab-scroll-active {
+  .action-chip-row.grab-scroll-active,
+  .search-filter-chips.grab-scroll-active {
     cursor: grabbing;
   }
 
   .chip-row,
-  .action-chip-row {
+  .action-chip-row,
+  .search-filter-chips {
     cursor: grab;
   }
 
@@ -2366,30 +2374,253 @@ const yampCardStyles = i$4`
     z-index: 30;
     background: rgba(15,18,30,0.70);
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: center;
+  }
+
+  /* Opening animations for hamburger menu */
+  @keyframes overlayFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes containerSlideIn {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sheetSlideIn {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .entity-options-overlay-opening {
+    animation: overlayFadeIn 0.2s ease-out;
+  }
+
+  .entity-options-container-opening {
+    animation: containerSlideIn 0.3s ease-out;
+  }
+
+  .entity-options-sheet-opening {
+    animation: sheetSlideIn 0.25s ease-out 0.05s both;
+  }
+
+  /* Closing animations for hamburger menu */
+  @keyframes overlayFadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes containerSlideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes sheetSlideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+  }
+
+  .entity-options-overlay-closing {
+    animation: overlayFadeOut 0.15s ease-in forwards;
+    pointer-events: none;
+  }
+
+  .entity-options-container-closing {
+    animation: containerSlideOut 0.2s ease-in forwards;
+  }
+
+  .entity-options-sheet-closing {
+    animation: sheetSlideOut 0.15s ease-in 0.05s both forwards;
+  }
+
+  .entity-options-container {
+    width: 98%;
+    max-width: 430px;
+    margin: 2% auto;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(96% - 70px);
+    min-height: 90px;
+    position: relative;
+  }
+
+  /* Expand container height when always collapsed (no persistent controls) */
+  :host([data-always-collapsed="true"]) .entity-options-container {
+    max-height: 96%;
+  }
+
+  /* Expand container height when hide_menu_player is enabled (no persistent controls) */
+  :host([data-hide-menu-player="true"]) .entity-options-container {
+    max-height: 96%;
+  }
+
+  /* Persistent Media Controls */
+  .persistent-media-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: none;
+    flex-shrink: 0;
+    position: absolute;
+    bottom: 1%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(98% - 24px);
+    max-width: calc(430px - 24px);
+    z-index: 1001;
+  }
+
+  /* Hide persistent controls when always collapsed is enabled */
+  :host([data-always-collapsed="true"]) .persistent-media-controls {
+    display: none;
+  }
+
+  /* Hide persistent controls when hide_menu_player is enabled */
+  :host([data-hide-menu-player="true"]) .persistent-media-controls {
+    display: none;
+  }
+
+  .persistent-controls-artwork {
+    flex-shrink: 0;
+  }
+
+  .persistent-artwork {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .persistent-artwork-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .persistent-artwork-placeholder ha-icon {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+  }
+
+  .persistent-controls-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+    position: relative;
+    margin-left: -9%; /* Percentage-based offset to align with menu text */
+  }
+
+  .persistent-control-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #fff;
+  }
+
+  .persistent-control-btn:hover {
+    background: var(--custom-accent);
+    border-color: var(--custom-accent);
+    transform: scale(1.05);
+  }
+
+  .persistent-control-btn:active {
+    transform: scale(0.95);
+  }
+
+  .persistent-control-btn ha-icon {
+    font-size: 16px;
+    color: inherit;
   }
 
   .entity-options-sheet {
     --custom-accent: var(--accent-color, #ff9800);
     background: none;
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    border-radius: var(--border-radius);
     box-shadow: none;
-    width: 98%;
-    max-width: 430px;
-    margin-bottom: 1.5%;
-    padding: 18px 8px 8px 8px;
+    width: 100%;
+    padding: 18px 8px 70px 8px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    max-height: 85%;
-    min-height: 90px;
+    flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
+
+  /* Main menu specific styling - move options down toward center */
+  .entity-options-sheet .entity-options-menu {
+    margin-top: 150px;
+    margin-bottom: 20px;
+  }
+
+  /* When always collapsed is enabled, keep menu at top */
+  :host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
+    margin-top: 0px;
+  }
+
+  /* Remove spacing between menu items */
+  .entity-options-sheet .entity-options-menu .entity-options-item {
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+
 
   /* Ensure entity-options-sheet honors match_theme for accent color */
   :host([data-match-theme="false"]) .entity-options-sheet {
@@ -2596,7 +2827,7 @@ const yampCardStyles = i$4`
 
   /* Search functionality */
   .entity-options-search {
-    padding: 2px 0 4px 0;
+    padding: 2px 0 80px 0;
   }
 
   .entity-options-search-row {
@@ -2648,14 +2879,14 @@ const yampCardStyles = i$4`
     min-width: 34px;
     font-size: 1.13em;
     border: none;
-    background: var(--custom-accent);
+    background: transparent;
     color: #fff;
     border-radius: 10px;
     padding: 6px 10px;
     cursor: pointer;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.13);
+    box-shadow: none;
     transition: background var(--transition-normal), color var(--transition-normal);
-    text-shadow: 0 2px 8px #0008;
+    text-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2669,20 +2900,90 @@ const yampCardStyles = i$4`
 
   .entity-options-search-play:hover,
   .entity-options-search-play:focus {
-    background: #fff;
+    background: transparent;
     color: var(--custom-accent);
+    opacity: 0.8;
   }
 
   .entity-options-search-queue {
-    background: #4a4a4a;
-    border: 1px solid #666;
+    background: transparent;
+    border: none;
+    color: #666;
+    padding-right: 20px; /* Add right padding to prevent cutoff on mobile */
+    padding-bottom: 12px;
   }
 
   .entity-options-search-queue:hover,
   .entity-options-search-queue:focus {
-    background: #5a5a5a;
-    border-color: #777;
+    background: transparent;
+    border: none;
+    color: var(--custom-accent);
+    opacity: 0.8;
+  }
+
+  /* Queue control buttons */
+  .queue-controls {
+    display: flex;
+    gap: 4px;
+    padding-right: 8px; /* Add padding to prevent cutoff on mobile */
+  }
+
+  .queue-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.9em;
+    border: none;
+    background: transparent;
     color: #fff;
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    box-shadow: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .queue-btn ha-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .queue-btn-up:hover,
+  .queue-btn-up:focus {
+    background: transparent;
+    color: #4caf50;
+  }
+
+  .queue-btn-down:hover,
+  .queue-btn-down:focus {
+    background: transparent;
+    color: #4caf50;
+  }
+
+  .queue-btn-next:hover,
+  .queue-btn-next:focus {
+    background: transparent;
+    color: var(--custom-accent);
+  }
+
+  .queue-btn-remove:hover,
+  .queue-btn-remove:focus {
+    background: transparent;
+    color: #f44336;
+  }
+
+  /* Visual feedback for moved queue items */
+  .entity-options-search-result.just-moved {
+    background: rgba(76, 175, 80, 0.2) !important;
+    border-left: 3px solid #4caf50 !important;
+    animation: queueMoveHighlight 1s ease-out;
+  }
+
+  @keyframes queueMoveHighlight {
+    0% { background: rgba(76, 175, 80, 0.4); transform: scale(1.02); }
+    100% { background: rgba(76, 175, 80, 0.2); transform: scale(1); }
   }
 
   .entity-options-search-input {
@@ -2826,6 +3127,15 @@ const yampCardStyles = i$4`
     flex: 1;
     overflow-y: auto;
     margin: 12px 0;
+    padding-bottom: 80px;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
+  .entity-options-sheet .entity-options-search-results::-webkit-scrollbar {
+    display: none;
   }
 
   .entity-options-resolved-entities {
@@ -2839,6 +3149,13 @@ const yampCardStyles = i$4`
     flex: 1;
     overflow-y: auto;
     margin: 12px 0;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  .entity-options-resolved-entities-list::-webkit-scrollbar {
+    display: none;
   }
 
   .entity-options-resolved-entities .entity-options-item {
@@ -2994,6 +3311,13 @@ const yampCardStyles = i$4`
   .search-sheet-results {
     flex: 1;
     overflow-y: auto;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  .search-sheet-results::-webkit-scrollbar {
+    display: none;
   }
 
   .search-sheet-result {
@@ -3267,7 +3591,9 @@ function renderSearchSheet(_ref) {
     onQueue,
     error,
     showQueueSuccess,
-    matchTheme = false // Add matchTheme parameter
+    matchTheme = false,
+    // Add matchTheme parameter
+    upcomingFilterActive = false // Add upcoming filter parameter
   } = _ref;
   if (!open) return E;
   return x`
@@ -3289,23 +3615,37 @@ function renderSearchSheet(_ref) {
       <div class="search-sheet-results">
         ${(results || []).length === 0 && !loading ? x`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => x`
                 <div class="search-sheet-result">
-                  <img
-                    class="search-sheet-thumb"
-                    src=${item.thumbnail}
-                    alt=${item.title}
-                  />
+                  ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x`
+                    <img
+                      class="search-sheet-thumb"
+                      src=${item.thumbnail}
+                      alt=${item.title}
+                      onerror="this.style.display='none'"
+                    />
+                  ` : x`
+                    <div class="search-sheet-thumb-placeholder">
+                      <ha-icon icon="mdi:music"></ha-icon>
+                    </div>
+                  `}
                   <span class="search-sheet-title">${item.title}</span>
+                  ${item.artist ? x`
+                    <span class="search-sheet-subtitle" style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;">
+                      ${item.artist}
+                    </span>
+                  ` : E}
                   <div class="search-sheet-buttons">
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
                       ▶
                     </button>
-                    <button class="search-sheet-queue" @click=${e => {
+                    ${!(upcomingFilterActive && item.queue_item_id) ? x`
+                      <button class="search-sheet-queue" @click=${e => {
     e.preventDefault();
     e.stopPropagation();
     onQueue(item);
   }} title="Add to Queue">
-                      <ha-icon icon="mdi:playlist-play"></ha-icon>
-                    </button>
+                        <ha-icon icon="mdi:playlist-play"></ha-icon>
+                      </button>
+                    ` : E}
                   </div>
                 </div>
               `)}
@@ -9765,6 +10105,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     return {
       hass: {},
       _config: {},
+      _activeTab: {
+        type: String
+      },
       _entityEditorIndex: {
         type: Number
       },
@@ -9784,6 +10127,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
   }
   constructor() {
     super();
+    this._activeTab = "Entities";
     this._entityEditorIndex = null;
     this._actionEditorIndex = null;
     this._yamlDraft = "";
@@ -9871,6 +10215,55 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           padding: 12px 16px;
           gap: 8px;
         }
+        .tabs {
+          display: flex;
+          gap: 4px;
+          padding: 8px 8px 0 8px;
+          border-bottom: 1px solid var(--divider-color, #444);
+        }
+        .tab {
+          background: transparent;
+          border: none;
+          color: var(--primary-text-color, #fff);
+          cursor: pointer;
+          padding: 9px 14px;
+          border-radius: 8px 8px 0 0;
+          font-weight: 500;
+          opacity: 0.85;
+          border-bottom: 3px solid transparent;
+          transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);
+          font-size: 1.06em;
+        }
+        .tab-mobile-label {
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .tab-desktop-label {
+            display: none;
+          }
+          .tab-mobile-label {
+            display: inline;
+          }
+        }
+        .tab:hover {
+          opacity: 1;
+          color: var(--custom-accent, var(--accent-color, #ff9800));
+          background: rgba(255,255,255,0.06);
+        }
+        .tab[selected] {
+          background: rgba(255,255,255,0.10);
+          color: var(--primary-text-color, #fff);
+          opacity: 1;
+          border-bottom-color: var(--custom-accent, var(--accent-color, #ff9800));
+          box-shadow: 0 2px 0 0 var(--custom-accent, var(--accent-color, #ff9800)) inset;
+        }
+        .tab:focus-visible {
+          outline: 2px solid var(--custom-accent, var(--accent-color, #ff9800));
+          outline-offset: 2px;
+        }
+        .tab-content {
+          padding-top: 4px;
+        }
         /* add to rows with multiple elements to align the elements horizontally */
         .form-row-multi-column {
           display: flex;
@@ -9881,6 +10274,13 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           display: flex;
           align-items: center;
           gap: 8px;
+        }
+        .config-subtitle {
+          font-size: 0.85em;
+          color: var(--secondary-text-color, #888);
+          margin-top: 4px;
+          line-height: 1.3;
+          font-style: italic;
         }
         /* reduced padding for entity selection subrows */
         .entity-row {
@@ -10081,24 +10481,54 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       `;
   }
   render() {
+    var _this$_config$entitie, _this$_config$actions;
     if (!this._config) return x``;
-    if (this._entityEditorIndex !== null) {
-      var _this$_config$entitie;
-      const entity = (_this$_config$entitie = this._config.entities) === null || _this$_config$entitie === void 0 ? void 0 : _this$_config$entitie[this._entityEditorIndex];
-      return this._renderEntityEditor(entity);
-    } else if (this._actionEditorIndex !== null) {
-      var _this$_config$actions;
-      const action = (_this$_config$actions = this._config.actions) === null || _this$_config$actions === void 0 ? void 0 : _this$_config$actions[this._actionEditorIndex];
-      return this._renderActionEditor(action);
-    }
-    return this._renderMainEditor();
+
+    // When editing an entity/action, keep tabs visible but show editor content
+    const editingEntity = this._entityEditorIndex !== null;
+    const editingAction = this._actionEditorIndex !== null;
+    return x`
+        <div class="tabs">
+          ${["Entities", "Behavior", "Look and Feel", "Actions"].map(name => x`
+            <button
+              class="tab" ${this._activeTab === name ? 'selected' : ''}
+              @click=${() => {
+      this._activeTab = name;
+      // Exit any sub-editor when switching tabs
+      this._entityEditorIndex = null;
+      this._actionEditorIndex = null;
+      this._useTemplate = null;
+      this._useVolTemplate = null;
+    }}
+              ?selected=${this._activeTab === name}
+            >${name === "Look and Feel" ? x`
+              <span class="tab-desktop-label">Look and Feel</span>
+              <span class="tab-mobile-label">Visual</span>
+            ` : name}</button>
+          `)}
+        </div>
+        <div class="tab-content">
+          ${editingEntity ? this._renderEntityEditor((_this$_config$entitie = this._config.entities) === null || _this$_config$entitie === void 0 ? void 0 : _this$_config$entitie[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions = this._config.actions) === null || _this$_config$actions === void 0 ? void 0 : _this$_config$actions[this._actionEditorIndex]) : this._renderActiveTab()}
+        </div>
+      `;
   }
-  _renderMainEditor() {
+  _renderActiveTab() {
+    switch (this._activeTab) {
+      case "Entities":
+        return this._renderEntitiesTab();
+      case "Behavior":
+        return this._renderBehaviorTab();
+      case "Look and Feel":
+        return this._renderVisualTab();
+      case "Actions":
+        return this._renderActionsTab();
+      default:
+        return this._renderEntitiesTab();
+    }
+  }
+  _renderEntitiesTab() {
     if (!this._config) return x``;
     let entities = [...(this._config.entities ?? [])];
-    let actions = [...(this._config.actions ?? [])];
-
-    // Append a blank row only for rendering (not saved)
     if (entities.length === 0 || entities[entities.length - 1].entity_id) {
       entities.push({
         entity_id: ""
@@ -10107,9 +10537,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     return x`
         <div class="form-row entity-group">
           <div class="entity-group-header">
-            <div class="entity-group-title">
-              Entities*
-            </div>
+            <div class="entity-group-title">Entities*</div>
           </div>
           <yamp-sortable-beta @item-moved=${e => this._onEntityMoved(e)}>
             <div class="sortable-container">
@@ -10121,15 +10549,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                     <ha-icon icon="mdi:drag"></ha-icon>
                   </div>
                   <div class="grow-children">
-                    ${
-      /* ha-entity-picker will show "[Object object]" for entities with extra properties,
-         so we'll get around that by using ha-selector. However ha-selector always renders 
-         as a required field for some reason. This is confusing for the last entity picker, 
-         used to add a new entity, which is always blank and not required. So for the last
-         last entity only, we'll use ha-entity-picker. This entity will never have extra
-         properties, because as soon as it's populated, a new blank entity is added below it
-      */
-      idx === entities.length - 1 && !ent.entity_id ? x`
+                    ${idx === entities.length - 1 && !ent.entity_id ? x`
                           <ha-entity-picker
                             .hass=${this.hass}
                             .value=${ent.entity_id}
@@ -10166,7 +10586,99 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             </div>
           </yamp-sortable-beta>
         </div>
-  
+      `;
+  }
+  _renderBehaviorTab() {
+    return x`
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+      number: {
+        min: 0,
+        step: 1000,
+        unit_of_measurement: "ms",
+        mode: "box"
+      }
+    }}
+              .value=${this._config.idle_timeout_ms ?? 60000}
+              label="Idle Timeout (ms)"
+              @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
+          ></ha-icon>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "auto",
+          label: "Auto"
+        }, {
+          value: "always",
+          label: "Always"
+        }]
+      }
+    }}
+            .value=${this._config.show_chip_row ?? "auto"}
+            label="Show Chip Row"
+            @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured.</div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="hold-to-pin-toggle"
+              .checked=${this._config.hold_to_pin ?? false}
+              @change=${e => this._updateConfig("hold_to_pin", e.target.checked)}
+            ></ha-switch>
+            <span>Hold to Pin</span>
+          </div>
+          <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector-number
+              .selector=${{
+      number: {
+        min: 1,
+        max: 100,
+        step: 1,
+        mode: "box"
+      }
+    }}
+              .value=${this._config.search_results_limit ?? 20}
+              label="Search Results Limit"
+              helper="Maximum number of search results to display (1-100, default: 20)"
+              @value-changed=${e => this._updateConfig("search_results_limit", e.detail.value)}
+            ></ha-selector-number>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("search_results_limit", 20)}
+          ></ha-icon>
+        </div>
+
+      `;
+  }
+  _renderVisualTab() {
+    return x`
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
@@ -10195,6 +10707,18 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             ></ha-switch>
             <span>Collapse on Idle</span>
           </div>
+          ${!this._config.always_collapsed ? x`
+            <div>
+              <ha-switch
+                id="hide-menu-player-toggle"
+                .checked=${this._config.hide_menu_player ?? false}
+                @change=${e => this._updateConfig("hide_menu_player", e.target.checked)}
+              ></ha-switch>
+              <span>Hide Menu Player</span>
+            </div>
+          ` : E}
+        </div>
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="always-collapsed-toggle"
@@ -10214,33 +10738,10 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             </div>
           ` : E}
         </div>
-
-        <div class="form-row form-row-multi-column">
-          <div class="grow-children">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-      number: {
-        min: 0,
-        step: 1000,
-        unit_of_measurement: "ms",
-        mode: "box"
-      }
-    }}
-              .value=${this._config.idle_timeout_ms ?? 60000}
-              label="Idle Timeout (ms)"
-              @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
-            ></ha-selector>
-          </div>
-          <ha-icon
-            class="icon-button"
-            icon="mdi:restore"
-            title="Reset to default"
-            @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
-          ></ha-icon>
+        <div class="form-row">
+          <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
         </div>
 
-   
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
@@ -10290,62 +10791,6 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         ` : E}
 
         <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-      select: {
-        mode: "dropdown",
-        options: [{
-          value: "auto",
-          label: "Auto"
-        }, {
-          value: "always",
-          label: "Always"
-        }]
-      }
-    }}
-            .value=${this._config.show_chip_row ?? "auto"}
-            label="Show Chip Row"
-            @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
-          ></ha-selector>
-        </div>
-
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="hold-to-pin-toggle"
-              .checked=${this._config.hold_to_pin ?? false}
-              @change=${e => this._updateConfig("hold_to_pin", e.target.checked)}
-            ></ha-switch>
-            <span>Hold to Pin</span>
-          </div>
-        </div>
-
-        <div class="form-row form-row-multi-column">
-          <div class="grow-children">
-            <ha-selector-number
-              .selector=${{
-      number: {
-        min: 1,
-        max: 100,
-        step: 1,
-        mode: "box"
-      }
-    }}
-              .value=${this._config.search_results_limit ?? 20}
-              label="Search Results Limit"
-              helper="Maximum number of search results to display (1-100, default: 20)"
-              @value-changed=${e => this._updateConfig("search_results_limit", e.detail.value)}
-            ></ha-selector-number>
-          </div>
-          <ha-icon
-            class="icon-button"
-            icon="mdi:restore"
-            title="Reset to default"
-            @click=${() => this._updateConfig("search_results_limit", 20)}
-          ></ha-icon>
-        </div>
-        <div class="form-row">
           <label style="margin-bottom: 8px;">Idle Image</label>
         </div>
         <div class="form-row form-row-multi-column">
@@ -10355,11 +10800,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
               @change=${e => {
       this._useIdleImageUrl = e.target.checked;
-      // Clear the value when switching modes to avoid confusion
       if (e.target.checked) {
         this._updateConfig("idle_image", "");
       } else {
-        // Also clear when switching back to entity mode to avoid invalid values
         this._updateConfig("idle_image", "");
       }
     }}
@@ -10388,12 +10831,14 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             `}
           </div>
         </div>
-
+      `;
+  }
+  _renderActionsTab() {
+    let actions = [...(this._config.actions ?? [])];
+    return x`
         <div class="form-row action-group">
           <div class="action-group-header">
-            <div class="action-group-title">
-              Actions
-            </div>
+            <div class="action-group-title">Actions</div>
           </div>
           <yamp-sortable-beta @item-moved=${e => this._onActionMoved(e)}>
             <div class="sortable-container">
@@ -10403,12 +10848,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                     <ha-icon icon="mdi:drag"></ha-icon>
                   </div>
                   ${act !== null && act !== void 0 && act.icon ? x`
-                    <ha-icon 
-                    class="action-icon"
-                    icon="${act === null || act === void 0 ? void 0 : act.icon}"></ha-icon>
-                  ` : x`
-                    <span class="action-icon-placeholder"></span>
-                  `}
+                    <ha-icon class="action-icon" icon="${act === null || act === void 0 ? void 0 : act.icon}"></ha-icon>
+                  ` : x`<span class="action-icon-placeholder"></span>`}
                   <div class="grow-children">
                     <ha-textfield
                       placeholder="(Icon Only)"
@@ -10450,7 +10891,6 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             ></ha-icon>
           </div>
         </div>
-
       `;
   }
   _renderEntityEditor(entity) {
@@ -10524,27 +10964,57 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         }]
       }
     }}
-            .value=${(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ?? []}
+            .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ? entity.hidden_controls : []}
+            .required=${false}
+            .invalid=${false}
             label="Hidden Controls"
             helper="Select which controls to hide for this entity (all are shown by default)"
             @value-changed=${e => this._updateEntityProperty("hidden_controls", e.detail.value)}
           ></ha-selector>
         </div>
 
-<div class="form-row form-row-multi-column">
-  <div>
-    <ha-switch
-      id="ma-template-toggle"
-      .checked=${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)}
-      @change=${e => {
+        ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
+      <div class="form-row">
+        <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+          <ha-code-editor
+            id="ma-template-editor"
+            label="Music Assistant Entity Template (Jinja)"
+            .hass=${this.hass}
+            mode="jinja2"
+            autocomplete-entities
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? ""}
+            @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+          ></ha-code-editor>
+          <div class="help-text">
+            <ha-icon icon="mdi:information-outline"></ha-icon>
+            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
+            <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
+  media_player.picore_house
+{% else %}
+  media_player.ma_wiim_mini
+{% endif %}</pre>
+           </pre>
+          </div>
+        </div>
+      </div>
+    ` : E}
+
+ 
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="ma-template-toggle"
+              .checked=${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)}
+              @change=${e => {
       this._useTemplate = e.target.checked;
     }}
-    ></ha-switch>
-    <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
-  </div>
-</div>
+            ></ha-switch>
+            <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
+          </div>
+        </div>
 
-${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
+        ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
       <div class="form-row">
         <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
           <ha-code-editor
@@ -10580,7 +11050,63 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
           @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
         ></ha-entity-picker>
       </div>
+      ${((_this$hass3, _mainState$attributes, _this$_looksLikeTempl, _this$hass4, _maState$attributes) => {
+      const mainId = entity === null || entity === void 0 ? void 0 : entity.entity_id;
+      const mainState = mainId ? (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[mainId] : undefined;
+      const mainIsMA = !!(mainState && ((_mainState$attributes = mainState.attributes) === null || _mainState$attributes === void 0 ? void 0 : _mainState$attributes.app_id) === 'music_assistant');
+      const rawMa = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity;
+      const isTemplate = (_this$_looksLikeTempl = this._looksLikeTemplate) === null || _this$_looksLikeTempl === void 0 ? void 0 : _this$_looksLikeTempl.call(this, rawMa);
+      const maId = typeof rawMa === 'string' && !isTemplate ? rawMa : undefined;
+      const maState = maId ? (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[maId] : undefined;
+      const maIsMA = !!(maState && ((_maState$attributes = maState.attributes) === null || _maState$attributes === void 0 ? void 0 : _maState$attributes.app_id) === 'music_assistant');
+      // Only show under the dropdown (non-template path)
+      const showHiddenFilterChips = mainIsMA || maIsMA;
+      if (!showHiddenFilterChips) return E;
+      return x`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+        select: {
+          mode: "dropdown",
+          multiple: true,
+          options: [{
+            value: "artist",
+            label: "Artist"
+          }, {
+            value: "album",
+            label: "Album"
+          }, {
+            value: "track",
+            label: "Track"
+          }, {
+            value: "playlist",
+            label: "Playlist"
+          }, {
+            value: "radio",
+            label: "Radio"
+          }, {
+            value: "podcast",
+            label: "Podcast"
+          }, {
+            value: "episode",
+            label: "Episode"
+          }]
+        }
+      }}
+              .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ? entity.hidden_filter_chips : []}
+              .required=${false}
+              .invalid=${false}
+              label="Hidden Search Filter Chips"
+              helper="Hide specific search filter chips for this entity"
+              @value-changed=${e => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
+            ></ha-selector>
+          </div>
+        `;
+    })()}
     `}
+
+ 
 
         ${showGroupVolume ? x`
           <div class="form-row">
@@ -11010,7 +11536,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
     try {
       serviceData = jsYaml.load(this._yamlDraft);
       if (typeof serviceData !== "object" || serviceData === null) {
-        console.error("Service data must be a valid object.");
+        console.error("yamp: Service data must be a valid object.");
         return;
       }
     } catch (e) {
@@ -11029,7 +11555,7 @@ ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === voi
     try {
       await this.hass.callService(domain, serviceName, serviceData);
     } catch (err) {
-      console.error("Failed to call service:", err);
+      console.error("yamp: Failed to call service:", err);
     }
   }
   _onToggleChanged(e) {
@@ -11403,6 +11929,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._manualSelect = false;
     this._lastActiveEntityId = null;
     this._playTimestamps = {};
+    this._lastMediaTitle = null;
     this._showSourceMenu = false;
     this._shouldDropdownOpenUp = false;
     this._collapsedArtDominantColor = "#444";
@@ -11449,6 +11976,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._showResolvedEntities = false;
     // Queue success message
     this._showQueueSuccessMessage = false;
+    // Quick-dismiss mode for action-triggered menu items
+    this._quickMenuInvoke = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -11665,6 +12194,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
       const dx = endX - this._swipeStartX;
       if (Math.abs(dx) > threshold) {
+        var _this$entityObjs3;
         // Get all available media classes from cached results
         const allClasses = new Set();
         Object.values(this._searchResultsByType).forEach(results => {
@@ -11672,7 +12202,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
             if (item.media_class) allClasses.add(item.media_class);
           });
         });
-        const classes = Array.from(allClasses);
+        const currEntityObj = ((_this$entityObjs3 = this.entityObjs) === null || _this$entityObjs3 === void 0 ? void 0 : _this$entityObjs3[this._selectedIndex]) || null;
+        const hiddenSet = new Set((currEntityObj === null || currEntityObj === void 0 ? void 0 : currEntityObj.hidden_filter_chips) || []);
+        const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
         const filterOrder = ['all', ...classes];
         const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
         const dir = dx < 0 ? 1 : -1; // swipe left -> next, right -> prev
@@ -11722,11 +12254,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Clear filter states to ensure accurate artist search results
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
+    this._upcomingFilterActive = false;
     this._initialFavoritesLoaded = false;
 
     // Render, then run search
     this.requestUpdate();
-    this.updateComplete.then(() => this._doSearch());
+    this.updateComplete.then(() => this._doSearch()).catch(error => {
+      console.error('yamp: updateComplete _doSearch rejected:', error);
+    });
   }
   // Show search sheet inside entity options
   _showSearchSheetInOptions() {
@@ -11742,6 +12277,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._usingMusicAssistant = false; // Track if we're using Music Assistant search
     this._favoritesFilterActive = false; // Track if favorites filter is active
     this._recentlyPlayedFilterActive = false; // Track if recently played filter is active
+    this._upcomingFilterActive = false; // Track if upcoming queue filter is active
     this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
     this.requestUpdate();
 
@@ -11778,6 +12314,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    if (this._quickMenuInvoke) {
+      this._showEntityOptions = false;
+      this._quickMenuInvoke = false;
+    }
     this.requestUpdate();
     // Force layout update for expand on search
     setTimeout(() => {
@@ -11802,6 +12342,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    if (this._quickMenuInvoke) {
+      this._showEntityOptions = false;
+      this._showSearchInSheet = false;
+      this._quickMenuInvoke = false;
+    }
     this.requestUpdate();
   }
   async _doSearch() {
@@ -11812,9 +12357,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = mediaType && mediaType !== 'favorites' ? mediaType : 'all';
 
-    // Respect favorites toggle across chip changes
-    const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive);
-    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || this._recentlyPlayedFilterActive);
+    // Respect favorites toggle across chip changes, but allow explicit filter clearing
+    const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive && !searchParams.clearFilters);
+    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || this._recentlyPlayedFilterActive && !searchParams.clearFilters);
+    const isUpcoming = !!(searchParams.isUpcoming || this._upcomingFilterActive && !searchParams.clearFilters);
 
     // Check if search query has changed - if so, clear cache
     if (this._currentSearchQuery !== this._searchQuery) {
@@ -11823,7 +12369,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
 
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}`;
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
       this._searchResults = this._searchResultsByType[cacheKey];
       this.requestUpdate();
@@ -11845,28 +12391,34 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._initialFavoritesLoaded = false;
         searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
-      } else if (isFavorites) {
+      } else if (isUpcoming) {
         var _this$config2;
+        // Load upcoming queue items
+        this._initialFavoritesLoaded = false;
+        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, ((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit) || 20);
+        this._lastSearchUsedServerFavorites = false;
+      } else if (isFavorites) {
+        var _this$config3;
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
           ...searchParams,
           favorites: true
-        }, ((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit) || 20);
+        }, ((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
-        var _this$config3;
-        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, ((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit) || 20);
+        var _this$config4;
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.search_results_limit) || 20);
         // Mark that initial favorites have been loaded
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
         }
         this._lastSearchUsedServerFavorites = true;
       } else {
-        var _this$config4;
+        var _this$config5;
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.search_results_limit) || 20);
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
       }
 
@@ -11879,6 +12431,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (isNewSearch) {
         this._favoritesFilterActive = false;
         this._recentlyPlayedFilterActive = false;
+        this._upcomingFilterActive = false;
         this._initialFavoritesLoaded = false;
       }
       this._searchResults = Array.isArray(arr) ? arr : [];
@@ -11905,7 +12458,32 @@ class YetAnotherMediaPlayerCard extends i$1 {
   async _playMediaFromSearch(item) {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
-    playSearchedMedia(this.hass, targetEntityId, item);
+
+    // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter with working mass_queue
+    if (item.queue_item_id && this._upcomingFilterActive && this._isMusicAssistantEntity() && this._massQueueAvailable) {
+      // For queue items in the "Next Up" filter, play the specific queue item
+      try {
+        const maState = this._getMusicAssistantState();
+        const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
+        if (maEntityId) {
+          // Use mass_queue to play the specific queue item
+          await this.hass.callService("mass_queue", "play_queue_item", {
+            entity: maEntityId,
+            queue_item_id: item.queue_item_id
+          });
+        }
+      } catch (error) {
+        console.error('yamp: Error playing queue item:', error);
+        // Fallback to next track if service call fails
+        await this.hass.callService("media_player", "media_next_track", {
+          entity_id: targetEntityId
+        });
+      }
+    } else {
+      // For regular search results or fallback mode, use the normal play method
+      playSearchedMedia(this.hass, targetEntityId, item);
+    }
+
     // If searching from the bottom sheet, close the entity options overlay.
     if (this._showSearchInSheet) {
       this._closeEntityOptions();
@@ -11951,13 +12529,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Clear filter states to ensure accurate artist search results
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
+    this._upcomingFilterActive = false;
     this._initialFavoritesLoaded = false;
 
     // Remove swipe handlers when entering hierarchy
     this._removeSearchSwipeHandlers();
 
-    // Use Music Assistant search with artist name for albums
-    await this._doSearch('album');
+    // Use Music Assistant search with artist name for albums (explicitly clear filters)
+    await this._doSearch('album', {
+      clearFilters: true
+    });
   }
 
   // Handle hierarchical search - search for tracks by album
@@ -11979,9 +12560,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     this._searchQuery = searchQuery;
 
+    // Clear filter states to ensure accurate album search results
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._initialFavoritesLoaded = false;
+
     // Pass artist and album as search parameters for more precise results
     const searchParams = {
-      album: albumName
+      album: albumName,
+      clearFilters: true
     };
     if (artistName) {
       searchParams.artist = artistName;
@@ -12025,9 +12612,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._doSearch();
 
       // Re-attach swipe handlers when returning to top level
-      setTimeout(() => {
-        this._attachSearchSwipe();
-      }, 100);
+      // setTimeout(() => {
+      //   this._attachSearchSwipe(); // Disabled on mobile due to false positives
+      // }, 100);
     } else {
       const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
       if (currentLevel.type === 'artist') {
@@ -12128,9 +12715,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
   async _toggleFavoritesFilter() {
     this._favoritesFilterActive = !this._favoritesFilterActive;
 
-    // Make mutually exclusive with recently played filter
+    // Make mutually exclusive with other filters
     if (this._favoritesFilterActive) {
       this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
     }
     if (this._favoritesFilterActive) {
       // Use the existing _doSearch method with favorites parameter
@@ -12179,9 +12767,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
   async _toggleRecentlyPlayedFilter() {
     this._recentlyPlayedFilterActive = !this._recentlyPlayedFilterActive;
 
-    // Make mutually exclusive with favorites filter
+    // Make mutually exclusive with other filters
     if (this._recentlyPlayedFilterActive) {
       this._favoritesFilterActive = false;
+      this._upcomingFilterActive = false;
       this._initialFavoritesLoaded = false; // Clear the initial favorites state
     }
     if (this._recentlyPlayedFilterActive) {
@@ -12215,14 +12804,462 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
 
+  // Toggle upcoming queue filter
+  async _toggleUpcomingFilter() {
+    this._upcomingFilterActive = !this._upcomingFilterActive;
+
+    // Make mutually exclusive with other filters
+    if (this._upcomingFilterActive) {
+      this._favoritesFilterActive = false;
+      this._recentlyPlayedFilterActive = false;
+      this._initialFavoritesLoaded = false; // Clear the initial favorites state
+    }
+    if (this._upcomingFilterActive) {
+      // Clear search box since it's not used in upcoming mode
+      this._searchQuery = '';
+      // Clear cache to force fresh fetch
+      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+      delete this._searchResultsByType[cacheKey];
+      // Subscribe to queue update events
+      await this._subscribeToQueueUpdates();
+      // Load upcoming queue items - always use "all" for upcoming
+      try {
+        await this._doSearch('all', {
+          isUpcoming: true
+        });
+      } catch (error) {
+        console.error('yamp: Error in _doSearch for upcoming queue:', error);
+      }
+    } else {
+      // Unsubscribe from queue update events
+      this._unsubscribeFromQueueUpdates();
+      // Restore original search results
+      if (this._searchQuery && this._searchQuery.trim() !== '') {
+        // Resubmit the original search without upcoming filter
+        const currentMediaType = this._searchMediaClassFilter;
+        await this._doSearch(currentMediaType);
+      } else {
+        // Restore from cache or load favorites if no search query
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        if (this._searchResultsByType[cacheKey]) {
+          this._searchResults = this._searchResultsByType[cacheKey];
+          this.requestUpdate();
+        } else {
+          // No cache, load favorites as default
+          await this._doSearch('favorites');
+        }
+      }
+    }
+  }
+
+  // Get next track from Music Assistant (limited by Music Assistant API)
+  async _getUpcomingQueue(hass, entityId) {
+    let limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 20;
+    try {
+      // Always check for mass_queue integration (don't cache this)
+      const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
+
+      // Cache the result for UI rendering
+      this._massQueueAvailable = hasMassQueue;
+      if (hasMassQueue) {
+        try {
+          const massQueueResult = await this._getUpcomingQueueWithMassQueue(hass, entityId, limit);
+
+          // If mass_queue returns 0 results, fall back to original method
+          if (!massQueueResult.results || massQueueResult.results.length === 0) {
+            this._massQueueAvailable = false; // Hide queue management buttons
+            return await this._getUpcomingQueueOriginal(hass, entityId, limit);
+          }
+          return massQueueResult;
+        } catch (error) {
+          this._massQueueAvailable = false; // Hide queue management buttons
+          return await this._getUpcomingQueueOriginal(hass, entityId, limit);
+        }
+      }
+
+      // Fallback to the original method
+      return await this._getUpcomingQueueOriginal(hass, entityId, limit);
+    } catch (error) {
+      console.error('yamp: Error getting upcoming queue:', error);
+      this._massQueueAvailable = false;
+      return {
+        results: [],
+        usedMusicAssistant: false
+      };
+    }
+  }
+
+  // Check if mass_queue integration is available and enabled
+  async _isMassQueueIntegrationAvailable(hass) {
+    try {
+      // First check if the mass_queue domain is available in services
+      const services = await hass.callWS({
+        type: "get_services"
+      });
+      let hasServices = false;
+      // Handle different response formats
+      if (Array.isArray(services)) {
+        hasServices = services.some(service => service.domain === "mass_queue");
+      } else if (services && typeof services === 'object') {
+        // Check if mass_queue exists as a key in the services object
+        hasServices = services.hasOwnProperty("mass_queue") || Object.keys(services).some(key => key === "mass_queue");
+      }
+      if (!hasServices) {
+        return false;
+      }
+
+      // If services are available, assume integration is working
+      // The companion card works, so this should be sufficient
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Get queue using mass_queue integration
+  async _getUpcomingQueueWithMassQueue(hass, entityId) {
+    let limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 20;
+    try {
+      var _playerState$attribut, _this$config6, _response$response;
+      // Get the currently playing track's media_content_id
+      const playerState = hass.states[entityId];
+      const currentTrackId = playerState === null || playerState === void 0 || (_playerState$attribut = playerState.attributes) === null || _playerState$attribut === void 0 ? void 0 : _playerState$attribut.media_content_id;
+
+      // Use limit_before and limit_after like the companion card does
+      // limit_before: 5 means get 5 items before the current track (to include current track)
+      // limit_after: limit means get up to 'limit' upcoming items
+      const message = {
+        type: "call_service",
+        domain: "mass_queue",
+        service: "get_queue_items",
+        service_data: {
+          entity: entityId,
+          limit_before: 5,
+          // Get items before current track to include current track
+          limit_after: Math.max(limit, ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.search_results_limit) || 20) // Use config search_results_limit
+        },
+        return_response: true
+      };
+      const response = await hass.connection.sendMessagePromise(message);
+      const queueItems = response === null || response === void 0 || (_response$response = response.response) === null || _response$response === void 0 ? void 0 : _response$response[entityId];
+      if (!Array.isArray(queueItems)) {
+        throw new Error('Invalid response from mass_queue');
+      }
+
+      // Find the currently playing track's index in the queue
+      const currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
+
+      // Get upcoming items (items after the current track)
+      const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
+
+      // Process the upcoming items like the companion card does
+      const results = upcomingItems.slice(0, limit).map((item, index) => ({
+        media_content_id: item.media_content_id || `queue_${index}`,
+        media_content_type: 'track',
+        media_class: 'track',
+        title: item.media_title || 'Unknown Track',
+        artist: item.media_artist || 'Unknown Artist',
+        album: item.media_album_name || 'Unknown Album',
+        thumbnail: item.media_image || null,
+        duration: null,
+        position: index + 1,
+        queue_item_id: item.queue_item_id || null
+      }));
+      return {
+        results,
+        usedMusicAssistant: true,
+        total: results.length,
+        source: 'mass_queue'
+      };
+    } catch (error) {
+      console.error('yamp: mass_queue service call failed:', error);
+      throw error;
+    }
+  }
+
+  // Queue reordering methods
+  async _moveQueueItemUp(queueItemId) {
+    try {
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+
+      // Update UI immediately (like companion card does)
+      this._moveQueueItemInUI(queueItemId, 'up');
+
+      // Then call the service
+      await this.hass.callService("mass_queue", "move_queue_item_up", {
+        entity: maEntityId,
+        queue_item_id: queueItemId
+      });
+    } catch (error) {
+      // Revert UI change on error
+      this._refreshQueue();
+    }
+  }
+  async _moveQueueItemDown(queueItemId) {
+    try {
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+
+      // Update UI immediately
+      this._moveQueueItemInUI(queueItemId, 'down');
+
+      // Then call the service
+      await this.hass.callService("mass_queue", "move_queue_item_down", {
+        entity: maEntityId,
+        queue_item_id: queueItemId
+      });
+    } catch (error) {
+      // Revert UI change on error
+      this._refreshQueue();
+    }
+  }
+  async _moveQueueItemNext(queueItemId) {
+    try {
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+
+      // Update UI immediately
+      this._moveQueueItemInUI(queueItemId, 'next');
+
+      // Then call the service
+      await this.hass.callService("mass_queue", "move_queue_item_next", {
+        entity: maEntityId,
+        queue_item_id: queueItemId
+      });
+    } catch (error) {
+      // Revert UI change on error
+      this._refreshQueue();
+    }
+  }
+  async _removeQueueItem(queueItemId) {
+    try {
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+
+      // Update UI immediately
+      this._removeQueueItemFromUI(queueItemId);
+
+      // Then call the service
+      await this.hass.callService("mass_queue", "remove_queue_item", {
+        entity: maEntityId,
+        queue_item_id: queueItemId
+      });
+    } catch (error) {
+      // Revert UI change on error
+      this._refreshQueue();
+    }
+  }
+
+  // Show queue error message
+  _showQueueError(message) {
+    // For now, just log the error. In the future, we could show a toast notification
+    console.error('yamp: Queue operation failed:', message);
+    // You could implement a toast notification here if desired
+  }
+
+  // Update queue items in UI immediately (like companion card does)
+  _moveQueueItemInUI(queueItemId, direction) {
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const currentResults = this._searchResultsByType[cacheKey];
+    if (!currentResults || !Array.isArray(currentResults.results)) {
+      return;
+    }
+    const itemIndex = currentResults.results.findIndex(item => item.queue_item_id === queueItemId);
+    if (itemIndex === -1) return;
+    let newIndex;
+    switch (direction) {
+      case 'up':
+        newIndex = Math.max(0, itemIndex - 1);
+        break;
+      case 'down':
+        newIndex = Math.min(currentResults.results.length - 1, itemIndex + 1);
+        break;
+      case 'next':
+        newIndex = 0; // Move to next position (first in upcoming queue)
+        break;
+      default:
+        return;
+    }
+
+    // Get the item being moved
+    currentResults.results[itemIndex];
+
+    // Move item in array (like companion card's moveQueueItem)
+    const movedItem = currentResults.results.splice(itemIndex, 1)[0];
+    currentResults.results.splice(newIndex, 0, movedItem);
+
+    // Update position numbers for visual feedback
+    currentResults.results.forEach((item, index) => {
+      item.position = index + 1;
+    });
+
+    // Add visual feedback - temporarily highlight the moved item
+    movedItem._justMoved = true;
+    setTimeout(() => {
+      delete movedItem._justMoved;
+      this.requestUpdate();
+    }, 1000);
+
+    // Trigger UI update
+    this.requestUpdate();
+  }
+
+  // Remove queue item from UI immediately
+  _removeQueueItemFromUI(queueItemId) {
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const currentResults = this._searchResultsByType[cacheKey];
+    if (!currentResults || !Array.isArray(currentResults.results)) {
+      return;
+    }
+
+    // Remove item from array
+    currentResults.results = currentResults.results.filter(item => item.queue_item_id !== queueItemId);
+
+    // Trigger UI update
+    this.requestUpdate();
+  }
+
+  // Check if current entity is a Music Assistant entity
+  _isMusicAssistantEntity() {
+    var _maState$attributes5, _maState$attributes6, _maState$attributes7, _this$_searchResultsB;
+    // Get the Music Assistant state for the current chip
+    const maState = this._getMusicAssistantState();
+    if (!maState) return false;
+
+    // Check if the Music Assistant entity has the right attributes
+    const hasMassAttributes = ((_maState$attributes5 = maState.attributes) === null || _maState$attributes5 === void 0 ? void 0 : _maState$attributes5.app_id) === "music_assistant" || ((_maState$attributes6 = maState.attributes) === null || _maState$attributes6 === void 0 ? void 0 : _maState$attributes6.mass_player_id) || ((_maState$attributes7 = maState.attributes) === null || _maState$attributes7 === void 0 ? void 0 : _maState$attributes7.active_queue) ||
+    // If we're in upcoming mode and getting queue items, assume it's MA
+    this._upcomingFilterActive && ((_this$_searchResultsB = this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming`]) === null || _this$_searchResultsB === void 0 || (_this$_searchResultsB = _this$_searchResultsB.results) === null || _this$_searchResultsB === void 0 ? void 0 : _this$_searchResultsB.some(item => item.queue_item_id));
+    return hasMassAttributes;
+  }
+
+  // Refresh the queue display
+  _refreshQueue() {
+    if (this._upcomingFilterActive) {
+      // Clear cache to force fresh fetch
+      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+      delete this._searchResultsByType[cacheKey];
+      // Reload upcoming queue items
+      this._doSearch('all', {
+        isUpcoming: true
+      }).catch(error => {
+        console.error('yamp: Error refreshing queue:', error);
+      });
+    }
+  }
+
+  // Subscribe to queue update events (like companion card)
+  async _subscribeToQueueUpdates() {
+    if (this._queueEventSubscription) return; // Already subscribed
+
+    try {
+      this._queueEventSubscription = await this.hass.connection.subscribeEvents(event => {
+        const eventData = event.data;
+        if (eventData.type === "queue_updated") {
+          // Refresh queue when it's updated
+          this._refreshQueue();
+        }
+      }, "mass_queue");
+    } catch (error) {
+      console.error('yamp: Failed to subscribe to queue updates:', error);
+    }
+  }
+
+  // Unsubscribe from queue update events
+  _unsubscribeFromQueueUpdates() {
+    if (this._queueEventSubscription) {
+      this._queueEventSubscription();
+      this._queueEventSubscription = null;
+    }
+  }
+
+  // Original method for getting queue (fallback)
+  async _getUpcomingQueueOriginal(hass, entityId) {
+    try {
+      var _response$response2;
+      // Get the queue metadata first to get the queue_id
+      const message = {
+        type: "call_service",
+        domain: "music_assistant",
+        service: "get_queue",
+        service_data: {
+          entity_id: entityId
+        },
+        return_response: true
+      };
+      const response = await hass.connection.sendMessagePromise(message);
+      const queueData = response === null || response === void 0 || (_response$response2 = response.response) === null || _response$response2 === void 0 ? void 0 : _response$response2[entityId];
+      if (!queueData) {
+        return {
+          results: [],
+          usedMusicAssistant: true
+        };
+      }
+
+      // Build results array from the queue data structure
+      const results = [];
+      if (!queueData) {
+        return {
+          results: [],
+          usedMusicAssistant: true
+        };
+      }
+
+      // Fallback to just the next item
+      if (queueData.next_item) {
+        var _item$media_item, _item$media_item2, _item$media_item3, _item$media_item4, _item$media_item5, _item$media_item6;
+        const item = queueData.next_item;
+        results.push({
+          media_content_id: ((_item$media_item = item.media_item) === null || _item$media_item === void 0 ? void 0 : _item$media_item.uri) || `queue_next`,
+          media_content_type: ((_item$media_item2 = item.media_item) === null || _item$media_item2 === void 0 ? void 0 : _item$media_item2.media_type) || 'track',
+          media_class: 'track',
+          title: item.name || ((_item$media_item3 = item.media_item) === null || _item$media_item3 === void 0 ? void 0 : _item$media_item3.name) || 'Unknown Track',
+          artist: ((_item$media_item4 = item.media_item) === null || _item$media_item4 === void 0 || (_item$media_item4 = _item$media_item4.artists) === null || _item$media_item4 === void 0 || (_item$media_item4 = _item$media_item4[0]) === null || _item$media_item4 === void 0 ? void 0 : _item$media_item4.name) || 'Unknown Artist',
+          album: ((_item$media_item5 = item.media_item) === null || _item$media_item5 === void 0 || (_item$media_item5 = _item$media_item5.album) === null || _item$media_item5 === void 0 ? void 0 : _item$media_item5.name) || 'Unknown Album',
+          thumbnail: ((_item$media_item6 = item.media_item) === null || _item$media_item6 === void 0 ? void 0 : _item$media_item6.image) || null,
+          duration: item.duration || null,
+          position: 1,
+          // Next item
+          queue_item_id: item.queue_item_id || null
+        });
+      }
+      return {
+        results,
+        usedMusicAssistant: true,
+        total: results.length,
+        source: 'music_assistant'
+      };
+    } catch (error) {
+      console.error('yamp: Error in original queue method:', error);
+      throw error;
+    }
+  }
+
   // Apply favorites filter to current results (called when switching filter chips)
   async _applyFavoritesFilterIfActive() {
     if (!this._favoritesFilterActive) return;
     const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
     try {
-      var _this$config5;
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.search_results_limit) || 20);
+      var _this$config7;
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.search_results_limit) || 20);
       const favorites = favoritesResponse.results || [];
 
       // Create a set of favorite URIs for quick lookup
@@ -12343,16 +13380,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config6, _this$config7;
+    var _this$config8, _this$config9;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
-    const appId = attrs.app_id;
-    const prefix = ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.artwork_hostname) || '';
+    attrs.app_id;
+    const prefix = ((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
 
     // Check for media artwork overrides first
-    const overrides = (_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.media_artwork_overrides;
+    const overrides = (_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.media_artwork_overrides;
     if (overrides && Array.isArray(overrides)) {
       var _override;
       const {
@@ -12368,7 +13405,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
       // If no specific match found, check for fallback when no artwork
       if (!override) {
-        const hasArtwork = attrs.entity_picture || attrs.album_art || appId === 'music_assistant' && attrs.entity_picture_local;
+        const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
         if (!hasArtwork) {
           override = overrides.find(override => override.if_missing);
         }
@@ -12382,19 +13419,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If no override found, use standard artwork
     if (!artworkUrl) {
-      // For Music Assistant, prefer entity_picture_local
-      if (appId === 'music_assistant' && attrs.entity_picture_local) {
-        artworkUrl = attrs.entity_picture_local;
-      } else {
-        // Fallback to standard artwork attributes
-        artworkUrl = attrs.entity_picture || attrs.album_art || null;
-      }
+      // Always check entity_picture_local first, then entity_picture
+      artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
     }
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config8;
-      const fallbackArtwork = (_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.fallback_artwork;
+      var _this$config0;
+      const fallbackArtwork = (_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -12418,10 +13450,37 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (artworkUrl && prefix && !artworkUrl.startsWith('http')) {
       artworkUrl = prefix + artworkUrl;
     }
+
+    // Validate artwork URL to prevent proxy errors
+    if (artworkUrl && !this._isValidArtworkUrl(artworkUrl)) {
+      artworkUrl = null;
+    }
     return {
       url: artworkUrl,
       sizePercentage
     };
+  }
+
+  // Validate artwork URL to prevent proxy errors
+  _isValidArtworkUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+
+    // Skip validation for data URLs and base64 images
+    if (url.startsWith('data:')) return true;
+
+    // Skip validation for localhost and relative URLs
+    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) return true;
+
+    // Check for obviously invalid URLs
+    if (url.includes('undefined') || url.includes('null') || url.trim() === '') return false;
+
+    // Check for valid URL format
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Extract dominant color from image
@@ -12473,6 +13532,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
+      this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
     }
     // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
@@ -12522,6 +13583,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         sync_power,
         follow_active_volume,
         hidden_controls,
+        hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
         ...(typeof group_volume !== "undefined" ? {
           group_volume
         } : {})
@@ -12697,11 +13759,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return maId;
     }
 
-    // If MA entity is paused (regardless of tracking), prioritize it over main entity that's playing
+    // If MA entity is paused and main entity is playing, prioritize the main entity
     if ((maState === null || maState === void 0 ? void 0 : maState.state) === "paused" && (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing") {
-      // Track this as the last active entity
-      this._lastActiveEntityId = maId;
-      return maId;
+      this._lastActiveEntityId = mainId;
+      return mainId;
     }
 
     // When card is idle, don't switch entities based on playing state - stay on last active entity
@@ -12960,6 +14021,28 @@ class YetAnotherMediaPlayerCard extends i$1 {
   updated(changedProps) {
     var _super$updated;
     if (this.hass && this.entityIds) {
+      // Check if currently playing track has changed and refresh "Next Up" if active
+      if (this._upcomingFilterActive) {
+        const currentPlaybackEntity = this.currentActivePlaybackEntityId;
+        if (currentPlaybackEntity) {
+          var _currentState$attribu;
+          const currentState = this.hass.states[currentPlaybackEntity];
+          const currentMediaTitle = currentState === null || currentState === void 0 || (_currentState$attribu = currentState.attributes) === null || _currentState$attribu === void 0 ? void 0 : _currentState$attribu.media_title;
+          if (currentMediaTitle && currentMediaTitle !== this._lastMediaTitle) {
+            this._lastMediaTitle = currentMediaTitle;
+            // Show loading state immediately
+            this._searchLoading = true;
+            this.requestUpdate();
+            // Clear cache and refresh with 4 second delay
+            const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+            delete this._searchResultsByType[cacheKey];
+            setTimeout(() => {
+              this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
+            }, 4000);
+          }
+        }
+      }
+
       // Update timestamps for playing entities
       this.entityIds.forEach((id, idx) => {
         const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
@@ -13049,6 +14132,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Add grab scroll to chip rows after update/render
     this._addGrabScroll('.chip-row');
     this._addGrabScroll('.action-chip-row');
+    this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
 
     // Autofocus the in-sheet search box when opening the search in entity options
@@ -13091,7 +14175,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
           }
         }
         // attach swipe gesture once
-        this._attachSearchSwipe();
+        // this._attachSearchSwipe(); // Disabled on mobile due to false positives
       }, 200);
     }
     // When the source‑list sheet opens, make sure the overlay scrolls to the top
@@ -13214,6 +14298,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const action = this.config.actions[idx];
     if (!action) return;
     if (action.menu_item) {
+      // Enable quick-dismiss mode for menu_item actions
+      this._quickMenuInvoke = true;
       switch (action.menu_item) {
         case "more-info":
           this._openMoreInfo();
@@ -13427,14 +14513,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
           // Press the associated favorite button entity
           const favoriteButtonEntity = this._getFavoriteButtonEntity();
           if (favoriteButtonEntity) {
-            var _this$hass14, _maState$attributes5;
+            var _this$hass14, _maState$attributes8;
             this.hass.callService("button", "press", {
               entity_id: favoriteButtonEntity
             });
 
             // Immediately mark as favorited when button is pressed
             const maState = (_this$hass14 = this.hass) === null || _this$hass14 === void 0 || (_this$hass14 = _this$hass14.states) === null || _this$hass14 === void 0 ? void 0 : _this$hass14[targetEntity];
-            if (maState !== null && maState !== void 0 && (_maState$attributes5 = maState.attributes) !== null && _maState$attributes5 !== void 0 && _maState$attributes5.media_content_id) {
+            if (maState !== null && maState !== void 0 && (_maState$attributes8 = maState.attributes) !== null && _maState$attributes8 !== void 0 && _maState$attributes8.media_content_id) {
               // Initialize cache if needed
               if (!this._favoriteStatusCache) {
                 this._favoriteStatusCache = {};
@@ -13795,10 +14881,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _mainState$attributes2, _mainState$attributes3, _mainState$attributes4, _mainState$attributes5, _this$currentVolumeSt2, _this$config9, _this$config0, _this$config1, _this$currentVolumeSt3, _this$currentStateObj;
+    var _this$_optimisticPlay, _this$hass18, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass19, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
+      this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
     }
     const showChipRow = this.config.show_chip_row || "auto";
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
@@ -13814,7 +14902,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Check if it's an entity ID
       if (this.hass.states[this.config.idle_image]) {
         const sensorState = this.hass.states[this.config.idle_image];
-        idleImageUrl = sensorState.attributes.entity_picture || (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
+        idleImageUrl = sensorState.attributes.entity_picture_local || sensorState.attributes.entity_picture || (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
       }
       // Check if it's a direct URL or file path
       else if (this.config.idle_image.startsWith("http") || this.config.idle_image.startsWith("/")) {
@@ -13848,9 +14936,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
     if (prevMa === "playing" && this._lastMaState !== "playing") {
+      var _this$config1;
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: actualResolvedMaId,
-        until: Date.now() + 86400000 // 24 hours - effectively permanent
+        until: Date.now() + ttl
       };
     }
     // Also set linger when MA entity is paused (regardless of previous state) to ensure UI stays on MA
@@ -13858,12 +14948,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
     const shouldSetLinger = prevMa === "playing" && this._lastMaState === "paused" && ((_this$_lastPlayingEnt9 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt9 === void 0 ? void 0 : _this$_lastPlayingEnt9[idx]) === actualResolvedMaId || prevMain === "playing" && this._lastMainState === "paused" && ((_this$_lastPlayingEnt0 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt0 === void 0 ? void 0 : _this$_lastPlayingEnt0[idx]) === (mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.entity_id);
     if (shouldSetLinger) {
+      var _this$config10;
       // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
       const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: lingerEntityId,
         // Use cached MA entity or last controlled entity
-        until: Date.now() + 86400000 // 24 hours - effectively permanent
+        until: Date.now() + ttl
       };
     }
     // If MA resumed playing, clear linger
@@ -13899,8 +14991,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
         effState = this._optimisticPlayback.state;
       }
     }
-    const shuffleActive = !!finalPlaybackStateObj.attributes.shuffle;
-    const repeatActive = finalPlaybackStateObj.attributes.repeat && finalPlaybackStateObj.attributes.repeat !== "off";
+    const shuffleActive = !!(finalPlaybackStateObj !== null && finalPlaybackStateObj !== void 0 && (_finalPlaybackStateOb = finalPlaybackStateObj.attributes) !== null && _finalPlaybackStateOb !== void 0 && _finalPlaybackStateOb.shuffle);
+    const repeatActive = (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb2 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb2 === void 0 ? void 0 : _finalPlaybackStateOb2.repeat) && (finalPlaybackStateObj === null || finalPlaybackStateObj === void 0 || (_finalPlaybackStateOb3 = finalPlaybackStateObj.attributes) === null || _finalPlaybackStateOb3 === void 0 ? void 0 : _finalPlaybackStateOb3.repeat) !== "off";
 
     // Artwork and idle logic
     // When idle_timeout_ms=0, always show content regardless of idle state
@@ -13914,12 +15006,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Details
     // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
     const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
-    const title = shouldShowDetails ? finalPlaybackStateObj.attributes.media_title || (mainState === null || mainState === void 0 || (_mainState$attributes2 = mainState.attributes) === null || _mainState$attributes2 === void 0 ? void 0 : _mainState$attributes2.media_title) || "" : "";
-    const artist = shouldShowDetails ? finalPlaybackStateObj.attributes.media_artist || finalPlaybackStateObj.attributes.media_series_title || finalPlaybackStateObj.attributes.app_name || (mainState === null || mainState === void 0 || (_mainState$attributes3 = mainState.attributes) === null || _mainState$attributes3 === void 0 ? void 0 : _mainState$attributes3.media_artist) || (mainState === null || mainState === void 0 || (_mainState$attributes4 = mainState.attributes) === null || _mainState$attributes4 === void 0 ? void 0 : _mainState$attributes4.media_series_title) || (mainState === null || mainState === void 0 || (_mainState$attributes5 = mainState.attributes) === null || _mainState$attributes5 === void 0 ? void 0 : _mainState$attributes5.app_name) || "" : "";
-    let pos = finalPlaybackStateObj.attributes.media_position || 0;
-    const duration = finalPlaybackStateObj.attributes.media_duration || 0;
-    if (isPlaying) {
-      const updatedAt = finalPlaybackStateObj.attributes.media_position_updated_at ? Date.parse(finalPlaybackStateObj.attributes.media_position_updated_at) : Date.parse(finalPlaybackStateObj.last_changed);
+    // For display-only fields, fall back to mainState when playback state is unavailable
+    const displaySource = finalPlaybackStateObj || mainState;
+    const title = shouldShowDetails ? (displaySource === null || displaySource === void 0 || (_displaySource$attrib = displaySource.attributes) === null || _displaySource$attrib === void 0 ? void 0 : _displaySource$attrib.media_title) || "" : "";
+    const artist = shouldShowDetails ? (displaySource === null || displaySource === void 0 || (_displaySource$attrib2 = displaySource.attributes) === null || _displaySource$attrib2 === void 0 ? void 0 : _displaySource$attrib2.media_artist) || (displaySource === null || displaySource === void 0 || (_displaySource$attrib3 = displaySource.attributes) === null || _displaySource$attrib3 === void 0 ? void 0 : _displaySource$attrib3.media_series_title) || (displaySource === null || displaySource === void 0 || (_displaySource$attrib4 = displaySource.attributes) === null || _displaySource$attrib4 === void 0 ? void 0 : _displaySource$attrib4.app_name) || "" : "";
+    let pos = (displaySource === null || displaySource === void 0 || (_displaySource$attrib5 = displaySource.attributes) === null || _displaySource$attrib5 === void 0 ? void 0 : _displaySource$attrib5.media_position) || 0;
+    const duration = (displaySource === null || displaySource === void 0 || (_displaySource$attrib6 = displaySource.attributes) === null || _displaySource$attrib6 === void 0 ? void 0 : _displaySource$attrib6.media_duration) || 0;
+    if (isPlaying && displaySource) {
+      var _displaySource$attrib7;
+      const updatedAt = (_displaySource$attrib7 = displaySource.attributes) !== null && _displaySource$attrib7 !== void 0 && _displaySource$attrib7.media_position_updated_at ? Date.parse(displaySource.attributes.media_position_updated_at) : displaySource.last_changed ? Date.parse(displaySource.last_changed) : Date.now();
       const elapsed = (Date.now() - updatedAt) / 1000;
       pos += elapsed;
     }
@@ -13977,9 +15072,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.fallback_artwork) || null,
+      artworkHostname: ((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass20;
         const obj = this._findEntityObjByAnyId(id);
@@ -14069,11 +15164,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
               ></div>
               ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
-                ${collapsed && artworkUrl ? x`
+                ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
                     <img class="collapsed-artwork" src="${artworkUrl}" 
-                         style="${this._getCollapsedArtworkStyle()}" />
+                         style="${this._getCollapsedArtworkStyle()}" 
+                         onerror="this.style.display='none'" />
                   </div>
                 ` : E}
                 ${!collapsed ? x`<div class="card-artwork-spacer"></div>` : E}
@@ -14097,7 +15193,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     </svg>
                   </div>
                 ` : E}
-                <div class="details">
+                <div class="details" style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
                   <div class="title">
                     ${shouldShowDetails ? title : ""}
                   </div>
@@ -14116,7 +15212,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       seekEnabled: true,
       onSeek: e => this._onProgressBarClick(e),
       collapsed: false,
-      accent: this._customAccent
+      accent: this._customAccent,
+      style: this._showEntityOptions ? "visibility:hidden" : ""
     }) : renderProgressBar({
       progress: 0,
       seekEnabled: false,
@@ -14127,10 +15224,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 ${(collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
-      accent: this._customAccent
+      accent: this._customAccent,
+      style: this._showEntityOptions ? "visibility:hidden" : ""
     }) : E}
                 ${!hideControlsNow ? x`
-                ${renderControlsRow({
+                  <div style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
+                    ${renderControlsRow({
       stateObj: playbackStateObj,
       showStop: this._shouldShowStopButton(playbackStateObj),
       shuffleActive,
@@ -14142,7 +15241,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       hiddenControls: this._getHiddenControlsForCurrentEntity()
     })}
 
-                ${renderVolumeRow({
+                    ${renderVolumeRow({
       isRemoteVolumeEntity,
       showSlider,
       vol,
@@ -14154,15 +15253,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
       onVolumeStep: dir => this._onVolumeStep(dir),
       onMuteToggle: () => this._onMuteToggle(),
       moreInfoMenu: x`
-                    <div class="more-info-menu">
-                      <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                        <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
-                      </button>
-                    </div>
-                  `
+                        <div class="more-info-menu">
+                          <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                            <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                          </button>
+                        </div>
+                      `
     })}
+                  </div>
                 ` : E}
-                ${hideControlsNow ? x`
+                ${hideControlsNow && !this._showEntityOptions ? x`
                   <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                     <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                       <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
@@ -14173,10 +15273,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
             </div>
           </div>
           ${this._showEntityOptions ? x`
-          <div class="entity-options-overlay" @click=${e => this._closeEntityOptions(e)}>
-            <div class="entity-options-sheet" @click=${e => e.stopPropagation()}>
+          <div class="entity-options-overlay entity-options-overlay-opening" @click=${e => this._closeEntityOptions(e)}>
+            <div class="entity-options-container entity-options-container-opening">
+              <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
               ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities ? x`
-                <div class="entity-options-menu" style="display:flex; flex-direction:column; margin-top:auto; margin-bottom:20px;">
+                <div class="entity-options-menu" style="display:flex; flex-direction:column;">
                   <button class="entity-options-item" @click=${() => {
       const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
       if (resolvedEntities.length === 1) {
@@ -14292,7 +15393,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 <div class="entity-options-search" style="margin-top:12px;">
                   ${this._searchBreadcrumb ? x`
                     <div class="entity-options-search-breadcrumb">
-                      <button class="entity-options-item" @click=${() => this._goBackInSearch()} style="margin-bottom:8px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => {
+      if (this._quickMenuInvoke) {
+        this._dismissWithAnimation();
+      } else {
+        this._goBackInSearch();
+      }
+    }} style="margin-bottom:8px;">&larr; Back</button>
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
                   ` : E}
@@ -14312,6 +15419,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         e.preventDefault();
         // Clear recently played filter when user initiates search
         this._recentlyPlayedFilterActive = false;
+        this._upcomingFilterActive = false;
         this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
       } else if (e.key === "Escape") {
         e.preventDefault();
@@ -14327,6 +15435,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                       @click=${() => {
       // Clear recently played filter when user initiates search
       this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
       this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
     }}
                       ?disabled=${this._searchLoading}>
@@ -14335,20 +15444,30 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
-                      @click=${() => this._hideSearchSheetInOptions()}>
+                      @click=${() => {
+      if (this._quickMenuInvoke) {
+        this._dismissWithAnimation();
+      } else {
+        this._hideSearchSheetInOptions();
+      }
+    }}>
                       Cancel
                     </button>
                   </div>
                   <!-- FILTER CHIPS -->
-                  ${(() => {
+                  ${(_this$entityObjs4 => {
       // Get all available media classes from cached results
       const allClasses = new Set();
       Object.values(this._searchResultsByType).forEach(results => {
         results.forEach(item => {
-          if (item.media_class) allClasses.add(item.media_class);
+          if (item && item.media_class) {
+            allClasses.add(item.media_class);
+          }
         });
       });
-      const classes = Array.from(allClasses);
+      const currEntityObj = ((_this$entityObjs4 = this.entityObjs) === null || _this$entityObjs4 === void 0 ? void 0 : _this$entityObjs4[this._selectedIndex]) || null;
+      const hiddenSet = new Set((currEntityObj === null || currEntityObj === void 0 ? void 0 : currEntityObj.hidden_filter_chips) || []);
+      const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
       const filter = this._searchMediaClassFilter || "all";
 
       // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
@@ -14435,6 +15554,28 @@ class YetAnotherMediaPlayerCard extends i$1 {
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
                       </button>
+                      ${this._isMusicAssistantEntity() ? x`
+                        <button
+                            class="button${this._upcomingFilterActive ? ' active' : ''}"
+                            style="
+                              background: none;
+                              border: none;
+                              font-size: 1.2em;
+                              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                              padding: 4px;
+                              border-radius: 50%;
+                              transition: all 0.2s ease;
+                              margin-right: 8px;
+                              opacity: ${this._searchAttempted ? '1' : '0.5'};
+                            "
+                            @click=${this._searchAttempted ? () => {
+      this._toggleUpcomingFilter();
+    } : () => {}}
+                            title="Next Up"
+                          >
+                            <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+                        </button>
+                      ` : E}
                     </div>
                   ` : E}
                   
@@ -14450,13 +15591,21 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Always render paddedResults, even before first search
       return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
                             <!-- EXISTING non‑placeholder row markup -->
-                            <div class="entity-options-search-result">
-                              <img
-                                class="entity-options-search-thumb"
-                                src=${item.thumbnail}
-                                alt=${item.title}
-                                style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
-                              />
+                            <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''}">
+                              ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x`
+                                <img
+                                  class="entity-options-search-thumb"
+                                  src=${item.thumbnail}
+                                  alt=${item.title}
+                                  style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
+                                  onerror="this.style.display='none'"
+                                />
+                              ` : x`
+                                <div class="entity-options-search-thumb-placeholder" 
+                                     style="height:38px;width:38px;border-radius:5px;margin-right:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
+                                  <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
+                                </div>
+                              `}
                               <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
                                       @touchstart=${e => this._handleSearchResultTouch(item, e)}
@@ -14465,20 +15614,74 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                   ${item.title}
                                 </span>
                                 <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
-                                  ${item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : ""}
+                                  ${(() => {
+        // Prefer artist when available for tracks/albums and special filters
+        const isTrackOrAlbum = this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album';
+        const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
+        const isUpcoming = !!this._upcomingFilterActive;
+        if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming) && item.artist) {
+          return item.artist;
+        }
+        // Otherwise show media class as before
+        return item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : "";
+      })()}
                                 </span>
                               </div>
                               <div class="entity-options-search-buttons">
                                 <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
                                   ▶
                                 </button>
-                                <button class="entity-options-search-queue" @click=${e => {
+                                ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? x`
+                                  <button class="entity-options-search-queue" @click=${e => {
         e.preventDefault();
         e.stopPropagation();
         this._queueMediaFromSearch(item);
       }} title="Add to Queue">
-                                  <ha-icon icon="mdi:playlist-play"></ha-icon>
-                                </button>
+                                    <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                  </button>
+                                ` : x`
+                                  <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->
+                                  ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? x`
+                                    <div class="queue-controls">
+                                      <button class="queue-btn queue-btn-up" @click=${e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._moveQueueItemUp(item.queue_item_id);
+      }} title="Move Up">
+                                        <ha-icon icon="mdi:arrow-up"></ha-icon>
+                                      </button>
+                                      <button class="queue-btn queue-btn-down" @click=${e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._moveQueueItemDown(item.queue_item_id);
+      }} title="Move Down">
+                                        <ha-icon icon="mdi:arrow-down"></ha-icon>
+                                      </button>
+                                      <button class="queue-btn queue-btn-next" @click=${e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._moveQueueItemNext(item.queue_item_id);
+      }} title="Move to Next">
+                                        <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
+                                      </button>
+                                      <button class="queue-btn queue-btn-remove" @click=${e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._removeQueueItem(item.queue_item_id);
+      }} title="Remove from Queue">
+                                        <ha-icon icon="mdi:close"></ha-icon>
+                                      </button>
+                                    </div>
+                                  ` : x`
+                                    <button class="entity-options-search-queue" @click=${e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._queueMediaFromSearch(item);
+      }} title="Add to Queue">
+                                      <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                    </button>
+                                  `}
+                                `}
                               </div>
                             </div>
                           ` : x`
@@ -14489,7 +15692,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   </div>
                 </div>
               ` : this._showGrouping ? x`
-                <button class="entity-options-item" @click=${() => this._closeGrouping()} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => {
+      if (this._quickMenuInvoke) {
+        this._dismissWithAnimation();
+      } else {
+        this._closeGrouping();
+      }
+    }} style="margin-bottom:14px;">&larr; Back</button>
                 ${(_masterState$attribut => {
       const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
       const masterState = this.hass.states[masterGroupId];
@@ -14505,7 +15714,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                         ` : x`<span></span>`}
                         <button class="entity-options-item"
                           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 0 2px 8px;">
+                          style="color:#fff; background:none; border:none; font-size:1.03em; cursor:pointer; padding:0 12px 2px 8px;">
                           ${groupedAny ? "Ungroup All" : "Group All"}
                         </button>
                       </div>
@@ -14567,7 +15776,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const others = groupPlayerIds.filter(item => item.id !== masterId);
       const sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
       return x`
-                      <div class="group-list-scroll" style="overflow-y: auto; max-height: 340px;">
+                      <div class="group-list-scroll">
                         ${sortedGroupIds.map(item => {
         var _displayVolumeState$a;
         const id = item.id;
@@ -14658,7 +15867,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // --- End new group player rows logic ---
     })()}
               ` : x`
-                <button class="entity-options-item" @click=${() => this._closeSourceList()} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item" @click=${() => {
+      if (this._quickMenuInvoke) {
+        this._dismissWithAnimation();
+      } else {
+        this._closeSourceList();
+      }
+    }} style="margin-bottom:14px;">&larr; Back</button>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => x`
@@ -14694,6 +15909,36 @@ class YetAnotherMediaPlayerCard extends i$1 {
     })}
                 </div>
               `}
+              </div>
+            </div>
+            <!-- Persistent Media Controls Section - Outside Scrollable Area -->
+            <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
+              <div class="persistent-controls-artwork">
+                ${(() => {
+      // Use the same entity resolution as the main card
+      const playbackStateObj = this.currentPlaybackStateObj;
+      const mainState = this.currentStateObj;
+      const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
+      return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x`
+                    <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
+                  ` : x`
+                    <div class="persistent-artwork-placeholder">
+                      <ha-icon icon="mdi:music"></ha-icon>
+                    </div>
+                  `;
+    })()}
+              </div>
+              <div class="persistent-controls-buttons">
+                <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
+                  <ha-icon icon="mdi:skip-previous"></ha-icon>
+                </button>
+                <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
+                  <ha-icon icon=${((_this$currentPlayback = this.currentPlaybackStateObj) === null || _this$currentPlayback === void 0 ? void 0 : _this$currentPlayback.state) === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+                </button>
+                <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
+                  <ha-icon icon="mdi:skip-next"></ha-icon>
+                </button>
+              </div>
             </div>
           </div>
         ` : E}
@@ -14713,11 +15958,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
       onSearch: () => {
         // Clear recently played filter when user initiates search
         this._recentlyPlayedFilterActive = false;
+        this._upcomingFilterActive = false;
         this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
       },
       onPlay: item => this._playMediaFromSearch(item),
       onQueue: item => this._queueMediaFromSearch(item),
-      showQueueSuccess: this._showQueueSuccessMessage
+      showQueueSuccess: this._showQueueSuccessMessage,
+      upcomingFilterActive: this._upcomingFilterActive
     }) : E}
           ${this._showQueueSuccessMessage ? x`
             <div style="
@@ -14745,11 +15992,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
       `;
   }
   _updateIdleState() {
-    var _this$hass25;
-    // Check if the active playback entity is playing (not just main entity)
-    const activePlaybackEntityId = this._getActivePlaybackEntityId();
-    const activePlaybackState = activePlaybackEntityId ? (_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[activePlaybackEntityId] : null;
-    const isAnyPlaying = (activePlaybackState === null || activePlaybackState === void 0 ? void 0 : activePlaybackState.state) === "playing";
+    var _this$hass25, _this$hass26;
+    // Consider both main and Music Assistant entities so we can wake from idle
+    // even if the active selection is frozen while idle.
+    const mainId = this.currentEntityId;
+    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    const mainState = mainId ? (_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[mainId] : null;
+    const maState = maId ? (_this$hass26 = this.hass) === null || _this$hass26 === void 0 || (_this$hass26 = _this$hass26.states) === null || _this$hass26 === void 0 ? void 0 : _this$hass26[maId] : null;
+    const isAnyPlaying = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing" || (maState === null || maState === void 0 ? void 0 : maState.state) === "playing";
     if (isAnyPlaying) {
       // Became active, clear timer and set not idle
       if (this._idleTimeout) clearTimeout(this._idleTimeout);
@@ -15074,6 +16324,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
     }
+    // Unsubscribe from queue update events
+    this._unsubscribeFromQueueUpdates();
     (_super$disconnectedCa = super.disconnectedCallback) === null || _super$disconnectedCa === void 0 || _super$disconnectedCa.call(this);
     if (this._progressTimer) {
       clearInterval(this._progressTimer);
@@ -15094,28 +16346,71 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
   }
-  // Entity options overlay handlers
-  _closeEntityOptions() {
-    if (this._showGrouping) {
-      // Close the grouping sheet and the overlay
-      this._showGrouping = false;
-      this._showEntityOptions = false;
-      // Auto-select the chip for the group just created (same as _closeGrouping logic)
-      const groups = this.groupedSortedEntityIds;
-      const curId = this.currentEntityId;
-      const group = groups.find(g => g.includes(curId));
-      if (group && group.length > 1) {
-        const master = this._getActualGroupMaster(group);
-        const idx = this.entityIds.indexOf(master);
-        if (idx >= 0) this._selectedIndex = idx;
-      }
-      this.requestUpdate();
-    } else {
+  // Helper method to apply closing animations
+  _applyClosingAnimations() {
+    const overlay = this.renderRoot.querySelector('.entity-options-overlay');
+    const container = this.renderRoot.querySelector('.entity-options-container');
+    const sheet = this.renderRoot.querySelector('.entity-options-sheet');
+    if (overlay) {
+      overlay.classList.remove('entity-options-overlay-opening');
+      overlay.classList.add('entity-options-overlay-closing');
+    }
+    if (container) {
+      container.classList.remove('entity-options-container-opening');
+      container.classList.add('entity-options-container-closing');
+    }
+    if (sheet) {
+      sheet.classList.remove('entity-options-sheet-opening');
+      sheet.classList.add('entity-options-sheet-closing');
+    }
+  }
+
+  // Helper method for immediate dismissals with animation
+  _dismissWithAnimation() {
+    this._applyClosingAnimations();
+    setTimeout(() => {
       this._showEntityOptions = false;
       this._showGrouping = false;
       this._showSourceList = false;
+      this._showSearchInSheet = false;
+      this._showResolvedEntities = false;
+      this._quickMenuInvoke = false;
       this.requestUpdate();
-    }
+    }, 200);
+  }
+
+  // Entity options overlay handlers
+  _closeEntityOptions() {
+    // Apply closing animations
+    this._applyClosingAnimations();
+
+    // Wait for animation to complete before hiding
+    setTimeout(() => {
+      if (this._showGrouping) {
+        // Close the grouping sheet and the overlay
+        this._showGrouping = false;
+        this._showEntityOptions = false;
+        // Auto-select the chip for the group just created (same as _closeGrouping logic)
+        const groups = this.groupedSortedEntityIds;
+        const curId = this.currentEntityId;
+        const group = groups.find(g => g.includes(curId));
+        if (group && group.length > 1) {
+          const master = this._getActualGroupMaster(group);
+          const idx = this.entityIds.indexOf(master);
+          if (idx >= 0) this._selectedIndex = idx;
+        }
+        this.requestUpdate();
+      } else {
+        this._showEntityOptions = false;
+        this._showGrouping = false;
+        this._showSourceList = false;
+        this._showSearchInSheet = false;
+        this._showResolvedEntities = false;
+        this.requestUpdate();
+      }
+      // Clear quick menu flag on any overlay close
+      this._quickMenuInvoke = false;
+    }, 200); // Match the longest animation duration
   }
   async _openEntityOptions() {
     // Resolve all templates before opening the menu so feature checking works correctly
