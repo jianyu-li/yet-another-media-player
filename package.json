@@ -14,12 +14,10 @@
     "@babel/core": "^7.28.4",
     "@babel/plugin-transform-optional-chaining": "^7.27.1",
     "@babel/preset-env": "^7.28.3",
-    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-babel": "^6.1.0",
     "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "archiver": "^7.0.1",
-    "rollup": "^4.52.0",
-    "rollup-plugin-zip": "^1.0.3"
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "rollup": "^4.52.4"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
