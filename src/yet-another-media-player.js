@@ -3968,6 +3968,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
               <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
               ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? html`
                 <div class="entity-options-menu" style="display:flex; flex-direction:column;">
+                  <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
+                    Close
+                  </button>
+                  <div class="entity-options-divider"></div>
                   <button class="entity-options-item" @click=${() => { 
                     const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
                     if (resolvedEntities.length === 1) {
@@ -4044,10 +4048,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       return nothing;
                     })()
                   }
-                  <button class="entity-options-item" @click=${() => this._closeEntityOptions()}>Close</button>
                 </div>
               ` : this._showTransferQueue ? html`
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }}>
+                  Back
+                </button>
+                <div class="entity-options-divider"></div>
                 <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
                 ${
                   (() => {
@@ -4089,10 +4095,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 ` : nothing}
               ` : this._showResolvedEntities ? html`
-                <button class="entity-options-item" @click=${() => {
+                <button class="entity-options-item close-item" @click=${() => {
                   this._showResolvedEntities = false;
                   this.requestUpdate();
-                }} style="margin-bottom:14px;">&larr; Back</button>
+                }}>
+                  Back
+                </button>
+                <div class="entity-options-divider"></div>
                 <div class="entity-options-resolved-entities" style="margin-top:12px;">
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
@@ -4136,9 +4145,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </div>
               ` : this._showSearchInSheet ? html`
                 <div class="entity-options-search" style="margin-top:12px;">
+                  ${this._searchHierarchy.length > 0 ? html`
+                    <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._goBackInSearch(); } }}>
+                      Back
+                    </button>
+                    <div class="entity-options-divider"></div>
+                  ` : nothing}
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._goBackInSearch(); } }} style="margin-bottom:8px;">&larr; Back</button>
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
                   ` : nothing}
@@ -4402,7 +4416,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 </div>
               ` : this._showGrouping ? html`
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }} style="margin-bottom:14px;">&larr; Back</button>
+                <div class="grouping-header">
+                  <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
+                    Back
+                  </button>
+                </div>
                 ${
                   (() => {
                     const masterGroupId = this._getGroupingEntityIdByIndex(this._selectedIndex);
@@ -4576,7 +4594,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     // --- End new group player rows logic ---
                   })()}
               ` : html`
-                <button class="entity-options-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }} style="margin-bottom:14px;">&larr; Back</button>
+                <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
+                  Back
+                </button>
+                <div class="entity-options-divider"></div>
                 <div class="entity-options-sheet source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => html`
