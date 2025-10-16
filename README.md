@@ -23,6 +23,7 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 - Add background image sensor for when not in use
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
+- Transfer queue between compatible Music Assistant players directly from the card menu
 - Action buttons run any Home Assistant service or script 
   - Pass currently selected entity to a script
 - Use "current" for the entity_id to reference the currently selected media player ([see example below](https://github.com/jianyu-li/yet-another-media-player#custom-actions))
@@ -61,6 +62,7 @@ Below you will find a list of all configuration options.
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
+| `transfer_queue`           | menu action  | No           | —           | Adds a "Transfer Queue" menu action for Music Assistant entities (see below)                   |
 | `idle_image`               | image/camera/url | No           | —           | Background image when player is idle (supports local files, cameras, or URLs)                   |
 | `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |
@@ -159,6 +161,10 @@ actions:
 always_collapsed: true
 expand_on_search: true
 ```
+
+### Transfer Queue
+
+The card can surface a **Transfer Queue** menu option for Music Assistant players. When the active entity supports queue transfers, selecting *Transfer Queue* opens a list of compatible targets and the queue moves instantly to the chosen player. The option only appears when a Music Assistant entity with a queue is selected.
 
 ### Custom Actions
 You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
