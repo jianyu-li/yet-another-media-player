@@ -307,6 +307,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showQueueSuccessMessage = false;
     // Quick-dismiss mode for action-triggered menu items
     this._quickMenuInvoke = false;
+    // Track collapsed layout height for idle mode
+    this._collapsedBaselineHeight = 220;
+    this._lastRenderedCollapsed = false;
+    this._lastRenderedHideControls = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -2780,6 +2784,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
 
+    if (this._lastRenderedCollapsed && !this._lastRenderedHideControls) {
+      const contentEl = this.renderRoot?.querySelector('.card-lower-content');
+      if (contentEl) {
+        const measured = contentEl.offsetHeight;
+        if (measured && measured > 0) {
+          this._collapsedBaselineHeight = measured;
+        }
+      }
+    }
+
     // Autofocus the in-sheet search box when opening the search in entity options
     if (this._showSearchInSheet) {
       // Use a longer delay when expand on search is enabled to allow for card expansion
@@ -3538,6 +3552,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       
       const showChipRow = this.config.show_chip_row || "auto";
+      const hasMultipleEntities = this.entityObjs.length > 1;
+      const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
+      const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
+      const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
       const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
 
@@ -3731,6 +3749,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._lastArtworkUrl = artworkUrl;
       }
 
+      const idleMinHeight = hideControlsNow
+        ? (collapsed ? (this._collapsedBaselineHeight || 220) : 325)
+        : null;
+
+      this._lastRenderedCollapsed = collapsed;
+      this._lastRenderedHideControls = hideControlsNow;
+
       return html`
         <ha-card class="yamp-card">
           <div
@@ -3738,7 +3763,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             data-match-theme="${String(this.config.match_theme === true)}"
             class="${shouldDimIdle ? 'dim-idle' : ''}"
           >
-            ${(this.entityObjs.length > 1 || showChipRow === "always") ? html`
+            ${showChipsInline ? html`
                 <div class="chip-row">
                   ${renderChipRow({
                     groupedSortedEntityIds: this.groupedSortedEntityIds,
@@ -3799,7 +3824,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     },
                     isIdle: this._isIdle,
                     hass: this.hass,
-                    onChipClick: (idx) => this._onChipClick(idx),
+                    onChipClick: (idx) => {
+                      this._onChipClick(idx);
+                    },
                     onIconClick: (idx, e) => {
                       const entityId = this.entityIds[idx];
                       const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
@@ -3822,7 +3849,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               actions: this.config.actions,
               onActionChipClick: (idx) => this._onActionChipClick(idx)
             })}
-            <div class="card-lower-content-container">
+            <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
                 style="
                   background-image: ${
@@ -3832,7 +3859,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         ? `url('${artworkUrl}')`
                         : "none"
                   };
-                  min-height: ${collapsed ? (hideControlsNow ? "120px" : "0px") : "320px"};
+                  min-height: ${collapsed
+                    ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : "0px")
+                    : (hideControlsNow ? "350px" : "350px")};
                   background-size: cover;
                   background-position: top center;
                   background-repeat: no-repeat;
@@ -3841,7 +3870,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 "
               ></div>
               ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
+                if (!hideControlsNow) return '';
+                return collapsed
+                  ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
+                  : 'min-height: 350px;';
+              })()}">
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? html`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
@@ -3874,7 +3908,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     </svg>
                   </div>
                 ` : nothing}
-                <div class="details" style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
+                <div class="details" style="${[
+                  this._showEntityOptions ? 'visibility:hidden' : '',
+                  (!shouldShowDetails ? 'min-height:48px;opacity:0' : '')
+                ].filter(Boolean).join(';')}">
                   <div class="title">
                     ${shouldShowDetails ? title : ""}
                   </div>
@@ -3952,22 +3989,94 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     })}
                   </div>
                 ` : nothing}
-                ${(hideControlsNow && !this._showEntityOptions) ? html`
-                  <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
-                    <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                      <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
-                    </button>
-                  </div>
-                ` : nothing}
+            ${(hideControlsNow && !this._showEntityOptions) ? html`
+              <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
+                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                  <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                </button>
               </div>
-            </div>
+            ` : nothing}
+            ${showChipsInMenu && !this._showEntityOptions ? html`
+              <div class="in-menu-active-label">${activeChipName}</div>
+            ` : nothing}
           </div>
-          ${this._showEntityOptions ? html`
-          <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
-            <div class="entity-options-container entity-options-container-opening">
-              <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
+        </div>
+      </div>
+      ${this._showEntityOptions ? html`
+      <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
+        <div class="entity-options-container entity-options-container-opening">
+          <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
+            ${showChipsInMenu ? html`
+                <div class="entity-options-chips-wrapper" @click=${(e) => e.stopPropagation()}>
+                <div class="chip-row entity-options-chips-strip">
+                  ${renderChipRow({
+                    groupedSortedEntityIds: this.groupedSortedEntityIds,
+                    entityIds: this.entityIds,
+                    selectedEntityId: this.currentEntityId,
+                    pinnedIndex: this._pinnedIndex,
+                    holdToPin: this._holdToPin,
+                    getChipName: (id) => this.getChipName(id),
+                    getActualGroupMaster: (group) => this._getActualGroupMaster(group),
+                    getIsChipPlaying: (id, isSelected) => {
+                      const obj = this._findEntityObjByAnyId(id);
+                      const mainId = obj?.entity_id || id;
+                      const idx = this.entityIds.indexOf(mainId);
+                      if (idx < 0) return isSelected ? !this._isIdle : false;
+                      const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+                      const playbackState = this.hass?.states?.[playbackEntityId];
+                      const anyPlaying = playbackState?.state === 'playing';
+                      return isSelected ? !this._isIdle : anyPlaying;
+                    },
+                    getChipArt: (id) => {
+                      const obj = this._findEntityObjByAnyId(id);
+                      const mainId = obj?.entity_id || id;
+                      const idx = this.entityIds.indexOf(mainId);
+                      if (idx < 0) return null;
+                      const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+                      const playbackState = this.hass?.states?.[playbackEntityId];
+                      const mainState = this.hass?.states?.[mainId];
+                      const playbackArtwork = this._getArtworkUrl(playbackState);
+                      const mainArtwork = this._getArtworkUrl(mainState);
+                      return (playbackArtwork || mainArtwork)?.url || null;
+                    },
+                    getIsMaActive: (id) => {
+                      const obj = this._findEntityObjByAnyId(id);
+                      const mainId = obj?.entity_id || id;
+                      const idx = this.entityIds.indexOf(mainId);
+                      if (idx < 0) return false;
+                      const entityObj = this.entityObjs[idx];
+                      if (!entityObj?.music_assistant_entity) return false;
+                      const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+                      const playbackState = this.hass?.states?.[playbackEntityId];
+                      return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) &&
+                        playbackState?.state === 'playing';
+                    },
+                    isIdle: this._isIdle,
+                    hass: this.hass,
+                    artworkHostname: this.config?.artwork_hostname || '',
+                    mediaArtworkOverrides: this.config?.media_artwork_overrides || [],
+                    fallbackArtwork: this.config?.fallback_artwork || null,
+                    onChipClick: (idx) => this._onChipClick(idx),
+                    onIconClick: (idx, e) => {
+                      const entityId = this.entityIds[idx];
+                      const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+                      if (group && group.length > 1) {
+                        this._selectedIndex = idx;
+                        this._showEntityOptions = true;
+                        this._showGrouping = true;
+                        this.requestUpdate();
+                      }
+                    },
+                    onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
+                    onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
+                    onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
+                    onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx),
+                  })}
+                </div>
+              </div>
+            ` : nothing}
               ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? html`
-                <div class="entity-options-menu" style="display:flex; flex-direction:column;">
+                <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''}" style="display:flex; flex-direction:column;">
                   <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
                     Close
                   </button>
@@ -4791,7 +4900,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             select: {
               options: [
                 { value: "auto", label: "Auto" },
-                { value: "always", label: "Always" }
+                { value: "always", label: "Always" },
+                { value: "in_menu", label: "In Menu" }
               ]
             }
           },
@@ -5182,6 +5292,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     this._showEntityOptions = true;
     this.requestUpdate();
+    this.updateComplete.then(() => {
+      const strip = this.renderRoot?.querySelector('.entity-options-chips-strip');
+      if (strip) {
+        strip.scrollLeft = 0;
+      }
+    });
   }
 
   // Deprecated: _triggerMoreInfo is replaced by _openMoreInfo for clarity.
