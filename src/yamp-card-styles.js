@@ -1292,8 +1292,10 @@ export const yampCardStyles = css`
     gap: 8px;
     flex: 1;
     justify-content: center;
-    position: relative;
-    margin-left: -9%; /* Percentage-based offset to align with menu text */
+    position: absolute;
+    left: calc(50% - 15px);
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .persistent-control-btn {
@@ -1394,6 +1396,21 @@ export const yampCardStyles = css`
     align-items: center;
     overflow-x: auto;
     padding: 6px 8px 10px 8px;
+  }
+
+  .entity-options-chips-strip .chip {
+    background: var(--chip-bg);
+    color: var(--primary-text);
+  }
+
+  .entity-options-chips-strip .chip:hover {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .entity-options-chips-strip .chip[selected] {
+    background: var(--custom-accent);
+    color: #fff;
   }
 
   .entity-options-chips-strip::-webkit-scrollbar {
@@ -1539,6 +1556,11 @@ export const yampCardStyles = css`
     scrollbar-width: none;
     -ms-overflow-style: none;
     cursor: grab;
+  }
+
+  .entity-options-sheet.chips-mode .floating-source-index {
+    top: clamp(72px, 15vh, 120px);
+    height: calc(100% - clamp(72px, 15vh, 120px));
   }
 
   .floating-source-index::-webkit-scrollbar {

@@ -2550,8 +2550,10 @@ const yampCardStyles = i$4`
     gap: 8px;
     flex: 1;
     justify-content: center;
-    position: relative;
-    margin-left: -9%; /* Percentage-based offset to align with menu text */
+    position: absolute;
+    left: calc(50% - 15px);
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .persistent-control-btn {
@@ -2652,6 +2654,21 @@ const yampCardStyles = i$4`
     align-items: center;
     overflow-x: auto;
     padding: 6px 8px 10px 8px;
+  }
+
+  .entity-options-chips-strip .chip {
+    background: var(--chip-bg);
+    color: var(--primary-text);
+  }
+
+  .entity-options-chips-strip .chip:hover {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .entity-options-chips-strip .chip[selected] {
+    background: var(--custom-accent);
+    color: #fff;
   }
 
   .entity-options-chips-strip::-webkit-scrollbar {
@@ -2797,6 +2814,11 @@ const yampCardStyles = i$4`
     scrollbar-width: none;
     -ms-overflow-style: none;
     cursor: grab;
+  }
+
+  .entity-options-sheet.chips-mode .floating-source-index {
+    top: clamp(72px, 15vh, 120px);
+    height: calc(100% - clamp(72px, 15vh, 120px));
   }
 
   .floating-source-index::-webkit-scrollbar {
@@ -12052,6 +12074,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._showQueueSuccessMessage = false;
     // Quick-dismiss mode for action-triggered menu items
     this._quickMenuInvoke = false;
+    // Track collapsed layout height for idle mode
+    this._collapsedBaselineHeight = 220;
+    this._lastRenderedCollapsed = false;
+    this._lastRenderedHideControls = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -14450,6 +14476,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._addGrabScroll('.action-chip-row');
     this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
+    if (this._lastRenderedCollapsed && !this._lastRenderedHideControls) {
+      var _this$renderRoot2;
+      const contentEl = (_this$renderRoot2 = this.renderRoot) === null || _this$renderRoot2 === void 0 ? void 0 : _this$renderRoot2.querySelector('.card-lower-content');
+      if (contentEl) {
+        const measured = contentEl.offsetHeight;
+        if (measured && measured > 0) {
+          this._collapsedBaselineHeight = measured;
+        }
+      }
+    }
 
     // Autofocus the in-sheet search box when opening the search in entity options
     if (this._showSearchInSheet) {
@@ -15379,6 +15415,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       });
       this._lastArtworkUrl = artworkUrl;
     }
+    const idleMinHeight = hideControlsNow ? collapsed ? this._collapsedBaselineHeight || 220 : 325 : null;
+    this._lastRenderedCollapsed = collapsed;
+    this._lastRenderedHideControls = hideControlsNow;
     return x`
         <ha-card class="yamp-card">
           <div
@@ -15476,11 +15515,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
       actions: this.config.actions,
       onActionChipClick: idx => this._onActionChipClick(idx)
     })}
-            <div class="card-lower-content-container" style="${!collapsed && hideControlsNow ? 'min-height:320px;' : ''}">
+            <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
                 style="
                   background-image: ${idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none"};
-                  min-height: ${collapsed ? hideControlsNow ? "120px" : "0px" : "320px"};
+                  min-height: ${collapsed ? hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : "0px" : hideControlsNow ? "350px" : "350px"};
                   background-size: cover;
                   background-position: top center;
                   background-repeat: no-repeat;
@@ -15490,9 +15529,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
               ></div>
               ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
-      if (collapsed && hideControlsNow) return 'min-height: 120px;';
-      if (!collapsed && hideControlsNow) return 'min-height: 320px;';
-      return '';
+      if (!hideControlsNow) return '';
+      return collapsed ? `min-height: ${this._collapsedBaselineHeight || 220}px;` : 'min-height: 350px;';
     })()}">
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x`
                   <div class="collapsed-artwork-container"
@@ -15523,7 +15561,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     </svg>
                   </div>
                 ` : E}
-                <div class="details" style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
+                <div class="details" style="${[this._showEntityOptions ? 'visibility:hidden' : '', !shouldShowDetails ? 'min-height:48px;opacity:0' : ''].filter(Boolean).join(';')}">
                   <div class="title">
                     ${shouldShowDetails ? title : ""}
                   </div>
@@ -15599,7 +15637,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 </button>
               </div>
             ` : E}
-            ${showChipsInMenu && !this._showEntityOptions && !this._isIdle ? x`
+            ${showChipsInMenu && !this._showEntityOptions ? x`
               <div class="in-menu-active-label">${activeChipName}</div>
             ` : E}
           </div>
@@ -15611,7 +15649,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
           <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
             ${showChipsInMenu ? x`
                 <div class="entity-options-chips-wrapper" @click=${e => e.stopPropagation()}>
-                <div class="entity-options-chips-strip">
+                <div class="chip-row entity-options-chips-strip">
                   ${renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
@@ -16903,8 +16941,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._showEntityOptions = true;
     this.requestUpdate();
     this.updateComplete.then(() => {
-      var _this$renderRoot2;
-      const strip = (_this$renderRoot2 = this.renderRoot) === null || _this$renderRoot2 === void 0 ? void 0 : _this$renderRoot2.querySelector('.entity-options-chips-strip');
+      var _this$renderRoot3;
+      const strip = (_this$renderRoot3 = this.renderRoot) === null || _this$renderRoot3 === void 0 ? void 0 : _this$renderRoot3.querySelector('.entity-options-chips-strip');
       if (strip) {
         strip.scrollLeft = 0;
       }

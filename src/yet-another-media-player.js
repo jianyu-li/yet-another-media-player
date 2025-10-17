@@ -307,6 +307,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showQueueSuccessMessage = false;
     // Quick-dismiss mode for action-triggered menu items
     this._quickMenuInvoke = false;
+    // Track collapsed layout height for idle mode
+    this._collapsedBaselineHeight = 220;
+    this._lastRenderedCollapsed = false;
+    this._lastRenderedHideControls = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -2780,6 +2784,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
 
+    if (this._lastRenderedCollapsed && !this._lastRenderedHideControls) {
+      const contentEl = this.renderRoot?.querySelector('.card-lower-content');
+      if (contentEl) {
+        const measured = contentEl.offsetHeight;
+        if (measured && measured > 0) {
+          this._collapsedBaselineHeight = measured;
+        }
+      }
+    }
+
     // Autofocus the in-sheet search box when opening the search in entity options
     if (this._showSearchInSheet) {
       // Use a longer delay when expand on search is enabled to allow for card expansion
@@ -3735,6 +3749,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._lastArtworkUrl = artworkUrl;
       }
 
+      const idleMinHeight = hideControlsNow
+        ? (collapsed ? (this._collapsedBaselineHeight || 220) : 325)
+        : null;
+
+      this._lastRenderedCollapsed = collapsed;
+      this._lastRenderedHideControls = hideControlsNow;
+
       return html`
         <ha-card class="yamp-card">
           <div
@@ -3828,7 +3849,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               actions: this.config.actions,
               onActionChipClick: (idx) => this._onActionChipClick(idx)
             })}
-            <div class="card-lower-content-container" style="${(!collapsed && hideControlsNow) ? 'min-height:320px;' : ''}">
+            <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
                 style="
                   background-image: ${
@@ -3838,7 +3859,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         ? `url('${artworkUrl}')`
                         : "none"
                   };
-                  min-height: ${collapsed ? (hideControlsNow ? "120px" : "0px") : "320px"};
+                  min-height: ${collapsed
+                    ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : "0px")
+                    : (hideControlsNow ? "350px" : "350px")};
                   background-size: cover;
                   background-position: top center;
                   background-repeat: no-repeat;
@@ -3848,9 +3871,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ></div>
               ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
-                if (collapsed && hideControlsNow) return 'min-height: 120px;';
-                if (!collapsed && hideControlsNow) return 'min-height: 320px;';
-                return '';
+                if (!hideControlsNow) return '';
+                return collapsed
+                  ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
+                  : 'min-height: 350px;';
               })()}">
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? html`
                   <div class="collapsed-artwork-container"
@@ -3884,7 +3908,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     </svg>
                   </div>
                 ` : nothing}
-                <div class="details" style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
+                <div class="details" style="${[
+                  this._showEntityOptions ? 'visibility:hidden' : '',
+                  (!shouldShowDetails ? 'min-height:48px;opacity:0' : '')
+                ].filter(Boolean).join(';')}">
                   <div class="title">
                     ${shouldShowDetails ? title : ""}
                   </div>
@@ -3969,7 +3996,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </button>
               </div>
             ` : nothing}
-            ${showChipsInMenu && !this._showEntityOptions && !this._isIdle ? html`
+            ${showChipsInMenu && !this._showEntityOptions ? html`
               <div class="in-menu-active-label">${activeChipName}</div>
             ` : nothing}
           </div>
@@ -3981,7 +4008,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
             ${showChipsInMenu ? html`
                 <div class="entity-options-chips-wrapper" @click=${(e) => e.stopPropagation()}>
-                <div class="entity-options-chips-strip">
+                <div class="chip-row entity-options-chips-strip">
                   ${renderChipRow({
                     groupedSortedEntityIds: this.groupedSortedEntityIds,
                     entityIds: this.entityIds,
