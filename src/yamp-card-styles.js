@@ -1235,19 +1235,16 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 12px;
+    padding: 14px 22px 18px 22px;
     margin: 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-top: none;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    border: none;
     flex-shrink: 0;
     position: absolute;
-    bottom: 1%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(98% - 24px);
-    max-width: calc(430px - 24px);
+    bottom: 0;
+    left: 0;
+    width: 100%;
     z-index: 1001;
   }
 
@@ -1386,14 +1383,14 @@ export const yampCardStyles = css`
     position: sticky;
     top: 0;
     z-index: 4;
-    padding: 12px 4px 16px 4px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    padding: 8px 4px 12px 4px;
+    background: transparent;
   }
 
   .entity-options-chips-strip {
     display: flex;
     gap: 10px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
     padding: 6px 8px 10px 8px;

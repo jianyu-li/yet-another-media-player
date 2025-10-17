@@ -3976,33 +3976,70 @@ class YetAnotherMediaPlayerCard extends LitElement {
         <div class="entity-options-container entity-options-container-opening">
           <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
             ${showChipsInMenu ? html`
-              <div class="entity-options-chips-wrapper" @click=${(e) => e.stopPropagation()}>
+                <div class="entity-options-chips-wrapper" @click=${(e) => e.stopPropagation()}>
                 <div class="entity-options-chips-strip">
-                  ${this.entityIds.map((entityId, chipIdx) => {
-                    const obj = this.entityObjs[chipIdx];
-                    const playbackEntityId = this._getEntityForPurpose(chipIdx, "playback_control");
-                    const playbackState = this.hass?.states?.[playbackEntityId];
-                    const mainState = this.hass?.states?.[entityId];
-                    const playbackArtwork = this._getArtworkUrl(playbackState);
-                    const mainArtwork = this._getArtworkUrl(mainState);
-                    const artUrl = (playbackArtwork || mainArtwork)?.url || null;
-                    return renderChip({
-                      idx: chipIdx,
-                      selected: this._selectedIndex === chipIdx,
-                      playing: playbackEntityId === this.currentActivePlaybackEntityId,
-                      name: this.getChipName(entityId),
-                      art: artUrl,
-                      icon: obj?.icon,
-                      pinned: this._pinnedIndex === chipIdx,
-                      holdToPin: this._holdToPin,
-                      maActive: false,
-                      onChipClick: (idx) => this._onChipClick(idx),
-                      onIconClick: () => {},
-                      onPinClick: (e) => { e.stopPropagation(); this._onPinClick(e); },
-                      onPointerDown: (e) => this._handleChipPointerDown(e, chipIdx),
-                      onPointerMove: (e) => this._handleChipPointerMove(e, chipIdx),
-                      onPointerUp: (e) => this._handleChipPointerUp(e, chipIdx),
-                    });
+                  ${renderChipRow({
+                    groupedSortedEntityIds: this.groupedSortedEntityIds,
+                    entityIds: this.entityIds,
+                    selectedEntityId: this.currentEntityId,
+                    pinnedIndex: this._pinnedIndex,
+                    holdToPin: this._holdToPin,
+                    getChipName: (id) => this.getChipName(id),
+                    getActualGroupMaster: (group) => this._getActualGroupMaster(group),
+                    getIsChipPlaying: (id, isSelected) => {
+                      const obj = this._findEntityObjByAnyId(id);
+                      const mainId = obj?.entity_id || id;
+                      const idx = this.entityIds.indexOf(mainId);
+                      if (idx < 0) return isSelected ? !this._isIdle : false;
+                      const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+                      const playbackState = this.hass?.states?.[playbackEntityId];
+                      const anyPlaying = playbackState?.state === 'playing';
+                      return isSelected ? !this._isIdle : anyPlaying;
+                    },
+                    getChipArt: (id) => {
+                      const obj = this._findEntityObjByAnyId(id);
+                      const mainId = obj?.entity_id || id;
+                      const idx = this.entityIds.indexOf(mainId);
+                      if (idx < 0) return null;
+                      const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+                      const playbackState = this.hass?.states?.[playbackEntityId];
+                      const mainState = this.hass?.states?.[mainId];
+                      const playbackArtwork = this._getArtworkUrl(playbackState);
+                      const mainArtwork = this._getArtworkUrl(mainState);
+                      return (playbackArtwork || mainArtwork)?.url || null;
+                    },
+                    getIsMaActive: (id) => {
+                      const obj = this._findEntityObjByAnyId(id);
+                      const mainId = obj?.entity_id || id;
+                      const idx = this.entityIds.indexOf(mainId);
+                      if (idx < 0) return false;
+                      const entityObj = this.entityObjs[idx];
+                      if (!entityObj?.music_assistant_entity) return false;
+                      const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+                      const playbackState = this.hass?.states?.[playbackEntityId];
+                      return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) &&
+                        playbackState?.state === 'playing';
+                    },
+                    isIdle: this._isIdle,
+                    hass: this.hass,
+                    artworkHostname: this.config?.artwork_hostname || '',
+                    mediaArtworkOverrides: this.config?.media_artwork_overrides || [],
+                    fallbackArtwork: this.config?.fallback_artwork || null,
+                    onChipClick: (idx) => this._onChipClick(idx),
+                    onIconClick: (idx, e) => {
+                      const entityId = this.entityIds[idx];
+                      const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+                      if (group && group.length > 1) {
+                        this._selectedIndex = idx;
+                        this._showEntityOptions = true;
+                        this._showGrouping = true;
+                        this.requestUpdate();
+                      }
+                    },
+                    onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
+                    onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
+                    onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
+                    onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx),
                   })}
                 </div>
               </div>
@@ -5224,6 +5261,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     this._showEntityOptions = true;
     this.requestUpdate();
+    this.updateComplete.then(() => {
+      const strip = this.renderRoot?.querySelector('.entity-options-chips-strip');
+      if (strip) {
+        strip.scrollLeft = 0;
+      }
+    });
   }
 
   // Deprecated: _triggerMoreInfo is replaced by _openMoreInfo for clarity.
