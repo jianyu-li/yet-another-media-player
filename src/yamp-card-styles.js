@@ -1235,19 +1235,16 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 12px;
+    padding: 14px 22px 18px 22px;
     margin: 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-top: none;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    border: none;
     flex-shrink: 0;
     position: absolute;
-    bottom: 1%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(98% - 24px);
-    max-width: calc(430px - 24px);
+    bottom: 0;
+    left: 0;
+    width: 100%;
     z-index: 1001;
   }
 
@@ -1295,8 +1292,10 @@ export const yampCardStyles = css`
     gap: 8px;
     flex: 1;
     justify-content: center;
-    position: relative;
-    margin-left: -9%; /* Percentage-based offset to align with menu text */
+    position: absolute;
+    left: calc(50% - 15px);
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .persistent-control-btn {
@@ -1333,18 +1332,19 @@ export const yampCardStyles = css`
     background: none;
     border-radius: var(--border-radius);
     box-shadow: none;
-    width: 100%;
-    padding: 18px 8px 70px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
+  width: 100%;
+  padding: 18px 8px 70px 8px;
+  padding-top: clamp(12px, 6vh, 18px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
   /* Main menu specific styling - move options down, adapt to card height */
   .entity-options-sheet .entity-options-menu {
@@ -1352,15 +1352,77 @@ export const yampCardStyles = css`
     margin-bottom: 16px;
   }
 
-  /* When always collapsed is enabled, keep menu at top */
-  :host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
-    margin-top: 0px;
+  .in-menu-active-label {
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    font-size: 0.78em;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.78);
+    pointer-events: none;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
   }
+
+  /* When always collapsed is enabled, keep menu at top */
+:host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
+  margin-top: 0px;
+}
 
   /* Remove spacing between menu items */
   .entity-options-sheet .entity-options-menu .entity-options-item {
     margin-top: 0px;
     margin-bottom: 0px;
+  }
+
+  .entity-options-container,
+  .entity-options-container-opening {
+    position: relative;
+  }
+
+  .entity-options-chips-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    padding: 8px 4px 12px 4px;
+    background: transparent;
+  }
+
+  .entity-options-chips-strip {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-x: auto;
+    padding: 6px 8px 10px 8px;
+  }
+
+  .entity-options-chips-strip .chip {
+    background: var(--chip-bg);
+    color: var(--primary-text);
+  }
+
+  .entity-options-chips-strip .chip:hover {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .entity-options-chips-strip .chip[selected] {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .entity-options-chips-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .entity-options-menu.chips-in-menu {
+    margin-top: 8px;
+  }
+
+  .entity-options-sheet.chips-mode {
+    padding-top: 18px;
   }
 
 
@@ -1494,6 +1556,11 @@ export const yampCardStyles = css`
     scrollbar-width: none;
     -ms-overflow-style: none;
     cursor: grab;
+  }
+
+  .entity-options-sheet.chips-mode .floating-source-index {
+    top: clamp(72px, 15vh, 120px);
+    height: calc(100% - clamp(72px, 15vh, 120px));
   }
 
   .floating-source-index::-webkit-scrollbar {
