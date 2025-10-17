@@ -38,20 +38,20 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 <div align="center">
   <table>
     <tr>
-      <td><img src="/preview/largepreview.png" alt="Card overview" width="320"></td>
-      <td><img src="/preview/collapsed.png" alt="Collapsed card" width="320"></td>
+      <td><img src="/preview/largepreview.png" alt="Card overview" width="420"></td>
+      <td><img src="/preview/collapsed.png" alt="Collapsed card" width="420"></td>
     </tr>
     <tr>
-      <td><img src="/preview/search.png" alt="Search view" width="320"></td>
-      <td><img src="/preview/group-player-menu.png" alt="Group players menu" width="320"></td>
+      <td><img src="/preview/search.png" alt="Search view" width="420"></td>
+      <td><img src="/preview/group-player-menu.png" alt="Group players menu" width="420"></td>
     </tr>
     <tr>
-      <td><img src="/preview/transfer-queue.png" alt="Transfer queue" width="320"></td>
-      <td><img src="/preview/up-next.png" alt="Up next queue" width="320"></td>
+      <td><img src="/preview/transfer-queue.png" alt="Transfer queue" width="420"></td>
+      <td><img src="/preview/up-next.png" alt="Up next queue" width="420"></td>
     </tr>
     <tr>
-      <td><img src="/preview/in-menu-mode.png" alt="Chips in menu mode" width="320"></td>
-      <td><img src="/preview/minimal-preview.png" alt="Minimal layout" width="320"></td>
+      <td><img src="/preview/in-menu-mode.png" alt="Chips in menu mode" width="420"></td>
+      <td><img src="/preview/minimal-preview.png" alt="Minimal layout" width="420"></td>
     </tr>
   </table>
 </div>
