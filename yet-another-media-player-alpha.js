@@ -800,10 +800,8 @@ function renderChip(_ref) {
     art,
     icon,
     pinned,
-    holdToPin,
     maActive,
     onChipClick,
-    onIconClick,
     onPinClick,
     onPointerDown,
     onPointerMove,
@@ -1021,7 +1019,6 @@ function renderChipRow(_ref4) {
         art,
         icon,
         pinned: pinnedIndex === idx,
-        holdToPin,
         maActive: isMaActive,
         onChipClick,
         onPinClick,
@@ -2496,19 +2493,16 @@ const yampCardStyles = i$4`
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 12px;
+    padding: 14px 22px 18px 22px;
     margin: 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-top: none;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    border: none;
     flex-shrink: 0;
     position: absolute;
-    bottom: 1%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(98% - 24px);
-    max-width: calc(430px - 24px);
+    bottom: 0;
+    left: 0;
+    width: 100%;
     z-index: 1001;
   }
 
@@ -2647,14 +2641,14 @@ const yampCardStyles = i$4`
     position: sticky;
     top: 0;
     z-index: 4;
-    padding: 12px 4px 16px 4px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    padding: 8px 4px 12px 4px;
+    background: transparent;
   }
 
   .entity-options-chips-strip {
     display: flex;
     gap: 10px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
     padding: 6px 8px 10px 8px;
@@ -15207,7 +15201,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass22, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass23, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass22, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass23, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -15612,37 +15606,75 @@ class YetAnotherMediaPlayerCard extends i$1 {
         <div class="entity-options-container entity-options-container-opening">
           <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
             ${showChipsInMenu ? x`
-              <div class="entity-options-chips-wrapper" @click=${e => e.stopPropagation()}>
+                <div class="entity-options-chips-wrapper" @click=${e => e.stopPropagation()}>
                 <div class="entity-options-chips-strip">
-                  ${this.entityIds.map((entityId, chipIdx) => {
-      var _this$hass28, _this$hass29, _ref3;
-      const obj = this.entityObjs[chipIdx];
-      const playbackEntityId = this._getEntityForPurpose(chipIdx, "playback_control");
-      const playbackState = (_this$hass28 = this.hass) === null || _this$hass28 === void 0 || (_this$hass28 = _this$hass28.states) === null || _this$hass28 === void 0 ? void 0 : _this$hass28[playbackEntityId];
-      const mainState = (_this$hass29 = this.hass) === null || _this$hass29 === void 0 || (_this$hass29 = _this$hass29.states) === null || _this$hass29 === void 0 ? void 0 : _this$hass29[entityId];
-      const playbackArtwork = this._getArtworkUrl(playbackState);
-      const mainArtwork = this._getArtworkUrl(mainState);
-      const artUrl = ((_ref3 = playbackArtwork || mainArtwork) === null || _ref3 === void 0 ? void 0 : _ref3.url) || null;
-      return renderChip({
-        idx: chipIdx,
-        selected: this._selectedIndex === chipIdx,
-        playing: playbackEntityId === this.currentActivePlaybackEntityId,
-        name: this.getChipName(entityId),
-        art: artUrl,
-        icon: obj === null || obj === void 0 ? void 0 : obj.icon,
-        pinned: this._pinnedIndex === chipIdx,
-        holdToPin: this._holdToPin,
-        maActive: false,
-        onChipClick: idx => this._onChipClick(idx),
-        onIconClick: () => {},
-        onPinClick: e => {
-          e.stopPropagation();
-          this._onPinClick(e);
-        },
-        onPointerDown: e => this._handleChipPointerDown(e, chipIdx),
-        onPointerMove: e => this._handleChipPointerMove(e, chipIdx),
-        onPointerUp: e => this._handleChipPointerUp(e, chipIdx)
-      });
+                  ${renderChipRow({
+      groupedSortedEntityIds: this.groupedSortedEntityIds,
+      entityIds: this.entityIds,
+      selectedEntityId: this.currentEntityId,
+      pinnedIndex: this._pinnedIndex,
+      holdToPin: this._holdToPin,
+      getChipName: id => this.getChipName(id),
+      getActualGroupMaster: group => this._getActualGroupMaster(group),
+      getIsChipPlaying: (id, isSelected) => {
+        var _this$hass28;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return isSelected ? !this._isIdle : false;
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass28 = this.hass) === null || _this$hass28 === void 0 || (_this$hass28 = _this$hass28.states) === null || _this$hass28 === void 0 ? void 0 : _this$hass28[playbackEntityId];
+        const anyPlaying = (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === 'playing';
+        return isSelected ? !this._isIdle : anyPlaying;
+      },
+      getChipArt: id => {
+        var _this$hass29, _this$hass30, _ref3;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return null;
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass29 = this.hass) === null || _this$hass29 === void 0 || (_this$hass29 = _this$hass29.states) === null || _this$hass29 === void 0 ? void 0 : _this$hass29[playbackEntityId];
+        const mainState = (_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[mainId];
+        const playbackArtwork = this._getArtworkUrl(playbackState);
+        const mainArtwork = this._getArtworkUrl(mainState);
+        return ((_ref3 = playbackArtwork || mainArtwork) === null || _ref3 === void 0 ? void 0 : _ref3.url) || null;
+      },
+      getIsMaActive: id => {
+        var _this$hass31;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return false;
+        const entityObj = this.entityObjs[idx];
+        if (!(entityObj !== null && entityObj !== void 0 && entityObj.music_assistant_entity)) return false;
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass31 = this.hass) === null || _this$hass31 === void 0 || (_this$hass31 = _this$hass31.states) === null || _this$hass31 === void 0 ? void 0 : _this$hass31[playbackEntityId];
+        return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === 'playing';
+      },
+      isIdle: this._isIdle,
+      hass: this.hass,
+      artworkHostname: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.fallback_artwork) || null,
+      onChipClick: idx => this._onChipClick(idx),
+      onIconClick: (idx, e) => {
+        const entityId = this.entityIds[idx];
+        const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+        if (group && group.length > 1) {
+          this._selectedIndex = idx;
+          this._showEntityOptions = true;
+          this._showGrouping = true;
+          this.requestUpdate();
+        }
+      },
+      onPinClick: (idx, e) => {
+        e.stopPropagation();
+        this._onPinClick(e);
+      },
+      onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
+      onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
+      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
     })}
                 </div>
               </div>
@@ -15783,8 +15815,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
                     ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
-      var _this$hass30, _state$attributes6, _state$attributes7;
-      const state = (_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[entityId];
+      var _this$hass32, _state$attributes6, _state$attributes7;
+      const state = (_this$hass32 = this.hass) === null || _this$hass32 === void 0 || (_this$hass32 = _this$hass32.states) === null || _this$hass32 === void 0 ? void 0 : _this$hass32[entityId];
       const name = (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.friendly_name) || entityId;
       const icon = (state === null || state === void 0 || (_state$attributes7 = state.attributes) === null || _state$attributes7 === void 0 ? void 0 : _state$attributes7.icon) || "mdi:help-circle";
 
@@ -16419,13 +16451,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
       `;
   }
   _updateIdleState() {
-    var _this$hass31, _this$hass32;
+    var _this$hass33, _this$hass34;
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const mainId = this.currentEntityId;
     const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const mainState = mainId ? (_this$hass31 = this.hass) === null || _this$hass31 === void 0 || (_this$hass31 = _this$hass31.states) === null || _this$hass31 === void 0 ? void 0 : _this$hass31[mainId] : null;
-    const maState = maId ? (_this$hass32 = this.hass) === null || _this$hass32 === void 0 || (_this$hass32 = _this$hass32.states) === null || _this$hass32 === void 0 ? void 0 : _this$hass32[maId] : null;
+    const mainState = mainId ? (_this$hass33 = this.hass) === null || _this$hass33 === void 0 || (_this$hass33 = _this$hass33.states) === null || _this$hass33 === void 0 ? void 0 : _this$hass33[mainId] : null;
+    const maState = maId ? (_this$hass34 = this.hass) === null || _this$hass34 === void 0 || (_this$hass34 = _this$hass34.states) === null || _this$hass34 === void 0 ? void 0 : _this$hass34[maId] : null;
     const isAnyPlaying = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing" || (maState === null || maState === void 0 ? void 0 : maState.state) === "playing";
     if (isAnyPlaying) {
       // Became active, clear timer and set not idle
@@ -16866,6 +16898,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
     this._showEntityOptions = true;
     this.requestUpdate();
+    this.updateComplete.then(() => {
+      var _this$renderRoot2;
+      const strip = (_this$renderRoot2 = this.renderRoot) === null || _this$renderRoot2 === void 0 ? void 0 : _this$renderRoot2.querySelector('.entity-options-chips-strip');
+      if (strip) {
+        strip.scrollLeft = 0;
+      }
+    });
   }
 
   // Deprecated: _triggerMoreInfo is replaced by _openMoreInfo for clarity.
