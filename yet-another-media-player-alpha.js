@@ -15476,7 +15476,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       actions: this.config.actions,
       onActionChipClick: idx => this._onActionChipClick(idx)
     })}
-            <div class="card-lower-content-container">
+            <div class="card-lower-content-container" style="${!collapsed && hideControlsNow ? 'min-height:320px;' : ''}">
               <div class="card-lower-content-bg"
                 style="
                   background-image: ${idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none"};
@@ -15489,7 +15489,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 "
               ></div>
               ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
+      if (collapsed && hideControlsNow) return 'min-height: 120px;';
+      if (!collapsed && hideControlsNow) return 'min-height: 320px;';
+      return '';
+    })()}">
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">

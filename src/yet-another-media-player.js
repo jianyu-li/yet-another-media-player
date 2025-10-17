@@ -3828,7 +3828,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               actions: this.config.actions,
               onActionChipClick: (idx) => this._onActionChipClick(idx)
             })}
-            <div class="card-lower-content-container">
+            <div class="card-lower-content-container" style="${(!collapsed && hideControlsNow) ? 'min-height:320px;' : ''}">
               <div class="card-lower-content-bg"
                 style="
                   background-image: ${
@@ -3847,7 +3847,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 "
               ></div>
               ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${collapsed && hideControlsNow ? 'min-height: 120px;' : ''}">
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
+                if (collapsed && hideControlsNow) return 'min-height: 120px;';
+                if (!collapsed && hideControlsNow) return 'min-height: 320px;';
+                return '';
+              })()}">
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? html`
                   <div class="collapsed-artwork-container"
                        style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
