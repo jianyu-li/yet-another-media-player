@@ -3538,6 +3538,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       
       const showChipRow = this.config.show_chip_row || "auto";
+      const hasMultipleEntities = this.entityObjs.length > 1;
+      const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
+      const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
+      const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
       const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
 
@@ -3738,7 +3742,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             data-match-theme="${String(this.config.match_theme === true)}"
             class="${shouldDimIdle ? 'dim-idle' : ''}"
           >
-            ${(this.entityObjs.length > 1 || showChipRow === "always") ? html`
+            ${showChipsInline ? html`
                 <div class="chip-row">
                   ${renderChipRow({
                     groupedSortedEntityIds: this.groupedSortedEntityIds,
@@ -3799,7 +3803,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     },
                     isIdle: this._isIdle,
                     hass: this.hass,
-                    onChipClick: (idx) => this._onChipClick(idx),
+                    onChipClick: (idx) => {
+                      this._onChipClick(idx);
+                    },
                     onIconClick: (idx, e) => {
                       const entityId = this.entityIds[idx];
                       const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
@@ -3952,22 +3958,57 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     })}
                   </div>
                 ` : nothing}
-                ${(hideControlsNow && !this._showEntityOptions) ? html`
-                  <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
-                    <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                      <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
-                    </button>
-                  </div>
-                ` : nothing}
+            ${(hideControlsNow && !this._showEntityOptions) ? html`
+              <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
+                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                  <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                </button>
               </div>
-            </div>
+            ` : nothing}
+            ${showChipsInMenu && !this._showEntityOptions && !this._isIdle ? html`
+              <div class="in-menu-active-label">${activeChipName}</div>
+            ` : nothing}
           </div>
-          ${this._showEntityOptions ? html`
-          <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
-            <div class="entity-options-container entity-options-container-opening">
-              <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
+        </div>
+      </div>
+      ${this._showEntityOptions ? html`
+      <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
+        <div class="entity-options-container entity-options-container-opening">
+          <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
+            ${showChipsInMenu ? html`
+              <div class="entity-options-chips-wrapper" @click=${(e) => e.stopPropagation()}>
+                <div class="entity-options-chips-strip">
+                  ${this.entityIds.map((entityId, chipIdx) => {
+                    const obj = this.entityObjs[chipIdx];
+                    const playbackEntityId = this._getEntityForPurpose(chipIdx, "playback_control");
+                    const playbackState = this.hass?.states?.[playbackEntityId];
+                    const mainState = this.hass?.states?.[entityId];
+                    const playbackArtwork = this._getArtworkUrl(playbackState);
+                    const mainArtwork = this._getArtworkUrl(mainState);
+                    const artUrl = (playbackArtwork || mainArtwork)?.url || null;
+                    return renderChip({
+                      idx: chipIdx,
+                      selected: this._selectedIndex === chipIdx,
+                      playing: playbackEntityId === this.currentActivePlaybackEntityId,
+                      name: this.getChipName(entityId),
+                      art: artUrl,
+                      icon: obj?.icon,
+                      pinned: this._pinnedIndex === chipIdx,
+                      holdToPin: this._holdToPin,
+                      maActive: false,
+                      onChipClick: (idx) => this._onChipClick(idx),
+                      onIconClick: () => {},
+                      onPinClick: (e) => { e.stopPropagation(); this._onPinClick(e); },
+                      onPointerDown: (e) => this._handleChipPointerDown(e, chipIdx),
+                      onPointerMove: (e) => this._handleChipPointerMove(e, chipIdx),
+                      onPointerUp: (e) => this._handleChipPointerUp(e, chipIdx),
+                    });
+                  })}
+                </div>
+              </div>
+            ` : nothing}
               ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? html`
-                <div class="entity-options-menu" style="display:flex; flex-direction:column;">
+                <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''}" style="display:flex; flex-direction:column;">
                   <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
                     Close
                   </button>
@@ -4791,7 +4832,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             select: {
               options: [
                 { value: "auto", label: "Auto" },
-                { value: "always", label: "Always" }
+                { value: "always", label: "Always" },
+                { value: "in_menu", label: "In Menu" }
               ]
             }
           },

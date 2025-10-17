@@ -800,10 +800,8 @@ function renderChip(_ref) {
     art,
     icon,
     pinned,
-    holdToPin,
     maActive,
     onChipClick,
-    onIconClick,
     onPinClick,
     onPointerDown,
     onPointerMove,
@@ -1021,7 +1019,6 @@ function renderChipRow(_ref4) {
         art,
         icon,
         pinned: pinnedIndex === idx,
-        holdToPin,
         maActive: isMaActive,
         onChipClick,
         onPinClick,
@@ -2594,19 +2591,18 @@ const yampCardStyles = i$4`
     background: none;
     border-radius: var(--border-radius);
     box-shadow: none;
-  width: 100%;
-  padding: 18px 8px 70px 8px;
-  padding-top: clamp(12px, 6vh, 18px);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
+    width: 100%;
+    padding: 18px 8px 70px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
 
   /* Main menu specific styling - move options down, adapt to card height */
   .entity-options-sheet .entity-options-menu {
@@ -2614,23 +2610,10 @@ const yampCardStyles = i$4`
     margin-bottom: 16px;
   }
 
-  .in-menu-active-label {
-    position: absolute;
-    left: 50%;
-    bottom: 6px;
-    transform: translateX(-50%);
-    font-size: 0.78em;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    color: rgba(255, 255, 255, 0.78);
-    pointer-events: none;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
-  }
-
   /* When always collapsed is enabled, keep menu at top */
-:host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
-  margin-top: 0px;
-}
+  :host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
+    margin-top: 0px;
+  }
 
   /* Remove spacing between menu items */
   .entity-options-sheet .entity-options-menu .entity-options-item {
@@ -2638,38 +2621,18 @@ const yampCardStyles = i$4`
     margin-bottom: 0px;
   }
 
-  .entity-options-container,
-  .entity-options-container-opening {
-    position: relative;
+  .entity-options-menu-chips {
+    padding: 4px 0 10px 0;
   }
 
-  .entity-options-chips-wrapper {
-    position: sticky;
-    top: 0;
-    z-index: 4;
-    padding: 12px 4px 16px 4px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
-  }
-
-  .entity-options-chips-strip {
-    display: flex;
-    gap: 10px;
+  .entity-options-menu-chips .chip-row {
     justify-content: center;
-    align-items: center;
-    overflow-x: auto;
-    padding: 6px 8px 10px 8px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
-  .entity-options-chips-strip::-webkit-scrollbar {
-    display: none;
-  }
-
-  .entity-options-menu.chips-in-menu {
-    margin-top: 8px;
-  }
-
-  .entity-options-sheet.chips-mode {
-    padding-top: 18px;
+  .entity-options-menu-chips .chip-row .chip {
+    min-width: 120px;
   }
 
 
@@ -10607,7 +10570,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           <div class="entity-group-header">
             <div class="entity-group-title">Entities*</div>
           </div>
-          <yamp-sortable-alpha @item-moved=${e => this._onEntityMoved(e)}>
+          <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
             <div class="sortable-container">
               ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
@@ -10652,7 +10615,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               `;
     })}
             </div>
-          </yamp-sortable-alpha>
+          </yamp-sortable>
         </div>
       `;
   }
@@ -10696,9 +10659,6 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         }, {
           value: "always",
           label: "Always"
-        }, {
-          value: "in_menu",
-          label: "In Menu"
         }]
       }
     }}
@@ -10706,7 +10666,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             label="Show Chip Row"
             @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
           ></ha-selector>
-          <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
+          <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured.</div>
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -10911,7 +10871,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           <div class="action-group-header">
             <div class="action-group-title">Actions</div>
           </div>
-          <yamp-sortable-alpha @item-moved=${e => this._onActionMoved(e)}>
+          <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
             <div class="sortable-container">
               ${actions.map((act, idx) => x`
                 <div class="action-row-inner sortable-item">
@@ -10947,7 +10907,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                 </div>
               `)}
             </div>
-          </yamp-sortable-alpha>
+          </yamp-sortable>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
@@ -15207,7 +15167,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass22, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass23, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass22, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass23, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -15215,10 +15175,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
     }
     const showChipRow = this.config.show_chip_row || "auto";
-    const hasMultipleEntities = this.entityObjs.length > 1;
-    const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
-    const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
-    const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
+    const showChipsInMenu = showChipRow === "in_menu" && this.entityObjs.length > 1;
+    const showChipsInline = showChipRow !== "in_menu" && (this.entityObjs.length > 1 || showChipRow === "always");
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     if (!stateObj) return x`<div class="details">Entity not found.</div>`;
 
@@ -15455,9 +15413,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       },
       isIdle: this._isIdle,
       hass: this.hass,
-      onChipClick: idx => {
-        this._onChipClick(idx);
-      },
+      onChipClick: idx => this._onChipClick(idx),
       onIconClick: (idx, e) => {
         const entityId = this.entityIds[idx];
         const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
@@ -15594,65 +15550,100 @@ class YetAnotherMediaPlayerCard extends i$1 {
     })}
                   </div>
                 ` : E}
-            ${hideControlsNow && !this._showEntityOptions ? x`
-              <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
-                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
-                </button>
+                ${hideControlsNow && !this._showEntityOptions ? x`
+                  <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
+                    <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                      <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                    </button>
+                  </div>
+                ` : E}
               </div>
-            ` : E}
-            ${showChipsInMenu && !this._showEntityOptions && !this._isIdle ? x`
-              <div class="in-menu-active-label">${activeChipName}</div>
-            ` : E}
+            </div>
           </div>
-        </div>
-      </div>
-      ${this._showEntityOptions ? x`
-      <div class="entity-options-overlay entity-options-overlay-opening" @click=${e => this._closeEntityOptions(e)}>
-        <div class="entity-options-container entity-options-container-opening">
-          <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
-            ${showChipsInMenu ? x`
-              <div class="entity-options-chips-wrapper" @click=${e => e.stopPropagation()}>
-                <div class="entity-options-chips-strip">
-                  ${this.entityIds.map((entityId, chipIdx) => {
-      var _this$hass28, _this$hass29, _ref3;
-      const obj = this.entityObjs[chipIdx];
-      const playbackEntityId = this._getEntityForPurpose(chipIdx, "playback_control");
-      const playbackState = (_this$hass28 = this.hass) === null || _this$hass28 === void 0 || (_this$hass28 = _this$hass28.states) === null || _this$hass28 === void 0 ? void 0 : _this$hass28[playbackEntityId];
-      const mainState = (_this$hass29 = this.hass) === null || _this$hass29 === void 0 || (_this$hass29 = _this$hass29.states) === null || _this$hass29 === void 0 ? void 0 : _this$hass29[entityId];
-      const playbackArtwork = this._getArtworkUrl(playbackState);
-      const mainArtwork = this._getArtworkUrl(mainState);
-      const artUrl = ((_ref3 = playbackArtwork || mainArtwork) === null || _ref3 === void 0 ? void 0 : _ref3.url) || null;
-      return renderChip({
-        idx: chipIdx,
-        selected: this._selectedIndex === chipIdx,
-        playing: playbackEntityId === this.currentActivePlaybackEntityId,
-        name: this.getChipName(entityId),
-        art: artUrl,
-        icon: obj === null || obj === void 0 ? void 0 : obj.icon,
-        pinned: this._pinnedIndex === chipIdx,
-        holdToPin: this._holdToPin,
-        maActive: false,
-        onChipClick: idx => this._onChipClick(idx),
-        onIconClick: () => {},
-        onPinClick: e => {
-          e.stopPropagation();
-          this._onPinClick(e);
-        },
-        onPointerDown: e => this._handleChipPointerDown(e, chipIdx),
-        onPointerMove: e => this._handleChipPointerMove(e, chipIdx),
-        onPointerUp: e => this._handleChipPointerUp(e, chipIdx)
-      });
-    })}
-                </div>
-              </div>
-            ` : E}
+          ${this._showEntityOptions ? x`
+          <div class="entity-options-overlay entity-options-overlay-opening" @click=${e => this._closeEntityOptions(e)}>
+            <div class="entity-options-container entity-options-container-opening">
+              <div class="entity-options-sheet entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
               ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue ? x`
-                <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''}" style="display:flex; flex-direction:column;">
+                <div class="entity-options-menu" style="display:flex; flex-direction:column;">
                   <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
                     Close
                   </button>
                   <div class="entity-options-divider"></div>
+                  ${showChipsInMenu ? x`
+                    <div class="entity-options-subtitle" style="margin-bottom:10px;">Players</div>
+                    <div class="entity-options-menu-chips">
+                      ${renderChipRow({
+      groupedSortedEntityIds: this.groupedSortedEntityIds,
+      entityIds: this.entityIds,
+      selectedEntityId: this.currentEntityId,
+      pinnedIndex: this._pinnedIndex,
+      holdToPin: this._holdToPin,
+      getChipName: id => this.getChipName(id),
+      getActualGroupMaster: group => this._getActualGroupMaster(group),
+      artworkHostname: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.artwork_hostname) || "",
+      mediaArtworkOverrides: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.fallback_artwork) || null,
+      getIsChipPlaying: (id, isSelected) => {
+        var _this$hass28;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return isSelected ? !this._isIdle : false;
+        const playbackEntityId = this._getEntityForPurpose(idx, "playback_control");
+        const playbackState = (_this$hass28 = this.hass) === null || _this$hass28 === void 0 || (_this$hass28 = _this$hass28.states) === null || _this$hass28 === void 0 ? void 0 : _this$hass28[playbackEntityId];
+        const anyPlaying = (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === "playing";
+        return isSelected ? !this._isIdle : anyPlaying;
+      },
+      getChipArt: id => {
+        var _this$hass29, _this$hass30, _ref3;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return null;
+        const playbackEntityId = this._getEntityForPurpose(idx, "playback_control");
+        const playbackState = (_this$hass29 = this.hass) === null || _this$hass29 === void 0 || (_this$hass29 = _this$hass29.states) === null || _this$hass29 === void 0 ? void 0 : _this$hass29[playbackEntityId];
+        const mainState = (_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[mainId];
+        const playbackArtwork = this._getArtworkUrl(playbackState);
+        const mainArtwork = this._getArtworkUrl(mainState);
+        return ((_ref3 = playbackArtwork || mainArtwork) === null || _ref3 === void 0 ? void 0 : _ref3.url) || null;
+      },
+      getIsMaActive: id => {
+        var _this$hass31;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return false;
+        const entityObj = this.entityObjs[idx];
+        if (!(entityObj !== null && entityObj !== void 0 && entityObj.music_assistant_entity)) return false;
+        const playbackEntityId = this._getEntityForPurpose(idx, "playback_control");
+        const playbackState = (_this$hass31 = this.hass) === null || _this$hass31 === void 0 || (_this$hass31 = _this$hass31.states) === null || _this$hass31 === void 0 ? void 0 : _this$hass31[playbackEntityId];
+        return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === "playing";
+      },
+      isIdle: this._isIdle,
+      hass: this.hass,
+      onChipClick: idx => this._onChipClick(idx),
+      onIconClick: (idx, e) => {
+        const entityId = this.entityIds[idx];
+        const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+        if (group && group.length > 1) {
+          this._selectedIndex = idx;
+          this._showEntityOptions = true;
+          this._showGrouping = true;
+          this.requestUpdate();
+        }
+      },
+      onPinClick: (idx, e) => {
+        e.stopPropagation();
+        this._onPinClick(e);
+      },
+      onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
+      onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
+      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
+    })}
+                    </div>
+                    <div class="entity-options-divider"></div>
+                  ` : E}
                   <button class="entity-options-item" @click=${() => {
       const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
       if (resolvedEntities.length === 1) {
@@ -15783,8 +15774,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   <div class="entity-options-title">Select Entity for More Info</div>
                   <div class="entity-options-resolved-entities-list">
                     ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
-      var _this$hass30, _state$attributes6, _state$attributes7;
-      const state = (_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[entityId];
+      var _this$hass32, _state$attributes6, _state$attributes7;
+      const state = (_this$hass32 = this.hass) === null || _this$hass32 === void 0 || (_this$hass32 = _this$hass32.states) === null || _this$hass32 === void 0 ? void 0 : _this$hass32[entityId];
       const name = (state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.friendly_name) || entityId;
       const icon = (state === null || state === void 0 || (_state$attributes7 = state.attributes) === null || _state$attributes7 === void 0 ? void 0 : _state$attributes7.icon) || "mdi:help-circle";
 
@@ -16419,13 +16410,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
       `;
   }
   _updateIdleState() {
-    var _this$hass31, _this$hass32;
+    var _this$hass33, _this$hass34;
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const mainId = this.currentEntityId;
     const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const mainState = mainId ? (_this$hass31 = this.hass) === null || _this$hass31 === void 0 || (_this$hass31 = _this$hass31.states) === null || _this$hass31 === void 0 ? void 0 : _this$hass31[mainId] : null;
-    const maState = maId ? (_this$hass32 = this.hass) === null || _this$hass32 === void 0 || (_this$hass32 = _this$hass32.states) === null || _this$hass32 === void 0 ? void 0 : _this$hass32[maId] : null;
+    const mainState = mainId ? (_this$hass33 = this.hass) === null || _this$hass33 === void 0 || (_this$hass33 = _this$hass33.states) === null || _this$hass33 === void 0 ? void 0 : _this$hass33[mainId] : null;
+    const maState = maId ? (_this$hass34 = this.hass) === null || _this$hass34 === void 0 || (_this$hass34 = _this$hass34.states) === null || _this$hass34 === void 0 ? void 0 : _this$hass34[maId] : null;
     const isAnyPlaying = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing" || (maState === null || maState === void 0 ? void 0 : maState.state) === "playing";
     if (isAnyPlaying) {
       // Became active, clear timer and set not idle

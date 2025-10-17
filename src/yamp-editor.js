@@ -513,14 +513,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             .selector=${{
               select: { mode: "dropdown", options: [
                 { value: "auto", label: "Auto" },
-                { value: "always", label: "Always" }
+                { value: "always", label: "Always" },
+                { value: "in_menu", label: "In Menu" }
               ]}
             }}
             .value=${this._config.show_chip_row ?? "auto"}
             label="Show Chip Row"
             @value-changed=${(e) => this._updateConfig("show_chip_row", e.detail.value)}
           ></ha-selector>
-          <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured.</div>
+          <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
         </div>
 
         <div class="form-row form-row-multi-column">

@@ -1333,18 +1333,19 @@ export const yampCardStyles = css`
     background: none;
     border-radius: var(--border-radius);
     box-shadow: none;
-    width: 100%;
-    padding: 18px 8px 70px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
+  width: 100%;
+  padding: 18px 8px 70px 8px;
+  padding-top: clamp(12px, 6vh, 18px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
   /* Main menu specific styling - move options down, adapt to card height */
   .entity-options-sheet .entity-options-menu {
@@ -1352,15 +1353,62 @@ export const yampCardStyles = css`
     margin-bottom: 16px;
   }
 
-  /* When always collapsed is enabled, keep menu at top */
-  :host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
-    margin-top: 0px;
+  .in-menu-active-label {
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    font-size: 0.78em;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.78);
+    pointer-events: none;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
   }
+
+  /* When always collapsed is enabled, keep menu at top */
+:host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
+  margin-top: 0px;
+}
 
   /* Remove spacing between menu items */
   .entity-options-sheet .entity-options-menu .entity-options-item {
     margin-top: 0px;
     margin-bottom: 0px;
+  }
+
+  .entity-options-container,
+  .entity-options-container-opening {
+    position: relative;
+  }
+
+  .entity-options-chips-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    padding: 12px 4px 16px 4px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+  }
+
+  .entity-options-chips-strip {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    overflow-x: auto;
+    padding: 6px 8px 10px 8px;
+  }
+
+  .entity-options-chips-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .entity-options-menu.chips-in-menu {
+    margin-top: 8px;
+  }
+
+  .entity-options-sheet.chips-mode {
+    padding-top: 18px;
   }
 
 
