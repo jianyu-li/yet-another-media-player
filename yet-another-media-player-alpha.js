@@ -2736,6 +2736,27 @@ const yampCardStyles = i$4`
     text-shadow: 0 2px 8px #0009;
   }
 
+  .entity-options-item.menu-action-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .entity-options-item.menu-action-item .menu-action-icon {
+    color: inherit;
+    --mdc-icon-color: currentColor;
+    --icon-color: currentColor;
+    --paper-item-icon-color: currentColor;
+    --ha-icon-color: currentColor;
+    fill: currentColor;
+  }
+
+  .entity-options-item.menu-action-item .menu-action-label {
+    color: inherit;
+  }
+
   .entity-options-item:hover {
     color: var(--custom-accent, #ff9800);
     text-shadow: none;
@@ -10941,7 +10962,16 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                     <ha-textfield
                       placeholder="(Icon Only)"
                       .value=${(act === null || act === void 0 ? void 0 : act.name) ?? ""}
-                      helper="${act !== null && act !== void 0 && act.menu_item ? `Open Menu Item: ${act === null || act === void 0 ? void 0 : act.menu_item}` : act !== null && act !== void 0 && act.service ? `Call Service: ${act === null || act === void 0 ? void 0 : act.service}` : `Not Configured`}"
+                      .helper=${(() => {
+      const inMenu = act !== null && act !== void 0 && act.in_menu ? " \u2022 In Menu" : "";
+      if (act !== null && act !== void 0 && act.menu_item) {
+        return `Open Menu Item: ${act.menu_item}${inMenu}`;
+      }
+      if (act !== null && act !== void 0 && act.service) {
+        return `Call Service: ${act.service}${inMenu}`;
+      }
+      return act !== null && act !== void 0 && act.in_menu ? `Not Configured${inMenu}` : "Not Configured";
+    })()}
                       .helperPersistent=${true}
                       @input=${a => this._onActionChanged(idx, a.target.value)}
                     ></ha-textfield>
@@ -11331,6 +11361,17 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             .value=${(action === null || action === void 0 ? void 0 : action.icon) ?? ""}
             @value-changed=${e => this._updateActionProperty("icon", e.detail.value)}
           ></ha-icon-picker>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="in-menu-toggle"
+              .checked=${(action === null || action === void 0 ? void 0 : action.in_menu) ?? false}
+              @change=${e => this._updateActionProperty("in_menu", e.target.checked)}
+            ></ha-switch>
+            <label for="in-menu-toggle">In Menu</label>
+          </div>
         </div>
 
         <div class="form-row">
@@ -14732,6 +14773,34 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     this.hass.callService(domain, service, data);
   }
+  _onMenuActionClick(idx) {
+    var _this$config$actions;
+    const action = (_this$config$actions = this.config.actions) === null || _this$config$actions === void 0 ? void 0 : _this$config$actions[idx];
+    if (!action) return;
+    if (!action.menu_item) {
+      this._quickMenuInvoke = true;
+    }
+    this._onActionChipClick(idx);
+    if (!action.menu_item) {
+      this._dismissWithAnimation();
+    }
+  }
+  _getActionLabel(action) {
+    if (!action) return "";
+    if (action.name) return action.name;
+    if (action.menu_item) {
+      const menuLabels = {
+        "search": "Search",
+        "source": "Source",
+        "more-info": "More Info",
+        "group-players": "Group Players",
+        "transfer-queue": "Transfer Queue"
+      };
+      return menuLabels[action.menu_item] ?? action.menu_item;
+    }
+    if (action.service) return action.service;
+    return "Action";
+  }
   async _onControlClick(action) {
     var _this$hass16;
     // Use the unified entity resolution system for control actions
@@ -15248,6 +15317,22 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const hasMultipleEntities = this.entityObjs.length > 1;
     const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
     const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
+    const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({
+      action,
+      idx
+    }));
+    const rowActions = decoratedActions.filter(_ref2 => {
+      let {
+        action
+      } = _ref2;
+      return !(action !== null && action !== void 0 && action.in_menu);
+    });
+    const menuOnlyActions = decoratedActions.filter(_ref3 => {
+      let {
+        action
+      } = _ref3;
+      return action === null || action === void 0 ? void 0 : action.in_menu;
+    });
     const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     if (!stateObj) return x`<div class="details">Entity not found.</div>`;
@@ -15452,7 +15537,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass25, _this$hass26, _ref2;
+        var _this$hass25, _this$hass26, _ref4;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -15466,7 +15551,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         // Prefer playback entity artwork, fallback to main entity
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return ((_ref2 = playbackArtwork || mainArtwork) === null || _ref2 === void 0 ? void 0 : _ref2.url) || null;
+        return ((_ref4 = playbackArtwork || mainArtwork) === null || _ref4 === void 0 ? void 0 : _ref4.url) || null;
       },
       getIsMaActive: id => {
         var _this$hass27;
@@ -15512,8 +15597,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 </div>
             ` : E}
             ${renderActionChipRow({
-      actions: this.config.actions,
-      onActionChipClick: idx => this._onActionChipClick(idx)
+      actions: rowActions.map(_ref5 => {
+        let {
+          action
+        } = _ref5;
+        return action;
+      }),
+      onActionChipClick: idx => {
+        const target = rowActions[idx];
+        if (!target) return;
+        this._onActionChipClick(target.idx);
+      }
     })}
             <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
@@ -15670,7 +15764,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass29, _this$hass30, _ref3;
+        var _this$hass29, _this$hass30, _ref6;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -15680,7 +15774,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const mainState = (_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[mainId];
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return ((_ref3 = playbackArtwork || mainArtwork) === null || _ref3 === void 0 ? void 0 : _ref3.url) || null;
+        return ((_ref6 = playbackArtwork || mainArtwork) === null || _ref6 === void 0 ? void 0 : _ref6.url) || null;
       },
       getIsMaActive: id => {
         var _this$hass31;
@@ -15795,6 +15889,28 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
       return E;
     })()}
+                  ${menuOnlyActions.length ? x`
+                    ${menuOnlyActions.map(_ref7 => {
+      let {
+        action,
+        idx
+      } = _ref7;
+      return x`
+                      <button
+                        class="entity-options-item menu-action-item"
+                        @click=${() => this._onMenuActionClick(idx)}
+                      >
+                        ${action.icon ? x`
+                          <ha-icon
+                            class="menu-action-icon"
+                            .icon=${action.icon}
+                          ></ha-icon>
+                        ` : E}
+                        <span class="menu-action-label">${this._getActionLabel(action)}</span>
+                      </button>
+                    `;
+    })}
+                  ` : E}
                 </div>
               ` : this._showTransferQueue ? x`
                 <button class="entity-options-item close-item" @click=${() => {

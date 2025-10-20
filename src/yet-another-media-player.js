@@ -3070,6 +3070,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.hass.callService(domain, service, data);
   }
 
+  _onMenuActionClick(idx) {
+    const action = this.config.actions?.[idx];
+    if (!action) return;
+    if (!action.menu_item) {
+      this._quickMenuInvoke = true;
+    }
+    this._onActionChipClick(idx);
+    if (!action.menu_item) {
+      this._dismissWithAnimation();
+    }
+  }
+
+  _getActionLabel(action) {
+    if (!action) return "";
+    if (action.name) return action.name;
+    if (action.menu_item) {
+      const menuLabels = {
+        "search": "Search",
+        "source": "Source",
+        "more-info": "More Info",
+        "group-players": "Group Players",
+        "transfer-queue": "Transfer Queue",
+      };
+      return menuLabels[action.menu_item] ?? action.menu_item;
+    }
+    if (action.service) return action.service;
+    return "Action";
+  }
+
   async _onControlClick(action) {
     // Use the unified entity resolution system for control actions
     const targetEntity = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
@@ -3555,6 +3584,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const hasMultipleEntities = this.entityObjs.length > 1;
       const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
       const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
+      const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
+      const rowActions = decoratedActions.filter(({ action }) => !action?.in_menu);
+      const menuOnlyActions = decoratedActions.filter(({ action }) => action?.in_menu);
       const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
       const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
@@ -3846,8 +3878,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </div>
             ` : nothing}
             ${renderActionChipRow({
-              actions: this.config.actions,
-              onActionChipClick: (idx) => this._onActionChipClick(idx)
+              actions: rowActions.map(({ action }) => action),
+              onActionChipClick: (idx) => {
+                const target = rowActions[idx];
+                if (!target) return;
+                this._onActionChipClick(target.idx);
+              }
             })}
             <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
@@ -4157,6 +4193,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       return nothing;
                     })()
                   }
+                  ${menuOnlyActions.length ? html`
+                    ${menuOnlyActions.map(({ action, idx }) => html`
+                      <button
+                        class="entity-options-item menu-action-item"
+                        @click=${() => this._onMenuActionClick(idx)}
+                      >
+                        ${action.icon ? html`
+                          <ha-icon
+                            class="menu-action-icon"
+                            .icon=${action.icon}
+                          ></ha-icon>
+                        ` : nothing}
+                        <span class="menu-action-label">${this._getActionLabel(action)}</span>
+                      </button>
+                    `)}
+                  ` : nothing}
                 </div>
               ` : this._showTransferQueue ? html`
                 <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }}>
