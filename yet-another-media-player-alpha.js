@@ -1402,6 +1402,10 @@ const yampCardStyles = i$4`
     pointer-events: none;
   }
 
+  :host([data-has-custom-height="true"]) .card-artwork-spacer {
+    min-height: 0;
+  }
+
   /* Media background */
   .media-bg-full {
     position: absolute;
@@ -10850,6 +10854,35 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
         </div>
 
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-textfield
+              class="full-width"
+              type="number"
+              min="0"
+              label="Card Height (px)"
+              .value=${this._config.card_height ?? ""}
+              helper="Leave blank for automatic height"
+              .helperPersistent=${true}
+              @input=${e => {
+      const raw = e.target.value;
+      if (raw === "") {
+        this._updateConfig("card_height", undefined);
+        return;
+      }
+      const parsed = Number(raw);
+      this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
+    }}
+            ></ha-textfield>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("card_height", undefined)}
+          ></ha-icon>
+        </div>
+
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
@@ -15308,10 +15341,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
   render() {
     var _this$_optimisticPlay, _this$hass22, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass23, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
+    const customCardHeight = Number(this.config.card_height);
+    const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+      if (hasCustomCardHeight) {
+        this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
+      } else {
+        this.shadowRoot.host.removeAttribute("data-has-custom-height");
+      }
     }
     const showChipRow = this.config.show_chip_row || "auto";
     const hasMultipleEntities = this.entityObjs.length > 1;
@@ -15504,7 +15544,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._lastRenderedCollapsed = collapsed;
     this._lastRenderedHideControls = hideControlsNow;
     return x`
-        <ha-card class="yamp-card">
+        <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : E}>
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"

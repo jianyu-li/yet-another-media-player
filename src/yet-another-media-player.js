@@ -3574,10 +3574,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     render() {
       if (!this.hass || !this.config) return nothing;
       
+      const customCardHeight = Number(this.config.card_height);
+      const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
+
       if (this.shadowRoot && this.shadowRoot.host) {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
         this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
         this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+        if (hasCustomCardHeight) {
+          this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
+        } else {
+          this.shadowRoot.host.removeAttribute("data-has-custom-height");
+        }
       }
       
       const showChipRow = this.config.show_chip_row || "auto";
@@ -3789,7 +3797,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._lastRenderedHideControls = hideControlsNow;
 
       return html`
-        <ha-card class="yamp-card">
+        <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : nothing}>
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
