@@ -622,6 +622,35 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
         </div>
 
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-textfield
+              class="full-width"
+              type="number"
+              min="0"
+              label="Card Height (px)"
+              .value=${this._config.card_height ?? ""}
+              helper="Leave blank for automatic height"
+              .helperPersistent=${true}
+              @input=${(e) => {
+                const raw = e.target.value;
+                if (raw === "") {
+                  this._updateConfig("card_height", undefined);
+                  return;
+                }
+                const parsed = Number(raw);
+                this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
+              }}
+            ></ha-textfield>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("card_height", undefined)}
+          ></ha-icon>
+        </div>
+
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}

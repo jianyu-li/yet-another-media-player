@@ -144,6 +144,10 @@ export const yampCardStyles = css`
     pointer-events: none;
   }
 
+  :host([data-has-custom-height="true"]) .card-artwork-spacer {
+    min-height: 0;
+  }
+
   /* Media background */
   .media-bg-full {
     position: absolute;

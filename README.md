@@ -59,6 +59,7 @@ Below you will find a list of all configuration options.
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
+| `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
 | `idle_image`               | image/camera/url | No           | —           | Background image when player is idle (supports local files, cameras, or URLs)                   |
 | `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |
@@ -78,6 +79,7 @@ Below you will find a list of all configuration options.
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `source`, `more-info`, `group-players`                    |
+| `in_menu`                  | boolean      | No           | `false`     | Move the action into the menu instead of the action chip row                                    |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 
 # Group Players
@@ -175,6 +177,24 @@ actions:
   - name: Play Bluey
     icon: mdi:television-play
     service: script.play_bluey_on_living    
+```
+
+### Menu-only Actions
+Set `in_menu: true` (or toggle **In Menu** in the editor) to remove an action chip and render it with the standard menu options such as *More Info* or *Transfer Queue*. Menu-only actions keep the same icon styling and hover states as the built-in entries.
+
+```yaml
+actions:
+  - icon: mdi:account-multiple-plus
+    name: Group Helpers
+    in_menu: true
+    service: script.group_helpers
+```
+
+### Card Height Override
+Use `card_height` (Look & Feel tab) to pin the card to a specific pixel height—handy if you previously relied on `card-mod` to keep the layout consistent. When a custom height is set, the artwork spacer is collapsed automatically so the entire value comes from your override.
+
+```yaml
+card_height: 500
 ```
 
 ## Music Assistant Entity Configuration
