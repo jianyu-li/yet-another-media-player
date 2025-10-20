@@ -95,6 +95,7 @@ Below you will find a list of all configuration options.
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `source`, `more-info`, `group-players`                    |
+| `in_menu`                  | boolean      | No           | `false`     | When `true`, remove the chip and show the action alongside the built-in menu options            |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 
 # Group Players
@@ -150,7 +151,8 @@ actions:
       enqueue: replace
   - name: Set the Mood
     service: script.set_mood
-    script_variable: true      
+    script_variable: true 
+    in_menu: true     
 match_theme: true
 volume_mode: slider
 collapse_on_idle: true
@@ -196,6 +198,21 @@ actions:
   - name: Play Bluey
     icon: mdi:television-play
     service: script.play_bluey_on_living    
+```
+
+### Menu-only Actions
+When configuring an action you can enable the **In Menu** toggle (or set `in_menu: true` in YAML) to move that action out of the chip row. Menu-only actions appear with the built-in options at the bottom of the entity menu, preserving the same hover styling and icon color as items like *More Info* or *Transfer Queue*.
+
+```yaml
+actions:
+  - name: Group Players
+    icon: mdi:account-multiple-plus
+    in_menu: true
+    service: media_player.join
+    service_data:
+      entity_id: current
+      group_members:
+        - media_player.kitchen_homepod
 ```
 
 ## Music Assistant Entity Configuration
