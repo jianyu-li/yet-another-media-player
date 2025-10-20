@@ -75,6 +75,7 @@ Below you will find a list of all configuration options.
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
+| `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
 | `transfer_queue`           | menu action  | No           | —           | Adds a "Transfer Queue" menu action for Music Assistant entities (see below)                   |
 | `idle_image`               | image/camera/url | No           | —           | Background image when player is idle (supports local files, cameras, or URLs)                   |
 | `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
@@ -469,32 +470,6 @@ Example action for playing a radio station on [Chromecast](https://www.home-assi
 ```
 
 ## Card Mod Examples
-
-### Decrease Height
-You must adjust the ha-card height as well as .card-artwork-spacer min-height, see example: 
-```
-card_mod:
-  style: |
-    ha-card {
-      height: 300px !important;
-    }
-    .card-artwork-spacer {
-      min-height: 0px !important;
-      }
-```
-
-### Increase Height
-You must adjust the ha-card height as well as .card-artwork-spacer min-height, see example: 
-```
-card_mod:
-  style: |
-    ha-card {
-      height: 700px !important;
-    }
-    .card-artwork-spacer {
-      min-height: 0px !important;
-      }
-```
 
 ### Update Background Image
 This is different from the idle_image argument (that allows a background image when not playing), using card-mod to change the background will apply the background at all times. 
