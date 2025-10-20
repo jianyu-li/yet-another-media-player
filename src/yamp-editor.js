@@ -719,7 +719,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-textfield
                       placeholder="(Icon Only)"
                       .value=${act?.name ?? ""}
-                      helper="${act?.menu_item ? `Open Menu Item: ${act?.menu_item}` : act?.service ? `Call Service: ${act?.service}` : `Not Configured`}"
+                      .helper=${(() => {
+                        const inMenu = act?.in_menu ? " \u2022 In Menu" : "";
+                        if (act?.menu_item) {
+                          return `Open Menu Item: ${act.menu_item}${inMenu}`;
+                        }
+                        if (act?.service) {
+                          return `Call Service: ${act.service}${inMenu}`;
+                        }
+                        return act?.in_menu ? `Not Configured${inMenu}` : "Not Configured";
+                      })()}
                       .helperPersistent=${true}
                       @input=${a => this._onActionChanged(idx, a.target.value)}
                     ></ha-textfield>
@@ -1101,6 +1110,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @value-changed=${(e) =>
               this._updateActionProperty("icon", e.detail.value)}
           ></ha-icon-picker>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="in-menu-toggle"
+              .checked=${action?.in_menu ?? false}
+              @change=${(e) =>
+                this._updateActionProperty("in_menu", e.target.checked)}
+            ></ha-switch>
+            <label for="in-menu-toggle">In Menu</label>
+          </div>
         </div>
 
         <div class="form-row">

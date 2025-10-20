@@ -1478,6 +1478,27 @@ export const yampCardStyles = css`
     text-shadow: 0 2px 8px #0009;
   }
 
+  .entity-options-item.menu-action-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .entity-options-item.menu-action-item .menu-action-icon {
+    color: inherit;
+    --mdc-icon-color: currentColor;
+    --icon-color: currentColor;
+    --paper-item-icon-color: currentColor;
+    --ha-icon-color: currentColor;
+    fill: currentColor;
+  }
+
+  .entity-options-item.menu-action-item .menu-action-label {
+    color: inherit;
+  }
+
   .entity-options-item:hover {
     color: var(--custom-accent, #ff9800);
     text-shadow: none;
