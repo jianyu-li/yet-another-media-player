@@ -18,6 +18,7 @@ export const yampCardStyles = css`
     --shadow-light: 0 2px 8px rgba(0,0,0,0.13);
     --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);
     --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
+    --yamp-artwork-fit: cover;
   }
 
   :host([data-match-theme="false"]) {
@@ -155,7 +156,7 @@ export const yampCardStyles = css`
     width: 100%;
     height: 100%;
     z-index: 0;
-    background-size: cover;
+    background-size: var(--yamp-artwork-bg-size, cover);
     background-position: top center;
     background-repeat: no-repeat;
     pointer-events: none;
@@ -304,7 +305,7 @@ export const yampCardStyles = css`
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     box-shadow: 0 1px 4px rgba(0,0,0,0.18);
     display: block;
   }
@@ -552,7 +553,7 @@ export const yampCardStyles = css`
     width: 100%;
     aspect-ratio: 1.75/1;
     overflow: hidden;
-    background-size: cover;
+    background-size: var(--yamp-artwork-bg-size, cover);
     background-repeat: no-repeat;
     background-position: top center;
   }
@@ -560,7 +561,7 @@ export const yampCardStyles = css`
   .artwork {
     width: 96px;
     height: 96px;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     border-radius: 12px;
     box-shadow: var(--shadow-medium);
     background: #222;
@@ -920,7 +921,7 @@ export const yampCardStyles = css`
     position: absolute;
     inset: 0;
     z-index: 0;
-    background-size: cover;
+    background-size: var(--yamp-artwork-bg-size, cover);
     background-position: top center;
     background-repeat: no-repeat;
     pointer-events: none;
@@ -1022,7 +1023,7 @@ export const yampCardStyles = css`
     width: 102px;
     height: 102px;
     border-radius: 16px;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     background: transparent;
     box-shadow: 0 1px 6px rgba(0,0,0,0.22);
     pointer-events: none;
@@ -1270,7 +1271,7 @@ export const yampCardStyles = css`
     width: 40px;
     height: 40px;
     border-radius: 6px;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   }
 
@@ -1714,7 +1715,7 @@ export const yampCardStyles = css`
     height: 38px;
     width: 38px;
     border-radius: var(--button-border-radius);
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     box-shadow: 0 1px 5px rgba(0,0,0,0.16);
     margin-right: 12px;
   }
@@ -2189,7 +2190,7 @@ export const yampCardStyles = css`
     width: 50px;
     height: 50px;
     border-radius: 8px;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
   }
 
   .search-sheet-title {

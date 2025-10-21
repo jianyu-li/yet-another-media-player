@@ -317,6 +317,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._collapsedBaselineHeight = 220;
     this._lastRenderedCollapsed = false;
     this._lastRenderedHideControls = false;
+    this._artworkObjectFit = "cover";
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -1974,7 +1975,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const isMobile = window.innerWidth <= 768;
         if (isMobile) {
           // Make artwork smaller on mobile when there are many controls
-          return "width: 60px; height: 60px; object-fit: cover; border-radius: 8px;";
+          return "width: 60px; height: 60px; object-fit: var(--yamp-artwork-fit, cover); border-radius: 8px;";
         }
       }
     }
@@ -2153,6 +2154,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._customAccent = "#ff9800";
     }
+    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none"]);
+    this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
+      ? config.artwork_object_fit
+      : "cover";
     
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -3609,6 +3614,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
         } else {
           this.shadowRoot.host.removeAttribute("data-has-custom-height");
         }
+        const currentFit = this._artworkObjectFit || "cover";
+        const bgSizeMap = {
+          cover: "cover",
+          contain: "contain",
+          fill: "100% 100%",
+          "scale-down": "contain",
+          none: "auto"
+        };
+        const bgSize = bgSizeMap[currentFit] || "cover";
+        this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', currentFit);
+        this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', bgSize);
       }
       
       const showChipRow = this.config.show_chip_row || "auto";
@@ -3929,7 +3945,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   min-height: ${collapsed
                     ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : "0px")
                     : (hideControlsNow ? "350px" : "350px")};
-                  background-size: cover;
+                  background-size: var(--yamp-artwork-bg-size, cover);
                   background-position: top center;
                   background-repeat: no-repeat;
                   filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
@@ -4538,7 +4554,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                   class="entity-options-search-thumb"
                                   src=${item.thumbnail}
                                   alt=${item.title}
-                                  style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
+                                  style="height:38px;width:38px;object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;margin-right:12px;"
                                   onerror="this.style.display='none'"
                                 />
                               ` : html`

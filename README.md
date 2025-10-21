@@ -60,6 +60,7 @@ Below you will find a list of all configuration options.
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
+| `artwork_object_fit`       | choice       | No           | `cover`     | Controls how artwork scales: `cover`, `contain`, `fill`, `scale-down`, or `none`                  |
 | `idle_image`               | image/camera/url | No           | —           | Background image when player is idle (supports local files, cameras, or URLs)                   |
 | `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |

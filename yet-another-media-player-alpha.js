@@ -1285,6 +1285,7 @@ const yampCardStyles = i$4`
     --shadow-light: 0 2px 8px rgba(0,0,0,0.13);
     --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);
     --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
+    --yamp-artwork-fit: cover;
   }
 
   :host([data-match-theme="false"]) {
@@ -1422,7 +1423,7 @@ const yampCardStyles = i$4`
     width: 100%;
     height: 100%;
     z-index: 0;
-    background-size: cover;
+    background-size: var(--yamp-artwork-bg-size, cover);
     background-position: top center;
     background-repeat: no-repeat;
     pointer-events: none;
@@ -1571,7 +1572,7 @@ const yampCardStyles = i$4`
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     box-shadow: 0 1px 4px rgba(0,0,0,0.18);
     display: block;
   }
@@ -1819,7 +1820,7 @@ const yampCardStyles = i$4`
     width: 100%;
     aspect-ratio: 1.75/1;
     overflow: hidden;
-    background-size: cover;
+    background-size: var(--yamp-artwork-bg-size, cover);
     background-repeat: no-repeat;
     background-position: top center;
   }
@@ -1827,7 +1828,7 @@ const yampCardStyles = i$4`
   .artwork {
     width: 96px;
     height: 96px;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     border-radius: 12px;
     box-shadow: var(--shadow-medium);
     background: #222;
@@ -2187,7 +2188,7 @@ const yampCardStyles = i$4`
     position: absolute;
     inset: 0;
     z-index: 0;
-    background-size: cover;
+    background-size: var(--yamp-artwork-bg-size, cover);
     background-position: top center;
     background-repeat: no-repeat;
     pointer-events: none;
@@ -2289,7 +2290,7 @@ const yampCardStyles = i$4`
     width: 102px;
     height: 102px;
     border-radius: 16px;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     background: transparent;
     box-shadow: 0 1px 6px rgba(0,0,0,0.22);
     pointer-events: none;
@@ -2537,7 +2538,7 @@ const yampCardStyles = i$4`
     width: 40px;
     height: 40px;
     border-radius: 6px;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   }
 
@@ -2981,7 +2982,7 @@ const yampCardStyles = i$4`
     height: 38px;
     width: 38px;
     border-radius: var(--button-border-radius);
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
     box-shadow: 0 1px 5px rgba(0,0,0,0.16);
     margin-right: 12px;
   }
@@ -3456,7 +3457,7 @@ const yampCardStyles = i$4`
     width: 50px;
     height: 50px;
     border-radius: 8px;
-    object-fit: cover;
+    object-fit: var(--yamp-artwork-fit, cover);
   }
 
   .search-sheet-title {
@@ -10826,6 +10827,46 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       label: "Missing Artwork"
     }];
     return x`
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              label="Artwork Fit"
+              .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "cover",
+          label: "Cover (default)"
+        }, {
+          value: "contain",
+          label: "Contain"
+        }, {
+          value: "fill",
+          label: "Fill"
+        }, {
+          value: "scale-down",
+          label: "Scale Down"
+        }, {
+          value: "none",
+          label: "None"
+        }]
+      }
+    }}
+              .value=${this._config.artwork_object_fit ?? "cover"}
+              @value-changed=${e => {
+      const value = e.detail.value;
+      this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
+    }}
+            ></ha-selector>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="config-subtitle">
+            Controls how artwork scales across the card (main art, chips, overrides). Choose a different fit if images appear cropped or stretched.
+          </div>
+        </div>
+
         <div class="form-row action-group">
           <div class="action-group-header">
             <div class="action-group-title">Artwork Overrides</div>
@@ -10903,6 +10944,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             Overrides are evaluated from top to bottom. Drag to reorder. Changes save automatically.
           </div>
         </div>
+
       `;
   }
   _renderActiveTab() {
@@ -12444,6 +12486,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._collapsedBaselineHeight = 220;
     this._lastRenderedCollapsed = false;
     this._lastRenderedHideControls = false;
+    this._artworkObjectFit = "cover";
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -14074,7 +14117,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const isMobile = window.innerWidth <= 768;
         if (isMobile) {
           // Make artwork smaller on mobile when there are many controls
-          return "width: 60px; height: 60px; object-fit: cover; border-radius: 8px;";
+          return "width: 60px; height: 60px; object-fit: var(--yamp-artwork-fit, cover); border-radius: 8px;";
         }
       }
     }
@@ -14242,6 +14285,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     } else {
       this._customAccent = "#ff9800";
     }
+    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none"]);
+    this._artworkObjectFit = allowedFits.has(config.artwork_object_fit) ? config.artwork_object_fit : "cover";
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
@@ -15654,6 +15699,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
       } else {
         this.shadowRoot.host.removeAttribute("data-has-custom-height");
       }
+      const currentFit = this._artworkObjectFit || "cover";
+      const bgSizeMap = {
+        cover: "cover",
+        contain: "contain",
+        fill: "100% 100%",
+        "scale-down": "contain",
+        none: "auto"
+      };
+      const bgSize = bgSizeMap[currentFit] || "cover";
+      this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', currentFit);
+      this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', bgSize);
     }
     const showChipRow = this.config.show_chip_row || "auto";
     const hasMultipleEntities = this.entityObjs.length > 1;
@@ -15956,7 +16012,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 style="
                   background-image: ${idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none"};
                   min-height: ${collapsed ? hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : "0px" : hideControlsNow ? "350px" : "350px"};
-                  background-size: cover;
+                  background-size: var(--yamp-artwork-bg-size, cover);
                   background-position: top center;
                   background-repeat: no-repeat;
                   filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
@@ -16564,7 +16620,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                   class="entity-options-search-thumb"
                                   src=${item.thumbnail}
                                   alt=${item.title}
-                                  style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
+                                  style="height:38px;width:38px;object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;margin-right:12px;"
                                   onerror="this.style.display='none'"
                                 />
                               ` : x`
