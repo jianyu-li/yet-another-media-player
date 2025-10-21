@@ -1986,6 +1986,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!state || !state.attributes) return null;
     
     const attrs = state.attributes;
+    const entityId = state.entity_id;
     const appId = attrs.app_id;
     const prefix = this.config?.artwork_hostname || '';
     
@@ -1993,33 +1994,48 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let sizePercentage = null;
     
     // Check for media artwork overrides first
-    const overrides = this.config?.media_artwork_overrides;
-    if (overrides && Array.isArray(overrides)) {
-      const {
-        media_title,
-        media_artist,
-        media_album_name,
-        media_content_id,
-        media_channel
-      } = attrs;
-      
-      // Find matching override
-      let override = overrides.find(override => 
-        (media_title && media_title === override.media_title_equals) ||
-        (media_artist && media_artist === override.media_artist_equals) ||
-        (media_album_name && media_album_name === override.media_album_name_equals) ||
-        (media_content_id && media_content_id === override.media_content_id_equals) ||
-        (media_channel && media_channel === override.media_channel_equals)
-      );
-      
-      // If no specific match found, check for fallback when no artwork
+    const overrides = Array.isArray(this.config?.media_artwork_overrides)
+      ? this.config.media_artwork_overrides
+      : null;
+    if (overrides && overrides.length) {
+      const getOverrideValue = (override, key) => {
+        if (!override) return undefined;
+        return override[key];
+      };
+
+      const matchers = [
+        ["media_title", "media_title"],
+        ["media_artist", "media_artist"],
+        ["media_album_name", "media_album_name"],
+        ["media_content_id", "media_content_id"],
+        ["media_channel", "media_channel"],
+        ["app_name", "app_name"],
+        ["media_content_type", "media_content_type"],
+        ["entity_id", "entity_id"],
+      ];
+
+      const findSpecificMatch = () =>
+        overrides.find((override) =>
+          matchers.some(([attrKey, overrideKey]) => {
+            const expected = getOverrideValue(override, overrideKey);
+            if (expected === undefined) return false;
+            const value = attrKey === "entity_id" ? entityId : attrs[attrKey];
+            return value === expected;
+          })
+        );
+
+      let override = findSpecificMatch();
+
       if (!override) {
         const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
         if (!hasArtwork) {
-          override = overrides.find(override => override.if_missing);
+          override = overrides.find((item) => item?.missing_art_url);
+          if (override?.missing_art_url) {
+            override = { ...override, image_url: override.missing_art_url };
+          }
         }
       }
-      
+
       if (override?.image_url) {
         artworkUrl = override.image_url;
         sizePercentage = override?.size_percentage;
@@ -2154,7 +2170,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
-    // Do not mutate config.force_chip_row here.
   }
 
   // Returns array of entity config objects, including group_volume if present in user config.

@@ -13823,7 +13823,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
-    // Do not mutate config.force_chip_row here.
   }
 
   // Returns array of entity config objects, including group_volume if present in user config.

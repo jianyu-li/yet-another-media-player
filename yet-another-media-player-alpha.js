@@ -723,35 +723,44 @@ function getArtworkUrl(state) {
   let fallbackArtwork = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
   if (!state || !state.attributes) return null;
   const attrs = state.attributes;
+  const entityId = state.entity_id;
   attrs.app_id;
   let artworkUrl = null;
   let sizePercentage = null;
 
   // Check for media artwork overrides first
-  if (overrides && Array.isArray(overrides)) {
-    var _override;
-    const {
-      media_title,
-      media_artist,
-      media_album_name,
-      media_content_id,
-      media_channel
-    } = attrs;
-
-    // Find matching override
-    let override = overrides.find(override => media_title && media_title === override.media_title_equals || media_artist && media_artist === override.media_artist_equals || media_album_name && media_album_name === override.media_album_name_equals || media_content_id && media_content_id === override.media_content_id_equals || media_channel && media_channel === override.media_channel_equals);
-
-    // If no specific match found, check for fallback when no artwork
+  if (overrides && Array.isArray(overrides) && overrides.length) {
+    var _override2;
+    const getOverrideValue = (override, key) => {
+      if (!override) return undefined;
+      return override[key];
+    };
+    const matchers = [["media_title", "media_title"], ["media_artist", "media_artist"], ["media_album_name", "media_album_name"], ["media_content_id", "media_content_id"], ["media_channel", "media_channel"], ["app_name", "app_name"], ["media_content_type", "media_content_type"], ["entity_id", "entity_id"]];
+    const findSpecificMatch = () => overrides.find(override => matchers.some(_ref => {
+      let [attrKey, overrideKey] = _ref;
+      const expected = getOverrideValue(override, overrideKey);
+      if (expected === undefined) return false;
+      const value = attrKey === "entity_id" ? entityId : attrs[attrKey];
+      return value === expected;
+    }));
+    let override = findSpecificMatch();
     if (!override) {
       const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
       if (!hasArtwork) {
-        override = overrides.find(override => override.if_missing);
+        var _override;
+        override = overrides.find(item => item === null || item === void 0 ? void 0 : item.missing_art_url);
+        if ((_override = override) !== null && _override !== void 0 && _override.missing_art_url) {
+          override = {
+            ...override,
+            image_url: override.missing_art_url
+          };
+        }
       }
     }
-    if ((_override = override) !== null && _override !== void 0 && _override.image_url) {
-      var _override2;
+    if ((_override2 = override) !== null && _override2 !== void 0 && _override2.image_url) {
+      var _override3;
       artworkUrl = override.image_url;
-      sizePercentage = (_override2 = override) === null || _override2 === void 0 ? void 0 : _override2.size_percentage;
+      sizePercentage = (_override3 = override) === null || _override3 === void 0 ? void 0 : _override3.size_percentage;
     }
   }
 
@@ -791,7 +800,7 @@ function getArtworkUrl(state) {
 }
 
 // Helper to render a single chip
-function renderChip(_ref) {
+function renderChip(_ref2) {
   let {
     idx,
     selected,
@@ -806,7 +815,7 @@ function renderChip(_ref) {
     onPointerDown,
     onPointerMove,
     onPointerUp
-  } = _ref;
+  } = _ref2;
   return x`
     <button class="chip"
             ?selected=${selected}
@@ -837,7 +846,7 @@ function renderChip(_ref) {
 }
 
 // Helper to render a group chip: same as chip but with label (with count), no badge/icon for group, just art/icon and label.
-function renderGroupChip(_ref2) {
+function renderGroupChip(_ref3) {
   let {
     idx,
     selected,
@@ -852,7 +861,7 @@ function renderGroupChip(_ref2) {
     onPointerDown,
     onPointerMove,
     onPointerUp
-  } = _ref2;
+  } = _ref3;
   return x`
     <button class="chip group"
             ?selected=${selected}
@@ -905,12 +914,12 @@ function renderGroupChip(_ref2) {
 }
 
 // Pin/hold logic helpers (timer, etc)
-function createHoldToPinHandler(_ref3) {
+function createHoldToPinHandler(_ref4) {
   let {
     onPin,
     holdTime = 600,
     moveThreshold = 8
-  } = _ref3;
+  } = _ref4;
   let holdTimer = null;
   let startX = null;
   let startY = null;
@@ -949,7 +958,7 @@ function createHoldToPinHandler(_ref3) {
   };
 }
 // Central chip row renderer
-function renderChipRow(_ref4) {
+function renderChipRow(_ref5) {
   let {
     groupedSortedEntityIds,
     entityIds,
@@ -972,7 +981,7 @@ function renderChipRow(_ref4) {
     onPointerDown,
     onPointerMove,
     onPointerUp
-  } = _ref4;
+  } = _ref5;
   if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return E;
   return x`
     ${groupedSortedEntityIds.map(group => {
@@ -10245,6 +10254,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     this._serviceItems = [];
     this._useTemplate = null; // auto-detect per entity on open
     this._useVolTemplate = null; // auto-detect per entity on open
+    this._artworkOverrides = [];
   }
   firstUpdated() {
     this._serviceItems = this._getServiceItems();
@@ -10258,6 +10268,77 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     if (!stateObj) return false;
     if (this._supportsFeature(stateObj, SUPPORT_GROUPING)) return true;
     return Array.isArray((_stateObj$attributes = stateObj.attributes) === null || _stateObj$attributes === void 0 ? void 0 : _stateObj$attributes.group_members);
+  }
+  _normalizeArtworkOverrides(overrides) {
+    if (!Array.isArray(overrides)) return [];
+    const matchKeys = ["media_title", "media_artist", "media_album_name", "media_content_id", "media_channel", "app_name", "media_content_type", "entity_id"];
+    return overrides.map(item => {
+      if (!item || typeof item !== "object") {
+        return {
+          match_type: "media_title",
+          match_value: "",
+          image_url: "",
+          size_percentage: undefined
+        };
+      }
+      const sizePercentage = item.size_percentage;
+      if (item.missing_art_url !== undefined) {
+        return {
+          match_type: "missing_art",
+          match_value: "",
+          image_url: item.missing_art_url ?? "",
+          size_percentage: sizePercentage
+        };
+      }
+      let matchType = "media_title";
+      let matchValue = "";
+      for (const key of matchKeys) {
+        if (item[key] !== undefined) {
+          matchType = key;
+          matchValue = item[key] ?? "";
+          break;
+        }
+        const legacyKey = `${key}_equals`;
+        if (item[legacyKey] !== undefined) {
+          matchType = key;
+          matchValue = item[legacyKey] ?? "";
+          break;
+        }
+      }
+      return {
+        match_type: matchType,
+        match_value: matchValue ?? "",
+        image_url: item.image_url ?? "",
+        size_percentage: sizePercentage
+      };
+    });
+  }
+  _serializeArtworkOverride(rule) {
+    if (!rule) return null;
+    const image = (rule.image_url ?? "").trim();
+    if (!image) return null;
+    if (rule.match_type === "missing_art") {
+      return {
+        missing_art_url: image,
+        ...(rule.size_percentage !== undefined ? {
+          size_percentage: rule.size_percentage
+        } : {})
+      };
+    }
+    const value = (rule.match_value ?? "").trim();
+    if (!value) return null;
+    return {
+      image_url: image,
+      [rule.match_type]: value,
+      ...(rule.size_percentage !== undefined ? {
+        size_percentage: rule.size_percentage
+      } : {})
+    };
+  }
+  _writeArtworkOverrides(list) {
+    this._artworkOverrides = list;
+    const serialized = list.map(rule => this._serializeArtworkOverride(rule)).filter(item => item);
+    this._updateConfig("media_artwork_overrides", serialized.length ? serialized : undefined);
   }
   _getServiceItems() {
     var _this$hass;
@@ -10287,6 +10368,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       ...config,
       entities: normalizedEntities
     };
+    this._artworkOverrides = this._normalizeArtworkOverrides(config.media_artwork_overrides);
   }
   _updateConfig(key, value) {
     const newConfig = {
@@ -10301,6 +10383,66 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       bubbles: true,
       composed: true
     }));
+  }
+  _addArtworkOverride() {
+    const list = [...(this._artworkOverrides ?? [])];
+    list.push({
+      match_type: "media_title",
+      match_value: "",
+      image_url: "",
+      size_percentage: undefined
+    });
+    this._writeArtworkOverrides(list);
+  }
+  _removeArtworkOverride(index) {
+    const list = [...(this._artworkOverrides ?? [])];
+    if (index < 0 || index >= list.length) return;
+    list.splice(index, 1);
+    this._writeArtworkOverrides(list);
+  }
+  _onArtworkMatchTypeChange(index, newType) {
+    if (!newType) return;
+    const list = [...(this._artworkOverrides ?? [])];
+    if (!list[index]) return;
+    const updated = {
+      ...list[index],
+      match_type: newType
+    };
+    if (newType === "missing_art") {
+      updated.match_value = "";
+    }
+    list[index] = updated;
+    this._writeArtworkOverrides(list);
+  }
+  _onArtworkMatchValueChange(index, value) {
+    const list = [...(this._artworkOverrides ?? [])];
+    if (!list[index]) return;
+    list[index] = {
+      ...list[index],
+      match_value: value
+    };
+    this._writeArtworkOverrides(list);
+  }
+  _onArtworkImageUrlChange(index, value) {
+    const list = [...(this._artworkOverrides ?? [])];
+    if (!list[index]) return;
+    list[index] = {
+      ...list[index],
+      image_url: value
+    };
+    this._writeArtworkOverrides(list);
+  }
+  _onArtworkMoved(e) {
+    const {
+      oldIndex,
+      newIndex
+    } = e.detail ?? {};
+    const list = [...(this._artworkOverrides ?? [])];
+    if (oldIndex === undefined || newIndex === undefined) return;
+    if (oldIndex < 0 || newIndex < 0 || oldIndex >= list.length || newIndex >= list.length) return;
+    const [moved] = list.splice(oldIndex, 1);
+    list.splice(newIndex, 0, moved);
+    this._writeArtworkOverrides(list);
   }
   _updateEntityProperty(key, value) {
     const entities = [...(this._config.entities ?? [])];
@@ -10335,6 +10477,11 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           gap: 4px;
           padding: 8px 8px 0 8px;
           border-bottom: 1px solid var(--divider-color, #444);
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .tabs::-webkit-scrollbar {
+          display: none;
         }
         .tab {
           background: transparent;
@@ -10348,6 +10495,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           border-bottom: 3px solid transparent;
           transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);
           font-size: 1.06em;
+          flex: 0 0 auto;
         }
         .tab-mobile-label {
           display: none;
@@ -10569,6 +10717,15 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           background: rgba(255, 255, 255, 0.05);
           padding: 2px 4px;
           border-radius: 4px;
+        }
+        .help-text pre {
+          margin: 8px 0 0 0;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 8px 12px;
+          border-radius: 8px;
+          font-family: monospace;
+          font-size: 0.92em;
+          white-space: pre-wrap;
         } 
         .icon-button {
           display: inline-flex;
@@ -10593,6 +10750,17 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           display: flex;
           justify-content: center;
         }
+        .artwork-row .artwork-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          flex: 1;
+        }
+        .config-subtitle.small {
+          font-size: 0.9em;
+          opacity: 0.75;
+          margin: 2px 0 0 0;
+        }
       `;
   }
   render() {
@@ -10604,7 +10772,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     const editingAction = this._actionEditorIndex !== null;
     return x`
         <div class="tabs">
-          ${["Entities", "Behavior", "Look and Feel", "Actions"].map(name => x`
+          ${["Entities", "Behavior", "Look and Feel", "Artwork", "Actions"].map(name => x`
             <button
               class="tab" ${this._activeTab === name ? 'selected' : ''}
               @click=${() => {
@@ -10627,6 +10795,116 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         </div>
       `;
   }
+  _renderArtworkTab() {
+    const overrides = [...(this._artworkOverrides ?? [])];
+    const matchOptions = [{
+      value: "media_title",
+      label: "Media Title"
+    }, {
+      value: "media_artist",
+      label: "Media Artist"
+    }, {
+      value: "media_album_name",
+      label: "Album Name"
+    }, {
+      value: "media_content_id",
+      label: "Content ID"
+    }, {
+      value: "media_channel",
+      label: "Channel"
+    }, {
+      value: "app_name",
+      label: "App Name"
+    }, {
+      value: "media_content_type",
+      label: "Content Type"
+    }, {
+      value: "entity_id",
+      label: "Entity ID"
+    }, {
+      value: "missing_art",
+      label: "Missing Artwork"
+    }];
+    return x`
+        <div class="form-row action-group">
+          <div class="action-group-header">
+            <div class="action-group-title">Artwork Overrides</div>
+          </div>
+          <yamp-sortable-alpha @item-moved=${e => this._onArtworkMoved(e)}>
+            <div class="sortable-container">
+              ${overrides.length ? overrides.map((rule, idx) => x`
+                    <div class="action-row-inner sortable-item artwork-row">
+                      <div class="handle action-handle">
+                        <ha-icon icon="mdi:drag"></ha-icon>
+                      </div>
+                      <div class="artwork-fields">
+                        <ha-selector
+                          .hass=${this.hass}
+                          label="Match Field"
+                          .selector=${{
+      select: {
+        mode: "dropdown",
+        options: matchOptions
+      }
+    }}
+                          .value=${rule.match_type ?? "media_title"}
+                          @value-changed=${e => this._onArtworkMatchTypeChange(idx, e.detail.value)}
+                        ></ha-selector>
+                        ${rule.match_type === "missing_art" ? x`
+                                <div class="config-subtitle small">
+                                  Applies when the selected media provides no artwork.
+                                </div>
+                              ` : rule.match_type === "entity_id" ? x`
+                                  <ha-entity-picker
+                                    class="full-width"
+                                    .hass=${this.hass}
+                                    .includeDomains=${["media_player"]}
+                                    .value=${rule.match_value ?? ""}
+                                    @value-changed=${e => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                  ></ha-entity-picker>
+                                ` : x`
+                                  <ha-textfield
+                                    class="full-width"
+                                    label="Match Value"
+                                    .value=${rule.match_value ?? ""}
+                                    @input=${e => this._onArtworkMatchValueChange(idx, e.target.value)}
+                                  ></ha-textfield>
+                                `}
+                        <ha-textfield
+                          class="full-width"
+                          label=${rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL"}
+                          .value=${rule.image_url ?? ""}
+                          @input=${e => this._onArtworkImageUrlChange(idx, e.target.value)}
+                        ></ha-textfield>
+                      </div>
+                      <div class="action-row-actions">
+                        <ha-icon
+                          class="icon-button"
+                          icon="mdi:trash-can"
+                          title="Delete Override"
+                          @click=${() => this._removeArtworkOverride(idx)}
+                        ></ha-icon>
+                      </div>
+                    </div>
+                  `) : x`<div class="config-subtitle" style="padding:12px 0;">No artwork overrides configured. Use the plus button below to add one.</div>`}
+            </div>
+          </yamp-sortable-alpha>
+          <div class="add-action-button-wrapper">
+            <ha-icon
+              class="icon-button"
+              icon="mdi:plus"
+              title="Add Artwork Override"
+              @click=${this._addArtworkOverride}
+            ></ha-icon>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="config-subtitle">
+            Overrides are evaluated from top to bottom. Drag to reorder. Changes save automatically.
+          </div>
+        </div>
+      `;
+  }
   _renderActiveTab() {
     switch (this._activeTab) {
       case "Entities":
@@ -10635,6 +10913,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         return this._renderBehaviorTab();
       case "Look and Feel":
         return this._renderVisualTab();
+      case "Artwork":
+        return this._renderArtworkTab();
       case "Actions":
         return this._renderActionsTab();
       default:
@@ -13806,37 +14086,46 @@ class YetAnotherMediaPlayerCard extends i$1 {
     var _this$config8, _this$config9;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
+    const entityId = state.entity_id;
     attrs.app_id;
     const prefix = ((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
 
     // Check for media artwork overrides first
-    const overrides = (_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.media_artwork_overrides;
-    if (overrides && Array.isArray(overrides)) {
-      var _override;
-      const {
-        media_title,
-        media_artist,
-        media_album_name,
-        media_content_id,
-        media_channel
-      } = attrs;
-
-      // Find matching override
-      let override = overrides.find(override => media_title && media_title === override.media_title_equals || media_artist && media_artist === override.media_artist_equals || media_album_name && media_album_name === override.media_album_name_equals || media_content_id && media_content_id === override.media_content_id_equals || media_channel && media_channel === override.media_channel_equals);
-
-      // If no specific match found, check for fallback when no artwork
+    const overrides = Array.isArray((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
+    if (overrides && overrides.length) {
+      var _override2;
+      const getOverrideValue = (override, key) => {
+        if (!override) return undefined;
+        return override[key];
+      };
+      const matchers = [["media_title", "media_title"], ["media_artist", "media_artist"], ["media_album_name", "media_album_name"], ["media_content_id", "media_content_id"], ["media_channel", "media_channel"], ["app_name", "app_name"], ["media_content_type", "media_content_type"], ["entity_id", "entity_id"]];
+      const findSpecificMatch = () => overrides.find(override => matchers.some(_ref2 => {
+        let [attrKey, overrideKey] = _ref2;
+        const expected = getOverrideValue(override, overrideKey);
+        if (expected === undefined) return false;
+        const value = attrKey === "entity_id" ? entityId : attrs[attrKey];
+        return value === expected;
+      }));
+      let override = findSpecificMatch();
       if (!override) {
         const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
         if (!hasArtwork) {
-          override = overrides.find(override => override.if_missing);
+          var _override;
+          override = overrides.find(item => item === null || item === void 0 ? void 0 : item.missing_art_url);
+          if ((_override = override) !== null && _override !== void 0 && _override.missing_art_url) {
+            override = {
+              ...override,
+              image_url: override.missing_art_url
+            };
+          }
         }
       }
-      if ((_override = override) !== null && _override !== void 0 && _override.image_url) {
-        var _override2;
+      if ((_override2 = override) !== null && _override2 !== void 0 && _override2.image_url) {
+        var _override3;
         artworkUrl = override.image_url;
-        sizePercentage = (_override2 = override) === null || _override2 === void 0 ? void 0 : _override2.size_percentage;
+        sizePercentage = (_override3 = override) === null || _override3 === void 0 ? void 0 : _override3.size_percentage;
       }
     }
 
@@ -13969,7 +14258,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
-    // Do not mutate config.force_chip_row here.
   }
 
   // Returns array of entity config objects, including group_volume if present in user config.
@@ -15375,16 +15663,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
       action,
       idx
     }));
-    const rowActions = decoratedActions.filter(_ref2 => {
-      let {
-        action
-      } = _ref2;
-      return !(action !== null && action !== void 0 && action.in_menu);
-    });
-    const menuOnlyActions = decoratedActions.filter(_ref3 => {
+    const rowActions = decoratedActions.filter(_ref3 => {
       let {
         action
       } = _ref3;
+      return !(action !== null && action !== void 0 && action.in_menu);
+    });
+    const menuOnlyActions = decoratedActions.filter(_ref4 => {
+      let {
+        action
+      } = _ref4;
       return action === null || action === void 0 ? void 0 : action.in_menu;
     });
     const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
@@ -15591,7 +15879,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass25, _this$hass26, _ref4;
+        var _this$hass25, _this$hass26, _ref5;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -15605,7 +15893,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         // Prefer playback entity artwork, fallback to main entity
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return ((_ref4 = playbackArtwork || mainArtwork) === null || _ref4 === void 0 ? void 0 : _ref4.url) || null;
+        return ((_ref5 = playbackArtwork || mainArtwork) === null || _ref5 === void 0 ? void 0 : _ref5.url) || null;
       },
       getIsMaActive: id => {
         var _this$hass27;
@@ -15651,10 +15939,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 </div>
             ` : E}
             ${renderActionChipRow({
-      actions: rowActions.map(_ref5 => {
+      actions: rowActions.map(_ref6 => {
         let {
           action
-        } = _ref5;
+        } = _ref6;
         return action;
       }),
       onActionChipClick: idx => {
@@ -15818,7 +16106,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass29, _this$hass30, _ref6;
+        var _this$hass29, _this$hass30, _ref7;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -15828,7 +16116,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const mainState = (_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[mainId];
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return ((_ref6 = playbackArtwork || mainArtwork) === null || _ref6 === void 0 ? void 0 : _ref6.url) || null;
+        return ((_ref7 = playbackArtwork || mainArtwork) === null || _ref7 === void 0 ? void 0 : _ref7.url) || null;
       },
       getIsMaActive: id => {
         var _this$hass31;
@@ -15944,11 +16232,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return E;
     })()}
                   ${menuOnlyActions.length ? x`
-                    ${menuOnlyActions.map(_ref7 => {
+                    ${menuOnlyActions.map(_ref8 => {
       let {
         action,
         idx
-      } = _ref7;
+      } = _ref8;
       const label = this._getActionLabel(action);
       return x`
                         <button
