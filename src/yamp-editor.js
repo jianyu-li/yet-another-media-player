@@ -43,6 +43,12 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       return (stateObj.attributes.supported_features & featureBit) !== 0;
     }
 
+    _isGroupCapable(stateObj) {
+      if (!stateObj) return false;
+      if (this._supportsFeature(stateObj, SUPPORT_GROUPING)) return true;
+      return Array.isArray(stateObj.attributes?.group_members);
+    }
+
     _getServiceItems() {
       if (!this.hass?.services) return [];
       return Object.entries(this.hass.services).flatMap(([domain, services]) =>
@@ -800,7 +806,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     _renderEntityEditor(entity) {
 
       const stateObj = this.hass?.states?.[entity?.entity_id];
-      const showGroupVolume = this._supportsFeature(stateObj, SUPPORT_GROUPING); 
+      const showGroupVolume = this._isGroupCapable(stateObj); 
   
       return html`
         <div class="entity-editor-header">
