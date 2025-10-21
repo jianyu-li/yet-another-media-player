@@ -67,6 +67,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
 
+  _isGroupCapable(stateObj) {
+    if (!stateObj) return false;
+    if (this._supportsFeature(stateObj, SUPPORT_GROUPING)) return true;
+    return Array.isArray(stateObj.attributes?.group_members);
+  }
+
   // Find button entities associated with a Music Assistant entity
   _findAssociatedButtonEntities(maEntityId) {
     return findAssociatedButtonEntities(this.hass, maEntityId);
@@ -2219,8 +2225,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // For grouping menu: use MA entity (main entity if it's MA, or configured MA entity)
         // Check if main entity is a Music Assistant entity by checking if it supports grouping
         const mainState = this.hass.states[obj.entity_id];
-        const mainIsMA = mainState?.attributes?.supported_features && 
-                        (mainState.attributes.supported_features & SUPPORT_GROUPING) !== 0;
+        const mainIsMA = this._isGroupCapable(mainState);
         
         if (mainIsMA) {
           return obj.entity_id;
@@ -3084,8 +3089,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getActionLabel(action) {
     if (!action) return "";
-    if (action.name) return action.name;
+    const hasName = typeof action.name === "string" && action.name.trim() !== "";
+    if (hasName) return action.name.trim();
+    const iconOnly = !!action.icon;
     if (action.menu_item) {
+      if (iconOnly) return "";
       const menuLabels = {
         "search": "Search",
         "source": "Source",
@@ -3095,8 +3103,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       };
       return menuLabels[action.menu_item] ?? action.menu_item;
     }
-    if (action.service) return action.service;
-    return "Action";
+    if (action.service) return iconOnly ? "" : action.service;
+    return iconOnly ? "" : "Action";
   }
 
   async _onControlClick(action) {
@@ -4169,7 +4177,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         }
                         
                         const st = this.hass.states[actualGroupId];
-                        return acc + (this._supportsFeature(st, SUPPORT_GROUPING) ? 1 : 0);
+                        return acc + (this._isGroupCapable(st) ? 1 : 0);
                       }, 0);
                       
                       // Check current entity's grouping support
@@ -4192,7 +4200,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       if (
                         totalEntities > 1 &&
                         groupableCount > 1 &&
-                        this._supportsFeature(currGroupState, SUPPORT_GROUPING)
+                        this._isGroupCapable(currGroupState)
                       ) {
                         return html`
                           <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
@@ -4202,20 +4210,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     })()
                   }
                   ${menuOnlyActions.length ? html`
-                    ${menuOnlyActions.map(({ action, idx }) => html`
-                      <button
-                        class="entity-options-item menu-action-item"
-                        @click=${() => this._onMenuActionClick(idx)}
-                      >
-                        ${action.icon ? html`
-                          <ha-icon
-                            class="menu-action-icon"
-                            .icon=${action.icon}
-                          ></ha-icon>
-                        ` : nothing}
-                        <span class="menu-action-label">${this._getActionLabel(action)}</span>
-                      </button>
-                    `)}
+                    ${menuOnlyActions.map(({ action, idx }) => {
+                      const label = this._getActionLabel(action);
+                      return html`
+                        <button
+                          class="entity-options-item menu-action-item"
+                          @click=${() => this._onMenuActionClick(idx)}
+                        >
+                          ${action.icon ? html`
+                            <ha-icon
+                              class="menu-action-icon"
+                              .icon=${action.icon}
+                            ></ha-icon>
+                          ` : nothing}
+                          ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
+                        </button>
+                      `;
+                    })}
                   ` : nothing}
                 </div>
               ` : this._showTransferQueue ? html`
@@ -4618,7 +4629,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         }
                         
                         const maState = this.hass.states[maEntityId];
-                        if (maState && this._supportsFeature(maState, SUPPORT_GROUPING)) {
+                        if (maState && this._isGroupCapable(maState)) {
                           entityToCheck = maEntityId;
                           entityName = id;
                         }
@@ -4626,7 +4637,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       
                       if (!entityToCheck) {
                         const mainState = this.hass.states[id];
-                        if (mainState && this._supportsFeature(mainState, SUPPORT_GROUPING)) {
+                        if (mainState && this._isGroupCapable(mainState)) {
                           entityToCheck = id;
                           entityName = id;
                         }
@@ -5484,7 +5495,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
-    if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
+    if (!this._isGroupCapable(masterState)) return;
 
     // Get all other entities that support grouping and are not already grouped with master
     const alreadyGrouped = Array.isArray(masterState.attributes.group_members)
@@ -5513,7 +5524,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       
       const st = this.hass.states[resolvedGroupId];
-      if (this._supportsFeature(st, SUPPORT_GROUPING) && !alreadyGrouped.includes(resolvedGroupId)) {
+      if (this._isGroupCapable(st) && !alreadyGrouped.includes(resolvedGroupId)) {
         toJoin.push(resolvedGroupId);
       }
     }
@@ -5548,7 +5559,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
-    if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
+    if (!this._isGroupCapable(masterState)) return;
 
     const members = Array.isArray(masterState.attributes.group_members)
       ? masterState.attributes.group_members
@@ -5556,7 +5567,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Only unjoin those that support grouping
     const toUnjoin = members.filter(id => {
       const st = this.hass.states[id];
-      return this._supportsFeature(st, SUPPORT_GROUPING);
+      return this._isGroupCapable(st);
     });
     // Unjoin each member individually
     for (const id of toUnjoin) {
@@ -5589,7 +5600,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
-    if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
+    if (!this._isGroupCapable(masterState)) return;
     // For sync volume, use the same entity that's being used for grouping (the MA entity) to get the master volume
     const masterVolumeEntity = masterGroupId;
     const masterVolumeState = masterVolumeEntity ? this.hass.states[masterVolumeEntity] : null;
