@@ -604,6 +604,37 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       ];
 
       return html`
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              label="Artwork Fit"
+              .selector=${{
+                select: {
+                  mode: "dropdown",
+                  options: [
+                    { value: "cover", label: "Cover (default)" },
+                    { value: "contain", label: "Contain" },
+                    { value: "fill", label: "Fill" },
+                    { value: "scale-down", label: "Scale Down" },
+                    { value: "none", label: "None" }
+                  ]
+                }
+              }}
+              .value=${this._config.artwork_object_fit ?? "cover"}
+              @value-changed=${(e) => {
+                const value = e.detail.value;
+                this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
+              }}
+            ></ha-selector>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="config-subtitle">
+            Controls how artwork scales across the card (main art, chips, overrides). Choose a different fit if images appear cropped or stretched.
+          </div>
+        </div>
+
         <div class="form-row action-group">
           <div class="action-group-header">
             <div class="action-group-title">Artwork Overrides</div>
@@ -685,6 +716,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             Overrides are evaluated from top to bottom. Drag to reorder. Changes save automatically.
           </div>
         </div>
+
       `;
     }
 
