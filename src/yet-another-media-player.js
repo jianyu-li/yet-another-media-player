@@ -48,6 +48,65 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._holdHandler.pointerDown(e, idx);
     }
   }
+
+  _applyIdleScreen() {
+    if (this._idleScreenApplied) return;
+    const mode = this._idleScreen || "default";
+    switch (mode) {
+      case "search":
+        this._showEntityOptions = true;
+        this._showGrouping = false;
+        this._showSourceList = false;
+        this._showTransferQueue = false;
+        this._showResolvedEntities = false;
+        this._showSearchSheetInOptions();
+        break;
+      case "source":
+        this._openSourceList();
+        break;
+      case "more-info":
+        this._openMoreInfo();
+        break;
+      case "group-players":
+        this._openGrouping();
+        break;
+      case "transfer-queue":
+        this._openTransferQueue();
+        break;
+      default:
+        return;
+    }
+    this._idleScreenApplied = true;
+  }
+
+  _resetIdleScreen() {
+    if (!this._idleScreenApplied) return;
+    switch (this._idleScreen) {
+      case "search":
+        this._hideSearchSheetInOptions();
+        this._showEntityOptions = false;
+        break;
+      case "source":
+        this._closeSourceList();
+        this._showEntityOptions = false;
+        break;
+      case "group-players":
+        this._closeGrouping();
+        this._showEntityOptions = false;
+        break;
+      case "transfer-queue":
+        this._closeTransferQueue();
+        this._showEntityOptions = false;
+        break;
+      case "more-info":
+        // nothing to reset; HA more-info handles its own lifecycle
+        break;
+      default:
+        break;
+    }
+    this._idleScreenApplied = false;
+    this.requestUpdate();
+  }
   _handleChipPointerMove(e, idx) {
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerMove(e, idx);
@@ -318,6 +377,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastRenderedCollapsed = false;
     this._lastRenderedHideControls = false;
     this._artworkObjectFit = "cover";
+    this._idleScreen = "default";
+    this._idleScreenApplied = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -2189,6 +2250,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
       ? config.artwork_object_fit
       : "cover";
+    this._idleScreen = config.idle_screen || "default";
+    this._idleScreenApplied = false;
+    if (this._isIdle) {
+      this._applyIdleScreen();
+    }
     
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -4992,6 +5058,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._idleTimeout = null;
         if (this._isIdle) {
           this._isIdle = false;
+          this._resetIdleScreen();
           this.requestUpdate();
         }
       } else {
@@ -5001,6 +5068,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._idleTimeout = setTimeout(() => {
             this._isIdle = true;
             this._idleTimeout = null;
+            this._idleScreenApplied = false;
+            this._applyIdleScreen();
             this.requestUpdate();
           }, this._idleTimeoutMs);
         }
@@ -5008,6 +5077,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // If idle_timeout_ms is 0, ensure we're never idle
         if (this._idleTimeoutMs === 0 && this._isIdle) {
           this._isIdle = false;
+          this._resetIdleScreen();
           this.requestUpdate();
         }
       }
@@ -5057,6 +5127,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 { value: "auto", label: "Auto" },
                 { value: "always", label: "Always" },
                 { value: "in_menu", label: "In Menu" }
+              ]
+            }
+          },
+          required: false
+        },
+        {
+          name: "idle_screen",
+          selector: {
+            select: {
+              options: [
+                { value: "default", label: "Default" },
+                { value: "search", label: "Search" },
+                { value: "source", label: "Source" },
+                { value: "more-info", label: "More Info" },
+                { value: "group-players", label: "Group Players" },
+                { value: "transfer-queue", label: "Transfer Queue" }
               ]
             }
           },
