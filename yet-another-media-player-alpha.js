@@ -16369,9 +16369,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const idx = this._selectedIndex;
       const obj = this.entityObjs[idx];
       let role = "Main Entity";
+      let isActive = false;
       if (obj) {
         const maEntity = this._getActualResolvedMaEntityForState(idx);
         const volEntity = this._getVolumeEntity(idx);
+        const activeEntity = this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+        isActive = activeEntity === entityId;
         if (entityId === maEntity && maEntity !== obj.entity_id) {
           role = "Music Assistant Entity";
         } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
@@ -16387,7 +16390,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }}>
                           <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
                           <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                            <div>${name}</div>
+                            <div>${isActive ? `${name} (Active)` : name}</div>
                             <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
                           </div>
                         </button>
