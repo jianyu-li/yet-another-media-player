@@ -875,6 +875,26 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
         </div>
 
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: { mode: "dropdown", options: [
+                { value: "default", label: "Default" },
+                { value: "search", label: "Search" },
+                { value: "source", label: "Source" },
+                { value: "more-info", label: "More Info" },
+                { value: "group-players", label: "Group Players" },
+                { value: "transfer-queue", label: "Transfer Queue" }
+              ]}
+            }}
+            .value=${this._config.idle_screen ?? "default"}
+            label="Idle Screen"
+            @value-changed=${(e) => this._updateConfig("idle_screen", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle">Choose which screen to show automatically when the card becomes idle.</div>
+        </div>
+
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
