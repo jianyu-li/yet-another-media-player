@@ -2574,7 +2574,7 @@ const yampCardStyles = i$4`
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 8px;  transform: translateX(-25px);
+    gap: 0px;  transform: translateX(-25px);
 
   }
 
