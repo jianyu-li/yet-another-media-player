@@ -735,12 +735,12 @@ function getArtworkUrl(state) {
       if (!override) return undefined;
       return override[key];
     };
-    const matchers = [["media_title", "media_title"], ["media_artist", "media_artist"], ["media_album_name", "media_album_name"], ["media_content_id", "media_content_id"], ["media_channel", "media_channel"], ["app_name", "app_name"], ["media_content_type", "media_content_type"], ["entity_id", "entity_id"]];
+    const matchers = [["media_title", "media_title"], ["media_artist", "media_artist"], ["media_album_name", "media_album_name"], ["media_content_id", "media_content_id"], ["media_channel", "media_channel"], ["app_name", "app_name"], ["media_content_type", "media_content_type"], ["entity_id", "entity_id"], ["entity_state", "entity_state"]];
     const findSpecificMatch = () => overrides.find(override => matchers.some(_ref => {
       let [attrKey, overrideKey] = _ref;
       const expected = getOverrideValue(override, overrideKey);
       if (expected === undefined) return false;
-      const value = attrKey === "entity_id" ? entityId : attrs[attrKey];
+      const value = attrKey === "entity_id" ? entityId : attrKey === "entity_state" ? state === null || state === void 0 ? void 0 : state.state : attrs[attrKey];
       return value === expected;
     }));
     let override = findSpecificMatch();
@@ -2568,6 +2568,44 @@ const yampCardStyles = i$4`
     left: calc(50% - 15px);
     top: 50%;
     transform: translate(-50%, -50%);
+  }
+
+  .persistent-volume-stepper {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;  transform: translateX(-25px);
+
+  }
+
+  .persistent-volume-stepper .stepper-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  .persistent-volume-stepper .stepper-btn:hover {
+    color: var(--custom-accent);
+  }
+
+  .persistent-volume-stepper .stepper-btn:active {
+    transform: scale(0.92);
+  }
+
+  .persistent-volume-stepper .stepper-value {
+    font-size: 0.95em;
+    opacity: 0.85;
+    min-width: 36px;
+    text-align: center;
+    color: #fff;
   }
 
   .persistent-control-btn {
@@ -10271,24 +10309,29 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     return Array.isArray((_stateObj$attributes = stateObj.attributes) === null || _stateObj$attributes === void 0 ? void 0 : _stateObj$attributes.group_members);
   }
   _normalizeArtworkOverrides(overrides) {
+    var _this$_config;
     if (!Array.isArray(overrides)) return [];
-    const matchKeys = ["media_title", "media_artist", "media_album_name", "media_content_id", "media_channel", "app_name", "media_content_type", "entity_id"];
+    const matchKeys = ["media_title", "media_artist", "media_album_name", "media_content_id", "media_channel", "app_name", "media_content_type", "entity_id", "entity_state"];
+    const defaultFit = ((_this$_config = this._config) === null || _this$_config === void 0 ? void 0 : _this$_config.artwork_object_fit) ?? "cover";
     return overrides.map(item => {
       if (!item || typeof item !== "object") {
         return {
           match_type: "media_title",
           match_value: "",
           image_url: "",
-          size_percentage: undefined
+          size_percentage: undefined,
+          object_fit: defaultFit
         };
       }
       const sizePercentage = item.size_percentage;
+      const objectFit = item.object_fit ?? defaultFit;
       if (item.missing_art_url !== undefined) {
         return {
           match_type: "missing_art",
           match_value: "",
           image_url: item.missing_art_url ?? "",
-          size_percentage: sizePercentage
+          size_percentage: sizePercentage,
+          object_fit: objectFit
         };
       }
       let matchType = "media_title";
@@ -10310,34 +10353,40 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         match_type: matchType,
         match_value: matchValue ?? "",
         image_url: item.image_url ?? "",
-        size_percentage: sizePercentage
+        size_percentage: sizePercentage,
+        object_fit: objectFit
       };
     });
   }
   _serializeArtworkOverride(rule) {
     if (!rule) return null;
     const image = (rule.image_url ?? "").trim();
-    if (!image) return null;
+    const fit = rule.object_fit ?? undefined;
     if (rule.match_type === "missing_art") {
-      return {
+      const out = {
         missing_art_url: image,
         ...(rule.size_percentage !== undefined ? {
           size_percentage: rule.size_percentage
         } : {})
       };
+      if (fit) out.object_fit = fit;
+      return out;
     }
-    const value = (rule.match_value ?? "").trim();
-    if (!value) return null;
-    return {
+    const value = rule.match_value ?? "";
+    const serialized = {
       image_url: image,
       [rule.match_type]: value,
       ...(rule.size_percentage !== undefined ? {
         size_percentage: rule.size_percentage
       } : {})
     };
+    if (fit) serialized.object_fit = fit;
+    return serialized;
   }
   _writeArtworkOverrides(list) {
-    this._artworkOverrides = list;
+    this._artworkOverrides = list.map(rule => ({
+      ...rule
+    }));
     const serialized = list.map(rule => this._serializeArtworkOverride(rule)).filter(item => item);
     this._updateConfig("media_artwork_overrides", serialized.length ? serialized : undefined);
   }
@@ -10386,12 +10435,15 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     }));
   }
   _addArtworkOverride() {
+    var _this$_config2;
     const list = [...(this._artworkOverrides ?? [])];
+    const defaultFit = ((_this$_config2 = this._config) === null || _this$_config2 === void 0 ? void 0 : _this$_config2.artwork_object_fit) ?? "cover";
     list.push({
       match_type: "media_title",
       match_value: "",
       image_url: "",
-      size_percentage: undefined
+      size_percentage: undefined,
+      object_fit: defaultFit
     });
     this._writeArtworkOverrides(list);
   }
@@ -10411,6 +10463,10 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     };
     if (newType === "missing_art") {
       updated.match_value = "";
+    } else if (newType === "entity_state") {
+      updated.match_value = updated.match_value || "playing";
+    } else if (updated.match_value === undefined) {
+      updated.match_value = "";
     }
     list[index] = updated;
     this._writeArtworkOverrides(list);
@@ -10420,7 +10476,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     if (!list[index]) return;
     list[index] = {
       ...list[index],
-      match_value: value
+      match_value: value ?? ""
     };
     this._writeArtworkOverrides(list);
   }
@@ -10429,7 +10485,16 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     if (!list[index]) return;
     list[index] = {
       ...list[index],
-      image_url: value
+      image_url: value ?? ""
+    };
+    this._writeArtworkOverrides(list);
+  }
+  _onArtworkObjectFitChange(index, value) {
+    const list = [...(this._artworkOverrides ?? [])];
+    if (!list[index]) return;
+    list[index] = {
+      ...list[index],
+      object_fit: value || undefined
     };
     this._writeArtworkOverrides(list);
   }
@@ -10811,6 +10876,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       value: "entity_id",
       label: "Entity ID"
     }, {
+      value: "entity_state",
+      label: "Entity State"
+    }, {
       value: "missing_art",
       label: "Missing Artwork"
     }];
@@ -10861,7 +10929,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           </div>
           <yamp-sortable-alpha @item-moved=${e => this._onArtworkMoved(e)}>
             <div class="sortable-container">
-              ${overrides.length ? overrides.map((rule, idx) => x`
+              ${overrides.length ? overrides.map((rule, idx) => {
+      var _this$_config3;
+      return x`
                     <div class="action-row-inner sortable-item artwork-row">
                       <div class="handle action-handle">
                         <ha-icon icon="mdi:drag"></ha-icon>
@@ -10871,11 +10941,11 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                           .hass=${this.hass}
                           label="Match Field"
                           .selector=${{
-      select: {
-        mode: "dropdown",
-        options: matchOptions
-      }
-    }}
+        select: {
+          mode: "dropdown",
+          options: matchOptions
+        }
+      }}
                           .value=${rule.match_type ?? "media_title"}
                           @value-changed=${e => this._onArtworkMatchTypeChange(idx, e.detail.value)}
                         ></ha-selector>
@@ -10891,20 +10961,80 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                                     .value=${rule.match_value ?? ""}
                                     @value-changed=${e => this._onArtworkMatchValueChange(idx, e.detail.value)}
                                   ></ha-entity-picker>
-                                ` : x`
-                                  <ha-textfield
-                                    class="full-width"
-                                    label="Match Value"
-                                    .value=${rule.match_value ?? ""}
-                                    @input=${e => this._onArtworkMatchValueChange(idx, e.target.value)}
-                                  ></ha-textfield>
-                                `}
+                                ` : rule.match_type === "entity_state" ? x`
+                                    <ha-selector
+                                      .hass=${this.hass}
+                                      class="full-width"
+                                      label="Match Value"
+                                      .selector=${{
+        select: {
+          mode: "dropdown",
+          options: [{
+            value: "playing",
+            label: "Playing"
+          }, {
+            value: "paused",
+            label: "Paused"
+          }, {
+            value: "idle",
+            label: "Idle"
+          }, {
+            value: "standby",
+            label: "Standby"
+          }, {
+            value: "off",
+            label: "Off"
+          }, {
+            value: "unavailable",
+            label: "Unavailable"
+          }]
+        }
+      }}
+                                      .value=${rule.match_value ?? "playing"}
+                                      @value-changed=${e => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                    ></ha-selector>
+                                  ` : x`
+                                    <ha-textfield
+                                      class="full-width"
+                                      label="Match Value"
+                                      .value=${rule.match_value ?? ""}
+                                      @input-changed=${e => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                    ></ha-textfield>
+                                  `}
                         <ha-textfield
                           class="full-width"
                           label=${rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL"}
                           .value=${rule.image_url ?? ""}
-                          @input=${e => this._onArtworkImageUrlChange(idx, e.target.value)}
+                          @value-changed=${e => this._onArtworkImageUrlChange(idx, e.detail.value)}
                         ></ha-textfield>
+                        <ha-selector
+                          .hass=${this.hass}
+                          class="full-width"
+                          label="Artwork Fit"
+                          .selector=${{
+        select: {
+          mode: "dropdown",
+          options: [{
+            value: "cover",
+            label: "Cover"
+          }, {
+            value: "contain",
+            label: "Contain"
+          }, {
+            value: "fill",
+            label: "Fill"
+          }, {
+            value: "scale-down",
+            label: "Scale Down"
+          }, {
+            value: "none",
+            label: "None"
+          }]
+        }
+      }}
+                          .value=${rule.object_fit ?? ((_this$_config3 = this._config) === null || _this$_config3 === void 0 ? void 0 : _this$_config3.artwork_object_fit) ?? "cover"}
+                          @value-changed=${e => this._onArtworkObjectFitChange(idx, e.detail.value)}
+                        ></ha-selector>
                       </div>
                       <div class="action-row-actions">
                         <ha-icon
@@ -10915,7 +11045,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                         ></ha-icon>
                       </div>
                     </div>
-                  `) : x`<div class="config-subtitle" style="padding:12px 0;">No artwork overrides configured. Use the plus button below to add one.</div>`}
+                  `;
+    }) : x`<div class="config-subtitle" style="padding:12px 0;">No artwork overrides configured. Use the plus button below to add one.</div>`}
             </div>
           </yamp-sortable-alpha>
           <div class="add-action-button-wrapper">
@@ -14122,6 +14253,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const prefix = ((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
+    let objectFit = null;
 
     // Check for media artwork overrides first
     const overrides = Array.isArray((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
@@ -14131,12 +14263,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
         if (!override) return undefined;
         return override[key];
       };
-      const matchers = [["media_title", "media_title"], ["media_artist", "media_artist"], ["media_album_name", "media_album_name"], ["media_content_id", "media_content_id"], ["media_channel", "media_channel"], ["app_name", "app_name"], ["media_content_type", "media_content_type"], ["entity_id", "entity_id"]];
+      const matchers = [["media_title", "media_title"], ["media_artist", "media_artist"], ["media_album_name", "media_album_name"], ["media_content_id", "media_content_id"], ["media_channel", "media_channel"], ["app_name", "app_name"], ["media_content_type", "media_content_type"], ["entity_id", "entity_id"], ["entity_state", "entity_state"]];
       const findSpecificMatch = () => overrides.find(override => matchers.some(_ref2 => {
         let [attrKey, overrideKey] = _ref2;
         const expected = getOverrideValue(override, overrideKey);
         if (expected === undefined) return false;
-        const value = attrKey === "entity_id" ? entityId : attrs[attrKey];
+        const value = attrKey === "entity_id" ? entityId : attrKey === "entity_state" ? state === null || state === void 0 ? void 0 : state.state : attrs[attrKey];
         return value === expected;
       }));
       let override = findSpecificMatch();
@@ -14154,9 +14286,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
         }
       }
       if ((_override2 = override) !== null && _override2 !== void 0 && _override2.image_url) {
-        var _override3;
+        var _override3, _override4;
         artworkUrl = override.image_url;
         sizePercentage = (_override3 = override) === null || _override3 === void 0 ? void 0 : _override3.size_percentage;
+        objectFit = ((_override4 = override) === null || _override4 === void 0 ? void 0 : _override4.object_fit) ?? null;
       }
     }
 
@@ -14186,6 +14319,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
           // Direct URL or base64 image
           artworkUrl = fallbackArtwork;
         }
+        if (artworkUrl) {
+          objectFit = this._artworkObjectFit;
+        }
       }
     }
 
@@ -14198,10 +14334,29 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (artworkUrl && !this._isValidArtworkUrl(artworkUrl)) {
       artworkUrl = null;
     }
+    if (!objectFit) {
+      objectFit = this._artworkObjectFit;
+    }
     return {
       url: artworkUrl,
-      sizePercentage
+      sizePercentage,
+      objectFit
     };
+  }
+  _getBackgroundSizeForFit(fit) {
+    switch (fit) {
+      case "contain":
+        return "contain";
+      case "fill":
+        return "100% 100%";
+      case "scale-down":
+        return "contain";
+      case "none":
+        return "auto";
+      case "cover":
+      default:
+        return "cover";
+    }
   }
 
   // Validate artwork URL to prevent proxy errors
@@ -15687,17 +15842,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
       } else {
         this.shadowRoot.host.removeAttribute("data-has-custom-height");
       }
-      const currentFit = this._artworkObjectFit || "cover";
-      const bgSizeMap = {
-        cover: "cover",
-        contain: "contain",
-        fill: "100% 100%",
-        "scale-down": "contain",
-        none: "auto"
-      };
-      const bgSize = bgSizeMap[currentFit] || "cover";
-      this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', currentFit);
-      this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', bgSize);
     }
     const showChipRow = this.config.show_chip_row || "auto";
     const hasMultipleEntities = this.entityObjs.length > 1;
@@ -15869,6 +16013,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     // Use null if idle or no artwork available
     let artworkUrl = null;
+    let artworkObjectFit = this._artworkObjectFit;
     if (!this._isIdle) {
       // Use the unified entity resolution system for artwork
       const playbackArtwork = this._getArtworkUrl(playbackStateObj);
@@ -15876,6 +16021,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const artwork = playbackArtwork || mainArtwork;
       artworkUrl = (artwork === null || artwork === void 0 ? void 0 : artwork.url) || null;
       artwork === null || artwork === void 0 ? void 0 : artwork.sizePercentage;
+      if (artwork !== null && artwork !== void 0 && artwork.objectFit) {
+        artworkObjectFit = artwork.objectFit;
+      }
     }
 
     // Dominant color extraction for collapsed artwork
@@ -15889,6 +16037,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const idleMinHeight = hideControlsNow ? collapsed ? this._collapsedBaselineHeight || 220 : 325 : null;
     this._lastRenderedCollapsed = collapsed;
     this._lastRenderedHideControls = hideControlsNow;
+    const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
+    const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
+    if (this.shadowRoot && this.shadowRoot.host) {
+      this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
+      this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
+    }
     return x`
         <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : E}>
           <div
@@ -16000,7 +16154,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 style="
                   background-image: ${idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none"};
                   min-height: ${collapsed ? hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : "0px" : hideControlsNow ? "350px" : "350px"};
-                  background-size: var(--yamp-artwork-bg-size, cover);
+                  background-size: ${backgroundSize};
                   background-position: top center;
                   background-repeat: no-repeat;
                   filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
@@ -16946,6 +17100,22 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   <ha-icon icon="mdi:skip-next"></ha-icon>
                 </button>
               </div>
+              ${(_volumeState$attribut => {
+      const idx = this._selectedIndex;
+      const volumeEntity = this._getVolumeEntity(idx);
+      if (!volumeEntity) return E;
+      const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
+      const volumeState = this.currentVolumeStateObj;
+      const volumeLevel = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) ?? 0);
+      const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
+      return x`
+                  <div class="persistent-volume-stepper">
+                    <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
+                    ${percentLabel ? x`<span class="stepper-value">${percentLabel}</span>` : E}
+                    <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
+                  </div>
+                `;
+    })()}
             </div>
           </div>
         ` : E}

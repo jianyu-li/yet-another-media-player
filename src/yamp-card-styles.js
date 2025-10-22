@@ -1303,6 +1303,44 @@ export const yampCardStyles = css`
     transform: translate(-50%, -50%);
   }
 
+  .persistent-volume-stepper {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;  transform: translateX(-25px);
+
+  }
+
+  .persistent-volume-stepper .stepper-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  .persistent-volume-stepper .stepper-btn:hover {
+    color: var(--custom-accent);
+  }
+
+  .persistent-volume-stepper .stepper-btn:active {
+    transform: scale(0.92);
+  }
+
+  .persistent-volume-stepper .stepper-value {
+    font-size: 0.95em;
+    opacity: 0.85;
+    min-width: 36px;
+    text-align: center;
+    color: #fff;
+  }
+
   .persistent-control-btn {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);

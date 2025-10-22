@@ -1993,6 +1993,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     let artworkUrl = null;
     let sizePercentage = null;
+    let objectFit = null;
     
     // Check for media artwork overrides first
     const overrides = Array.isArray(this.config?.media_artwork_overrides)
@@ -2013,6 +2014,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         ["app_name", "app_name"],
         ["media_content_type", "media_content_type"],
         ["entity_id", "entity_id"],
+        ["entity_state", "entity_state"],
       ];
 
       const findSpecificMatch = () =>
@@ -2020,7 +2022,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
           matchers.some(([attrKey, overrideKey]) => {
             const expected = getOverrideValue(override, overrideKey);
             if (expected === undefined) return false;
-            const value = attrKey === "entity_id" ? entityId : attrs[attrKey];
+            const value = attrKey === "entity_id"
+              ? entityId
+              : attrKey === "entity_state"
+                ? state?.state
+                : attrs[attrKey];
             return value === expected;
           })
         );
@@ -2040,6 +2046,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (override?.image_url) {
         artworkUrl = override.image_url;
         sizePercentage = override?.size_percentage;
+        objectFit = override?.object_fit ?? null;
       }
     }
     
@@ -2069,9 +2076,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
           // Direct URL or base64 image
           artworkUrl = fallbackArtwork;
         }
+
+        if (artworkUrl) {
+          objectFit = this._artworkObjectFit;
+        }
       }
     }
-    
+
     // Apply hostname prefix if configured and artwork URL is relative
     if (artworkUrl && prefix && !artworkUrl.startsWith('http')) {
       artworkUrl = prefix + artworkUrl;
@@ -2081,8 +2092,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (artworkUrl && !this._isValidArtworkUrl(artworkUrl)) {
       artworkUrl = null;
     }
-    
-    return { url: artworkUrl, sizePercentage };
+
+    if (!objectFit) {
+      objectFit = this._artworkObjectFit;
+    }
+
+    return { url: artworkUrl, sizePercentage, objectFit };
+  }
+
+  _getBackgroundSizeForFit(fit) {
+    switch (fit) {
+      case "contain":
+        return "contain";
+      case "fill":
+        return "100% 100%";
+      case "scale-down":
+        return "contain";
+      case "none":
+        return "auto";
+      case "cover":
+      default:
+        return "cover";
+    }
   }
 
   // Validate artwork URL to prevent proxy errors
@@ -3614,17 +3645,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         } else {
           this.shadowRoot.host.removeAttribute("data-has-custom-height");
         }
-        const currentFit = this._artworkObjectFit || "cover";
-        const bgSizeMap = {
-          cover: "cover",
-          contain: "contain",
-          fill: "100% 100%",
-          "scale-down": "contain",
-          none: "auto"
-        };
-        const bgSize = bgSizeMap[currentFit] || "cover";
-        this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', currentFit);
-        this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', bgSize);
       }
       
       const showChipRow = this.config.show_chip_row || "auto";
@@ -3809,6 +3829,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Use null if idle or no artwork available
       let artworkUrl = null;
       let artworkSizePercentage = null;
+      let artworkObjectFit = this._artworkObjectFit;
       if (!this._isIdle) {
         // Use the unified entity resolution system for artwork
         const playbackArtwork = this._getArtworkUrl(playbackStateObj);
@@ -3816,6 +3837,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const artwork = playbackArtwork || mainArtwork;
         artworkUrl = artwork?.url || null;
         artworkSizePercentage = artwork?.sizePercentage;
+        if (artwork?.objectFit) {
+          artworkObjectFit = artwork.objectFit;
+        }
         
       }
 
@@ -3834,6 +3858,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       this._lastRenderedCollapsed = collapsed;
       this._lastRenderedHideControls = hideControlsNow;
+
+      const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
+      const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
+
+      if (this.shadowRoot && this.shadowRoot.host) {
+        this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
+        this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
+      }
 
       return html`
         <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : nothing}>
@@ -3945,7 +3977,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   min-height: ${collapsed
                     ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : "0px")
                     : (hideControlsNow ? "350px" : "350px")};
-                  background-size: var(--yamp-artwork-bg-size, cover);
+                  background-size: ${backgroundSize};
                   background-position: top center;
                   background-repeat: no-repeat;
                   filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
@@ -4873,6 +4905,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <ha-icon icon="mdi:skip-next"></ha-icon>
                 </button>
               </div>
+              ${(() => {
+                const idx = this._selectedIndex;
+                const volumeEntity = this._getVolumeEntity(idx);
+                if (!volumeEntity) return nothing;
+
+                const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
+                const volumeState = this.currentVolumeStateObj;
+                const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
+                const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
+
+                return html`
+                  <div class="persistent-volume-stepper">
+                    <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
+                    ${percentLabel ? html`<span class="stepper-value">${percentLabel}</span>` : nothing}
+                    <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
+                  </div>
+                `;
+              })()}
             </div>
           </div>
         ` : nothing}
