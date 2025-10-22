@@ -28,6 +28,7 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
       ["app_name", "app_name"],
       ["media_content_type", "media_content_type"],
       ["entity_id", "entity_id"],
+      ["entity_state", "entity_state"],
     ];
 
     const findSpecificMatch = () =>
@@ -35,7 +36,11 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
         matchers.some(([attrKey, overrideKey]) => {
           const expected = getOverrideValue(override, overrideKey);
           if (expected === undefined) return false;
-          const value = attrKey === "entity_id" ? entityId : attrs[attrKey];
+          const value = attrKey === "entity_id"
+            ? entityId
+            : attrKey === "entity_state"
+              ? state?.state
+              : attrs[attrKey];
           return value === expected;
         })
       );
