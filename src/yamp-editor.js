@@ -285,17 +285,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           font-size: 1.06em;
           flex: 0 0 auto;
         }
-        .tab-mobile-label {
-          display: none;
-        }
-        @media (max-width: 768px) {
-          .tab-desktop-label {
-            display: none;
-          }
-          .tab-mobile-label {
-            display: inline;
-          }
-        }
+        
+        
         .tab:hover {
           opacity: 1;
           color: var(--custom-accent, var(--accent-color, #ff9800));
@@ -573,10 +564,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 this._useVolTemplate = null;
               }}
               ?selected=${this._activeTab === name}
-            >${name === "Look and Feel" ? html`
-              <span class="tab-desktop-label">Look and Feel</span>
-              <span class="tab-mobile-label">Visual</span>
-            ` : name}</button>
+            >${name}</button>
           `)}
         </div>
         <div class="tab-content">
