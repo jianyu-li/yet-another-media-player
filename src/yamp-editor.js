@@ -919,6 +919,25 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
         </div>
 
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "default", label: "Default" },
+                  { value: "search", label: "Search" }
+                ]
+              }
+            }}
+            .value=${this._config.idle_screen ?? "default"}
+            label="Idle Screen"
+            @value-changed=${(e) => this._updateConfig("idle_screen", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle">Choose which screen to display automatically when the card becomes idle.</div>
+        </div>
+
         <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <ha-textfield

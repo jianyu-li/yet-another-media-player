@@ -61,18 +61,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._showResolvedEntities = false;
         this._showSearchSheetInOptions();
         break;
-      case "source":
-        this._openSourceList();
-        break;
-      case "more-info":
-        this._openMoreInfo();
-        break;
-      case "group-players":
-        this._openGrouping();
-        break;
-      case "transfer-queue":
-        this._openTransferQueue();
-        break;
       default:
         return;
     }
@@ -85,21 +73,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       case "search":
         this._hideSearchSheetInOptions();
         this._showEntityOptions = false;
-        break;
-      case "source":
-        this._closeSourceList();
-        this._showEntityOptions = false;
-        break;
-      case "group-players":
-        this._closeGrouping();
-        this._showEntityOptions = false;
-        break;
-      case "transfer-queue":
-        this._closeTransferQueue();
-        this._showEntityOptions = false;
-        break;
-      case "more-info":
-        // nothing to reset; HA more-info handles its own lifecycle
         break;
       default:
         break;
@@ -379,6 +352,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._artworkObjectFit = "cover";
     this._idleScreen = "default";
     this._idleScreenApplied = false;
+    this._hasSeenPlayback = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -2252,6 +2226,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       : "cover";
     this._idleScreen = config.idle_screen || "default";
     this._idleScreenApplied = false;
+    this._hasSeenPlayback = false;
     if (this._isIdle) {
       this._applyIdleScreen();
     }
@@ -5054,19 +5029,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       if (isAnyPlaying) {
         // Became active, clear timer and set not idle
-        if (this._idleTimeout) clearTimeout(this._idleTimeout);
-        this._idleTimeout = null;
-        if (this._isIdle) {
-          this._isIdle = false;
-          this._resetIdleScreen();
+      if (this._idleTimeout) clearTimeout(this._idleTimeout);
+      this._idleTimeout = null;
+      this._hasSeenPlayback = true;
+      if (this._isIdle) {
+        this._isIdle = false;
+        this._resetIdleScreen();
+        this.requestUpdate();
+      }
+    } else {
+      if (!this._hasSeenPlayback) {
+        if (!this._isIdle) {
+          this._isIdle = true;
+          this._idleScreenApplied = false;
+          this._applyIdleScreen();
           this.requestUpdate();
         }
-      } else {
-        // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
-        // Don't check for linger here - linger should not prevent idle timeout
-        if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
-          this._idleTimeout = setTimeout(() => {
-            this._isIdle = true;
+        return;
+      }
+      // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
+      // Don't check for linger here - linger should not prevent idle timeout
+      if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
+        this._idleTimeout = setTimeout(() => {
+          this._isIdle = true;
             this._idleTimeout = null;
             this._idleScreenApplied = false;
             this._applyIdleScreen();

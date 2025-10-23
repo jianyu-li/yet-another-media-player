@@ -11208,6 +11208,28 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
         </div>
 
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "default",
+          label: "Default"
+        }, {
+          value: "search",
+          label: "Search"
+        }]
+      }
+    }}
+            .value=${this._config.idle_screen ?? "default"}
+            label="Idle Screen"
+            @value-changed=${e => this._updateConfig("idle_screen", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle">Choose which screen to display automatically when the card becomes idle.</div>
+        </div>
+
         <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <ha-textfield
@@ -12250,18 +12272,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._showResolvedEntities = false;
         this._showSearchSheetInOptions();
         break;
-      case "source":
-        this._openSourceList();
-        break;
-      case "more-info":
-        this._openMoreInfo();
-        break;
-      case "group-players":
-        this._openGrouping();
-        break;
-      case "transfer-queue":
-        this._openTransferQueue();
-        break;
       default:
         return;
     }
@@ -12272,18 +12282,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
     switch (this._idleScreen) {
       case "search":
         this._hideSearchSheetInOptions();
-        this._showEntityOptions = false;
-        break;
-      case "source":
-        this._closeSourceList();
-        this._showEntityOptions = false;
-        break;
-      case "group-players":
-        this._closeGrouping();
-        this._showEntityOptions = false;
-        break;
-      case "transfer-queue":
-        this._closeTransferQueue();
         this._showEntityOptions = false;
         break;
     }
@@ -12567,6 +12565,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._artworkObjectFit = "cover";
     this._idleScreen = "default";
     this._idleScreenApplied = false;
+    this._hasSeenPlayback = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -14393,6 +14392,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._artworkObjectFit = allowedFits.has(config.artwork_object_fit) ? config.artwork_object_fit : "cover";
     this._idleScreen = config.idle_screen || "default";
     this._idleScreenApplied = false;
+    this._hasSeenPlayback = false;
     if (this._isIdle) {
       this._applyIdleScreen();
     }
@@ -17147,12 +17147,22 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Became active, clear timer and set not idle
       if (this._idleTimeout) clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
+      this._hasSeenPlayback = true;
       if (this._isIdle) {
         this._isIdle = false;
         this._resetIdleScreen();
         this.requestUpdate();
       }
     } else {
+      if (!this._hasSeenPlayback) {
+        if (!this._isIdle) {
+          this._isIdle = true;
+          this._idleScreenApplied = false;
+          this._applyIdleScreen();
+          this.requestUpdate();
+        }
+        return;
+      }
       // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
       // Don't check for linger here - linger should not prevent idle timeout
       if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
