@@ -48,6 +48,38 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._holdHandler.pointerDown(e, idx);
     }
   }
+
+  _applyIdleScreen() {
+    if (this._idleScreenApplied) return;
+    const mode = this._idleScreen || "default";
+    switch (mode) {
+      case "search":
+        this._showEntityOptions = true;
+        this._showGrouping = false;
+        this._showSourceList = false;
+        this._showTransferQueue = false;
+        this._showResolvedEntities = false;
+        this._showSearchSheetInOptions();
+        break;
+      default:
+        return;
+    }
+    this._idleScreenApplied = true;
+  }
+
+  _resetIdleScreen() {
+    if (!this._idleScreenApplied) return;
+    switch (this._idleScreen) {
+      case "search":
+        this._hideSearchSheetInOptions();
+        this._showEntityOptions = false;
+        break;
+      default:
+        break;
+    }
+    this._idleScreenApplied = false;
+    this.requestUpdate();
+  }
   _handleChipPointerMove(e, idx) {
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerMove(e, idx);
@@ -65,6 +97,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _supportsFeature(stateObj, featureBit) {
     if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
     return (stateObj.attributes.supported_features & featureBit) !== 0;
+  }
+
+  _isGroupCapable(stateObj) {
+    if (!stateObj) return false;
+    if (this._supportsFeature(stateObj, SUPPORT_GROUPING)) return true;
+    return Array.isArray(stateObj.attributes?.group_members);
   }
 
   // Find button entities associated with a Music Assistant entity
@@ -311,6 +349,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._collapsedBaselineHeight = 220;
     this._lastRenderedCollapsed = false;
     this._lastRenderedHideControls = false;
+    this._artworkObjectFit = "cover";
+    this._idleScreen = "default";
+    this._idleScreenApplied = false;
+    this._hasSeenPlayback = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -1968,7 +2010,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const isMobile = window.innerWidth <= 768;
         if (isMobile) {
           // Make artwork smaller on mobile when there are many controls
-          return "width: 60px; height: 60px; object-fit: cover; border-radius: 8px;";
+          return "width: 60px; height: 60px; object-fit: var(--yamp-artwork-fit, cover); border-radius: 8px;";
         }
       }
     }
@@ -1980,43 +2022,66 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!state || !state.attributes) return null;
     
     const attrs = state.attributes;
+    const entityId = state.entity_id;
     const appId = attrs.app_id;
     const prefix = this.config?.artwork_hostname || '';
     
     let artworkUrl = null;
     let sizePercentage = null;
+    let objectFit = null;
     
     // Check for media artwork overrides first
-    const overrides = this.config?.media_artwork_overrides;
-    if (overrides && Array.isArray(overrides)) {
-      const {
-        media_title,
-        media_artist,
-        media_album_name,
-        media_content_id,
-        media_channel
-      } = attrs;
-      
-      // Find matching override
-      let override = overrides.find(override => 
-        (media_title && media_title === override.media_title_equals) ||
-        (media_artist && media_artist === override.media_artist_equals) ||
-        (media_album_name && media_album_name === override.media_album_name_equals) ||
-        (media_content_id && media_content_id === override.media_content_id_equals) ||
-        (media_channel && media_channel === override.media_channel_equals)
-      );
-      
-      // If no specific match found, check for fallback when no artwork
+    const overrides = Array.isArray(this.config?.media_artwork_overrides)
+      ? this.config.media_artwork_overrides
+      : null;
+    if (overrides && overrides.length) {
+      const getOverrideValue = (override, key) => {
+        if (!override) return undefined;
+        return override[key];
+      };
+
+      const matchers = [
+        ["media_title", "media_title"],
+        ["media_artist", "media_artist"],
+        ["media_album_name", "media_album_name"],
+        ["media_content_id", "media_content_id"],
+        ["media_channel", "media_channel"],
+        ["app_name", "app_name"],
+        ["media_content_type", "media_content_type"],
+        ["entity_id", "entity_id"],
+        ["entity_state", "entity_state"],
+      ];
+
+      const findSpecificMatch = () =>
+        overrides.find((override) =>
+          matchers.some(([attrKey, overrideKey]) => {
+            const expected = getOverrideValue(override, overrideKey);
+            if (expected === undefined) return false;
+            const value = attrKey === "entity_id"
+              ? entityId
+              : attrKey === "entity_state"
+                ? state?.state
+                : attrs[attrKey];
+            return value === expected;
+          })
+        );
+
+      let override = findSpecificMatch();
+
       if (!override) {
         const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
         if (!hasArtwork) {
-          override = overrides.find(override => override.if_missing);
+          override = overrides.find((item) => item?.missing_art_url);
+          if (override?.missing_art_url) {
+            override = { ...override, image_url: override.missing_art_url };
+          }
         }
       }
-      
+
       if (override?.image_url) {
         artworkUrl = override.image_url;
         sizePercentage = override?.size_percentage;
+        objectFit = override?.object_fit ?? null;
       }
     }
     
@@ -2046,9 +2111,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
           // Direct URL or base64 image
           artworkUrl = fallbackArtwork;
         }
+
+        if (artworkUrl) {
+          objectFit = this._artworkObjectFit;
+        }
       }
     }
-    
+
     // Apply hostname prefix if configured and artwork URL is relative
     if (artworkUrl && prefix && !artworkUrl.startsWith('http')) {
       artworkUrl = prefix + artworkUrl;
@@ -2058,8 +2127,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (artworkUrl && !this._isValidArtworkUrl(artworkUrl)) {
       artworkUrl = null;
     }
-    
-    return { url: artworkUrl, sizePercentage };
+
+    if (!objectFit) {
+      objectFit = this._artworkObjectFit;
+    }
+
+    return { url: artworkUrl, sizePercentage, objectFit };
+  }
+
+  _getBackgroundSizeForFit(fit) {
+    switch (fit) {
+      case "contain":
+        return "contain";
+      case "fill":
+        return "100% 100%";
+      case "scale-down":
+        return "contain";
+      case "none":
+        return "auto";
+      case "cover":
+      default:
+        return "cover";
+    }
   }
 
   // Validate artwork URL to prevent proxy errors
@@ -2131,6 +2220,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._customAccent = "#ff9800";
     }
+    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none"]);
+    this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
+      ? config.artwork_object_fit
+      : "cover";
+    this._idleScreen = config.idle_screen || "default";
+    this._idleScreenApplied = false;
+    this._hasSeenPlayback = false;
+    if (this._isIdle) {
+      this._applyIdleScreen();
+    }
     
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -2148,7 +2247,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
-    // Do not mutate config.force_chip_row here.
   }
 
   // Returns array of entity config objects, including group_volume if present in user config.
@@ -2219,8 +2317,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // For grouping menu: use MA entity (main entity if it's MA, or configured MA entity)
         // Check if main entity is a Music Assistant entity by checking if it supports grouping
         const mainState = this.hass.states[obj.entity_id];
-        const mainIsMA = mainState?.attributes?.supported_features && 
-                        (mainState.attributes.supported_features & SUPPORT_GROUPING) !== 0;
+        const mainIsMA = this._isGroupCapable(mainState);
         
         if (mainIsMA) {
           return obj.entity_id;
@@ -3084,8 +3181,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getActionLabel(action) {
     if (!action) return "";
-    if (action.name) return action.name;
+    const hasName = typeof action.name === "string" && action.name.trim() !== "";
+    if (hasName) return action.name.trim();
+    const iconOnly = !!action.icon;
     if (action.menu_item) {
+      if (iconOnly) return "";
       const menuLabels = {
         "search": "Search",
         "source": "Source",
@@ -3095,8 +3195,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       };
       return menuLabels[action.menu_item] ?? action.menu_item;
     }
-    if (action.service) return action.service;
-    return "Action";
+    if (action.service) return iconOnly ? "" : action.service;
+    return iconOnly ? "" : "Action";
   }
 
   async _onControlClick(action) {
@@ -3574,10 +3674,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     render() {
       if (!this.hass || !this.config) return nothing;
       
+      const customCardHeight = Number(this.config.card_height);
+      const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
+
       if (this.shadowRoot && this.shadowRoot.host) {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
         this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
         this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+        if (hasCustomCardHeight) {
+          this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
+        } else {
+          this.shadowRoot.host.removeAttribute("data-has-custom-height");
+        }
       }
       
       const showChipRow = this.config.show_chip_row || "auto";
@@ -3762,6 +3870,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Use null if idle or no artwork available
       let artworkUrl = null;
       let artworkSizePercentage = null;
+      let artworkObjectFit = this._artworkObjectFit;
       if (!this._isIdle) {
         // Use the unified entity resolution system for artwork
         const playbackArtwork = this._getArtworkUrl(playbackStateObj);
@@ -3769,6 +3878,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const artwork = playbackArtwork || mainArtwork;
         artworkUrl = artwork?.url || null;
         artworkSizePercentage = artwork?.sizePercentage;
+        if (artwork?.objectFit) {
+          artworkObjectFit = artwork.objectFit;
+        }
         
       }
 
@@ -3788,8 +3900,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._lastRenderedCollapsed = collapsed;
       this._lastRenderedHideControls = hideControlsNow;
 
+      const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
+      const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
+
+      if (this.shadowRoot && this.shadowRoot.host) {
+        this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
+        this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
+      }
+
       return html`
-        <ha-card class="yamp-card">
+        <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : nothing}>
           <div
             style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
@@ -3898,7 +4018,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   min-height: ${collapsed
                     ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : "0px")
                     : (hideControlsNow ? "350px" : "350px")};
-                  background-size: cover;
+                  background-size: ${backgroundSize};
                   background-position: top center;
                   background-repeat: no-repeat;
                   filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
@@ -4161,7 +4281,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         }
                         
                         const st = this.hass.states[actualGroupId];
-                        return acc + (this._supportsFeature(st, SUPPORT_GROUPING) ? 1 : 0);
+                        return acc + (this._isGroupCapable(st) ? 1 : 0);
                       }, 0);
                       
                       // Check current entity's grouping support
@@ -4184,7 +4304,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       if (
                         totalEntities > 1 &&
                         groupableCount > 1 &&
-                        this._supportsFeature(currGroupState, SUPPORT_GROUPING)
+                        this._isGroupCapable(currGroupState)
                       ) {
                         return html`
                           <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
@@ -4194,20 +4314,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     })()
                   }
                   ${menuOnlyActions.length ? html`
-                    ${menuOnlyActions.map(({ action, idx }) => html`
-                      <button
-                        class="entity-options-item menu-action-item"
-                        @click=${() => this._onMenuActionClick(idx)}
-                      >
-                        ${action.icon ? html`
-                          <ha-icon
-                            class="menu-action-icon"
-                            .icon=${action.icon}
-                          ></ha-icon>
-                        ` : nothing}
-                        <span class="menu-action-label">${this._getActionLabel(action)}</span>
-                      </button>
-                    `)}
+                    ${menuOnlyActions.map(({ action, idx }) => {
+                      const label = this._getActionLabel(action);
+                      return html`
+                        <button
+                          class="entity-options-item menu-action-item"
+                          @click=${() => this._onMenuActionClick(idx)}
+                        >
+                          ${action.icon ? html`
+                            <ha-icon
+                              class="menu-action-icon"
+                              .icon=${action.icon}
+                            ></ha-icon>
+                          ` : nothing}
+                          ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
+                        </button>
+                      `;
+                    })}
                   ` : nothing}
                 </div>
               ` : this._showTransferQueue ? html`
@@ -4276,10 +4399,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       const obj = this.entityObjs[idx];
                       let role = "Main Entity";
                       
+                      let isActive = false;
                       if (obj) {
                         const maEntity = this._getActualResolvedMaEntityForState(idx);
                         const volEntity = this._getVolumeEntity(idx);
-                        
+                        const activeEntity = this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+                        isActive = activeEntity === entityId;
+
                         if (entityId === maEntity && maEntity !== obj.entity_id) {
                           role = "Music Assistant Entity";
                         } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
@@ -4296,7 +4422,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         }}>
                           <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
                           <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                            <div>${name}</div>
+                            <div>${isActive ? `${name} (Active)` : name}</div>
                             <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
                           </div>
                         </button>
@@ -4504,7 +4630,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                   class="entity-options-search-thumb"
                                   src=${item.thumbnail}
                                   alt=${item.title}
-                                  style="height:38px;width:38px;object-fit:cover;border-radius:5px;margin-right:12px;"
+                                  style="height:38px;width:38px;object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;margin-right:12px;"
                                   onerror="this.style.display='none'"
                                 />
                               ` : html`
@@ -4610,7 +4736,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         }
                         
                         const maState = this.hass.states[maEntityId];
-                        if (maState && this._supportsFeature(maState, SUPPORT_GROUPING)) {
+                        if (maState && this._isGroupCapable(maState)) {
                           entityToCheck = maEntityId;
                           entityName = id;
                         }
@@ -4618,7 +4744,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       
                       if (!entityToCheck) {
                         const mainState = this.hass.states[id];
-                        if (mainState && this._supportsFeature(mainState, SUPPORT_GROUPING)) {
+                        if (mainState && this._isGroupCapable(mainState)) {
                           entityToCheck = id;
                           entityName = id;
                         }
@@ -4820,6 +4946,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <ha-icon icon="mdi:skip-next"></ha-icon>
                 </button>
               </div>
+              ${(() => {
+                const idx = this._selectedIndex;
+                const volumeEntity = this._getVolumeEntity(idx);
+                if (!volumeEntity) return nothing;
+
+                const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
+                const volumeState = this.currentVolumeStateObj;
+                const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
+                const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
+
+                return html`
+                  <div class="persistent-volume-stepper">
+                    <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
+                    ${percentLabel ? html`<span class="stepper-value">${percentLabel}</span>` : nothing}
+                    <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
+                  </div>
+                `;
+              })()}
             </div>
           </div>
         ` : nothing}
@@ -4885,19 +5029,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       if (isAnyPlaying) {
         // Became active, clear timer and set not idle
-        if (this._idleTimeout) clearTimeout(this._idleTimeout);
-        this._idleTimeout = null;
-        if (this._isIdle) {
-          this._isIdle = false;
+      if (this._idleTimeout) clearTimeout(this._idleTimeout);
+      this._idleTimeout = null;
+      this._hasSeenPlayback = true;
+      if (this._isIdle) {
+        this._isIdle = false;
+        this._resetIdleScreen();
+        this.requestUpdate();
+      }
+    } else {
+      if (!this._hasSeenPlayback) {
+        if (!this._isIdle) {
+          this._isIdle = true;
+          this._idleScreenApplied = false;
+          this._applyIdleScreen();
           this.requestUpdate();
         }
-      } else {
-        // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
-        // Don't check for linger here - linger should not prevent idle timeout
-        if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
-          this._idleTimeout = setTimeout(() => {
-            this._isIdle = true;
+        return;
+      }
+      // Only set timer if not already idle and not already waiting, and idle_timeout_ms > 0
+      // Don't check for linger here - linger should not prevent idle timeout
+      if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
+        this._idleTimeout = setTimeout(() => {
+          this._isIdle = true;
             this._idleTimeout = null;
+            this._idleScreenApplied = false;
+            this._applyIdleScreen();
             this.requestUpdate();
           }, this._idleTimeoutMs);
         }
@@ -4905,6 +5062,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // If idle_timeout_ms is 0, ensure we're never idle
         if (this._idleTimeoutMs === 0 && this._isIdle) {
           this._isIdle = false;
+          this._resetIdleScreen();
           this.requestUpdate();
         }
       }
@@ -4954,6 +5112,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 { value: "auto", label: "Auto" },
                 { value: "always", label: "Always" },
                 { value: "in_menu", label: "In Menu" }
+              ]
+            }
+          },
+          required: false
+        },
+        {
+          name: "idle_screen",
+          selector: {
+            select: {
+              options: [
+                { value: "default", label: "Default" },
+                { value: "search", label: "Search" },
+                { value: "source", label: "Source" },
+                { value: "more-info", label: "More Info" },
+                { value: "group-players", label: "Group Players" },
+                { value: "transfer-queue", label: "Transfer Queue" }
               ]
             }
           },
@@ -5476,7 +5650,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
-    if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
+    if (!this._isGroupCapable(masterState)) return;
 
     // Get all other entities that support grouping and are not already grouped with master
     const alreadyGrouped = Array.isArray(masterState.attributes.group_members)
@@ -5505,7 +5679,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       
       const st = this.hass.states[resolvedGroupId];
-      if (this._supportsFeature(st, SUPPORT_GROUPING) && !alreadyGrouped.includes(resolvedGroupId)) {
+      if (this._isGroupCapable(st) && !alreadyGrouped.includes(resolvedGroupId)) {
         toJoin.push(resolvedGroupId);
       }
     }
@@ -5540,7 +5714,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
-    if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
+    if (!this._isGroupCapable(masterState)) return;
 
     const members = Array.isArray(masterState.attributes.group_members)
       ? masterState.attributes.group_members
@@ -5548,7 +5722,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Only unjoin those that support grouping
     const toUnjoin = members.filter(id => {
       const st = this.hass.states[id];
-      return this._supportsFeature(st, SUPPORT_GROUPING);
+      return this._isGroupCapable(st);
     });
     // Unjoin each member individually
     for (const id of toUnjoin) {
@@ -5581,7 +5755,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
-    if (!this._supportsFeature(masterState, SUPPORT_GROUPING)) return;
+    if (!this._isGroupCapable(masterState)) return;
     // For sync volume, use the same entity that's being used for grouping (the MA entity) to get the master volume
     const masterVolumeEntity = masterGroupId;
     const masterVolumeState = masterVolumeEntity ? this.hass.states[masterVolumeEntity] : null;
