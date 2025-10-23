@@ -10309,29 +10309,24 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     return Array.isArray((_stateObj$attributes = stateObj.attributes) === null || _stateObj$attributes === void 0 ? void 0 : _stateObj$attributes.group_members);
   }
   _normalizeArtworkOverrides(overrides) {
-    var _this$_config;
     if (!Array.isArray(overrides)) return [];
-    const matchKeys = ["media_title", "media_artist", "media_album_name", "media_content_id", "media_channel", "app_name", "media_content_type", "entity_id", "entity_state"];
-    const defaultFit = ((_this$_config = this._config) === null || _this$_config === void 0 ? void 0 : _this$_config.artwork_object_fit) ?? "cover";
+    const matchKeys = ["media_title", "media_artist", "media_album_name", "media_content_id", "media_channel", "app_name", "media_content_type", "entity_id"];
     return overrides.map(item => {
       if (!item || typeof item !== "object") {
         return {
           match_type: "media_title",
           match_value: "",
           image_url: "",
-          size_percentage: undefined,
-          object_fit: defaultFit
+          size_percentage: undefined
         };
       }
       const sizePercentage = item.size_percentage;
-      const objectFit = item.object_fit ?? defaultFit;
       if (item.missing_art_url !== undefined) {
         return {
           match_type: "missing_art",
           match_value: "",
           image_url: item.missing_art_url ?? "",
-          size_percentage: sizePercentage,
-          object_fit: objectFit
+          size_percentage: sizePercentage
         };
       }
       let matchType = "media_title";
@@ -10353,40 +10348,34 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         match_type: matchType,
         match_value: matchValue ?? "",
         image_url: item.image_url ?? "",
-        size_percentage: sizePercentage,
-        object_fit: objectFit
+        size_percentage: sizePercentage
       };
     });
   }
   _serializeArtworkOverride(rule) {
     if (!rule) return null;
     const image = (rule.image_url ?? "").trim();
-    const fit = rule.object_fit ?? undefined;
+    if (!image) return null;
     if (rule.match_type === "missing_art") {
-      const out = {
+      return {
         missing_art_url: image,
         ...(rule.size_percentage !== undefined ? {
           size_percentage: rule.size_percentage
         } : {})
       };
-      if (fit) out.object_fit = fit;
-      return out;
     }
-    const value = rule.match_value ?? "";
-    const serialized = {
+    const value = (rule.match_value ?? "").trim();
+    if (!value) return null;
+    return {
       image_url: image,
       [rule.match_type]: value,
       ...(rule.size_percentage !== undefined ? {
         size_percentage: rule.size_percentage
       } : {})
     };
-    if (fit) serialized.object_fit = fit;
-    return serialized;
   }
   _writeArtworkOverrides(list) {
-    this._artworkOverrides = list.map(rule => ({
-      ...rule
-    }));
+    this._artworkOverrides = list;
     const serialized = list.map(rule => this._serializeArtworkOverride(rule)).filter(item => item);
     this._updateConfig("media_artwork_overrides", serialized.length ? serialized : undefined);
   }
@@ -10435,15 +10424,12 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     }));
   }
   _addArtworkOverride() {
-    var _this$_config2;
     const list = [...(this._artworkOverrides ?? [])];
-    const defaultFit = ((_this$_config2 = this._config) === null || _this$_config2 === void 0 ? void 0 : _this$_config2.artwork_object_fit) ?? "cover";
     list.push({
       match_type: "media_title",
       match_value: "",
       image_url: "",
-      size_percentage: undefined,
-      object_fit: defaultFit
+      size_percentage: undefined
     });
     this._writeArtworkOverrides(list);
   }
@@ -10463,10 +10449,6 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     };
     if (newType === "missing_art") {
       updated.match_value = "";
-    } else if (newType === "entity_state") {
-      updated.match_value = updated.match_value || "playing";
-    } else if (updated.match_value === undefined) {
-      updated.match_value = "";
     }
     list[index] = updated;
     this._writeArtworkOverrides(list);
@@ -10476,7 +10458,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     if (!list[index]) return;
     list[index] = {
       ...list[index],
-      match_value: value ?? ""
+      match_value: value
     };
     this._writeArtworkOverrides(list);
   }
@@ -10485,16 +10467,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     if (!list[index]) return;
     list[index] = {
       ...list[index],
-      image_url: value ?? ""
-    };
-    this._writeArtworkOverrides(list);
-  }
-  _onArtworkObjectFitChange(index, value) {
-    const list = [...(this._artworkOverrides ?? [])];
-    if (!list[index]) return;
-    list[index] = {
-      ...list[index],
-      object_fit: value || undefined
+      image_url: value
     };
     this._writeArtworkOverrides(list);
   }
@@ -10876,9 +10849,6 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       value: "entity_id",
       label: "Entity ID"
     }, {
-      value: "entity_state",
-      label: "Entity State"
-    }, {
       value: "missing_art",
       label: "Missing Artwork"
     }];
@@ -10929,9 +10899,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           </div>
           <yamp-sortable-alpha @item-moved=${e => this._onArtworkMoved(e)}>
             <div class="sortable-container">
-              ${overrides.length ? overrides.map((rule, idx) => {
-      var _this$_config3;
-      return x`
+              ${overrides.length ? overrides.map((rule, idx) => x`
                     <div class="action-row-inner sortable-item artwork-row">
                       <div class="handle action-handle">
                         <ha-icon icon="mdi:drag"></ha-icon>
@@ -10941,11 +10909,11 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                           .hass=${this.hass}
                           label="Match Field"
                           .selector=${{
-        select: {
-          mode: "dropdown",
-          options: matchOptions
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: matchOptions
+      }
+    }}
                           .value=${rule.match_type ?? "media_title"}
                           @value-changed=${e => this._onArtworkMatchTypeChange(idx, e.detail.value)}
                         ></ha-selector>
@@ -10961,80 +10929,20 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                                     .value=${rule.match_value ?? ""}
                                     @value-changed=${e => this._onArtworkMatchValueChange(idx, e.detail.value)}
                                   ></ha-entity-picker>
-                                ` : rule.match_type === "entity_state" ? x`
-                                    <ha-selector
-                                      .hass=${this.hass}
-                                      class="full-width"
-                                      label="Match Value"
-                                      .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "playing",
-            label: "Playing"
-          }, {
-            value: "paused",
-            label: "Paused"
-          }, {
-            value: "idle",
-            label: "Idle"
-          }, {
-            value: "standby",
-            label: "Standby"
-          }, {
-            value: "off",
-            label: "Off"
-          }, {
-            value: "unavailable",
-            label: "Unavailable"
-          }]
-        }
-      }}
-                                      .value=${rule.match_value ?? "playing"}
-                                      @value-changed=${e => this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                    ></ha-selector>
-                                  ` : x`
-                                    <ha-textfield
-                                      class="full-width"
-                                      label="Match Value"
-                                      .value=${rule.match_value ?? ""}
-                                      @input-changed=${e => this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                    ></ha-textfield>
-                                  `}
+                                ` : x`
+                                  <ha-textfield
+                                    class="full-width"
+                                    label="Match Value"
+                                    .value=${rule.match_value ?? ""}
+                                    @input=${e => this._onArtworkMatchValueChange(idx, e.target.value)}
+                                  ></ha-textfield>
+                                `}
                         <ha-textfield
                           class="full-width"
                           label=${rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL"}
                           .value=${rule.image_url ?? ""}
-                          @value-changed=${e => this._onArtworkImageUrlChange(idx, e.detail.value)}
+                          @input=${e => this._onArtworkImageUrlChange(idx, e.target.value)}
                         ></ha-textfield>
-                        <ha-selector
-                          .hass=${this.hass}
-                          class="full-width"
-                          label="Artwork Fit"
-                          .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "cover",
-            label: "Cover"
-          }, {
-            value: "contain",
-            label: "Contain"
-          }, {
-            value: "fill",
-            label: "Fill"
-          }, {
-            value: "scale-down",
-            label: "Scale Down"
-          }, {
-            value: "none",
-            label: "None"
-          }]
-        }
-      }}
-                          .value=${rule.object_fit ?? ((_this$_config3 = this._config) === null || _this$_config3 === void 0 ? void 0 : _this$_config3.artwork_object_fit) ?? "cover"}
-                          @value-changed=${e => this._onArtworkObjectFitChange(idx, e.detail.value)}
-                        ></ha-selector>
                       </div>
                       <div class="action-row-actions">
                         <ha-icon
@@ -11045,8 +10953,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                         ></ha-icon>
                       </div>
                     </div>
-                  `;
-    }) : x`<div class="config-subtitle" style="padding:12px 0;">No artwork overrides configured. Use the plus button below to add one.</div>`}
+                  `) : x`<div class="config-subtitle" style="padding:12px 0;">No artwork overrides configured. Use the plus button below to add one.</div>`}
             </div>
           </yamp-sortable-alpha>
           <div class="add-action-button-wrapper">
@@ -11195,40 +11102,6 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
           ></ha-selector>
           <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
-        </div>
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-      select: {
-        mode: "dropdown",
-        options: [{
-          value: "default",
-          label: "Default"
-        }, {
-          value: "search",
-          label: "Search"
-        }, {
-          value: "source",
-          label: "Source"
-        }, {
-          value: "more-info",
-          label: "More Info"
-        }, {
-          value: "group-players",
-          label: "Group Players"
-        }, {
-          value: "transfer-queue",
-          label: "Transfer Queue"
-        }]
-      }
-    }}
-            .value=${this._config.idle_screen ?? "default"}
-            label="Idle Screen"
-            @value-changed=${e => this._updateConfig("idle_screen", e.detail.value)}
-          ></ha-selector>
-          <div class="config-subtitle">Choose which screen to show automatically when the card becomes idle.</div>
         </div>
 
         <div class="form-row form-row-multi-column">
