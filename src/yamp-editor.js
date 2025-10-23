@@ -32,6 +32,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       this._serviceItems = [];
       this._useTemplate = null; // auto-detect per entity on open
       this._useVolTemplate = null; // auto-detect per entity on open
+      this._artworkOverrides = [];
     }
 
     firstUpdated() {
@@ -41,6 +42,105 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     _supportsFeature(stateObj, featureBit) {
       if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
       return (stateObj.attributes.supported_features & featureBit) !== 0;
+    }
+
+    _isGroupCapable(stateObj) {
+      if (!stateObj) return false;
+      if (this._supportsFeature(stateObj, SUPPORT_GROUPING)) return true;
+      return Array.isArray(stateObj.attributes?.group_members);
+    }
+
+    _normalizeArtworkOverrides(overrides) {
+      if (!Array.isArray(overrides)) return [];
+      const matchKeys = [
+        "media_title",
+        "media_artist",
+        "media_album_name",
+        "media_content_id",
+        "media_channel",
+        "app_name",
+        "media_content_type",
+        "entity_id",
+      ];
+
+      return overrides.map((item) => {
+        if (!item || typeof item !== "object") {
+          return {
+            match_type: "media_title",
+            match_value: "",
+            image_url: "",
+            size_percentage: undefined,
+          };
+        }
+
+        const sizePercentage = item.size_percentage;
+
+        if (item.missing_art_url !== undefined) {
+          return {
+            match_type: "missing_art",
+            match_value: "",
+            image_url: item.missing_art_url ?? "",
+            size_percentage: sizePercentage,
+          };
+        }
+
+        let matchType = "media_title";
+        let matchValue = "";
+
+        for (const key of matchKeys) {
+          if (item[key] !== undefined) {
+            matchType = key;
+            matchValue = item[key] ?? "";
+            break;
+          }
+          const legacyKey = `${key}_equals`;
+          if (item[legacyKey] !== undefined) {
+            matchType = key;
+            matchValue = item[legacyKey] ?? "";
+            break;
+          }
+        }
+
+        return {
+          match_type: matchType,
+          match_value: matchValue ?? "",
+          image_url: item.image_url ?? "",
+          size_percentage: sizePercentage,
+        };
+      });
+    }
+
+    _serializeArtworkOverride(rule) {
+      if (!rule) return null;
+      const image = (rule.image_url ?? "").trim();
+      if (!image) return null;
+
+      if (rule.match_type === "missing_art") {
+        return {
+          missing_art_url: image,
+          ...(rule.size_percentage !== undefined ? { size_percentage: rule.size_percentage } : {}),
+        };
+      }
+
+      const value = (rule.match_value ?? "").trim();
+      if (!value) return null;
+
+      return {
+        image_url: image,
+        [rule.match_type]: value,
+        ...(rule.size_percentage !== undefined ? { size_percentage: rule.size_percentage } : {}),
+      };
+    }
+
+    _writeArtworkOverrides(list) {
+      this._artworkOverrides = list;
+      const serialized = list
+        .map((rule) => this._serializeArtworkOverride(rule))
+        .filter((item) => item);
+      this._updateConfig(
+        "media_artwork_overrides",
+        serialized.length ? serialized : undefined
+      );
     }
 
     _getServiceItems() {
@@ -73,6 +173,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         ...config,
         entities: normalizedEntities,
       };
+      this._artworkOverrides = this._normalizeArtworkOverrides(config.media_artwork_overrides);
     }
     
     _updateConfig(key, value) {
@@ -83,6 +184,55 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         bubbles: true,
         composed: true,
       }));
+    }
+
+    _addArtworkOverride() {
+      const list = [...(this._artworkOverrides ?? [])];
+      list.push({ match_type: "media_title", match_value: "", image_url: "", size_percentage: undefined });
+      this._writeArtworkOverrides(list);
+    }
+
+    _removeArtworkOverride(index) {
+      const list = [...(this._artworkOverrides ?? [])];
+      if (index < 0 || index >= list.length) return;
+      list.splice(index, 1);
+      this._writeArtworkOverrides(list);
+    }
+
+    _onArtworkMatchTypeChange(index, newType) {
+      if (!newType) return;
+      const list = [...(this._artworkOverrides ?? [])];
+      if (!list[index]) return;
+      const updated = { ...list[index], match_type: newType };
+      if (newType === "missing_art") {
+        updated.match_value = "";
+      }
+      list[index] = updated;
+      this._writeArtworkOverrides(list);
+    }
+
+    _onArtworkMatchValueChange(index, value) {
+      const list = [...(this._artworkOverrides ?? [])];
+      if (!list[index]) return;
+      list[index] = { ...list[index], match_value: value };
+      this._writeArtworkOverrides(list);
+    }
+
+    _onArtworkImageUrlChange(index, value) {
+      const list = [...(this._artworkOverrides ?? [])];
+      if (!list[index]) return;
+      list[index] = { ...list[index], image_url: value };
+      this._writeArtworkOverrides(list);
+    }
+
+    _onArtworkMoved(e) {
+      const { oldIndex, newIndex } = e.detail ?? {};
+      const list = [...(this._artworkOverrides ?? [])];
+      if (oldIndex === undefined || newIndex === undefined) return;
+      if (oldIndex < 0 || newIndex < 0 || oldIndex >= list.length || newIndex >= list.length) return;
+      const [moved] = list.splice(oldIndex, 1);
+      list.splice(newIndex, 0, moved);
+      this._writeArtworkOverrides(list);
     }
 
     _updateEntityProperty(key, value) {
@@ -115,6 +265,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           gap: 4px;
           padding: 8px 8px 0 8px;
           border-bottom: 1px solid var(--divider-color, #444);
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .tabs::-webkit-scrollbar {
+          display: none;
         }
         .tab {
           background: transparent;
@@ -128,18 +283,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           border-bottom: 3px solid transparent;
           transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);
           font-size: 1.06em;
+          flex: 0 0 auto;
         }
-        .tab-mobile-label {
-          display: none;
-        }
-        @media (max-width: 768px) {
-          .tab-desktop-label {
-            display: none;
-          }
-          .tab-mobile-label {
-            display: inline;
-          }
-        }
+        
+        
         .tab:hover {
           opacity: 1;
           color: var(--custom-accent, var(--accent-color, #ff9800));
@@ -349,6 +496,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           background: rgba(255, 255, 255, 0.05);
           padding: 2px 4px;
           border-radius: 4px;
+        }
+        .help-text pre {
+          margin: 8px 0 0 0;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 8px 12px;
+          border-radius: 8px;
+          font-family: monospace;
+          font-size: 0.92em;
+          white-space: pre-wrap;
         } 
         .icon-button {
           display: inline-flex;
@@ -373,6 +529,17 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           display: flex;
           justify-content: center;
         }
+        .artwork-row .artwork-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          flex: 1;
+        }
+        .config-subtitle.small {
+          font-size: 0.9em;
+          opacity: 0.75;
+          margin: 2px 0 0 0;
+        }
       `;
     }
   
@@ -385,7 +552,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
       return html`
         <div class="tabs">
-          ${["Entities","Behavior","Look and Feel","Actions"].map((name) => html`
+          ${["Entities","Behavior","Look and Feel","Artwork","Actions"].map((name) => html`
             <button
               class="tab" ${this._activeTab === name ? 'selected' : ''}
               @click=${() => { 
@@ -397,10 +564,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 this._useVolTemplate = null;
               }}
               ?selected=${this._activeTab === name}
-            >${name === "Look and Feel" ? html`
-              <span class="tab-desktop-label">Look and Feel</span>
-              <span class="tab-mobile-label">Visual</span>
-            ` : name}</button>
+            >${name}</button>
           `)}
         </div>
         <div class="tab-content">
@@ -413,6 +577,137 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       `;
     }
 
+    _renderArtworkTab() {
+      const overrides = [...(this._artworkOverrides ?? [])];
+      const matchOptions = [
+        { value: "media_title", label: "Media Title" },
+        { value: "media_artist", label: "Media Artist" },
+        { value: "media_album_name", label: "Album Name" },
+        { value: "media_content_id", label: "Content ID" },
+        { value: "media_channel", label: "Channel" },
+        { value: "app_name", label: "App Name" },
+        { value: "media_content_type", label: "Content Type" },
+        { value: "entity_id", label: "Entity ID" },
+        { value: "missing_art", label: "Missing Artwork" },
+      ];
+
+      return html`
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              label="Artwork Fit"
+              .selector=${{
+                select: {
+                  mode: "dropdown",
+                  options: [
+                    { value: "cover", label: "Cover (default)" },
+                    { value: "contain", label: "Contain" },
+                    { value: "fill", label: "Fill" },
+                    { value: "scale-down", label: "Scale Down" },
+                    { value: "none", label: "None" }
+                  ]
+                }
+              }}
+              .value=${this._config.artwork_object_fit ?? "cover"}
+              @value-changed=${(e) => {
+                const value = e.detail.value;
+                this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
+              }}
+            ></ha-selector>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="config-subtitle">
+            Controls how artwork scales across the card (main art, chips, overrides). Choose a different fit if images appear cropped or stretched.
+          </div>
+        </div>
+
+        <div class="form-row action-group">
+          <div class="action-group-header">
+            <div class="action-group-title">Artwork Overrides</div>
+          </div>
+          <yamp-sortable @item-moved=${(e) => this._onArtworkMoved(e)}>
+            <div class="sortable-container">
+              ${overrides.length
+                ? overrides.map((rule, idx) => html`
+                    <div class="action-row-inner sortable-item artwork-row">
+                      <div class="handle action-handle">
+                        <ha-icon icon="mdi:drag"></ha-icon>
+                      </div>
+                      <div class="artwork-fields">
+                        <ha-selector
+                          .hass=${this.hass}
+                          label="Match Field"
+                          .selector=${{ select: { mode: "dropdown", options: matchOptions } }}
+                          .value=${rule.match_type ?? "media_title"}
+                          @value-changed=${(e) => this._onArtworkMatchTypeChange(idx, e.detail.value)}
+                        ></ha-selector>
+                        ${
+                          rule.match_type === "missing_art"
+                            ? html`
+                                <div class="config-subtitle small">
+                                  Applies when the selected media provides no artwork.
+                                </div>
+                              `
+                            : rule.match_type === "entity_id"
+                              ? html`
+                                  <ha-entity-picker
+                                    class="full-width"
+                                    .hass=${this.hass}
+                                    .includeDomains=${["media_player"]}
+                                    .value=${rule.match_value ?? ""}
+                                    @value-changed=${(e) =>
+                                      this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                  ></ha-entity-picker>
+                                `
+                              : html`
+                                  <ha-textfield
+                                    class="full-width"
+                                    label="Match Value"
+                                    .value=${rule.match_value ?? ""}
+                                    @input=${(e) => this._onArtworkMatchValueChange(idx, e.target.value)}
+                                  ></ha-textfield>
+                                `
+                        }
+                        <ha-textfield
+                          class="full-width"
+                          label=${rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL"}
+                          .value=${rule.image_url ?? ""}
+                          @input=${(e) => this._onArtworkImageUrlChange(idx, e.target.value)}
+                        ></ha-textfield>
+                      </div>
+                      <div class="action-row-actions">
+                        <ha-icon
+                          class="icon-button"
+                          icon="mdi:trash-can"
+                          title="Delete Override"
+                          @click=${() => this._removeArtworkOverride(idx)}
+                        ></ha-icon>
+                      </div>
+                    </div>
+                  `)
+                : html`<div class="config-subtitle" style="padding:12px 0;">No artwork overrides configured. Use the plus button below to add one.</div>`}
+            </div>
+          </yamp-sortable>
+          <div class="add-action-button-wrapper">
+            <ha-icon
+              class="icon-button"
+              icon="mdi:plus"
+              title="Add Artwork Override"
+              @click=${this._addArtworkOverride}
+            ></ha-icon>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="config-subtitle">
+            Overrides are evaluated from top to bottom. Drag to reorder. Changes save automatically.
+          </div>
+        </div>
+
+      `;
+    }
+
     _renderActiveTab() {
       switch (this._activeTab) {
         case "Entities":
@@ -421,6 +716,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           return this._renderBehaviorTab();
         case "Look and Feel":
           return this._renderVisualTab();
+        case "Artwork":
+          return this._renderArtworkTab();
         case "Actions":
           return this._renderActionsTab();
         default:
@@ -625,6 +922,54 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "default", label: "Default" },
+                  { value: "search", label: "Search" }
+                ]
+              }
+            }}
+            .value=${this._config.idle_screen ?? "default"}
+            label="Idle Screen"
+            @value-changed=${(e) => this._updateConfig("idle_screen", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle">Choose which screen to display automatically when the card becomes idle.</div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-textfield
+              class="full-width"
+              type="number"
+              min="0"
+              label="Card Height (px)"
+              .value=${this._config.card_height ?? ""}
+              helper="Leave blank for automatic height"
+              .helperPersistent=${true}
+              @input=${(e) => {
+                const raw = e.target.value;
+                if (raw === "") {
+                  this._updateConfig("card_height", undefined);
+                  return;
+                }
+                const parsed = Number(raw);
+                this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
+              }}
+            ></ha-textfield>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="Reset to default"
+            @click=${() => this._updateConfig("card_height", undefined)}
+          ></ha-icon>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
             .selector=${{ select: { mode: "dropdown", options: [
               { value: "slider", label: "Slider" },
               { value: "stepper", label: "Stepper" },
@@ -771,7 +1116,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     _renderEntityEditor(entity) {
 
       const stateObj = this.hass?.states?.[entity?.entity_id];
-      const showGroupVolume = this._supportsFeature(stateObj, SUPPORT_GROUPING); 
+      const showGroupVolume = this._isGroupCapable(stateObj); 
   
       return html`
         <div class="entity-editor-header">
