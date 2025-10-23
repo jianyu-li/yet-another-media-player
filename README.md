@@ -19,8 +19,10 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
   - Control volume as a group or individually
   - Separate volume entity 
   - Override sync volume behavior on a per entity basis using `group_volume`
+  - Supports Linkplay/WiiM speakers and other integrations that expose group members
 - Music Assistant Support: Search music on compatible players
 - Add background image sensor for when not in use
+- Jump straight into search from the idle screen when you prefer browsing over artwork
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
 - Transfer queue between compatible Music Assistant players directly from the card menu
@@ -28,6 +30,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
   - Pass currently selected entity to a script
 - Use "current" for the entity_id to reference the currently selected media player ([see example below](https://github.com/jianyu-li/yet-another-media-player#custom-actions))
 - Set match_theme to TRUE to have the cards accent colors follow your selected accent theme color
+- Prioritize replacement artwork with `media_artwork_overrides` and fine-tune scaling via `artwork_object_fit`
 - Use collapse_on_idle to collapse the card down when nothing is playing. This looks great on mobile!
 - Use always_collapsed to keep the card collapsed even when something is playing
 
@@ -76,6 +79,9 @@ Below you will find a list of all configuration options.
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
+| `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately |
+| `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `fill`, `scale-down`, or `none`                   |
+| `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` scales the replacement |
 | `transfer_queue`           | menu action  | No           | —           | Adds a "Transfer Queue" menu action for Music Assistant entities (see below)                   |
 | `idle_image`               | image/camera/url | No           | —           | Background image when player is idle (supports local files, cameras, or URLs)                   |
 | `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
@@ -215,6 +221,33 @@ actions:
       group_members:
         - media_player.kitchen_homepod
 ```
+
+### Idle Screen Search Mode
+Prefer jumping straight into browsing? Set `idle_screen: search` to skip the idle artwork splash and open the search sheet whenever the card is idle.
+
+```yaml
+idle_screen: search
+```
+
+### Artwork Overrides
+Use `media_artwork_overrides` to replace missing or low-resolution art with higher quality images. Rules are evaluated from top to bottom; the first match wins. Supply an `image_url` along with a single match key (`media_title`, `media_artist`, `media_album_name`, `media_content_id`, `media_channel`, `app_name`, `media_content_type`, or `entity_id`). To cover any track that ships without art, use `missing_art_url` instead of a match value. Optionally include `size_percentage` to scale the replacement relative to the card.
+
+```yaml
+media_artwork_overrides:
+  - image_url: >-
+      https://upload.wikimedia.org/wikipedia/commons/6/62/YouTube_social_white_square_%282024%29.svg
+    app_name: YouTube
+  - image_url: https://shine1049.org/files/Stack%20Images/shine104.9.png?ade9fb8c3c
+    media_content_id: library://radio/2
+  - image_url: >-
+      https://www.freepnglogos.com/uploads/youtube-tv-png/youtube-tv-youtube-watch-record-live-apk-download-from-moboplay-21.png
+    app_name: YouTube TV
+  - image_url: /local/images/KROQ.png
+    media_artist: KROQ
+  - missing_art_url: /local/images/default_station.png
+```
+
+Adjust `artwork_object_fit` (`cover`, `contain`, `fill`, `scale-down`, or `none`) to control how the replacement scales inside the card’s media frame.
 
 ## Music Assistant Entity Configuration
 
