@@ -61,10 +61,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         "app_name",
         "media_content_type",
         "entity_id",
-        "entity_state",
       ];
-
-      const defaultFit = this._config?.artwork_object_fit ?? "cover";
 
       return overrides.map((item) => {
         if (!item || typeof item !== "object") {
@@ -73,12 +70,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             match_value: "",
             image_url: "",
             size_percentage: undefined,
-            object_fit: defaultFit,
           };
         }
 
         const sizePercentage = item.size_percentage;
-        const objectFit = item.object_fit ?? defaultFit;
 
         if (item.missing_art_url !== undefined) {
           return {
@@ -86,7 +81,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             match_value: "",
             image_url: item.missing_art_url ?? "",
             size_percentage: sizePercentage,
-            object_fit: objectFit,
           };
         }
 
@@ -112,7 +106,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           match_value: matchValue ?? "",
           image_url: item.image_url ?? "",
           size_percentage: sizePercentage,
-          object_fit: objectFit,
         };
       });
     }
@@ -120,29 +113,27 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     _serializeArtworkOverride(rule) {
       if (!rule) return null;
       const image = (rule.image_url ?? "").trim();
-      const fit = rule.object_fit ?? undefined;
+      if (!image) return null;
 
       if (rule.match_type === "missing_art") {
-        const out = {
+        return {
           missing_art_url: image,
           ...(rule.size_percentage !== undefined ? { size_percentage: rule.size_percentage } : {}),
         };
-        if (fit) out.object_fit = fit;
-        return out;
       }
 
-      const value = rule.match_value ?? "";
-      const serialized = {
+      const value = (rule.match_value ?? "").trim();
+      if (!value) return null;
+
+      return {
         image_url: image,
         [rule.match_type]: value,
         ...(rule.size_percentage !== undefined ? { size_percentage: rule.size_percentage } : {}),
       };
-      if (fit) serialized.object_fit = fit;
-      return serialized;
     }
 
     _writeArtworkOverrides(list) {
-      this._artworkOverrides = list.map((rule) => ({ ...rule }));
+      this._artworkOverrides = list;
       const serialized = list
         .map((rule) => this._serializeArtworkOverride(rule))
         .filter((item) => item);
@@ -197,8 +188,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
     _addArtworkOverride() {
       const list = [...(this._artworkOverrides ?? [])];
-      const defaultFit = this._config?.artwork_object_fit ?? "cover";
-      list.push({ match_type: "media_title", match_value: "", image_url: "", size_percentage: undefined, object_fit: defaultFit });
+      list.push({ match_type: "media_title", match_value: "", image_url: "", size_percentage: undefined });
       this._writeArtworkOverrides(list);
     }
 
@@ -216,10 +206,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       const updated = { ...list[index], match_type: newType };
       if (newType === "missing_art") {
         updated.match_value = "";
-      } else if (newType === "entity_state") {
-        updated.match_value = updated.match_value || "playing";
-      } else if (updated.match_value === undefined) {
-        updated.match_value = "";
       }
       list[index] = updated;
       this._writeArtworkOverrides(list);
@@ -228,21 +214,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     _onArtworkMatchValueChange(index, value) {
       const list = [...(this._artworkOverrides ?? [])];
       if (!list[index]) return;
-      list[index] = { ...list[index], match_value: value ?? "" };
+      list[index] = { ...list[index], match_value: value };
       this._writeArtworkOverrides(list);
     }
 
     _onArtworkImageUrlChange(index, value) {
       const list = [...(this._artworkOverrides ?? [])];
       if (!list[index]) return;
-      list[index] = { ...list[index], image_url: value ?? "" };
-      this._writeArtworkOverrides(list);
-    }
-
-    _onArtworkObjectFitChange(index, value) {
-      const list = [...(this._artworkOverrides ?? [])];
-      if (!list[index]) return;
-      list[index] = { ...list[index], object_fit: value || undefined };
+      list[index] = { ...list[index], image_url: value };
       this._writeArtworkOverrides(list);
     }
 
@@ -609,7 +588,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         { value: "app_name", label: "App Name" },
         { value: "media_content_type", label: "Content Type" },
         { value: "entity_id", label: "Entity ID" },
-        { value: "entity_state", label: "Entity State" },
         { value: "missing_art", label: "Missing Artwork" },
       ];
 
@@ -683,53 +661,21 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                                       this._onArtworkMatchValueChange(idx, e.detail.value)}
                                   ></ha-entity-picker>
                                 `
-                              : rule.match_type === "entity_state"
-                                ? html`
-                                    <ha-selector
-                                      .hass=${this.hass}
-                                      class="full-width"
-                                      label="Match Value"
-                                      .selector=${{ select: { mode: "dropdown", options: [
-                                        { value: "playing", label: "Playing" },
-                                        { value: "paused", label: "Paused" },
-                                        { value: "idle", label: "Idle" },
-                                        { value: "standby", label: "Standby" },
-                                        { value: "off", label: "Off" },
-                                        { value: "unavailable", label: "Unavailable" },
-                                      ] } }}
-                                      .value=${rule.match_value ?? "playing"}
-                                      @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                    ></ha-selector>
-                                  `
-                                : html`
-                                    <ha-textfield
-                                      class="full-width"
-                                      label="Match Value"
-                                      .value=${rule.match_value ?? ""}
-                                      @input-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                    ></ha-textfield>
-                                  `
+                              : html`
+                                  <ha-textfield
+                                    class="full-width"
+                                    label="Match Value"
+                                    .value=${rule.match_value ?? ""}
+                                    @input=${(e) => this._onArtworkMatchValueChange(idx, e.target.value)}
+                                  ></ha-textfield>
+                                `
                         }
                         <ha-textfield
                           class="full-width"
                           label=${rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL"}
                           .value=${rule.image_url ?? ""}
-                          @value-changed=${(e) => this._onArtworkImageUrlChange(idx, e.detail.value)}
+                          @input=${(e) => this._onArtworkImageUrlChange(idx, e.target.value)}
                         ></ha-textfield>
-                        <ha-selector
-                          .hass=${this.hass}
-                          class="full-width"
-                          label="Artwork Fit"
-                          .selector=${{ select: { mode: "dropdown", options: [
-                            { value: "cover", label: "Cover" },
-                            { value: "contain", label: "Contain" },
-                            { value: "fill", label: "Fill" },
-                            { value: "scale-down", label: "Scale Down" },
-                            { value: "none", label: "None" }
-                          ] } }}
-                          .value=${rule.object_fit ?? this._config?.artwork_object_fit ?? "cover"}
-                          @value-changed=${(e) => this._onArtworkObjectFitChange(idx, e.detail.value)}
-                        ></ha-selector>
                       </div>
                       <div class="action-row-actions">
                         <ha-icon
@@ -873,26 +819,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             @value-changed=${(e) => this._updateConfig("show_chip_row", e.detail.value)}
           ></ha-selector>
           <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
-        </div>
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-              select: { mode: "dropdown", options: [
-                { value: "default", label: "Default" },
-                { value: "search", label: "Search" },
-                { value: "source", label: "Source" },
-                { value: "more-info", label: "More Info" },
-                { value: "group-players", label: "Group Players" },
-                { value: "transfer-queue", label: "Transfer Queue" }
-              ]}
-            }}
-            .value=${this._config.idle_screen ?? "default"}
-            label="Idle Screen"
-            @value-changed=${(e) => this._updateConfig("idle_screen", e.detail.value)}
-          ></ha-selector>
-          <div class="config-subtitle">Choose which screen to show automatically when the card becomes idle.</div>
         </div>
 
         <div class="form-row form-row-multi-column">
