@@ -11398,7 +11398,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         return `Call Service: ${act.service}${inMenu}`;
       }
       if (act !== null && act !== void 0 && act.navigation_path || (act === null || act === void 0 ? void 0 : act.action) === "navigate") {
-        return `Navigate to ${act.navigation_path || "(missing path)"}${inMenu}`;
+        const newTab = act !== null && act !== void 0 && act.navigation_new_tab ? " (New Tab)" : "";
+        return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${inMenu}`;
       }
       return act !== null && act !== void 0 && act.in_menu ? `Not Configured${inMenu}` : "Not Configured";
     })()}
@@ -11829,12 +11830,14 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       if (mode === "service") {
         this._updateActionProperty("menu_item", undefined);
         this._updateActionProperty("navigation_path", undefined);
+        this._updateActionProperty("navigation_new_tab", undefined);
         this._updateActionProperty("action", undefined);
       } else if (mode === "menu") {
         this._updateActionProperty("service", undefined);
         this._updateActionProperty("service_data", undefined);
         this._updateActionProperty("script_variable", undefined);
         this._updateActionProperty("navigation_path", undefined);
+        this._updateActionProperty("navigation_new_tab", undefined);
         this._updateActionProperty("action", undefined);
       } else if (mode === "navigate") {
         this._updateActionProperty("menu_item", undefined);
@@ -11902,6 +11905,16 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       this._updateActionProperty("action", "navigate");
     }}
             ></ha-textfield>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="navigation-new-tab-toggle"
+                .checked=${(action === null || action === void 0 ? void 0 : action.navigation_new_tab) ?? false}
+                @change=${e => this._updateActionProperty("navigation_new_tab", e.target.checked)}
+              ></ha-switch>
+              <label for="navigation-new-tab-toggle">Open External URLs in New Tab</label>
+            </div>
           </div>
           <div class="form-row">
             <div class="config-subtitle">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>
@@ -12989,6 +13002,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
   }
   _handleNavigate(path) {
     var _this$hass2;
+    let openInNewTab = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     if (typeof path !== "string") return;
     const target = path.trim();
     if (!target) return;
@@ -13006,6 +13020,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
       window.location.hash = target;
       handled = true;
     } else if (/^https?:\/\//i.test(target)) {
+      if (openInNewTab) {
+        window.open(target, "_blank", "noopener,noreferrer");
+        return;
+      }
       window.location.assign(target);
       handled = true;
     } else if ((_this$hass2 = this.hass) !== null && _this$hass2 !== void 0 && _this$hass2.navigate) {
@@ -15366,7 +15384,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     if (typeof action.navigation_path === "string" && action.navigation_path.trim() !== "" || action.action === "navigate") {
       const path = (typeof action.navigation_path === "string" ? action.navigation_path : action.path || "").trim();
-      this._handleNavigate(path);
+      const openInNewTab = action.navigation_new_tab === true;
+      this._handleNavigate(path, openInNewTab);
       return;
     }
     if (!action.service) return;
