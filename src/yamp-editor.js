@@ -1082,6 +1082,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                         if (act?.service) {
                           return `Call Service: ${act.service}${inMenu}`;
                         }
+                        if (act?.navigation_path || act?.action === "navigate") {
+                          return `Navigate to ${act.navigation_path || "(missing path)"}${inMenu}`;
+                        }
                         return act?.in_menu ? `Not Configured${inMenu}` : "Not Configured";
                       })()}
                       .helperPersistent=${true}
