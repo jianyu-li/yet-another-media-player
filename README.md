@@ -1,6 +1,6 @@
 # Yet Another Media Player
 
-YAMP is a Home Assistant media card for controlling multiple entities with customizable actions and music assistant support.
+YAMP is a full-featured Home Assistant media card for controlling multiple entities with customizable actions, music assistant support, and various layout options.
 
 
 
@@ -19,14 +19,18 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
   - Control volume as a group or individually
   - Separate volume entity 
   - Override sync volume behavior on a per entity basis using `group_volume`
+  - Supports Linkplay/WiiM speakers and other integrations that expose group members
 - Music Assistant Support: Search music on compatible players
 - Add background image sensor for when not in use
+- Jump straight into search from the idle screen when you prefer browsing over artwork
 - Auto-switches to the active media player
   - Manually selected players will pin in place for the current session until manually removed
+- Transfer queue between compatible Music Assistant players directly from the card menu
 - Action buttons run any Home Assistant service or script 
   - Pass currently selected entity to a script
 - Use "current" for the entity_id to reference the currently selected media player ([see example below](https://github.com/jianyu-li/yet-another-media-player#custom-actions))
 - Set match_theme to TRUE to have the cards accent colors follow your selected accent theme color
+- Prioritize replacement artwork with `media_artwork_overrides` and fine-tune scaling via `artwork_object_fit`
 - Use collapse_on_idle to collapse the card down when nothing is playing. This looks great on mobile!
 - Use always_collapsed to keep the card collapsed even when something is playing
 
@@ -34,12 +38,27 @@ YAMP is a Home Assistant media card for controlling multiple entities with custo
 
 ## Screenshots
 
-![preview Image](/preview/largepreview.png)
-![preview Image Collapsed](/preview/collapsed.png)
-![preview Image Search](/preview/search.png)
-![preview Image Grouping](/preview/group-player-menu.png)
-![preview Image Movie](/preview/movie.png)
-![preview Image No Icon](/preview/NoIcons.png)
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="preview/largepreview.png" alt="Card overview" width="420"></td>
+      <td><img src="preview/collapsed.png" alt="Collapsed card" width="420"></td>
+    </tr>
+    <tr>
+      <td><img src="preview/minimal-preview.png" alt="Minimal layout" width="420"></td>
+      <td><img src="preview/in-menu-mode.png" alt="Chips in menu mode" width="420"></td>    
+    </tr>
+    <tr>
+      <td><img src="preview/transfer-queue.png" alt="Transfer queue" width="420"></td>
+      <td><img src="preview/up-next.png" alt="Up next queue" width="420"></td>
+    </tr>
+    <tr>
+      <td><img src="preview/search.png" alt="Search view" width="420"></td>
+      <td><img src="preview/group-player-menu.png" alt="Group players menu" width="420"></td>
+    </tr>
+  </table>
+</div>
+
 
 
 ---
@@ -60,10 +79,13 @@ Below you will find a list of all configuration options.
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
-| `artwork_object_fit`       | choice       | No           | `cover`     | Controls how artwork scales: `cover`, `contain`, `fill`, `scale-down`, or `none`                  |
+| `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately |
+| `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `fill`, `scale-down`, or `none`                   |
+| `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` scales the replacement |
+| `transfer_queue`           | menu action  | No           | —           | Adds a "Transfer Queue" menu action for Music Assistant entities (see below)                   |
 | `idle_image`               | image/camera/url | No           | —           | Background image when player is idle (supports local files, cameras, or URLs)                   |
 | `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
-| `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row                  |
+| `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu |
 |                                                                                                 |
 | **Entity Options**         |              |              |             |                                                                                                 |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume) (supports Jinja templates) |
@@ -80,7 +102,7 @@ Below you will find a list of all configuration options.
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `source`, `more-info`, `group-players`                    |
-| `in_menu`                  | boolean      | No           | `false`     | Move the action into the menu instead of the action chip row                                    |
+| `in_menu`                  | boolean      | No           | `false`     | When `true`, moves actions alongside the built-in menu options instead of forward facing chips           |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 
 # Group Players
@@ -93,11 +115,11 @@ Player entities can be grouped together for supported entities. Access the hambu
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
 - **Favorites Filter**: Toggle the favorites button to show only favorited tracks
 - **Recently Played Filter**: Toggle the recently played button to show your most recently played items. When enabled, results are fetched from Music Assistant ordered by most recently played. Only items that are part of your library will appear. You can still use the media-type chips to narrow the list. Submitting a new search query will start a normal search and turn off filters.
-- **Next Up Filter**: Toggle the next up button to show the upcoming track in your queue. When enabled, displays the next song that will play. The play button will advance to the next track, and the "Add to Queue" button is hidden since the track is already in the queue. Submitting a new search query will start a normal search and turn off filters.
+- **Next Up Filter**: Toggle the next up button to show the upcoming track in your queue. 
+  - Install mass_queue to see and manage the entire upcoming queue! See documentation for Music Assistant Queue Actions below. 
 - **Enqueue**: Use the enqueue button (playlist icon) to add tracks to your queue
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
-- Bonus Bonus Tip: On mobile, swipe left or right to rotate through the media type to quickly filter results.
-![preview Image Search](/preview/search.png)
+![preview Image Search](preview/search.png)
 
 
 ## Config Examples
@@ -136,7 +158,8 @@ actions:
       enqueue: replace
   - name: Set the Mood
     service: script.set_mood
-    script_variable: true      
+    script_variable: true 
+    in_menu: true     
 match_theme: true
 volume_mode: slider
 collapse_on_idle: true
@@ -161,6 +184,10 @@ always_collapsed: true
 expand_on_search: true
 ```
 
+### Transfer Queue
+
+The card can surface a **Transfer Queue** menu option for Music Assistant players. When the active entity supports queue transfers, selecting *Transfer Queue* opens a list of compatible targets and the queue moves instantly to the chosen player. The option only appears when a Music Assistant entity with a queue is selected.
+
 ### Custom Actions
 You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
 
@@ -181,22 +208,46 @@ actions:
 ```
 
 ### Menu-only Actions
-Set `in_menu: true` (or toggle **In Menu** in the editor) to remove an action chip and render it with the standard menu options such as *More Info* or *Transfer Queue*. Menu-only actions keep the same icon styling and hover states as the built-in entries.
+When configuring an action you can enable the **In Menu** toggle (or set `in_menu: true` in YAML) to move that action out of the chip row. Menu-only actions appear with the built-in options at the bottom of the entity menu, preserving the same hover styling and icon color as items like *More Info* or *Transfer Queue*.
 
 ```yaml
 actions:
-  - icon: mdi:account-multiple-plus
-    name: Group Helpers
+  - name: Group Players
+    icon: mdi:account-multiple-plus
     in_menu: true
-    service: script.group_helpers
+    service: media_player.join
+    service_data:
+      entity_id: current
+      group_members:
+        - media_player.kitchen_homepod
 ```
 
-### Card Height Override
-Use `card_height` (Look & Feel tab) to pin the card to a specific pixel height—handy if you previously relied on `card-mod` to keep the layout consistent. When a custom height is set, the artwork spacer is collapsed automatically so the entire value comes from your override.
+### Idle Screen Search Mode
+Prefer jumping straight into browsing? Set `idle_screen: search` to skip the idle artwork splash and open the search sheet whenever the card is idle.
 
 ```yaml
-card_height: 500
+idle_screen: search
 ```
+
+### Artwork Overrides
+Use `media_artwork_overrides` to replace missing or low-resolution art with higher quality images. Rules are evaluated from top to bottom; the first match wins. Supply an `image_url` along with a single match key (`media_title`, `media_artist`, `media_album_name`, `media_content_id`, `media_channel`, `app_name`, `media_content_type`, or `entity_id`). To cover any track that ships without art, use `missing_art_url` instead of a match value. Optionally include `size_percentage` to scale the replacement relative to the card.
+
+```yaml
+media_artwork_overrides:
+  - image_url: >-
+      https://upload.wikimedia.org/wikipedia/commons/6/62/YouTube_social_white_square_%282024%29.svg
+    app_name: YouTube
+  - image_url: https://shine1049.org/files/Stack%20Images/shine104.9.png?ade9fb8c3c
+    media_content_id: library://radio/2
+  - image_url: >-
+      https://www.freepnglogos.com/uploads/youtube-tv-png/youtube-tv-youtube-watch-record-live-apk-download-from-moboplay-21.png
+    app_name: YouTube TV
+  - image_url: /local/images/KROQ.png
+    media_artist: KROQ
+  - missing_art_url: /local/images/default_station.png
+```
+
+Adjust `artwork_object_fit` (`cover`, `contain`, `fill`, `scale-down`, or `none`) to control how the replacement scales inside the card’s media frame.
 
 ## Music Assistant Entity Configuration
 
@@ -453,32 +504,6 @@ Example action for playing a radio station on [Chromecast](https://www.home-assi
 
 ## Card Mod Examples
 
-### Decrease Height
-You must adjust the ha-card height as well as .card-artwork-spacer min-height, see example: 
-```
-card_mod:
-  style: |
-    ha-card {
-      height: 300px !important;
-    }
-    .card-artwork-spacer {
-      min-height: 0px !important;
-      }
-```
-
-### Increase Height
-You must adjust the ha-card height as well as .card-artwork-spacer min-height, see example: 
-```
-card_mod:
-  style: |
-    ha-card {
-      height: 700px !important;
-    }
-    .card-artwork-spacer {
-      min-height: 0px !important;
-      }
-```
-
 ### Update Background Image
 This is different from the idle_image argument (that allows a background image when not playing), using card-mod to change the background will apply the background at all times. 
 ```
@@ -500,6 +525,24 @@ card_mod:
 - When an entity is manually selected it will be pinned in place and will not auto-switch to the more recently playing entity for that session. Tap or click the pin icon that appears to unpin the entity.
 - Actions can run any home assistant service, not just media services. Specifying "current" in the entity_id field will target the currently selected entity. 
 - Grouping players only works on supported entities, if the entity is not supported the option will not be visible
+
+
+---
+
+## Optional: Music Assistant Queue Actions (mass_queue)
+
+For enhanced queue controls in the Search sheet (e.g., viewing and reordering the upcoming queue, moving items up/down/next, and removing items), you can optionally install the community integration that adds Music Assistant queue services.
+
+- Integration: `mass_queue` — Actions to control player queues for Music Assistant
+- Install via HACS or manual install as described in the integration’s README
+- Repository link: [droans/mass_queue](https://github.com/droans/mass_queue)
+
+Once installed and configured, YAMP will automatically detect the integration and enable:
+- Fetching the upcoming queue with `mass_queue.get_queue_items` (the existing ```search_results_limit``` will be used for this)
+- Queue item reordering: move up, move down, move next
+- Queue item removal
+
+These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
 
 
 
