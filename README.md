@@ -41,20 +41,20 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 <div align="center">
   <table>
     <tr>
-      <td><img src="/preview/largepreview.png" alt="Card overview" width="420"></td>
-      <td><img src="/preview/collapsed.png" alt="Collapsed card" width="420"></td>
+      <td><img src="preview/largepreview.png" alt="Card overview" width="420"></td>
+      <td><img src="preview/collapsed.png" alt="Collapsed card" width="420"></td>
     </tr>
     <tr>
-      <td><img src="/preview/minimal-preview.png" alt="Minimal layout" width="420"></td>
-      <td><img src="/preview/in-menu-mode.png" alt="Chips in menu mode" width="420"></td>    
+      <td><img src="preview/minimal-preview.png" alt="Minimal layout" width="420"></td>
+      <td><img src="preview/in-menu-mode.png" alt="Chips in menu mode" width="420"></td>    
     </tr>
     <tr>
-      <td><img src="/preview/transfer-queue.png" alt="Transfer queue" width="420"></td>
-      <td><img src="/preview/up-next.png" alt="Up next queue" width="420"></td>
+      <td><img src="preview/transfer-queue.png" alt="Transfer queue" width="420"></td>
+      <td><img src="preview/up-next.png" alt="Up next queue" width="420"></td>
     </tr>
     <tr>
-      <td><img src="/preview/search.png" alt="Search view" width="420"></td>
-      <td><img src="/preview/group-player-menu.png" alt="Group players menu" width="420"></td>
+      <td><img src="preview/search.png" alt="Search view" width="420"></td>
+      <td><img src="preview/group-player-menu.png" alt="Group players menu" width="420"></td>
     </tr>
   </table>
 </div>
@@ -119,7 +119,7 @@ Initiate a search using the hamburger menu and selecting `search`. Press Enter o
   - Install mass_queue to see and manage the entire upcoming queue! See documentation for Music Assistant Queue Actions below. 
 - **Enqueue**: Use the enqueue button (playlist icon) to add tracks to your queue
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
-![preview Image Search](/preview/search.png)
+![preview Image Search](preview/search.png)
 
 
 ## Config Examples
