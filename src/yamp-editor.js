@@ -927,7 +927,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 mode: "dropdown",
                 options: [
                   { value: "default", label: "Default" },
-                  { value: "search", label: "Search" }
+                  { value: "search", label: "Search" },
+                  { value: "search-recently-played", label: "Recently Played" },
+                  { value: "search-next-up", label: "Next Up" }
                 ]
               }
             }}
@@ -1508,6 +1510,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                   options: [
                     { value: "", label: "" },
                     { value: "search", label: "Search" },
+                    { value: "search-recently-played", label: "Recently Played" },
+                    { value: "search-next-up", label: "Next Up" },
                     { value: "source", label: "Source" },
                     { value: "more-info", label: "More Info" },
                     { value: "group-players", label: "Group Players" },
