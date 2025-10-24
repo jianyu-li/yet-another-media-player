@@ -1410,6 +1410,10 @@ const yampCardStyles = i$4`
     height: auto;
     min-height: 180px;
     pointer-events: none;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   :host([data-has-custom-height="true"]) .card-artwork-spacer {
@@ -2252,20 +2256,21 @@ const yampCardStyles = i$4`
 
 
   /* Media artwork placeholder */
-  .media-artwork-placeholder ha-icon {
-    width: 104px;
-    height: 104px;
-    min-width: 104px;
-    min-height: 104px;
-    max-width: 104px;
-    max-height: 104px;
-    display: block;
+  .media-artwork-placeholder {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(96px, 50%, 184px);
+    aspect-ratio: 1;
+    pointer-events: none;
   }
 
-  .media-artwork-placeholder ha-icon svg {
+  .media-artwork-placeholder svg {
     width: 100%;
     height: 100%;
     display: block;
+    opacity: 0.85;
   }
 
   /* Collapsed artwork */
@@ -16140,25 +16145,21 @@ class YetAnotherMediaPlayerCard extends i$1 {
                          onerror="this.style.display='none'" />
                   </div>
                 ` : E}
-                ${!collapsed ? x`<div class="card-artwork-spacer"></div>` : E}
-                ${!collapsed && !artworkUrl && !idleImageUrl ? x`
-                  <div class="media-artwork-placeholder"
-                    style="
-                      position: absolute;
-                      left: 50%; top: 36px;
-                      transform: translateX(-50%);
-                      width: 184px; height: 184px;
-                      display: flex; align-items: center; justify-content: center;
-                      background: none;
-                      z-index: 2;">
-                    <svg width="184" height="184" viewBox="0 0 184 184"
-                      style="display:block;opacity:0.85;${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
-                      xmlns="http://www.w3.org/2000/svg">
-                      <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"/>
-                      <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"/>
-                      <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"/>
-                      <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"/>
-                    </svg>
+                ${!collapsed ? x`
+                  <div class="card-artwork-spacer">
+                    ${!artworkUrl && !idleImageUrl ? x`
+                      <div class="media-artwork-placeholder">
+                        <svg
+                          viewBox="0 0 184 184"
+                          style="${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"></rect>
+                          <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"></rect>
+                          <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"></rect>
+                          <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"></rect>
+                        </svg>
+                      </div>
+                    ` : E}
                   </div>
                 ` : E}
                 <div class="details" style="${[this._showEntityOptions ? 'visibility:hidden' : '', !shouldShowDetails ? 'min-height:48px;opacity:0' : ''].filter(Boolean).join(';')}">
