@@ -59,7 +59,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._showSourceList = false;
         this._showTransferQueue = false;
         this._showResolvedEntities = false;
-        this._showSearchSheetInOptions();
+        this._showSearchSheetInOptions("default");
+        break;
+      case "search-recently-played":
+        this._showEntityOptions = true;
+        this._showGrouping = false;
+        this._showSourceList = false;
+        this._showTransferQueue = false;
+        this._showResolvedEntities = false;
+        this._showSearchSheetInOptions("recently-played");
+        break;
+      case "search-next-up":
+        this._showEntityOptions = true;
+        this._showGrouping = false;
+        this._showSourceList = false;
+        this._showTransferQueue = false;
+        this._showResolvedEntities = false;
+        this._showSearchSheetInOptions("next-up");
         break;
       default:
         return;
@@ -71,6 +87,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!this._idleScreenApplied) return;
     switch (this._idleScreen) {
       case "search":
+      case "search-recently-played":
+      case "search-next-up":
         this._hideSearchSheetInOptions();
         this._showEntityOptions = false;
         break;
@@ -624,7 +642,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       });
   }
   // Show search sheet inside entity options
-  _showSearchSheetInOptions() {
+  _showSearchSheetInOptions(mode = "default") {
     this._showSearchInSheet = true;
     this._searchError = "";
     this._searchResults = [];
@@ -641,9 +659,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
     this.requestUpdate();
     
-    // Trigger search to load favorites when search sheet opens
+    // Trigger selected search mode after sheet opens
     setTimeout(() => {
-      this._doSearch();
+      let promise;
+      switch (mode) {
+        case "recently-played":
+          promise = this._toggleRecentlyPlayedFilter(true);
+          break;
+        case "next-up":
+          promise = this._toggleUpcomingFilter(true);
+          break;
+        default:
+          promise = this._doSearch();
+          break;
+      }
+      if (promise?.catch) {
+        promise.catch((err) => {
+          console.error("yamp: search initialization failed:", err);
+        });
+      }
     }, 100);
     
     // Handle focus for expand on search
@@ -662,6 +696,40 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }, 200);
       }
     }, focusDelay);
+  }
+
+  _handleNavigate(path) {
+    if (typeof path !== "string") return;
+    const target = path.trim();
+    if (!target) return;
+
+    const navEvent = new CustomEvent("hass-navigate", {
+      detail: { path: target },
+      bubbles: true,
+      composed: true
+    });
+    this.dispatchEvent(navEvent);
+
+    if (navEvent.defaultPrevented) return;
+
+    let handled = false;
+    if (target.startsWith("#")) {
+      window.location.hash = target;
+      handled = true;
+    } else if (/^https?:\/\//i.test(target)) {
+      window.location.assign(target);
+      handled = true;
+    } else if (this.hass?.navigate) {
+      this.hass.navigate(target);
+      handled = true;
+    } else {
+      window.history.pushState(null, "", target);
+      handled = true;
+    }
+
+    if (handled) {
+      window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+    }
   }
 
 
@@ -1118,8 +1186,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Toggle recently played filter
-  async _toggleRecentlyPlayedFilter() {
-    this._recentlyPlayedFilterActive = !this._recentlyPlayedFilterActive;
+  async _toggleRecentlyPlayedFilter(forceState = null) {
+    const targetState = typeof forceState === "boolean"
+      ? forceState
+      : !this._recentlyPlayedFilterActive;
+    const isStateChanging = targetState !== this._recentlyPlayedFilterActive;
+    this._recentlyPlayedFilterActive = targetState;
     
     // Make mutually exclusive with other filters
     if (this._recentlyPlayedFilterActive) {
@@ -1133,7 +1205,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._searchQuery = '';
       // Load recently played items - always use "all" for recently played
       try {
-        await this._doSearch('all', { isRecentlyPlayed: true });
+        await this._doSearch('all', { isRecentlyPlayed: true, clearFilters: !isStateChanging });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recently played:', error);
       }
@@ -1158,8 +1230,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Toggle upcoming queue filter
-  async _toggleUpcomingFilter() {
-    this._upcomingFilterActive = !this._upcomingFilterActive;
+  async _toggleUpcomingFilter(forceState = null) {
+    const targetState = typeof forceState === "boolean"
+      ? forceState
+      : !this._upcomingFilterActive;
+    const isStateChanging = targetState !== this._upcomingFilterActive;
+    this._upcomingFilterActive = targetState;
     
     // Make mutually exclusive with other filters
     if (this._upcomingFilterActive) {
@@ -1178,7 +1254,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       await this._subscribeToQueueUpdates();
       // Load upcoming queue items - always use "all" for upcoming
       try {
-        await this._doSearch('all', { isUpcoming: true });
+        await this._doSearch('all', { isUpcoming: true, clearFilters: !isStateChanging });
       } catch (error) {
         console.error('yamp: Error in _doSearch for upcoming queue:', error);
       }
@@ -3086,23 +3162,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
           break;
         case "search":
           this._showEntityOptions = true;
-          this._showSearchInSheet = true;
-          this._searchError = "";
-          this._searchResults = [];
-          this._searchQuery = "";
-          this._searchAttempted = false;
-          this._searchResultsByType = {}; // Clear cache when opening new search
-          this._currentSearchQuery = ""; // Reset current search query
-          this._searchHierarchy = []; // Clear search hierarchy
-          this._searchBreadcrumb = ""; // Clear breadcrumb
-          this.requestUpdate();
-          
-          // Trigger search to load favorites when search sheet opens
+          this._showSearchSheetInOptions("default");
           setTimeout(() => {
-            this._doSearch();
-          }, 100);
-          
-          // Force layout update for expand on search
+            this._notifyResize();
+          }, 0);
+          break;
+        case "search-recently-played":
+          this._showEntityOptions = true;
+          this._showSearchSheetInOptions("recently-played");
+          setTimeout(() => {
+            this._notifyResize();
+          }, 0);
+          break;
+        case "search-next-up":
+          this._showEntityOptions = true;
+          this._showSearchSheetInOptions("next-up");
           setTimeout(() => {
             this._notifyResize();
           }, 0);
@@ -3121,6 +3195,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
           // Do nothing for unknown menu_item
           break;
       }
+      return;
+    }
+    if (
+      (typeof action.navigation_path === "string" && action.navigation_path.trim() !== "") ||
+      action.action === "navigate"
+    ) {
+      const path = (typeof action.navigation_path === "string" ? action.navigation_path : action.path || "").trim();
+      this._handleNavigate(path);
       return;
     }
     if (!action.service) return;
@@ -3188,12 +3270,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (iconOnly) return "";
       const menuLabels = {
         "search": "Search",
+        "search-recently-played": "Recently Played",
+        "search-next-up": "Next Up",
         "source": "Source",
         "more-info": "More Info",
         "group-players": "Group Players",
         "transfer-queue": "Transfer Queue",
       };
       return menuLabels[action.menu_item] ?? action.menu_item;
+    }
+    if (
+      (typeof action.navigation_path === "string" && action.navigation_path.trim() !== "") ||
+      action.action === "navigate"
+    ) {
+      return iconOnly ? "" : "Navigate";
     }
     if (action.service) return iconOnly ? "" : action.service;
     return iconOnly ? "" : "Action";
@@ -4040,28 +4130,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                          onerror="this.style.display='none'" />
                   </div>
                 ` : nothing}
-                ${!collapsed
-                  ? html`<div class="card-artwork-spacer"></div>`
-                  : nothing
-                }
-                ${(!collapsed && !artworkUrl && !idleImageUrl) ? html`
-                  <div class="media-artwork-placeholder"
-                    style="
-                      position: absolute;
-                      left: 50%; top: 36px;
-                      transform: translateX(-50%);
-                      width: 184px; height: 184px;
-                      display: flex; align-items: center; justify-content: center;
-                      background: none;
-                      z-index: 2;">
-                    <svg width="184" height="184" viewBox="0 0 184 184"
-                      style="display:block;opacity:0.85;${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
-                      xmlns="http://www.w3.org/2000/svg">
-                      <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"/>
-                      <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"/>
-                      <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"/>
-                      <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"/>
-                    </svg>
+                ${!collapsed ? html`
+                  <div class="card-artwork-spacer">
+                    ${(!artworkUrl && !idleImageUrl) ? html`
+                      <div class="media-artwork-placeholder">
+                        <svg
+                          viewBox="0 0 184 184"
+                          style="${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"></rect>
+                          <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"></rect>
+                          <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"></rect>
+                          <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"></rect>
+                        </svg>
+                      </div>
+                    ` : nothing}
                   </div>
                 ` : nothing}
                 <div class="details" style="${[
