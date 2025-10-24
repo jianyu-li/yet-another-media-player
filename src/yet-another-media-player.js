@@ -4040,28 +4040,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                          onerror="this.style.display='none'" />
                   </div>
                 ` : nothing}
-                ${!collapsed
-                  ? html`<div class="card-artwork-spacer"></div>`
-                  : nothing
-                }
-                ${(!collapsed && !artworkUrl && !idleImageUrl) ? html`
-                  <div class="media-artwork-placeholder"
-                    style="
-                      position: absolute;
-                      left: 50%; top: 36px;
-                      transform: translateX(-50%);
-                      width: 184px; height: 184px;
-                      display: flex; align-items: center; justify-content: center;
-                      background: none;
-                      z-index: 2;">
-                    <svg width="184" height="184" viewBox="0 0 184 184"
-                      style="display:block;opacity:0.85;${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
-                      xmlns="http://www.w3.org/2000/svg">
-                      <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"/>
-                      <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"/>
-                      <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"/>
-                      <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"/>
-                    </svg>
+                ${!collapsed ? html`
+                  <div class="card-artwork-spacer">
+                    ${(!artworkUrl && !idleImageUrl) ? html`
+                      <div class="media-artwork-placeholder">
+                        <svg
+                          viewBox="0 0 184 184"
+                          style="${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"></rect>
+                          <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"></rect>
+                          <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"></rect>
+                          <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"></rect>
+                        </svg>
+                      </div>
+                    ` : nothing}
                   </div>
                 ` : nothing}
                 <div class="details" style="${[

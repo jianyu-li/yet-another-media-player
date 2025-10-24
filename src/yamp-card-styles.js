@@ -143,6 +143,10 @@ export const yampCardStyles = css`
     height: auto;
     min-height: 180px;
     pointer-events: none;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   :host([data-has-custom-height="true"]) .card-artwork-spacer {
@@ -985,20 +989,21 @@ export const yampCardStyles = css`
 
 
   /* Media artwork placeholder */
-  .media-artwork-placeholder ha-icon {
-    width: 104px;
-    height: 104px;
-    min-width: 104px;
-    min-height: 104px;
-    max-width: 104px;
-    max-height: 104px;
-    display: block;
+  .media-artwork-placeholder {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(96px, 50%, 184px);
+    aspect-ratio: 1;
+    pointer-events: none;
   }
 
-  .media-artwork-placeholder ha-icon svg {
+  .media-artwork-placeholder svg {
     width: 100%;
     height: 100%;
     display: block;
+    opacity: 0.85;
   }
 
   /* Collapsed artwork */
