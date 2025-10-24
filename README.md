@@ -107,6 +107,7 @@ Below you will find a list of all configuration options.
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
 | `action`                   | string       | No           | —           | Set to `navigate` to create a navigation shortcut                                               |
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
+| `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`                    |
 | `in_menu`                  | boolean      | No           | `false`     | When `true`, moves actions alongside the built-in menu options instead of forward facing chips           |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
@@ -237,6 +238,17 @@ actions:
     icon: mdi:television
     action: navigate
     navigation_path: "#living"
+```
+
+To launch an external site in a new browser tab:
+
+```yaml
+actions:
+  - name: Player Docs
+    icon: mdi:open-in-new
+    action: navigate
+    navigation_path: "https://example.com/docs"
+    navigation_new_tab: true
 ```
 
 ### Idle Screen Search Mode

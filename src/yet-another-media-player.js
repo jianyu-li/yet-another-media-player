@@ -698,7 +698,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }, focusDelay);
   }
 
-  _handleNavigate(path) {
+  _handleNavigate(path, openInNewTab = false) {
     if (typeof path !== "string") return;
     const target = path.trim();
     if (!target) return;
@@ -717,6 +717,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       window.location.hash = target;
       handled = true;
     } else if (/^https?:\/\//i.test(target)) {
+      if (openInNewTab) {
+        window.open(target, "_blank", "noopener,noreferrer");
+        return;
+      }
       window.location.assign(target);
       handled = true;
     } else if (this.hass?.navigate) {
@@ -3202,7 +3206,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       action.action === "navigate"
     ) {
       const path = (typeof action.navigation_path === "string" ? action.navigation_path : action.path || "").trim();
-      this._handleNavigate(path);
+      const openInNewTab = action.navigation_new_tab === true;
+      this._handleNavigate(path, openInNewTab);
       return;
     }
     if (!action.service) return;
