@@ -1083,7 +1083,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                           return `Call Service: ${act.service}${inMenu}`;
                         }
                         if (act?.navigation_path || act?.action === "navigate") {
-                          return `Navigate to ${act.navigation_path || "(missing path)"}${inMenu}`;
+                          const newTab = act?.navigation_new_tab ? " (New Tab)" : "";
+                          return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${inMenu}`;
                         }
                         return act?.in_menu ? `Not Configured${inMenu}` : "Not Configured";
                       })()}
@@ -1503,12 +1504,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               if (mode === "service") {
                 this._updateActionProperty("menu_item", undefined);
                 this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("navigation_new_tab", undefined);
                 this._updateActionProperty("action", undefined);
               } else if (mode === "menu") {
                 this._updateActionProperty("service", undefined);
                 this._updateActionProperty("service_data", undefined);
                 this._updateActionProperty("script_variable", undefined);
                 this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("navigation_new_tab", undefined);
                 this._updateActionProperty("action", undefined);
               } else if (mode === "navigate") {
                 this._updateActionProperty("menu_item", undefined);
@@ -1562,6 +1565,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 this._updateActionProperty("action", "navigate");
               }}
             ></ha-textfield>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="navigation-new-tab-toggle"
+                .checked=${action?.navigation_new_tab ?? false}
+                @change=${(e) => this._updateActionProperty("navigation_new_tab", e.target.checked)}
+              ></ha-switch>
+              <label for="navigation-new-tab-toggle">Open External URLs in New Tab</label>
+            </div>
           </div>
           <div class="form-row">
             <div class="config-subtitle">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>
