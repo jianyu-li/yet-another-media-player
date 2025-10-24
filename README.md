@@ -85,7 +85,7 @@ Below you will find a list of all configuration options.
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing                                          |
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
-| `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately |
+| `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
@@ -105,7 +105,9 @@ Below you will find a list of all configuration options.
 | `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
-| `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `source`, `more-info`, `group-players`                    |
+| `action`                   | string       | No           | —           | Set to `navigate` to create a navigation shortcut                                               |
+| `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
+| `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`                    |
 | `in_menu`                  | boolean      | No           | `false`     | When `true`, moves actions alongside the built-in menu options instead of forward facing chips           |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 
@@ -226,11 +228,26 @@ actions:
         - media_player.kitchen_homepod
 ```
 
-### Idle Screen Search Mode
-Prefer jumping straight into browsing? Set `idle_screen: search` to skip the idle artwork splash and open the search sheet whenever the card is idle.
+### Navigation Actions
+Jump straight to another dashboard view or pop-up by creating a navigation action. Choose **Navigate** in the editor (or set `action: navigate`) and supply the target with `navigation_path`.
 
 ```yaml
-idle_screen: search
+actions:
+  - name: Living Room View
+    icon: mdi:television
+    action: navigate
+    navigation_path: "#living"
+```
+
+### Idle Screen Search Mode
+Prefer jumping straight into browsing? Set `idle_screen` to one of the search shortcuts to skip the idle artwork splash automatically:
+
+- `idle_screen: search` opens the standard search view
+- `idle_screen: search-recently-played` jumps directly to the Recently Played filter
+- `idle_screen: search-next-up` shows the Next Up queue
+
+```yaml
+idle_screen: search-recently-played
 ```
 
 ### Artwork Overrides
