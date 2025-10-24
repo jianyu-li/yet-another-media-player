@@ -42,8 +42,8 @@ jobs:
           # Switch back to beta
           git checkout beta
           
-          # Copy only the src directory from alpha
-          git checkout temp-alpha -- src/
+          # Copy only the src directory and README from alpha
+          git checkout temp-alpha -- src/ README.md
           
           # Check if there are any changes
           if git diff --quiet; then
@@ -76,7 +76,7 @@ jobs:
         run: |
           # Only commit if there are changes
           if ! git diff --quiet; then
-            git add src/
+            git add src/ README.md
             git commit -m "Merge alpha changes to beta: Update source files
 
             - Merged source files from alpha branch

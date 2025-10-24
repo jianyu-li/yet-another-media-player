@@ -40,9 +40,9 @@ jobs:
           git reset --hard HEAD
           # Create a temporary branch from beta
           git checkout -b temp-beta origin/beta
-          # Copy only source files from beta to main (preserve config files)
+          # Copy only source files and README from beta to main (preserve config files)
           git checkout main
-          git checkout temp-beta -- src/ || true
+          git checkout temp-beta -- src/ README.md || true
           # Remove the temporary branch
           git branch -D temp-beta
 
