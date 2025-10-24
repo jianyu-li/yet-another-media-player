@@ -253,6 +253,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         this._updateConfig("actions", actions);
       }
     }
+
+    _deriveActionMode(action) {
+      if (!action) return "service";
+      if (typeof action.menu_item === "string" && action.menu_item.trim() !== "") return "menu";
+      const navPath = typeof action.navigation_path === "string" ? action.navigation_path.trim() : "";
+      if (action.action === "navigate" || navPath) return "navigate";
+      return "service";
+    }
   
     static get styles() {
       return css`
@@ -1427,7 +1435,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
     _renderActionEditor(action) {
 
-      const actionMode = this._actionMode ?? (action?.menu_item?.trim() ? "menu" : "service");
+      const actionMode = this._actionMode ?? this._deriveActionMode(action);
 
       return html`
         <div class="action-editor-header">
@@ -1480,20 +1488,34 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 mode: "dropdown",
                 options: [
                   { value: "menu", label: "Open a Card Menu Item" },
-                  { value: "service", label: "Call a Service" }
+                  { value: "service", label: "Call a Service" },
+                  { value: "navigate", label: "Navigate" }
                 ]
               }
             }}
-            .value=${this._actionMode ?? (action?.menu_item?.trim() ? "menu" : "service")}
+            .value=${this._actionMode ?? this._deriveActionMode(action)}
             @value-changed=${(e) => {
               const mode = e.detail.value;
               this._actionMode = mode;
               if (mode === "service") {
                 this._updateActionProperty("menu_item", undefined);
+                this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("action", undefined);
               } else if (mode === "menu") {
                 this._updateActionProperty("service", undefined);
                 this._updateActionProperty("service_data", undefined);
                 this._updateActionProperty("script_variable", undefined);
+                this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("action", undefined);
+              } else if (mode === "navigate") {
+                this._updateActionProperty("menu_item", undefined);
+                this._updateActionProperty("service", undefined);
+                this._updateActionProperty("service_data", undefined);
+                this._updateActionProperty("script_variable", undefined);
+                this._updateActionProperty("action", "navigate");
+                if (!action?.navigation_path) {
+                  this._updateActionProperty("navigation_path", "");
+                }
               }
             }}
           ></ha-selector>
@@ -1525,6 +1547,23 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-selector>
           </div>
         ` : nothing} 
+        ${actionMode === "navigate" ? html`
+          <div class="form-row">
+            <ha-textfield
+              class="full-width"
+              label="Navigation Path"
+              placeholder="/lovelace/music or #popup"
+              .value=${action?.navigation_path ?? ""}
+              @input=${(e) => {
+                this._updateActionProperty("navigation_path", e.target.value);
+                this._updateActionProperty("action", "navigate");
+              }}
+            ></ha-textfield>
+          </div>
+          <div class="form-row">
+            <div class="config-subtitle">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>
+          </div>
+        ` : nothing}
         ${actionMode === 'service' ? html`
           <div class="form-row">
             <ha-combo-box
@@ -1674,7 +1713,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     _onEditAction(index) {
       this._actionEditorIndex = index;
       const action = this._config.actions?.[index];
-      this._actionMode = action?.menu_item ? "menu" : "service";
+      this._actionMode = this._deriveActionMode(action);
     }
 
     _onBackFromEntityEditor() {
@@ -1685,6 +1724,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
   
     _onBackFromActionEditor() {
       this._actionEditorIndex = null;
+      this._actionMode = null;
     }
 
     _onEntityMoved(event) {

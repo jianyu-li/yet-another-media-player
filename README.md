@@ -105,6 +105,8 @@ Below you will find a list of all configuration options.
 | `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
+| `action`                   | string       | No           | —           | Set to `navigate` to create a navigation shortcut                                               |
+| `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`                    |
 | `in_menu`                  | boolean      | No           | `false`     | When `true`, moves actions alongside the built-in menu options instead of forward facing chips           |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
@@ -224,6 +226,17 @@ actions:
       entity_id: current
       group_members:
         - media_player.kitchen_homepod
+```
+
+### Navigation Actions
+Jump straight to another dashboard view or pop-up by creating a navigation action. Choose **Navigate** in the editor (or set `action: navigate`) and supply the target with `navigation_path`.
+
+```yaml
+actions:
+  - name: Living Room View
+    icon: mdi:television
+    action: navigate
+    navigation_path: "#living"
 ```
 
 ### Idle Screen Search Mode

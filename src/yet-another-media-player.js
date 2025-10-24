@@ -698,6 +698,40 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }, focusDelay);
   }
 
+  _handleNavigate(path) {
+    if (typeof path !== "string") return;
+    const target = path.trim();
+    if (!target) return;
+
+    const navEvent = new CustomEvent("hass-navigate", {
+      detail: { path: target },
+      bubbles: true,
+      composed: true
+    });
+    this.dispatchEvent(navEvent);
+
+    if (navEvent.defaultPrevented) return;
+
+    let handled = false;
+    if (target.startsWith("#")) {
+      window.location.hash = target;
+      handled = true;
+    } else if (/^https?:\/\//i.test(target)) {
+      window.location.assign(target);
+      handled = true;
+    } else if (this.hass?.navigate) {
+      this.hass.navigate(target);
+      handled = true;
+    } else {
+      window.history.pushState(null, "", target);
+      handled = true;
+    }
+
+    if (handled) {
+      window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+    }
+  }
+
 
 
   _hideSearchSheetInOptions() {
@@ -3163,6 +3197,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       return;
     }
+    if (
+      (typeof action.navigation_path === "string" && action.navigation_path.trim() !== "") ||
+      action.action === "navigate"
+    ) {
+      const path = (typeof action.navigation_path === "string" ? action.navigation_path : action.path || "").trim();
+      this._handleNavigate(path);
+      return;
+    }
     if (!action.service) return;
     const [domain, service] = action.service.split(".");
     let data = { ...(action.service_data || {}) };
@@ -3236,6 +3278,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
         "transfer-queue": "Transfer Queue",
       };
       return menuLabels[action.menu_item] ?? action.menu_item;
+    }
+    if (
+      (typeof action.navigation_path === "string" && action.navigation_path.trim() !== "") ||
+      action.action === "navigate"
+    ) {
+      return iconOnly ? "" : "Navigate";
     }
     if (action.service) return iconOnly ? "" : action.service;
     return iconOnly ? "" : "Action";
