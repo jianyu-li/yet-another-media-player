@@ -11225,6 +11225,12 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         }, {
           value: "search",
           label: "Search"
+        }, {
+          value: "search-recently-played",
+          label: "Recently Played"
+        }, {
+          value: "search-next-up",
+          label: "Next Up"
         }]
       }
     }}
@@ -11834,6 +11840,12 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           value: "search",
           label: "Search"
         }, {
+          value: "search-recently-played",
+          label: "Recently Played"
+        }, {
+          value: "search-next-up",
+          label: "Next Up"
+        }, {
           value: "source",
           label: "Source"
         }, {
@@ -12275,7 +12287,23 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._showSourceList = false;
         this._showTransferQueue = false;
         this._showResolvedEntities = false;
-        this._showSearchSheetInOptions();
+        this._showSearchSheetInOptions("default");
+        break;
+      case "search-recently-played":
+        this._showEntityOptions = true;
+        this._showGrouping = false;
+        this._showSourceList = false;
+        this._showTransferQueue = false;
+        this._showResolvedEntities = false;
+        this._showSearchSheetInOptions("recently-played");
+        break;
+      case "search-next-up":
+        this._showEntityOptions = true;
+        this._showGrouping = false;
+        this._showSourceList = false;
+        this._showTransferQueue = false;
+        this._showResolvedEntities = false;
+        this._showSearchSheetInOptions("next-up");
         break;
       default:
         return;
@@ -12286,6 +12314,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (!this._idleScreenApplied) return;
     switch (this._idleScreen) {
       case "search":
+      case "search-recently-played":
+      case "search-next-up":
         this._hideSearchSheetInOptions();
         this._showEntityOptions = false;
         break;
@@ -12858,6 +12888,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
   }
   // Show search sheet inside entity options
   _showSearchSheetInOptions() {
+    let mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "default";
     this._showSearchInSheet = true;
     this._searchError = "";
     this._searchResults = [];
@@ -12874,9 +12905,26 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
     this.requestUpdate();
 
-    // Trigger search to load favorites when search sheet opens
+    // Trigger selected search mode after sheet opens
     setTimeout(() => {
-      this._doSearch();
+      var _promise;
+      let promise;
+      switch (mode) {
+        case "recently-played":
+          promise = this._toggleRecentlyPlayedFilter(true);
+          break;
+        case "next-up":
+          promise = this._toggleUpcomingFilter(true);
+          break;
+        default:
+          promise = this._doSearch();
+          break;
+      }
+      if ((_promise = promise) !== null && _promise !== void 0 && _promise.catch) {
+        promise.catch(err => {
+          console.error("yamp: search initialization failed:", err);
+        });
+      }
     }, 100);
 
     // Handle focus for expand on search
@@ -13358,7 +13406,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Toggle recently played filter
   async _toggleRecentlyPlayedFilter() {
-    this._recentlyPlayedFilterActive = !this._recentlyPlayedFilterActive;
+    let forceState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    const targetState = typeof forceState === "boolean" ? forceState : !this._recentlyPlayedFilterActive;
+    const isStateChanging = targetState !== this._recentlyPlayedFilterActive;
+    this._recentlyPlayedFilterActive = targetState;
 
     // Make mutually exclusive with other filters
     if (this._recentlyPlayedFilterActive) {
@@ -13372,7 +13423,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Load recently played items - always use "all" for recently played
       try {
         await this._doSearch('all', {
-          isRecentlyPlayed: true
+          isRecentlyPlayed: true,
+          clearFilters: !isStateChanging
         });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recently played:', error);
@@ -13399,7 +13451,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Toggle upcoming queue filter
   async _toggleUpcomingFilter() {
-    this._upcomingFilterActive = !this._upcomingFilterActive;
+    let forceState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    const targetState = typeof forceState === "boolean" ? forceState : !this._upcomingFilterActive;
+    const isStateChanging = targetState !== this._upcomingFilterActive;
+    this._upcomingFilterActive = targetState;
 
     // Make mutually exclusive with other filters
     if (this._upcomingFilterActive) {
@@ -13418,7 +13473,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Load upcoming queue items - always use "all" for upcoming
       try {
         await this._doSearch('all', {
-          isUpcoming: true
+          isUpcoming: true,
+          clearFilters: !isStateChanging
         });
       } catch (error) {
         console.error('yamp: Error in _doSearch for upcoming queue:', error);
@@ -15197,23 +15253,21 @@ class YetAnotherMediaPlayerCard extends i$1 {
           break;
         case "search":
           this._showEntityOptions = true;
-          this._showSearchInSheet = true;
-          this._searchError = "";
-          this._searchResults = [];
-          this._searchQuery = "";
-          this._searchAttempted = false;
-          this._searchResultsByType = {}; // Clear cache when opening new search
-          this._currentSearchQuery = ""; // Reset current search query
-          this._searchHierarchy = []; // Clear search hierarchy
-          this._searchBreadcrumb = ""; // Clear breadcrumb
-          this.requestUpdate();
-
-          // Trigger search to load favorites when search sheet opens
+          this._showSearchSheetInOptions("default");
           setTimeout(() => {
-            this._doSearch();
-          }, 100);
-
-          // Force layout update for expand on search
+            this._notifyResize();
+          }, 0);
+          break;
+        case "search-recently-played":
+          this._showEntityOptions = true;
+          this._showSearchSheetInOptions("recently-played");
+          setTimeout(() => {
+            this._notifyResize();
+          }, 0);
+          break;
+        case "search-next-up":
+          this._showEntityOptions = true;
+          this._showSearchSheetInOptions("next-up");
           setTimeout(() => {
             this._notifyResize();
           }, 0);
@@ -15285,6 +15339,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (iconOnly) return "";
       const menuLabels = {
         "search": "Search",
+        "search-recently-played": "Recently Played",
+        "search-next-up": "Next Up",
         "source": "Source",
         "more-info": "More Info",
         "group-players": "Group Players",
