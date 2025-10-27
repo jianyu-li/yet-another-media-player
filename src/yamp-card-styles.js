@@ -447,23 +447,6 @@ export const yampCardStyles = css`
     padding-right: 6px;
   }
 
-  /* Music Assistant active outline */
-  .chip[ma-active] {
-    border: 1px solid rgba(255, 152, 0, 0.6);
-  }
-
-  .chip[ma-active]:hover {
-    border: 1px solid rgba(255, 152, 0, 0.8);
-  }
-
-  .chip[selected][ma-active] {
-    border: 1px solid rgba(255, 152, 0, 0.8);
-  }
-
-  .chip[selected][ma-active]:hover {
-    border: 1px solid rgba(255, 152, 0, 1);
-  }
-
   /* Chip pin */
   .chip-pin {
     position: absolute;
