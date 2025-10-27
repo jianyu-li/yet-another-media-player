@@ -3,7 +3,6 @@
 YAMP is a full-featured Home Assistant media card for controlling multiple entities with customizable actions, music assistant support, and various layout options.
 
 
-
 ## Installation via HACS
 
 [![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=yet-another-media-player&category=dashboard&owner=jianyu-li)
@@ -46,8 +45,6 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 - ![Up next queue](preview/up-next.png)
 - ![Search view](preview/search.png)
 - ![Group players menu](preview/group-player-menu.png)
-
-
 
 ---
 

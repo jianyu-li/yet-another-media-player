@@ -1714,23 +1714,6 @@ const yampCardStyles = i$4`
     padding-right: 6px;
   }
 
-  /* Music Assistant active outline */
-  .chip[ma-active] {
-    border: 1px solid rgba(255, 152, 0, 0.6);
-  }
-
-  .chip[ma-active]:hover {
-    border: 1px solid rgba(255, 152, 0, 0.8);
-  }
-
-  .chip[selected][ma-active] {
-    border: 1px solid rgba(255, 152, 0, 0.8);
-  }
-
-  .chip[selected][ma-active]:hover {
-    border: 1px solid rgba(255, 152, 0, 1);
-  }
-
   /* Chip pin */
   .chip-pin {
     position: absolute;
@@ -14569,6 +14552,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._alternateProgressBar = !!config.alternate_progress_bar;
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
+    if (this._idleTimeoutMs === 0) {
+      if (this._idleTimeout) {
+        clearTimeout(this._idleTimeout);
+        this._idleTimeout = null;
+      }
+      if (this._isIdle) {
+        this._isIdle = false;
+        this._resetIdleScreen();
+        this.requestUpdate();
+      }
+    }
     this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
   }
 
@@ -17318,10 +17312,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
     } else {
       if (!this._hasSeenPlayback) {
-        if (!this._isIdle) {
-          this._isIdle = true;
-          this._idleScreenApplied = false;
-          this._applyIdleScreen();
+        if (this._idleTimeoutMs > 0) {
+          if (!this._isIdle) {
+            this._isIdle = true;
+            this._idleScreenApplied = false;
+            this._applyIdleScreen();
+            this.requestUpdate();
+          }
+        } else if (this._isIdle) {
+          this._isIdle = false;
+          this._resetIdleScreen();
           this.requestUpdate();
         }
         return;
