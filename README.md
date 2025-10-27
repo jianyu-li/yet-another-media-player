@@ -3,7 +3,6 @@
 YAMP is a full-featured Home Assistant media card for controlling multiple entities with customizable actions, music assistant support, and various layout options.
 
 
-
 ## Installation via HACS
 
 [![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=yet-another-media-player&category=dashboard&owner=jianyu-li)
@@ -38,28 +37,14 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 
 ## Screenshots
 
-<div align="center">
-  <table>
-    <tr>
-      <td><img src="preview/largepreview.png" alt="Card overview" width="420"></td>
-      <td><img src="preview/collapsed.png" alt="Collapsed card" width="420"></td>
-    </tr>
-    <tr>
-      <td><img src="preview/minimal-preview.png" alt="Minimal layout" width="420"></td>
-      <td><img src="preview/in-menu-mode.png" alt="Chips in menu mode" width="420"></td>    
-    </tr>
-    <tr>
-      <td><img src="preview/transfer-queue.png" alt="Transfer queue" width="420"></td>
-      <td><img src="preview/up-next.png" alt="Up next queue" width="420"></td>
-    </tr>
-    <tr>
-      <td><img src="preview/search.png" alt="Search view" width="420"></td>
-      <td><img src="preview/group-player-menu.png" alt="Group players menu" width="420"></td>
-    </tr>
-  </table>
-</div>
-
-
+![preview Card overview](preview/largepreview.png)
+![preview Collapsed card](preview/collapsed.png)
+![preview Minimal layout](preview/minimal-preview.png)
+![preview Chips in menuy mode](preview/in-menu-mode.png)
+![preview Transfer queue](preview/transfer-queue.png)
+![preview Up next queue](preview/up-next.png)
+![preview Search view](preview/search.png)
+![preview Group players menu](preview/group-player-menu.png)
 
 ---
 
