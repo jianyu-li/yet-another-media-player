@@ -361,6 +361,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showResolvedEntities = false;
     // Queue success message
     this._showQueueSuccessMessage = false;
+    // Search filter toggles
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._upcomingFilterActive = false;
+    this._recommendationsFilterActive = false;
+    // mass_queue availability tracking
+    this._massQueueAvailable = false;
+    this._hasMassQueueIntegration = null;
+    this._checkingMassQueueIntegration = false;
     // Quick-dismiss mode for action-triggered menu items
     this._quickMenuInvoke = false;
     // Track collapsed layout height for idle mode
@@ -631,6 +640,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
     this._upcomingFilterActive = false;
+    this._recommendationsFilterActive = false;
     this._initialFavoritesLoaded = false;
 
     // Render, then run search
@@ -656,6 +666,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._favoritesFilterActive = false; // Track if favorites filter is active
     this._recentlyPlayedFilterActive = false; // Track if recently played filter is active
     this._upcomingFilterActive = false; // Track if upcoming queue filter is active
+    this._recommendationsFilterActive = false; // Track if recommendations filter is active
     this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
     this.requestUpdate();
     
@@ -668,6 +679,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
           break;
         case "next-up":
           promise = this._toggleUpcomingFilter(true);
+          break;
+        case "recommendations":
+          promise = this._toggleRecommendationsFilter(true);
           break;
         default:
           promise = this._doSearch();
@@ -749,6 +763,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    this._recommendationsFilterActive = false;
     if (this._quickMenuInvoke) {
       this._showEntityOptions = false;
       this._quickMenuInvoke = false;
@@ -777,6 +792,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    this._recommendationsFilterActive = false;
     if (this._quickMenuInvoke) {
       this._showEntityOptions = false;
       this._showSearchInSheet = false;
@@ -802,6 +818,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const isFavorites = !!(searchParams.favorites || (this._favoritesFilterActive && !searchParams.clearFilters));
     const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || (this._recentlyPlayedFilterActive && !searchParams.clearFilters));
     const isUpcoming = !!(searchParams.isUpcoming || (this._upcomingFilterActive && !searchParams.clearFilters));
+    const isRecommendations = !!(searchParams.isRecommendations || (this._recommendationsFilterActive && !searchParams.clearFilters));
     
     // Check if search query has changed - if so, clear cache
     if (this._currentSearchQuery !== this._searchQuery) {
@@ -810,7 +827,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}`;
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
       this._searchResults = this._searchResultsByType[cacheKey];
       this.requestUpdate();
@@ -838,6 +855,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Load upcoming queue items
         this._initialFavoritesLoaded = false;
         searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, this.config?.search_results_limit || 20);
+        this._lastSearchUsedServerFavorites = false;
+      } else if (isRecommendations) {
+        this._initialFavoritesLoaded = false;
+        searchResponse = await this._getRecommendations(
+          this.hass,
+          searchEntityId,
+          mediaType,
+          this.config?.search_results_limit || 20
+        );
         this._lastSearchUsedServerFavorites = false;
       } else if (isFavorites) {
         // Ask backend (Music Assistant) to filter favorites at source with the current query
@@ -876,6 +902,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._favoritesFilterActive = false;
         this._recentlyPlayedFilterActive = false;
         this._upcomingFilterActive = false;
+        this._recommendationsFilterActive = false;
         this._initialFavoritesLoaded = false;
       }
       
@@ -1146,6 +1173,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._favoritesFilterActive) {
       this._recentlyPlayedFilterActive = false;
       this._upcomingFilterActive = false;
+      this._recommendationsFilterActive = false;
     }
     
     if (this._favoritesFilterActive) {
@@ -1201,6 +1229,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._recentlyPlayedFilterActive) {
       this._favoritesFilterActive = false;
       this._upcomingFilterActive = false;
+      this._recommendationsFilterActive = false;
       this._initialFavoritesLoaded = false; // Clear the initial favorites state
     }
     
@@ -1245,6 +1274,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._upcomingFilterActive) {
       this._favoritesFilterActive = false;
       this._recentlyPlayedFilterActive = false;
+      this._recommendationsFilterActive = false;
       this._initialFavoritesLoaded = false; // Clear the initial favorites state
     }
     
@@ -1284,6 +1314,56 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
+  // Toggle recommendations filter (mass_queue)
+  async _toggleRecommendationsFilter(forceState = null) {
+    const targetState = typeof forceState === "boolean"
+      ? forceState
+      : !this._recommendationsFilterActive;
+    const isStateChanging = targetState !== this._recommendationsFilterActive;
+    this._recommendationsFilterActive = targetState;
+
+    if (this._recommendationsFilterActive) {
+      this._favoritesFilterActive = false;
+      this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
+      this._initialFavoritesLoaded = false;
+      this._searchQuery = '';
+
+      try {
+        const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
+        this._hasMassQueueIntegration = hasMassQueue;
+        this._massQueueAvailable = hasMassQueue;
+
+        if (!hasMassQueue) {
+          this._recommendationsFilterActive = false;
+          this._searchError = "Recommendations require the Music Assistant queue integration.";
+          this.requestUpdate();
+          return;
+        }
+
+        await this._doSearch('all', { isRecommendations: true, clearFilters: !isStateChanging });
+      } catch (error) {
+        console.error('yamp: Error in _doSearch for recommendations:', error);
+        this._searchError = "Unable to load recommendations.";
+        this._recommendationsFilterActive = false;
+        this.requestUpdate();
+      }
+    } else {
+      if (this._searchQuery && this._searchQuery.trim() !== '') {
+        const currentMediaType = this._searchMediaClassFilter;
+        await this._doSearch(currentMediaType);
+      } else {
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        if (this._searchResultsByType[cacheKey]) {
+          this._searchResults = this._searchResultsByType[cacheKey];
+          this.requestUpdate();
+        } else {
+          await this._doSearch('favorites');
+        }
+      }
+    }
+  }
+
   // Get next track from Music Assistant (limited by Music Assistant API)
   async _getUpcomingQueue(hass, entityId, limit = 20) {
     try {
@@ -1292,6 +1372,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       // Cache the result for UI rendering
       this._massQueueAvailable = hasMassQueue;
+      this._hasMassQueueIntegration = hasMassQueue;
       
       if (hasMassQueue) {
         try {
@@ -1316,6 +1397,140 @@ class YetAnotherMediaPlayerCard extends LitElement {
       console.error('yamp: Error getting upcoming queue:', error);
       this._massQueueAvailable = false;
       return { results: [], usedMusicAssistant: false };
+    }
+  }
+
+  // Get recommendations using mass_queue integration
+  async _getRecommendations(hass, entityId, mediaType = null, limit = 20) {
+    try {
+      const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
+      this._hasMassQueueIntegration = hasMassQueue;
+      this._massQueueAvailable = hasMassQueue;
+
+      if (!hasMassQueue) {
+        throw new Error('mass_queue integration unavailable');
+      }
+
+      const limitToUse = Math.max(limit || 0, this.config?.search_results_limit || 20);
+      const message = {
+        type: "call_service",
+        domain: "mass_queue",
+        service: "get_recommendations",
+        service_data: {
+          entity: entityId
+        },
+        return_response: true,
+      };
+
+      const response = await hass.connection.sendMessagePromise(message);
+      const payload = response?.response;
+
+      let groups = [];
+      if (Array.isArray(payload)) {
+        groups = payload;
+      } else if (payload && typeof payload === "object") {
+        if (Array.isArray(payload[entityId])) {
+          groups = payload[entityId];
+        } else {
+          const values = Object.values(payload);
+          values.forEach(val => {
+            if (Array.isArray(val)) {
+              groups.push(...val);
+            } else if (val && typeof val === "object") {
+              groups.push(val);
+            }
+          });
+        }
+        if (groups.length === 0 && Array.isArray(payload.items)) {
+          groups = payload.items;
+        }
+      }
+
+      const normalizeMediaClass = (value) => {
+        if (!value || typeof value !== "string") return "track";
+        const type = value.toLowerCase();
+        switch (type) {
+          case "song":
+          case "music":
+            return "track";
+          case "podcast_episode":
+          case "episode":
+            return "podcast";
+          case "station":
+            return "radio";
+          case "directory":
+          case "folder":
+            return "playlist";
+          default:
+            return type;
+        }
+      };
+      const formatLabel = (value) => {
+        if (!value) return "";
+        return value
+          .toString()
+          .replace(/[_-]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .replace(/\b\w/g, ch => ch.toUpperCase());
+      };
+
+      const requestedClass = mediaType && mediaType !== "all"
+        ? normalizeMediaClass(mediaType)
+        : null;
+
+      const results = [];
+      let collected = 0;
+      const maxItems = limitToUse > 0 ? limitToUse : Infinity;
+      for (const group of groups) {
+        if (collected >= maxItems) break;
+        const groupName = group?.name || group?.sort_name || "";
+        const groupImage = typeof group?.image === "string" && group.image.trim() !== "" ? group.image : null;
+        const groupItems = (Array.isArray(group?.items) && group.items.length > 0)
+          ? group.items
+          : [group];
+
+        for (const item of groupItems) {
+          if (collected >= maxItems) break;
+          const mediaContentId = item?.uri || item?.item_id;
+          if (!mediaContentId) continue;
+
+          const itemImage = typeof item?.image === "string" && item.image.trim() !== "" ? item.image : null;
+          const rawType = item?.media_type || group?.media_type || "music";
+          const normalizedClass = normalizeMediaClass(rawType);
+          if (requestedClass && normalizedClass !== requestedClass) {
+            continue;
+          }
+          const typeLabel = formatLabel(rawType) || formatLabel(normalizedClass);
+          const providerLabel = formatLabel(item?.provider || group?.provider);
+          const subtitleParts = typeLabel ? [typeLabel] : [];
+          if (groupName) {
+            subtitleParts.push(groupName);
+          } else if (providerLabel) {
+            subtitleParts.push(providerLabel);
+          }
+
+          results.push({
+            media_content_id: mediaContentId,
+            media_content_type: rawType || normalizedClass,
+            media_class: normalizedClass,
+            title: item?.name || item?.sort_name || groupName || "Recommendation",
+            artist: subtitleParts.join(" • "),
+            thumbnail: itemImage || groupImage || null,
+            provider: item?.provider || group?.provider || null
+          });
+          collected += 1;
+        }
+      }
+
+      return {
+        results,
+        usedMusicAssistant: true,
+        source: 'mass_queue'
+      };
+    } catch (error) {
+      console.error('yamp: Error getting recommendations from mass_queue:', error);
+      throw error;
     }
   }
 
@@ -2847,6 +3062,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
   updated(changedProps) {
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
+    }
+
+    if (this.hass && this._hasMassQueueIntegration === null && !this._checkingMassQueueIntegration) {
+      this._checkingMassQueueIntegration = true;
+      this._isMassQueueIntegrationAvailable(this.hass)
+        .then(hasIntegration => {
+          this._hasMassQueueIntegration = hasIntegration;
+          if (hasIntegration) {
+            this._massQueueAvailable = this._massQueueAvailable || hasIntegration;
+          }
+        })
+        .catch(() => {
+          this._hasMassQueueIntegration = false;
+        })
+        .finally(() => {
+          this._checkingMassQueueIntegration = false;
+          this.requestUpdate();
+        });
     }
 
     if (this.hass && this.entityIds) {
@@ -4556,6 +4789,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             // Clear recently played filter when user initiates search
                             this._recentlyPlayedFilterActive = false;
                             this._upcomingFilterActive = false;
+                            this._recommendationsFilterActive = false;
                             this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); 
                           }
                           else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
@@ -4570,6 +4804,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         // Clear recently played filter when user initiates search
                         this._recentlyPlayedFilterActive = false;
                         this._upcomingFilterActive = false;
+                        this._recommendationsFilterActive = false;
                         this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter); 
                       }}
                       ?disabled=${this._searchLoading}>
@@ -4650,10 +4885,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             border: none;
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px;
+                            padding: 4px 8px;
                             border-radius: 50%;
                             transition: all 0.2s ease;
                             margin-right: 8px;
+                            display: flex;
+                            align-items: center;
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
@@ -4662,6 +4899,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           title="Favorites"
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
+                          ${this._initialFavoritesLoaded || this._favoritesFilterActive ? html`
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                              Favorites
+                            </span>
+                          ` : nothing}
                       </button>
                       <button
                           class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
@@ -4670,10 +4912,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             border: none;
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px;
+                            padding: 4px 8px;
                             border-radius: 50%;
                             transition: all 0.2s ease;
                             margin-right: 8px;
+                            display: flex;
+                            align-items: center;
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
@@ -4682,6 +4926,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           title="Recently Played"
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
+                          ${this._recentlyPlayedFilterActive ? html`
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                              Recently Played
+                            </span>
+                          ` : nothing}
                       </button>
                       ${this._isMusicAssistantEntity() ? html`
                         <button
@@ -4691,10 +4940,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                               border: none;
                               font-size: 1.2em;
                               cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                              padding: 4px;
+                              padding: 4px 8px;
                               border-radius: 50%;
                               transition: all 0.2s ease;
                               margin-right: 8px;
+                              display: flex;
+                              align-items: center;
                               opacity: ${this._searchAttempted ? '1' : '0.5'};
                             "
                             @click=${this._searchAttempted ? () => {
@@ -4703,7 +4954,41 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             title="Next Up"
                           >
                             <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+                            ${this._upcomingFilterActive ? html`
+                              <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                Next Up
+                              </span>
+                            ` : nothing}
                         </button>
+                        ${this._hasMassQueueIntegration ? html`
+                          <button
+                              class="button${this._recommendationsFilterActive ? ' active' : ''}"
+                              style="
+                                background: none;
+                                border: none;
+                                font-size: 1.2em;
+                                cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                                padding: 4px 8px;
+                                border-radius: 50%;
+                                transition: all 0.2s ease;
+                                margin-right: 8px;
+                                display: flex;
+                                align-items: center;
+                                opacity: ${this._searchAttempted ? '1' : '0.5'};
+                              "
+                              @click=${this._searchAttempted ? () => {
+                                this._toggleRecommendationsFilter();
+                              } : () => {}}
+                              title="Recommendations"
+                            >
+                              <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:lightbulb-on' : 'mdi:lightbulb-on-outline'}></ha-icon>
+                              ${this._recommendationsFilterActive ? html`
+                                <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                  Recommendations
+                                </span>
+                              ` : nothing}
+                          </button>
+                        ` : nothing}
                       ` : nothing}
                     </div>
                   ` : nothing}
@@ -4751,7 +5036,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                     const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
                                     const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
                                     const isUpcoming = !!this._upcomingFilterActive;
-                                    if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming) && item.artist) {
+                                    const isRecommendations = !!this._recommendationsFilterActive;
+                                    if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
                                       return item.artist;
                                     }
                                     // Otherwise show media class as before
@@ -5083,6 +5369,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   // Clear recently played filter when user initiates search
                   this._recentlyPlayedFilterActive = false;
                   this._upcomingFilterActive = false;
+                  this._recommendationsFilterActive = false;
                   this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
                 },
                 onPlay: item => this._playMediaFromSearch(item),
