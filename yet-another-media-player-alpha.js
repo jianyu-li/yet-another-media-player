@@ -17020,10 +17020,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
                             border: none;
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px;
+                            padding: 4px 8px;
                             border-radius: 50%;
                             transition: all 0.2s ease;
                             margin-right: 8px;
+                            display: flex;
+                            align-items: center;
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
@@ -17032,6 +17034,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
                           title="Favorites"
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
+                          ${this._initialFavoritesLoaded || this._favoritesFilterActive ? x`
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                              Favorites
+                            </span>
+                          ` : E}
                       </button>
                       <button
                           class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
@@ -17040,10 +17047,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
                             border: none;
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px;
+                            padding: 4px 8px;
                             border-radius: 50%;
                             transition: all 0.2s ease;
                             margin-right: 8px;
+                            display: flex;
+                            align-items: center;
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
@@ -17052,6 +17061,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
                           title="Recently Played"
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
+                          ${this._recentlyPlayedFilterActive ? x`
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                              Recently Played
+                            </span>
+                          ` : E}
                       </button>
                       ${this._isMusicAssistantEntity() ? x`
                         <button
@@ -17061,10 +17075,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
                               border: none;
                               font-size: 1.2em;
                               cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                              padding: 4px;
+                              padding: 4px 8px;
                               border-radius: 50%;
                               transition: all 0.2s ease;
                               margin-right: 8px;
+                              display: flex;
+                              align-items: center;
                               opacity: ${this._searchAttempted ? '1' : '0.5'};
                             "
                             @click=${this._searchAttempted ? () => {
@@ -17073,6 +17089,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
                             title="Next Up"
                           >
                             <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+                            ${this._upcomingFilterActive ? x`
+                              <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                Next Up
+                              </span>
+                            ` : E}
                         </button>
                         ${this._hasMassQueueIntegration ? x`
                           <button
@@ -17082,10 +17103,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                 border: none;
                                 font-size: 1.2em;
                                 cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                                padding: 4px;
+                                padding: 4px 8px;
                                 border-radius: 50%;
                                 transition: all 0.2s ease;
                                 margin-right: 8px;
+                                display: flex;
+                                align-items: center;
                                 opacity: ${this._searchAttempted ? '1' : '0.5'};
                               "
                               @click=${this._searchAttempted ? () => {
@@ -17094,6 +17117,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
                               title="Recommendations"
                             >
                               <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:lightbulb-on' : 'mdi:lightbulb-on-outline'}></ha-icon>
+                              ${this._recommendationsFilterActive ? x`
+                                <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                  Recommendations
+                                </span>
+                              ` : E}
                           </button>
                         ` : E}
                       ` : E}
