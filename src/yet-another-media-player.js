@@ -4885,10 +4885,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             border: none;
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px;
+                            padding: 4px 8px;
                             border-radius: 50%;
                             transition: all 0.2s ease;
                             margin-right: 8px;
+                            display: flex;
+                            align-items: center;
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
@@ -4897,6 +4899,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           title="Favorites"
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
+                          ${this._initialFavoritesLoaded || this._favoritesFilterActive ? html`
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                              Favorites
+                            </span>
+                          ` : nothing}
                       </button>
                       <button
                           class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
@@ -4905,10 +4912,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             border: none;
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px;
+                            padding: 4px 8px;
                             border-radius: 50%;
                             transition: all 0.2s ease;
                             margin-right: 8px;
+                            display: flex;
+                            align-items: center;
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
@@ -4917,6 +4926,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           title="Recently Played"
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
+                          ${this._recentlyPlayedFilterActive ? html`
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                              Recently Played
+                            </span>
+                          ` : nothing}
                       </button>
                       ${this._isMusicAssistantEntity() ? html`
                         <button
@@ -4926,10 +4940,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                               border: none;
                               font-size: 1.2em;
                               cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                              padding: 4px;
+                              padding: 4px 8px;
                               border-radius: 50%;
                               transition: all 0.2s ease;
                               margin-right: 8px;
+                              display: flex;
+                              align-items: center;
                               opacity: ${this._searchAttempted ? '1' : '0.5'};
                             "
                             @click=${this._searchAttempted ? () => {
@@ -4938,6 +4954,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             title="Next Up"
                           >
                             <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+                            ${this._upcomingFilterActive ? html`
+                              <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                Next Up
+                              </span>
+                            ` : nothing}
                         </button>
                         ${this._hasMassQueueIntegration ? html`
                           <button
@@ -4947,10 +4968,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 border: none;
                                 font-size: 1.2em;
                                 cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                                padding: 4px;
+                                padding: 4px 8px;
                                 border-radius: 50%;
                                 transition: all 0.2s ease;
                                 margin-right: 8px;
+                                display: flex;
+                                align-items: center;
                                 opacity: ${this._searchAttempted ? '1' : '0.5'};
                               "
                               @click=${this._searchAttempted ? () => {
@@ -4959,6 +4982,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                               title="Recommendations"
                             >
                               <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:lightbulb-on' : 'mdi:lightbulb-on-outline'}></ha-icon>
+                              ${this._recommendationsFilterActive ? html`
+                                <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                  Recommendations
+                                </span>
+                              ` : nothing}
                           </button>
                         ` : nothing}
                       ` : nothing}
