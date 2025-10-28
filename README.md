@@ -18,7 +18,6 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
   - Control volume as a group or individually
   - Separate volume entity 
   - Override sync volume behavior on a per entity basis using `group_volume`
-  - Supports Linkplay/WiiM speakers and other integrations that expose group members
 - Music Assistant Support: Search music on compatible players
 - Add background image sensor for when not in use
 - Jump straight into search from the idle screen when you prefer browsing over artwork
