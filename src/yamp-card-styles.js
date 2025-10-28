@@ -1416,7 +1416,7 @@ export const yampCardStyles = css`
     position: sticky;
     top: 0;
     z-index: 4;
-    padding: 8px 4px 12px 4px;
+    padding: 6px 4px 6px 4px;
     background: transparent;
   }
 
@@ -1426,7 +1426,7 @@ export const yampCardStyles = css`
     justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
-    padding: 6px 8px 10px 8px;
+    padding: 6px 8px 6px 8px;
   }
 
   .entity-options-chips-strip .chip {
@@ -1449,11 +1449,11 @@ export const yampCardStyles = css`
   }
 
   .entity-options-menu.chips-in-menu {
-    margin-top: 8px;
+    margin-top: 4px;
   }
 
   .entity-options-sheet.chips-mode {
-    padding-top: 18px;
+    padding-top: 12px;
   }
 
 
