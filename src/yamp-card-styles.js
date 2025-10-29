@@ -944,19 +944,25 @@ export const yampCardStyles = css`
   .card-lower-content.collapsed .details {
     opacity: 1;
     pointer-events: auto;
-    margin-right: 120px;
+    margin-right: var(--yamp-collapsed-details-offset, 120px);
     transition: margin var(--transition-normal);
   }
 
   @media (max-width: 420px) {
     .card-lower-content.collapsed .details {
-      margin-right: 74px;
+      margin-right: var(--yamp-collapsed-details-offset, 74px);
     }
   }
 
   .card-lower-content.collapsed .card-artwork-spacer {
     opacity: 0;
     pointer-events: none;
+  }
+
+  .collapsed-flex-spacer {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
   }
 
   /* Force white text for important UI elements */
@@ -967,6 +973,16 @@ export const yampCardStyles = css`
   .button,
   .vol-stepper span {
     color: #fff;
+  }
+
+  .card-lower-content.collapsed .details .title,
+  .card-lower-content.collapsed .title {
+    font-size: calc(1.1em * var(--yamp-collapsed-title-scale, 1));
+    line-height: calc(1.2 * var(--yamp-collapsed-title-scale, 1));
+  }
+
+  .card-lower-content.collapsed .artist {
+    font-size: calc(1em * var(--yamp-collapsed-artist-scale, 1));
   }
   
 
@@ -1021,16 +1037,16 @@ export const yampCardStyles = css`
   }
 
   .card-lower-content.collapsed.has-artwork .controls-row {
-    max-width: calc(100% - 120px) !important;
-    margin-right: 115px !important;
+    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) !important;
+    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) !important;
     width: auto !important;
   }
 
   /* Medium screens */
   @media (max-width: 600px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 115px) !important;
-      margin-right: 110px !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) !important;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) !important;
       width: auto !important;
     }
 
@@ -1049,8 +1065,8 @@ export const yampCardStyles = css`
   /* Small screens */
   @media (max-width: 420px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 90px) !important;
-      margin-right: 85px !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) !important;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) !important;
       width: auto !important;
     }
 
@@ -1069,8 +1085,8 @@ export const yampCardStyles = css`
   /* Very small screens */
   @media (max-width: 320px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 80px) !important;
-      margin-right: 75px !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) !important;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) !important;
       width: auto !important;
     }
 

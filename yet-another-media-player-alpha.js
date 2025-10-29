@@ -2211,19 +2211,25 @@ const yampCardStyles = i$4`
   .card-lower-content.collapsed .details {
     opacity: 1;
     pointer-events: auto;
-    margin-right: 120px;
+    margin-right: var(--yamp-collapsed-details-offset, 120px);
     transition: margin var(--transition-normal);
   }
 
   @media (max-width: 420px) {
     .card-lower-content.collapsed .details {
-      margin-right: 74px;
+      margin-right: var(--yamp-collapsed-details-offset, 74px);
     }
   }
 
   .card-lower-content.collapsed .card-artwork-spacer {
     opacity: 0;
     pointer-events: none;
+  }
+
+  .collapsed-flex-spacer {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
   }
 
   /* Force white text for important UI elements */
@@ -2234,6 +2240,16 @@ const yampCardStyles = i$4`
   .button,
   .vol-stepper span {
     color: #fff;
+  }
+
+  .card-lower-content.collapsed .details .title,
+  .card-lower-content.collapsed .title {
+    font-size: calc(1.1em * var(--yamp-collapsed-title-scale, 1));
+    line-height: calc(1.2 * var(--yamp-collapsed-title-scale, 1));
+  }
+
+  .card-lower-content.collapsed .artist {
+    font-size: calc(1em * var(--yamp-collapsed-artist-scale, 1));
   }
   
 
@@ -2288,16 +2304,16 @@ const yampCardStyles = i$4`
   }
 
   .card-lower-content.collapsed.has-artwork .controls-row {
-    max-width: calc(100% - 120px) !important;
-    margin-right: 115px !important;
+    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) !important;
+    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) !important;
     width: auto !important;
   }
 
   /* Medium screens */
   @media (max-width: 600px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 115px) !important;
-      margin-right: 110px !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) !important;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) !important;
       width: auto !important;
     }
 
@@ -2316,8 +2332,8 @@ const yampCardStyles = i$4`
   /* Small screens */
   @media (max-width: 420px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 90px) !important;
-      margin-right: 85px !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) !important;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) !important;
       width: auto !important;
     }
 
@@ -2336,8 +2352,8 @@ const yampCardStyles = i$4`
   /* Very small screens */
   @media (max-width: 320px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 80px) !important;
-      margin-right: 75px !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) !important;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) !important;
       width: auto !important;
     }
 
@@ -15367,7 +15383,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          this._collapsedBaselineHeight = measured;
+          var _this$config11;
+          const customHeight = Number((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.card_height);
+          const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
+          if (!hasCustomCardHeight) {
+            this._collapsedBaselineHeight = measured;
+          } else if (!this._collapsedBaselineHeight || measured < this._collapsedBaselineHeight - 1) {
+            // Allow the baseline to shrink but never grow when a custom height is applied
+            this._collapsedBaselineHeight = measured;
+          }
         }
       }
     }
@@ -16162,10 +16186,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass23, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass24, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$config13, _this$config14, _this$config15, _this$currentVolumeSt3, _this$config16, _this$config17, _this$config18, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass23, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass24, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$config14, _this$config15, _this$config16, _this$currentVolumeSt3, _this$config17, _this$config18, _this$config19, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     const customCardHeight = Number(this.config.card_height);
     const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
+    const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
@@ -16244,8 +16269,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
     if (prevMa === "playing" && this._lastMaState !== "playing") {
-      var _this$config11;
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.idle_timeout_ms) || 60000), 500);
+      var _this$config12;
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: actualResolvedMaId,
         until: Date.now() + ttl
@@ -16256,10 +16281,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
     const shouldSetLinger = prevMa === "playing" && this._lastMaState === "paused" && ((_this$_lastPlayingEnt9 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt9 === void 0 ? void 0 : _this$_lastPlayingEnt9[idx]) === actualResolvedMaId || prevMain === "playing" && this._lastMainState === "paused" && ((_this$_lastPlayingEnt0 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt0 === void 0 ? void 0 : _this$_lastPlayingEnt0[idx]) === (mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.entity_id);
     if (shouldSetLinger) {
-      var _this$config12;
+      var _this$config13;
       // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
       const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.idle_timeout_ms) || 60000), 500);
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: lingerEntityId,
         // Use cached MA entity or last controlled entity
@@ -16344,6 +16369,33 @@ class YetAnotherMediaPlayerCard extends i$1 {
     } else {
       collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
     }
+    const collapsedExtraSpace = collapsed && this._alwaysCollapsed && hasCustomCardHeight ? Math.max(0, customCardHeight - collapsedBaselineHeight) : 0;
+    const collapsedArtworkSize = collapsedExtraSpace > 0 ? Math.min(240, 102 + collapsedExtraSpace * 0.75) : 102;
+    const collapsedArtworkOffset = collapsedExtraSpace > 0 ? Math.max(12, Math.min(56, 16 + collapsedExtraSpace * 0.3)) : 16;
+    const collapsedTypographyScale = collapsedExtraSpace > 0 ? Math.min(1.45, 1 + collapsedExtraSpace / 180) : 1;
+    const baseDetailsMinHeight = 48;
+    const detailGrowth = collapsedExtraSpace > 0 ? Math.min(collapsedExtraSpace * 0.45, 96) : 0;
+    const collapsedDetailsMinHeight = collapsedExtraSpace > 0 ? Math.round(baseDetailsMinHeight + detailGrowth) : baseDetailsMinHeight;
+    const detailsMinHeight = collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight;
+    const controlSpacerSize = collapsedExtraSpace > 0 ? Math.max(0, collapsedExtraSpace - detailGrowth) : 0;
+    const releaseControlsRow = controlSpacerSize >= 48;
+    const collapsedDetailsOffset = collapsedExtraSpace > 0 ? Math.max(100, Math.round(collapsedArtworkSize + 24 + Math.min(40, collapsedExtraSpace * 0.12))) : null;
+    const collapsedControlsOffset = releaseControlsRow ? 0 : collapsedDetailsOffset ?? 0;
+    if (this.shadowRoot && this.shadowRoot.host) {
+      if (collapsedExtraSpace > 0) {
+        if (collapsedDetailsOffset != null) {
+          this.shadowRoot.host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
+        }
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', collapsedTypographyScale.toFixed(3));
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', (collapsedTypographyScale * 0.92).toFixed(3));
+      } else {
+        this.shadowRoot.host.style.removeProperty('--yamp-collapsed-controls-offset');
+        this.shadowRoot.host.style.removeProperty('--yamp-collapsed-details-offset');
+        this.shadowRoot.host.style.removeProperty('--yamp-collapsed-title-scale');
+        this.shadowRoot.host.style.removeProperty('--yamp-collapsed-artist-scale');
+      }
+    }
     // Use null if idle or no artwork available
     let artworkUrl = null;
     let artworkObjectFit = this._artworkObjectFit;
@@ -16393,9 +16445,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.fallback_artwork) || null,
+      artworkHostname: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass25;
         const obj = this._findEntityObjByAnyId(id);
@@ -16500,11 +16552,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return collapsed ? `min-height: ${this._collapsedBaselineHeight || 220}px;` : 'min-height: 350px;';
     })()}">
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x`
-                  <div class="collapsed-artwork-container"
-                       style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
-                    <img class="collapsed-artwork" src="${artworkUrl}" 
-                         style="${this._getCollapsedArtworkStyle()}" 
-                         onerror="this.style.display='none'" />
+                  <div
+                    class="collapsed-artwork-container"
+                    style="${[`background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`, collapsedExtraSpace > 0 ? `top:${Math.round(collapsedArtworkOffset)}px` : '', collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : ''].filter(Boolean).join('; ')}"
+                  >
+                    <img
+                      class="collapsed-artwork"
+                      src="${artworkUrl}" 
+                      style="${[this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize)}px; height:${Math.round(collapsedArtworkSize)}px;` : ''].filter(Boolean).join(' ')}" 
+                      onerror="this.style.display='none'" />
                   </div>
                 ` : E}
                 ${!collapsed ? x`
@@ -16524,7 +16580,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     ` : E}
                   </div>
                 ` : E}
-                <div class="details" style="${[this._showEntityOptions ? 'visibility:hidden' : '', !shouldShowDetails ? 'min-height:48px;opacity:0' : ''].filter(Boolean).join(';')}">
+                <div class="details" style="${(() => {
+      const detailStyleParts = [];
+      if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
+      detailStyleParts.push(`min-height:${detailsMinHeight}px`);
+      if (!shouldShowDetails) detailStyleParts.push('opacity:0');
+      return detailStyleParts.join(';');
+    })()}">
                   <div class="title">
                     ${shouldShowDetails ? title : ""}
                   </div>
@@ -16558,6 +16620,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       accent: this._customAccent,
       style: this._showEntityOptions ? "visibility:hidden" : ""
     }) : E}
+                ${!hideControlsNow && controlSpacerSize > 0 ? x`
+                  <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
+                ` : E}
                 ${!hideControlsNow ? x`
                   <div style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
                     ${renderControlsRow({
@@ -16659,9 +16724,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       },
       isIdle: this._isIdle,
       hass: this.hass,
-      artworkHostname: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config18 = this.config) === null || _this$config18 === void 0 ? void 0 : _this$config18.fallback_artwork) || null,
+      artworkHostname: ((_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config18 = this.config) === null || _this$config18 === void 0 ? void 0 : _this$config18.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config19 = this.config) === null || _this$config19 === void 0 ? void 0 : _this$config19.fallback_artwork) || null,
       onChipClick: idx => this._onChipClick(idx),
       onIconClick: (idx, e) => {
         const entityId = this.entityIds[idx];
