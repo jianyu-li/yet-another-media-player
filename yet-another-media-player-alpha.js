@@ -16186,7 +16186,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass23, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass24, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$config14, _this$config15, _this$config16, _this$currentVolumeSt3, _this$config17, _this$config18, _this$config19, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass23, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass24, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config14, _this$config15, _this$config16, _this$currentVolumeSt3, _this$config17, _this$config18, _this$config19, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     const customCardHeight = Number(this.config.card_height);
     const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
@@ -16370,30 +16370,39 @@ class YetAnotherMediaPlayerCard extends i$1 {
       collapsed = this._alwaysCollapsed ? true : this._collapseOnIdle ? this._isIdle : false;
     }
     const collapsedExtraSpace = collapsed && this._alwaysCollapsed && hasCustomCardHeight ? Math.max(0, customCardHeight - collapsedBaselineHeight) : 0;
-    const collapsedArtworkSize = collapsedExtraSpace > 0 ? Math.min(240, 102 + collapsedExtraSpace * 0.75) : 102;
-    const collapsedArtworkOffset = collapsedExtraSpace > 0 ? Math.max(12, Math.min(56, 16 + collapsedExtraSpace * 0.3)) : 16;
-    const collapsedTypographyScale = collapsedExtraSpace > 0 ? Math.min(1.45, 1 + collapsedExtraSpace / 180) : 1;
+    const chipRowReserve = collapsed && showChipsInline ? 48 : 0;
+    const actionRowReserve = collapsed && rowActions.length > 0 ? 40 : 0;
+    const reservedTopSpace = chipRowReserve + actionRowReserve;
+    const collapsedArtworkSize = collapsedExtraSpace > 0 ? Math.min(240, 102 + effectiveExtraSpace * 0.75) : 102;
     const baseDetailsMinHeight = 48;
-    const detailGrowth = collapsedExtraSpace > 0 ? Math.min(collapsedExtraSpace * 0.45, 96) : 0;
-    const collapsedDetailsMinHeight = collapsedExtraSpace > 0 ? Math.round(baseDetailsMinHeight + detailGrowth) : baseDetailsMinHeight;
+    const effectiveExtraSpace = Math.max(0, collapsedExtraSpace - reservedTopSpace);
+    const detailGrowth = effectiveExtraSpace > 0 ? Math.min(effectiveExtraSpace * 0.45, 96) : 0;
+    const collapsedDetailsMinHeight = effectiveExtraSpace > 0 ? Math.round(baseDetailsMinHeight + detailGrowth) : baseDetailsMinHeight;
     const detailsMinHeight = collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight;
-    const controlSpacerSize = collapsedExtraSpace > 0 ? Math.max(0, collapsedExtraSpace - detailGrowth) : 0;
+    const controlSpacerSize = effectiveExtraSpace > 0 ? Math.max(0, effectiveExtraSpace - detailGrowth) : 0;
+    let showCollapsedPlaceholder = false;
     const releaseControlsRow = controlSpacerSize >= 48;
     const collapsedDetailsOffset = collapsedExtraSpace > 0 ? Math.max(100, Math.round(collapsedArtworkSize + 24 + Math.min(40, collapsedExtraSpace * 0.12))) : null;
     const collapsedControlsOffset = releaseControlsRow ? 0 : collapsedDetailsOffset ?? 0;
+    let cardWidth = this.offsetWidth || (((_this$shadowRoot = this.shadowRoot) === null || _this$shadowRoot === void 0 || (_this$shadowRoot = _this$shadowRoot.host) === null || _this$shadowRoot === void 0 ? void 0 : _this$shadowRoot.offsetWidth) ?? 0);
+    const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
+    const heightScale = collapsedExtraSpace > 0 ? Math.min(1.45, 1 + effectiveExtraSpace / 180) : 1;
+    const titleScale = heightScale > 1 || widthScale > 1 ? Math.min(1.6, Math.max(heightScale, widthScale)) : 1;
+    const artistScale = Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
     if (this.shadowRoot && this.shadowRoot.host) {
       if (collapsedExtraSpace > 0) {
         if (collapsedDetailsOffset != null) {
           this.shadowRoot.host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
         }
         this.shadowRoot.host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
-        this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', collapsedTypographyScale.toFixed(3));
-        this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', (collapsedTypographyScale * 0.92).toFixed(3));
-      } else {
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
+      }
+      this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
+      this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
+      if (!(collapsedExtraSpace > 0 && hasCustomCardHeight)) {
         this.shadowRoot.host.style.removeProperty('--yamp-collapsed-controls-offset');
         this.shadowRoot.host.style.removeProperty('--yamp-collapsed-details-offset');
-        this.shadowRoot.host.style.removeProperty('--yamp-collapsed-title-scale');
-        this.shadowRoot.host.style.removeProperty('--yamp-collapsed-artist-scale');
       }
     }
     // Use null if idle or no artwork available
@@ -16410,6 +16419,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         artworkObjectFit = artwork.objectFit;
       }
     }
+    showCollapsedPlaceholder = collapsed && !artworkUrl && !idleImageUrl && effectiveExtraSpace >= 40;
 
     // Dominant color extraction for collapsed artwork
     if (collapsed && artworkUrl && artworkUrl !== this._lastArtworkUrl) {
@@ -16554,17 +16564,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x`
                   <div
                     class="collapsed-artwork-container"
-                    style="${[`background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`, collapsedExtraSpace > 0 ? `top:${Math.round(collapsedArtworkOffset)}px` : '', collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : ''].filter(Boolean).join('; ')}"
+                    style="${[`background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`, collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : ''].filter(Boolean).join('; ')}"
                   >
                     <img
                       class="collapsed-artwork"
                       src="${artworkUrl}" 
                       style="${[this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize)}px; height:${Math.round(collapsedArtworkSize)}px;` : ''].filter(Boolean).join(' ')}" 
+                      onload="this.style.display='block'"
                       onerror="this.style.display='none'" />
                   </div>
                 ` : E}
-                ${!collapsed ? x`
-                  <div class="card-artwork-spacer">
+                ${showCollapsedPlaceholder || !collapsed ? x`
+                  <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}">
                     ${!artworkUrl && !idleImageUrl ? x`
                       <div class="media-artwork-placeholder">
                         <svg
