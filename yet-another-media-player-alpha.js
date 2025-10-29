@@ -2501,13 +2501,13 @@ const yampCardStyles = i$4`
     position: relative;
   }
 
-  /* Expand container height when always collapsed (no persistent controls) */
-  :host([data-always-collapsed="true"]) .entity-options-container {
+  /* Expand container height when hide_menu_player is enabled (no persistent controls) */
+  :host([data-hide-menu-player="true"]) .entity-options-container {
     max-height: 96%;
   }
 
-  /* Expand container height when hide_menu_player is enabled (no persistent controls) */
-  :host([data-hide-menu-player="true"]) .entity-options-container {
+  /* Expand container height when persistent controls are hidden due to layout constraints */
+  :host([data-hide-persistent-controls="true"]) .entity-options-container {
     max-height: 96%;
   }
 
@@ -2529,13 +2529,13 @@ const yampCardStyles = i$4`
     z-index: 1001;
   }
 
-  /* Hide persistent controls when always collapsed is enabled */
-  :host([data-always-collapsed="true"]) .persistent-media-controls {
+  /* Hide persistent controls when hide_menu_player is enabled */
+  :host([data-hide-menu-player="true"]) .persistent-media-controls {
     display: none;
   }
 
-  /* Hide persistent controls when hide_menu_player is enabled */
-  :host([data-hide-menu-player="true"]) .persistent-media-controls {
+  /* Hide persistent controls when layout constraints require it */
+  :host([data-hide-persistent-controls="true"]) .persistent-media-controls {
     display: none;
   }
 
@@ -16378,14 +16378,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const chipRowReserve = collapsed && showChipsInline ? 48 : 0;
     const actionRowReserve = collapsed && rowActions.length > 0 ? 40 : 0;
     const reservedTopSpace = chipRowReserve + actionRowReserve;
-    const collapsedArtworkSize = collapsedExtraSpace > 0 ? Math.min(240, 102 + effectiveExtraSpace * 0.75) : 102;
     const baseDetailsMinHeight = 48;
     const effectiveExtraSpace = Math.max(0, collapsedExtraSpace - reservedTopSpace);
+    const collapsedArtworkSize = collapsedExtraSpace > 0 ? Math.min(240, 102 + effectiveExtraSpace * 0.75) : 102;
     const detailGrowth = effectiveExtraSpace > 0 ? Math.min(effectiveExtraSpace * 0.45, 96) : 0;
     const collapsedDetailsMinHeight = effectiveExtraSpace > 0 ? Math.round(baseDetailsMinHeight + detailGrowth) : baseDetailsMinHeight;
     const detailsMinHeight = collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight;
     const controlSpacerSize = effectiveExtraSpace > 0 ? Math.max(0, effectiveExtraSpace - detailGrowth) : 0;
     let showCollapsedPlaceholder = false;
+    const expandedHeightBaseline = 350;
+    const resolvedCollapsedHeight = collapsed ? hasCustomCardHeight ? customCardHeight : this._collapsedBaselineHeight || 220 : expandedHeightBaseline;
+    const meetsPersistentHeight = resolvedCollapsedHeight >= expandedHeightBaseline;
+    const shouldShowPersistentControls = this.config.hide_menu_player === true ? false : !collapsed || meetsPersistentHeight;
     const releaseControlsRow = controlSpacerSize >= 48;
     const collapsedDetailsOffset = collapsedExtraSpace > 0 ? Math.max(100, Math.round(collapsedArtworkSize + 24 + Math.min(40, collapsedExtraSpace * 0.12))) : null;
     const collapsedControlsOffset = releaseControlsRow ? 0 : collapsedDetailsOffset ?? 0;
@@ -16408,6 +16412,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (!(collapsedExtraSpace > 0 && hasCustomCardHeight)) {
         this.shadowRoot.host.style.removeProperty('--yamp-collapsed-controls-offset');
         this.shadowRoot.host.style.removeProperty('--yamp-collapsed-details-offset');
+      }
+      if (shouldShowPersistentControls) {
+        this.shadowRoot.host.removeAttribute('data-hide-persistent-controls');
+      } else {
+        this.shadowRoot.host.setAttribute('data-hide-persistent-controls', 'true');
       }
     }
     // Use null if idle or no artwork available
@@ -17536,34 +17545,35 @@ class YetAnotherMediaPlayerCard extends i$1 {
               </div>
             </div>
             <!-- Persistent Media Controls Section - Outside Scrollable Area -->
-            <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
-              <div class="persistent-controls-artwork">
-                ${(() => {
+            ${shouldShowPersistentControls ? x`
+              <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
+                <div class="persistent-controls-artwork">
+                  ${(() => {
       // Use the same entity resolution as the main card
       const playbackStateObj = this.currentPlaybackStateObj;
       const mainState = this.currentStateObj;
       const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
       return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x`
-                    <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
-                  ` : x`
-                    <div class="persistent-artwork-placeholder">
-                      <ha-icon icon="mdi:music"></ha-icon>
-                    </div>
-                  `;
+                      <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
+                    ` : x`
+                      <div class="persistent-artwork-placeholder">
+                        <ha-icon icon="mdi:music"></ha-icon>
+                      </div>
+                    `;
     })()}
-              </div>
-              <div class="persistent-controls-buttons">
-                <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
-                  <ha-icon icon="mdi:skip-previous"></ha-icon>
-                </button>
-                <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                  <ha-icon icon=${((_this$currentPlayback = this.currentPlaybackStateObj) === null || _this$currentPlayback === void 0 ? void 0 : _this$currentPlayback.state) === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-                </button>
-                <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
-                  <ha-icon icon="mdi:skip-next"></ha-icon>
-                </button>
-              </div>
-              ${(_volumeState$attribut => {
+                </div>
+                <div class="persistent-controls-buttons">
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
+                    <ha-icon icon="mdi:skip-previous"></ha-icon>
+                  </button>
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
+                    <ha-icon icon=${((_this$currentPlayback = this.currentPlaybackStateObj) === null || _this$currentPlayback === void 0 ? void 0 : _this$currentPlayback.state) === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+                  </button>
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
+                    <ha-icon icon="mdi:skip-next"></ha-icon>
+                  </button>
+                </div>
+                ${(_volumeState$attribut => {
       const idx = this._selectedIndex;
       const volumeEntity = this._getVolumeEntity(idx);
       if (!volumeEntity) return E;
@@ -17572,14 +17582,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const volumeLevel = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) ?? 0);
       const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
       return x`
-                  <div class="persistent-volume-stepper">
-                    <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
-                    ${percentLabel ? x`<span class="stepper-value">${percentLabel}</span>` : E}
-                    <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
-                  </div>
-                `;
+                    <div class="persistent-volume-stepper">
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
+                      ${percentLabel ? x`<span class="stepper-value">${percentLabel}</span>` : E}
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
+                    </div>
+                  `;
     })()}
-            </div>
+              </div>
+            ` : E}
           </div>
         ` : E}
           ${this._searchOpen ? renderSearchSheet({

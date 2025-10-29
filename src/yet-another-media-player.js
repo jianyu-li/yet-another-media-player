@@ -4220,11 +4220,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const chipRowReserve = collapsed && showChipsInline ? 48 : 0;
       const actionRowReserve = collapsed && rowActions.length > 0 ? 40 : 0;
       const reservedTopSpace = chipRowReserve + actionRowReserve;
+      const baseDetailsMinHeight = 48;
+      const effectiveExtraSpace = Math.max(0, collapsedExtraSpace - reservedTopSpace);
       const collapsedArtworkSize = collapsedExtraSpace > 0
         ? Math.min(240, 102 + effectiveExtraSpace * 0.75)
         : 102;
-      const baseDetailsMinHeight = 48;
-      const effectiveExtraSpace = Math.max(0, collapsedExtraSpace - reservedTopSpace);
       const detailGrowth = effectiveExtraSpace > 0
         ? Math.min(effectiveExtraSpace * 0.45, 96)
         : 0;
@@ -4236,6 +4236,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
         ? Math.max(0, effectiveExtraSpace - detailGrowth)
         : 0;
       let showCollapsedPlaceholder = false;
+      const expandedHeightBaseline = 350;
+      const resolvedCollapsedHeight = collapsed
+        ? (hasCustomCardHeight ? customCardHeight : (this._collapsedBaselineHeight || 220))
+        : expandedHeightBaseline;
+      const meetsPersistentHeight = resolvedCollapsedHeight >= expandedHeightBaseline;
+      const shouldShowPersistentControls = this.config.hide_menu_player === true
+        ? false
+        : (!collapsed || meetsPersistentHeight);
       const releaseControlsRow = controlSpacerSize >= 48;
       const collapsedDetailsOffset = collapsedExtraSpace > 0
         ? Math.max(100, Math.round(collapsedArtworkSize + 24 + Math.min(40, collapsedExtraSpace * 0.12)))
@@ -4265,6 +4273,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (!(collapsedExtraSpace > 0 && hasCustomCardHeight)) {
           this.shadowRoot.host.style.removeProperty('--yamp-collapsed-controls-offset');
           this.shadowRoot.host.style.removeProperty('--yamp-collapsed-details-offset');
+        }
+        if (shouldShowPersistentControls) {
+          this.shadowRoot.host.removeAttribute('data-hide-persistent-controls');
+        } else {
+          this.shadowRoot.host.setAttribute('data-hide-persistent-controls', 'true');
         }
       }
       // Use null if idle or no artwork available
@@ -5384,52 +5397,54 @@ class YetAnotherMediaPlayerCard extends LitElement {
               </div>
             </div>
             <!-- Persistent Media Controls Section - Outside Scrollable Area -->
-            <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
-              <div class="persistent-controls-artwork">
+            ${shouldShowPersistentControls ? html`
+              <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
+                <div class="persistent-controls-artwork">
+                  ${(() => {
+                    // Use the same entity resolution as the main card
+                    const playbackStateObj = this.currentPlaybackStateObj;
+                    const mainState = this.currentStateObj;
+                    const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
+                    return artwork?.url && this._isValidArtworkUrl(artwork.url) ? html`
+                      <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
+                    ` : html`
+                      <div class="persistent-artwork-placeholder">
+                        <ha-icon icon="mdi:music"></ha-icon>
+                      </div>
+                    `;
+                  })()}
+                </div>
+                <div class="persistent-controls-buttons">
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
+                    <ha-icon icon="mdi:skip-previous"></ha-icon>
+                  </button>
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
+                    <ha-icon icon=${this.currentPlaybackStateObj?.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+                  </button>
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
+                    <ha-icon icon="mdi:skip-next"></ha-icon>
+                  </button>
+                </div>
                 ${(() => {
-                  // Use the same entity resolution as the main card
-                  const playbackStateObj = this.currentPlaybackStateObj;
-                  const mainState = this.currentStateObj;
-                  const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
-                  return artwork?.url && this._isValidArtworkUrl(artwork.url) ? html`
-                    <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
-                  ` : html`
-                    <div class="persistent-artwork-placeholder">
-                      <ha-icon icon="mdi:music"></ha-icon>
+                  const idx = this._selectedIndex;
+                  const volumeEntity = this._getVolumeEntity(idx);
+                  if (!volumeEntity) return nothing;
+
+                  const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
+                  const volumeState = this.currentVolumeStateObj;
+                  const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
+                  const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
+
+                  return html`
+                    <div class="persistent-volume-stepper">
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
+                      ${percentLabel ? html`<span class="stepper-value">${percentLabel}</span>` : nothing}
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
                     </div>
                   `;
                 })()}
               </div>
-              <div class="persistent-controls-buttons">
-                <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
-                  <ha-icon icon="mdi:skip-previous"></ha-icon>
-                </button>
-                <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                  <ha-icon icon=${this.currentPlaybackStateObj?.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-                </button>
-                <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
-                  <ha-icon icon="mdi:skip-next"></ha-icon>
-                </button>
-              </div>
-              ${(() => {
-                const idx = this._selectedIndex;
-                const volumeEntity = this._getVolumeEntity(idx);
-                if (!volumeEntity) return nothing;
-
-                const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
-                const volumeState = this.currentVolumeStateObj;
-                const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
-                const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
-
-                return html`
-                  <div class="persistent-volume-stepper">
-                    <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
-                    ${percentLabel ? html`<span class="stepper-value">${percentLabel}</span>` : nothing}
-                    <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
-                  </div>
-                `;
-              })()}
-            </div>
+            ` : nothing}
           </div>
         ` : nothing}
           ${this._searchOpen

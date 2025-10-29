@@ -1234,13 +1234,13 @@ export const yampCardStyles = css`
     position: relative;
   }
 
-  /* Expand container height when always collapsed (no persistent controls) */
-  :host([data-always-collapsed="true"]) .entity-options-container {
+  /* Expand container height when hide_menu_player is enabled (no persistent controls) */
+  :host([data-hide-menu-player="true"]) .entity-options-container {
     max-height: 96%;
   }
 
-  /* Expand container height when hide_menu_player is enabled (no persistent controls) */
-  :host([data-hide-menu-player="true"]) .entity-options-container {
+  /* Expand container height when persistent controls are hidden due to layout constraints */
+  :host([data-hide-persistent-controls="true"]) .entity-options-container {
     max-height: 96%;
   }
 
@@ -1262,13 +1262,13 @@ export const yampCardStyles = css`
     z-index: 1001;
   }
 
-  /* Hide persistent controls when always collapsed is enabled */
-  :host([data-always-collapsed="true"]) .persistent-media-controls {
+  /* Hide persistent controls when hide_menu_player is enabled */
+  :host([data-hide-menu-player="true"]) .persistent-media-controls {
     display: none;
   }
 
-  /* Hide persistent controls when hide_menu_player is enabled */
-  :host([data-hide-menu-player="true"]) .persistent-media-controls {
+  /* Hide persistent controls when layout constraints require it */
+  :host([data-hide-persistent-controls="true"]) .persistent-media-controls {
     display: none;
   }
 
