@@ -4217,44 +4217,54 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const collapsedExtraSpace = collapsed && this._alwaysCollapsed && hasCustomCardHeight
         ? Math.max(0, customCardHeight - collapsedBaselineHeight)
         : 0;
+      const chipRowReserve = collapsed && showChipsInline ? 48 : 0;
+      const actionRowReserve = collapsed && rowActions.length > 0 ? 40 : 0;
+      const reservedTopSpace = chipRowReserve + actionRowReserve;
       const collapsedArtworkSize = collapsedExtraSpace > 0
-        ? Math.min(240, 102 + collapsedExtraSpace * 0.75)
+        ? Math.min(240, 102 + effectiveExtraSpace * 0.75)
         : 102;
-      const collapsedArtworkOffset = collapsedExtraSpace > 0
-        ? Math.max(12, Math.min(56, 16 + collapsedExtraSpace * 0.3))
-        : 16;
-      const collapsedTypographyScale = collapsedExtraSpace > 0
-        ? Math.min(1.45, 1 + collapsedExtraSpace / 180)
-        : 1;
       const baseDetailsMinHeight = 48;
-      const detailGrowth = collapsedExtraSpace > 0
-        ? Math.min(collapsedExtraSpace * 0.45, 96)
+      const effectiveExtraSpace = Math.max(0, collapsedExtraSpace - reservedTopSpace);
+      const detailGrowth = effectiveExtraSpace > 0
+        ? Math.min(effectiveExtraSpace * 0.45, 96)
         : 0;
-      const collapsedDetailsMinHeight = collapsedExtraSpace > 0
+      const collapsedDetailsMinHeight = effectiveExtraSpace > 0
         ? Math.round(baseDetailsMinHeight + detailGrowth)
         : baseDetailsMinHeight;
       const detailsMinHeight = collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight;
-      const controlSpacerSize = collapsedExtraSpace > 0
-        ? Math.max(0, collapsedExtraSpace - detailGrowth)
+      const controlSpacerSize = effectiveExtraSpace > 0
+        ? Math.max(0, effectiveExtraSpace - detailGrowth)
         : 0;
+      let showCollapsedPlaceholder = false;
       const releaseControlsRow = controlSpacerSize >= 48;
       const collapsedDetailsOffset = collapsedExtraSpace > 0
         ? Math.max(100, Math.round(collapsedArtworkSize + 24 + Math.min(40, collapsedExtraSpace * 0.12)))
         : null;
       const collapsedControlsOffset = releaseControlsRow ? 0 : (collapsedDetailsOffset ?? 0);
+      let cardWidth = this.offsetWidth || (this.shadowRoot?.host?.offsetWidth ?? 0);
+      const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
+      const heightScale = collapsedExtraSpace > 0
+        ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
+        : 1;
+      const titleScale = heightScale > 1 || widthScale > 1
+        ? Math.min(1.6, Math.max(heightScale, widthScale))
+        : 1;
+      const artistScale = Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
+
       if (this.shadowRoot && this.shadowRoot.host) {
         if (collapsedExtraSpace > 0) {
           if (collapsedDetailsOffset != null) {
             this.shadowRoot.host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
           }
           this.shadowRoot.host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
-          this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', collapsedTypographyScale.toFixed(3));
-          this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', (collapsedTypographyScale * 0.92).toFixed(3));
-        } else {
+          this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
+          this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
+        }
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
+        if (!(collapsedExtraSpace > 0 && hasCustomCardHeight)) {
           this.shadowRoot.host.style.removeProperty('--yamp-collapsed-controls-offset');
           this.shadowRoot.host.style.removeProperty('--yamp-collapsed-details-offset');
-          this.shadowRoot.host.style.removeProperty('--yamp-collapsed-title-scale');
-          this.shadowRoot.host.style.removeProperty('--yamp-collapsed-artist-scale');
         }
       }
       // Use null if idle or no artwork available
@@ -4273,6 +4283,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
         
       }
+
+      showCollapsedPlaceholder = collapsed && !artworkUrl && !idleImageUrl && effectiveExtraSpace >= 40;
 
       // Dominant color extraction for collapsed artwork
       if (collapsed && artworkUrl && artworkUrl !== this._lastArtworkUrl) {
@@ -4427,7 +4439,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     class="collapsed-artwork-container"
                     style="${[
                       `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
-                      collapsedExtraSpace > 0 ? `top:${Math.round(collapsedArtworkOffset)}px` : '',
                       collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : ''
                     ].filter(Boolean).join('; ')}"
                   >
@@ -4438,11 +4449,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         this._getCollapsedArtworkStyle(),
                         collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize)}px; height:${Math.round(collapsedArtworkSize)}px;` : ''
                       ].filter(Boolean).join(' ')}" 
+                      onload="this.style.display='block'"
                       onerror="this.style.display='none'" />
                   </div>
                 ` : nothing}
-                ${!collapsed ? html`
-                  <div class="card-artwork-spacer">
+                ${(showCollapsedPlaceholder || !collapsed) ? html`
+                  <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}">
                     ${(!artworkUrl && !idleImageUrl) ? html`
                       <div class="media-artwork-placeholder">
                         <svg
