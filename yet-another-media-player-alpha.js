@@ -2226,6 +2226,11 @@ const yampCardStyles = i$4`
     pointer-events: none;
   }
 
+  .card-lower-content.collapsed .card-artwork-spacer.show-placeholder {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .collapsed-flex-spacer {
     flex: 1 1 auto;
     width: 100%;
