@@ -1268,6 +1268,17 @@ function renderProgressBar(_ref) {
 }
 
 // import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+const Z_LAYERS = Object.freeze({
+  MEDIA_BACKGROUND: 0,
+  MEDIA_OVERLAY: 1,
+  FLOATING_ELEMENT: 2,
+  OVERLAY_BASE: 3,
+  STICKY_CHIPS: 4,
+  ACCENT_FOREGROUND: 5,
+  FLOATING_CONTROLS: 6,
+  MODAL_BACKDROP: 8,
+  MODAL_TOAST: 9
+});
 const yampCardStyles = i$4`
   /* CSS Custom Properties for consistency */
   :host {
@@ -1350,6 +1361,14 @@ const yampCardStyles = i$4`
     overflow: hidden;
   }
 
+  .yamp-card-inner {
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
   /* Idle state dimming */
   .dim-idle .details,
   .dim-idle .controls-row,
@@ -1426,7 +1445,7 @@ const yampCardStyles = i$4`
     inset: 0;
     width: 100%;
     height: 100%;
-    z-index: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     background-size: var(--yamp-artwork-bg-size, cover);
     background-position: top center;
     background-repeat: no-repeat;
@@ -1439,7 +1458,7 @@ const yampCardStyles = i$4`
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.5);
-    z-index: 1;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     pointer-events: none;
   }
 
@@ -1484,7 +1503,7 @@ const yampCardStyles = i$4`
     border-radius: var(--button-border-radius);
     box-shadow: var(--shadow-light);
     min-width: 110px;
-    z-index: 6;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     margin-top: 2px;
     border: 1px solid #444;
     overflow: hidden;
@@ -1722,7 +1741,7 @@ const yampCardStyles = i$4`
     background: #fff;
     border-radius: 50%;
     padding: 2px;
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     width: 22px;
     height: 22px;
     display: flex;
@@ -2155,7 +2174,7 @@ const yampCardStyles = i$4`
       rgba(0,0,0,0.0) 0%,
       rgba(0,0,0,0.40) 55%,
       rgba(0,0,0,0.70) 100%);
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
   }
 
   /* Card lower content */
@@ -2174,7 +2193,7 @@ const yampCardStyles = i$4`
   .card-lower-content-bg {
     position: absolute;
     inset: 0;
-    z-index: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     background-size: var(--yamp-artwork-bg-size, cover);
     background-position: top center;
     background-repeat: no-repeat;
@@ -2186,7 +2205,7 @@ const yampCardStyles = i$4`
     position: absolute;
     inset: 0;
     pointer-events: none;
-    z-index: 1;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     background: linear-gradient(
       to bottom,
       rgba(0,0,0,0.0) 0%,
@@ -2197,7 +2216,7 @@ const yampCardStyles = i$4`
 
   .card-lower-content {
     position: relative;
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -2287,7 +2306,7 @@ const yampCardStyles = i$4`
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     background: transparent;
     pointer-events: none;
     box-shadow: none;
@@ -2382,7 +2401,7 @@ const yampCardStyles = i$4`
     height: 4px;
     background: var(--custom-accent);
     border-radius: 0 0 12px 12px;
-    z-index: 5;
+    z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
     transition: width var(--transition-normal) linear;
     pointer-events: none;
   }
@@ -2394,7 +2413,7 @@ const yampCardStyles = i$4`
     right: 0;
     top: 0;
     bottom: 0;
-    z-index: 3;
+    z-index: ${Z_LAYERS.OVERLAY_BASE};
     background: rgba(15,18,30,0.70);
     display: flex;
     align-items: flex-start;
@@ -2526,7 +2545,7 @@ const yampCardStyles = i$4`
     bottom: 0;
     left: 0;
     width: 100%;
-    z-index: 6;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
   /* Hide persistent controls when hide_menu_player is enabled */
@@ -2703,7 +2722,7 @@ const yampCardStyles = i$4`
   .entity-options-chips-wrapper {
     position: sticky;
     top: 0;
-    z-index: 4;
+    z-index: ${Z_LAYERS.STICKY_CHIPS};
     padding: 6px 4px 6px 4px;
     background: transparent;
   }
@@ -2888,7 +2907,7 @@ const yampCardStyles = i$4`
     align-items: flex-start;
     pointer-events: auto;
     overscroll-behavior: contain;
-    z-index: 5;
+    z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
     padding: 12px 8px 8px 0;
     overflow-y: auto;
     max-height: 100%;
@@ -2919,7 +2938,7 @@ const yampCardStyles = i$4`
     outline: none;
     transition: color var(--transition-fast), background var(--transition-fast), transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
     transform: scale(1);
-    z-index: 1;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     min-height: 32px;
     min-width: 100%;
     display: flex;
@@ -2929,17 +2948,17 @@ const yampCardStyles = i$4`
 
   .floating-source-index .source-index-letter[data-scale="max"] {
     transform: scale(1.38);
-    z-index: 3;
+    z-index: ${Z_LAYERS.OVERLAY_BASE};
   }
 
   .floating-source-index .source-index-letter[data-scale="large"] {
     transform: scale(1.19);
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
   }
 
   .floating-source-index .source-index-letter[data-scale="med"] {
     transform: scale(1.10);
-    z-index: 1;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
   }
 
   .floating-source-index .source-index-letter::after {
@@ -3396,7 +3415,7 @@ const yampCardStyles = i$4`
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.8);
-    z-index: 8;
+    z-index: ${Z_LAYERS.MODAL_BACKDROP};
     display: flex;
     flex-direction: column;
     padding: 20px;
@@ -3461,7 +3480,7 @@ const yampCardStyles = i$4`
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 9;
+    z-index: ${Z_LAYERS.MODAL_TOAST};
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     min-width: 200px;
     text-align: center;
@@ -16468,9 +16487,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return x`
         <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : E}>
           <div
-            style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
-            class="${shouldDimIdle ? 'dim-idle' : ''}"
+            class="yamp-card-inner ${shouldDimIdle ? 'dim-idle' : ''}"
           >
             ${showChipsInline ? x`
                 <div class="chip-row">
@@ -17631,28 +17649,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
       showQueueSuccess: this._showQueueSuccessMessage,
       upcomingFilterActive: this._upcomingFilterActive
     }) : E}
-          ${this._showQueueSuccessMessage ? x`
-            <div style="
-              color: #4caf50;
-              padding: 20px;
-              text-align: center;
-              font-size: 20px;
-              font-weight: 600;
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              z-index: 99999;
-              min-width: 200px;
-              background: rgba(0, 0, 0, 0.1);
-              border-radius: 8px;
-              box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-              animation: fadeInOut 3s ease-in-out;
-            ">
-              ✅ Added to queue!
-            </div>
-          ` : E}
-
         </ha-card>
       `;
   }
