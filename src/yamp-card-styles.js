@@ -217,7 +217,7 @@ export const yampCardStyles = css`
     border-radius: var(--button-border-radius);
     box-shadow: var(--shadow-light);
     min-width: 110px;
-    z-index: 11;
+    z-index: 6;
     margin-top: 2px;
     border: 1px solid #444;
     overflow: hidden;
@@ -1115,7 +1115,7 @@ export const yampCardStyles = css`
     height: 4px;
     background: var(--custom-accent);
     border-radius: 0 0 12px 12px;
-    z-index: 99;
+    z-index: 5;
     transition: width var(--transition-normal) linear;
     pointer-events: none;
   }
@@ -1127,7 +1127,7 @@ export const yampCardStyles = css`
     right: 0;
     top: 0;
     bottom: 0;
-    z-index: 30;
+    z-index: 3;
     background: rgba(15,18,30,0.70);
     display: flex;
     align-items: flex-start;
@@ -1259,7 +1259,7 @@ export const yampCardStyles = css`
     bottom: 0;
     left: 0;
     width: 100%;
-    z-index: 1001;
+    z-index: 6;
   }
 
   /* Hide persistent controls when hide_menu_player is enabled */
@@ -1621,7 +1621,7 @@ export const yampCardStyles = css`
     align-items: flex-start;
     pointer-events: auto;
     overscroll-behavior: contain;
-    z-index: 10;
+    z-index: 5;
     padding: 12px 8px 8px 0;
     overflow-y: auto;
     max-height: 100%;
@@ -2129,7 +2129,7 @@ export const yampCardStyles = css`
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
+    z-index: 8;
     display: flex;
     flex-direction: column;
     padding: 20px;
@@ -2194,7 +2194,7 @@ export const yampCardStyles = css`
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 10000;
+    z-index: 9;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     min-width: 200px;
     text-align: center;
