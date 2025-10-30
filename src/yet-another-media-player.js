@@ -405,6 +405,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // --- swipe‑to‑filter helpers ---
     this._swipeStartX = null;
     this._searchSwipeAttached = false;
+    this._artworkSwipeAttached = false;
+    this._artworkSwipeTarget = null;
     // Snapshot of entities that were playing when manual‑select started.
     this._manualSelectPlayingSet = null;
     this._idleTimeoutMs = 60000;
@@ -645,11 +647,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Render, then run search
     this.requestUpdate();
-    this.updateComplete
-      .then(() => this._doSearch())
-      .catch((error) => {
-        console.error('yamp: updateComplete _doSearch rejected:', error);
-      });
+    // Kick off search immediately so results populate without requiring user interaction.
+    this._doSearch().catch((error) => {
+      console.error('yamp: artist quick-search failed:', error);
+    });
   }
   // Show search sheet inside entity options
   _showSearchSheetInOptions(mode = "default") {
@@ -3204,13 +3205,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._addGrabScroll('.action-chip-row');
     this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
+    this._attachArtworkSwipe(collapsed && showChipsInMenu && hasMultipleEntities);
 
     if (this._lastRenderedCollapsed && !this._lastRenderedHideControls) {
       const contentEl = this.renderRoot?.querySelector('.card-lower-content');
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          this._collapsedBaselineHeight = measured;
+          const customHeight = Number(this.config?.card_height);
+          const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
+          if (!hasCustomCardHeight) {
+            this._collapsedBaselineHeight = measured;
+          } else if (!this._collapsedBaselineHeight || measured < this._collapsedBaselineHeight - 1) {
+            // Allow the baseline to shrink but never grow when a custom height is applied
+            this._collapsedBaselineHeight = measured;
+          }
         }
       }
     }
@@ -3374,6 +3383,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     this.requestUpdate();
+  }
+
+  _selectAdjacentEntity(direction) {
+    if (!direction) return;
+    const total = this.entityIds.length;
+    if (total <= 1) return;
+    let next = this._selectedIndex + direction;
+    if (next < 0) next = total - 1;
+    if (next >= total) next = 0;
+    this._onChipClick(next);
   }
 
   _pinChip(idx) {
@@ -4015,6 +4034,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       
       const customCardHeight = Number(this.config.card_height);
       const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
+      const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
       if (this.shadowRoot && this.shadowRoot.host) {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -4206,6 +4226,72 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ? true
           : (this._collapseOnIdle ? this._isIdle : false);
       }
+      const collapsedExtraSpace = collapsed && this._alwaysCollapsed && hasCustomCardHeight
+        ? Math.max(0, customCardHeight - collapsedBaselineHeight)
+        : 0;
+      const chipRowReserve = collapsed && showChipsInline ? 48 : 0;
+      const actionRowReserve = collapsed && rowActions.length > 0 ? 40 : 0;
+      const reservedTopSpace = chipRowReserve + actionRowReserve;
+      const baseDetailsMinHeight = 48;
+      const effectiveExtraSpace = Math.max(0, collapsedExtraSpace - reservedTopSpace);
+      const collapsedArtworkSize = collapsedExtraSpace > 0
+        ? Math.min(240, 102 + effectiveExtraSpace * 0.75)
+        : 102;
+      const detailGrowth = effectiveExtraSpace > 0
+        ? Math.min(effectiveExtraSpace * 0.45, 96)
+        : 0;
+      const collapsedDetailsMinHeight = effectiveExtraSpace > 0
+        ? Math.round(baseDetailsMinHeight + detailGrowth)
+        : baseDetailsMinHeight;
+      const detailsMinHeight = collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight;
+      const controlSpacerSize = effectiveExtraSpace > 0
+        ? Math.max(0, effectiveExtraSpace - detailGrowth)
+        : 0;
+      let showCollapsedPlaceholder = false;
+      const expandedHeightBaseline = 350;
+      const resolvedCollapsedHeight = collapsed
+        ? (hasCustomCardHeight ? customCardHeight : (this._collapsedBaselineHeight || 220))
+        : expandedHeightBaseline;
+      const meetsPersistentHeight = resolvedCollapsedHeight >= expandedHeightBaseline;
+      const shouldShowPersistentControls = this.config.hide_menu_player === true
+        ? false
+        : (!collapsed || meetsPersistentHeight);
+      const releaseControlsRow = controlSpacerSize >= 48;
+      const collapsedDetailsOffset = collapsedExtraSpace > 0
+        ? Math.max(100, Math.round(collapsedArtworkSize + 24 + Math.min(40, collapsedExtraSpace * 0.12)))
+        : null;
+      const collapsedControlsOffset = releaseControlsRow ? 0 : (collapsedDetailsOffset ?? 0);
+      let cardWidth = this.offsetWidth || (this.shadowRoot?.host?.offsetWidth ?? 0);
+      const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
+      const heightScale = collapsedExtraSpace > 0
+        ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
+        : 1;
+      const titleScale = heightScale > 1 || widthScale > 1
+        ? Math.min(1.6, Math.max(heightScale, widthScale))
+        : 1;
+      const artistScale = Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
+
+      if (this.shadowRoot && this.shadowRoot.host) {
+        if (collapsedExtraSpace > 0) {
+          if (collapsedDetailsOffset != null) {
+            this.shadowRoot.host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
+          }
+          this.shadowRoot.host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
+          this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
+          this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
+        }
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
+        if (!(collapsedExtraSpace > 0 && hasCustomCardHeight)) {
+          this.shadowRoot.host.style.removeProperty('--yamp-collapsed-controls-offset');
+          this.shadowRoot.host.style.removeProperty('--yamp-collapsed-details-offset');
+        }
+        if (shouldShowPersistentControls) {
+          this.shadowRoot.host.removeAttribute('data-hide-persistent-controls');
+        } else {
+          this.shadowRoot.host.setAttribute('data-hide-persistent-controls', 'true');
+        }
+      }
       // Use null if idle or no artwork available
       let artworkUrl = null;
       let artworkSizePercentage = null;
@@ -4222,6 +4308,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
         
       }
+
+      showCollapsedPlaceholder = collapsed && !artworkUrl && !idleImageUrl && effectiveExtraSpace >= 40;
 
       // Dominant color extraction for collapsed artwork
       if (collapsed && artworkUrl && artworkUrl !== this._lastArtworkUrl) {
@@ -4250,9 +4338,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return html`
         <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : nothing}>
           <div
-            style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
-            class="${shouldDimIdle ? 'dim-idle' : ''}"
+            class="yamp-card-inner ${shouldDimIdle ? 'dim-idle' : ''}"
           >
             ${showChipsInline ? html`
                 <div class="chip-row">
@@ -4372,15 +4459,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   : 'min-height: 350px;';
               })()}">
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? html`
-                  <div class="collapsed-artwork-container"
-                       style="background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%);">
-                    <img class="collapsed-artwork" src="${artworkUrl}" 
-                         style="${this._getCollapsedArtworkStyle()}" 
-                         onerror="this.style.display='none'" />
+                  <div
+                    class="collapsed-artwork-container"
+                    style="${[
+                      `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
+                      collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : ''
+                    ].filter(Boolean).join('; ')}"
+                  >
+                    <img
+                      class="collapsed-artwork"
+                      src="${artworkUrl}" 
+                      style="${[
+                        this._getCollapsedArtworkStyle(),
+                        collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize)}px; height:${Math.round(collapsedArtworkSize)}px;` : ''
+                      ].filter(Boolean).join(' ')}" 
+                      onload="this.style.display='block'"
+                      onerror="this.style.display='none'" />
                   </div>
                 ` : nothing}
-                ${!collapsed ? html`
-                  <div class="card-artwork-spacer">
+                ${(showCollapsedPlaceholder || !collapsed) ? html`
+                  <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}">
                     ${(!artworkUrl && !idleImageUrl) ? html`
                       <div class="media-artwork-placeholder">
                         <svg
@@ -4396,10 +4494,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     ` : nothing}
                   </div>
                 ` : nothing}
-                <div class="details" style="${[
-                  this._showEntityOptions ? 'visibility:hidden' : '',
-                  (!shouldShowDetails ? 'min-height:48px;opacity:0' : '')
-                ].filter(Boolean).join(';')}">
+                <div class="details" style="${(() => {
+                  const detailStyleParts = [];
+                  if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
+                  detailStyleParts.push(`min-height:${detailsMinHeight}px`);
+                  if (!shouldShowDetails) detailStyleParts.push('opacity:0');
+                  return detailStyleParts.join(';');
+                })()}">
                   <div class="title">
                     ${shouldShowDetails ? title : ""}
                   </div>
@@ -4442,6 +4543,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     })
                   : nothing
                 }
+                ${(!hideControlsNow && controlSpacerSize > 0) ? html`
+                  <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
+                ` : nothing}
                 ${!hideControlsNow ? html`
                   <div style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
                     ${renderControlsRow({
@@ -5304,52 +5408,54 @@ class YetAnotherMediaPlayerCard extends LitElement {
               </div>
             </div>
             <!-- Persistent Media Controls Section - Outside Scrollable Area -->
-            <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
-              <div class="persistent-controls-artwork">
+            ${shouldShowPersistentControls ? html`
+              <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
+                <div class="persistent-controls-artwork">
+                  ${(() => {
+                    // Use the same entity resolution as the main card
+                    const playbackStateObj = this.currentPlaybackStateObj;
+                    const mainState = this.currentStateObj;
+                    const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
+                    return artwork?.url && this._isValidArtworkUrl(artwork.url) ? html`
+                      <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
+                    ` : html`
+                      <div class="persistent-artwork-placeholder">
+                        <ha-icon icon="mdi:music"></ha-icon>
+                      </div>
+                    `;
+                  })()}
+                </div>
+                <div class="persistent-controls-buttons">
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
+                    <ha-icon icon="mdi:skip-previous"></ha-icon>
+                  </button>
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
+                    <ha-icon icon=${this.currentPlaybackStateObj?.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+                  </button>
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
+                    <ha-icon icon="mdi:skip-next"></ha-icon>
+                  </button>
+                </div>
                 ${(() => {
-                  // Use the same entity resolution as the main card
-                  const playbackStateObj = this.currentPlaybackStateObj;
-                  const mainState = this.currentStateObj;
-                  const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
-                  return artwork?.url && this._isValidArtworkUrl(artwork.url) ? html`
-                    <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
-                  ` : html`
-                    <div class="persistent-artwork-placeholder">
-                      <ha-icon icon="mdi:music"></ha-icon>
+                  const idx = this._selectedIndex;
+                  const volumeEntity = this._getVolumeEntity(idx);
+                  if (!volumeEntity) return nothing;
+
+                  const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
+                  const volumeState = this.currentVolumeStateObj;
+                  const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
+                  const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
+
+                  return html`
+                    <div class="persistent-volume-stepper">
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
+                      ${percentLabel ? html`<span class="stepper-value">${percentLabel}</span>` : nothing}
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
                     </div>
                   `;
                 })()}
               </div>
-              <div class="persistent-controls-buttons">
-                <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
-                  <ha-icon icon="mdi:skip-previous"></ha-icon>
-                </button>
-                <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                  <ha-icon icon=${this.currentPlaybackStateObj?.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-                </button>
-                <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
-                  <ha-icon icon="mdi:skip-next"></ha-icon>
-                </button>
-              </div>
-              ${(() => {
-                const idx = this._selectedIndex;
-                const volumeEntity = this._getVolumeEntity(idx);
-                if (!volumeEntity) return nothing;
-
-                const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
-                const volumeState = this.currentVolumeStateObj;
-                const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
-                const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
-
-                return html`
-                  <div class="persistent-volume-stepper">
-                    <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
-                    ${percentLabel ? html`<span class="stepper-value">${percentLabel}</span>` : nothing}
-                    <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
-                  </div>
-                `;
-              })()}
-            </div>
+            ` : nothing}
           </div>
         ` : nothing}
           ${this._searchOpen
@@ -5378,28 +5484,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 upcomingFilterActive: this._upcomingFilterActive,
               })
             : nothing}
-          ${this._showQueueSuccessMessage ? html`
-            <div style="
-              color: #4caf50;
-              padding: 20px;
-              text-align: center;
-              font-size: 20px;
-              font-weight: 600;
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              z-index: 99999;
-              min-width: 200px;
-              background: rgba(0, 0, 0, 0.1);
-              border-radius: 8px;
-              box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-              animation: fadeInOut 3s ease-in-out;
-            ">
-              ✅ Added to queue!
-            </div>
-          ` : nothing}
-
         </ha-card>
       `;
     }
@@ -5756,6 +5840,59 @@ class YetAnotherMediaPlayerCard extends LitElement {
       click: clickHandler
     };
     col._grabScrollAttached = true;
+  }
+
+  _attachArtworkSwipe(enable) {
+    const previousTarget = this._artworkSwipeTarget;
+    const container = this.renderRoot.querySelector('.card-lower-content.collapsed .collapsed-artwork-container') ||
+      this.renderRoot.querySelector('.card-lower-content .card-artwork-spacer');
+
+    if (!enable || !container) {
+      if (previousTarget && this._artworkSwipeAttached) {
+        previousTarget.removeEventListener('touchstart', this._onArtworkTouchStart);
+        previousTarget.removeEventListener('touchend', this._onArtworkTouchEnd);
+        previousTarget.removeEventListener('touchcancel', this._onArtworkTouchEnd);
+      }
+      this._artworkSwipeAttached = false;
+      this._artworkSwipeTarget = null;
+      this._onArtworkTouchStart = null;
+      this._onArtworkTouchEnd = null;
+      this._artworkTouchStartX = null;
+      return;
+    }
+
+    if (this._artworkSwipeAttached && previousTarget === container) return;
+
+    if (previousTarget && this._artworkSwipeAttached) {
+      previousTarget.removeEventListener('touchstart', this._onArtworkTouchStart);
+      previousTarget.removeEventListener('touchend', this._onArtworkTouchEnd);
+      previousTarget.removeEventListener('touchcancel', this._onArtworkTouchEnd);
+    }
+
+    this._artworkTouchStartX = null;
+    this._onArtworkTouchStart = (e) => {
+      this._artworkTouchStartX = e.touches?.[0]?.clientX ?? null;
+    };
+    this._onArtworkTouchEnd = (e) => {
+      if (this._artworkTouchStartX === null) return;
+      const endX = e.changedTouches?.[0]?.clientX ?? null;
+      if (endX === null) {
+        this._artworkTouchStartX = null;
+        return;
+      }
+      const dx = endX - this._artworkTouchStartX;
+      const threshold = 30;
+      if (Math.abs(dx) > threshold) {
+        const direction = dx < 0 ? 1 : -1;
+        this._selectAdjacentEntity(direction);
+      }
+      this._artworkTouchStartX = null;
+    };
+    container.addEventListener('touchstart', this._onArtworkTouchStart, { passive: true });
+    container.addEventListener('touchend', this._onArtworkTouchEnd);
+    container.addEventListener('touchcancel', this._onArtworkTouchEnd);
+    this._artworkSwipeAttached = true;
+    this._artworkSwipeTarget = container;
   }
 
   _removeGrabScrollHandlers() {
