@@ -2394,7 +2394,7 @@ const yampCardStyles = i$4`
     right: 0;
     top: 0;
     bottom: 0;
-    z-index: 30;
+    z-index: 3;
     background: rgba(15,18,30,0.70);
     display: flex;
     align-items: flex-start;
