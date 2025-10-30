@@ -4338,9 +4338,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return html`
         <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : nothing}>
           <div
-            style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;"
             data-match-theme="${String(this.config.match_theme === true)}"
-            class="${shouldDimIdle ? 'dim-idle' : ''}"
+            class="yamp-card-inner ${shouldDimIdle ? 'dim-idle' : ''}"
           >
             ${showChipsInline ? html`
                 <div class="chip-row">
@@ -5485,28 +5484,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 upcomingFilterActive: this._upcomingFilterActive,
               })
             : nothing}
-          ${this._showQueueSuccessMessage ? html`
-            <div style="
-              color: #4caf50;
-              padding: 20px;
-              text-align: center;
-              font-size: 20px;
-              font-weight: 600;
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              z-index: 99999;
-              min-width: 200px;
-              background: rgba(0, 0, 0, 0.1);
-              border-radius: 8px;
-              box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-              animation: fadeInOut 3s ease-in-out;
-            ">
-              ✅ Added to queue!
-            </div>
-          ` : nothing}
-
         </ha-card>
       `;
     }
