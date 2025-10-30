@@ -12695,6 +12695,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // --- swipe‑to‑filter helpers ---
     this._swipeStartX = null;
     this._searchSwipeAttached = false;
+    this._artworkSwipeAttached = false;
+    this._artworkSwipeTarget = null;
     // Snapshot of entities that were playing when manual‑select started.
     this._manualSelectPlayingSet = null;
     this._idleTimeoutMs = 60000;
@@ -12952,8 +12954,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // Render, then run search
     this.requestUpdate();
-    this.updateComplete.then(() => this._doSearch()).catch(error => {
-      console.error('yamp: updateComplete _doSearch rejected:', error);
+    // Kick off search immediately so results populate without requiring user interaction.
+    this._doSearch().catch(error => {
+      console.error('yamp: artist quick-search failed:', error);
     });
   }
   // Show search sheet inside entity options
@@ -15382,6 +15385,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._addGrabScroll('.action-chip-row');
     this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
+    this._attachArtworkSwipe(collapsed && showChipsInMenu && hasMultipleEntities);
     if (this._lastRenderedCollapsed && !this._lastRenderedHideControls) {
       var _this$renderRoot2;
       const contentEl = (_this$renderRoot2 = this.renderRoot) === null || _this$renderRoot2 === void 0 ? void 0 : _this$renderRoot2.querySelector('.card-lower-content');
@@ -15546,6 +15550,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._pinnedIndex = idx;
     }
     this.requestUpdate();
+  }
+  _selectAdjacentEntity(direction) {
+    if (!direction) return;
+    const total = this.entityIds.length;
+    if (total <= 1) return;
+    let next = this._selectedIndex + direction;
+    if (next < 0) next = total - 1;
+    if (next >= total) next = 0;
+    this._onChipClick(next);
   }
   _pinChip(idx) {
     // Mark that this chip was just pinned via long‑press so the
@@ -17991,6 +18004,57 @@ class YetAnotherMediaPlayerCard extends i$1 {
       click: clickHandler
     };
     col._grabScrollAttached = true;
+  }
+  _attachArtworkSwipe(enable) {
+    const previousTarget = this._artworkSwipeTarget;
+    const container = this.renderRoot.querySelector('.card-lower-content.collapsed .collapsed-artwork-container') || this.renderRoot.querySelector('.card-lower-content .card-artwork-spacer');
+    if (!enable || !container) {
+      if (previousTarget && this._artworkSwipeAttached) {
+        previousTarget.removeEventListener('touchstart', this._onArtworkTouchStart);
+        previousTarget.removeEventListener('touchend', this._onArtworkTouchEnd);
+        previousTarget.removeEventListener('touchcancel', this._onArtworkTouchEnd);
+      }
+      this._artworkSwipeAttached = false;
+      this._artworkSwipeTarget = null;
+      this._onArtworkTouchStart = null;
+      this._onArtworkTouchEnd = null;
+      this._artworkTouchStartX = null;
+      return;
+    }
+    if (this._artworkSwipeAttached && previousTarget === container) return;
+    if (previousTarget && this._artworkSwipeAttached) {
+      previousTarget.removeEventListener('touchstart', this._onArtworkTouchStart);
+      previousTarget.removeEventListener('touchend', this._onArtworkTouchEnd);
+      previousTarget.removeEventListener('touchcancel', this._onArtworkTouchEnd);
+    }
+    this._artworkTouchStartX = null;
+    this._onArtworkTouchStart = e => {
+      var _e$touches;
+      this._artworkTouchStartX = ((_e$touches = e.touches) === null || _e$touches === void 0 || (_e$touches = _e$touches[0]) === null || _e$touches === void 0 ? void 0 : _e$touches.clientX) ?? null;
+    };
+    this._onArtworkTouchEnd = e => {
+      var _e$changedTouches;
+      if (this._artworkTouchStartX === null) return;
+      const endX = ((_e$changedTouches = e.changedTouches) === null || _e$changedTouches === void 0 || (_e$changedTouches = _e$changedTouches[0]) === null || _e$changedTouches === void 0 ? void 0 : _e$changedTouches.clientX) ?? null;
+      if (endX === null) {
+        this._artworkTouchStartX = null;
+        return;
+      }
+      const dx = endX - this._artworkTouchStartX;
+      const threshold = 30;
+      if (Math.abs(dx) > threshold) {
+        const direction = dx < 0 ? 1 : -1;
+        this._selectAdjacentEntity(direction);
+      }
+      this._artworkTouchStartX = null;
+    };
+    container.addEventListener('touchstart', this._onArtworkTouchStart, {
+      passive: true
+    });
+    container.addEventListener('touchend', this._onArtworkTouchEnd);
+    container.addEventListener('touchcancel', this._onArtworkTouchEnd);
+    this._artworkSwipeAttached = true;
+    this._artworkSwipeTarget = container;
   }
   _removeGrabScrollHandlers() {
     // Remove grab scroll handlers from all elements
