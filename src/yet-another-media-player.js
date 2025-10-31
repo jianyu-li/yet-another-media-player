@@ -351,6 +351,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResultsByType = {}; // { mediaType: results[] }
     // Track the current search query for cache invalidation
     this._currentSearchQuery = "";
+    this._latestSearchToken = 0;
+    this._searchTimeoutHandle = null;
+    this._latestSearchToken = 0;
+    this._searchTimeoutHandle = null;
     // Search hierarchy tracking
     this._searchHierarchy = []; // Array of {type: 'artist'|'album', name: string, query: string}
     this._searchBreadcrumb = ""; // Display string for current search context
@@ -828,7 +832,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Use cached results if available for this media type and search params
     const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
+      if (this._searchTimeoutHandle) {
+        clearTimeout(this._searchTimeoutHandle);
+        this._searchTimeoutHandle = null;
+      }
+      this._latestSearchToken = 0;
       this._searchResults = this._searchResultsByType[cacheKey];
+      this._searchLoading = false;
+      this._searchError = "";
       this.requestUpdate();
       return;
     }
@@ -837,6 +848,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchError = "";
     this._searchResults = [];
     this.requestUpdate();
+    const searchToken = Date.now();
+    this._latestSearchToken = searchToken;
+    if (this._searchTimeoutHandle) {
+      clearTimeout(this._searchTimeoutHandle);
+    }
+    this._searchTimeoutHandle = window.setTimeout(() => {
+      if (this._latestSearchToken === searchToken && this._searchLoading) {
+        this._searchLoading = false;
+        this._searchError = "Search timed out. Try again.";
+        this.requestUpdate();
+      }
+    }, this.config?.search_timeout_ms ? Number(this.config.search_timeout_ms) : 12000);
     
     try {
       const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
@@ -922,6 +945,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._searchError = (e && e.message) || "Unknown error";
       this._searchResults = [];
       this._searchTotalRows = 0;
+    }
+    if (this._latestSearchToken === searchToken && this._searchTimeoutHandle) {
+      clearTimeout(this._searchTimeoutHandle);
+      this._searchTimeoutHandle = null;
+    }
+    if (this._latestSearchToken === searchToken) {
+      this._latestSearchToken = 0;
     }
     this._searchLoading = false;
     this.requestUpdate();
@@ -5881,6 +5911,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       clearTimeout(this._manualSelectTimeout);
       this._manualSelectTimeout = null;
     }
+    if (this._searchTimeoutHandle) {
+      clearTimeout(this._searchTimeoutHandle);
+      this._searchTimeoutHandle = null;
+    }
+    this._latestSearchToken = 0;
 
 
     this._removeSourceDropdownOutsideHandler();
