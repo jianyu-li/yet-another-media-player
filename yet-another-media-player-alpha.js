@@ -12660,6 +12660,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchResultsByType = {}; // { mediaType: results[] }
     // Track the current search query for cache invalidation
     this._currentSearchQuery = "";
+    this._latestSearchToken = 0;
+    this._searchTimeoutHandle = null;
+    this._latestSearchToken = 0;
+    this._searchTimeoutHandle = null;
     // Search hierarchy tracking
     this._searchHierarchy = []; // Array of {type: 'artist'|'album', name: string, query: string}
     this._searchBreadcrumb = ""; // Display string for current search context
@@ -13128,6 +13132,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this.requestUpdate();
   }
   async _doSearch() {
+    var _this$config;
     let mediaType = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     let searchParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     this._searchAttempted = true;
@@ -13150,7 +13155,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Use cached results if available for this media type and search params
     const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
+      if (this._searchTimeoutHandle) {
+        clearTimeout(this._searchTimeoutHandle);
+        this._searchTimeoutHandle = null;
+      }
+      this._latestSearchToken = 0;
       this._searchResults = this._searchResultsByType[cacheKey];
+      this._searchLoading = false;
+      this._searchError = "";
       this.requestUpdate();
       return;
     }
@@ -13158,6 +13170,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchError = "";
     this._searchResults = [];
     this.requestUpdate();
+    const searchToken = Date.now();
+    this._latestSearchToken = searchToken;
+    if (this._searchTimeoutHandle) {
+      clearTimeout(this._searchTimeoutHandle);
+    }
+    this._searchTimeoutHandle = window.setTimeout(() => {
+      if (this._latestSearchToken === searchToken && this._searchLoading) {
+        this._searchLoading = false;
+        this._searchError = "Search timed out. Try again.";
+        this.requestUpdate();
+      }
+    }, (_this$config = this.config) !== null && _this$config !== void 0 && _this$config.search_timeout_ms ? Number(this.config.search_timeout_ms) : 12000);
     try {
       const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
       const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
@@ -13165,44 +13189,44 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
       // Check for recently played first (highest priority)
       if (isRecentlyPlayed) {
-        var _this$config;
+        var _this$config2;
         // Load recently played items
         this._initialFavoritesLoaded = false;
-        searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_limit) || 20);
+        searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, ((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
       } else if (isUpcoming) {
-        var _this$config2;
+        var _this$config3;
         // Load upcoming queue items
         this._initialFavoritesLoaded = false;
-        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, ((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit) || 20);
+        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, ((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
       } else if (isRecommendations) {
-        var _this$config3;
+        var _this$config4;
         this._initialFavoritesLoaded = false;
-        searchResponse = await this._getRecommendations(this.hass, searchEntityId, mediaType, ((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit) || 20);
+        searchResponse = await this._getRecommendations(this.hass, searchEntityId, mediaType, ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
       } else if (isFavorites) {
-        var _this$config4;
+        var _this$config5;
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
           ...searchParams,
           favorites: true
-        }, ((_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.search_results_limit) || 20);
+        }, ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
-        var _this$config5;
-        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, ((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.search_results_limit) || 20);
+        var _this$config6;
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.search_results_limit) || 20);
         // Mark that initial favorites have been loaded
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
         }
         this._lastSearchUsedServerFavorites = true;
       } else {
-        var _this$config6;
+        var _this$config7;
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.search_results_limit) || 20);
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.search_results_limit) || 20);
         this._lastSearchUsedServerFavorites = false;
       }
 
@@ -13236,6 +13260,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._searchError = e && e.message || "Unknown error";
       this._searchResults = [];
       this._searchTotalRows = 0;
+    }
+    if (this._latestSearchToken === searchToken && this._searchTimeoutHandle) {
+      clearTimeout(this._searchTimeoutHandle);
+      this._searchTimeoutHandle = null;
+    }
+    if (this._latestSearchToken === searchToken) {
+      this._latestSearchToken = 0;
     }
     this._searchLoading = false;
     this.requestUpdate();
@@ -13739,14 +13770,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
     let mediaType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     let limit = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 20;
     try {
-      var _this$config7;
+      var _this$config8;
       const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
       this._hasMassQueueIntegration = hasMassQueue;
       this._massQueueAvailable = hasMassQueue;
       if (!hasMassQueue) {
         throw new Error('mass_queue integration unavailable');
       }
-      const limitToUse = Math.max(limit || 0, ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.search_results_limit) || 20);
+      const limitToUse = Math.max(limit || 0, ((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.search_results_limit) || 20);
       const message = {
         type: "call_service",
         domain: "mass_queue",
@@ -13882,7 +13913,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
   async _getUpcomingQueueWithMassQueue(hass, entityId) {
     let limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 20;
     try {
-      var _playerState$attribut, _this$config8, _response$response;
+      var _playerState$attribut, _this$config9, _response$response;
       // Get the currently playing track's media_content_id
       const playerState = hass.states[entityId];
       const currentTrackId = playerState === null || playerState === void 0 || (_playerState$attribut = playerState.attributes) === null || _playerState$attribut === void 0 ? void 0 : _playerState$attribut.media_content_id;
@@ -13898,7 +13929,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
           entity: entityId,
           limit_before: 5,
           // Get items before current track to include current track
-          limit_after: Math.max(limit, ((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.search_results_limit) || 20) // Use config search_results_limit
+          limit_after: Math.max(limit, ((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.search_results_limit) || 20) // Use config search_results_limit
         },
         return_response: true
       };
@@ -14457,8 +14488,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
     try {
-      var _this$config9;
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.search_results_limit) || 20);
+      var _this$config0;
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.search_results_limit) || 20);
       const favorites = favoritesResponse.results || [];
 
       // Create a set of favorite URIs for quick lookup
@@ -14579,18 +14610,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config0, _this$config1;
+    var _this$config1, _this$config10;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
     const entityId = state.entity_id;
     attrs.app_id;
-    const prefix = ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.artwork_hostname) || '';
+    const prefix = ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
     let objectFit = null;
 
     // Check for media artwork overrides first
-    const overrides = Array.isArray((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
+    const overrides = Array.isArray((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
     if (overrides && overrides.length) {
       var _override2;
       const getOverrideValue = (override, key) => {
@@ -14635,8 +14666,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config10;
-      const fallbackArtwork = (_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.fallback_artwork;
+      var _this$config11;
+      const fallbackArtwork = (_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -15408,8 +15439,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          var _this$config11;
-          const customHeight = Number((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.card_height);
+          var _this$config12;
+          const customHeight = Number((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.card_height);
           const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
           if (!hasCustomCardHeight) {
             this._collapsedBaselineHeight = measured;
@@ -16211,7 +16242,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass23, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass24, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config14, _this$config15, _this$config16, _this$currentVolumeSt3, _this$config17, _this$config18, _this$config19, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass23, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass24, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config15, _this$config16, _this$config17, _this$currentVolumeSt3, _this$config18, _this$config19, _this$config20, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     const customCardHeight = Number(this.config.card_height);
     const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
@@ -16294,8 +16325,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
     if (prevMa === "playing" && this._lastMaState !== "playing") {
-      var _this$config12;
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.idle_timeout_ms) || 60000), 500);
+      var _this$config13;
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: actualResolvedMaId,
         until: Date.now() + ttl
@@ -16306,10 +16337,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
     const shouldSetLinger = prevMa === "playing" && this._lastMaState === "paused" && ((_this$_lastPlayingEnt9 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt9 === void 0 ? void 0 : _this$_lastPlayingEnt9[idx]) === actualResolvedMaId || prevMain === "playing" && this._lastMainState === "paused" && ((_this$_lastPlayingEnt0 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt0 === void 0 ? void 0 : _this$_lastPlayingEnt0[idx]) === (mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.entity_id);
     if (shouldSetLinger) {
-      var _this$config13;
+      var _this$config14;
       // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
       const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.idle_timeout_ms) || 60000), 500);
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: lingerEntityId,
         // Use cached MA entity or last controlled entity
@@ -16488,9 +16519,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.fallback_artwork) || null,
+      artworkHostname: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass25;
         const obj = this._findEntityObjByAnyId(id);
@@ -16768,9 +16799,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       },
       isIdle: this._isIdle,
       hass: this.hass,
-      artworkHostname: ((_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config18 = this.config) === null || _this$config18 === void 0 ? void 0 : _this$config18.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config19 = this.config) === null || _this$config19 === void 0 ? void 0 : _this$config19.fallback_artwork) || null,
+      artworkHostname: ((_this$config18 = this.config) === null || _this$config18 === void 0 ? void 0 : _this$config18.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config19 = this.config) === null || _this$config19 === void 0 ? void 0 : _this$config19.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config20 = this.config) === null || _this$config20 === void 0 ? void 0 : _this$config20.fallback_artwork) || null,
       onChipClick: idx => this._onChipClick(idx),
       onIconClick: (idx, e) => {
         const entityId = this.entityIds[idx];
@@ -18037,6 +18068,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
       clearTimeout(this._manualSelectTimeout);
       this._manualSelectTimeout = null;
     }
+    if (this._searchTimeoutHandle) {
+      clearTimeout(this._searchTimeoutHandle);
+      this._searchTimeoutHandle = null;
+    }
+    this._latestSearchToken = 0;
     this._removeSourceDropdownOutsideHandler();
     this._removeGrabScrollHandlers();
     this._removeSearchSwipeHandlers();
