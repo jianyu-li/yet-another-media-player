@@ -959,7 +959,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
   async _playMediaFromSearch(item) {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
+    this._searchError = "";
+    const playbackStarted = await this._performSearchPlayback(item, targetEntityId);
+
+    if (!playbackStarted) {
+      this._searchError = "Unable to start playback. Please try again.";
+      this.requestUpdate();
+      return;
+    }
     
+    if (this._showSearchInSheet) {
+      this._closeEntityOptions();
+      this._showSearchInSheet = false;
+    }
+    this._searchCloseSheet();
+  }
+
+  async _performSearchPlayback(item, targetEntityId) {
     // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter with working mass_queue
     if (item.queue_item_id && this._upcomingFilterActive && this._isMusicAssistantEntity() && this._massQueueAvailable) {
       // For queue items in the "Next Up" filter, play the specific queue item
@@ -974,24 +990,119 @@ class YetAnotherMediaPlayerCard extends LitElement {
             queue_item_id: item.queue_item_id
           });
         }
+        return true;
       } catch (error) {
         console.error('yamp: Error playing queue item:', error);
         // Fallback to next track if service call fails
         await this.hass.callService("media_player", "media_next_track", {
           entity_id: targetEntityId
         });
+        return true;
       }
-    } else {
-      // For regular search results or fallback mode, use the normal play method
-      playSearchedMedia(this.hass, targetEntityId, item);
     }
-    
-    // If searching from the bottom sheet, close the entity options overlay.
-    if (this._showSearchInSheet) {
-      this._closeEntityOptions();
-      this._showSearchInSheet = false;
+
+    if (!targetEntityId) {
+      return false;
     }
-    this._searchCloseSheet();
+
+    // For regular search results or fallback mode, use the normal play method with a retry guard.
+    const monitorIds = this._collectPlaybackMonitorIds(targetEntityId);
+    const firstSnapshot = this._snapshotPlaybackState(monitorIds);
+    const firstAttempt = await this._invokePlayMedia(targetEntityId, item);
+    if (!firstAttempt) {
+      return false;
+    }
+    const firstChangeDetected = await this._waitForPlaybackChange(firstSnapshot, monitorIds);
+    if (firstChangeDetected) {
+      return true;
+    }
+
+    // Retry once if we didn't observe playback starting yet.
+    const retrySnapshot = this._snapshotPlaybackState(monitorIds);
+    const retryAttempt = await this._invokePlayMedia(targetEntityId, item);
+    if (!retryAttempt) {
+      return false;
+    }
+    return await this._waitForPlaybackChange(retrySnapshot, monitorIds);
+  }
+
+  _collectPlaybackMonitorIds(targetEntityId) {
+    const ids = new Set();
+    if (targetEntityId) ids.add(targetEntityId);
+    const playbackEntity = this._getPlaybackEntityId(this._selectedIndex);
+    if (playbackEntity) ids.add(playbackEntity);
+    const mainEntity = this.currentEntityId;
+    if (mainEntity) ids.add(mainEntity);
+    const maEntity = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    if (maEntity) ids.add(maEntity);
+    return Array.from(ids).filter(Boolean);
+  }
+
+  _snapshotPlaybackState(entityIds) {
+    const snapshot = {};
+    if (!Array.isArray(entityIds)) {
+      return snapshot;
+    }
+    entityIds.forEach(id => {
+      const stateObj = id ? this.hass?.states?.[id] : null;
+      snapshot[id] = {
+        state: stateObj?.state ?? null,
+        mediaId: stateObj?.attributes?.media_content_id ?? null,
+        mediaTitle: stateObj?.attributes?.media_title ?? null
+      };
+    });
+    return snapshot;
+  }
+
+  async _waitForPlaybackChange(snapshot, entityIds, timeout = 2500) {
+    if (!Array.isArray(entityIds) || entityIds.length === 0) {
+      return true;
+    }
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      await this._delay(150);
+      for (const id of entityIds) {
+        if (!id) continue;
+        const stateObj = this.hass?.states?.[id];
+        if (!stateObj) continue;
+        if (stateObj.state === "playing" || stateObj.state === "buffering") {
+          return true;
+        }
+        const previous = snapshot[id] || {};
+        const currentMediaId = stateObj.attributes?.media_content_id ?? null;
+        const currentTitle = stateObj.attributes?.media_title ?? null;
+        if (currentMediaId && currentMediaId !== previous.mediaId) {
+          return true;
+        }
+        if (currentTitle && currentTitle !== previous.mediaTitle) {
+          return true;
+        }
+        if (!previous.mediaId && currentMediaId) {
+          return true;
+        }
+        if (!previous.mediaTitle && currentTitle) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  async _invokePlayMedia(targetEntityId, item) {
+    try {
+      await playSearchedMedia(this.hass, targetEntityId, item);
+      return true;
+    } catch (error) {
+      console.error("yamp: Error starting playback from search:", error);
+      return false;
+    }
+  }
+
+  _delay(ms) {
+    return new Promise(resolve => {
+      const timerHost = typeof window !== "undefined" ? window : globalThis;
+      timerHost.setTimeout(resolve, ms);
+    });
   }
 
   async _queueMediaFromSearch(item) {
