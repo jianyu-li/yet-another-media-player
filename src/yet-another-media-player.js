@@ -3200,12 +3200,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getGroupingMasterId() {
     if (!this.entityIds || !this.entityIds.length) return null;
-    const preferred = (this._lastGroupingMasterId && this.entityIds.includes(this._lastGroupingMasterId))
-      ? this._lastGroupingMasterId
-      : (this.currentEntityId || this.entityIds[0]);
     const groups = this.groupedSortedEntityIds || [];
+    const currentId = this.currentEntityId || this.entityIds[0];
+
+    let preferred = currentId;
+    if (this._lastGroupingMasterId && this.entityIds.includes(this._lastGroupingMasterId)) {
+      const lastGroup = groups.find(g => g.includes(this._lastGroupingMasterId));
+      if (lastGroup && lastGroup.length > 1) {
+        preferred = this._lastGroupingMasterId;
+      }
+    }
+
     const group = preferred ? groups.find(g => g.includes(preferred)) : null;
-    if (group && group.length) {
+    if (group && group.length > 1) {
       const actual = this._getActualGroupMaster(group);
       if (actual && this.entityIds.includes(actual)) {
         return actual;
@@ -5506,9 +5513,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       }
                     }
                     
-                    const masterFirst = groupPlayerIds.find(item => item.id === masterId);
-                    const others = groupPlayerIds.filter(item => item.id !== masterId);
-                    const sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
+                    const activeId = this.currentEntityId;
+                    let sortedGroupIds;
+                    if (groupedAny) {
+                      const masterFirst = masterId ? groupPlayerIds.find(item => item.id === masterId) : null;
+                      const others = masterFirst
+                        ? groupPlayerIds.filter(item => item.id !== masterId)
+                        : groupPlayerIds;
+                      sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
+                    } else {
+                      const currentFirst = activeId ? groupPlayerIds.find(item => item.id === activeId) : null;
+                      const others = currentFirst
+                        ? groupPlayerIds.filter(item => item.id !== activeId)
+                        : groupPlayerIds;
+                      sortedGroupIds = currentFirst ? [currentFirst, ...others] : groupPlayerIds;
+                    }
                     
                     return html`
                       <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
@@ -5537,13 +5556,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           const obj = this.entityObjs.find(e => e.entity_id === id);
                           if (!obj) return nothing;
                           const name = this.getChipName(id);
-                          const grouped =
-                            actualGroupId === masterGroupId
-                              ? true
-                              : (
-                                Array.isArray(masterState?.attributes?.group_members) &&
-                                masterState.attributes.group_members.includes(actualGroupId)
-                              );
+                          let grouped = false;
+                          if (groupedAny && masterState) {
+                            if (actualGroupId === masterGroupId) {
+                              grouped = true;
+                            } else {
+                              const members = Array.isArray(masterState.attributes?.group_members)
+                                ? masterState.attributes.group_members
+                                : [];
+                              grouped = members.includes(actualGroupId);
+                            }
+                          }
                           // Use unified entity resolution for grouping menu
                           const entityIdx = this.entityIds.indexOf(id);
                           const volumeEntity = this._getEntityForPurpose(entityIdx, 'grouping_control');
@@ -5553,8 +5576,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           
                           const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
                           const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
-                          const isMaster = actualGroupId === masterGroupId;
-                          const stateLabel = isMaster ? "Master" : (grouped ? "Joined" : "Available");
+                          const isPrimaryRow = groupedAny ? actualGroupId === masterGroupId : id === masterId;
+                          const showToggleButton = groupedAny ? !isPrimaryRow : id !== masterId;
+                          const isCurrent = id === activeId;
+                          const stateLabel = groupedAny
+                            ? (isPrimaryRow ? "Master" : (grouped ? "Joined" : "Available"))
+                            : (isCurrent ? "Current" : "Available");
                           return html`
                             <div class="entity-options-item group-player-row" style="
                               display:flex;
@@ -5596,16 +5623,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 }
                                 <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                               </div>
-                              ${isMaster
-                                ? html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
-                                : html`
+                              ${showToggleButton
+                                ? html`
                                     <button class="group-toggle-btn"
                                             @click=${() => this._toggleGroup(id)}
                                             title=${grouped ? "Unjoin" : "Join"}
                                             style="margin-left:4px;">
                                       <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
                                     </button>
-                                  `}
+                                  `
+                                : html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
+                              }
                             </div>
                           `;
                         })}

@@ -15415,10 +15415,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
   }
   _getGroupingMasterId() {
     if (!this.entityIds || !this.entityIds.length) return null;
-    const preferred = this._lastGroupingMasterId && this.entityIds.includes(this._lastGroupingMasterId) ? this._lastGroupingMasterId : this.currentEntityId || this.entityIds[0];
     const groups = this.groupedSortedEntityIds || [];
+    const currentId = this.currentEntityId || this.entityIds[0];
+    let preferred = currentId;
+    if (this._lastGroupingMasterId && this.entityIds.includes(this._lastGroupingMasterId)) {
+      const lastGroup = groups.find(g => g.includes(this._lastGroupingMasterId));
+      if (lastGroup && lastGroup.length > 1) {
+        preferred = this._lastGroupingMasterId;
+      }
+    }
     const group = preferred ? groups.find(g => g.includes(preferred)) : null;
-    if (group && group.length) {
+    if (group && group.length > 1) {
       const actual = this._getActualGroupMaster(group);
       if (actual && this.entityIds.includes(actual)) {
         return actual;
@@ -17663,9 +17670,17 @@ class YetAnotherMediaPlayerCard extends i$1 {
           });
         }
       }
-      const masterFirst = groupPlayerIds.find(item => item.id === masterId);
-      const others = groupPlayerIds.filter(item => item.id !== masterId);
-      const sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
+      const activeId = this.currentEntityId;
+      let sortedGroupIds;
+      if (groupedAny) {
+        const masterFirst = masterId ? groupPlayerIds.find(item => item.id === masterId) : null;
+        const others = masterFirst ? groupPlayerIds.filter(item => item.id !== masterId) : groupPlayerIds;
+        sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
+      } else {
+        const currentFirst = activeId ? groupPlayerIds.find(item => item.id === activeId) : null;
+        const others = currentFirst ? groupPlayerIds.filter(item => item.id !== activeId) : groupPlayerIds;
+        sortedGroupIds = currentFirst ? [currentFirst, ...others] : groupPlayerIds;
+      }
       return x`
                       <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
                       <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
@@ -17688,13 +17703,22 @@ class YetAnotherMediaPlayerCard extends i$1 {
                             No group-capable players.
                           </div>
                         ` : sortedGroupIds.map(item => {
-        var _masterState$attribut2, _displayVolumeState$a;
+        var _displayVolumeState$a;
         const id = item.id;
         const actualGroupId = item.groupId;
         const obj = this.entityObjs.find(e => e.entity_id === id);
         if (!obj) return E;
         const name = this.getChipName(id);
-        const grouped = actualGroupId === masterGroupId ? true : Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut2 = masterState.attributes) === null || _masterState$attribut2 === void 0 ? void 0 : _masterState$attribut2.group_members) && masterState.attributes.group_members.includes(actualGroupId);
+        let grouped = false;
+        if (groupedAny && masterState) {
+          if (actualGroupId === masterGroupId) {
+            grouped = true;
+          } else {
+            var _masterState$attribut2;
+            const members = Array.isArray((_masterState$attribut2 = masterState.attributes) === null || _masterState$attribut2 === void 0 ? void 0 : _masterState$attribut2.group_members) ? masterState.attributes.group_members : [];
+            grouped = members.includes(actualGroupId);
+          }
+        }
         // Use unified entity resolution for grouping menu
         const entityIdx = this.entityIds.indexOf(id);
         const volumeEntity = this._getEntityForPurpose(entityIdx, 'grouping_control');
@@ -17703,8 +17727,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const displayVolumeState = this.hass.states[displayEntity];
         const isRemoteVol = (displayEntity === null || displayEntity === void 0 ? void 0 : displayEntity.startsWith) && displayEntity.startsWith("remote.");
         const volVal = Number((displayVolumeState === null || displayVolumeState === void 0 || (_displayVolumeState$a = displayVolumeState.attributes) === null || _displayVolumeState$a === void 0 ? void 0 : _displayVolumeState$a.volume_level) || 0);
-        const isMaster = actualGroupId === masterGroupId;
-        const stateLabel = isMaster ? "Master" : grouped ? "Joined" : "Available";
+        const isPrimaryRow = groupedAny ? actualGroupId === masterGroupId : id === masterId;
+        const showToggleButton = groupedAny ? !isPrimaryRow : id !== masterId;
+        const isCurrent = id === activeId;
+        const stateLabel = groupedAny ? isPrimaryRow ? "Master" : grouped ? "Joined" : "Available" : isCurrent ? "Current" : "Available";
         return x`
                             <div class="entity-options-item group-player-row" style="
                               display:flex;
@@ -17742,14 +17768,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                       `}
                                 <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
                               </div>
-                              ${isMaster ? x`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>` : x`
+                              ${showToggleButton ? x`
                                     <button class="group-toggle-btn"
                                             @click=${() => this._toggleGroup(id)}
                                             title=${grouped ? "Unjoin" : "Join"}
                                             style="margin-left:4px;">
                                       <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
                                     </button>
-                                  `}
+                                  ` : x`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`}
                             </div>
                           `;
       })}
