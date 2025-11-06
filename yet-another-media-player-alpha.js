@@ -17671,6 +17671,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
         }
       }
       const activeId = this.currentEntityId;
+      const activeObj = activeId ? this.entityObjs.find(e => e.entity_id === activeId) : null;
+      const activeGroupId = activeObj ? this._getGroupingEntityIdByEntityId(activeObj.entity_id) : null;
+      const activeState = activeGroupId ? this.hass.states[activeGroupId] : activeId ? this.hass.states[activeId] : null;
+      const activeIsGroupCapable = activeState ? this._isGroupCapable(activeState) : false;
+      if (!groupedAny && !activeIsGroupCapable) {
+        return x`
+                        <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
+                        <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
+                          No group-capable players.
+                        </div>
+                      `;
+      }
       let sortedGroupIds;
       if (groupedAny) {
         const masterFirst = masterId ? groupPlayerIds.find(item => item.id === masterId) : null;
