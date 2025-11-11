@@ -133,7 +133,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const obj = this.entityObjs[this._selectedIndex];
     if (!obj) return null;
     
-    // Get the active entity (the one currently playing/selected)
+    // Get the active entity (the one currently selected or playing)
     const activeEntityId = this._getActivePlaybackEntityId();
     if (!activeEntityId) return null;
     
