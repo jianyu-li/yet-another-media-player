@@ -5,6 +5,13 @@ import yaml from 'js-yaml';
 
 import {SUPPORT_GROUPING} from "./constants.js";
 import "./yamp-sortable.js";
+
+const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
+  { value: "details", label: "Now Playing Details" },
+  { value: "menu", label: "Menu & Search Sheets" },
+  { value: "action_chips", label: "Action Chips" },
+]);
+const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map((opt) => opt.value);
   
 class YetAnotherMediaPlayerEditor extends LitElement {
     static get properties() {
@@ -151,6 +158,24 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           value: `${domain}.${svc}`,
         }))
       );
+    }
+
+    _getAdaptiveTextTargetsValue() {
+      if (Array.isArray(this._config?.adaptive_text_targets)) {
+        return this._config.adaptive_text_targets.filter((value) =>
+          ADAPTIVE_TEXT_SELECTOR_VALUES.includes(value)
+        );
+      }
+      return this._config?.adaptive_text === true
+        ? [...ADAPTIVE_TEXT_SELECTOR_VALUES]
+        : [];
+    }
+
+    _onAdaptiveTextTargetsChanged(value) {
+      const list = Array.isArray(value)
+        ? value.filter((item) => ADAPTIVE_TEXT_SELECTOR_VALUES.includes(item))
+        : [];
+      this._updateConfig("adaptive_text_targets", list);
     }
 
     _looksLikeTemplate(val) {
@@ -883,7 +908,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
           </div>
 
-        <div class="form-row form-row-multi-column">
+        <div class="form-row">
           <div>
             <ha-switch
               id="adaptive-controls-toggle"
@@ -891,17 +916,24 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               @change=${(e) => this._updateConfig("adaptive_controls", e.target.checked)}
             ></ha-switch>
             <span>Adaptive Control Size</span>
-            <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
           </div>
-          <div>
-            <ha-switch
-              id="adaptive-text-toggle"
-              .checked=${this._config.adaptive_text ?? false}
-              @change=${(e) => this._updateConfig("adaptive_text", e.target.checked)}
-            ></ha-switch>
-            <span>Adaptive Text Size</span>
-            <div class="config-subtitle">Scale card text (titles, menu items, etc.) based on the card width.</div>
-          </div>
+          <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                multiple: true,
+                options: ADAPTIVE_TEXT_SELECTOR_OPTIONS,
+              },
+            }}
+            .value=${this._getAdaptiveTextTargetsValue()}
+            label="Adaptive Text Elements"
+            helper="Choose which text groups should scale with available space (leave empty to disable adaptive text)."
+            @value-changed=${(e) => this._onAdaptiveTextTargetsChanged(e.detail.value)}
+          ></ha-selector>
         </div>
 
         <div class="form-row form-row-multi-column">

@@ -1355,7 +1355,9 @@ const yampCardStyles = i$4`
     --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
     --yamp-artwork-fit: cover;
     --yamp-text-scale: 1;
-    font-size: calc(1rem * var(--yamp-text-scale, 1));
+    --yamp-text-scale-details: 1;
+    --yamp-text-scale-menu: 1;
+    --yamp-text-scale-action-chips: 1;
   }
 
   :host([data-match-theme="false"]) {
@@ -1709,6 +1711,7 @@ const yampCardStyles = i$4`
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
+    font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));
   }
 
   .action-chip-row::-webkit-scrollbar {
@@ -1908,6 +1911,7 @@ const yampCardStyles = i$4`
     gap: 8px;
     margin-top: 8px;
     min-height: 48px;
+    font-size: calc(1em * var(--yamp-text-scale-details, 1));
   }
 
   .details .title,
@@ -2766,19 +2770,20 @@ const yampCardStyles = i$4`
     background: none;
     border-radius: var(--border-radius);
     box-shadow: none;
-  width: 100%;
-  padding: 18px 8px 70px 8px;
-  padding-top: clamp(12px, 6vh, 18px);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
+    width: 100%;
+    padding: 18px 8px 70px 8px;
+    padding-top: clamp(12px, 6vh, 18px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    font-size: calc(1em * var(--yamp-text-scale-menu, 1));
+  }
 
   /* Main menu specific styling - move options down, adapt to card height */
   .entity-options-sheet .entity-options-menu {
@@ -10381,6 +10386,17 @@ customElements.define("yamp-sortable-alpha", YampSortable);
 
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 // import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
+const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([{
+  value: "details",
+  label: "Now Playing Details"
+}, {
+  value: "menu",
+  label: "Menu & Search Sheets"
+}, {
+  value: "action_chips",
+  label: "Action Chips"
+}]);
+const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map(opt => opt.value);
 class YetAnotherMediaPlayerEditor extends i$1 {
   static get properties() {
     return {
@@ -10513,6 +10529,17 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         value: `${domain}.${svc}`
       }));
     });
+  }
+  _getAdaptiveTextTargetsValue() {
+    var _this$_config, _this$_config2;
+    if (Array.isArray((_this$_config = this._config) === null || _this$_config === void 0 ? void 0 : _this$_config.adaptive_text_targets)) {
+      return this._config.adaptive_text_targets.filter(value => ADAPTIVE_TEXT_SELECTOR_VALUES.includes(value));
+    }
+    return ((_this$_config2 = this._config) === null || _this$_config2 === void 0 ? void 0 : _this$_config2.adaptive_text) === true ? [...ADAPTIVE_TEXT_SELECTOR_VALUES] : [];
+  }
+  _onAdaptiveTextTargetsChanged(value) {
+    const list = Array.isArray(value) ? value.filter(item => ADAPTIVE_TEXT_SELECTOR_VALUES.includes(item)) : [];
+    this._updateConfig("adaptive_text_targets", list);
   }
   _looksLikeTemplate(val) {
     if (typeof val !== "string") return false;
@@ -11295,7 +11322,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             </div>
           </div>
 
-        <div class="form-row form-row-multi-column">
+        <div class="form-row">
           <div>
             <ha-switch
               id="adaptive-controls-toggle"
@@ -11303,17 +11330,24 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               @change=${e => this._updateConfig("adaptive_controls", e.target.checked)}
             ></ha-switch>
             <span>Adaptive Control Size</span>
-            <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
           </div>
-          <div>
-            <ha-switch
-              id="adaptive-text-toggle"
-              .checked=${this._config.adaptive_text ?? false}
-              @change=${e => this._updateConfig("adaptive_text", e.target.checked)}
-            ></ha-switch>
-            <span>Adaptive Text Size</span>
-            <div class="config-subtitle">Scale card text (titles, menu items, etc.) based on the card width.</div>
-          </div>
+          <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+      select: {
+        multiple: true,
+        options: ADAPTIVE_TEXT_SELECTOR_OPTIONS
+      }
+    }}
+            .value=${this._getAdaptiveTextTargetsValue()}
+            label="Adaptive Text Elements"
+            helper="Choose which text groups should scale with available space (leave empty to disable adaptive text)."
+            @value-changed=${e => this._onAdaptiveTextTargetsChanged(e.detail.value)}
+          ></ha-selector>
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -12460,6 +12494,13 @@ function getSearchResultClickTitle(item) {
   return item.name || item.media_title || 'Unknown';
 }
 
+const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
+const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
+const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
+  details: "--yamp-text-scale-details",
+  menu: "--yamp-text-scale-menu",
+  action_chips: "--yamp-text-scale-action-chips"
+});
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player-alpha",
@@ -12814,6 +12855,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._adaptiveText = false;
     this._textResizeObserver = null;
     this._currentTextScale = null;
+    this._adaptiveTextTargets = new Set();
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -14825,13 +14867,23 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._updateAdaptiveTextScale();
   }
   _teardownAdaptiveTextObserver() {
-    var _this$style, _this$style$removePro;
     if (this._textResizeObserver) {
       this._textResizeObserver.disconnect();
       this._textResizeObserver = null;
     }
     this._currentTextScale = null;
-    (_this$style = this.style) === null || _this$style === void 0 || (_this$style$removePro = _this$style.removeProperty) === null || _this$style$removePro === void 0 || _this$style$removePro.call(_this$style, "--yamp-text-scale");
+    this._setAdaptiveTextVars(1, new Set());
+  }
+  _setAdaptiveTextVars(scale, overrideTargets) {
+    if (!this.style) return;
+    const targetSet = overrideTargets || this._adaptiveTextTargets;
+    const safeScale = Number.isFinite(scale) ? scale : 1;
+    const scaleString = safeScale.toFixed(2);
+    this.style.setProperty("--yamp-text-scale", scaleString);
+    for (const [target, varName] of Object.entries(ADAPTIVE_TEXT_VAR_MAP)) {
+      const isActive = !!(targetSet !== null && targetSet !== void 0 && targetSet.has(target));
+      this.style.setProperty(varName, isActive ? scaleString : "1");
+    }
   }
   _updateAdaptiveTextObserverState() {
     if (this._adaptiveText && this.isConnected) {
@@ -14852,7 +14904,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const scale = Math.max(0.85, Math.min(1.4, blended));
     if (this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01) {
       this._currentTextScale = scale;
-      this.style.setProperty("--yamp-text-scale", scale.toFixed(2));
+      this._setAdaptiveTextVars(scale);
     }
   }
 
@@ -15031,6 +15083,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
       };
     });
   }
+  _normalizeAdaptiveTextTargets(config) {
+    if (Array.isArray(config === null || config === void 0 ? void 0 : config.adaptive_text_targets)) {
+      return config.adaptive_text_targets.map(item => typeof item === "string" ? item.trim().toLowerCase() : "").filter(item => ADAPTIVE_TEXT_TARGETS.includes(item));
+    }
+    if ((config === null || config === void 0 ? void 0 : config.adaptive_text) === true) {
+      return [...DEFAULT_ADAPTIVE_TEXT_TARGETS];
+    }
+    return [];
+  }
   setConfig(config) {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
@@ -15082,8 +15143,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space
-    this._adaptiveText = config.adaptive_text === true;
+    const adaptiveTextTargets = this._normalizeAdaptiveTextTargets(config);
+    this._adaptiveTextTargets = new Set(adaptiveTextTargets);
+    this._adaptiveText = this._adaptiveTextTargets.size > 0;
     this._updateAdaptiveTextObserverState();
+    if (this._adaptiveText) {
+      this._setAdaptiveTextVars(this._currentTextScale ?? 1);
+      this._updateAdaptiveTextScale();
+    } else {
+      this._setAdaptiveTextVars(1, new Set());
+    }
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     if (this._idleTimeoutMs === 0) {

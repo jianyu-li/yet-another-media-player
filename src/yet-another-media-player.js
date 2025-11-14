@@ -32,6 +32,13 @@ import {
   SUPPORT_REPEAT_SET
 } from "./constants.js";
 
+const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
+const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
+const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
+  details: "--yamp-text-scale-details",
+  menu: "--yamp-text-scale-menu",
+  action_chips: "--yamp-text-scale-action-chips"
+});
 
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -388,6 +395,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._adaptiveText = false;
     this._textResizeObserver = null;
     this._currentTextScale = null;
+    this._adaptiveTextTargets = new Set();
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -2454,7 +2462,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._textResizeObserver = null;
     }
     this._currentTextScale = null;
-    this.style?.removeProperty?.("--yamp-text-scale");
+    this._setAdaptiveTextVars(1, new Set());
+  }
+
+  _setAdaptiveTextVars(scale, overrideTargets) {
+    if (!this.style) return;
+    const targetSet = overrideTargets || this._adaptiveTextTargets;
+    const safeScale = Number.isFinite(scale) ? scale : 1;
+    const scaleString = safeScale.toFixed(2);
+    this.style.setProperty("--yamp-text-scale", scaleString);
+    for (const [target, varName] of Object.entries(ADAPTIVE_TEXT_VAR_MAP)) {
+      const isActive = !!targetSet?.has(target);
+      this.style.setProperty(varName, isActive ? scaleString : "1");
+    }
   }
 
   _updateAdaptiveTextObserverState() {
@@ -2477,7 +2497,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const scale = Math.max(0.85, Math.min(1.4, blended));
     if (this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01) {
       this._currentTextScale = scale;
-      this.style.setProperty("--yamp-text-scale", scale.toFixed(2));
+      this._setAdaptiveTextVars(scale);
     }
   }
 
@@ -2673,6 +2693,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     });
   }
 
+  _normalizeAdaptiveTextTargets(config) {
+    if (Array.isArray(config?.adaptive_text_targets)) {
+      return config.adaptive_text_targets
+        .map((item) => typeof item === "string" ? item.trim().toLowerCase() : "")
+        .filter((item) => ADAPTIVE_TEXT_TARGETS.includes(item));
+    }
+    if (config?.adaptive_text === true) {
+      return [...DEFAULT_ADAPTIVE_TEXT_TARGETS];
+    }
+    return [];
+  }
+
   setConfig(config) {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
@@ -2728,8 +2760,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space
-    this._adaptiveText = config.adaptive_text === true;
+    const adaptiveTextTargets = this._normalizeAdaptiveTextTargets(config);
+    this._adaptiveTextTargets = new Set(adaptiveTextTargets);
+    this._adaptiveText = this._adaptiveTextTargets.size > 0;
     this._updateAdaptiveTextObserverState();
+    if (this._adaptiveText) {
+      this._setAdaptiveTextVars(this._currentTextScale ?? 1);
+      this._updateAdaptiveTextScale();
+    } else {
+      this._setAdaptiveTextVars(1, new Set());
+    }
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     if (this._idleTimeoutMs === 0) {

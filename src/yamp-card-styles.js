@@ -32,7 +32,9 @@ export const yampCardStyles = css`
     --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
     --yamp-artwork-fit: cover;
     --yamp-text-scale: 1;
-    font-size: calc(1rem * var(--yamp-text-scale, 1));
+    --yamp-text-scale-details: 1;
+    --yamp-text-scale-menu: 1;
+    --yamp-text-scale-action-chips: 1;
   }
 
   :host([data-match-theme="false"]) {
@@ -386,6 +388,7 @@ export const yampCardStyles = css`
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
+    font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));
   }
 
   .action-chip-row::-webkit-scrollbar {
@@ -585,6 +588,7 @@ export const yampCardStyles = css`
     gap: 8px;
     margin-top: 8px;
     min-height: 48px;
+    font-size: calc(1em * var(--yamp-text-scale-details, 1));
   }
 
   .details .title,
@@ -1443,19 +1447,20 @@ export const yampCardStyles = css`
     background: none;
     border-radius: var(--border-radius);
     box-shadow: none;
-  width: 100%;
-  padding: 18px 8px 70px 8px;
-  padding-top: clamp(12px, 6vh, 18px);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
+    width: 100%;
+    padding: 18px 8px 70px 8px;
+    padding-top: clamp(12px, 6vh, 18px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    font-size: calc(1em * var(--yamp-text-scale-menu, 1));
+  }
 
   /* Main menu specific styling - move options down, adapt to card height */
   .entity-options-sheet .entity-options-menu {
