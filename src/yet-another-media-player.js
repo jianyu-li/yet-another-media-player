@@ -2679,6 +2679,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._expandOnSearch = !!config.expand_on_search;
     // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
+    // Allow main controls to grow with available space
+    this._adaptiveControls = config.adaptive_controls === true;
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     if (this._idleTimeoutMs === 0) {
@@ -4809,7 +4811,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       supportsFeature: (state, feature) => this._supportsFeature(state, feature),
                       showFavorite: !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite,
                       favoriteActive: this._isCurrentTrackFavorited(),
-                      hiddenControls: this._getHiddenControlsForCurrentEntity()
+                      hiddenControls: this._getHiddenControlsForCurrentEntity(),
+                      adaptiveControls: this._adaptiveControls
                     })}
 
                     ${renderVolumeRow({

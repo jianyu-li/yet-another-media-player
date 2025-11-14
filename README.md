@@ -75,6 +75,7 @@ Below you will find a list of all configuration options.
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
+| `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
@@ -245,6 +246,9 @@ Prefer jumping straight into browsing? Set `idle_screen` to one of the search sh
 ```yaml
 idle_screen: search-recently-played
 ```
+
+### Adaptive Control Size
+Some dashboards give the card a ton of horizontal space which previously resulted in big gaps between the playback controls. Set `adaptive_controls: true` to have each control button stretch and gain padding as space becomes available, producing larger and easier-to-press targets without impacting compact layouts.
 
 ### Artwork Overrides
 Use `media_artwork_overrides` to replace missing or low-resolution art with higher quality images. Rules are evaluated from top to bottom; the first match wins. Supply an `image_url` along with a single match key (`media_title`, `media_artist`, `media_album_name`, `media_content_id`, `media_channel`, `app_name`, `media_content_type`, or `entity_id`). To cover any track that ships without art, use `missing_art_url` instead of a match value. Optionally include `size_percentage` to scale the replacement relative to the card.

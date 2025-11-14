@@ -886,6 +886,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
+              id="adaptive-controls-toggle"
+              .checked=${this._config.adaptive_controls ?? false}
+              @change=${(e) => this._updateConfig("adaptive_controls", e.target.checked)}
+            ></ha-switch>
+            <span>Adaptive Control Size</span>
+          </div>
+          <div class="config-subtitle">Allow the main playback controls to expand and fill extra space for larger, easier-to-tap buttons.</div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
               id="collapse-on-idle-toggle"
               .checked=${this._config.collapse_on_idle ?? false}
               @change=${(e) => this._updateConfig("collapse_on_idle", e.target.checked)}

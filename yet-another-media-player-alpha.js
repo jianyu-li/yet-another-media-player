@@ -1070,7 +1070,8 @@ function renderControlsRow(_ref) {
     supportsFeature,
     showFavorite,
     favoriteActive,
-    hiddenControls = {}
+    hiddenControls = {},
+    adaptiveControls = false
   } = _ref;
   if (!stateObj) return E;
 
@@ -1086,8 +1087,64 @@ function renderControlsRow(_ref) {
   const SUPPORT_TURN_ON = 128;
   const SUPPORT_TURN_OFF = 256;
   const SUPPORT_PLAY = 16384;
+  const controlCount = countMainControls(stateObj, supportsFeature, showFavorite, hiddenControls, showStop);
+  const rowClass = adaptiveControls ? "controls-row adaptive" : "controls-row";
+  let rowStyle = adaptiveControls ? `--yamp-control-count:${Math.max(controlCount, 1)};` : E;
+  if (adaptiveControls) {
+    const sizing = (() => {
+      if (controlCount <= 3) {
+        return {
+          icon: 56,
+          minWidth: 78,
+          maxWidth: 150,
+          minHeight: 78,
+          padding: 14,
+          gap: 14
+        };
+      }
+      if (controlCount === 4) {
+        return {
+          icon: 48,
+          minWidth: 68,
+          maxWidth: 130,
+          minHeight: 68,
+          padding: 12,
+          gap: 12
+        };
+      }
+      if (controlCount === 5) {
+        return {
+          icon: 42,
+          minWidth: 58,
+          maxWidth: 110,
+          minHeight: 58,
+          padding: 10,
+          gap: 10
+        };
+      }
+      if (controlCount === 6) {
+        return {
+          icon: 36,
+          minWidth: 50,
+          maxWidth: 96,
+          minHeight: 52,
+          padding: 8,
+          gap: 8
+        };
+      }
+      return {
+        icon: 32,
+        minWidth: 44,
+        maxWidth: 88,
+        minHeight: 48,
+        padding: 6,
+        gap: 6
+      };
+    })();
+    rowStyle += [`--yamp-control-gap:${sizing.gap}px`, `--yamp-control-min-width:${sizing.minWidth}px`, `--yamp-control-max-width:${sizing.maxWidth}px`, `--yamp-control-min-height:${sizing.minHeight}px`, `--yamp-control-padding:${sizing.padding}px`, `--yamp-control-icon-size:${sizing.icon}px`].join(";");
+  }
   return x`
-    <div class="controls-row">
+    <div class=${rowClass} style=${rowStyle}>
       ${!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
         <button class="button" @click=${() => onControlClick("prev")} title="Previous">
           <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
@@ -1880,6 +1937,42 @@ const yampCardStyles = i$4`
     align-items: center;
     gap: 12px;
     padding: 4px 16px;
+  }
+
+  .controls-row.adaptive {
+    justify-content: center;
+    gap: var(--yamp-control-gap, 10px);
+    flex-wrap: nowrap;
+  }
+
+  .controls-row.adaptive .button {
+    flex: 1 1 calc(
+      (100% - (var(--yamp-control-gap, 10px) * (var(--yamp-control-count, 5) - 1))) /
+      var(--yamp-control-count, 5)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--yamp-control-min-width, 48px);
+    max-width: var(--yamp-control-max-width, 120px);
+    min-height: var(--yamp-control-min-height, 48px);
+    padding: var(--yamp-control-padding, 8px);
+  }
+
+  .controls-row.adaptive .button ha-icon {
+    --mdc-icon-size: var(--yamp-control-icon-size, 36px);
+    width: var(--yamp-control-icon-size, 36px);
+    height: var(--yamp-control-icon-size, 36px);
+    font-size: var(--yamp-control-icon-size, 36px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .controls-row.adaptive .button ha-icon svg,
+  .controls-row.adaptive .button ha-icon iron-icon {
+    width: 100%;
+    height: 100%;
   }
 
   /* Tighter spacing for collapsed mode with artwork */
@@ -11202,6 +11295,18 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
+              id="adaptive-controls-toggle"
+              .checked=${this._config.adaptive_controls ?? false}
+              @change=${e => this._updateConfig("adaptive_controls", e.target.checked)}
+            ></ha-switch>
+            <span>Adaptive Control Size</span>
+          </div>
+          <div class="config-subtitle">Allow the main playback controls to expand and fill extra space for larger, easier-to-tap buttons.</div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
               id="collapse-on-idle-toggle"
               .checked=${this._config.collapse_on_idle ?? false}
               @change=${e => this._updateConfig("collapse_on_idle", e.target.checked)}
@@ -14919,6 +15024,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._expandOnSearch = !!config.expand_on_search;
     // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
+    // Allow main controls to grow with available space
+    this._adaptiveControls = config.adaptive_controls === true;
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     if (this._idleTimeoutMs === 0) {
@@ -16927,7 +17034,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       supportsFeature: (state, feature) => this._supportsFeature(state, feature),
       showFavorite: !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite,
       favoriteActive: this._isCurrentTrackFavorited(),
-      hiddenControls: this._getHiddenControlsForCurrentEntity()
+      hiddenControls: this._getHiddenControlsForCurrentEntity(),
+      adaptiveControls: this._adaptiveControls
     })}
 
                     ${renderVolumeRow({

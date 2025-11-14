@@ -616,6 +616,42 @@ export const yampCardStyles = css`
     padding: 4px 16px;
   }
 
+  .controls-row.adaptive {
+    justify-content: center;
+    gap: var(--yamp-control-gap, 10px);
+    flex-wrap: nowrap;
+  }
+
+  .controls-row.adaptive .button {
+    flex: 1 1 calc(
+      (100% - (var(--yamp-control-gap, 10px) * (var(--yamp-control-count, 5) - 1))) /
+      var(--yamp-control-count, 5)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--yamp-control-min-width, 48px);
+    max-width: var(--yamp-control-max-width, 120px);
+    min-height: var(--yamp-control-min-height, 48px);
+    padding: var(--yamp-control-padding, 8px);
+  }
+
+  .controls-row.adaptive .button ha-icon {
+    --mdc-icon-size: var(--yamp-control-icon-size, 36px);
+    width: var(--yamp-control-icon-size, 36px);
+    height: var(--yamp-control-icon-size, 36px);
+    font-size: var(--yamp-control-icon-size, 36px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .controls-row.adaptive .button ha-icon svg,
+  .controls-row.adaptive .button ha-icon iron-icon {
+    width: 100%;
+    height: 100%;
+  }
+
   /* Tighter spacing for collapsed mode with artwork */
   .card-lower-content.collapsed.has-artwork .controls-row {
     gap: 8px;
