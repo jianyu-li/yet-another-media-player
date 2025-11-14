@@ -240,6 +240,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this._updateAdaptiveTextObserverState();
   }
 
   // Scroll to first source option starting with the given letter
@@ -384,6 +385,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._idleScreen = "default";
     this._idleScreenApplied = false;
     this._hasSeenPlayback = false;
+    this._adaptiveText = false;
+    this._textResizeObserver = null;
+    this._currentTextScale = null;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -2435,6 +2439,48 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.dispatchEvent(new Event("iron-resize", { bubbles: true, composed: true }));
   }
 
+  _setupAdaptiveTextObserver() {
+    if (!this._adaptiveText || this._textResizeObserver || typeof ResizeObserver === "undefined" || !this.isConnected) {
+      return;
+    }
+    this._textResizeObserver = new ResizeObserver(() => this._updateAdaptiveTextScale());
+    this._textResizeObserver.observe(this);
+    this._updateAdaptiveTextScale();
+  }
+
+  _teardownAdaptiveTextObserver() {
+    if (this._textResizeObserver) {
+      this._textResizeObserver.disconnect();
+      this._textResizeObserver = null;
+    }
+    this._currentTextScale = null;
+    this.style?.removeProperty?.("--yamp-text-scale");
+  }
+
+  _updateAdaptiveTextObserverState() {
+    if (this._adaptiveText && this.isConnected) {
+      this._setupAdaptiveTextObserver();
+    } else {
+      this._teardownAdaptiveTextObserver();
+    }
+  }
+
+  _updateAdaptiveTextScale() {
+    if (!this._adaptiveText) return;
+    const rect = this.getBoundingClientRect();
+    const width = rect?.width || 0;
+    if (!width) return;
+    const height = rect?.height || width;
+    const widthFactor = width / 360;
+    const heightFactor = height / 360;
+    const blended = (widthFactor * 0.8) + (heightFactor * 0.2);
+    const scale = Math.max(0.85, Math.min(1.4, blended));
+    if (this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01) {
+      this._currentTextScale = scale;
+      this.style.setProperty("--yamp-text-scale", scale.toFixed(2));
+    }
+  }
+
   // Get style for collapsed artwork based on mobile and control count
   _getCollapsedArtworkStyle() {
     if (this._alwaysCollapsed) {
@@ -2681,6 +2727,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._alternateProgressBar = !!config.alternate_progress_bar;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
+    // Allow typography to scale with available space
+    this._adaptiveText = config.adaptive_text === true;
+    this._updateAdaptiveTextObserverState();
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     if (this._idleTimeoutMs === 0) {
@@ -6188,13 +6237,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     this._latestSearchToken = 0;
 
-
     this._removeSourceDropdownOutsideHandler();
     this._removeGrabScrollHandlers();
     this._removeSearchSwipeHandlers();
     // Clear tracking properties
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
+    this._teardownAdaptiveTextObserver();
   }
   // Helper method to apply closing animations
   _applyClosingAnimations() {

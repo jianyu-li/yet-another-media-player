@@ -1354,6 +1354,8 @@ const yampCardStyles = i$4`
     --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);
     --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
     --yamp-artwork-fit: cover;
+    --yamp-text-scale: 1;
+    font-size: calc(1rem * var(--yamp-text-scale, 1));
   }
 
   :host([data-match-theme="false"]) {
@@ -1416,6 +1418,7 @@ const yampCardStyles = i$4`
     color: var(--primary-text);
     transition: background var(--transition-normal);
     overflow: hidden;
+    font-size: inherit;
   }
 
   .yamp-card-inner {
@@ -11288,9 +11291,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               .checked=${this._config.alternate_progress_bar ?? false}
               @change=${e => this._updateConfig("alternate_progress_bar", e.target.checked)}
             ></ha-switch>
-            <span>Alternate Progress Bar</span>
+              <span>Alternate Progress Bar</span>
+            </div>
           </div>
-        </div>
 
         <div class="form-row form-row-multi-column">
           <div>
@@ -11300,8 +11303,17 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               @change=${e => this._updateConfig("adaptive_controls", e.target.checked)}
             ></ha-switch>
             <span>Adaptive Control Size</span>
+            <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
           </div>
-          <div class="config-subtitle">Allow the main playback controls to expand and fill extra space for larger, easier-to-tap buttons.</div>
+          <div>
+            <ha-switch
+              id="adaptive-text-toggle"
+              .checked=${this._config.adaptive_text ?? false}
+              @change=${e => this._updateConfig("adaptive_text", e.target.checked)}
+            ></ha-switch>
+            <span>Adaptive Text Size</span>
+            <div class="config-subtitle">Scale card text (titles, menu items, etc.) based on the card width.</div>
+          </div>
         </div>
 
         <div class="form-row form-row-multi-column">
@@ -12640,6 +12652,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
   }
   connectedCallback() {
     super.connectedCallback();
+    this._updateAdaptiveTextObserverState();
   }
 
   // Scroll to first source option starting with the given letter
@@ -12798,6 +12811,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._idleScreen = "default";
     this._idleScreenApplied = false;
     this._hasSeenPlayback = false;
+    this._adaptiveText = false;
+    this._textResizeObserver = null;
+    this._currentTextScale = null;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -14800,6 +14816,45 @@ class YetAnotherMediaPlayerCard extends i$1 {
       composed: true
     }));
   }
+  _setupAdaptiveTextObserver() {
+    if (!this._adaptiveText || this._textResizeObserver || typeof ResizeObserver === "undefined" || !this.isConnected) {
+      return;
+    }
+    this._textResizeObserver = new ResizeObserver(() => this._updateAdaptiveTextScale());
+    this._textResizeObserver.observe(this);
+    this._updateAdaptiveTextScale();
+  }
+  _teardownAdaptiveTextObserver() {
+    var _this$style, _this$style$removePro;
+    if (this._textResizeObserver) {
+      this._textResizeObserver.disconnect();
+      this._textResizeObserver = null;
+    }
+    this._currentTextScale = null;
+    (_this$style = this.style) === null || _this$style === void 0 || (_this$style$removePro = _this$style.removeProperty) === null || _this$style$removePro === void 0 || _this$style$removePro.call(_this$style, "--yamp-text-scale");
+  }
+  _updateAdaptiveTextObserverState() {
+    if (this._adaptiveText && this.isConnected) {
+      this._setupAdaptiveTextObserver();
+    } else {
+      this._teardownAdaptiveTextObserver();
+    }
+  }
+  _updateAdaptiveTextScale() {
+    if (!this._adaptiveText) return;
+    const rect = this.getBoundingClientRect();
+    const width = (rect === null || rect === void 0 ? void 0 : rect.width) || 0;
+    if (!width) return;
+    const height = (rect === null || rect === void 0 ? void 0 : rect.height) || width;
+    const widthFactor = width / 360;
+    const heightFactor = height / 360;
+    const blended = widthFactor * 0.8 + heightFactor * 0.2;
+    const scale = Math.max(0.85, Math.min(1.4, blended));
+    if (this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01) {
+      this._currentTextScale = scale;
+      this.style.setProperty("--yamp-text-scale", scale.toFixed(2));
+    }
+  }
 
   // Get style for collapsed artwork based on mobile and control count
   _getCollapsedArtworkStyle() {
@@ -15026,6 +15081,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._alternateProgressBar = !!config.alternate_progress_bar;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
+    // Allow typography to scale with available space
+    this._adaptiveText = config.adaptive_text === true;
+    this._updateAdaptiveTextObserverState();
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     if (this._idleTimeoutMs === 0) {
@@ -18436,6 +18494,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Clear tracking properties
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
+    this._teardownAdaptiveTextObserver();
   }
   // Helper method to apply closing animations
   _applyClosingAnimations() {

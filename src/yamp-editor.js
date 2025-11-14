@@ -879,9 +879,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               .checked=${this._config.alternate_progress_bar ?? false}
               @change=${(e) => this._updateConfig("alternate_progress_bar", e.target.checked)}
             ></ha-switch>
-            <span>Alternate Progress Bar</span>
+              <span>Alternate Progress Bar</span>
+            </div>
           </div>
-        </div>
 
         <div class="form-row form-row-multi-column">
           <div>
@@ -891,8 +891,17 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               @change=${(e) => this._updateConfig("adaptive_controls", e.target.checked)}
             ></ha-switch>
             <span>Adaptive Control Size</span>
+            <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
           </div>
-          <div class="config-subtitle">Allow the main playback controls to expand and fill extra space for larger, easier-to-tap buttons.</div>
+          <div>
+            <ha-switch
+              id="adaptive-text-toggle"
+              .checked=${this._config.adaptive_text ?? false}
+              @change=${(e) => this._updateConfig("adaptive_text", e.target.checked)}
+            ></ha-switch>
+            <span>Adaptive Text Size</span>
+            <div class="config-subtitle">Scale card text (titles, menu items, etc.) based on the card width.</div>
+          </div>
         </div>
 
         <div class="form-row form-row-multi-column">

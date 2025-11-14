@@ -31,6 +31,8 @@ export const yampCardStyles = css`
     --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);
     --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
     --yamp-artwork-fit: cover;
+    --yamp-text-scale: 1;
+    font-size: calc(1rem * var(--yamp-text-scale, 1));
   }
 
   :host([data-match-theme="false"]) {
@@ -93,6 +95,7 @@ export const yampCardStyles = css`
     color: var(--primary-text);
     transition: background var(--transition-normal);
     overflow: hidden;
+    font-size: inherit;
   }
 
   .yamp-card-inner {
