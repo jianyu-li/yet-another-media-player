@@ -921,6 +921,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
 
         <div class="form-row">
+          <div>
+            <ha-switch
+              id="hide-active-entity-label-toggle"
+              .checked=${this._config.hide_active_entity_label ?? false}
+              @change=${(e) => this._updateConfig("hide_active_entity_label", e.target.checked)}
+            ></ha-switch>
+            <span>Hide Active Entity Label</span>
+          </div>
+          <div class="config-subtitle">When chips live in the menu, hide the tiny label at the bottom of the card.</div>
+        </div>
+
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{

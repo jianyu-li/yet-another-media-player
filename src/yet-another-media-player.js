@@ -402,6 +402,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._idleImageTemplateNeedsResolve = false;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
+    this._hideActiveEntityLabel = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -2877,6 +2878,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._setAdaptiveTextVars(1, new Set());
     }
+    this._hideActiveEntityLabel = config.hide_active_entity_label === true;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
     // Handle idle image templates
@@ -5062,7 +5064,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </button>
               </div>
             ` : nothing}
-            ${showChipsInMenu && !this._showEntityOptions ? html`
+            ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? html`
               <div class="in-menu-active-label">${activeChipName}</div>
             ` : nothing}
           </div>

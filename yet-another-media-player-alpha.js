@@ -11335,6 +11335,18 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         </div>
 
         <div class="form-row">
+          <div>
+            <ha-switch
+              id="hide-active-entity-label-toggle"
+              .checked=${this._config.hide_active_entity_label ?? false}
+              @change=${e => this._updateConfig("hide_active_entity_label", e.target.checked)}
+            ></ha-switch>
+            <span>Hide Active Entity Label</span>
+          </div>
+          <div class="config-subtitle">When chips live in the menu, hide the tiny label at the bottom of the card.</div>
+        </div>
+
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -12862,6 +12874,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._idleImageTemplateNeedsResolve = false;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
+    this._hideActiveEntityLabel = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -15254,6 +15267,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     } else {
       this._setAdaptiveTextVars(1, new Set());
     }
+    this._hideActiveEntityLabel = config.hide_active_entity_label === true;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
     // Handle idle image templates
@@ -17313,7 +17327,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                 </button>
               </div>
             ` : E}
-            ${showChipsInMenu && !this._showEntityOptions ? x`
+            ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x`
               <div class="in-menu-active-label">${activeChipName}</div>
             ` : E}
           </div>

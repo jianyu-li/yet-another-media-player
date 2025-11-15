@@ -77,6 +77,7 @@ Below you will find a list of all configuration options.
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
+| `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
