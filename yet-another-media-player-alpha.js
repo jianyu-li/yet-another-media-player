@@ -12907,6 +12907,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._artworkOverrideIndexMap = null;
     this._hideActiveEntityLabel = false;
     this._currentDetailsScale = null;
+    this._lastTitleLength = 0;
     this._suspendAdaptiveScaling = false;
     this._pendingAdaptiveScaleUpdate = false;
     this._adaptiveScrollTimer = null;
@@ -14978,12 +14979,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const rect = this.getBoundingClientRect();
     const width = (rect === null || rect === void 0 ? void 0 : rect.width) || 0;
     if (!width) return;
-    const height = (rect === null || rect === void 0 ? void 0 : rect.height) || width;
+    const baselineHeight = this._getAdaptiveBaselineHeight(this._lastRenderedCollapsed || false);
+    const height = baselineHeight || (rect === null || rect === void 0 ? void 0 : rect.height) || width;
     const widthFactor = width / 360;
     const heightFactor = height / 360;
     const blended = widthFactor * 0.8 + heightFactor * 0.2;
     const scale = Math.max(0.85, Math.min(1.4, blended));
-    const detailScale = this._calculateDetailsScale(width, height, scale);
+    const detailScale = this._calculateDetailsScale(width, height, scale, this._lastTitleLength || 0);
     const textScaleChanged = this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01;
     const detailScaleChanged = this._currentDetailsScale === null || Math.abs(this._currentDetailsScale - detailScale) > 0.02;
     if (textScaleChanged || detailScaleChanged) {
@@ -14996,18 +14998,42 @@ class YetAnotherMediaPlayerCard extends i$1 {
     let fallbackScale = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
     const targetSet = this._adaptiveTextTargets;
     if (!(targetSet !== null && targetSet !== void 0 && targetSet.has("details"))) return 1;
-    const widthFactor = width / 360;
-    const heightFactor = Math.max(1, Math.min(height / 320, 1.65));
-    const dominant = Math.max(widthFactor * 0.65 + heightFactor * 0.35, heightFactor);
-    const scaled = Math.max(fallbackScale, dominant);
-    const maxScale = Math.min(2.6, 1 + (heightFactor - 1) * 0.85);
-    return Math.max(1, Math.min(scaled, maxScale));
+    const widthFactor = Math.min(Math.max(1, width / 360), 3.2);
+    const heightFactor = Math.max(1, Math.min(height / 330, 2.4));
+    const dominant = Math.max(widthFactor * 0.7 + heightFactor * 0.3, heightFactor);
+    const maxScale = Math.min(3.25, 1 + (heightFactor - 1) * 1.35);
+    const requested = Math.max(fallbackScale, dominant * 1.18);
+    const baseScale = Math.max(1, Math.min(requested, maxScale));
+    const titleLength = this._lastTitleLength || 0;
+    const lengthClamp = titleLength > 0 ? Math.max(0.62, Math.min(1, 30 / Math.min(titleLength, 72))) : 1;
+    return 1 + (baseScale - 1) * lengthClamp;
   }
   _calculateDetailsLineHeight(scale) {
     const clampedScale = Math.max(1, Math.min(scale, 2.6));
     const extra = Math.max(0, clampedScale - 1);
     // Allow line-height to rise gently from 1.2 to 1.55
     return Math.min(1.55, 1.2 + extra * 0.35);
+  }
+  _getAdaptiveBaselineHeight() {
+    var _this$config1;
+    let collapsed = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    const raw = (_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.card_height;
+    if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
+      return raw;
+    }
+    if (typeof raw === "string") {
+      const trimmed = raw.trim();
+      if (trimmed) {
+        const parsed = Number(trimmed);
+        if (Number.isFinite(parsed) && parsed > 0) {
+          return parsed;
+        }
+      }
+    }
+    if (collapsed || this._alwaysCollapsed) {
+      return this._collapsedBaselineHeight || 220;
+    }
+    return 350;
   }
   async _resolveIdleImageTemplate() {
     if (!this._idleImageTemplate || this._resolvingIdleImageTemplate || !this.hass) return;
@@ -15026,10 +15052,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
   _ensureArtworkOverrideIndexMap() {
-    var _this$config1;
+    var _this$config10;
     if (this._artworkOverrideIndexMap) return;
     this._artworkOverrideIndexMap = new WeakMap();
-    const overrides = Array.isArray((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.media_artwork_overrides) ? this.config.media_artwork_overrides : [];
+    const overrides = Array.isArray((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.media_artwork_overrides) ? this.config.media_artwork_overrides : [];
     overrides.forEach((item, idx) => {
       if (item && typeof item === "object") {
         this._artworkOverrideIndexMap.set(item, idx);
@@ -15099,18 +15125,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config10, _this$config11;
+    var _this$config11, _this$config12;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
     const entityId = state.entity_id;
     attrs.app_id;
-    const prefix = ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.artwork_hostname) || '';
+    const prefix = ((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
     let objectFit = null;
 
     // Check for media artwork overrides first
-    const overrides = Array.isArray((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
+    const overrides = Array.isArray((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
     if (overrides && overrides.length) {
       var _override, _override2;
       const getOverrideValue = (override, key) => {
@@ -15162,8 +15188,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config12;
-      const fallbackArtwork = (_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.fallback_artwork;
+      var _this$config13;
+      const fallbackArtwork = (_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -16107,8 +16133,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          var _this$config13;
-          const customHeight = Number((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.card_height);
+          var _this$config14;
+          const customHeight = Number((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.card_height);
           const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
           if (!hasCustomCardHeight) {
             this._collapsedBaselineHeight = measured;
@@ -16910,7 +16936,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config16, _this$config17, _this$config18, _this$currentVolumeSt3, _this$config19, _this$config20, _this$config21, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config17, _this$config18, _this$config19, _this$currentVolumeSt3, _this$config20, _this$config21, _this$config22, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -16999,8 +17025,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
     if (prevMa === "playing" && this._lastMaState !== "playing") {
-      var _this$config14;
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.idle_timeout_ms) || 60000), 500);
+      var _this$config15;
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: actualResolvedMaId,
         until: Date.now() + ttl
@@ -17011,10 +17037,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
     const shouldSetLinger = prevMa === "playing" && this._lastMaState === "paused" && ((_this$_lastPlayingEnt9 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt9 === void 0 ? void 0 : _this$_lastPlayingEnt9[idx]) === actualResolvedMaId || prevMain === "playing" && this._lastMainState === "paused" && ((_this$_lastPlayingEnt0 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt0 === void 0 ? void 0 : _this$_lastPlayingEnt0[idx]) === (mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.entity_id);
     if (shouldSetLinger) {
-      var _this$config15;
+      var _this$config16;
       // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
       const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.idle_timeout_ms) || 60000), 500);
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: lingerEntityId,
         // Use cached MA entity or last controlled entity
@@ -17073,6 +17099,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const displaySource = finalPlaybackStateObj || mainState;
     const title = shouldShowDetails ? (displaySource === null || displaySource === void 0 || (_displaySource$attrib = displaySource.attributes) === null || _displaySource$attrib === void 0 ? void 0 : _displaySource$attrib.media_title) || "" : "";
     const artist = shouldShowDetails ? (displaySource === null || displaySource === void 0 || (_displaySource$attrib2 = displaySource.attributes) === null || _displaySource$attrib2 === void 0 ? void 0 : _displaySource$attrib2.media_artist) || (displaySource === null || displaySource === void 0 || (_displaySource$attrib3 = displaySource.attributes) === null || _displaySource$attrib3 === void 0 ? void 0 : _displaySource$attrib3.media_series_title) || (displaySource === null || displaySource === void 0 || (_displaySource$attrib4 = displaySource.attributes) === null || _displaySource$attrib4 === void 0 ? void 0 : _displaySource$attrib4.app_name) || "" : "";
+    this._lastTitleLength = title ? title.length : 0;
+    if (this._adaptiveText) {
+      this._updateAdaptiveTextScale(true);
+    }
     let pos = (displaySource === null || displaySource === void 0 || (_displaySource$attrib5 = displaySource.attributes) === null || _displaySource$attrib5 === void 0 ? void 0 : _displaySource$attrib5.media_position) || 0;
     const duration = (displaySource === null || displaySource === void 0 || (_displaySource$attrib6 = displaySource.attributes) === null || _displaySource$attrib6 === void 0 ? void 0 : _displaySource$attrib6.media_duration) || 0;
     if (isPlaying && displaySource) {
@@ -17193,9 +17223,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config18 = this.config) === null || _this$config18 === void 0 ? void 0 : _this$config18.fallback_artwork) || null,
+      artworkHostname: ((_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config18 = this.config) === null || _this$config18 === void 0 ? void 0 : _this$config18.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config19 = this.config) === null || _this$config19 === void 0 ? void 0 : _this$config19.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass27;
         const obj = this._findEntityObjByAnyId(id);
@@ -17474,9 +17504,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       },
       isIdle: this._isIdle,
       hass: this.hass,
-      artworkHostname: ((_this$config19 = this.config) === null || _this$config19 === void 0 ? void 0 : _this$config19.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config20 = this.config) === null || _this$config20 === void 0 ? void 0 : _this$config20.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config21 = this.config) === null || _this$config21 === void 0 ? void 0 : _this$config21.fallback_artwork) || null,
+      artworkHostname: ((_this$config20 = this.config) === null || _this$config20 === void 0 ? void 0 : _this$config20.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config21 = this.config) === null || _this$config21 === void 0 ? void 0 : _this$config21.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config22 = this.config) === null || _this$config22 === void 0 ? void 0 : _this$config22.fallback_artwork) || null,
       onChipClick: idx => this._onChipClick(idx),
       onIconClick: (idx, e) => {
         const entityId = this.entityIds[idx];

@@ -405,6 +405,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._artworkOverrideIndexMap = null;
     this._hideActiveEntityLabel = false;
     this._currentDetailsScale = null;
+    this._lastTitleLength = 0;
     this._suspendAdaptiveScaling = false;
     this._pendingAdaptiveScaleUpdate = false;
     this._adaptiveScrollTimer = null;
@@ -2529,12 +2530,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const rect = this.getBoundingClientRect();
     const width = rect?.width || 0;
     if (!width) return;
-    const height = rect?.height || width;
+    const baselineHeight = this._getAdaptiveBaselineHeight(this._lastRenderedCollapsed || false);
+    const height = baselineHeight || rect?.height || width;
     const widthFactor = width / 360;
     const heightFactor = height / 360;
     const blended = (widthFactor * 0.8) + (heightFactor * 0.2);
     const scale = Math.max(0.85, Math.min(1.4, blended));
-    const detailScale = this._calculateDetailsScale(width, height, scale);
+    const detailScale = this._calculateDetailsScale(width, height, scale, this._lastTitleLength || 0);
     const textScaleChanged = this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01;
     const detailScaleChanged = this._currentDetailsScale === null || Math.abs(this._currentDetailsScale - detailScale) > 0.02;
     if (textScaleChanged || detailScaleChanged) {
@@ -2547,12 +2549,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _calculateDetailsScale(width, height, fallbackScale = 1) {
     const targetSet = this._adaptiveTextTargets;
     if (!targetSet?.has("details")) return 1;
-    const widthFactor = width / 360;
-    const heightFactor = Math.max(1, Math.min(height / 320, 1.65));
-    const dominant = Math.max(widthFactor * 0.65 + heightFactor * 0.35, heightFactor);
-    const scaled = Math.max(fallbackScale, dominant);
-    const maxScale = Math.min(2.6, 1 + (heightFactor - 1) * 0.85);
-    return Math.max(1, Math.min(scaled, maxScale));
+    const widthFactor = Math.min(Math.max(1, width / 360), 3.2);
+    const heightFactor = Math.max(1, Math.min(height / 330, 2.4));
+    const dominant = Math.max(widthFactor * 0.7 + heightFactor * 0.3, heightFactor);
+    const maxScale = Math.min(3.25, 1 + (heightFactor - 1) * 1.35);
+    const requested = Math.max(fallbackScale, dominant * 1.18);
+    const baseScale = Math.max(1, Math.min(requested, maxScale));
+    const titleLength = this._lastTitleLength || 0;
+    const lengthClamp = titleLength > 0
+      ? Math.max(0.62, Math.min(1, 30 / Math.min(titleLength, 72)))
+      : 1;
+    return 1 + (baseScale - 1) * lengthClamp;
   }
 
   _calculateDetailsLineHeight(scale) {
@@ -2560,6 +2567,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const extra = Math.max(0, clampedScale - 1);
     // Allow line-height to rise gently from 1.2 to 1.55
     return Math.min(1.55, 1.2 + (extra * 0.35));
+  }
+
+  _getAdaptiveBaselineHeight(collapsed = false) {
+    const raw = this.config?.card_height;
+    if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
+      return raw;
+    }
+    if (typeof raw === "string") {
+      const trimmed = raw.trim();
+      if (trimmed) {
+        const parsed = Number(trimmed);
+        if (Number.isFinite(parsed) && parsed > 0) {
+          return parsed;
+        }
+      }
+    }
+    if (collapsed || this._alwaysCollapsed) {
+      return this._collapsedBaselineHeight || 220;
+    }
+    return 350;
   }
 
   async _resolveIdleImageTemplate() {
@@ -4733,6 +4760,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
             ""
           )
         : "";
+      this._lastTitleLength = title ? title.length : 0;
+      if (this._adaptiveText) {
+        this._updateAdaptiveTextScale(true);
+      }
       let pos = displaySource?.attributes?.media_position || 0;
       const duration = displaySource?.attributes?.media_duration || 0;
       if (isPlaying && displaySource) {
