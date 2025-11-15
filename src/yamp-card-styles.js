@@ -85,8 +85,8 @@ export const yampCardStyles = css`
   :host {
     display: block;
     border-radius: var(--border-radius);
-    box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
-    background: var(--card-bg);
+    box-shadow: none;
+    background: transparent;
     color: var(--primary-text);
     transition: background var(--transition-normal);
     overflow: hidden;
@@ -95,8 +95,8 @@ export const yampCardStyles = css`
   ha-card.yamp-card {
     display: block;
     border-radius: var(--border-radius);
-    box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
-    background: var(--card-bg);
+    box-shadow: none;
+    background: transparent;
     color: var(--primary-text);
     transition: background var(--transition-normal);
     overflow: hidden;
@@ -368,6 +368,7 @@ export const yampCardStyles = css`
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     max-width: 100vw;
+    background: var(--ha-chip-row-background, transparent);
   }
 
   .chip-row::-webkit-scrollbar {
@@ -392,6 +393,7 @@ export const yampCardStyles = css`
     white-space: nowrap;
     scrollbar-width: none;
     font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));
+    background: var(--ha-action-row-background, transparent);
   }
 
   .action-chip-row::-webkit-scrollbar {
@@ -400,7 +402,7 @@ export const yampCardStyles = css`
 
   /* Action chips */
   .action-chip {
-    background: var(--card-bg);
+    background: transparent;
     opacity: 1;
     border-radius: var(--button-border-radius);
     color: var(--primary-text);
@@ -1216,7 +1218,7 @@ export const yampCardStyles = css`
     top: 0;
     bottom: 0;
     z-index: ${Z_LAYERS.OVERLAY_BASE};
-    background: rgba(15,18,30,0.70);
+    background: var(--ha-entity-menu-overlay, rgba(0,0,0,0.82));
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -1537,6 +1539,7 @@ export const yampCardStyles = css`
     align-items: center;
     overflow-x: auto;
     padding: 6px 8px 6px 8px;
+    background: var(--ha-menu-chip-row-background, transparent);
   }
 
   .entity-options-chips-strip .chip {
