@@ -1358,6 +1358,9 @@ const yampCardStyles = i$4`
     --yamp-text-scale-details: 1;
     --yamp-text-scale-menu: 1;
     --yamp-text-scale-action-chips: 1;
+    --yamp-details-scale: var(--yamp-text-scale-details, 1);
+    --yamp-details-line-height: 1.2;
+    --yamp-details-max-lines: 3;
   }
 
   :host([data-match-theme="false"]) {
@@ -1905,16 +1908,38 @@ const yampCardStyles = i$4`
 
   /* Details section */
   .details {
-    padding: 0 16px 12px 16px;
+    padding-top: 0;
+    padding-right: calc(16px * var(--yamp-details-scale, 1));
+    padding-bottom: calc(12px * var(--yamp-details-scale, 1));
+    padding-left: calc(16px * var(--yamp-details-scale, 1));
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
-    min-height: 48px;
-    font-size: calc(1em * var(--yamp-text-scale-details, 1));
+    gap: calc(8px * var(--yamp-details-scale, 1));
+    margin-top: calc(8px * var(--yamp-details-scale, 1));
+    min-height: calc(48px * var(--yamp-details-scale, 1));
+    font-size: calc(1em * var(--yamp-details-scale, 1));
   }
 
-  .details .title,
+  .details .title {
+    font-size: calc(1.1em * var(--yamp-details-scale, 1));
+    font-weight: 600;
+    line-height: var(--yamp-details-line-height, 1.2);
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--yamp-details-max-lines, 3);
+    overflow: hidden;
+    padding-top: calc(8px * var(--yamp-details-scale, 1));
+  }
+
+  .details .artist {
+    font-size: calc(1em * var(--yamp-details-scale, 1));
+    line-height: var(--yamp-details-line-height, 1.2);
+  }
+
   .title {
     font-size: 1.1em;
     font-weight: 600;
@@ -12705,6 +12730,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
   }
   connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("scroll", this._handleGlobalScroll, {
+      passive: true
+    });
     this._updateAdaptiveTextObserverState();
   }
 
@@ -12875,6 +12903,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
     this._hideActiveEntityLabel = false;
+    this._currentDetailsScale = null;
+    this._suspendAdaptiveScaling = false;
+    this._pendingAdaptiveScaleUpdate = false;
+    this._adaptiveScrollTimer = null;
+    this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -14893,7 +14926,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._currentTextScale = null;
     this._setAdaptiveTextVars(1, new Set());
   }
-  _setAdaptiveTextVars(scale, overrideTargets) {
+  _setAdaptiveTextVars(scale, overrideTargets, detailsScale) {
     if (!this.style) return;
     const targetSet = overrideTargets || this._adaptiveTextTargets;
     const safeScale = Number.isFinite(scale) ? scale : 1;
@@ -14903,6 +14936,14 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const isActive = !!(targetSet !== null && targetSet !== void 0 && targetSet.has(target));
       this.style.setProperty(varName, isActive ? scaleString : "1");
     }
+    const detailActive = !!(targetSet !== null && targetSet !== void 0 && targetSet.has("details"));
+    const safeDetailsScale = Number.isFinite(detailsScale) ? detailsScale : safeScale;
+    const detailScaleString = detailActive ? safeDetailsScale.toFixed(2) : "1";
+    const detailLineHeight = detailActive ? this._calculateDetailsLineHeight(safeDetailsScale) : 1.2;
+    this.style.setProperty("--yamp-details-scale", detailScaleString);
+    this.style.setProperty("--yamp-details-line-height", detailLineHeight.toFixed(2));
+    const detailMaxLines = detailActive ? safeDetailsScale >= 2 ? 3 : safeDetailsScale >= 1.3 ? 2 : 1 : 3;
+    this.style.setProperty("--yamp-details-max-lines", detailMaxLines.toString());
   }
   _updateAdaptiveTextObserverState() {
     if (this._adaptiveText && this.isConnected) {
@@ -14911,8 +14952,26 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._teardownAdaptiveTextObserver();
     }
   }
-  _updateAdaptiveTextScale() {
+  _handleGlobalScroll() {
     if (!this._adaptiveText) return;
+    this._suspendAdaptiveScaling = true;
+    this._pendingAdaptiveScaleUpdate = true;
+    clearTimeout(this._adaptiveScrollTimer);
+    this._adaptiveScrollTimer = setTimeout(() => {
+      this._suspendAdaptiveScaling = false;
+      if (this._pendingAdaptiveScaleUpdate) {
+        this._pendingAdaptiveScaleUpdate = false;
+        this._updateAdaptiveTextScale(true);
+      }
+    }, 400);
+  }
+  _updateAdaptiveTextScale() {
+    let force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    if (!this._adaptiveText) return;
+    if (this._suspendAdaptiveScaling && !force) {
+      this._pendingAdaptiveScaleUpdate = true;
+      return;
+    }
     const rect = this.getBoundingClientRect();
     const width = (rect === null || rect === void 0 ? void 0 : rect.width) || 0;
     if (!width) return;
@@ -14921,10 +14980,31 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const heightFactor = height / 360;
     const blended = widthFactor * 0.8 + heightFactor * 0.2;
     const scale = Math.max(0.85, Math.min(1.4, blended));
-    if (this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01) {
+    const detailScale = this._calculateDetailsScale(width, height, scale);
+    const textScaleChanged = this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01;
+    const detailScaleChanged = this._currentDetailsScale === null || Math.abs(this._currentDetailsScale - detailScale) > 0.02;
+    if (textScaleChanged || detailScaleChanged) {
       this._currentTextScale = scale;
-      this._setAdaptiveTextVars(scale);
+      this._currentDetailsScale = detailScale;
+      this._setAdaptiveTextVars(scale, undefined, detailScale);
     }
+  }
+  _calculateDetailsScale(width, height) {
+    let fallbackScale = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+    const targetSet = this._adaptiveTextTargets;
+    if (!(targetSet !== null && targetSet !== void 0 && targetSet.has("details"))) return 1;
+    const widthFactor = width / 360;
+    const heightFactor = Math.max(1, Math.min(height / 320, 1.65));
+    const dominant = Math.max(widthFactor * 0.65 + heightFactor * 0.35, heightFactor);
+    const scaled = Math.max(fallbackScale, dominant);
+    const maxScale = Math.min(2.6, 1 + (heightFactor - 1) * 0.85);
+    return Math.max(1, Math.min(scaled, maxScale));
+  }
+  _calculateDetailsLineHeight(scale) {
+    const clampedScale = Math.max(1, Math.min(scale, 2.6));
+    const extra = Math.max(0, clampedScale - 1);
+    // Allow line-height to rise gently from 1.2 to 1.55
+    return Math.min(1.55, 1.2 + extra * 0.35);
   }
   async _resolveIdleImageTemplate() {
     if (!this._idleImageTemplate || this._resolvingIdleImageTemplate || !this.hass) return;
@@ -15260,12 +15340,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const adaptiveTextTargets = this._normalizeAdaptiveTextTargets(config);
     this._adaptiveTextTargets = new Set(adaptiveTextTargets);
     this._adaptiveText = this._adaptiveTextTargets.size > 0;
+    this._currentDetailsScale = null;
     this._updateAdaptiveTextObserverState();
     if (this._adaptiveText) {
-      this._setAdaptiveTextVars(this._currentTextScale ?? 1);
+      const initialScale = this._currentTextScale ?? 1;
+      const initialDetailsScale = this._currentDetailsScale ?? 1;
+      this._setAdaptiveTextVars(initialScale, undefined, initialDetailsScale);
       this._updateAdaptiveTextScale();
     } else {
-      this._setAdaptiveTextVars(1, new Set());
+      this._setAdaptiveTextVars(1, new Set(), 1);
     }
     this._hideActiveEntityLabel = config.hide_active_entity_label === true;
     this._artworkOverrideTemplateCache = {};
@@ -16826,8 +16909,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
   render() {
     var _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config16, _this$config17, _this$config18, _this$currentVolumeSt3, _this$config19, _this$config20, _this$config21, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
-    const customCardHeight = Number(this.config.card_height);
-    const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
+    const customCardHeightInput = this.config.card_height;
+    const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
+    const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
+    const hasCustomCardHeight = isValidCardHeightNumber || typeof customCardHeight === "string" && customCardHeight.trim() !== "";
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -18694,6 +18779,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._removeSourceDropdownOutsideHandler();
     this._removeGrabScrollHandlers();
     this._removeSearchSwipeHandlers();
+    window.removeEventListener("scroll", this._handleGlobalScroll);
+    if (this._adaptiveScrollTimer) {
+      clearTimeout(this._adaptiveScrollTimer);
+      this._adaptiveScrollTimer = null;
+    }
     // Clear tracking properties
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;

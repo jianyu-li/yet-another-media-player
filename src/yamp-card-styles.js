@@ -35,6 +35,9 @@ export const yampCardStyles = css`
     --yamp-text-scale-details: 1;
     --yamp-text-scale-menu: 1;
     --yamp-text-scale-action-chips: 1;
+    --yamp-details-scale: var(--yamp-text-scale-details, 1);
+    --yamp-details-line-height: 1.2;
+    --yamp-details-max-lines: 3;
   }
 
   :host([data-match-theme="false"]) {
@@ -582,16 +585,38 @@ export const yampCardStyles = css`
 
   /* Details section */
   .details {
-    padding: 0 16px 12px 16px;
+    padding-top: 0;
+    padding-right: calc(16px * var(--yamp-details-scale, 1));
+    padding-bottom: calc(12px * var(--yamp-details-scale, 1));
+    padding-left: calc(16px * var(--yamp-details-scale, 1));
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
-    min-height: 48px;
-    font-size: calc(1em * var(--yamp-text-scale-details, 1));
+    gap: calc(8px * var(--yamp-details-scale, 1));
+    margin-top: calc(8px * var(--yamp-details-scale, 1));
+    min-height: calc(48px * var(--yamp-details-scale, 1));
+    font-size: calc(1em * var(--yamp-details-scale, 1));
   }
 
-  .details .title,
+  .details .title {
+    font-size: calc(1.1em * var(--yamp-details-scale, 1));
+    font-weight: 600;
+    line-height: var(--yamp-details-line-height, 1.2);
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--yamp-details-max-lines, 3);
+    overflow: hidden;
+    padding-top: calc(8px * var(--yamp-details-scale, 1));
+  }
+
+  .details .artist {
+    font-size: calc(1em * var(--yamp-details-scale, 1));
+    line-height: var(--yamp-details-line-height, 1.2);
+  }
+
   .title {
     font-size: 1.1em;
     font-weight: 600;

@@ -247,6 +247,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("scroll", this._handleGlobalScroll, { passive: true });
     this._updateAdaptiveTextObserverState();
   }
 
@@ -403,6 +404,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
     this._hideActiveEntityLabel = false;
+    this._currentDetailsScale = null;
+    this._suspendAdaptiveScaling = false;
+    this._pendingAdaptiveScaleUpdate = false;
+    this._adaptiveScrollTimer = null;
+    this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -2472,7 +2478,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._setAdaptiveTextVars(1, new Set());
   }
 
-  _setAdaptiveTextVars(scale, overrideTargets) {
+  _setAdaptiveTextVars(scale, overrideTargets, detailsScale) {
     if (!this.style) return;
     const targetSet = overrideTargets || this._adaptiveTextTargets;
     const safeScale = Number.isFinite(scale) ? scale : 1;
@@ -2482,7 +2488,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const isActive = !!targetSet?.has(target);
       this.style.setProperty(varName, isActive ? scaleString : "1");
     }
-  }
+  const detailActive = !!targetSet?.has("details");
+  const safeDetailsScale = Number.isFinite(detailsScale) ? detailsScale : safeScale;
+  const detailScaleString = detailActive ? safeDetailsScale.toFixed(2) : "1";
+  const detailLineHeight = detailActive ? this._calculateDetailsLineHeight(safeDetailsScale) : 1.2;
+  this.style.setProperty("--yamp-details-scale", detailScaleString);
+  this.style.setProperty("--yamp-details-line-height", detailLineHeight.toFixed(2));
+  const detailMaxLines = detailActive ? (safeDetailsScale >= 2 ? 3 : safeDetailsScale >= 1.3 ? 2 : 1) : 3;
+  this.style.setProperty("--yamp-details-max-lines", detailMaxLines.toString());
+}
 
   _updateAdaptiveTextObserverState() {
     if (this._adaptiveText && this.isConnected) {
@@ -2492,8 +2506,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
-  _updateAdaptiveTextScale() {
+  _handleGlobalScroll() {
     if (!this._adaptiveText) return;
+    this._suspendAdaptiveScaling = true;
+    this._pendingAdaptiveScaleUpdate = true;
+    clearTimeout(this._adaptiveScrollTimer);
+    this._adaptiveScrollTimer = setTimeout(() => {
+      this._suspendAdaptiveScaling = false;
+      if (this._pendingAdaptiveScaleUpdate) {
+        this._pendingAdaptiveScaleUpdate = false;
+        this._updateAdaptiveTextScale(true);
+      }
+    }, 400);
+  }
+
+  _updateAdaptiveTextScale(force = false) {
+    if (!this._adaptiveText) return;
+    if (this._suspendAdaptiveScaling && !force) {
+      this._pendingAdaptiveScaleUpdate = true;
+      return;
+    }
     const rect = this.getBoundingClientRect();
     const width = rect?.width || 0;
     if (!width) return;
@@ -2502,10 +2534,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const heightFactor = height / 360;
     const blended = (widthFactor * 0.8) + (heightFactor * 0.2);
     const scale = Math.max(0.85, Math.min(1.4, blended));
-    if (this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01) {
+    const detailScale = this._calculateDetailsScale(width, height, scale);
+    const textScaleChanged = this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01;
+    const detailScaleChanged = this._currentDetailsScale === null || Math.abs(this._currentDetailsScale - detailScale) > 0.02;
+    if (textScaleChanged || detailScaleChanged) {
       this._currentTextScale = scale;
-      this._setAdaptiveTextVars(scale);
+      this._currentDetailsScale = detailScale;
+      this._setAdaptiveTextVars(scale, undefined, detailScale);
     }
+  }
+
+  _calculateDetailsScale(width, height, fallbackScale = 1) {
+    const targetSet = this._adaptiveTextTargets;
+    if (!targetSet?.has("details")) return 1;
+    const widthFactor = width / 360;
+    const heightFactor = Math.max(1, Math.min(height / 320, 1.65));
+    const dominant = Math.max(widthFactor * 0.65 + heightFactor * 0.35, heightFactor);
+    const scaled = Math.max(fallbackScale, dominant);
+    const maxScale = Math.min(2.6, 1 + (heightFactor - 1) * 0.85);
+    return Math.max(1, Math.min(scaled, maxScale));
+  }
+
+  _calculateDetailsLineHeight(scale) {
+    const clampedScale = Math.max(1, Math.min(scale, 2.6));
+    const extra = Math.max(0, clampedScale - 1);
+    // Allow line-height to rise gently from 1.2 to 1.55
+    return Math.min(1.55, 1.2 + (extra * 0.35));
   }
 
   async _resolveIdleImageTemplate() {
@@ -2871,12 +2925,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const adaptiveTextTargets = this._normalizeAdaptiveTextTargets(config);
     this._adaptiveTextTargets = new Set(adaptiveTextTargets);
     this._adaptiveText = this._adaptiveTextTargets.size > 0;
+    this._currentDetailsScale = null;
     this._updateAdaptiveTextObserverState();
     if (this._adaptiveText) {
-      this._setAdaptiveTextVars(this._currentTextScale ?? 1);
+      const initialScale = this._currentTextScale ?? 1;
+      const initialDetailsScale = this._currentDetailsScale ?? 1;
+      this._setAdaptiveTextVars(initialScale, undefined, initialDetailsScale);
       this._updateAdaptiveTextScale();
     } else {
-      this._setAdaptiveTextVars(1, new Set());
+      this._setAdaptiveTextVars(1, new Set(), 1);
     }
     this._hideActiveEntityLabel = config.hide_active_entity_label === true;
     this._artworkOverrideTemplateCache = {};
@@ -4500,8 +4557,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     render() {
       if (!this.hass || !this.config) return nothing;
       
-      const customCardHeight = Number(this.config.card_height);
-      const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
+      const customCardHeightInput = this.config.card_height;
+      const customCardHeight = typeof customCardHeightInput === "string"
+        ? customCardHeightInput
+        : Number(customCardHeightInput);
+      const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
+      const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
       const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
       if (this.shadowRoot && this.shadowRoot.host) {
@@ -6412,6 +6473,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._removeSourceDropdownOutsideHandler();
     this._removeGrabScrollHandlers();
     this._removeSearchSwipeHandlers();
+    window.removeEventListener("scroll", this._handleGlobalScroll);
+    if (this._adaptiveScrollTimer) {
+      clearTimeout(this._adaptiveScrollTimer);
+      this._adaptiveScrollTimer = null;
+    }
     // Clear tracking properties
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
