@@ -396,6 +396,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._textResizeObserver = null;
     this._currentTextScale = null;
     this._adaptiveTextTargets = new Set();
+    this._idleImageTemplate = null;
+    this._idleImageTemplateResult = "";
+    this._resolvingIdleImageTemplate = false;
+    this._idleImageTemplateNeedsResolve = false;
+    this._artworkOverrideTemplateCache = {};
+    this._artworkOverrideIndexMap = null;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -2501,6 +2507,75 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
+  async _resolveIdleImageTemplate() {
+    if (!this._idleImageTemplate || this._resolvingIdleImageTemplate || !this.hass) return;
+    this._resolvingIdleImageTemplate = true;
+    try {
+      const result = await this.hass.callApi('POST', 'template', { template: this._idleImageTemplate });
+      this._idleImageTemplateResult = (result ?? "").toString().trim();
+    } catch (error) {
+      this._idleImageTemplateResult = "";
+    } finally {
+      this._resolvingIdleImageTemplate = false;
+      this._idleImageTemplateNeedsResolve = false;
+      this.requestUpdate();
+    }
+  }
+
+  _ensureArtworkOverrideIndexMap() {
+    if (this._artworkOverrideIndexMap) return;
+    this._artworkOverrideIndexMap = new WeakMap();
+    const overrides = Array.isArray(this.config?.media_artwork_overrides)
+      ? this.config.media_artwork_overrides
+      : [];
+    overrides.forEach((item, idx) => {
+      if (item && typeof item === "object") {
+        this._artworkOverrideIndexMap.set(item, idx);
+      }
+    });
+  }
+
+  _getArtworkOverrideCacheKey(override, type = "image") {
+    this._ensureArtworkOverrideIndexMap();
+    if (!override) return `generic:${type}`;
+    const idx = this._artworkOverrideIndexMap?.get(override);
+    if (typeof idx === "number") return `${idx}:${type}`;
+    return `generic:${type}`;
+  }
+
+  _getResolvedArtworkOverrideSource(override, sourceValue, type = "image") {
+    if (!sourceValue || typeof sourceValue !== "string") return null;
+    const normalizedInput = this._normalizeImageSourceValue(sourceValue);
+    if (!normalizedInput) return null;
+    const isTemplate = sourceValue.includes("{{") || sourceValue.includes("{%");
+    if (!isTemplate) return normalizedInput;
+
+    if (!this._artworkOverrideTemplateCache) {
+      this._artworkOverrideTemplateCache = {};
+    }
+    const key = this._getArtworkOverrideCacheKey(override, type);
+    if (!this._artworkOverrideTemplateCache[key]) {
+      this._artworkOverrideTemplateCache[key] = { value: null, resolving: false };
+    }
+    const entry = this._artworkOverrideTemplateCache[key];
+    if (entry.value) return entry.value;
+    if (!entry.resolving && this.hass) {
+      entry.resolving = true;
+      this.hass.callApi('POST', 'template', { template: sourceValue })
+        .then((res) => {
+          entry.value = this._normalizeImageSourceValue((res ?? "").toString());
+        })
+        .catch(() => {
+          entry.value = "";
+        })
+        .finally(() => {
+          entry.resolving = false;
+          this.requestUpdate();
+        });
+    }
+    return entry.value;
+  }
+
   // Get style for collapsed artwork based on mobile and control count
   _getCollapsedArtworkStyle() {
     if (this._alwaysCollapsed) {
@@ -2567,22 +2642,34 @@ class YetAnotherMediaPlayerCard extends LitElement {
           })
         );
 
+      const hasExistingArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
       let override = findSpecificMatch();
+      let overrideSource = null;
+      let overrideType = "image";
 
-      if (!override) {
-        const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
-        if (!hasArtwork) {
-          override = overrides.find((item) => item?.missing_art_url);
-          if (override?.missing_art_url) {
-            override = { ...override, image_url: override.missing_art_url };
-          }
+      if (override?.image_url) {
+        overrideSource = override.image_url;
+      } else if (override?.missing_art_url && !hasExistingArtwork) {
+        overrideSource = override.missing_art_url;
+        overrideType = "missing";
+      }
+
+      if (!override && !hasExistingArtwork) {
+        const missingOverride = overrides.find((item) => item?.missing_art_url);
+        if (missingOverride?.missing_art_url) {
+          override = missingOverride;
+          overrideSource = missingOverride.missing_art_url;
+          overrideType = "missing";
         }
       }
 
-      if (override?.image_url) {
-        artworkUrl = override.image_url;
-        sizePercentage = override?.size_percentage;
-        objectFit = override?.object_fit ?? null;
+      if (override && overrideSource) {
+        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType);
+        if (resolvedOverride) {
+          artworkUrl = resolvedOverride;
+          sizePercentage = override?.size_percentage;
+          objectFit = override?.object_fit ?? null;
+        }
       }
     }
     
@@ -2705,6 +2792,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return [];
   }
 
+  _normalizeImageSourceValue(value) {
+    if (!value || typeof value !== "string") return "";
+    let trimmed = value.trim();
+    if (!trimmed) return "";
+    const quoted = (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+      (trimmed.startsWith('"') && trimmed.endsWith('"'));
+    if (quoted && trimmed.length >= 2) {
+      trimmed = trimmed.slice(1, -1).trim();
+    }
+    const urlMatch = trimmed.match(/^url\((.*)\)$/i);
+    if (urlMatch && urlMatch[1] !== undefined) {
+      let inner = urlMatch[1].trim();
+      if ((inner.startsWith("'") && inner.endsWith("'")) || (inner.startsWith('"') && inner.endsWith('"'))) {
+        inner = inner.slice(1, -1).trim();
+      }
+      return inner;
+    }
+    return trimmed;
+  }
+
   setConfig(config) {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
@@ -2769,6 +2876,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._updateAdaptiveTextScale();
     } else {
       this._setAdaptiveTextVars(1, new Set());
+    }
+    this._artworkOverrideTemplateCache = {};
+    this._artworkOverrideIndexMap = null;
+    // Handle idle image templates
+    if (typeof config.idle_image === "string" &&
+        (config.idle_image.includes("{{") || config.idle_image.includes("{%"))) {
+      this._idleImageTemplate = config.idle_image;
+      this._idleImageTemplateResult = "";
+      this._idleImageTemplateNeedsResolve = true;
+    } else {
+      this._idleImageTemplate = null;
+      this._idleImageTemplateResult = "";
+      this._idleImageTemplateNeedsResolve = false;
     }
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
@@ -3385,6 +3505,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   updated(changedProps) {
+    if (this._idleImageTemplate && changedProps.has("hass")) {
+      this._idleImageTemplateNeedsResolve = true;
+    }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
@@ -4407,20 +4530,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
         .filter(l => l && /^[A-Z]$/.test(l))
         .sort();
 
+      if (this._idleImageTemplate && this._idleImageTemplateNeedsResolve && !this._resolvingIdleImageTemplate && this._isIdle) {
+        void this._resolveIdleImageTemplate();
+      }
       // Idle image "picture frame" mode when idle
+      const rawIdleImageInput = this._idleImageTemplate
+        ? this._idleImageTemplateResult
+        : this.config.idle_image;
+      const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
       let idleImageUrl = null;
-      if (this.config.idle_image && this._isIdle) {
+      if (normalizedIdleImageInput && this._isIdle) {
         // Check if it's an entity ID
-        if (this.hass.states[this.config.idle_image]) {
-          const sensorState = this.hass.states[this.config.idle_image];
+        if (this.hass.states[normalizedIdleImageInput]) {
+          const sensorState = this.hass.states[normalizedIdleImageInput];
           idleImageUrl =
             sensorState.attributes.entity_picture_local ||
             sensorState.attributes.entity_picture ||
             (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
         }
         // Check if it's a direct URL or file path
-        else if (this.config.idle_image.startsWith("http") || this.config.idle_image.startsWith("/")) {
-          idleImageUrl = this.config.idle_image;
+        else if (normalizedIdleImageInput.startsWith("http") || normalizedIdleImageInput.startsWith("/")) {
+          idleImageUrl = normalizedIdleImageInput;
         }
       }
       const dimIdleFrame = !!idleImageUrl;

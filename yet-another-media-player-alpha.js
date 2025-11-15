@@ -12856,6 +12856,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._textResizeObserver = null;
     this._currentTextScale = null;
     this._adaptiveTextTargets = new Set();
+    this._idleImageTemplate = null;
+    this._idleImageTemplateResult = "";
+    this._resolvingIdleImageTemplate = false;
+    this._idleImageTemplateNeedsResolve = false;
+    this._artworkOverrideTemplateCache = {};
+    this._artworkOverrideIndexMap = null;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -14907,6 +14913,76 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._setAdaptiveTextVars(scale);
     }
   }
+  async _resolveIdleImageTemplate() {
+    if (!this._idleImageTemplate || this._resolvingIdleImageTemplate || !this.hass) return;
+    this._resolvingIdleImageTemplate = true;
+    try {
+      const result = await this.hass.callApi('POST', 'template', {
+        template: this._idleImageTemplate
+      });
+      this._idleImageTemplateResult = (result ?? "").toString().trim();
+    } catch (error) {
+      this._idleImageTemplateResult = "";
+    } finally {
+      this._resolvingIdleImageTemplate = false;
+      this._idleImageTemplateNeedsResolve = false;
+      this.requestUpdate();
+    }
+  }
+  _ensureArtworkOverrideIndexMap() {
+    var _this$config1;
+    if (this._artworkOverrideIndexMap) return;
+    this._artworkOverrideIndexMap = new WeakMap();
+    const overrides = Array.isArray((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.media_artwork_overrides) ? this.config.media_artwork_overrides : [];
+    overrides.forEach((item, idx) => {
+      if (item && typeof item === "object") {
+        this._artworkOverrideIndexMap.set(item, idx);
+      }
+    });
+  }
+  _getArtworkOverrideCacheKey(override) {
+    var _this$_artworkOverrid;
+    let type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "image";
+    this._ensureArtworkOverrideIndexMap();
+    if (!override) return `generic:${type}`;
+    const idx = (_this$_artworkOverrid = this._artworkOverrideIndexMap) === null || _this$_artworkOverrid === void 0 ? void 0 : _this$_artworkOverrid.get(override);
+    if (typeof idx === "number") return `${idx}:${type}`;
+    return `generic:${type}`;
+  }
+  _getResolvedArtworkOverrideSource(override, sourceValue) {
+    let type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "image";
+    if (!sourceValue || typeof sourceValue !== "string") return null;
+    const normalizedInput = this._normalizeImageSourceValue(sourceValue);
+    if (!normalizedInput) return null;
+    const isTemplate = sourceValue.includes("{{") || sourceValue.includes("{%");
+    if (!isTemplate) return normalizedInput;
+    if (!this._artworkOverrideTemplateCache) {
+      this._artworkOverrideTemplateCache = {};
+    }
+    const key = this._getArtworkOverrideCacheKey(override, type);
+    if (!this._artworkOverrideTemplateCache[key]) {
+      this._artworkOverrideTemplateCache[key] = {
+        value: null,
+        resolving: false
+      };
+    }
+    const entry = this._artworkOverrideTemplateCache[key];
+    if (entry.value) return entry.value;
+    if (!entry.resolving && this.hass) {
+      entry.resolving = true;
+      this.hass.callApi('POST', 'template', {
+        template: sourceValue
+      }).then(res => {
+        entry.value = this._normalizeImageSourceValue((res ?? "").toString());
+      }).catch(() => {
+        entry.value = "";
+      }).finally(() => {
+        entry.resolving = false;
+        this.requestUpdate();
+      });
+    }
+    return entry.value;
+  }
 
   // Get style for collapsed artwork based on mobile and control count
   _getCollapsedArtworkStyle() {
@@ -14927,20 +15003,20 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config1, _this$config10;
+    var _this$config10, _this$config11;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
     const entityId = state.entity_id;
     attrs.app_id;
-    const prefix = ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.artwork_hostname) || '';
+    const prefix = ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
     let objectFit = null;
 
     // Check for media artwork overrides first
-    const overrides = Array.isArray((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
+    const overrides = Array.isArray((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
     if (overrides && overrides.length) {
-      var _override2;
+      var _override, _override2;
       const getOverrideValue = (override, key) => {
         if (!override) return undefined;
         return override[key];
@@ -14953,25 +15029,32 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const value = attrKey === "entity_id" ? entityId : attrKey === "entity_state" ? state === null || state === void 0 ? void 0 : state.state : attrs[attrKey];
         return value === expected;
       }));
+      const hasExistingArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
       let override = findSpecificMatch();
-      if (!override) {
-        const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
-        if (!hasArtwork) {
-          var _override;
-          override = overrides.find(item => item === null || item === void 0 ? void 0 : item.missing_art_url);
-          if ((_override = override) !== null && _override !== void 0 && _override.missing_art_url) {
-            override = {
-              ...override,
-              image_url: override.missing_art_url
-            };
-          }
+      let overrideSource = null;
+      let overrideType = "image";
+      if ((_override = override) !== null && _override !== void 0 && _override.image_url) {
+        overrideSource = override.image_url;
+      } else if ((_override2 = override) !== null && _override2 !== void 0 && _override2.missing_art_url && !hasExistingArtwork) {
+        overrideSource = override.missing_art_url;
+        overrideType = "missing";
+      }
+      if (!override && !hasExistingArtwork) {
+        const missingOverride = overrides.find(item => item === null || item === void 0 ? void 0 : item.missing_art_url);
+        if (missingOverride !== null && missingOverride !== void 0 && missingOverride.missing_art_url) {
+          override = missingOverride;
+          overrideSource = missingOverride.missing_art_url;
+          overrideType = "missing";
         }
       }
-      if ((_override2 = override) !== null && _override2 !== void 0 && _override2.image_url) {
-        var _override3, _override4;
-        artworkUrl = override.image_url;
-        sizePercentage = (_override3 = override) === null || _override3 === void 0 ? void 0 : _override3.size_percentage;
-        objectFit = ((_override4 = override) === null || _override4 === void 0 ? void 0 : _override4.object_fit) ?? null;
+      if (override && overrideSource) {
+        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType);
+        if (resolvedOverride) {
+          var _override3, _override4;
+          artworkUrl = resolvedOverride;
+          sizePercentage = (_override3 = override) === null || _override3 === void 0 ? void 0 : _override3.size_percentage;
+          objectFit = ((_override4 = override) === null || _override4 === void 0 ? void 0 : _override4.object_fit) ?? null;
+        }
       }
     }
 
@@ -14983,8 +15066,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config11;
-      const fallbackArtwork = (_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.fallback_artwork;
+      var _this$config12;
+      const fallbackArtwork = (_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -15092,6 +15175,24 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     return [];
   }
+  _normalizeImageSourceValue(value) {
+    if (!value || typeof value !== "string") return "";
+    let trimmed = value.trim();
+    if (!trimmed) return "";
+    const quoted = trimmed.startsWith("'") && trimmed.endsWith("'") || trimmed.startsWith('"') && trimmed.endsWith('"');
+    if (quoted && trimmed.length >= 2) {
+      trimmed = trimmed.slice(1, -1).trim();
+    }
+    const urlMatch = trimmed.match(/^url\((.*)\)$/i);
+    if (urlMatch && urlMatch[1] !== undefined) {
+      let inner = urlMatch[1].trim();
+      if (inner.startsWith("'") && inner.endsWith("'") || inner.startsWith('"') && inner.endsWith('"')) {
+        inner = inner.slice(1, -1).trim();
+      }
+      return inner;
+    }
+    return trimmed;
+  }
   setConfig(config) {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
@@ -15152,6 +15253,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._updateAdaptiveTextScale();
     } else {
       this._setAdaptiveTextVars(1, new Set());
+    }
+    this._artworkOverrideTemplateCache = {};
+    this._artworkOverrideIndexMap = null;
+    // Handle idle image templates
+    if (typeof config.idle_image === "string" && (config.idle_image.includes("{{") || config.idle_image.includes("{%"))) {
+      this._idleImageTemplate = config.idle_image;
+      this._idleImageTemplateResult = "";
+      this._idleImageTemplateNeedsResolve = true;
+    } else {
+      this._idleImageTemplate = null;
+      this._idleImageTemplateResult = "";
+      this._idleImageTemplateNeedsResolve = false;
     }
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
@@ -15731,6 +15844,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
   }
   updated(changedProps) {
     var _super$updated;
+    if (this._idleImageTemplate && changedProps.has("hass")) {
+      this._idleImageTemplateNeedsResolve = true;
+    }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({
         refresh: false
@@ -15891,8 +16007,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          var _this$config12;
-          const customHeight = Number((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.card_height);
+          var _this$config13;
+          const customHeight = Number((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.card_height);
           const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
           if (!hasCustomCardHeight) {
             this._collapsedBaselineHeight = measured;
@@ -16694,7 +16810,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config15, _this$config16, _this$config17, _this$currentVolumeSt3, _this$config18, _this$config19, _this$config20, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config16, _this$config17, _this$config18, _this$currentVolumeSt3, _this$config19, _this$config20, _this$config21, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     const customCardHeight = Number(this.config.card_height);
     const hasCustomCardHeight = Number.isFinite(customCardHeight) && customCardHeight > 0;
@@ -16736,18 +16852,22 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
     const sourceLetters = Array.from(new Set(sourceList.map(s => s && s[0] ? s[0].toUpperCase() : ""))).filter(l => l && /^[A-Z]$/.test(l)).sort();
-
+    if (this._idleImageTemplate && this._idleImageTemplateNeedsResolve && !this._resolvingIdleImageTemplate && this._isIdle) {
+      void this._resolveIdleImageTemplate();
+    }
     // Idle image "picture frame" mode when idle
+    const rawIdleImageInput = this._idleImageTemplate ? this._idleImageTemplateResult : this.config.idle_image;
+    const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
     let idleImageUrl = null;
-    if (this.config.idle_image && this._isIdle) {
+    if (normalizedIdleImageInput && this._isIdle) {
       // Check if it's an entity ID
-      if (this.hass.states[this.config.idle_image]) {
-        const sensorState = this.hass.states[this.config.idle_image];
+      if (this.hass.states[normalizedIdleImageInput]) {
+        const sensorState = this.hass.states[normalizedIdleImageInput];
         idleImageUrl = sensorState.attributes.entity_picture_local || sensorState.attributes.entity_picture || (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
       }
       // Check if it's a direct URL or file path
-      else if (this.config.idle_image.startsWith("http") || this.config.idle_image.startsWith("/")) {
-        idleImageUrl = this.config.idle_image;
+      else if (normalizedIdleImageInput.startsWith("http") || normalizedIdleImageInput.startsWith("/")) {
+        idleImageUrl = normalizedIdleImageInput;
       }
     }
     const dimIdleFrame = !!idleImageUrl;
@@ -16777,8 +16897,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
     if (prevMa === "playing" && this._lastMaState !== "playing") {
-      var _this$config13;
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.idle_timeout_ms) || 60000), 500);
+      var _this$config14;
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: actualResolvedMaId,
         until: Date.now() + ttl
@@ -16789,10 +16909,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
     const shouldSetLinger = prevMa === "playing" && this._lastMaState === "paused" && ((_this$_lastPlayingEnt9 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt9 === void 0 ? void 0 : _this$_lastPlayingEnt9[idx]) === actualResolvedMaId || prevMain === "playing" && this._lastMainState === "paused" && ((_this$_lastPlayingEnt0 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt0 === void 0 ? void 0 : _this$_lastPlayingEnt0[idx]) === (mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.entity_id);
     if (shouldSetLinger) {
-      var _this$config14;
+      var _this$config15;
       // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
       const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.idle_timeout_ms) || 60000), 500);
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: lingerEntityId,
         // Use cached MA entity or last controlled entity
@@ -16971,9 +17091,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.fallback_artwork) || null,
+      artworkHostname: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config18 = this.config) === null || _this$config18 === void 0 ? void 0 : _this$config18.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass27;
         const obj = this._findEntityObjByAnyId(id);
@@ -17252,9 +17372,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       },
       isIdle: this._isIdle,
       hass: this.hass,
-      artworkHostname: ((_this$config18 = this.config) === null || _this$config18 === void 0 ? void 0 : _this$config18.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config19 = this.config) === null || _this$config19 === void 0 ? void 0 : _this$config19.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config20 = this.config) === null || _this$config20 === void 0 ? void 0 : _this$config20.fallback_artwork) || null,
+      artworkHostname: ((_this$config19 = this.config) === null || _this$config19 === void 0 ? void 0 : _this$config19.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config20 = this.config) === null || _this$config20 === void 0 ? void 0 : _this$config20.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config21 = this.config) === null || _this$config21 === void 0 ? void 0 : _this$config21.fallback_artwork) || null,
       onChipClick: idx => this._onChipClick(idx),
       onIconClick: (idx, e) => {
         const entityId = this.entityIds[idx];
