@@ -36,7 +36,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 
 ## Screenshots
 
-- ![Card overview](preview/largepreview.png)
+- ![Card overview](preview/layouts.png)
 - ![Collapsed card](preview/collapsed.png)
 - ![Minimal layout](preview/minimal-preview.png)
 - ![Chips in menu mode](preview/in-menu-mode.png)
@@ -75,12 +75,15 @@ Below you will find a list of all configuration options.
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
+| `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
+| `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
+| `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
 | `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `fill`, `scale-down`, or `none`                   |
-| `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` scales the replacement |
-| `idle_image`               | image/camera/url | No           | —           | Background image when player is idle (supports local files, cameras, or URLs)                   |
+| `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` scales the replacement. `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
+| `idle_image`               | image/camera/url/template | No           | —           | Background image when player is idle (supports local files, cameras, URLs, or templates that return either)                   |
 | `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
 |                                                                                                 |
 | **Actions**                |              |              |             | (Each chip/action can have any/all of the below)                                                |
@@ -246,6 +249,19 @@ Prefer jumping straight into browsing? Set `idle_screen` to one of the search sh
 idle_screen: search-recently-played
 ```
 
+### Adaptive Control Size
+Some dashboards give the card a ton of horizontal space which previously resulted in big gaps between the playback controls. Set `adaptive_controls: true` to have each control button stretch and gain padding as space becomes available, producing larger and easier-to-press targets without impacting compact layouts.
+
+### Adaptive Text Size
+Enable adaptive text when you’d like titles, menu entries, or chips to scale with the space your dashboard gives the card. Smaller cards tighten the typography to avoid wrapping, while roomy layouts increase the font size for easier readability. You can either set `adaptive_text: true` to scale everything, or specify the exact sections via `adaptive_text_targets`:
+
+```yaml
+adaptive_text_targets:
+  - details        # now playing title/artist
+  - menu           # menu + search sheets
+  - action_chips   # action chips on the card
+```
+
 ### Artwork Overrides
 Use `media_artwork_overrides` to replace missing or low-resolution art with higher quality images. Rules are evaluated from top to bottom; the first match wins. Supply an `image_url` along with a single match key (`media_title`, `media_artist`, `media_album_name`, `media_content_id`, `media_channel`, `app_name`, `media_content_type`, or `entity_id`). To cover any track that ships without art, use `missing_art_url` instead of a match value. Optionally include `size_percentage` to scale the replacement relative to the card.
 
@@ -262,6 +278,8 @@ media_artwork_overrides:
   - image_url: /local/images/KROQ.png
     media_artist: KROQ
   - missing_art_url: /local/images/default_station.png
+  - image_url: "{{ states('sensor.bg_img_url') }}"
+    entity_id: media_player.office_homepod_2
 ```
 
 Adjust `artwork_object_fit` (`cover`, `contain`, `fill`, `scale-down`, or `none`) to control how the replacement scales inside the card’s media frame.

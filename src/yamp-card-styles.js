@@ -1,6 +1,18 @@
 // import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { css } from "lit";
 
+const Z_LAYERS = Object.freeze({
+  MEDIA_BACKGROUND: 0,
+  MEDIA_OVERLAY: 1,
+  FLOATING_ELEMENT: 2,
+  OVERLAY_BASE: 3,
+  STICKY_CHIPS: 4,
+  ACCENT_FOREGROUND: 5,
+  FLOATING_CONTROLS: 6,
+  MODAL_BACKDROP: 8,
+  MODAL_TOAST: 9,
+});
+
 export const yampCardStyles = css`
   /* CSS Custom Properties for consistency */
   :host {
@@ -19,6 +31,13 @@ export const yampCardStyles = css`
     --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);
     --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
     --yamp-artwork-fit: cover;
+    --yamp-text-scale: 1;
+    --yamp-text-scale-details: 1;
+    --yamp-text-scale-menu: 1;
+    --yamp-text-scale-action-chips: 1;
+    --yamp-details-scale: var(--yamp-text-scale-details, 1);
+    --yamp-details-line-height: 1.2;
+    --yamp-details-max-lines: 3;
   }
 
   :host([data-match-theme="false"]) {
@@ -66,8 +85,8 @@ export const yampCardStyles = css`
   :host {
     display: block;
     border-radius: var(--border-radius);
-    box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
-    background: var(--card-bg);
+    box-shadow: none;
+    background: transparent;
     color: var(--primary-text);
     transition: background var(--transition-normal);
     overflow: hidden;
@@ -76,11 +95,20 @@ export const yampCardStyles = css`
   ha-card.yamp-card {
     display: block;
     border-radius: var(--border-radius);
-    box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
-    background: var(--card-bg);
+    box-shadow: none;
+    background: transparent;
     color: var(--primary-text);
     transition: background var(--transition-normal);
     overflow: hidden;
+    font-size: inherit;
+  }
+
+  .yamp-card-inner {
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Idle state dimming */
@@ -159,7 +187,7 @@ export const yampCardStyles = css`
     inset: 0;
     width: 100%;
     height: 100%;
-    z-index: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     background-size: var(--yamp-artwork-bg-size, cover);
     background-position: top center;
     background-repeat: no-repeat;
@@ -172,7 +200,7 @@ export const yampCardStyles = css`
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.5);
-    z-index: 1;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     pointer-events: none;
   }
 
@@ -217,7 +245,7 @@ export const yampCardStyles = css`
     border-radius: var(--button-border-radius);
     box-shadow: var(--shadow-light);
     min-width: 110px;
-    z-index: 11;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     margin-top: 2px;
     border: 1px solid #444;
     overflow: hidden;
@@ -340,6 +368,7 @@ export const yampCardStyles = css`
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     max-width: 100vw;
+    background: var(--ha-chip-row-background, transparent);
   }
 
   .chip-row::-webkit-scrollbar {
@@ -363,6 +392,8 @@ export const yampCardStyles = css`
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
+    font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));
+    background: var(--ha-action-row-background, transparent);
   }
 
   .action-chip-row::-webkit-scrollbar {
@@ -371,7 +402,7 @@ export const yampCardStyles = css`
 
   /* Action chips */
   .action-chip {
-    background: var(--card-bg);
+    background: transparent;
     opacity: 1;
     border-radius: var(--button-border-radius);
     color: var(--primary-text);
@@ -455,7 +486,7 @@ export const yampCardStyles = css`
     background: #fff;
     border-radius: 50%;
     padding: 2px;
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     width: 22px;
     height: 22px;
     display: flex;
@@ -556,15 +587,38 @@ export const yampCardStyles = css`
 
   /* Details section */
   .details {
-    padding: 0 16px 12px 16px;
+    padding-top: 0;
+    padding-right: calc(16px * var(--yamp-details-scale, 1));
+    padding-bottom: calc(12px * var(--yamp-details-scale, 1));
+    padding-left: calc(16px * var(--yamp-details-scale, 1));
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
-    min-height: 48px;
+    gap: calc(8px * var(--yamp-details-scale, 1));
+    margin-top: calc(8px * var(--yamp-details-scale, 1));
+    min-height: calc(48px * var(--yamp-details-scale, 1));
+    font-size: calc(1em * var(--yamp-details-scale, 1));
   }
 
-  .details .title,
+  .details .title {
+    font-size: calc(1.1em * var(--yamp-details-scale, 1));
+    font-weight: 600;
+    line-height: var(--yamp-details-line-height, 1.2);
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--yamp-details-max-lines, 3);
+    overflow: hidden;
+    padding-top: calc(8px * var(--yamp-details-scale, 1));
+  }
+
+  .details .artist {
+    font-size: calc(1em * var(--yamp-details-scale, 1));
+    line-height: var(--yamp-details-line-height, 1.2);
+  }
+
   .title {
     font-size: 1.1em;
     font-weight: 600;
@@ -594,6 +648,42 @@ export const yampCardStyles = css`
     align-items: center;
     gap: 12px;
     padding: 4px 16px;
+  }
+
+  .controls-row.adaptive {
+    justify-content: center;
+    gap: var(--yamp-control-gap, 10px);
+    flex-wrap: nowrap;
+  }
+
+  .controls-row.adaptive .button {
+    flex: 1 1 calc(
+      (100% - (var(--yamp-control-gap, 10px) * (var(--yamp-control-count, 5) - 1))) /
+      var(--yamp-control-count, 5)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--yamp-control-min-width, 48px);
+    max-width: var(--yamp-control-max-width, 120px);
+    min-height: var(--yamp-control-min-height, 48px);
+    padding: var(--yamp-control-padding, 8px);
+  }
+
+  .controls-row.adaptive .button ha-icon {
+    --mdc-icon-size: var(--yamp-control-icon-size, 36px);
+    width: var(--yamp-control-icon-size, 36px);
+    height: var(--yamp-control-icon-size, 36px);
+    font-size: var(--yamp-control-icon-size, 36px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .controls-row.adaptive .button ha-icon svg,
+  .controls-row.adaptive .button ha-icon iron-icon {
+    width: 100%;
+    height: 100%;
   }
 
   /* Tighter spacing for collapsed mode with artwork */
@@ -888,7 +978,7 @@ export const yampCardStyles = css`
       rgba(0,0,0,0.0) 0%,
       rgba(0,0,0,0.40) 55%,
       rgba(0,0,0,0.70) 100%);
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
   }
 
   /* Card lower content */
@@ -907,7 +997,7 @@ export const yampCardStyles = css`
   .card-lower-content-bg {
     position: absolute;
     inset: 0;
-    z-index: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     background-size: var(--yamp-artwork-bg-size, cover);
     background-position: top center;
     background-repeat: no-repeat;
@@ -919,7 +1009,7 @@ export const yampCardStyles = css`
     position: absolute;
     inset: 0;
     pointer-events: none;
-    z-index: 1;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     background: linear-gradient(
       to bottom,
       rgba(0,0,0,0.0) 0%,
@@ -930,7 +1020,7 @@ export const yampCardStyles = css`
 
   .card-lower-content {
     position: relative;
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -944,19 +1034,30 @@ export const yampCardStyles = css`
   .card-lower-content.collapsed .details {
     opacity: 1;
     pointer-events: auto;
-    margin-right: 120px;
+    margin-right: var(--yamp-collapsed-details-offset, 120px);
     transition: margin var(--transition-normal);
   }
 
   @media (max-width: 420px) {
     .card-lower-content.collapsed .details {
-      margin-right: 74px;
+      margin-right: var(--yamp-collapsed-details-offset, 74px);
     }
   }
 
   .card-lower-content.collapsed .card-artwork-spacer {
     opacity: 0;
     pointer-events: none;
+  }
+
+  .card-lower-content.collapsed .card-artwork-spacer.show-placeholder {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .collapsed-flex-spacer {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
   }
 
   /* Force white text for important UI elements */
@@ -967,6 +1068,16 @@ export const yampCardStyles = css`
   .button,
   .vol-stepper span {
     color: #fff;
+  }
+
+  .card-lower-content.collapsed .details .title,
+  .card-lower-content.collapsed .title {
+    font-size: calc(1.1em * var(--yamp-collapsed-title-scale, 1));
+    line-height: calc(1.2 * var(--yamp-collapsed-title-scale, 1));
+  }
+
+  .card-lower-content.collapsed .artist {
+    font-size: calc(1em * var(--yamp-collapsed-artist-scale, 1));
   }
   
 
@@ -999,7 +1110,7 @@ export const yampCardStyles = css`
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     background: transparent;
     pointer-events: none;
     box-shadow: none;
@@ -1021,16 +1132,16 @@ export const yampCardStyles = css`
   }
 
   .card-lower-content.collapsed.has-artwork .controls-row {
-    max-width: calc(100% - 120px) !important;
-    margin-right: 115px !important;
+    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) !important;
+    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) !important;
     width: auto !important;
   }
 
   /* Medium screens */
   @media (max-width: 600px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 115px) !important;
-      margin-right: 110px !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) !important;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) !important;
       width: auto !important;
     }
 
@@ -1049,8 +1160,8 @@ export const yampCardStyles = css`
   /* Small screens */
   @media (max-width: 420px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 90px) !important;
-      margin-right: 85px !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) !important;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) !important;
       width: auto !important;
     }
 
@@ -1069,8 +1180,8 @@ export const yampCardStyles = css`
   /* Very small screens */
   @media (max-width: 320px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - 80px) !important;
-      margin-right: 75px !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) !important;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) !important;
       width: auto !important;
     }
 
@@ -1094,7 +1205,7 @@ export const yampCardStyles = css`
     height: 4px;
     background: var(--custom-accent);
     border-radius: 0 0 12px 12px;
-    z-index: 99;
+    z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
     transition: width var(--transition-normal) linear;
     pointer-events: none;
   }
@@ -1106,8 +1217,8 @@ export const yampCardStyles = css`
     right: 0;
     top: 0;
     bottom: 0;
-    z-index: 30;
-    background: rgba(15,18,30,0.70);
+    z-index: ${Z_LAYERS.OVERLAY_BASE};
+    background: var(--ha-entity-menu-overlay, rgba(0,0,0,0.82));
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -1213,13 +1324,13 @@ export const yampCardStyles = css`
     position: relative;
   }
 
-  /* Expand container height when always collapsed (no persistent controls) */
-  :host([data-always-collapsed="true"]) .entity-options-container {
+  /* Expand container height when hide_menu_player is enabled (no persistent controls) */
+  :host([data-hide-menu-player="true"]) .entity-options-container {
     max-height: 96%;
   }
 
-  /* Expand container height when hide_menu_player is enabled (no persistent controls) */
-  :host([data-hide-menu-player="true"]) .entity-options-container {
+  /* Expand container height when persistent controls are hidden due to layout constraints */
+  :host([data-hide-persistent-controls="true"]) .entity-options-container {
     max-height: 96%;
   }
 
@@ -1238,16 +1349,16 @@ export const yampCardStyles = css`
     bottom: 0;
     left: 0;
     width: 100%;
-    z-index: 1001;
-  }
-
-  /* Hide persistent controls when always collapsed is enabled */
-  :host([data-always-collapsed="true"]) .persistent-media-controls {
-    display: none;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
   /* Hide persistent controls when hide_menu_player is enabled */
   :host([data-hide-menu-player="true"]) .persistent-media-controls {
+    display: none;
+  }
+
+  /* Hide persistent controls when layout constraints require it */
+  :host([data-hide-persistent-controls="true"]) .persistent-media-controls {
     display: none;
   }
 
@@ -1363,19 +1474,20 @@ export const yampCardStyles = css`
     background: none;
     border-radius: var(--border-radius);
     box-shadow: none;
-  width: 100%;
-  padding: 18px 8px 70px 8px;
-  padding-top: clamp(12px, 6vh, 18px);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
+    width: 100%;
+    padding: 18px 8px 70px 8px;
+    padding-top: clamp(12px, 6vh, 18px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    font-size: calc(1em * var(--yamp-text-scale-menu, 1));
+  }
 
   /* Main menu specific styling - move options down, adapt to card height */
   .entity-options-sheet .entity-options-menu {
@@ -1415,8 +1527,8 @@ export const yampCardStyles = css`
   .entity-options-chips-wrapper {
     position: sticky;
     top: 0;
-    z-index: 4;
-    padding: 8px 4px 12px 4px;
+    z-index: ${Z_LAYERS.STICKY_CHIPS};
+    padding: 6px 4px 6px 4px;
     background: transparent;
   }
 
@@ -1426,7 +1538,8 @@ export const yampCardStyles = css`
     justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
-    padding: 6px 8px 10px 8px;
+    padding: 6px 8px 6px 8px;
+    background: var(--ha-menu-chip-row-background, transparent);
   }
 
   .entity-options-chips-strip .chip {
@@ -1449,11 +1562,11 @@ export const yampCardStyles = css`
   }
 
   .entity-options-menu.chips-in-menu {
-    margin-top: 8px;
+    margin-top: 4px;
   }
 
   .entity-options-sheet.chips-mode {
-    padding-top: 18px;
+    padding-top: 12px;
   }
 
 
@@ -1600,7 +1713,7 @@ export const yampCardStyles = css`
     align-items: flex-start;
     pointer-events: auto;
     overscroll-behavior: contain;
-    z-index: 10;
+    z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
     padding: 12px 8px 8px 0;
     overflow-y: auto;
     max-height: 100%;
@@ -1631,7 +1744,7 @@ export const yampCardStyles = css`
     outline: none;
     transition: color var(--transition-fast), background var(--transition-fast), transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
     transform: scale(1);
-    z-index: 1;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     min-height: 32px;
     min-width: 100%;
     display: flex;
@@ -1641,17 +1754,17 @@ export const yampCardStyles = css`
 
   .floating-source-index .source-index-letter[data-scale="max"] {
     transform: scale(1.38);
-    z-index: 3;
+    z-index: ${Z_LAYERS.OVERLAY_BASE};
   }
 
   .floating-source-index .source-index-letter[data-scale="large"] {
     transform: scale(1.19);
-    z-index: 2;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
   }
 
   .floating-source-index .source-index-letter[data-scale="med"] {
     transform: scale(1.10);
-    z-index: 1;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
   }
 
   .floating-source-index .source-index-letter::after {
@@ -2108,7 +2221,7 @@ export const yampCardStyles = css`
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
+    z-index: ${Z_LAYERS.MODAL_BACKDROP};
     display: flex;
     flex-direction: column;
     padding: 20px;
@@ -2173,7 +2286,7 @@ export const yampCardStyles = css`
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 10000;
+    z-index: ${Z_LAYERS.MODAL_TOAST};
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     min-width: 200px;
     text-align: center;

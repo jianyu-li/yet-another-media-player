@@ -11,6 +11,7 @@ export function renderControlsRow({
   showFavorite,
   favoriteActive,
   hiddenControls = {},
+  adaptiveControls = false,
 }) {
   if (!stateObj) return nothing;
 
@@ -30,8 +31,38 @@ export function renderControlsRow({
   const SUPPORT_TURN_OFF = 256;
   const SUPPORT_PLAY = 16384;
 
+  const controlCount = countMainControls(stateObj, supportsFeature, showFavorite, hiddenControls, showStop);
+  const rowClass = adaptiveControls ? "controls-row adaptive" : "controls-row";
+  let rowStyle = adaptiveControls ? `--yamp-control-count:${Math.max(controlCount, 1)};` : nothing;
+
+  if (adaptiveControls) {
+    const sizing = (() => {
+      if (controlCount <= 3) {
+        return { icon: 56, minWidth: 78, maxWidth: 150, minHeight: 78, padding: 14, gap: 14 };
+      }
+      if (controlCount === 4) {
+        return { icon: 48, minWidth: 68, maxWidth: 130, minHeight: 68, padding: 12, gap: 12 };
+      }
+      if (controlCount === 5) {
+        return { icon: 42, minWidth: 58, maxWidth: 110, minHeight: 58, padding: 10, gap: 10 };
+      }
+      if (controlCount === 6) {
+        return { icon: 36, minWidth: 50, maxWidth: 96, minHeight: 52, padding: 8, gap: 8 };
+      }
+      return { icon: 32, minWidth: 44, maxWidth: 88, minHeight: 48, padding: 6, gap: 6 };
+    })();
+    rowStyle += [
+      `--yamp-control-gap:${sizing.gap}px`,
+      `--yamp-control-min-width:${sizing.minWidth}px`,
+      `--yamp-control-max-width:${sizing.maxWidth}px`,
+      `--yamp-control-min-height:${sizing.minHeight}px`,
+      `--yamp-control-padding:${sizing.padding}px`,
+      `--yamp-control-icon-size:${sizing.icon}px`,
+    ].join(";");
+  }
+
   return html`
-    <div class="controls-row">
+    <div class=${rowClass} style=${rowStyle}>
       ${!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
         <button class="button" @click=${() => onControlClick("prev")} title="Previous">
           <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>

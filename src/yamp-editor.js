@@ -5,6 +5,13 @@ import yaml from 'js-yaml';
 
 import {SUPPORT_GROUPING} from "./constants.js";
 import "./yamp-sortable.js";
+
+const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
+  { value: "details", label: "Now Playing Details" },
+  { value: "menu", label: "Menu & Search Sheets" },
+  { value: "action_chips", label: "Action Chips" },
+]);
+const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map((opt) => opt.value);
   
 class YetAnotherMediaPlayerEditor extends LitElement {
     static get properties() {
@@ -151,6 +158,24 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           value: `${domain}.${svc}`,
         }))
       );
+    }
+
+    _getAdaptiveTextTargetsValue() {
+      if (Array.isArray(this._config?.adaptive_text_targets)) {
+        return this._config.adaptive_text_targets.filter((value) =>
+          ADAPTIVE_TEXT_SELECTOR_VALUES.includes(value)
+        );
+      }
+      return this._config?.adaptive_text === true
+        ? [...ADAPTIVE_TEXT_SELECTOR_VALUES]
+        : [];
+    }
+
+    _onAdaptiveTextTargetsChanged(value) {
+      const list = Array.isArray(value)
+        ? value.filter((item) => ADAPTIVE_TEXT_SELECTOR_VALUES.includes(item))
+        : [];
+      this._updateConfig("adaptive_text_targets", list);
     }
 
     _looksLikeTemplate(val) {
@@ -879,8 +904,48 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               .checked=${this._config.alternate_progress_bar ?? false}
               @change=${(e) => this._updateConfig("alternate_progress_bar", e.target.checked)}
             ></ha-switch>
-            <span>Alternate Progress Bar</span>
+              <span>Alternate Progress Bar</span>
+            </div>
           </div>
+
+        <div class="form-row">
+          <div>
+            <ha-switch
+              id="adaptive-controls-toggle"
+              .checked=${this._config.adaptive_controls ?? false}
+              @change=${(e) => this._updateConfig("adaptive_controls", e.target.checked)}
+            ></ha-switch>
+            <span>Adaptive Control Size</span>
+          </div>
+          <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <ha-switch
+              id="hide-active-entity-label-toggle"
+              .checked=${this._config.hide_active_entity_label ?? false}
+              @change=${(e) => this._updateConfig("hide_active_entity_label", e.target.checked)}
+            ></ha-switch>
+            <span>Hide Active Entity Label</span>
+          </div>
+          <div class="config-subtitle">When chips live in the menu, hide the tiny label at the bottom of the card.</div>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                multiple: true,
+                options: ADAPTIVE_TEXT_SELECTOR_OPTIONS,
+              },
+            }}
+            .value=${this._getAdaptiveTextTargetsValue()}
+            label="Adaptive Text Size Elements"
+            helper="Choose which text groups should scale with available space (leave empty to disable adaptive text)."
+            @value-changed=${(e) => this._onAdaptiveTextTargetsChanged(e.detail.value)}
+          ></ha-selector>
         </div>
 
         <div class="form-row form-row-multi-column">
