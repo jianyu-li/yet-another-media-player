@@ -5,7 +5,7 @@
   "main": "rollup.config.js",
   "type": "module",
   "dependencies": {
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "lit": "^3.3.1",
     "sortablejs": "^1.15.0"
   },
