@@ -38,6 +38,14 @@ export const yampCardStyles = css`
     --yamp-details-scale: var(--yamp-text-scale-details, 1);
     --yamp-details-line-height: 1.2;
     --yamp-details-max-lines: 3;
+    --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));
+    --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));
+    --yamp-section-radius: 12px;
+    --yamp-section-divider: rgba(255,255,255,0.06);
+    --yamp-section-title-size: 1em;
+    --yamp-section-title-weight: 600;
+    --yamp-section-description-size: 0.9em;
+    --yamp-section-description-color: var(--secondary-text-color, #888);
   }
 
   :host([data-match-theme="false"]) {
