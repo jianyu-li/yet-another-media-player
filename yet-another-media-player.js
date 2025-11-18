@@ -11376,7 +11376,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             ></ha-switch>
             <span>Hide Active Entity Label</span>
           </div>
-          <div class="config-subtitle">When chips live in the menu, hide the tiny label at the bottom of the card.</div>
+          <div class="config-subtitle">When chips live in the menu, hide the entity label at the bottom of the card.</div>
         </div>
 
         <div class="form-row">
