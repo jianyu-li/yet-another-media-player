@@ -749,7 +749,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="config-section">
           <div class="section-header">
             <div class="section-title">Artwork Overrides</div>
-            <div class="section-description">Overrides are evaluated from top to bottom. Drag to reorder. Changes save automatically.</div>
+            <div class="section-description">Overrides are evaluated from top to bottom. Drag to reorder.</div>
           </div>
           <yamp-sortable @item-moved=${(e) => this._onArtworkMoved(e)}>
             <div class="sortable-container">
@@ -952,7 +952,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="config-section">
           <div class="section-header">
             <div class="section-title">Interactions & Search</div>
-            <div class="section-description">Fine-tune how users pin entities and how many results show at once.</div>
+            <div class="section-description">Fine-tune how entities are pinned and how many results show at once.</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
