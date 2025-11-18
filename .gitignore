@@ -1,5 +1,6 @@
 .DS_Store
 node_modules/
+node_modules_old/
 .vscode
 BETA_WORKFLOW_GUIDE.md
 DEV_CARD_LOGIC_NOTES.local.md
