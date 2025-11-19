@@ -12494,7 +12494,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
 }
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 
-// Utility functions for Yet Another Media Player
+// Utility functions for Yet Another Media Player (YAMP)
 
 /**
  * Resolve a Jinja template string at runtime
