@@ -982,6 +982,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchLoading = false;
     this.requestUpdate();
   }
+
+  // Derive the list of visible search filter chips based on cached results and entity visibility settings
+  _getVisibleSearchFilterClasses() {
+    const classes = new Set();
+    const cacheValues = Object.values(this._searchResultsByType || {});
+    cacheValues.forEach(results => {
+      const items = Array.isArray(results)
+        ? results
+        : Array.isArray(results?.results)
+          ? results.results
+          : [];
+      items.forEach(item => {
+        const mediaClass = item?.media_class;
+        if (mediaClass) {
+          classes.add(mediaClass);
+        }
+      });
+    });
+
+    const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
+    const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
+    return Array.from(classes).filter(c => !hiddenSet.has(c));
+  }
+
   async _playMediaFromSearch(item) {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
@@ -3804,9 +3828,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }, 200);
         }
         // Only scroll filter chip row to start if the set of chips has changed
-        const classes = Array.from(
-          new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean))
-        );
+        const classes = this._getVisibleSearchFilterClasses();
         const classStr = classes.join(",");
         const shouldResetChipScroll =
           (!this._searchLoading || classStr) && this._lastSearchChipClasses !== classStr;
@@ -5493,18 +5515,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                   <!-- FILTER CHIPS -->
                   ${(() => {
-                    // Get all available media classes from cached results
-                    const allClasses = new Set();
-                    Object.values(this._searchResultsByType).forEach(results => {
-                      results.forEach(item => {
-                        if (item && item.media_class) {
-                          allClasses.add(item.media_class);
-                        }
-                      });
-                    });
-                    const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
-                    const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
-                    const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
+                    const classes = this._getVisibleSearchFilterClasses();
                     const filter = this._searchMediaClassFilter || "all";
                     
                     // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)

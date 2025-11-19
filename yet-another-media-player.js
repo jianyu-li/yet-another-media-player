@@ -13495,6 +13495,25 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchLoading = false;
     this.requestUpdate();
   }
+
+  // Derive the list of visible search filter chips based on cached results and entity visibility settings
+  _getVisibleSearchFilterClasses() {
+    var _this$entityObjs4;
+    const classes = new Set();
+    const cacheValues = Object.values(this._searchResultsByType || {});
+    cacheValues.forEach(results => {
+      const items = Array.isArray(results) ? results : Array.isArray(results === null || results === void 0 ? void 0 : results.results) ? results.results : [];
+      items.forEach(item => {
+        const mediaClass = item === null || item === void 0 ? void 0 : item.media_class;
+        if (mediaClass) {
+          classes.add(mediaClass);
+        }
+      });
+    });
+    const currEntityObj = ((_this$entityObjs4 = this.entityObjs) === null || _this$entityObjs4 === void 0 ? void 0 : _this$entityObjs4[this._selectedIndex]) || null;
+    const hiddenSet = new Set((currEntityObj === null || currEntityObj === void 0 ? void 0 : currEntityObj.hidden_filter_chips) || []);
+    return Array.from(classes).filter(c => !hiddenSet.has(c));
+  }
   async _playMediaFromSearch(item) {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
@@ -16169,9 +16188,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
           }, 200);
         }
         // Only scroll filter chip row to start if the set of chips has changed
-        const classes = Array.from(new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean)));
+        const classes = this._getVisibleSearchFilterClasses();
         const classStr = classes.join(",");
-        if (this._lastSearchChipClasses !== classStr) {
+        const shouldResetChipScroll = (!this._searchLoading || classStr) && this._lastSearchChipClasses !== classStr;
+        if (shouldResetChipScroll) {
           const chipRow = this.renderRoot.querySelector('.search-filter-chips');
           if (chipRow) chipRow.scrollLeft = 0;
           // Reset scroll only when the result set (and chip classes) actually changes
@@ -17804,19 +17824,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
                     </button>
                   </div>
                   <!-- FILTER CHIPS -->
-                  ${(_this$entityObjs4 => {
-      // Get all available media classes from cached results
-      const allClasses = new Set();
-      Object.values(this._searchResultsByType).forEach(results => {
-        results.forEach(item => {
-          if (item && item.media_class) {
-            allClasses.add(item.media_class);
-          }
-        });
-      });
-      const currEntityObj = ((_this$entityObjs4 = this.entityObjs) === null || _this$entityObjs4 === void 0 ? void 0 : _this$entityObjs4[this._selectedIndex]) || null;
-      const hiddenSet = new Set((currEntityObj === null || currEntityObj === void 0 ? void 0 : currEntityObj.hidden_filter_chips) || []);
-      const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
+                  ${(() => {
+      const classes = this._getVisibleSearchFilterClasses();
       const filter = this._searchMediaClassFilter || "all";
 
       // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
