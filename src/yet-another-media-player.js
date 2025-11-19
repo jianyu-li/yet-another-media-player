@@ -439,6 +439,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._manualSelectPlayingSet = null;
     this._idleTimeoutMs = 60000;
     this._volumeStep = 0.05;
+    this._searchInputAutoFocused = false;
     // Optimistic playback state after control clicks
     this._optimisticPlayback = null;
     // Debounce entity switching to prevent rapid state changes
@@ -655,6 +656,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Open overlay + search sheet
     this._showEntityOptions = true;
     this._showSearchInSheet = true;
+    this._searchInputAutoFocused = false;
 
     // Prefill search state
     this._searchQuery        = artist;
@@ -683,6 +685,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Show search sheet inside entity options
   _showSearchSheetInOptions(mode = "default") {
     this._showSearchInSheet = true;
+    this._searchInputAutoFocused = false;
     this._searchError = "";
     this._searchResults = [];
     this._searchQuery = "";
@@ -786,6 +789,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchError = "";
     this._searchResults = [];
     this._searchQuery = "";
+    this._searchInputAutoFocused = false;
     this._searchLoading = false;
     this._searchAttempted = false;
     this._searchResultsByType = {}; // Clear cache when closing
@@ -817,6 +821,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchResults = [];
     this._searchQuery = "";
     this._searchLoading = false;
+    this._searchInputAutoFocused = false;
     this._searchResultsByType = {}; // Clear cache when closing
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
@@ -3815,17 +3820,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
       
       setTimeout(() => {
-        const inp = this.renderRoot.querySelector('#search-input-box');
-        if (inp) {
-          inp.focus();
-        } else {
-          // If input not found, try again with a longer delay
-          setTimeout(() => {
-            const retryInp = this.renderRoot.querySelector('#search-input-box');
-            if (retryInp) {
-              retryInp.focus();
-            }
-          }, 200);
+        const focusSearchInput = () => {
+          const inputEl = this.renderRoot.querySelector('#search-input-box');
+          if (inputEl) {
+            inputEl.focus();
+            this._searchInputAutoFocused = true;
+            return true;
+          }
+          return false;
+        };
+
+        if (!this._searchInputAutoFocused) {
+          const focusedNow = focusSearchInput();
+          if (!focusedNow) {
+            // If input not found yet, try again with a longer delay
+            setTimeout(() => {
+              if (this._showSearchInSheet && !this._searchInputAutoFocused) {
+                focusSearchInput();
+              }
+            }, 200);
+          }
         }
         // Only scroll filter chip row to start if the set of chips has changed
         const classes = this._getVisibleSearchFilterClasses();
@@ -6602,6 +6616,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._showSourceList = false;
         this._showSearchInSheet = false;
         this._showResolvedEntities = false;
+        this._searchInputAutoFocused = false;
         this.requestUpdate();
       }
       // Clear quick menu flag on any overlay close
