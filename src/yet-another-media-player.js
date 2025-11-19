@@ -3808,7 +3808,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
           new Set((this._searchResults || []).map(i => i.media_class).filter(Boolean))
         );
         const classStr = classes.join(",");
-        if (this._lastSearchChipClasses !== classStr) {
+        const shouldResetChipScroll =
+          (!this._searchLoading || classStr) && this._lastSearchChipClasses !== classStr;
+        if (shouldResetChipScroll) {
           const chipRow = this.renderRoot.querySelector('.search-filter-chips');
           if (chipRow) chipRow.scrollLeft = 0;
           // Reset scroll only when the result set (and chip classes) actually changes
