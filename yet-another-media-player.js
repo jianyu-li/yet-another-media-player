@@ -11720,20 +11720,20 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                         @input=${a => this._onActionChanged(idx, a.target.value)}
                       ></ha-textfield>
                     </div>
-                      <div class="action-row-actions">
-                        <ha-icon
+                    <div class="action-row-actions">
+                      <ha-icon
+                        class="icon-button icon-button-compact"
+                        icon="mdi:pencil"
+                        title="Edit Action Settings"
+                        @click=${() => this._onEditAction(idx)}
+                      ></ha-icon>
+                      <ha-icon
                         class="icon-button icon-button-compact icon-button-toggle ${act !== null && act !== void 0 && act.in_menu ? "active" : ""}"
                         icon="${act !== null && act !== void 0 && act.in_menu ? "mdi:menu" : "mdi:view-grid-outline"}"
                         title="${act !== null && act !== void 0 && act.in_menu ? "Move action to main chips" : "Move action into menu"}"
                         role="button"
                         aria-label="${act !== null && act !== void 0 && act.in_menu ? "Move action to main chips" : "Move action into menu"}"
                         @click=${() => this._toggleActionInMenu(idx)}
-                      ></ha-icon>
-                      <ha-icon
-                        class="icon-button icon-button-compact"
-                        icon="mdi:pencil"
-                        title="Edit Action Settings"
-                        @click=${() => this._onEditAction(idx)}
                       ></ha-icon>
                       <ha-icon
                         class="icon-button icon-button-compact"
