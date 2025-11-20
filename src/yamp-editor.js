@@ -592,12 +592,22 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           align-items: center;
           padding: 12px;
         }
+        .icon-button-compact {
+          padding: 6px;
+        }
         .icon-button:hover {
           color: var(--primary-color, #2196f3);
         }
         .icon-button-disabled {
           opacity: 0.4;
           pointer-events: none;
+        }
+        .icon-button-toggle {
+          opacity: 0.8;
+        }
+        .icon-button-toggle.active {
+          color: var(--custom-accent, var(--accent-color, #ff9800));
+          opacity: 1;
         }
         .help-text {
           padding: 12px 25px;
@@ -1236,15 +1246,23 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                         @input=${a => this._onActionChanged(idx, a.target.value)}
                       ></ha-textfield>
                     </div>
-                    <div class="action-row-actions">
+                      <div class="action-row-actions">
+                        <ha-icon
+                        class="icon-button icon-button-compact icon-button-toggle ${act?.in_menu ? "active" : ""}"
+                        icon="${act?.in_menu ? "mdi:menu" : "mdi:view-grid-outline"}"
+                        title="${act?.in_menu ? "Move action to main chips" : "Move action into menu"}"
+                        role="button"
+                        aria-label="${act?.in_menu ? "Move action to main chips" : "Move action into menu"}"
+                        @click=${() => this._toggleActionInMenu(idx)}
+                      ></ha-icon>
                       <ha-icon
-                        class="icon-button"
+                        class="icon-button icon-button-compact"
                         icon="mdi:pencil"
                         title="Edit Action Settings"
                         @click=${() => this._onEditAction(idx)}
                       ></ha-icon>
                       <ha-icon
-                        class="icon-button"
+                        class="icon-button icon-button-compact"
                         icon="mdi:trash-can"
                         title="Delete Action"
                         @click=${() => this._removeAction(idx)}
@@ -1616,18 +1634,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-icon-picker>
         </div>
 
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="in-menu-toggle"
-              .checked=${action?.in_menu ?? false}
-              @change=${(e) =>
-                this._updateActionProperty("in_menu", e.target.checked)}
-            ></ha-switch>
-            <label for="in-menu-toggle">In Menu</label>
-          </div>
-        </div>
-
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
@@ -1924,6 +1930,14 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       if (index < 0 || index >= actions.length) return;
     
       actions.splice(index, 1);
+      this._updateConfig("actions", actions);
+    }
+
+    _toggleActionInMenu(index) {
+      const actions = [...(this._config.actions ?? [])];
+      if (!actions[index]) return;
+      const current = !!actions[index].in_menu;
+      actions[index] = { ...actions[index], in_menu: !current };
       this._updateConfig("actions", actions);
     }
 
