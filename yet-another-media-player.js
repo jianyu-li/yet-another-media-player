@@ -1361,6 +1361,14 @@ const yampCardStyles = i$4`
     --yamp-details-scale: var(--yamp-text-scale-details, 1);
     --yamp-details-line-height: 1.2;
     --yamp-details-max-lines: 3;
+    --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));
+    --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));
+    --yamp-section-radius: 12px;
+    --yamp-section-divider: rgba(255,255,255,0.06);
+    --yamp-section-title-size: 1em;
+    --yamp-section-title-weight: 600;
+    --yamp-section-description-size: 0.9em;
+    --yamp-section-description-color: var(--secondary-text-color, #888);
   }
 
   :host([data-match-theme="false"]) {
@@ -10766,18 +10774,67 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           line-height: 1.3;
           font-style: italic;
         }
+        .form-label {
+          display: block;
+          font-weight: 600;
+          font-size: 0.95em;
+          color: var(--primary-text-color, #fff);
+          margin-bottom: 2px;
+        }
+        .form-row-compact {
+          padding-top: 4px;
+          padding-bottom: 4px;
+        }
         /* reduced padding for entity selection subrows */
         .entity-row {
           padding: 6px;
         }
         /* visually isolate grouped controls */
-        .entity-group, .action-group {
-          background: var(--card-background-color, #f7f7f7);
-          border: 1px solid var(--divider-color, #ccc);
-          border-radius: 6px;
-          padding: 12px 16px;
-          margin-bottom: 16px;
-          margin-top: 16px;
+        .config-section,
+        .entity-group,
+        .action-group {
+          background: var(--yamp-section-bg, var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02))));
+          border: 1px solid var(--yamp-section-border, var(--divider-color, rgba(255,255,255,0.1)));
+          border-radius: var(--yamp-section-radius, 12px);
+          margin: 16px 0;
+          overflow: hidden;
+        }
+        .config-section:first-of-type,
+        .entity-group:first-of-type,
+        .action-group:first-of-type {
+          margin-top: 8px;
+        }
+        .config-section .form-row + .form-row,
+        .entity-group .form-row + .form-row,
+        .action-group .form-row + .form-row {
+          border-top: 1px solid var(--yamp-section-divider, rgba(255,255,255,0.06));
+        }
+        .section-header,
+        .entity-group-header,
+        .action-group-header {
+          display: block;
+          padding: 12px 16px 0 16px;
+          width: 100%;
+        }
+        .section-title,
+        .entity-group-title,
+        .action-group-title {
+          font-size: var(--yamp-section-title-size, 1em);
+          font-weight: var(--yamp-section-title-weight, 600);
+        }
+        .section-description {
+          display: block;
+          align-self: stretch;
+          font-size: var(--yamp-section-description-size, 0.9em);
+          color: var(--yamp-section-description-color, var(--secondary-text-color, #888));
+          margin-top: 2px;
+          line-height: 1.4;
+          width: 100%;
+          box-sizing: border-box;
+          padding-right: 24px;
+          white-space: normal;
+          word-break: break-word;
+          overflow-wrap: anywhere;
         }
         /* wraps the entity selector and edit button */
         .entity-row-inner {
@@ -10827,17 +10884,12 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         .full-width {
           width: 100%;
         }
-        .entity-group-header, .action-group-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-          padding: 0px 6px;
+        .entity-group-header,
+        .action-group-header {
+          width: 100%;
         }
-        .entity-group-title, action-group-title {
-          font-weight: 500;
-        }
-        .entity-group-actions, action-group-actions {
+        .entity-group-actions,
+        .action-group-actions {
           display: flex;
           align-items: center;
         }
@@ -11044,12 +11096,17 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       label: "Missing Artwork"
     }];
     return x`
-        <div class="form-row form-row-multi-column">
-          <div class="grow-children">
-            <ha-selector
-              .hass=${this.hass}
-              label="Artwork Fit"
-              .selector=${{
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">Artwork Fit</div>
+            <div class="section-description">Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                label="Artwork Fit"
+                .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11070,23 +11127,65 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         }]
       }
     }}
-              .value=${this._config.artwork_object_fit ?? "cover"}
-              @value-changed=${e => {
+                .value=${this._config.artwork_object_fit ?? "cover"}
+                @value-changed=${e => {
       const value = e.detail.value;
       this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
     }}
-            ></ha-selector>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="config-subtitle">
-            Controls how artwork scales across the card (main art, chips, overrides). Choose a different fit if images appear cropped or stretched.
+              ></ha-selector>
+            </div>
           </div>
         </div>
 
-        <div class="form-row action-group">
-          <div class="action-group-header">
-            <div class="action-group-title">Artwork Overrides</div>
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">Idle Artwork</div>
+            <div class="section-description">Show a static image or entity snapshot whenever nothing is playing.</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="idle-image-url-toggle"
+                .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
+                @change=${e => {
+      this._useIdleImageUrl = e.target.checked;
+      if (e.target.checked) {
+        this._updateConfig("idle_image", "");
+      } else {
+        this._updateConfig("idle_image", "");
+      }
+    }}
+              ></ha-switch>
+              <label for="idle-image-url-toggle">Use URL or Path</label>
+            </div>
+            <div style="flex: 2;">
+              ${this._useIdleImageUrl ? x`
+                <ha-textfield
+                  class="full-width"
+                  placeholder="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                  .value=${this._config.idle_image ?? ""}
+                  @input=${e => this._updateConfig("idle_image", e.target.value)}
+                  helper="Enter a direct URL to an image or a local file path"
+                  .helperPersistent=${true}
+                ></ha-textfield>
+              ` : x`
+                <ha-entity-picker
+                  class="full-width"
+                  .hass=${this.hass}
+                  .value=${this._config.idle_image ?? ""}
+                  .includeDomains=${["camera", "image"]}
+                  clearable
+                  @value-changed=${e => this._updateConfig("idle_image", e.detail.value)}
+                ></ha-entity-picker>
+              `}
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">Artwork Overrides</div>
+            <div class="section-description">Overrides are evaluated from top to bottom. Drag to reorder.</div>
           </div>
           <yamp-sortable @item-moved=${e => this._onArtworkMoved(e)}>
             <div class="sortable-container">
@@ -11156,10 +11255,6 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             ></ha-icon>
           </div>
         </div>
-        <div class="form-row">
-          <div class="config-subtitle">
-            Overrides are evaluated from top to bottom. Drag to reorder. Changes save automatically.
-          </div>
         </div>
 
       `;
@@ -11189,66 +11284,74 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       });
     }
     return x`
-        <div class="form-row entity-group">
-          <div class="entity-group-header">
-            <div class="entity-group-title">Entities*</div>
+        <div class="entity-group">
+          <div class="entity-group-header section-header">
+            <div class="entity-group-title section-title">Entities*</div>
+            <div class="section-description">Add the media players you want to control. Drag entities to reorder the chip row.</div>
           </div>
-          <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
-            <div class="sortable-container">
-              ${entities.map((ent, idx) => {
+          <div class="form-row">
+            <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
+              <div class="sortable-container">
+                ${entities.map((ent, idx) => {
       var _this$_config$entitie2;
       return x`
-                <div class="entity-row-inner ${idx < entities.length - 1 ? 'sortable-item' : ''}" data-index="${idx}">
-                  <div class="handle ${idx === entities.length - 1 ? 'handle-disabled' : ''}">
-                    <ha-icon icon="mdi:drag"></ha-icon>
-                  </div>
-                  <div class="grow-children">
-                    ${idx === entities.length - 1 && !ent.entity_id ? x`
-                          <ha-entity-picker
-                            .hass=${this.hass}
-                            .value=${ent.entity_id}
-                            .includeDomains=${["media_player"]}
-                            .excludeEntities=${((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2.map(e => e.entity_id)) ?? []}
-                            clearable
-                            @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                          ></ha-entity-picker>
-                        ` : x`
-                          <ha-selector
-                            .hass=${this.hass}
-                            .selector=${{
+                  <div class="entity-row-inner ${idx < entities.length - 1 ? 'sortable-item' : ''}" data-index="${idx}">
+                    <div class="handle ${idx === entities.length - 1 ? 'handle-disabled' : ''}">
+                      <ha-icon icon="mdi:drag"></ha-icon>
+                    </div>
+                    <div class="grow-children">
+                      ${idx === entities.length - 1 && !ent.entity_id ? x`
+                            <ha-entity-picker
+                              .hass=${this.hass}
+                              .value=${ent.entity_id}
+                              .includeDomains=${["media_player"]}
+                              .excludeEntities=${((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2.map(e => e.entity_id)) ?? []}
+                              clearable
+                              @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                            ></ha-entity-picker>
+                          ` : x`
+                            <ha-selector
+                              .hass=${this.hass}
+                              .selector=${{
         entity: {
           domain: "media_player"
         }
       }}
-                            .value=${ent.entity_id}
-                            clearable
-                            @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                          ></ha-selector>
-                        `}
+                              .value=${ent.entity_id}
+                              clearable
+                              @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                            ></ha-selector>
+                          `}
+                    </div>
+                    <div class="entity-row-actions">
+                      <ha-icon
+                        class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
+                        icon="mdi:pencil"
+                        title="Edit Entity Settings"
+                        @click=${() => this._onEditEntity(idx)}
+                      ></ha-icon>
+                    </div>
                   </div>
-                  <div class="entity-row-actions">
-                    <ha-icon
-                      class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
-                      icon="mdi:pencil"
-                      title="Edit Entity Settings"
-                      @click=${() => this._onEditEntity(idx)}
-                    ></ha-icon>
-                  </div>
-                </div>
-              `;
+                `;
     })}
-            </div>
-          </yamp-sortable>
+              </div>
+            </yamp-sortable>
+          </div>
         </div>
       `;
   }
   _renderBehaviorTab() {
     return x`
-        <div class="form-row form-row-multi-column">
-          <div class="grow-children">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">Idle & Chips</div>
+            <div class="section-description">Choose when the card goes idle and how entity chips behave.</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
       number: {
         min: 0,
         step: 1000,
@@ -11256,24 +11359,23 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         mode: "box"
       }
     }}
-              .value=${this._config.idle_timeout_ms ?? 60000}
-              label="Idle Timeout (ms)"
-              @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
-            ></ha-selector>
-            <div class="config-subtitle">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>
+                .value=${this._config.idle_timeout_ms ?? 60000}
+                label="Idle Timeout (ms)"
+                @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
+              ></ha-selector>
+              <div class="config-subtitle">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>
+            </div>
+            <ha-icon
+              class="icon-button"
+              icon="mdi:restore"
+              title="Reset to default"
+              @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
+            ></ha-icon>
           </div>
-          <ha-icon
-            class="icon-button"
-            icon="mdi:restore"
-            title="Reset to default"
-            @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
-          ></ha-icon>
-        </div>
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11288,29 +11390,34 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         }]
       }
     }}
-            .value=${this._config.show_chip_row ?? "auto"}
-            label="Show Chip Row"
-            @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
-          ></ha-selector>
-          <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
-        </div>
-
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="hold-to-pin-toggle"
-              .checked=${this._config.hold_to_pin ?? false}
-              @change=${e => this._updateConfig("hold_to_pin", e.target.checked)}
-            ></ha-switch>
-            <span>Hold to Pin</span>
+              .value=${this._config.show_chip_row ?? "auto"}
+              label="Show Chip Row"
+              @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
           </div>
-          <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
         </div>
 
-        <div class="form-row form-row-multi-column">
-          <div class="grow-children">
-            <ha-selector-number
-              .selector=${{
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">Interactions & Search</div>
+            <div class="section-description">Fine-tune how entities are pinned and how many results show at once.</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="hold-to-pin-toggle"
+                .checked=${this._config.hold_to_pin ?? false}
+                @change=${e => this._updateConfig("hold_to_pin", e.target.checked)}
+              ></ha-switch>
+              <span>Hold to Pin</span>
+            </div>
+            <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector-number
+                .selector=${{
       number: {
         min: 1,
         max: 100,
@@ -11318,205 +11425,24 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         mode: "box"
       }
     }}
-              .value=${this._config.search_results_limit ?? 20}
-              label="Search Results Limit"
-              helper="Maximum number of search results to display (1-100, default: 20)"
-              @value-changed=${e => this._updateConfig("search_results_limit", e.detail.value)}
-            ></ha-selector-number>
+                .value=${this._config.search_results_limit ?? 20}
+                label="Search Results Limit"
+                helper="Maximum number of search results to display (1-100, default: 20)"
+                @value-changed=${e => this._updateConfig("search_results_limit", e.detail.value)}
+              ></ha-selector-number>
+            </div>
+            <ha-icon
+              class="icon-button"
+              icon="mdi:restore"
+              title="Reset to default"
+              @click=${() => this._updateConfig("search_results_limit", 20)}
+            ></ha-icon>
           </div>
-          <ha-icon
-            class="icon-button"
-            icon="mdi:restore"
-            title="Reset to default"
-            @click=${() => this._updateConfig("search_results_limit", 20)}
-          ></ha-icon>
         </div>
-
       `;
   }
   _renderVisualTab() {
-    return x`
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="match-theme-toggle"
-              .checked=${this._config.match_theme ?? false}
-              @change=${e => this._updateConfig("match_theme", e.target.checked)}
-            ></ha-switch>
-            <span>Match Theme</span>
-          </div>
-          <div>
-            <ha-switch
-              id="alternate-progress-bar-toggle"
-              .checked=${this._config.alternate_progress_bar ?? false}
-              @change=${e => this._updateConfig("alternate_progress_bar", e.target.checked)}
-            ></ha-switch>
-              <span>Alternate Progress Bar</span>
-            </div>
-          </div>
-
-        <div class="form-row">
-          <div>
-            <ha-switch
-              id="adaptive-controls-toggle"
-              .checked=${this._config.adaptive_controls ?? false}
-              @change=${e => this._updateConfig("adaptive_controls", e.target.checked)}
-            ></ha-switch>
-            <span>Adaptive Control Size</span>
-          </div>
-          <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
-        </div>
-
-        <div class="form-row">
-          <div>
-            <ha-switch
-              id="hide-active-entity-label-toggle"
-              .checked=${this._config.hide_active_entity_label ?? false}
-              @change=${e => this._updateConfig("hide_active_entity_label", e.target.checked)}
-            ></ha-switch>
-            <span>Hide Active Entity Label</span>
-          </div>
-          <div class="config-subtitle">When chips live in the menu, hide the entity label at the bottom of the card.</div>
-        </div>
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-      select: {
-        multiple: true,
-        options: ADAPTIVE_TEXT_SELECTOR_OPTIONS
-      }
-    }}
-            .value=${this._getAdaptiveTextTargetsValue()}
-            label="Adaptive Text Size Elements"
-            helper="Choose which text groups should scale with available space (leave empty to disable adaptive text)."
-            @value-changed=${e => this._onAdaptiveTextTargetsChanged(e.detail.value)}
-          ></ha-selector>
-        </div>
-
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="collapse-on-idle-toggle"
-              .checked=${this._config.collapse_on_idle ?? false}
-              @change=${e => this._updateConfig("collapse_on_idle", e.target.checked)}
-            ></ha-switch>
-            <span>Collapse on Idle</span>
-          </div>
-          ${!this._config.always_collapsed ? x`
-            <div>
-              <ha-switch
-                id="hide-menu-player-toggle"
-                .checked=${this._config.hide_menu_player ?? false}
-                @change=${e => this._updateConfig("hide_menu_player", e.target.checked)}
-              ></ha-switch>
-              <span>Hide Menu Player</span>
-            </div>
-          ` : E}
-        </div>
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="always-collapsed-toggle"
-              .checked=${this._config.always_collapsed ?? false}
-              @change=${e => this._updateConfig("always_collapsed", e.target.checked)}
-            ></ha-switch>
-            <span>Always Collapsed</span>
-          </div>
-          ${this._config.always_collapsed ? x`
-            <div>
-              <ha-switch
-                id="expand-on-search-toggle"
-                .checked=${this._config.expand_on_search ?? false}
-                @change=${e => this._updateConfig("expand_on_search", e.target.checked)}
-              ></ha-switch>
-              <span>Expand on Search</span>
-            </div>
-          ` : E}
-        </div>
-        <div class="form-row">
-          <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
-        </div>
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-      select: {
-        mode: "dropdown",
-        options: [{
-          value: "default",
-          label: "Default"
-        }, {
-          value: "search",
-          label: "Search"
-        }, {
-          value: "search-recently-played",
-          label: "Recently Played"
-        }, {
-          value: "search-next-up",
-          label: "Next Up"
-        }]
-      }
-    }}
-            .value=${this._config.idle_screen ?? "default"}
-            label="Idle Screen"
-            @value-changed=${e => this._updateConfig("idle_screen", e.detail.value)}
-          ></ha-selector>
-          <div class="config-subtitle">Choose which screen to display automatically when the card becomes idle.</div>
-        </div>
-
-        <div class="form-row form-row-multi-column">
-          <div class="grow-children">
-            <ha-textfield
-              class="full-width"
-              type="number"
-              min="0"
-              label="Card Height (px)"
-              .value=${this._config.card_height ?? ""}
-              helper="Leave blank for automatic height"
-              .helperPersistent=${true}
-              @input=${e => {
-      const raw = e.target.value;
-      if (raw === "") {
-        this._updateConfig("card_height", undefined);
-        return;
-      }
-      const parsed = Number(raw);
-      this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
-    }}
-            ></ha-textfield>
-          </div>
-          <ha-icon
-            class="icon-button"
-            icon="mdi:restore"
-            title="Reset to default"
-            @click=${() => this._updateConfig("card_height", undefined)}
-          ></ha-icon>
-        </div>
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-      select: {
-        mode: "dropdown",
-        options: [{
-          value: "slider",
-          label: "Slider"
-        }, {
-          value: "stepper",
-          label: "Stepper"
-        }]
-      }
-    }}
-            .value=${this._config.volume_mode ?? "slider"}
-            label="Volume Mode"
-            @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
-          ></ha-selector>
-        </div>
-        ${this._config.volume_mode === "stepper" ? x`
+    const renderVolumeStep = this._config.volume_mode === "stepper" ? x`
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector
@@ -11542,73 +11468,231 @@ class YetAnotherMediaPlayerEditor extends i$1 {
               @click=${() => this._updateConfig("volume_step", 0.05)}
             ></ha-icon>
           </div>
-        ` : E}
-
-        <div class="form-row">
-          <label style="margin-bottom: 8px;">Idle Image</label>
-        </div>
-        <div class="form-row form-row-multi-column">
-          <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-            <ha-switch
-              id="idle-image-url-toggle"
-              .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
-              @change=${e => {
-      this._useIdleImageUrl = e.target.checked;
-      if (e.target.checked) {
-        this._updateConfig("idle_image", "");
-      } else {
-        this._updateConfig("idle_image", "");
-      }
-    }}
-            ></ha-switch>
-            <label for="idle-image-url-toggle">Use URL or Path</label>
+        ` : E;
+    return x`
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">Theme & Layout</div>
+            <div class="section-description">Match dashboard styling and control the overall footprint.</div>
           </div>
-          <div style="flex: 2;">
-            ${this._useIdleImageUrl ? x`
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="match-theme-toggle"
+                .checked=${this._config.match_theme ?? false}
+                @change=${e => this._updateConfig("match_theme", e.target.checked)}
+              ></ha-switch>
+              <span>Match Theme</span>
+            </div>
+            <div>
+              <ha-switch
+                id="alternate-progress-bar-toggle"
+                .checked=${this._config.alternate_progress_bar ?? false}
+                @change=${e => this._updateConfig("alternate_progress_bar", e.target.checked)}
+              ></ha-switch>
+              <span>Alternate Progress Bar</span>
+            </div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
               <ha-textfield
                 class="full-width"
-                placeholder="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
-                .value=${this._config.idle_image ?? ""}
-                @input=${e => this._updateConfig("idle_image", e.target.value)}
-                helper="Enter a direct URL to an image or a local file path"
+                type="number"
+                min="0"
+                label="Card Height (px)"
+                .value=${this._config.card_height ?? ""}
+                helper="Leave blank for automatic height"
                 .helperPersistent=${true}
+                @input=${e => {
+      const raw = e.target.value;
+      if (raw === "") {
+        this._updateConfig("card_height", undefined);
+        return;
+      }
+      const parsed = Number(raw);
+      this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
+    }}
               ></ha-textfield>
-            ` : x`
-              <ha-entity-picker
-                class="full-width"
-                .hass=${this.hass}
-                .value=${this._config.idle_image ?? ""}
-                .includeDomains=${["camera", "image"]}
-                clearable
-                @value-changed=${e => this._updateConfig("idle_image", e.detail.value)}
-              ></ha-entity-picker>
-            `}
+            </div>
+            <ha-icon
+              class="icon-button"
+              icon="mdi:restore"
+              title="Reset to default"
+              @click=${() => this._updateConfig("card_height", undefined)}
+            ></ha-icon>
           </div>
         </div>
+
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">Controls & Typography</div>
+            <div class="section-description">Tune button sizing, entity labels, and adaptive text.</div>
+          </div>
+          <div class="form-row">
+            <div>
+              <ha-switch
+                id="adaptive-controls-toggle"
+                .checked=${this._config.adaptive_controls ?? false}
+                @change=${e => this._updateConfig("adaptive_controls", e.target.checked)}
+              ></ha-switch>
+              <span>Adaptive Control Size</span>
+            </div>
+            <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
+          </div>
+          <div class="form-row">
+            <div>
+              <ha-switch
+                id="hide-active-entity-label-toggle"
+                .checked=${this._config.hide_active_entity_label ?? false}
+                @change=${e => this._updateConfig("hide_active_entity_label", e.target.checked)}
+              ></ha-switch>
+              <span>Hide Active Entity Label</span>
+            </div>
+            <div class="config-subtitle">When chips live in the menu, hide the entity label at the bottom of the card.</div>
+          </div>
+        <div class="form-row">
+          <div class="full-width">
+            <span class="form-label">Adaptive Text Size Elements</span>
+            <div class="config-subtitle">Choose which text groups should scale with available space (leave empty to disable adaptive text).</div>
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+      select: {
+        multiple: true,
+        options: ADAPTIVE_TEXT_SELECTOR_OPTIONS
+      }
+    }}
+              .value=${this._getAdaptiveTextTargetsValue()}
+              @value-changed=${e => this._onAdaptiveTextTargetsChanged(e.detail.value)}
+            ></ha-selector>
+          </div>
+        </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "slider",
+          label: "Slider"
+        }, {
+          value: "stepper",
+          label: "Stepper"
+        }]
+      }
+    }}
+              .value=${this._config.volume_mode ?? "slider"}
+              label="Volume Mode"
+              @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
+            ></ha-selector>
+          </div>
+          ${renderVolumeStep}
+        </div>
+
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">Collapsed & Idle States</div>
+            <div class="section-description">Control when the card collapses and which views show while idle.</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="collapse-on-idle-toggle"
+                .checked=${this._config.collapse_on_idle ?? false}
+                @change=${e => this._updateConfig("collapse_on_idle", e.target.checked)}
+              ></ha-switch>
+              <span>Collapse on Idle</span>
+            </div>
+            ${!this._config.always_collapsed ? x`
+              <div>
+                <ha-switch
+                  id="hide-menu-player-toggle"
+                  .checked=${this._config.hide_menu_player ?? false}
+                  @change=${e => this._updateConfig("hide_menu_player", e.target.checked)}
+                ></ha-switch>
+                <span>Hide Menu Player</span>
+              </div>
+            ` : E}
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="always-collapsed-toggle"
+                .checked=${this._config.always_collapsed ?? false}
+                @change=${e => this._updateConfig("always_collapsed", e.target.checked)}
+              ></ha-switch>
+              <span>Always Collapsed</span>
+            </div>
+            ${this._config.always_collapsed ? x`
+              <div>
+                <ha-switch
+                  id="expand-on-search-toggle"
+                  .checked=${this._config.expand_on_search ?? false}
+                  @change=${e => this._updateConfig("expand_on_search", e.target.checked)}
+                ></ha-switch>
+                <span>Expand on Search</span>
+              </div>
+            ` : E}
+          </div>
+          <div class="form-row">
+            <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "default",
+          label: "Default"
+        }, {
+          value: "search",
+          label: "Search"
+        }, {
+          value: "search-recently-played",
+          label: "Recently Played"
+        }, {
+          value: "search-next-up",
+          label: "Next Up"
+        }]
+      }
+    }}
+              .value=${this._config.idle_screen ?? "default"}
+              label="Idle Screen"
+              @value-changed=${e => this._updateConfig("idle_screen", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">Choose which screen to display automatically when the card becomes idle.</div>
+          </div>
+        </div>
+
       `;
   }
   _renderActionsTab() {
     let actions = [...(this._config.actions ?? [])];
     return x`
-        <div class="form-row action-group">
-          <div class="action-group-header">
-            <div class="action-group-title">Actions</div>
+        <div class="action-group config-section">
+          <div class="action-group-header section-header">
+            <div class="action-group-title section-title">Actions</div>
+            <div class="section-description">Build the action chips that appear in the card or its menu. Drag to reorder, click the pencil to configure each action.</div>
           </div>
-          <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
-            <div class="sortable-container">
-              ${actions.map((act, idx) => x`
-                <div class="action-row-inner sortable-item">
-                  <div class="handle action-handle">
-                    <ha-icon icon="mdi:drag"></ha-icon>
-                  </div>
-                  ${act !== null && act !== void 0 && act.icon ? x`
-                    <ha-icon class="action-icon" icon="${act === null || act === void 0 ? void 0 : act.icon}"></ha-icon>
-                  ` : x`<span class="action-icon-placeholder"></span>`}
-                  <div class="grow-children">
-                    <ha-textfield
-                      placeholder="(Icon Only)"
-                      .value=${(act === null || act === void 0 ? void 0 : act.name) ?? ""}
-                      .helper=${(() => {
+          <div class="form-row">
+            <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
+              <div class="sortable-container">
+                ${actions.map((act, idx) => x`
+                  <div class="action-row-inner sortable-item">
+                    <div class="handle action-handle">
+                      <ha-icon icon="mdi:drag"></ha-icon>
+                    </div>
+                    ${act !== null && act !== void 0 && act.icon ? x`
+                      <ha-icon class="action-icon" icon="${act === null || act === void 0 ? void 0 : act.icon}"></ha-icon>
+                    ` : x`<span class="action-icon-placeholder"></span>`}
+                    <div class="grow-children">
+                      <ha-textfield
+                        placeholder="(Icon Only)"
+                        .value=${(act === null || act === void 0 ? void 0 : act.name) ?? ""}
+                        .helper=${(() => {
       const inMenu = act !== null && act !== void 0 && act.in_menu ? " \u2022 In Menu" : "";
       if (act !== null && act !== void 0 && act.menu_item) {
         return `Open Menu Item: ${act.menu_item}${inMenu}`;
@@ -11622,28 +11706,29 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       }
       return act !== null && act !== void 0 && act.in_menu ? `Not Configured${inMenu}` : "Not Configured";
     })()}
-                      .helperPersistent=${true}
-                      @input=${a => this._onActionChanged(idx, a.target.value)}
-                    ></ha-textfield>
+                        .helperPersistent=${true}
+                        @input=${a => this._onActionChanged(idx, a.target.value)}
+                      ></ha-textfield>
+                    </div>
+                    <div class="action-row-actions">
+                      <ha-icon
+                        class="icon-button"
+                        icon="mdi:pencil"
+                        title="Edit Action Settings"
+                        @click=${() => this._onEditAction(idx)}
+                      ></ha-icon>
+                      <ha-icon
+                        class="icon-button"
+                        icon="mdi:trash-can"
+                        title="Delete Action"
+                        @click=${() => this._removeAction(idx)}
+                      ></ha-icon>
+                    </div>
                   </div>
-                  <div class="action-row-actions">
-                    <ha-icon
-                      class="icon-button"
-                      icon="mdi:pencil"
-                      title="Edit Action Settings"
-                      @click=${() => this._onEditAction(idx)}
-                    ></ha-icon>
-                    <ha-icon
-                      class="icon-button"
-                      icon="mdi:trash-can"
-                      title="Delete Action"
-                      @click=${() => this._removeAction(idx)}
-                    ></ha-icon>
-                  </div>
-                </div>
-              `)}
-            </div>
-          </yamp-sortable>
+                `)}
+              </div>
+            </yamp-sortable>
+          </div>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
@@ -12409,7 +12494,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
 }
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 
-// Utility functions for Yet Another Media Player
+// Utility functions for Yet Another Media Player (YAMP)
 
 /**
  * Resolve a Jinja template string at runtime
