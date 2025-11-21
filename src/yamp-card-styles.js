@@ -392,6 +392,8 @@ export const yampCardStyles = css`
     gap: 8px;
     padding: 8px 12px 0 12px;
     margin-bottom: 12px;
+    position: relative;
+    z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
@@ -421,6 +423,8 @@ export const yampCardStyles = css`
     gap: 8px;
     padding: 2px 12px 0 12px;
     margin-bottom: 8px;
+    position: relative;
+    z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
