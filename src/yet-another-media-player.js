@@ -2955,12 +2955,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
       ? config.artwork_object_fit
       : "cover";
-    const extendArtworkConfig = config.extend_artwork;
-    const legacyArtworkFullBleed = config.artwork_full_bleed;
-    const extendArtworkEnabled = typeof extendArtworkConfig === "boolean"
-      ? extendArtworkConfig
-      : legacyArtworkFullBleed === true;
-    this._extendArtwork = extendArtworkEnabled;
+    this._extendArtwork = config.extend_artwork === true;
     this._idleScreen = config.idle_screen || "default";
     this._idleScreenApplied = false;
     this._hasSeenPlayback = false;
@@ -4637,17 +4632,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
       const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
-      const extendArtworkSetting = this.config.extend_artwork;
-      const legacyExtendArtwork = this.config.artwork_full_bleed;
-      const extendArtwork = typeof extendArtworkSetting === "boolean"
-        ? extendArtworkSetting
-        : legacyExtendArtwork === true;
-
       if (this.shadowRoot && this.shadowRoot.host) {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
         this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
         this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
-        this.shadowRoot.host.setAttribute("data-extend-artwork", String(extendArtwork));
+        this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
         if (hasCustomCardHeight) {
           this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
         } else {
@@ -4698,7 +4687,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const dimIdleFrame = !!idleImageUrl;
       const hideControlsNow = this._isIdle;
       const shouldDimIdle = dimIdleFrame && this._isIdle;
-      const artworkFullBleed = extendArtwork;
+      const artworkFullBleed = this.config.extend_artwork === true;
 
       // Calculate shuffle/repeat state from the active playback entity when available
       const mainStateForPlayback = this.currentStateObj;

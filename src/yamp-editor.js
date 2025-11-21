@@ -713,7 +713,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <div style="display:flex;align-items:center;gap:12px;flex:1;">
               <ha-switch
                 id="extend-artwork-toggle"
-                .checked=${this._config.extend_artwork ?? this._config.artwork_full_bleed ?? false}
+                .checked=${this._config.extend_artwork ?? false}
                 @change=${(e) => this._updateConfig("extend_artwork", e.target.checked)}
               ></ha-switch>
               <div>
