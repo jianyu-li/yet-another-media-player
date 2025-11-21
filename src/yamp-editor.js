@@ -712,13 +712,13 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row form-row-multi-column">
             <div style="display:flex;align-items:center;gap:12px;flex:1;">
               <ha-switch
-                id="artwork-full-bleed-toggle"
-                .checked=${this._config.artwork_full_bleed ?? false}
-                @change=${(e) => this._updateConfig("artwork_full_bleed", e.target.checked)}
+                id="extend-artwork-toggle"
+                .checked=${this._config.extend_artwork ?? this._config.artwork_full_bleed ?? false}
+                @change=${(e) => this._updateConfig("extend_artwork", e.target.checked)}
               ></ha-switch>
               <div>
-                <div>Full-bleed artwork</div>
-                <div class="config-subtitle small">Extend the background image underneath the chip and action rows.</div>
+                <div>Extend artwork</div>
+                <div class="config-subtitle small">Let the artwork background continue underneath the chip and action rows.</div>
               </div>
             </div>
           </div>
