@@ -11290,7 +11290,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
                         ></ha-icon>
                       </div>
                     </div>
-                  `) : x`<div class="config-subtitle" style="padding:12px 0;">No artwork overrides configured. Use the plus button below to add one.</div>`}
+                  `) : x`<div class="config-subtitle" style="padding:12px 0;text-align:center;">No artwork overrides configured. Use the plus button below to add one.</div>`}
             </div>
           </yamp-sortable>
           <div class="add-action-button-wrapper">
