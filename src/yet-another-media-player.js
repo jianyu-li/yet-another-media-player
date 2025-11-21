@@ -5200,7 +5200,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       moreInfoMenu: html`
                         <div class="more-info-menu">
                           <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                            <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                            <span class="more-info-icon">&#9776;</span>
                           </button>
                         </div>
                       `,
@@ -5210,7 +5210,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             ${(hideControlsNow && !this._showEntityOptions) ? html`
               <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                 <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                  <span class="more-info-icon">&#9776;</span>
                 </button>
               </div>
             ` : nothing}

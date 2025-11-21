@@ -164,6 +164,8 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     margin-right: 0;
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
   .more-info-btn {
@@ -194,6 +196,25 @@ export const yampCardStyles = css`
     position: relative;
     margin: 0 0 2px 0;
     color: #fff;
+    transition: color var(--transition-normal, 0.2s);
+  }
+
+  .dim-idle .more-info-btn ha-icon {
+    color: #9ea2a8;
+  }
+
+  .more-info-icon {
+    font-size: 1.7em;
+    line-height: 1;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-normal, 0.2s);
+  }
+
+  .dim-idle .more-info-icon {
+    color: #9ea2a8;
   }
 
   /* Card artwork spacer */

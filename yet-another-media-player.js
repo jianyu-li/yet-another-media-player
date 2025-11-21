@@ -1487,6 +1487,8 @@ const yampCardStyles = i$4`
     display: flex;
     align-items: center;
     margin-right: 0;
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
   .more-info-btn {
@@ -1517,6 +1519,25 @@ const yampCardStyles = i$4`
     position: relative;
     margin: 0 0 2px 0;
     color: #fff;
+    transition: color var(--transition-normal, 0.2s);
+  }
+
+  .dim-idle .more-info-btn ha-icon {
+    color: #9ea2a8;
+  }
+
+  .more-info-icon {
+    font-size: 1.7em;
+    line-height: 1;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-normal, 0.2s);
+  }
+
+  .dim-idle .more-info-icon {
+    color: #9ea2a8;
   }
 
   /* Card artwork spacer */
@@ -17626,7 +17647,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       moreInfoMenu: x`
                         <div class="more-info-menu">
                           <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                            <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                            <span class="more-info-icon">&#9776;</span>
                           </button>
                         </div>
                       `
@@ -17636,7 +17657,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
             ${hideControlsNow && !this._showEntityOptions ? x`
               <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
                 <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span style="font-size: 1.7em; line-height: 1; color: #fff; display: flex; align-items: center; justify-content: center;">&#9776;</span>
+                  <span class="more-info-icon">&#9776;</span>
                 </button>
               </div>
             ` : E}
