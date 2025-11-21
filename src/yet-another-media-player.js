@@ -2955,6 +2955,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
       ? config.artwork_object_fit
       : "cover";
+    this._artworkFullBleed = config.artwork_full_bleed === true;
     this._idleScreen = config.idle_screen || "default";
     this._idleScreenApplied = false;
     this._hasSeenPlayback = false;
@@ -2966,6 +2967,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+      this.shadowRoot.host.setAttribute("data-artwork-full-bleed", String(this._artworkFullBleed));
     }
     // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
@@ -4634,6 +4636,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
         this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
         this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+        this.shadowRoot.host.setAttribute("data-artwork-full-bleed", String(this.config.artwork_full_bleed === true));
         if (hasCustomCardHeight) {
           this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
         } else {
@@ -4684,6 +4687,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const dimIdleFrame = !!idleImageUrl;
       const hideControlsNow = this._isIdle;
       const shouldDimIdle = dimIdleFrame && this._isIdle;
+      const artworkFullBleed = this.config.artwork_full_bleed === true;
 
       // Calculate shuffle/repeat state from the active playback entity when available
       const mainStateForPlayback = this.currentStateObj;
@@ -4934,6 +4938,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
       const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
+      const backgroundImageValue = idleImageUrl
+        ? `url('${idleImageUrl}')`
+        : artworkUrl
+          ? `url('${artworkUrl}')`
+          : "none";
+      const hasBackgroundImage = backgroundImageValue !== "none";
+      const backgroundFilter = (collapsed && artworkUrl)
+        ? "blur(18px) brightness(0.7) saturate(1.15)"
+        : "none";
+      const sharedBackgroundStyle = [
+        `background-image: ${backgroundImageValue}`,
+        `background-size: ${backgroundSize}`,
+        "background-position: top center",
+        "background-repeat: no-repeat",
+        `filter: ${backgroundFilter}`
+      ].join('; ');
 
       if (this.shadowRoot && this.shadowRoot.host) {
         this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
@@ -4946,6 +4966,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
             data-match-theme="${String(this.config.match_theme === true)}"
             class="yamp-card-inner ${shouldDimIdle ? 'dim-idle' : ''}"
           >
+            ${artworkFullBleed && hasBackgroundImage ? html`
+              <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
+              ${!dimIdleFrame ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+            ` : nothing}
             ${showChipsInline ? html`
                 <div class="chip-row">
                   ${renderChipRow({
@@ -5038,23 +5062,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
             })}
             <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
-                style="
-                  background-image: ${
-                    idleImageUrl
-                      ? `url('${idleImageUrl}')`
-                      : artworkUrl
-                        ? `url('${artworkUrl}')`
-                        : "none"
-                  };
-                  min-height: ${collapsed
-                    ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : "0px")
-                    : (hideControlsNow ? "350px" : "350px")};
-                  background-size: ${backgroundSize};
-                  background-position: top center;
-                  background-repeat: no-repeat;
-                  filter: ${collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none"};
-                  transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s;
-                "
+                style="${(() => {
+                  const styles = [];
+                  if (!(artworkFullBleed && hasBackgroundImage)) {
+                    styles.push(sharedBackgroundStyle);
+                  } else {
+                    styles.push('background-image: none', 'filter: none');
+                  }
+                  styles.push(`min-height: ${collapsed
+                    ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px')
+                    : (hideControlsNow ? '350px' : '350px')}`);
+                  styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
+                  return styles.join('; ');
+                })()}"
               ></div>
               ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
