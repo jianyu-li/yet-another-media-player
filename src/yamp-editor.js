@@ -709,6 +709,19 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-selector>
             </div>
           </div>
+          <div class="form-row form-row-multi-column">
+            <div style="display:flex;align-items:center;gap:12px;flex:1;">
+              <ha-switch
+                id="extend-artwork-toggle"
+                .checked=${this._config.extend_artwork ?? false}
+                @change=${(e) => this._updateConfig("extend_artwork", e.target.checked)}
+              ></ha-switch>
+              <div>
+                <div>Extend artwork</div>
+                <div class="config-subtitle small">Let the artwork background continue underneath the chip and action rows.</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="config-section">
@@ -821,7 +834,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                       </div>
                     </div>
                   `)
-                : html`<div class="config-subtitle" style="padding:12px 0;">No artwork overrides configured. Use the plus button below to add one.</div>`}
+                : html`<div class="config-subtitle" style="padding:12px 0;text-align:center;">No artwork overrides configured. Use the plus button below to add one.</div>`}
             </div>
           </yamp-sortable>
           <div class="add-action-button-wrapper">

@@ -117,6 +117,30 @@ export const yampCardStyles = css`
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+  }
+
+  .full-bleed-artwork-bg {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    background-size: var(--yamp-artwork-bg-size, cover);
+    background-position: top center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+  }
+
+  .full-bleed-artwork-fade {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.0) 0%,
+      rgba(0,0,0,0.40) 55%,
+      rgba(0,0,0,0.92) 100%
+    );
   }
 
   /* Idle state dimming */
@@ -140,6 +164,8 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     margin-right: 0;
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
   .more-info-btn {
@@ -170,6 +196,25 @@ export const yampCardStyles = css`
     position: relative;
     margin: 0 0 2px 0;
     color: #fff;
+    transition: color var(--transition-normal, 0.2s);
+  }
+
+  .dim-idle .more-info-btn ha-icon {
+    color: #9ea2a8;
+  }
+
+  .more-info-icon {
+    font-size: 1.7em;
+    line-height: 1;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-normal, 0.2s);
+  }
+
+  .dim-idle .more-info-icon {
+    color: #9ea2a8;
   }
 
   /* Card artwork spacer */
@@ -368,6 +413,8 @@ export const yampCardStyles = css`
     gap: 8px;
     padding: 8px 12px 0 12px;
     margin-bottom: 12px;
+    position: relative;
+    z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
@@ -397,6 +444,8 @@ export const yampCardStyles = css`
     gap: 8px;
     padding: 2px 12px 0 12px;
     margin-bottom: 8px;
+    position: relative;
+    z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
