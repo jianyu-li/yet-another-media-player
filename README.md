@@ -538,19 +538,19 @@ Example action for playing a radio station on [Chromecast](https://www.home-assi
 
 ## Card Mod Examples
 
-### Update Background Image
-This is different from the idle_image argument (that allows a background image when not playing), using card-mod to change the background will apply the background at all times. 
+### Increase font size for details row
+Even if `adaptive_text_targets` is configured, the text still won't grow until the card goes over 300px. To adjust sizing for shorter cards, you can use this card-mod and adjust to your liking
 ```
 card_mod:
   style: |
-    ha-card {
-      background-image: url('/local/image/background_dawn.png') !important;
-      background-size: cover !important;
-      background-position: center !important;
-      background-repeat: no-repeat !important;
+    .details {
+      font-size: 2.4em !important;      # overall scaling
     }
-    .media-artwork-placeholder {
-      display: none !important /* optionally hide the placeholder image */
+    .details .title {
+      font-size: 1.6em !important;      # optional: title only
+    }
+    .details .artist {
+      font-size: 1.2em !important;      # optional: artist only
     }
 ```
 
