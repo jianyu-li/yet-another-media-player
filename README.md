@@ -432,7 +432,8 @@ You can configure the maximum number of search results to display using the `sea
 
 ### Configuration Options
 - **Default**: 20 results
-- **Range**: 1-100 results
+- **Range**: 1-500 results
+- **Note**: Higher limits may increase load time and memory usage when rendering large result sets.
 - **Scope**: Global setting that applies to all entities and search types
 
 ### Example Configuration
@@ -444,6 +445,25 @@ entities:
     name: Living Room
   - entity_id: media_player.kitchen_homepod
     name: Kitchen
+```
+
+## Result Sorting Configuration
+
+Use the `search_results_sort` option to change how search results are ordered. The default behavior keeps the original order returned by the music service. Available values are:
+
+- `default` (source order)
+- `title_asc`
+- `title_desc`
+- `artist_asc`
+- `artist_desc`
+
+### Example Configuration
+```yaml
+type: custom:yet-another-media-player-alpha
+search_results_sort: title_asc
+entities:
+  - entity_id: media_player.office_homepod
+    name: Office
 ```
 
 ## Passing Current Entity to a Script

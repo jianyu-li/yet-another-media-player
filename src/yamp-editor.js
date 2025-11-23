@@ -991,10 +991,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector-number
-                .selector=${{ number: { min: 1, max: 100, step: 1, mode: "box" } }}
+                .selector=${{ number: { min: 1, max: 500, step: 1, mode: "box" } }}
                 .value=${this._config.search_results_limit ?? 20}
                 label="Search Results Limit"
-                helper="Maximum number of search results to display (1-100, default: 20)"
+                helper="Maximum number of search results to display (1-500, default: 20)"
                 @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
               ></ha-selector-number>
             </div>
@@ -1004,6 +1004,22 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               title="Reset to default"
               @click=${() => this._updateConfig("search_results_limit", 20)}
             ></ha-icon>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{ select: { mode: "dropdown", options: [
+                { value: "default", label: "Default" },
+                { value: "title_asc", label: "Title Ascending" },
+                { value: "title_desc", label: "Title Descending" },
+                { value: "artist_asc", label: "Artist Ascending" },
+                { value: "artist_desc", label: "Artist Descending" },
+              ]}}}
+              .value=${this._config.search_results_sort ?? "default"}
+              label="Result Sorting"
+              helper="Choose how search results are ordered. Default keeps the source order."
+              @value-changed=${(e) => this._updateConfig("search_results_sort", e.detail.value)}
+            ></ha-selector>
           </div>
         </div>
       `;

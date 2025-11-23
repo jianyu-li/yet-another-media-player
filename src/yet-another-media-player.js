@@ -835,6 +835,63 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
   }
 
+  _sortSearchResults(results) {
+    const sortMode = this.config?.search_results_sort || "default";
+    const list = Array.isArray(results) ? [...results] : [];
+
+    if (sortMode === "default") {
+      return list;
+    }
+
+    const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
+    const normalize = (val) => (typeof val === "string" ? val : (val ?? "").toString());
+    const getTitle = (item) => normalize(item?.title ?? item?.name ?? "");
+    const getArtist = (item) => normalize(item?.artist ?? item?.artist_name ?? "");
+
+    const compareWithFallback = (primaryGetter, secondaryGetter, direction = 1) => (a, b) => {
+      const primaryA = primaryGetter(a);
+      const primaryB = primaryGetter(b);
+
+      if (!primaryA && !primaryB) {
+        const secondaryA = secondaryGetter(a);
+        const secondaryB = secondaryGetter(b);
+        return direction * collator.compare(secondaryA, secondaryB);
+      }
+      if (!primaryA) return 1;
+      if (!primaryB) return -1;
+
+      const primaryCompare = collator.compare(primaryA, primaryB);
+      if (primaryCompare !== 0) {
+        return direction * primaryCompare;
+      }
+
+      const secondaryA = secondaryGetter(a);
+      const secondaryB = secondaryGetter(b);
+      return direction * collator.compare(secondaryA, secondaryB);
+    };
+
+    switch (sortMode) {
+      case "title_asc":
+        return list.sort(compareWithFallback(getTitle, getArtist, 1));
+      case "title_desc":
+        return list.sort(compareWithFallback(getTitle, getArtist, -1));
+      case "artist_asc":
+        return list.sort(compareWithFallback(getArtist, getTitle, 1));
+      case "artist_desc":
+        return list.sort(compareWithFallback(getArtist, getTitle, -1));
+      default:
+        return list;
+    }
+  }
+
+  _getSearchResultsLimit() {
+    const raw = Number(this.config?.search_results_limit);
+    if (Number.isFinite(raw)) {
+      return Math.min(Math.max(raw, 1), 500);
+    }
+    return 20;
+  }
+
 
 
 
@@ -868,7 +925,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._searchTimeoutHandle = null;
       }
       this._latestSearchToken = 0;
-      this._searchResults = this._searchResultsByType[cacheKey];
+      this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
       this._searchLoading = false;
       this._searchError = "";
       this.requestUpdate();
@@ -902,12 +959,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (isRecentlyPlayed) {
         // Load recently played items
         this._initialFavoritesLoaded = false;
-        searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, this.config?.search_results_limit || 20);
+        searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = false;
       } else if (isUpcoming) {
         // Load upcoming queue items
         this._initialFavoritesLoaded = false;
-        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, this.config?.search_results_limit || 20);
+        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = false;
       } else if (isRecommendations) {
         this._initialFavoritesLoaded = false;
@@ -915,7 +972,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this.hass,
           searchEntityId,
           mediaType,
-          this.config?.search_results_limit || 20
+          this._getSearchResultsLimit()
         );
         this._lastSearchUsedServerFavorites = false;
       } else if (isFavorites) {
@@ -927,11 +984,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._searchQuery,
           mediaType,
           { ...searchParams, favorites: true },
-          this.config?.search_results_limit || 20
+          this._getSearchResultsLimit()
         );
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
-        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this.config?.search_results_limit || 20);
+        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this._getSearchResultsLimit());
         // Mark that initial favorites have been loaded
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
@@ -940,7 +997,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this.config?.search_results_limit || 20);
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = false;
       }
       
@@ -959,15 +1016,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._initialFavoritesLoaded = false;
       }
       
-      this._searchResults = Array.isArray(arr) ? arr : [];
-      
+      const normalizedResults = Array.isArray(arr) ? arr : [];
+      this._searchResults = this._sortSearchResults(normalizedResults);
+
       // Apply local favorites filter ONLY when needed (e.g., switching filter chips with cached results)
       if (!isNewSearch && this._favoritesFilterActive && !this._lastSearchUsedServerFavorites) {
         await this._applyFavoritesFilterIfActive();
       }
-      
+
       // Cache the results for this media type and search params
-      this._searchResultsByType[cacheKey] = this._searchResults;
+      this._searchResultsByType[cacheKey] = normalizedResults;
       
       // remember how many rows exist in the full ("All") set, but keep at least 15 for layout
       const rows = Array.isArray(this._searchResults) ? this._searchResults.length : 0;
@@ -1396,9 +1454,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
           console.error('yamp: Error loading favorites:', error);
         }
       }
-    } else {
-      // Restore original search results
-      
+      } else {
+        // Restore original search results
+
       if (this._searchQuery && this._searchQuery.trim() !== '') {
         // Resubmit the original search without favorites filter
         const currentMediaType = this._searchMediaClassFilter;
@@ -1406,7 +1464,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else {
         // Restore from cache
         const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        this._searchResults = this._searchResultsByType[cacheKey] || [];
+        this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey] || []);
         this.requestUpdate();
       }
     }
@@ -1447,7 +1505,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Restore from cache or load favorites if no search query
         const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
         if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._searchResultsByType[cacheKey];
+          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
           this.requestUpdate();
         } else {
           // No cache, load favorites as default
@@ -1499,7 +1557,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Restore from cache or load favorites if no search query
         const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
         if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._searchResultsByType[cacheKey];
+          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
           this.requestUpdate();
         } else {
           // No cache, load favorites as default
@@ -1550,7 +1608,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else {
         const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
         if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._searchResultsByType[cacheKey];
+          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
           this.requestUpdate();
         } else {
           await this._doSearch('favorites');
@@ -1606,7 +1664,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         throw new Error('mass_queue integration unavailable');
       }
 
-      const limitToUse = Math.max(limit || 0, this.config?.search_results_limit || 20);
+      const limitToUse = Math.max(limit || 0, this._getSearchResultsLimit());
       const message = {
         type: "call_service",
         domain: "mass_queue",
@@ -1775,7 +1833,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         service_data: {
           entity: entityId,
           limit_before: 5,  // Get items before current track to include current track
-          limit_after: Math.max(limit, this.config?.search_results_limit || 20)  // Use config search_results_limit
+          limit_after: Math.max(limit, this._getSearchResultsLimit())  // Use config search_results_limit
         },
         return_response: true,
       };
@@ -2380,17 +2438,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-    
+
     try {
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, this.config?.search_results_limit || 20);
+      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, this._getSearchResultsLimit());
       const favorites = favoritesResponse.results || [];
       
       // Create a set of favorite URIs for quick lookup
       const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
-      
+
       // Filter current results to only show favorites
       const currentResults = this._searchResults || [];
-      this._searchResults = currentResults.filter(item => favoriteUris.has(item.media_content_id));
+      this._searchResults = this._sortSearchResults(currentResults.filter(item => favoriteUris.has(item.media_content_id)));
     } catch (error) {
       // If favorites loading fails, just show current results
     }
@@ -2455,12 +2513,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
         
         const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
         const tracks = browseResult.children || [];
-        
+
         if (tracks.length > 0) {
-      
-          
+
+
           // Set the tracks as search results
-          this._searchResults = tracks;
+          this._searchResults = this._sortSearchResults(tracks);
           this._searchMediaClassFilter = 'track';
           this._searchTotalRows = Math.max(15, tracks.length);
           this.requestUpdate();
