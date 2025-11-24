@@ -360,6 +360,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           font-style: normal;
           margin-top: 6px;
         }
+        #search-limit-reset {
+          align-self: flex-start;
+          margin-top: 6px;
+        }
         .config-subtitle {
           font-size: 0.85em;
           color: var(--secondary-text-color, #888);
@@ -937,8 +941,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       `;
     }
 
-    _renderBehaviorTab() {
-      return html`
+  _renderBehaviorTab() {
+    const searchLimitWarningActive = Number(this._config.search_results_limit) > 100;
+    return html`
         <div class="config-section">
           <div class="section-header">
             <div class="section-title">Idle & Chips</div>
@@ -1007,20 +1012,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                   helper="Maximum number of search results to display (1-1000, default: 20)"
                   @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
                 ></ha-selector-number>
-                ${(() => {
-                  const limit = Number(this._config.search_results_limit);
-                  if (limit > 100) {
-                    return html`
-                      <div class="config-subtitle warning">
-                        Warning: requesting higher results can cause performance issues.
-                      </div>
-                    `;
-                  }
-                  return nothing;
-                })()}
+                ${searchLimitWarningActive ? html`
+                  <div class="config-subtitle warning">
+                    Warning: requesting higher results can cause performance issues.
+                  </div>
+                ` : nothing}
             </div>
             <ha-icon
               class="icon-button"
+              id="search-limit-reset"
               icon="mdi:restore"
               title="Reset to default"
               @click=${() => this._updateConfig("search_results_limit", 20)}
