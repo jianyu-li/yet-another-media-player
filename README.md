@@ -69,6 +69,10 @@ Below you will find a list of all configuration options.
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 |                                                                                                 |
+| **Search**                 |              |              |             |                                                                                                 |
+| `search_results_limit`     | number       | No           | `20`        | Maximum number of results to request per media category (artist/album/track/etc.) across favorites, recently played, and standard searches; set to `0` to fall back to Music Assistant’s own limits |
+| `search_results_sort`      | choice       | No           | `default`   | Order search results by `default`, `title_asc`, `title_desc`, `artist_asc`, or `artist_desc`; sorting happens within the results returned by `search_results_limit` |
+|                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu |
@@ -118,49 +122,80 @@ Initiate a search using the hamburger menu and selecting `search`. Press Enter o
 ## Config Examples
 
 ### Full Example 
-Customize entities using name, volume_entity (sets a different entity for volume control), and music_assistant_entity (for search/grouping) arguments. 
+The sample below includes every configuration option from the table above so you can see the expected YAML structure in one place.
 
 ```yaml
 type: custom:yet-another-media-player
 entities:
-  - media_player.downstairs_2
-  - media_player.kitchen_speaker_2
-  - media_player.kitchen_homepod
   - entity_id: media_player.living_room_apple_tv
-    volume_entity: media_player.living_room_sonos
-    music_assistant_entity: media_player.living_room_homepod
     name: Living Room
-    sync_power: true
-  - entity_id: media_player.bedroom
-    group_volume: false
-  - media_player.entryway_speaker
-  - entity_id: media_player.office_homepod
-    name: Office
+    volume_entity: media_player.living_room_sonos
     follow_active_volume: true
+    music_assistant_entity: media_player.living_room_homepod
+    group_volume: false
+    sync_power: true
     hidden_controls:
       - favorite
       - shuffle
+    hidden_filter_chips:
+      - artist
+      - podcast
+  - entity_id: media_player.office_homepod
+    name: Office
+    group_volume: true
+    music_assistant_entity: media_player.office_homepod_2
+  - media_player.kitchen_speaker
+  - media_player.entryway_display
+search_results_limit: 50
+search_results_sort: title_asc
+match_theme: true
+show_chip_row: in_menu
+alternate_progress_bar: true
+adaptive_controls: true
+adaptive_text:
+  - details
+  - action_chips
+hide_active_entity_label: true
+card_height: 420
+artwork_object_fit: contain
+extend_artwork: true
+media_artwork_overrides:
+  - title: The Daily
+    image_url: /local/podcasts/daily.png
+    size_percentage: 85
+  - missing_art_url: /local/artwork/default.png
+idle_image: camera.family_slideshow
+idle_timeout_ms: 30000
+collapse_on_idle: true
+always_collapsed: true
+expand_on_search: true
+hide_menu_player: false  
+idle_screen: search-next-up
 actions:
-  - icon: mdi:magnify
-    menu_item: search
+  - name: Transfer Queue
+    transfer_queue: true
+    in_menu: true
+  - name: Search Queue
+    icon: mdi:magnify
+    menu_item: search-next-up
   - name: Soul
+    icon: mdi:music
     service: music_assistant.play_media
     service_data:
       entity_id: current
       media_id: apple_music://playlist/pl.3cb881c4590341fabc374f003afaf2b4
       enqueue: replace
+    in_menu: true
   - name: Set the Mood
+    icon: mdi:lightbulb-on
     service: script.set_mood
-    script_variable: true 
-    in_menu: true     
-match_theme: true
-volume_mode: slider
-collapse_on_idle: true
-always_collapsed: false
-alternate_progress_bar: false
-idle_image: camera.family_slideshow
-idle_timeout_ms: 30000
-  ```
+    script_variable: true
+  - name: Player Docs
+    icon: mdi:open-in-new
+    action: navigate
+    navigation_path: https://example.com/docs
+    navigation_new_tab: true
+```
 
 ### Expand on Search Example
 When using `always_collapsed: true`, you can enable `expand_on_search: true` to temporarily expand the card to its normal size when the search interface is open:
@@ -428,11 +463,12 @@ entities:
 
 ## Search Results Limit Configuration
 
-You can configure the maximum number of search results to display using the `search_results_limit` option. This is a global setting that affects all search operations including favorites, recently played, and regular searches across all entities.
+You can configure the maximum number of search results to display using the `search_results_limit` option. This value is applied to each media category (e.g., artists, albums, tracks, playlists) that Music Assistant returns before the results are flattened together, so the total count in the UI can exceed the configured limit when multiple categories are shown. Setting the limit to `0` tells the card not to constrain the request; Music Assistant will still apply its own default caps, so the results are not truly unlimited.
 
 ### Configuration Options
 - **Default**: 20 results
-- **Range**: 1-500 results
+- **Range**: 0-1000 results
+- **Music Assistant default**: Set to `0` to defer to Music Assistant’s built-in limits (not unlimited)
 - **Note**: Higher limits may increase load time and memory usage when rendering large result sets.
 - **Scope**: Global setting that applies to all entities and search types
 
@@ -449,7 +485,7 @@ entities:
 
 ## Result Sorting Configuration
 
-Use the `search_results_sort` option to change how search results are ordered. The default behavior keeps the original order returned by the music service. Available values are:
+Use the `search_results_sort` option to change how search results are ordered. The default behavior keeps the original order returned by the music service. Sorting is applied within the results already constrained by `search_results_limit`. Available values are:
 
 - `default` (source order)
 - `title_asc`

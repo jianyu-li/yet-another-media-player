@@ -887,9 +887,40 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getSearchResultsLimit() {
     const raw = Number(this.config?.search_results_limit);
     if (Number.isFinite(raw)) {
-      return Math.min(Math.max(raw, 1), 500);
+      if (raw === 0) {
+        return 0; // Explicitly disable limit
+      }
+      return Math.min(Math.max(raw, 1), 1000);
     }
     return 20;
+  }
+
+  _getSearchResultsCount() {
+    return Array.isArray(this._searchResults) ? this._searchResults.length : 0;
+  }
+
+  _shouldShowSearchResultsCount() {
+    if (!this._usingMusicAssistant || this._searchLoading) {
+      return false;
+    }
+    const count = this._getSearchResultsCount();
+    if (count > 0) {
+      return true;
+    }
+    return (
+      this._searchAttempted ||
+      this._initialFavoritesLoaded ||
+      this._favoritesFilterActive ||
+      this._recentlyPlayedFilterActive ||
+      this._upcomingFilterActive ||
+      this._recommendationsFilterActive
+    );
+  }
+
+  _getSearchResultsCountLabel() {
+    const count = this._getSearchResultsCount();
+    const noun = count === 1 ? "result" : "results";
+    return `${count} ${noun}`;
   }
 
 
@@ -1832,11 +1863,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
         service: "get_queue_items",
         service_data: {
           entity: entityId,
-          limit_before: 5,  // Get items before current track to include current track
-          limit_after: Math.max(limit, this._getSearchResultsLimit())  // Use config search_results_limit
+          limit_before: 5  // Get items before current track to include current track
         },
         return_response: true,
       };
+      const configLimit = this._getSearchResultsLimit();
+      const normalizedLimit = Number.isFinite(limit) ? limit : configLimit;
+      const limitAfter = Math.max(normalizedLimit || 0, configLimit || 0);
+      if (limitAfter > 0) {
+        message.service_data.limit_after = limitAfter;  // Use config search_results_limit
+      }
       
       const response = await hass.connection.sendMessagePromise(message);
       const queueItems = response?.response?.[entityId];
@@ -1852,7 +1888,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
       
       // Process the upcoming items like the companion card does
-      const results = upcomingItems.slice(0, limit).map((item, index) => ({
+      const itemsToRender = normalizedLimit > 0
+        ? upcomingItems.slice(0, normalizedLimit)
+        : upcomingItems;
+      const results = itemsToRender.map((item, index) => ({
         media_content_id: item.media_content_id || `queue_${index}`,
         media_content_type: 'track',
         media_class: 'track',
@@ -5651,11 +5690,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   
                   ${this._usingMusicAssistant && !this._searchLoading ? html`
-                    <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px;">
-                      ${(() => {
-                        return nothing;
-                      })()}
-                                              <button
+                    <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
+                      <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                        <button
                           class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
                           style="
                             background: none;
@@ -5766,6 +5803,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                               ` : nothing}
                           </button>
                         ` : nothing}
+                      ` : nothing}
+                      </div>
+                      ${this._shouldShowSearchResultsCount() ? html`
+                        <span style="margin-left:auto;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;">
+                          ${this._getSearchResultsCountLabel()}
+                        </span>
                       ` : nothing}
                     </div>
                   ` : nothing}

@@ -3931,6 +3931,24 @@ const yampCardStyles = i$4`
 `;
 
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+const resolveLimitValue = function (limit) {
+  let {
+    cap,
+    floor
+  } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  const numericLimit = Number(limit);
+  if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
+    return undefined;
+  }
+  let value = numericLimit;
+  if (typeof floor === "number") {
+    value = Math.max(floor, value);
+  }
+  if (typeof cap === "number") {
+    value = Math.min(cap, value);
+  }
+  return value;
+};
 
 /**
  * Renders the search sheet UI for media search.
@@ -4057,11 +4075,14 @@ async function searchMedia(hass, entityId, query) {
               config_entry_id: configEntryId,
               media_type: mt,
               favorite: true,
-              search: query,
-              limit: mt === 'all' ? Math.min(8, searchResultsLimit) : searchResultsLimit
+              search: query
             },
             return_response: true
           };
+          const favoritesLimit = resolveLimitValue(searchResultsLimit);
+          if (favoritesLimit !== undefined) {
+            message.service_data.limit = favoritesLimit;
+          }
           const favRes = await hass.connection.sendMessagePromise(message);
           const favResponse = favRes === null || favRes === void 0 ? void 0 : favRes.response;
           const items = (favResponse === null || favResponse === void 0 ? void 0 : favResponse.items) || [];
@@ -4089,9 +4110,14 @@ async function searchMedia(hass, entityId, query) {
       }
       const serviceData = {
         name: query,
-        config_entry_id: configEntryId,
-        limit: mediaType === "all" ? Math.min(8, searchResultsLimit) : searchResultsLimit // Use configurable limit for filtered searches
+        config_entry_id: configEntryId
       };
+      const searchLimit = resolveLimitValue(searchResultsLimit, {
+        cap: mediaType === "all" ? 8 : undefined
+      });
+      if (searchLimit !== undefined) {
+        serviceData.limit = searchLimit; // Use configurable limit for filtered searches
+      }
 
       // Add media_type if specified and not "all"
       if (mediaType && mediaType !== 'all') {
@@ -4195,11 +4221,16 @@ async function getRecentlyPlayed(hass, entityId) {
           service_data: {
             config_entry_id: configEntryId,
             media_type: mt,
-            order_by: "last_played_desc",
-            limit: Math.min(5, searchResultsLimit) // Limit each type to avoid too many results
+            order_by: "last_played_desc"
           },
           return_response: true
         };
+        const recentLimit = resolveLimitValue(searchResultsLimit, {
+          cap: 5
+        });
+        if (recentLimit !== undefined) {
+          message.service_data.limit = recentLimit; // Limit each type to avoid too many results
+        }
         const response = await hass.connection.sendMessagePromise(message);
         const items = (response === null || response === void 0 || (_response$response = response.response) === null || _response$response === void 0 ? void 0 : _response$response.items) || [];
         allResults.push(...items);
@@ -4235,11 +4266,14 @@ async function getRecentlyPlayed(hass, entityId) {
         service_data: {
           config_entry_id: configEntryId,
           media_type: mediaType || "track",
-          order_by: "last_played_desc",
-          limit: searchResultsLimit
+          order_by: "last_played_desc"
         },
         return_response: true
       };
+      const recentSingleLimit = resolveLimitValue(searchResultsLimit);
+      if (recentSingleLimit !== undefined) {
+        message.service_data.limit = recentSingleLimit;
+      }
       const response = await hass.connection.sendMessagePromise(message);
       const items = (response === null || response === void 0 || (_response$response2 = response.response) === null || _response$response2 === void 0 ? void 0 : _response$response2.items) || [];
 
@@ -4319,11 +4353,16 @@ async function getFavorites(hass, entityId) {
         service_data: {
           config_entry_id: configEntryId,
           media_type: mediaType,
-          favorite: true,
-          limit: mediaType === "all" ? Math.min(8, searchResultsLimit) : searchResultsLimit
+          favorite: true
         },
         return_response: true
       };
+      const favoritesLimit = resolveLimitValue(searchResultsLimit, {
+        cap: mediaType === "all" ? 8 : undefined
+      });
+      if (favoritesLimit !== undefined) {
+        message.service_data.limit = favoritesLimit;
+      }
       try {
         const res = await hass.connection.sendMessagePromise(message);
         const response = res === null || res === void 0 ? void 0 : res.response;
@@ -4466,9 +4505,12 @@ async function isTrackFavorited(hass, mediaContentId) {
         const serviceData = {
           name: trackName || artistName,
           config_entry_id: configEntryId,
-          limit: searchResultsLimit,
           media_type: 'track'
         };
+        const searchLimit = resolveLimitValue(searchResultsLimit);
+        if (searchLimit !== undefined) {
+          serviceData.limit = searchLimit;
+        }
         if (artistName) {
           serviceData.artist = artistName;
         }
@@ -4516,11 +4558,14 @@ async function isTrackFavorited(hass, mediaContentId) {
               config_entry_id: configEntryId,
               media_type: "track",
               favorite: true,
-              search: trackName.trim(),
-              limit: searchResultsLimit // Use configurable limit
+              search: trackName.trim()
             },
             return_response: true
           };
+          const trackSearchLimit = resolveLimitValue(searchResultsLimit);
+          if (trackSearchLimit !== undefined) {
+            message.service_data.limit = trackSearchLimit; // Use configurable limit
+          }
           const response = await hass.connection.sendMessagePromise(message);
           const favoriteTracks = (response === null || response === void 0 || (_response$response3 = response.response) === null || _response$response3 === void 0 ? void 0 : _response$response3.items) || [];
           if (favoriteTracks.some(track => track.uri === mediaContentId)) {
@@ -4542,11 +4587,16 @@ async function isTrackFavorited(hass, mediaContentId) {
         service_data: {
           config_entry_id: configEntryId,
           media_type: "track",
-          favorite: true,
-          limit: Math.max(100, searchResultsLimit) // Check at least 100 favorites for better matching
+          favorite: true
         },
         return_response: true
       };
+      const fallbackLimit = resolveLimitValue(searchResultsLimit, {
+        floor: 100
+      });
+      if (fallbackLimit !== undefined) {
+        message.service_data.limit = fallbackLimit; // Check at least 100 favorites for better matching
+      }
       const response = await hass.connection.sendMessagePromise(message);
       const favoriteTracks = (response === null || response === void 0 || (_response$response4 = response.response) === null || _response$response4 === void 0 ? void 0 : _response$response4.items) || [];
       return favoriteTracks.some(t => t.uri === mediaContentId);
@@ -10816,6 +10866,16 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           align-items: center;
           gap: 8px;
         }
+        .form-row-multi-column > div.number-input-with-note {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 4px;
+        }
+        .config-subtitle.warning {
+          color: var(--error-color, #f44336);
+          font-style: normal;
+          margin-top: 6px;
+        }
         .config-subtitle {
           font-size: 0.85em;
           color: var(--secondary-text-color, #888);
@@ -11486,22 +11546,33 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             </div>
             <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
           </div>
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector-number
-                .selector=${{
+            <div class="form-row form-row-multi-column">
+              <div class="grow-children number-input-with-note">
+                <ha-selector-number
+                  .selector=${{
       number: {
-        min: 1,
-        max: 500,
+        min: 0,
+        max: 1000,
         step: 1,
         mode: "box"
       }
     }}
-                .value=${this._config.search_results_limit ?? 20}
-                label="Search Results Limit"
-                helper="Maximum number of search results to display (1-500, default: 20)"
-                @value-changed=${e => this._updateConfig("search_results_limit", e.detail.value)}
-              ></ha-selector-number>
+                  .value=${this._config.search_results_limit ?? 20}
+                  label="Search Results Limit"
+                  helper="Maximum number of search results to display (1-1000, default: 20)"
+                  @value-changed=${e => this._updateConfig("search_results_limit", e.detail.value)}
+                ></ha-selector-number>
+                ${(() => {
+      const limit = Number(this._config.search_results_limit);
+      if (limit > 100) {
+        return x`
+                      <div class="config-subtitle warning">
+                        Warning: requesting higher results can cause performance issues.
+                      </div>
+                    `;
+      }
+      return E;
+    })()}
             </div>
             <ha-icon
               class="icon-button"
@@ -13606,9 +13677,30 @@ class YetAnotherMediaPlayerCard extends i$1 {
     var _this$config2;
     const raw = Number((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit);
     if (Number.isFinite(raw)) {
-      return Math.min(Math.max(raw, 1), 500);
+      if (raw === 0) {
+        return 0; // Explicitly disable limit
+      }
+      return Math.min(Math.max(raw, 1), 1000);
     }
     return 20;
+  }
+  _getSearchResultsCount() {
+    return Array.isArray(this._searchResults) ? this._searchResults.length : 0;
+  }
+  _shouldShowSearchResultsCount() {
+    if (!this._usingMusicAssistant || this._searchLoading) {
+      return false;
+    }
+    const count = this._getSearchResultsCount();
+    if (count > 0) {
+      return true;
+    }
+    return this._searchAttempted || this._initialFavoritesLoaded || this._favoritesFilterActive || this._recentlyPlayedFilterActive || this._upcomingFilterActive || this._recommendationsFilterActive;
+  }
+  _getSearchResultsCountLabel() {
+    const count = this._getSearchResultsCount();
+    const noun = count === 1 ? "result" : "results";
+    return `${count} ${noun}`;
   }
   async _doSearch() {
     var _this$config3;
@@ -14524,12 +14616,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
         service: "get_queue_items",
         service_data: {
           entity: entityId,
-          limit_before: 5,
-          // Get items before current track to include current track
-          limit_after: Math.max(limit, this._getSearchResultsLimit()) // Use config search_results_limit
+          limit_before: 5 // Get items before current track to include current track
         },
         return_response: true
       };
+      const configLimit = this._getSearchResultsLimit();
+      const normalizedLimit = Number.isFinite(limit) ? limit : configLimit;
+      const limitAfter = Math.max(normalizedLimit || 0, configLimit || 0);
+      if (limitAfter > 0) {
+        message.service_data.limit_after = limitAfter; // Use config search_results_limit
+      }
       const response = await hass.connection.sendMessagePromise(message);
       const queueItems = response === null || response === void 0 || (_response$response = response.response) === null || _response$response === void 0 ? void 0 : _response$response[entityId];
       if (!Array.isArray(queueItems)) {
@@ -14543,7 +14639,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
 
       // Process the upcoming items like the companion card does
-      const results = upcomingItems.slice(0, limit).map((item, index) => ({
+      const itemsToRender = normalizedLimit > 0 ? upcomingItems.slice(0, normalizedLimit) : upcomingItems;
+      const results = itemsToRender.map((item, index) => ({
         media_content_id: item.media_content_id || `queue_${index}`,
         media_content_type: 'track',
         media_class: 'track',
@@ -18138,11 +18235,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   ${this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
                   
                   ${this._usingMusicAssistant && !this._searchLoading ? x`
-                    <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px;">
-                      ${(() => {
-      return E;
-    })()}
-                                              <button
+                    <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
+                      <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                        <button
                           class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
                           style="
                             background: none;
@@ -18253,6 +18348,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
                               ` : E}
                           </button>
                         ` : E}
+                      ` : E}
+                      </div>
+                      ${this._shouldShowSearchResultsCount() ? x`
+                        <span style="margin-left:auto;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;">
+                          ${this._getSearchResultsCountLabel()}
+                        </span>
                       ` : E}
                     </div>
                   ` : E}
