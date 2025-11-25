@@ -1,6 +1,21 @@
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { LitElement, html, css, nothing } from "lit";
 
+const resolveLimitValue = (limit, { cap, floor } = {}) => {
+  const numericLimit = Number(limit);
+  if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
+    return undefined;
+  }
+  let value = numericLimit;
+  if (typeof floor === "number") {
+    value = Math.max(floor, value);
+  }
+  if (typeof cap === "number") {
+    value = Math.min(cap, value);
+  }
+  return value;
+};
+
 /**
  * Renders the search sheet UI for media search.
  *
@@ -133,10 +148,13 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
                 media_type: mt,
                 favorite: true,
                 search: query,
-                limit: mt === 'all' ? Math.min(8, searchResultsLimit) : searchResultsLimit,
               },
               return_response: true,
             };
+            const favoritesLimit = resolveLimitValue(searchResultsLimit);
+            if (favoritesLimit !== undefined) {
+              message.service_data.limit = favoritesLimit;
+            }
             const favRes = await hass.connection.sendMessagePromise(message);
             const favResponse = favRes?.response;
             const items = favResponse?.items || [];
@@ -160,8 +178,14 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
       const serviceData = {
         name: query,
         config_entry_id: configEntryId,
-        limit: mediaType === "all" ? Math.min(8, searchResultsLimit) : searchResultsLimit, // Use configurable limit for filtered searches
       };
+      const searchLimit = resolveLimitValue(
+        searchResultsLimit,
+        { cap: mediaType === "all" ? 8 : undefined }
+      );
+      if (searchLimit !== undefined) {
+        serviceData.limit = searchLimit; // Use configurable limit for filtered searches
+      }
       
       // Add media_type if specified and not "all"
       if (mediaType && mediaType !== 'all') {
@@ -270,10 +294,13 @@ export async function getRecentlyPlayed(hass, entityId, mediaType = null, search
               config_entry_id: configEntryId,
               media_type: mt,
               order_by: "last_played_desc",
-              limit: Math.min(5, searchResultsLimit), // Limit each type to avoid too many results
             },
             return_response: true,
           };
+          const recentLimit = resolveLimitValue(searchResultsLimit, { cap: 5 });
+          if (recentLimit !== undefined) {
+            message.service_data.limit = recentLimit; // Limit each type to avoid too many results
+          }
           
           const response = await hass.connection.sendMessagePromise(message);
           const items = response?.response?.items || [];
@@ -304,10 +331,13 @@ export async function getRecentlyPlayed(hass, entityId, mediaType = null, search
           config_entry_id: configEntryId,
           media_type: mediaType || "track",
           order_by: "last_played_desc",
-          limit: searchResultsLimit,
         },
         return_response: true,
       };
+      const recentSingleLimit = resolveLimitValue(searchResultsLimit);
+      if (recentSingleLimit !== undefined) {
+        message.service_data.limit = recentSingleLimit;
+      }
       
       const response = await hass.connection.sendMessagePromise(message);
       const items = response?.response?.items || [];
@@ -379,19 +409,25 @@ export async function getFavorites(hass, entityId, mediaType = null, searchResul
       podcast: "podcasts",
     };
     
-    const getResult = async (mediaType) => {
-      const message = {
-        type: "call_service",
-        domain: "music_assistant",
-        service: "get_library",
-        service_data: {
-          config_entry_id: configEntryId,
-          media_type: mediaType,
-          favorite: true,
-          limit: mediaType === "all" ? Math.min(8, searchResultsLimit) : searchResultsLimit,
-        },
-        return_response: true,
-      };
+      const getResult = async (mediaType) => {
+        const message = {
+          type: "call_service",
+          domain: "music_assistant",
+          service: "get_library",
+          service_data: {
+            config_entry_id: configEntryId,
+            media_type: mediaType,
+            favorite: true,
+          },
+          return_response: true,
+        };
+        const favoritesLimit = resolveLimitValue(
+          searchResultsLimit,
+          { cap: mediaType === "all" ? 8 : undefined }
+        );
+        if (favoritesLimit !== undefined) {
+          message.service_data.limit = favoritesLimit;
+        }
       
 
       
@@ -543,9 +579,12 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
         const serviceData = {
           name: trackName || artistName,
           config_entry_id: configEntryId,
-          limit: searchResultsLimit,
           media_type: 'track',
         };
+        const searchLimit = resolveLimitValue(searchResultsLimit);
+        if (searchLimit !== undefined) {
+          serviceData.limit = searchLimit;
+        }
         if (artistName) {
           serviceData.artist = artistName;
         }
@@ -589,16 +628,19 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
           const message = {
             type: "call_service",
             domain: "music_assistant",
-            service: "get_library",
-            service_data: {
-              config_entry_id: configEntryId,
-              media_type: "track",
-              favorite: true,
-              search: trackName.trim(),
-              limit: searchResultsLimit, // Use configurable limit
-            },
-            return_response: true,
-          };
+          service: "get_library",
+          service_data: {
+            config_entry_id: configEntryId,
+            media_type: "track",
+            favorite: true,
+            search: trackName.trim(),
+          },
+          return_response: true,
+        };
+        const trackSearchLimit = resolveLimitValue(searchResultsLimit);
+        if (trackSearchLimit !== undefined) {
+          message.service_data.limit = trackSearchLimit; // Use configurable limit
+        }
           const response = await hass.connection.sendMessagePromise(message);
           const favoriteTracks = response?.response?.items || [];
           if (favoriteTracks.some(track => track.uri === mediaContentId)) {
@@ -616,14 +658,17 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
         type: "call_service",
         domain: "music_assistant",
         service: "get_library",
-        service_data: {
-          config_entry_id: configEntryId,
-          media_type: "track",
-          favorite: true,
-          limit: Math.max(100, searchResultsLimit), // Check at least 100 favorites for better matching
-        },
-        return_response: true,
-      };
+          service_data: {
+            config_entry_id: configEntryId,
+            media_type: "track",
+            favorite: true,
+          },
+          return_response: true,
+        };
+        const fallbackLimit = resolveLimitValue(searchResultsLimit, { floor: 100 });
+        if (fallbackLimit !== undefined) {
+          message.service_data.limit = fallbackLimit; // Check at least 100 favorites for better matching
+        }
       const response = await hass.connection.sendMessagePromise(message);
       const favoriteTracks = response?.response?.items || [];
       return favoriteTracks.some(t => t.uri === mediaContentId);

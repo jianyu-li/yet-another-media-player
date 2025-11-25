@@ -350,6 +350,20 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           align-items: center;
           gap: 8px;
         }
+        .form-row-multi-column > div.number-input-with-note {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 4px;
+        }
+        .config-subtitle.warning {
+          color: var(--error-color, #f44336);
+          font-style: normal;
+          margin-top: 6px;
+        }
+        #search-limit-reset {
+          align-self: flex-start;
+          margin-top: 6px;
+        }
         .config-subtitle {
           font-size: 0.85em;
           color: var(--secondary-text-color, #888);
@@ -927,8 +941,9 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       `;
     }
 
-    _renderBehaviorTab() {
-      return html`
+  _renderBehaviorTab() {
+    const searchLimitWarningActive = Number(this._config.search_results_limit) > 100;
+    return html`
         <div class="config-section">
           <div class="section-header">
             <div class="section-title">Idle & Chips</div>
@@ -988,22 +1003,44 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
             <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
           </div>
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector-number
-                .selector=${{ number: { min: 1, max: 100, step: 1, mode: "box" } }}
-                .value=${this._config.search_results_limit ?? 20}
-                label="Search Results Limit"
-                helper="Maximum number of search results to display (1-100, default: 20)"
-                @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
-              ></ha-selector-number>
+            <div class="form-row form-row-multi-column">
+              <div class="grow-children number-input-with-note">
+                <ha-selector-number
+                  .selector=${{ number: { min: 0, max: 1000, step: 1, mode: "box" } }}
+                  .value=${this._config.search_results_limit ?? 20}
+                  label="Search Results Limit"
+                  helper="Maximum number of search results to display (1-1000, default: 20)"
+                  @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
+                ></ha-selector-number>
+                ${searchLimitWarningActive ? html`
+                  <div class="config-subtitle warning">
+                    Warning: requesting higher results can cause performance issues.
+                  </div>
+                ` : nothing}
             </div>
             <ha-icon
               class="icon-button"
+              id="search-limit-reset"
               icon="mdi:restore"
               title="Reset to default"
               @click=${() => this._updateConfig("search_results_limit", 20)}
             ></ha-icon>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{ select: { mode: "dropdown", options: [
+                { value: "default", label: "Default" },
+                { value: "title_asc", label: "Title Ascending" },
+                { value: "title_desc", label: "Title Descending" },
+                { value: "artist_asc", label: "Artist Ascending" },
+                { value: "artist_desc", label: "Artist Descending" },
+              ]}}}
+              .value=${this._config.search_results_sort ?? "default"}
+              label="Result Sorting"
+              helper="Choose how search results are ordered. Default keeps the source order."
+              @value-changed=${(e) => this._updateConfig("search_results_sort", e.detail.value)}
+            ></ha-selector>
           </div>
         </div>
       `;
