@@ -345,6 +345,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._transferQueueStatus = null;
     this._hasTransferQueueForCurrent = false;
     this._transferQueueAutoCloseTimer = null;
+    // Queue actions pop-out state
+    this._queueActionsMenuOpenId = null;
+    this._queueActionsMenuOutsideHandler = null;
     // Alternate progress‑bar mode
     this._alternateProgressBar = false;
     // Group base volume for group gain logic
@@ -785,6 +788,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
   _hideSearchSheetInOptions() {
+    this._closeQueueActionsMenu();
     this._showSearchInSheet = false;
     this._searchError = "";
     this._searchResults = [];
@@ -816,6 +820,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
   }
   _searchCloseSheet() {
+    this._closeQueueActionsMenu();
     this._searchOpen = false;
     this._searchError = "";
     this._searchResults = [];
@@ -932,6 +937,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       async _doSearch(mediaType = null, searchParams = {}) {
     this._searchAttempted = true;
+    this._closeQueueActionsMenu();
     
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
@@ -1451,6 +1457,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
   async _toggleFavoritesFilter() {
+    this._closeQueueActionsMenu();
     this._favoritesFilterActive = !this._favoritesFilterActive;
     
     // Make mutually exclusive with other filters
@@ -1503,6 +1510,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Toggle recently played filter
   async _toggleRecentlyPlayedFilter(forceState = null) {
+    this._closeQueueActionsMenu();
     const targetState = typeof forceState === "boolean"
       ? forceState
       : !this._recentlyPlayedFilterActive;
@@ -1548,6 +1556,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Toggle upcoming queue filter
   async _toggleUpcomingFilter(forceState = null) {
+    this._closeQueueActionsMenu();
     const targetState = typeof forceState === "boolean"
       ? forceState
       : !this._upcomingFilterActive;
@@ -1600,6 +1609,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Toggle recommendations filter (mass_queue)
   async _toggleRecommendationsFilter(forceState = null) {
+    this._closeQueueActionsMenu();
     const targetState = typeof forceState === "boolean"
       ? forceState
       : !this._recommendationsFilterActive;
@@ -1917,8 +1927,71 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
+  // Queue actions pop-out helpers
+  _toggleQueueActionsMenu(queueItemId, event = null) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (queueItemId === null || queueItemId === undefined) {
+      this._closeQueueActionsMenu();
+      return;
+    }
+    const normalizedId = String(queueItemId);
+    if (this._queueActionsMenuOpenId === normalizedId) {
+      this._closeQueueActionsMenu();
+      return;
+    }
+    this._queueActionsMenuOpenId = normalizedId;
+    this.requestUpdate();
+    this._addQueueActionsOutsideHandler();
+  }
+
+  _closeQueueActionsMenu() {
+    const hadMenu = this._queueActionsMenuOpenId !== null && this._queueActionsMenuOpenId !== undefined;
+    this._queueActionsMenuOpenId = null;
+    this._removeQueueActionsOutsideHandler();
+    if (hadMenu) {
+      this.requestUpdate();
+    }
+  }
+
+  _addQueueActionsOutsideHandler() {
+    if (this._queueActionsMenuOutsideHandler) return;
+    this._queueActionsMenuOutsideHandler = (evt) => {
+      const targetId = this._queueActionsMenuOpenId;
+      if (!targetId) {
+        this._closeQueueActionsMenu();
+        return;
+      }
+      const wrappers = this.renderRoot?.querySelectorAll('[data-queue-menu]');
+      let activeWrapper = null;
+      if (wrappers && wrappers.length) {
+        activeWrapper = Array.from(wrappers).find((el) => {
+          const attr = el.getAttribute('data-queue-menu');
+          return attr === String(targetId);
+        });
+      }
+      const path = typeof evt.composedPath === 'function' ? evt.composedPath() : [];
+      if (activeWrapper && path.includes(activeWrapper)) {
+        return;
+      }
+      this._closeQueueActionsMenu();
+    };
+    window.addEventListener('mousedown', this._queueActionsMenuOutsideHandler, true);
+    window.addEventListener('touchstart', this._queueActionsMenuOutsideHandler, true);
+  }
+
+  _removeQueueActionsOutsideHandler() {
+    if (!this._queueActionsMenuOutsideHandler) return;
+    window.removeEventListener('mousedown', this._queueActionsMenuOutsideHandler, true);
+    window.removeEventListener('touchstart', this._queueActionsMenuOutsideHandler, true);
+    this._queueActionsMenuOutsideHandler = null;
+  }
+
   // Queue reordering methods
   async _moveQueueItemUp(queueItemId) {
+    this._closeQueueActionsMenu();
     try {
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
@@ -1943,6 +2016,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   async _moveQueueItemDown(queueItemId) {
+    this._closeQueueActionsMenu();
     try {
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
@@ -1967,6 +2041,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   async _moveQueueItemNext(queueItemId) {
+    this._closeQueueActionsMenu();
     try {
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
@@ -1991,6 +2066,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   async _removeQueueItem(queueItemId) {
+    this._closeQueueActionsMenu();
     try {
       // Get the Music Assistant entity for the current chip
       const maState = this._getMusicAssistantState();
@@ -4377,6 +4453,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         break;
       }
     }
+
   }
 
   /**
@@ -5871,32 +5948,43 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
                                   ▶
                                 </button>
-                                ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
+                                ${this._upcomingFilterActive && item.queue_item_id != null && this._isMusicAssistantEntity() && this._massQueueAvailable ? html`
+                                  <div
+                                    class="queue-actions-wrapper"
+                                    data-queue-menu=${item.queue_item_id != null ? String(item.queue_item_id) : ""}
+                                  >
+                                    <button
+                                      class="entity-options-search-queue queue-menu-trigger"
+                                      @click=${(e) => this._toggleQueueActionsMenu(item.queue_item_id, e)}
+                                      title="Queue Actions"
+                                    >
+                                      <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                                    </button>
+                                    ${this._queueActionsMenuOpenId === (item.queue_item_id != null ? String(item.queue_item_id) : "") ? html`
+                                      <div class="queue-action-menu" @click=${(e) => e.stopPropagation()}>
+                                        <button class="queue-action-menu-item" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }}>
+                                          <ha-icon icon="mdi:arrow-up"></ha-icon>
+                                          <span class="queue-action-menu-label">Move Up</span>
+                                        </button>
+                                        <button class="queue-action-menu-item" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }}>
+                                          <ha-icon icon="mdi:arrow-down"></ha-icon>
+                                          <span class="queue-action-menu-label">Move Down</span>
+                                        </button>
+                                        <button class="queue-action-menu-item" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }}>
+                                          <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
+                                          <span class="queue-action-menu-label">Move to Next</span>
+                                        </button>
+                                        <button class="queue-action-menu-item queue-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }}>
+                                          <ha-icon icon="mdi:close"></ha-icon>
+                                          <span class="queue-action-menu-label">Remove</span>
+                                        </button>
+                                      </div>
+                                    ` : nothing}
+                                  </div>
+                                ` : html`
                                   <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
                                     <ha-icon icon="mdi:playlist-play"></ha-icon>
                                   </button>
-                                ` : html`
-                                  <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->
-                                  ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? html`
-                                    <div class="queue-controls">
-                                      <button class="queue-btn queue-btn-up" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }} title="Move Up">
-                                        <ha-icon icon="mdi:arrow-up"></ha-icon>
-                                      </button>
-                                      <button class="queue-btn queue-btn-down" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }} title="Move Down">
-                                        <ha-icon icon="mdi:arrow-down"></ha-icon>
-                                      </button>
-                                      <button class="queue-btn queue-btn-next" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }} title="Move to Next">
-                                        <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
-                                      </button>
-                                      <button class="queue-btn queue-btn-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }} title="Remove from Queue">
-                                        <ha-icon icon="mdi:close"></ha-icon>
-                                      </button>
-                                    </div>
-                                  ` : html`
-                                    <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
-                                      <ha-icon icon="mdi:playlist-play"></ha-icon>
-                                    </button>
-                                  `}
                                 `}
                               </div>
                             </div>
@@ -6629,6 +6717,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     // Unsubscribe from queue update events
     this._unsubscribeFromQueueUpdates();
+    this._removeQueueActionsOutsideHandler();
     super.disconnectedCallback?.();
     if (this._progressTimer) {
       clearInterval(this._progressTimer);

@@ -1920,6 +1920,7 @@ export const yampCardStyles = css`
     display: flex;
     gap: 6px;
     margin-left: 7px;
+    align-items: center;
   }
 
   .entity-options-search-play,
@@ -1967,6 +1968,79 @@ export const yampCardStyles = css`
     border: none;
     color: var(--custom-accent);
     opacity: 0.8;
+  }
+
+  .queue-actions-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-right: 8px;
+  }
+
+  .queue-menu-trigger {
+    padding-right: 4px;
+    padding-bottom: 0;
+    border-radius: 50%;
+    margin-top: -12px;
+  }
+
+  .queue-menu-trigger:hover,
+  .queue-menu-trigger:focus {
+    color: var(--custom-accent);
+  }
+
+  .queue-action-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: rgba(8, 8, 8, 0.95);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    padding: 6px;
+    min-width: 175px;
+    z-index: 20;
+  }
+
+  .queue-action-menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: background var(--transition-normal), color var(--transition-normal);
+  }
+
+  .queue-action-menu-item:hover,
+  .queue-action-menu-item:focus {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .queue-action-menu-item ha-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .queue-action-menu-label {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 5px;
+  }
+
+  .queue-action-menu-item.queue-remove {
+    color: #f46a60;
+  }
+
+  .queue-action-menu-item.queue-remove:hover,
+  .queue-action-menu-item.queue-remove:focus {
+    background: rgba(244, 106, 96, 0.15);
+    color: #fff;
   }
 
   /* Queue control buttons */
