@@ -3332,11 +3332,10 @@ const yampCardStyles = i$4`
   .queue-slideout {
     position: absolute;
     inset: 0;
-    background: rgba(4, 4, 5, 0.86);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 14px 26px rgba(0, 0, 0, 0.55);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
     transform: translateX(105%);
     opacity: 0;
     pointer-events: none;
@@ -3344,6 +3343,7 @@ const yampCardStyles = i$4`
     display: flex;
     align-items: center;
     z-index: 4;
+    overflow: hidden;
   }
 
   .queue-slideout.open {
@@ -3358,6 +3358,18 @@ const yampCardStyles = i$4`
     display: flex;
     flex-direction: column;
     gap: 6px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .entity-options-search-result.queue-slideout-active .entity-options-search-thumb,
+  .entity-options-search-result.queue-slideout-active .entity-options-search-thumb-placeholder,
+  .entity-options-search-result.queue-slideout-active .queue-item-details,
+  .entity-options-search-result.queue-slideout-active .entity-options-search-buttons {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--transition-normal);
   }
 
   .queue-slideout-dismiss {
@@ -3388,6 +3400,12 @@ const yampCardStyles = i$4`
     flex-wrap: nowrap;
     gap: 6px;
     justify-content: flex-start;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 
   .queue-slideout-btn {
@@ -18590,7 +18608,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return x`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div
-                              class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''} ${queueActionEligible ? 'has-queue-slideout' : ''}"
+                              class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''} ${queueActionEligible ? 'has-queue-slideout' : ''} ${slideoutOpen ? 'queue-slideout-active' : ''}"
                               data-queue-menu=${queueActionId || E}
                             >
                               ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x`
@@ -18607,7 +18625,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                                   <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
                                 </div>
                               `}
-                              <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                              <div class="queue-item-details" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
                                       @touchstart=${e => this._handleSearchResultTouch(item, e)}
                                       @click=${() => this._handleSearchResultClick(item)}

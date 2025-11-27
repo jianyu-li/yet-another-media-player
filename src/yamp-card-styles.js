@@ -2009,11 +2009,10 @@ export const yampCardStyles = css`
   .queue-slideout {
     position: absolute;
     inset: 0;
-    background: rgba(4, 4, 5, 0.86);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 14px 26px rgba(0, 0, 0, 0.55);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
     transform: translateX(105%);
     opacity: 0;
     pointer-events: none;
@@ -2021,6 +2020,7 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     z-index: 4;
+    overflow: hidden;
   }
 
   .queue-slideout.open {
@@ -2035,6 +2035,18 @@ export const yampCardStyles = css`
     display: flex;
     flex-direction: column;
     gap: 6px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .entity-options-search-result.queue-slideout-active .entity-options-search-thumb,
+  .entity-options-search-result.queue-slideout-active .entity-options-search-thumb-placeholder,
+  .entity-options-search-result.queue-slideout-active .queue-item-details,
+  .entity-options-search-result.queue-slideout-active .entity-options-search-buttons {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--transition-normal);
   }
 
   .queue-slideout-dismiss {
@@ -2065,6 +2077,12 @@ export const yampCardStyles = css`
     flex-wrap: nowrap;
     gap: 6px;
     justify-content: flex-start;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 
   .queue-slideout-btn {

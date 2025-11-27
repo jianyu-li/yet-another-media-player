@@ -5910,7 +5910,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             return html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div
-                              class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''} ${queueActionEligible ? 'has-queue-slideout' : ''}"
+                              class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''} ${queueActionEligible ? 'has-queue-slideout' : ''} ${slideoutOpen ? 'queue-slideout-active' : ''}"
                               data-queue-menu=${queueActionId || nothing}
                             >
                               ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
@@ -5927,7 +5927,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                   <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
                                 </div>
                               `}
-                              <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                              <div class="queue-item-details" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
                                       @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
                                       @click=${() => this._handleSearchResultClick(item)}
