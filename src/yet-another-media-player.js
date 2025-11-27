@@ -5903,9 +5903,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       // Always render paddedResults, even before first search
                       return (this._searchAttempted && currentResults.length === 0 && !this._searchLoading)
                         ? html`<div class="entity-options-search-empty" style="color: white;">No results.</div>`
-                        : paddedResults.map(item => item ? html`
+                        : paddedResults.map(item => item ? (() => {
+                            const queueActionEligible = this._upcomingFilterActive && item.queue_item_id != null && this._isMusicAssistantEntity() && this._massQueueAvailable;
+                            const queueActionId = queueActionEligible ? String(item.queue_item_id) : null;
+                            const slideoutOpen = queueActionEligible && queueActionId === this._queueActionsMenuOpenId;
+                            return html`
                             <!-- EXISTING non‑placeholder row markup -->
-                            <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''}">
+                            <div
+                              class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''} ${queueActionEligible ? 'has-queue-slideout' : ''}"
+                              data-queue-menu=${queueActionId || nothing}
+                            >
                               ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
                                 <img
                                   class="entity-options-search-thumb"
@@ -5948,11 +5955,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
                                   ▶
                                 </button>
-                                ${this._upcomingFilterActive && item.queue_item_id != null && this._isMusicAssistantEntity() && this._massQueueAvailable ? html`
-                                  <div
-                                    class="queue-actions-wrapper"
-                                    data-queue-menu=${item.queue_item_id != null ? String(item.queue_item_id) : ""}
-                                  >
+                                ${queueActionEligible ? html`
+                                  <div class="queue-actions-wrapper">
                                     <button
                                       class="entity-options-search-queue queue-menu-trigger"
                                       @click=${(e) => this._toggleQueueActionsMenu(item.queue_item_id, e)}
@@ -5960,26 +5964,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                     >
                                       <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                     </button>
-                                    ${this._queueActionsMenuOpenId === (item.queue_item_id != null ? String(item.queue_item_id) : "") ? html`
-                                      <div class="queue-action-menu" @click=${(e) => e.stopPropagation()}>
-                                        <button class="queue-action-menu-item" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }}>
-                                          <ha-icon icon="mdi:arrow-up"></ha-icon>
-                                          <span class="queue-action-menu-label">Move Up</span>
-                                        </button>
-                                        <button class="queue-action-menu-item" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }}>
-                                          <ha-icon icon="mdi:arrow-down"></ha-icon>
-                                          <span class="queue-action-menu-label">Move Down</span>
-                                        </button>
-                                        <button class="queue-action-menu-item" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }}>
-                                          <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
-                                          <span class="queue-action-menu-label">Move to Next</span>
-                                        </button>
-                                        <button class="queue-action-menu-item queue-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }}>
-                                          <ha-icon icon="mdi:close"></ha-icon>
-                                          <span class="queue-action-menu-label">Remove</span>
-                                        </button>
-                                      </div>
-                                    ` : nothing}
                                   </div>
                                 ` : html`
                                   <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
@@ -5987,8 +5971,36 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                   </button>
                                 `}
                               </div>
+                              ${queueActionEligible ? html`
+                                <div class="queue-slideout ${slideoutOpen ? 'open' : ''}" @click=${(e) => e.stopPropagation()}>
+                                  <button class="queue-slideout-dismiss" @click=${(e) => this._toggleQueueActionsMenu(item.queue_item_id, e)} title="Close queue controls">
+                                    <ha-icon icon="mdi:chevron-right"></ha-icon>
+                                  </button>
+                                  <div class="queue-slideout-content">
+                                    <div class="queue-slideout-actions">
+                                      <button class="queue-slideout-btn" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }}>
+                                        <ha-icon icon="mdi:arrow-up"></ha-icon>
+                                        <span>Move Up</span>
+                                      </button>
+                                      <button class="queue-slideout-btn" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }}>
+                                        <ha-icon icon="mdi:arrow-down"></ha-icon>
+                                        <span>Move Down</span>
+                                      </button>
+                                      <button class="queue-slideout-btn" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }}>
+                                        <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
+                                        <span>Move to Next</span>
+                                      </button>
+                                      <button class="queue-slideout-btn danger" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }}>
+                                        <ha-icon icon="mdi:trash-can-outline"></ha-icon>
+                                        <span>Remove</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ` : nothing}
                             </div>
-                          ` : html`
+                          `;
+                          })() : html`
                             <!-- placeholder row keeps height -->
                             <div class="entity-options-search-result placeholder"></div>
                           `);

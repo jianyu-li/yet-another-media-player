@@ -1941,10 +1941,20 @@ export const yampCardStyles = css`
     justify-content: center;
   }
 
+  .entity-options-search-buttons .entity-options-search-play {
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
   .entity-options-search-play ha-icon,
   .entity-options-search-queue ha-icon {
     width: 16px;
     height: 16px;
+  }
+
+  .entity-options-search-buttons .entity-options-search-queue {
+    align-self: flex-start;
+    margin-top: 2px;
   }
 
   .entity-options-search-play:hover,
@@ -1970,18 +1980,25 @@ export const yampCardStyles = css`
     opacity: 0.8;
   }
 
-  .queue-actions-wrapper {
+  .entity-options-search-result.has-queue-slideout {
     position: relative;
+    overflow: hidden;
+  }
+
+  .queue-actions-wrapper {
     display: flex;
     align-items: center;
-    padding-right: 8px;
+    padding-right: 4px;
+    align-self: flex-start;
+    margin-top: 2px;
   }
 
   .queue-menu-trigger {
-    padding-right: 4px;
-    padding-bottom: 0;
+    padding: 4px;
+    border: none;
+    background: transparent;
     border-radius: 50%;
-    margin-top: -12px;
+    margin-top: 0;
   }
 
   .queue-menu-trigger:hover,
@@ -1989,56 +2006,105 @@ export const yampCardStyles = css`
     color: var(--custom-accent);
   }
 
-  .queue-action-menu {
+  .queue-slideout {
     position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
-    background: rgba(8, 8, 8, 0.95);
+    inset: 0;
+    background: rgba(4, 4, 5, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-    padding: 6px;
-    min-width: 175px;
-    z-index: 20;
-  }
-
-  .queue-action-menu-item {
-    width: 100%;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 14px 26px rgba(0, 0, 0, 0.55);
+    transform: translateX(105%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.24s ease, opacity 0.22s ease;
     display: flex;
     align-items: center;
-    gap: 10px;
+    z-index: 4;
+  }
+
+  .queue-slideout.open {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .queue-slideout-content {
+    width: 100%;
+    padding: 10px 48px 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .queue-slideout-dismiss {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
     border: none;
-    background: transparent;
+    background: rgba(255, 255, 255, 0.08);
     color: #fff;
-    padding: 6px 8px;
-    border-radius: 8px;
-    font-size: 0.95em;
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: background var(--transition-normal), color var(--transition-normal);
   }
 
-  .queue-action-menu-item:hover,
-  .queue-action-menu-item:focus {
+  .queue-slideout-dismiss:hover,
+  .queue-slideout-dismiss:focus {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .queue-slideout-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    justify-content: flex-start;
+  }
+
+  .queue-slideout-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+    border-radius: 12px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: border var(--transition-normal), background var(--transition-normal), color var(--transition-normal);
+  }
+
+  .queue-slideout-btn:hover,
+  .queue-slideout-btn:focus {
+    border-color: var(--custom-accent);
     background: rgba(255, 255, 255, 0.08);
   }
 
-  .queue-action-menu-item ha-icon {
-    width: 16px;
-    height: 16px;
+  .queue-slideout-btn ha-icon {
+    width: 18px;
+    height: 18px;
   }
 
-  .queue-action-menu-label {
-    display: inline-flex;
-    align-items: center;
-    margin-top: 5px;
+  .queue-slideout-btn span {
+    font-size: 0.92em;
+    font-weight: 600;
   }
 
-  .queue-action-menu-item.queue-remove {
+  .queue-slideout-btn.danger {
+    border-color: rgba(244, 106, 96, 0.4);
     color: #f46a60;
   }
 
-  .queue-action-menu-item.queue-remove:hover,
-  .queue-action-menu-item.queue-remove:focus {
+  .queue-slideout-btn.danger:hover,
+  .queue-slideout-btn.danger:focus {
     background: rgba(244, 106, 96, 0.15);
     color: #fff;
   }
