@@ -3372,6 +3372,15 @@ const yampCardStyles = i$4`
     transition: opacity var(--transition-normal);
   }
 
+  .entity-options-search-result.queue-slideout-active .entity-options-search-thumb,
+  .entity-options-search-result.queue-slideout-active .entity-options-search-thumb-placeholder {
+    display: none;
+  }
+
+  .entity-options-search-result.queue-slideout-active .queue-item-details {
+    display: none;
+  }
+
   .queue-slideout-dismiss {
     position: absolute;
     top: 50%;
