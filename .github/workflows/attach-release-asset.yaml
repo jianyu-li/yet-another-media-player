@@ -1,0 +1,21 @@
+name: Attach Release Bundle
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  upload-bundle:
+    name: Attach Bundle to Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload bundle to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: yet-another-media-player.js
