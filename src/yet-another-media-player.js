@@ -248,6 +248,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener("scroll", this._handleGlobalScroll, { passive: true });
+    window.addEventListener("resize", this._handleViewportResize, { passive: true });
+    this._updateViewportFlags();
     this._updateAdaptiveTextObserverState();
   }
 
@@ -354,6 +356,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchQuery = "";
     this._searchLoading = false;
     this._searchResults = [];
+    this._searchDisplaySortOverride = null;
     this._searchError = "";
     this._searchTotalRows = 15;  // minimum 15 rows for layout padding
     // Cache search results by media type for better performance
@@ -410,6 +413,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._pendingAdaptiveScaleUpdate = false;
     this._adaptiveScrollTimer = null;
     this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
+    this._handleViewportResize = this._handleViewportResize.bind(this);
+    this._isNarrowViewport = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -789,6 +794,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchError = "";
     this._searchResults = [];
     this._searchQuery = "";
+    this._searchDisplaySortOverride = null;
     this._searchInputAutoFocused = false;
     this._searchLoading = false;
     this._searchAttempted = false;
@@ -820,6 +826,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchError = "";
     this._searchResults = [];
     this._searchQuery = "";
+    this._searchDisplaySortOverride = null;
     this._searchLoading = false;
     this._searchInputAutoFocused = false;
     this._searchResultsByType = {}; // Clear cache when closing
@@ -835,8 +842,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
   }
 
-  _sortSearchResults(results) {
-    const sortMode = this.config?.search_results_sort || "default";
+  _closeMenuIfOpen() {
+    if (this._queueActionsMenuOpenId) {
+      this._closeQueueActionsMenu();
+    }
+  }
+
+  _sortSearchResults(results, sortModeOverride = null) {
+    const sortMode = sortModeOverride ?? this.config?.search_results_sort ?? "default";
     const list = Array.isArray(results) ? [...results] : [];
 
     if (sortMode === "default") {
@@ -884,6 +897,92 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
+  _getConfiguredSearchResultsSortMode() {
+    const configured = this.config?.search_results_sort;
+    return typeof configured === "string" ? configured : "default";
+  }
+
+  _isSortableSearchMode(mode) {
+    return typeof mode === "string" && /^(title|artist)_(asc|desc)$/.test(mode);
+  }
+
+  _getOppositeSearchSortMode(mode) {
+    const match = /^(title|artist)_(asc|desc)$/.exec(mode || "");
+    if (!match) {
+      return null;
+    }
+    const [, field, direction] = match;
+    const oppositeDirection = direction === "asc" ? "desc" : "asc";
+    return `${field}_${oppositeDirection}`;
+  }
+
+  _shouldShowSearchSortToggle() {
+    return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
+  }
+
+  _toggleSearchResultsSortDirection() {
+    if (!this._shouldShowSearchSortToggle()) {
+      this._searchDisplaySortOverride = null;
+      return;
+    }
+    const configured = this._getConfiguredSearchResultsSortMode();
+    const alternate = this._getOppositeSearchSortMode(configured);
+    if (!alternate) {
+      this._searchDisplaySortOverride = null;
+      return;
+    }
+    if (this._searchDisplaySortOverride === alternate) {
+      this._searchDisplaySortOverride = null;
+    } else {
+      this._searchDisplaySortOverride = alternate;
+    }
+    this.requestUpdate();
+  }
+
+  _getActiveSearchDisplaySortMode() {
+    if (!this._shouldShowSearchSortToggle()) {
+      return this._getConfiguredSearchResultsSortMode();
+    }
+    const override = this._searchDisplaySortOverride;
+    if (override && this._isSortableSearchMode(override)) {
+      return override;
+    }
+    return this._getConfiguredSearchResultsSortMode();
+  }
+
+  _getSearchSortToggleIcon() {
+    const mode = this._getActiveSearchDisplaySortMode();
+    if (!this._isSortableSearchMode(mode)) {
+      return "mdi:sort-variant";
+    }
+    const [, direction] = mode.split("_");
+    return direction === "asc" ? "mdi:sort-alphabetical-ascending" : "mdi:sort-alphabetical-descending";
+  }
+
+  _getSearchSortToggleTitle() {
+    const mode = this._getActiveSearchDisplaySortMode();
+    if (!this._isSortableSearchMode(mode)) {
+      return "Toggle search result order";
+    }
+    const [field, direction] = mode.split("_");
+    const labelField = field === "artist" ? "artist" : "title";
+    const labelDirection = direction === "asc" ? "ascending" : "descending";
+    return `Sort ${labelField} ${labelDirection}`;
+  }
+
+  _getDisplaySearchResults() {
+    const baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
+    if (!this._shouldShowSearchSortToggle()) {
+      return baseResults;
+    }
+    const configured = this._getConfiguredSearchResultsSortMode();
+    const activeMode = this._getActiveSearchDisplaySortMode();
+    if (!this._isSortableSearchMode(activeMode) || activeMode === configured) {
+      return baseResults;
+    }
+    return this._sortSearchResults(baseResults, activeMode);
+  }
+
   _getSearchResultsLimit() {
     const raw = Number(this.config?.search_results_limit);
     if (Number.isFinite(raw)) {
@@ -900,7 +999,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _shouldShowSearchResultsCount() {
-    if (!this._usingMusicAssistant || this._searchLoading) {
+    if (this._isNarrowViewport || !this._usingMusicAssistant || this._searchLoading) {
       return false;
     }
     const count = this._getSearchResultsCount();
@@ -932,7 +1031,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       async _doSearch(mediaType = null, searchParams = {}) {
     this._searchAttempted = true;
-    
+    this._closeMenuIfOpen();
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
     
@@ -2645,6 +2744,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._updateAdaptiveTextScale(true);
       }
     }, 400);
+  }
+
+  _handleViewportResize() {
+    this._updateViewportFlags();
+  }
+
+  _updateViewportFlags() {
+    if (typeof window === "undefined") return;
+    const docWidth = typeof document !== "undefined" ? document.documentElement?.clientWidth : 0;
+    const viewportWidth = window.innerWidth || docWidth || 0;
+    const isNarrow = viewportWidth > 0 ? viewportWidth <= 520 : this._isNarrowViewport;
+    if (isNarrow !== this._isNarrowViewport) {
+      this._isNarrowViewport = isNarrow;
+      this.requestUpdate();
+    }
   }
 
   _updateAdaptiveTextScale(force = false) {
@@ -5691,7 +5805,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   
                   ${this._usingMusicAssistant && !this._searchLoading ? html`
                     <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
-                      <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                      <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
                         <button
                           class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
                           style="
@@ -5804,9 +5918,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           </button>
                         ` : nothing}
                       ` : nothing}
-                      </div>
+                      ${this._shouldShowSearchSortToggle() ? html`
+                        <button
+                          class="button"
+                          style="
+                            background: none;
+                            border: none;
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px 8px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            display: flex;
+                            align-items: center;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}}
+                          title=${this._getSearchSortToggleTitle()}
+                        >
+                          <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
+                        </button>
+                      ` : nothing}
                       ${this._shouldShowSearchResultsCount() ? html`
-                        <span style="margin-left:auto;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;">
+                        <span style="margin-left:auto;padding-left:8px;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;text-align:right;flex-shrink:0;">
                           ${this._getSearchResultsCountLabel()}
                         </span>
                       ` : nothing}
@@ -5816,7 +5951,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <div class="entity-options-search-results">
                     ${(() => {
                       const filter = this._searchMediaClassFilter || "all";
-                      const currentResults = this._searchResults || [];
+                      const currentResults = this._getDisplaySearchResults();
                       // Build padded array so row‑count stays constant
                       const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
                       const paddedResults = [
@@ -6213,7 +6348,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 open: this._searchOpen,
                 query: this._searchQuery,
                 loading: this._searchLoading,
-                results: this._searchResults,
+                results: this._getDisplaySearchResults(),
                 error: this._searchError,
                 matchTheme: this._config.match_theme, // Add matchTheme parameter
                 onClose: () => this._searchCloseSheet(),
@@ -6653,6 +6788,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._removeGrabScrollHandlers();
     this._removeSearchSwipeHandlers();
     window.removeEventListener("scroll", this._handleGlobalScroll);
+    window.removeEventListener("resize", this._handleViewportResize);
     if (this._adaptiveScrollTimer) {
       clearTimeout(this._adaptiveScrollTimer);
       this._adaptiveScrollTimer = null;

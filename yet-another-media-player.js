@@ -13006,6 +13006,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     window.addEventListener("scroll", this._handleGlobalScroll, {
       passive: true
     });
+    window.addEventListener("resize", this._handleViewportResize, {
+      passive: true
+    });
+    this._updateViewportFlags();
     this._updateAdaptiveTextObserverState();
   }
 
@@ -13126,6 +13130,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchQuery = "";
     this._searchLoading = false;
     this._searchResults = [];
+    this._searchDisplaySortOverride = null;
     this._searchError = "";
     this._searchTotalRows = 15; // minimum 15 rows for layout padding
     // Cache search results by media type for better performance
@@ -13182,6 +13187,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._pendingAdaptiveScaleUpdate = false;
     this._adaptiveScrollTimer = null;
     this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
+    this._handleViewportResize = this._handleViewportResize.bind(this);
+    this._isNarrowViewport = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     setTimeout(() => {
@@ -13580,6 +13587,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchError = "";
     this._searchResults = [];
     this._searchQuery = "";
+    this._searchDisplaySortOverride = null;
     this._searchInputAutoFocused = false;
     this._searchLoading = false;
     this._searchAttempted = false;
@@ -13611,6 +13619,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._searchError = "";
     this._searchResults = [];
     this._searchQuery = "";
+    this._searchDisplaySortOverride = null;
     this._searchLoading = false;
     this._searchInputAutoFocused = false;
     this._searchResultsByType = {}; // Clear cache when closing
@@ -13625,9 +13634,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     this.requestUpdate();
   }
+  _closeMenuIfOpen() {
+    if (this._queueActionsMenuOpenId) {
+      this._closeQueueActionsMenu();
+    }
+  }
   _sortSearchResults(results) {
     var _this$config;
-    const sortMode = ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_sort) || "default";
+    let sortModeOverride = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    const sortMode = sortModeOverride ?? ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_sort) ?? "default";
     const list = Array.isArray(results) ? [...results] : [];
     if (sortMode === "default") {
       return list;
@@ -13673,9 +13688,87 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return list;
     }
   }
-  _getSearchResultsLimit() {
+  _getConfiguredSearchResultsSortMode() {
     var _this$config2;
-    const raw = Number((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit);
+    const configured = (_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_sort;
+    return typeof configured === "string" ? configured : "default";
+  }
+  _isSortableSearchMode(mode) {
+    return typeof mode === "string" && /^(title|artist)_(asc|desc)$/.test(mode);
+  }
+  _getOppositeSearchSortMode(mode) {
+    const match = /^(title|artist)_(asc|desc)$/.exec(mode || "");
+    if (!match) {
+      return null;
+    }
+    const [, field, direction] = match;
+    const oppositeDirection = direction === "asc" ? "desc" : "asc";
+    return `${field}_${oppositeDirection}`;
+  }
+  _shouldShowSearchSortToggle() {
+    return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
+  }
+  _toggleSearchResultsSortDirection() {
+    if (!this._shouldShowSearchSortToggle()) {
+      this._searchDisplaySortOverride = null;
+      return;
+    }
+    const configured = this._getConfiguredSearchResultsSortMode();
+    const alternate = this._getOppositeSearchSortMode(configured);
+    if (!alternate) {
+      this._searchDisplaySortOverride = null;
+      return;
+    }
+    if (this._searchDisplaySortOverride === alternate) {
+      this._searchDisplaySortOverride = null;
+    } else {
+      this._searchDisplaySortOverride = alternate;
+    }
+    this.requestUpdate();
+  }
+  _getActiveSearchDisplaySortMode() {
+    if (!this._shouldShowSearchSortToggle()) {
+      return this._getConfiguredSearchResultsSortMode();
+    }
+    const override = this._searchDisplaySortOverride;
+    if (override && this._isSortableSearchMode(override)) {
+      return override;
+    }
+    return this._getConfiguredSearchResultsSortMode();
+  }
+  _getSearchSortToggleIcon() {
+    const mode = this._getActiveSearchDisplaySortMode();
+    if (!this._isSortableSearchMode(mode)) {
+      return "mdi:sort-variant";
+    }
+    const [, direction] = mode.split("_");
+    return direction === "asc" ? "mdi:sort-alphabetical-ascending" : "mdi:sort-alphabetical-descending";
+  }
+  _getSearchSortToggleTitle() {
+    const mode = this._getActiveSearchDisplaySortMode();
+    if (!this._isSortableSearchMode(mode)) {
+      return "Toggle search result order";
+    }
+    const [field, direction] = mode.split("_");
+    const labelField = field === "artist" ? "artist" : "title";
+    const labelDirection = direction === "asc" ? "ascending" : "descending";
+    return `Sort ${labelField} ${labelDirection}`;
+  }
+  _getDisplaySearchResults() {
+    const baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
+    if (!this._shouldShowSearchSortToggle()) {
+      return baseResults;
+    }
+    const configured = this._getConfiguredSearchResultsSortMode();
+    const activeMode = this._getActiveSearchDisplaySortMode();
+    if (!this._isSortableSearchMode(activeMode) || activeMode === configured) {
+      return baseResults;
+    }
+    return this._sortSearchResults(baseResults, activeMode);
+  }
+  _getSearchResultsLimit() {
+    var _this$config3;
+    const raw = Number((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit);
     if (Number.isFinite(raw)) {
       if (raw === 0) {
         return 0; // Explicitly disable limit
@@ -13688,7 +13781,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return Array.isArray(this._searchResults) ? this._searchResults.length : 0;
   }
   _shouldShowSearchResultsCount() {
-    if (!this._usingMusicAssistant || this._searchLoading) {
+    if (this._isNarrowViewport || !this._usingMusicAssistant || this._searchLoading) {
       return false;
     }
     const count = this._getSearchResultsCount();
@@ -13703,11 +13796,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return `${count} ${noun}`;
   }
   async _doSearch() {
-    var _this$config3;
+    var _this$config4;
     let mediaType = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     let searchParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     this._searchAttempted = true;
-
+    this._closeMenuIfOpen();
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = mediaType && mediaType !== 'favorites' ? mediaType : 'all';
 
@@ -13752,7 +13845,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._searchError = "Search timed out. Try again.";
         this.requestUpdate();
       }
-    }, (_this$config3 = this.config) !== null && _this$config3 !== void 0 && _this$config3.search_timeout_ms ? Number(this.config.search_timeout_ms) : 12000);
+    }, (_this$config4 = this.config) !== null && _this$config4 !== void 0 && _this$config4.search_timeout_ms ? Number(this.config.search_timeout_ms) : 12000);
     try {
       const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
       const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
@@ -15338,6 +15431,20 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
     }, 400);
   }
+  _handleViewportResize() {
+    this._updateViewportFlags();
+  }
+  _updateViewportFlags() {
+    var _document$documentEle;
+    if (typeof window === "undefined") return;
+    const docWidth = typeof document !== "undefined" ? (_document$documentEle = document.documentElement) === null || _document$documentEle === void 0 ? void 0 : _document$documentEle.clientWidth : 0;
+    const viewportWidth = window.innerWidth || docWidth || 0;
+    const isNarrow = viewportWidth > 0 ? viewportWidth <= 520 : this._isNarrowViewport;
+    if (isNarrow !== this._isNarrowViewport) {
+      this._isNarrowViewport = isNarrow;
+      this.requestUpdate();
+    }
+  }
   _updateAdaptiveTextScale() {
     let force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     if (!this._adaptiveText) return;
@@ -15384,9 +15491,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return Math.min(1.55, 1.2 + extra * 0.35);
   }
   _getAdaptiveBaselineHeight() {
-    var _this$config4;
+    var _this$config5;
     let collapsed = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    const raw = (_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.card_height;
+    const raw = (_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.card_height;
     if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
       return raw;
     }
@@ -15421,10 +15528,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
   _ensureArtworkOverrideIndexMap() {
-    var _this$config5;
+    var _this$config6;
     if (this._artworkOverrideIndexMap) return;
     this._artworkOverrideIndexMap = new WeakMap();
-    const overrides = Array.isArray((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.media_artwork_overrides) ? this.config.media_artwork_overrides : [];
+    const overrides = Array.isArray((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.media_artwork_overrides) ? this.config.media_artwork_overrides : [];
     overrides.forEach((item, idx) => {
       if (item && typeof item === "object") {
         this._artworkOverrideIndexMap.set(item, idx);
@@ -15494,18 +15601,18 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config6, _this$config7;
+    var _this$config7, _this$config8;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
     const entityId = state.entity_id;
     attrs.app_id;
-    const prefix = ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.artwork_hostname) || '';
+    const prefix = ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
     let objectFit = null;
 
     // Check for media artwork overrides first
-    const overrides = Array.isArray((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
+    const overrides = Array.isArray((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
     if (overrides && overrides.length) {
       var _override, _override2;
       const getOverrideValue = (override, key) => {
@@ -15557,8 +15664,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config8;
-      const fallbackArtwork = (_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.fallback_artwork;
+      var _this$config9;
+      const fallbackArtwork = (_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -16504,8 +16611,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          var _this$config9;
-          const customHeight = Number((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.card_height);
+          var _this$config0;
+          const customHeight = Number((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.card_height);
           const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
           if (!hasCustomCardHeight) {
             this._collapsedBaselineHeight = measured;
@@ -17316,7 +17423,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config10, _this$config11, _this$config12, _this$currentVolumeSt3, _this$config13, _this$config14, _this$config15, _this$currentStateObj, _this$currentPlayback;
+    var _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -17407,8 +17514,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
     // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
     if (prevMa === "playing" && this._lastMaState !== "playing") {
-      var _this$config0;
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.idle_timeout_ms) || 60000), 500);
+      var _this$config1;
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: actualResolvedMaId,
         until: Date.now() + ttl
@@ -17419,10 +17526,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
     const shouldSetLinger = prevMa === "playing" && this._lastMaState === "paused" && ((_this$_lastPlayingEnt9 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt9 === void 0 ? void 0 : _this$_lastPlayingEnt9[idx]) === actualResolvedMaId || prevMain === "playing" && this._lastMainState === "paused" && ((_this$_lastPlayingEnt0 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt0 === void 0 ? void 0 : _this$_lastPlayingEnt0[idx]) === (mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.entity_id);
     if (shouldSetLinger) {
-      var _this$config1;
+      var _this$config10;
       // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
       const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.idle_timeout_ms) || 60000), 500);
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: lingerEntityId,
         // Use cached MA entity or last controlled entity
@@ -17613,9 +17720,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.fallback_artwork) || null,
+      artworkHostname: ((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass27;
         const obj = this._findEntityObjByAnyId(id);
@@ -17896,9 +18003,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       },
       isIdle: this._isIdle,
       hass: this.hass,
-      artworkHostname: ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.fallback_artwork) || null,
+      artworkHostname: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.fallback_artwork) || null,
       onChipClick: idx => this._onChipClick(idx),
       onIconClick: (idx, e) => {
         const entityId = this.entityIds[idx];
@@ -18236,7 +18343,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   
                   ${this._usingMusicAssistant && !this._searchLoading ? x`
                     <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
-                      <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                      <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
                         <button
                           class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
                           style="
@@ -18349,9 +18456,30 @@ class YetAnotherMediaPlayerCard extends i$1 {
                           </button>
                         ` : E}
                       ` : E}
-                      </div>
+                      ${this._shouldShowSearchSortToggle() ? x`
+                        <button
+                          class="button"
+                          style="
+                            background: none;
+                            border: none;
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px 8px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            display: flex;
+                            align-items: center;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}}
+                          title=${this._getSearchSortToggleTitle()}
+                        >
+                          <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
+                        </button>
+                      ` : E}
                       ${this._shouldShowSearchResultsCount() ? x`
-                        <span style="margin-left:auto;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;">
+                        <span style="margin-left:auto;padding-left:8px;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;text-align:right;flex-shrink:0;">
                           ${this._getSearchResultsCountLabel()}
                         </span>
                       ` : E}
@@ -18361,7 +18489,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
                   <div class="entity-options-search-results">
                     ${(() => {
       this._searchMediaClassFilter || "all";
-      const currentResults = this._searchResults || [];
+      const currentResults = this._getDisplaySearchResults();
       // Build padded array so row‑count stays constant
       const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
       const paddedResults = [...currentResults, ...Array.from({
@@ -18768,7 +18896,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       open: this._searchOpen,
       query: this._searchQuery,
       loading: this._searchLoading,
-      results: this._searchResults,
+      results: this._getDisplaySearchResults(),
       error: this._searchError,
       matchTheme: this._config.match_theme,
       // Add matchTheme parameter
@@ -19198,6 +19326,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._removeGrabScrollHandlers();
     this._removeSearchSwipeHandlers();
     window.removeEventListener("scroll", this._handleGlobalScroll);
+    window.removeEventListener("resize", this._handleViewportResize);
     if (this._adaptiveScrollTimer) {
       clearTimeout(this._adaptiveScrollTimer);
       this._adaptiveScrollTimer = null;
