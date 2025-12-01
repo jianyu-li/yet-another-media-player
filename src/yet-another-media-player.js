@@ -1068,6 +1068,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
     const searchToken = Date.now();
     this._latestSearchToken = searchToken;
+    const progressiveUpdate = (chunk) => this._handleProgressiveSearchResults(chunk, cacheKey, searchToken);
     if (this._searchTimeoutHandle) {
       clearTimeout(this._searchTimeoutHandle);
     }
@@ -1089,7 +1090,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (isRecentlyPlayed) {
         // Load recently played items
         this._initialFavoritesLoaded = false;
-        searchResponse = await getRecentlyPlayed(this.hass, searchEntityId, mediaType, this._getSearchResultsLimit());
+        searchResponse = await getRecentlyPlayed(
+          this.hass,
+          searchEntityId,
+          mediaType,
+          this._getSearchResultsLimit(),
+          { onChunk: progressiveUpdate }
+        );
         this._lastSearchUsedServerFavorites = false;
       } else if (isUpcoming) {
         // Load upcoming queue items
@@ -1118,7 +1125,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         );
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
-        searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this._getSearchResultsLimit());
+        searchResponse = await getFavorites(
+          this.hass,
+          searchEntityId,
+          mediaType === 'favorites' ? null : mediaType,
+          this._getSearchResultsLimit(),
+          { onChunk: progressiveUpdate }
+        );
         // Mark that initial favorites have been loaded
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
@@ -1173,6 +1186,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._latestSearchToken = 0;
     }
     this._searchLoading = false;
+    this.requestUpdate();
+  }
+
+  _handleProgressiveSearchResults(chunk, cacheKey, searchToken) {
+    if (!Array.isArray(chunk) || !chunk.length) {
+      return;
+    }
+    if (this._latestSearchToken !== searchToken) {
+      return;
+    }
+    const mergedResults = (this._searchResultsByType[cacheKey] || []).concat(chunk);
+    this._searchResultsByType[cacheKey] = mergedResults;
+    this._searchResults = this._sortSearchResults(mergedResults);
+    const rows = Array.isArray(mergedResults) ? mergedResults.length : 0;
+    this._searchTotalRows = Math.max(15, rows);
     this.requestUpdate();
   }
 
