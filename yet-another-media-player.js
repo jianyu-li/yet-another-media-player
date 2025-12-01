@@ -1,3 +1,54 @@
+function _defineProperty$1(e, r, t) {
+  return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+    value: t,
+    enumerable: true,
+    configurable: true,
+    writable: true
+  }) : e[r] = t, e;
+}
+function ownKeys$1(e, r) {
+  var t = Object.keys(e);
+  if (Object.getOwnPropertySymbols) {
+    var o = Object.getOwnPropertySymbols(e);
+    r && (o = o.filter(function (r) {
+      return Object.getOwnPropertyDescriptor(e, r).enumerable;
+    })), t.push.apply(t, o);
+  }
+  return t;
+}
+function _objectSpread2$1(e) {
+  for (var r = 1; r < arguments.length; r++) {
+    var t = null != arguments[r] ? arguments[r] : {};
+    r % 2 ? ownKeys$1(Object(t), true).forEach(function (r) {
+      _defineProperty$1(e, r, t[r]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$1(Object(t)).forEach(function (r) {
+      Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
+    });
+  }
+  return e;
+}
+function _taggedTemplateLiteral(e, t) {
+  return t || (t = e.slice(0)), Object.freeze(Object.defineProperties(e, {
+    raw: {
+      value: Object.freeze(t)
+    }
+  }));
+}
+function _toPrimitive(t, r) {
+  if ("object" != typeof t || !t) return t;
+  var e = t[Symbol.toPrimitive];
+  if (void 0 !== e) {
+    var i = e.call(t, r);
+    if ("object" != typeof i) return i;
+    throw new TypeError("@@toPrimitive must return a primitive value.");
+  }
+  return ("string" === r ? String : Number)(t);
+}
+function _toPropertyKey(t) {
+  var i = _toPrimitive(t, "string");
+  return "symbol" == typeof i ? i : i + "";
+}
+
 /**
  * @license
  * Copyright 2019 Google LLC
@@ -50,6 +101,7 @@ const r$2 = t => new n$2("string" == typeof t ? t : t + "", void 0, s$2),
     return r$2(e);
   })(t) : t;
 
+var _Symbol$metadata, _a$litPropertyMetadat, _a$reactiveElementVer;
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -109,10 +161,11 @@ const {
     useDefault: false,
     hasChanged: f$1
   };
-Symbol.metadata ??= Symbol("metadata"), a$1.litPropertyMetadata ??= new WeakMap();
+(_Symbol$metadata = Symbol.metadata) !== null && _Symbol$metadata !== void 0 ? _Symbol$metadata : Symbol.metadata = Symbol("metadata"), (_a$litPropertyMetadat = a$1.litPropertyMetadata) !== null && _a$litPropertyMetadat !== void 0 ? _a$litPropertyMetadat : a$1.litPropertyMetadata = new WeakMap();
 let y$1 = class y extends HTMLElement {
   static addInitializer(t) {
-    this._$Ei(), (this.l ??= []).push(t);
+    var _this$l;
+    this._$Ei(), ((_this$l = this.l) !== null && _this$l !== void 0 ? _this$l : this.l = []).push(t);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
@@ -126,10 +179,11 @@ let y$1 = class y extends HTMLElement {
     }
   }
   static getPropertyDescriptor(t, s, i) {
+    var _h;
     const {
       get: e,
       set: r
-    } = h$1(this.prototype, t) ?? {
+    } = (_h = h$1(this.prototype, t)) !== null && _h !== void 0 ? _h : {
       get() {
         return this[s];
       },
@@ -148,7 +202,8 @@ let y$1 = class y extends HTMLElement {
     };
   }
   static getPropertyOptions(t) {
-    return this.elementProperties.get(t) ?? b;
+    var _this$elementProperti;
+    return (_this$elementProperti = this.elementProperties.get(t)) !== null && _this$elementProperti !== void 0 ? _this$elementProperti : b;
   }
   static _$Ei() {
     if (this.hasOwnProperty(d$1("elementProperties"))) return;
@@ -194,12 +249,12 @@ let y$1 = class y extends HTMLElement {
     this._$ES = new Promise(t => this.enableUpdating = t), this._$AL = new Map(), this._$E_(), this.requestUpdate(), (_this$constructor$l = this.constructor.l) === null || _this$constructor$l === void 0 ? void 0 : _this$constructor$l.forEach(t => t(this));
   }
   addController(t) {
-    var _t$hostConnected;
-    (this._$EO ??= new Set()).add(t), void 0 !== this.renderRoot && this.isConnected && ((_t$hostConnected = t.hostConnected) === null || _t$hostConnected === void 0 ? void 0 : _t$hostConnected.call(t));
+    var _this$_$EO, _t$hostConnected;
+    ((_this$_$EO = this._$EO) !== null && _this$_$EO !== void 0 ? _this$_$EO : this._$EO = new Set()).add(t), void 0 !== this.renderRoot && this.isConnected && ((_t$hostConnected = t.hostConnected) === null || _t$hostConnected === void 0 ? void 0 : _t$hostConnected.call(t));
   }
   removeController(t) {
-    var _this$_$EO;
-    (_this$_$EO = this._$EO) === null || _this$_$EO === void 0 || _this$_$EO.delete(t);
+    var _this$_$EO2;
+    (_this$_$EO2 = this._$EO) === null || _this$_$EO2 === void 0 || _this$_$EO2.delete(t);
   }
   _$E_() {
     const t = new Map(),
@@ -208,20 +263,21 @@ let y$1 = class y extends HTMLElement {
     t.size > 0 && (this._$Ep = t);
   }
   createRenderRoot() {
-    const t = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
+    var _this$shadowRoot;
+    const t = (_this$shadowRoot = this.shadowRoot) !== null && _this$shadowRoot !== void 0 ? _this$shadowRoot : this.attachShadow(this.constructor.shadowRootOptions);
     return S$1(t, this.constructor.elementStyles), t;
   }
   connectedCallback() {
-    var _this$_$EO2;
-    this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(true), (_this$_$EO2 = this._$EO) === null || _this$_$EO2 === void 0 ? void 0 : _this$_$EO2.forEach(t => {
+    var _this$renderRoot, _this$_$EO3;
+    (_this$renderRoot = this.renderRoot) !== null && _this$renderRoot !== void 0 ? _this$renderRoot : this.renderRoot = this.createRenderRoot(), this.enableUpdating(true), (_this$_$EO3 = this._$EO) === null || _this$_$EO3 === void 0 ? void 0 : _this$_$EO3.forEach(t => {
       var _t$hostConnected2;
       return (_t$hostConnected2 = t.hostConnected) === null || _t$hostConnected2 === void 0 ? void 0 : _t$hostConnected2.call(t);
     });
   }
   enableUpdating(t) {}
   disconnectedCallback() {
-    var _this$_$EO3;
-    (_this$_$EO3 = this._$EO) === null || _this$_$EO3 === void 0 || _this$_$EO3.forEach(t => {
+    var _this$_$EO4;
+    (_this$_$EO4 = this._$EO) === null || _this$_$EO4 === void 0 || _this$_$EO4.forEach(t => {
       var _t$hostDisconnected;
       return (_t$hostDisconnected = t.hostDisconnected) === null || _t$hostDisconnected === void 0 ? void 0 : _t$hostDisconnected.call(t);
     });
@@ -242,31 +298,32 @@ let y$1 = class y extends HTMLElement {
     const i = this.constructor,
       e = i._$Eh.get(t);
     if (void 0 !== e && this._$Em !== e) {
-      var _t$converter, _this$_$Ej;
+      var _t$converter, _ref, _h$fromAttribute, _this$_$Ej;
       const t = i.getPropertyOptions(e),
         h = "function" == typeof t.converter ? {
           fromAttribute: t.converter
         } : void 0 !== ((_t$converter = t.converter) === null || _t$converter === void 0 ? void 0 : _t$converter.fromAttribute) ? t.converter : u$1;
-      this._$Em = e, this[e] = h.fromAttribute(s, t.type) ?? ((_this$_$Ej = this._$Ej) === null || _this$_$Ej === void 0 ? void 0 : _this$_$Ej.get(e)) ?? null, this._$Em = null;
+      this._$Em = e, this[e] = (_ref = (_h$fromAttribute = h.fromAttribute(s, t.type)) !== null && _h$fromAttribute !== void 0 ? _h$fromAttribute : (_this$_$Ej = this._$Ej) === null || _this$_$Ej === void 0 ? void 0 : _this$_$Ej.get(e)) !== null && _ref !== void 0 ? _ref : null, this._$Em = null;
     }
   }
   requestUpdate(t, s, i) {
     if (void 0 !== t) {
-      var _this$_$Ej2;
+      var _i$hasChanged, _this$_$Ej2;
       const e = this.constructor,
         h = this[t];
-      if (i ??= e.getPropertyOptions(t), !((i.hasChanged ?? f$1)(h, s) || i.useDefault && i.reflect && h === ((_this$_$Ej2 = this._$Ej) === null || _this$_$Ej2 === void 0 ? void 0 : _this$_$Ej2.get(t)) && !this.hasAttribute(e._$Eu(t, i)))) return;
+      if (i !== null && i !== void 0 ? i : i = e.getPropertyOptions(t), !(((_i$hasChanged = i.hasChanged) !== null && _i$hasChanged !== void 0 ? _i$hasChanged : f$1)(h, s) || i.useDefault && i.reflect && h === ((_this$_$Ej2 = this._$Ej) === null || _this$_$Ej2 === void 0 ? void 0 : _this$_$Ej2.get(t)) && !this.hasAttribute(e._$Eu(t, i)))) return;
       this.C(t, s, i);
     }
     false === this.isUpdatePending && (this._$ES = this._$EP());
   }
-  C(t, s, _ref, r) {
+  C(t, s, _ref2, r) {
+    var _this$_$Ej3, _ref3, _this$_$Eq;
     let {
       useDefault: i,
       reflect: e,
       wrapped: h
-    } = _ref;
-    i && !(this._$Ej ??= new Map()).has(t) && (this._$Ej.set(t, r ?? s ?? this[t]), true !== h || void 0 !== r) || (this._$AL.has(t) || (this.hasUpdated || i || (s = void 0), this._$AL.set(t, s)), true === e && this._$Em !== t && (this._$Eq ??= new Set()).add(t));
+    } = _ref2;
+    i && !((_this$_$Ej3 = this._$Ej) !== null && _this$_$Ej3 !== void 0 ? _this$_$Ej3 : this._$Ej = new Map()).has(t) && (this._$Ej.set(t, (_ref3 = r !== null && r !== void 0 ? r : s) !== null && _ref3 !== void 0 ? _ref3 : this[t]), true !== h || void 0 !== r) || (this._$AL.has(t) || (this.hasUpdated || i || (s = void 0), this._$AL.set(t, s)), true === e && this._$Em !== t && ((_this$_$Eq = this._$Eq) !== null && _this$_$Eq !== void 0 ? _this$_$Eq : this._$Eq = new Set()).add(t));
   }
   async _$EP() {
     this.isUpdatePending = true;
@@ -284,7 +341,8 @@ let y$1 = class y extends HTMLElement {
   performUpdate() {
     if (!this.isUpdatePending) return;
     if (!this.hasUpdated) {
-      if (this.renderRoot ??= this.createRenderRoot(), this._$Ep) {
+      var _this$renderRoot2;
+      if ((_this$renderRoot2 = this.renderRoot) !== null && _this$renderRoot2 !== void 0 ? _this$renderRoot2 : this.renderRoot = this.createRenderRoot(), this._$Ep) {
         for (const [t, s] of this._$Ep) this[t] = s;
         this._$Ep = void 0;
       }
@@ -300,8 +358,8 @@ let y$1 = class y extends HTMLElement {
     let t = false;
     const s = this._$AL;
     try {
-      var _this$_$EO4;
-      t = this.shouldUpdate(s), t ? (this.willUpdate(s), (_this$_$EO4 = this._$EO) !== null && _this$_$EO4 !== void 0 && _this$_$EO4.forEach(t => {
+      var _this$_$EO5;
+      t = this.shouldUpdate(s), t ? (this.willUpdate(s), (_this$_$EO5 = this._$EO) !== null && _this$_$EO5 !== void 0 && _this$_$EO5.forEach(t => {
         var _t$hostUpdate;
         return (_t$hostUpdate = t.hostUpdate) === null || _t$hostUpdate === void 0 ? void 0 : _t$hostUpdate.call(t);
       }), this.update(s)) : this._$EM();
@@ -312,8 +370,8 @@ let y$1 = class y extends HTMLElement {
   }
   willUpdate(t) {}
   _$AE(t) {
-    var _this$_$EO5;
-    (_this$_$EO5 = this._$EO) !== null && _this$_$EO5 !== void 0 && _this$_$EO5.forEach(t => {
+    var _this$_$EO6;
+    (_this$_$EO6 = this._$EO) !== null && _this$_$EO6 !== void 0 && _this$_$EO6.forEach(t => {
       var _t$hostUpdated;
       return (_t$hostUpdated = t.hostUpdated) === null || _t$hostUpdated === void 0 ? void 0 : _t$hostUpdated.call(t);
     }), this.hasUpdated || (this.hasUpdated = true, this.firstUpdated(t)), this.updated(t);
@@ -331,7 +389,7 @@ let y$1 = class y extends HTMLElement {
     return true;
   }
   update(t) {
-    this._$Eq &&= this._$Eq.forEach(t => this._$ET(t, this[t])), this._$EM();
+    this._$Eq && (this._$Eq = this._$Eq.forEach(t => this._$ET(t, this[t]))), this._$EM();
   }
   updated(t) {}
   firstUpdated(t) {}
@@ -340,8 +398,9 @@ y$1.elementStyles = [], y$1.shadowRootOptions = {
   mode: "open"
 }, y$1[d$1("elementProperties")] = new Map(), y$1[d$1("finalized")] = new Map(), p$1 !== null && p$1 !== void 0 && p$1({
   ReactiveElement: y$1
-}), (a$1.reactiveElementVersions ??= []).push("2.1.0");
+}), ((_a$reactiveElementVer = a$1.reactiveElementVersions) !== null && _a$reactiveElementVer !== void 0 ? _a$reactiveElementVer : a$1.reactiveElementVersions = []).push("2.1.0");
 
+var _t$litHtmlVersions;
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -353,9 +412,9 @@ const t = globalThis,
     createHTML: t => t
   }) : void 0,
   e = "$lit$",
-  h = `lit$${Math.random().toFixed(9).slice(2)}$`,
+  h = "lit$".concat(Math.random().toFixed(9).slice(2), "$"),
   o$1 = "?" + h,
-  n = `<${o$1}>`,
+  n = "<".concat(o$1, ">"),
   r = document,
   l = () => r.createComment(""),
   c = t => null === t || "object" != typeof t && "function" != typeof t,
@@ -365,7 +424,7 @@ const t = globalThis,
   f = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,
   v = /-->/g,
   _ = />/g,
-  m = RegExp(`>|${d}(?:([^\\s"'>=/]+)(${d}*=${d}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"),
+  m = RegExp(">|".concat(d, "(?:([^\\s\"'>=/]+)(").concat(d, "*=").concat(d, "*(?:[^ \t\n\f\r\"'`<>=]|(\"|')|))|$)"), "g"),
   p = /'/g,
   g = /"/g,
   $ = /^(?:script|style|textarea|title)$/i,
@@ -400,7 +459,7 @@ const V = (t, i) => {
       u,
       d = -1,
       y = 0;
-    for (; y < s.length && (c.lastIndex = y, u = c.exec(s), null !== u);) y = c.lastIndex, c === f ? "!--" === u[1] ? c = v : void 0 !== u[1] ? c = _ : void 0 !== u[2] ? ($.test(u[2]) && (r = RegExp("</" + u[2], "g")), c = m) : void 0 !== u[3] && (c = m) : c === m ? ">" === u[0] ? (c = r ?? f, d = -1) : void 0 === u[1] ? d = -2 : (d = c.lastIndex - u[2].length, a = u[1], c = void 0 === u[3] ? m : '"' === u[3] ? g : p) : c === g || c === p ? c = m : c === v || c === _ ? c = f : (c = m, r = void 0);
+    for (; y < s.length && (c.lastIndex = y, u = c.exec(s), null !== u);) y = c.lastIndex, c === f ? "!--" === u[1] ? c = v : void 0 !== u[1] ? c = _ : void 0 !== u[2] ? ($.test(u[2]) && (r = RegExp("</" + u[2], "g")), c = m) : void 0 !== u[3] && (c = m) : c === m ? ">" === u[0] ? (c = r !== null && r !== void 0 ? r : f, d = -1) : void 0 === u[1] ? d = -2 : (d = c.lastIndex - u[2].length, a = u[1], c = void 0 === u[3] ? m : '"' === u[3] ? g : p) : c === g || c === p ? c = m : c === v || c === _ ? c = f : (c = m, r = void 0);
     const x = c === m && t[i + 1].startsWith("/>") ? " " : "";
     l += c === f ? s + n : d >= 0 ? (o.push(a), s.slice(0, d) + e + s.slice(d) + h + x) : s + h + (-2 === d ? i : x);
   }
@@ -471,13 +530,13 @@ class N {
   }
 }
 function S(t, i) {
-  var _s$_$Co, _h, _h2, _h2$_$AO;
+  var _s$_$Co, _h, _h2, _h2$_$AO, _s$_$Co2;
   let s = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : t;
   let e = arguments.length > 3 ? arguments[3] : undefined;
   if (i === T) return i;
   let h = void 0 !== e ? (_s$_$Co = s._$Co) === null || _s$_$Co === void 0 ? void 0 : _s$_$Co[e] : s._$Cl;
   const o = c(i) ? void 0 : i._$litDirective$;
-  return ((_h = h) === null || _h === void 0 ? void 0 : _h.constructor) !== o && ((_h2 = h) !== null && _h2 !== void 0 && (_h2$_$AO = _h2._$AO) !== null && _h2$_$AO !== void 0 && _h2$_$AO.call(_h2, false), void 0 === o ? h = void 0 : (h = new o(t), h._$AT(t, s, e)), void 0 !== e ? (s._$Co ??= [])[e] = h : s._$Cl = h), void 0 !== h && (i = S(t, h._$AS(t, i.values), h, e)), i;
+  return ((_h = h) === null || _h === void 0 ? void 0 : _h.constructor) !== o && ((_h2 = h) !== null && _h2 !== void 0 && (_h2$_$AO = _h2._$AO) !== null && _h2$_$AO !== void 0 && _h2$_$AO.call(_h2, false), void 0 === o ? h = void 0 : (h = new o(t), h._$AT(t, s, e)), void 0 !== e ? ((_s$_$Co2 = s._$Co) !== null && _s$_$Co2 !== void 0 ? _s$_$Co2 : s._$Co = [])[e] = h : s._$Cl = h), void 0 !== h && (i = S(t, h._$AS(t, i.values), h, e)), i;
 }
 class M {
   constructor(t, i) {
@@ -490,13 +549,14 @@ class M {
     return this._$AM._$AU;
   }
   u(t) {
+    var _t$creationScope;
     const {
         el: {
           content: i
         },
         parts: s
       } = this._$AD,
-      e = ((t === null || t === void 0 ? void 0 : t.creationScope) ?? r).importNode(i, true);
+      e = ((_t$creationScope = t === null || t === void 0 ? void 0 : t.creationScope) !== null && _t$creationScope !== void 0 ? _t$creationScope : r).importNode(i, true);
     C.currentNode = e;
     let h = C.nextNode(),
       o = 0,
@@ -519,11 +579,12 @@ class M {
 }
 class R {
   get _$AU() {
-    var _this$_$AM;
-    return ((_this$_$AM = this._$AM) === null || _this$_$AM === void 0 ? void 0 : _this$_$AM._$AU) ?? this._$Cv;
+    var _this$_$AM$_$AU, _this$_$AM;
+    return (_this$_$AM$_$AU = (_this$_$AM = this._$AM) === null || _this$_$AM === void 0 ? void 0 : _this$_$AM._$AU) !== null && _this$_$AM$_$AU !== void 0 ? _this$_$AM$_$AU : this._$Cv;
   }
   constructor(t, i, s, e) {
-    this.type = 2, this._$AH = E, this._$AN = void 0, this._$AA = t, this._$AB = i, this._$AM = s, this.options = e, this._$Cv = (e === null || e === void 0 ? void 0 : e.isConnected) ?? true;
+    var _e$isConnected;
+    this.type = 2, this._$AH = E, this._$AN = void 0, this._$AA = t, this._$AB = i, this._$AM = s, this.options = e, this._$Cv = (_e$isConnected = e === null || e === void 0 ? void 0 : e.isConnected) !== null && _e$isConnected !== void 0 ? _e$isConnected : true;
   }
   get parentNode() {
     var _t;
@@ -608,12 +669,12 @@ class k {
     if (void 0 === h) t = S(this, t, i, 0), o = !c(t) || t !== this._$AH && t !== T, o && (this._$AH = t);else {
       const e = t;
       let n, r;
-      for (t = h[0], n = 0; n < h.length - 1; n++) r = S(this, e[s + n], i, n), r === T && (r = this._$AH[n]), o ||= !c(r) || r !== this._$AH[n], r === E ? t = E : t !== E && (t += (r ?? "") + h[n + 1]), this._$AH[n] = r;
+      for (t = h[0], n = 0; n < h.length - 1; n++) r = S(this, e[s + n], i, n), r === T && (r = this._$AH[n]), o || (o = !c(r) || r !== this._$AH[n]), r === E ? t = E : t !== E && (t += (r !== null && r !== void 0 ? r : "") + h[n + 1]), this._$AH[n] = r;
     }
     o && !e && this.j(t);
   }
   j(t) {
-    t === E ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t ?? "");
+    t === E ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t !== null && t !== void 0 ? t : "");
   }
 }
 class H extends k {
@@ -637,16 +698,17 @@ class L extends k {
     super(t, i, s, e, h), this.type = 5;
   }
   _$AI(t) {
+    var _S;
     let i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
-    if ((t = S(this, t, i, 0) ?? E) === T) return;
+    if ((t = (_S = S(this, t, i, 0)) !== null && _S !== void 0 ? _S : E) === T) return;
     const s = this._$AH,
       e = t === E && s !== E || t.capture !== s.capture || t.once !== s.once || t.passive !== s.passive,
       h = t !== E && (s === E || e);
     e && this.element.removeEventListener(this.name, this, s), h && this.element.addEventListener(this.name, this, t), this._$AH = t;
   }
   handleEvent(t) {
-    var _this$options;
-    "function" == typeof this._$AH ? this._$AH.call(((_this$options = this.options) === null || _this$options === void 0 ? void 0 : _this$options.host) ?? this.element, t) : this._$AH.handleEvent(t);
+    var _this$options$host, _this$options;
+    "function" == typeof this._$AH ? this._$AH.call((_this$options$host = (_this$options = this.options) === null || _this$options === void 0 ? void 0 : _this$options.host) !== null && _this$options$host !== void 0 ? _this$options$host : this.element, t) : this._$AH.handleEvent(t);
   }
 }
 class z {
@@ -661,18 +723,20 @@ class z {
   }
 }
 const j = t.litHtmlPolyfillSupport;
-j !== null && j !== void 0 && j(N, R), (t.litHtmlVersions ??= []).push("3.3.0");
+j !== null && j !== void 0 && j(N, R), ((_t$litHtmlVersions = t.litHtmlVersions) !== null && _t$litHtmlVersions !== void 0 ? _t$litHtmlVersions : t.litHtmlVersions = []).push("3.3.0");
 const B = (t, i, s) => {
-  const e = (s === null || s === void 0 ? void 0 : s.renderBefore) ?? i;
+  var _s$renderBefore;
+  const e = (_s$renderBefore = s === null || s === void 0 ? void 0 : s.renderBefore) !== null && _s$renderBefore !== void 0 ? _s$renderBefore : i;
   let h = e._$litPart$;
   if (void 0 === h) {
-    const t = (s === null || s === void 0 ? void 0 : s.renderBefore) ?? null;
-    e._$litPart$ = h = new R(i.insertBefore(l(), t), t, void 0, s ?? {});
+    var _s$renderBefore2;
+    const t = (_s$renderBefore2 = s === null || s === void 0 ? void 0 : s.renderBefore) !== null && _s$renderBefore2 !== void 0 ? _s$renderBefore2 : null;
+    e._$litPart$ = h = new R(i.insertBefore(l(), t), t, void 0, s !== null && s !== void 0 ? s : {});
   }
   return h._$AI(t), h;
 };
 
-var _s$litElementHydrateS;
+var _s$litElementHydrateS, _s$litElementVersions;
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -686,8 +750,9 @@ let i$1 = class i extends y$1 {
     }, this._$Do = void 0;
   }
   createRenderRoot() {
+    var _this$renderOptions, _this$renderOptions$r;
     const t = super.createRenderRoot();
-    return this.renderOptions.renderBefore ??= t.firstChild, t;
+    return (_this$renderOptions$r = (_this$renderOptions = this.renderOptions).renderBefore) !== null && _this$renderOptions$r !== void 0 ? _this$renderOptions$r : _this$renderOptions.renderBefore = t.firstChild, t;
   }
   update(t) {
     const r = this.render();
@@ -712,9 +777,9 @@ const o = s.litElementPolyfillSupport;
 o === null || o === void 0 || o({
   LitElement: i$1
 });
-(s.litElementVersions ??= []).push("4.2.0");
+((_s$litElementVersions = s.litElementVersions) !== null && _s$litElementVersions !== void 0 ? _s$litElementVersions : s.litElementVersions = []).push("4.2.0");
 
-// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+var _templateObject$9, _templateObject2$8, _templateObject3$6, _templateObject4$5, _templateObject5$4, _templateObject6$4, _templateObject7$4, _templateObject8$4, _templateObject9$4, _templateObject0$3, _templateObject1$2;
 
 // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
 function getArtworkUrl(state) {
@@ -750,10 +815,9 @@ function getArtworkUrl(state) {
         var _override;
         override = overrides.find(item => item === null || item === void 0 ? void 0 : item.missing_art_url);
         if ((_override = override) !== null && _override !== void 0 && _override.missing_art_url) {
-          override = {
-            ...override,
+          override = _objectSpread2$1(_objectSpread2$1({}, override), {}, {
             image_url: override.missing_art_url
-          };
+          });
         }
       }
     }
@@ -816,33 +880,10 @@ function renderChip(_ref2) {
     onPointerMove,
     onPointerUp
   } = _ref2;
-  return x`
-    <button class="chip"
-            ?selected=${selected}
-            ?playing=${playing}
-            ?ma-active=${maActive}
-            @click=${() => onChipClick(idx)}
-            @pointerdown=${onPointerDown}
-            @pointermove=${onPointerMove}
-            @pointerup=${onPointerUp}
-            @pointerleave=${onPointerUp}
-            style="display:flex;align-items:center;justify-content:space-between;">
-      <span class="chip-icon">
-        ${art ? x`<img class="chip-mini-art" src="${art}" onerror="this.style.display='none'" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
-      </span>
-      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
-        ${name}
-      </span>
-      ${pinned ? x`
-            <span class="chip-pin-inside" @click=${e => {
+  return x(_templateObject$9 || (_templateObject$9 = _taggedTemplateLiteral(["\n    <button class=\"chip\"\n            ?selected=", "\n            ?playing=", "\n            ?ma-active=", "\n            @click=", "\n            @pointerdown=", "\n            @pointermove=", "\n            @pointerup=", "\n            @pointerleave=", "\n            style=\"display:flex;align-items:center;justify-content:space-between;\">\n      <span class=\"chip-icon\">\n        ", "\n      </span>\n      <span class=\"chip-label\" style=\"flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;\">\n        ", "\n      </span>\n      ", "\n    </button>\n  "])), selected, playing, maActive, () => onChipClick(idx), onPointerDown, onPointerMove, onPointerUp, onPointerUp, art ? x(_templateObject2$8 || (_templateObject2$8 = _taggedTemplateLiteral(["<img class=\"chip-mini-art\" src=\"", "\" onerror=\"this.style.display='none'\" />"])), art) : x(_templateObject3$6 || (_templateObject3$6 = _taggedTemplateLiteral(["<ha-icon .icon=", " style=\"font-size:28px;\"></ha-icon>"])), icon), name, pinned ? x(_templateObject4$5 || (_templateObject4$5 = _taggedTemplateLiteral(["\n            <span class=\"chip-pin-inside\" @click=", " title=\"Unpin\">\n              <ha-icon .icon=", "></ha-icon>\n            </span>\n          "])), e => {
     e.stopPropagation();
     onPinClick(idx, e);
-  }} title="Unpin">
-              <ha-icon .icon=${"mdi:pin"}></ha-icon>
-            </span>
-          ` : x`<span class="chip-pin-spacer"></span>`}
-    </button>
-  `;
+  }, "mdi:pin") : x(_templateObject5$4 || (_templateObject5$4 = _taggedTemplateLiteral(["<span class=\"chip-pin-spacer\"></span>"]))));
 }
 
 // Helper to render a group chip: same as chip but with label (with count), no badge/icon for group, just art/icon and label.
@@ -862,55 +903,25 @@ function renderGroupChip(_ref3) {
     onPointerMove,
     onPointerUp
   } = _ref3;
-  return x`
-    <button class="chip group"
-            ?selected=${selected}
-            ?ma-active=${maActive}
-            @click=${() => onChipClick(idx)}
-            @pointerdown=${onPointerDown}
-            @pointermove=${onPointerMove}
-            @pointerup=${onPointerUp}
-            @pointerleave=${onPointerUp}
-            style="display:flex;align-items:center;justify-content:space-between;">
-      <span class="chip-icon"
-            style="cursor:pointer;"
-            @click=${e => {
+  return x(_templateObject6$4 || (_templateObject6$4 = _taggedTemplateLiteral(["\n    <button class=\"chip group\"\n            ?selected=", "\n            ?ma-active=", "\n            @click=", "\n            @pointerdown=", "\n            @pointermove=", "\n            @pointerup=", "\n            @pointerleave=", "\n            style=\"display:flex;align-items:center;justify-content:space-between;\">\n      <span class=\"chip-icon\"\n            style=\"cursor:pointer;\"\n            @click=", ">\n        ", "\n      </span>\n      <span class=\"chip-label\" style=\"flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;\">\n        ", "\n      </span>\n      ", "\n    </button>\n  "])), selected, maActive, () => onChipClick(idx), onPointerDown, onPointerMove, onPointerUp, onPointerUp, e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
     }
-  }}>
-        ${art ? x`<img class="chip-mini-art"
-                      src="${art}"
-                      style="cursor:pointer;"
-                      onerror="this.style.display='none'"
-                      @click=${e => {
+  }, art ? x(_templateObject7$4 || (_templateObject7$4 = _taggedTemplateLiteral(["<img class=\"chip-mini-art\"\n                      src=\"", "\"\n                      style=\"cursor:pointer;\"\n                      onerror=\"this.style.display='none'\"\n                      @click=", "/>"])), art, e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
     }
-  }}/>` : x`<ha-icon .icon=${icon}
-                          style="font-size:28px;cursor:pointer;"
-                          @click=${e => {
+  }) : x(_templateObject8$4 || (_templateObject8$4 = _taggedTemplateLiteral(["<ha-icon .icon=", "\n                          style=\"font-size:28px;cursor:pointer;\"\n                          @click=", "></ha-icon>"])), icon, e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
     }
-  }}></ha-icon>`}
-      </span>
-      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
-        ${groupName}
-      </span>
-      ${pinned ? x`
-            <span class="chip-pin-inside" @click=${e => {
+  }), groupName, pinned ? x(_templateObject9$4 || (_templateObject9$4 = _taggedTemplateLiteral(["\n            <span class=\"chip-pin-inside\" @click=", " title=\"Unpin\">\n              <ha-icon .icon=", "></ha-icon>\n            </span>\n          "])), e => {
     e.stopPropagation();
     onPinClick(idx, e);
-  }} title="Unpin">
-              <ha-icon .icon=${"mdi:pin"}></ha-icon>
-            </span>
-          ` : x`<span class="chip-pin-spacer"></span>`}
-    </button>
-  `;
+  }, "mdi:pin") : x(_templateObject0$3 || (_templateObject0$3 = _taggedTemplateLiteral(["<span class=\"chip-pin-spacer\"></span>"]))));
 }
 
 // Pin/hold logic helpers (timer, etc)
@@ -983,8 +994,7 @@ function renderChipRow(_ref5) {
     onPointerUp
   } = _ref5;
   if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return E;
-  return x`
-    ${groupedSortedEntityIds.map(group => {
+  return x(_templateObject1$2 || (_templateObject1$2 = _taggedTemplateLiteral(["\n    ", "\n  "])), groupedSortedEntityIds.map(group => {
     // If it's a group (more than one entity)
     if (group.length > 1) {
       var _hass$states, _getArtworkUrl, _state$attributes;
@@ -997,7 +1007,7 @@ function renderChipRow(_ref5) {
       return renderGroupChip({
         idx,
         selected: selectedEntityId === id,
-        groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
+        groupName: getChipName(id) + (group.length > 1 ? " [".concat(group.length, "]") : ""),
         art,
         icon,
         pinned: pinnedIndex === idx,
@@ -1036,30 +1046,20 @@ function renderChipRow(_ref5) {
         onPointerUp: e => onPointerUp(e, idx)
       });
     }
-  })}
-  `;
+  }));
 }
 
-// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+var _templateObject$8, _templateObject2$7, _templateObject3$5;
 function renderActionChipRow(_ref) {
   let {
     actions,
     onActionChipClick
   } = _ref;
   if (!(actions !== null && actions !== void 0 && actions.length)) return E;
-  return x`
-    <div class="action-chip-row">
-      ${actions.map((a, idx) => x`
-          <button class="action-chip" @click=${() => onActionChipClick(idx)}>
-            ${a.icon ? x`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : E}
-            ${a.name || ""}
-          </button>
-        `)}
-    </div>
-  `;
+  return x(_templateObject$8 || (_templateObject$8 = _taggedTemplateLiteral(["\n    <div class=\"action-chip-row\">\n      ", "\n    </div>\n  "])), actions.map((a, idx) => x(_templateObject2$7 || (_templateObject2$7 = _taggedTemplateLiteral(["\n          <button class=\"action-chip\" @click=", ">\n            ", "\n            ", "\n          </button>\n        "])), () => onActionChipClick(idx), a.icon ? x(_templateObject3$5 || (_templateObject3$5 = _taggedTemplateLiteral(["<ha-icon .icon=", " style=\"font-size: 22px; margin-right: ", ";\"></ha-icon>"])), a.icon, a.name ? '8px' : '0') : E, a.name || "")));
 }
 
-// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+var _templateObject$7, _templateObject2$6, _templateObject3$4, _templateObject4$4, _templateObject5$3, _templateObject6$3, _templateObject7$3, _templateObject8$3, _templateObject9$3;
 function renderControlsRow(_ref) {
   let {
     stateObj,
@@ -1089,7 +1089,7 @@ function renderControlsRow(_ref) {
   const SUPPORT_PLAY = 16384;
   const controlCount = countMainControls(stateObj, supportsFeature, showFavorite, hiddenControls, showStop);
   const rowClass = adaptiveControls ? "controls-row adaptive" : "controls-row";
-  let rowStyle = adaptiveControls ? `--yamp-control-count:${Math.max(controlCount, 1)};` : E;
+  let rowStyle = adaptiveControls ? "--yamp-control-count:".concat(Math.max(controlCount, 1), ";") : E;
   if (adaptiveControls) {
     const sizing = (() => {
       if (controlCount <= 3) {
@@ -1141,56 +1141,9 @@ function renderControlsRow(_ref) {
         gap: 6
       };
     })();
-    rowStyle += [`--yamp-control-gap:${sizing.gap}px`, `--yamp-control-min-width:${sizing.minWidth}px`, `--yamp-control-max-width:${sizing.maxWidth}px`, `--yamp-control-min-height:${sizing.minHeight}px`, `--yamp-control-padding:${sizing.padding}px`, `--yamp-control-icon-size:${sizing.icon}px`].join(";");
+    rowStyle += ["--yamp-control-gap:".concat(sizing.gap, "px"), "--yamp-control-min-width:".concat(sizing.minWidth, "px"), "--yamp-control-max-width:".concat(sizing.maxWidth, "px"), "--yamp-control-min-height:".concat(sizing.minHeight, "px"), "--yamp-control-padding:".concat(sizing.padding, "px"), "--yamp-control-icon-size:".concat(sizing.icon, "px")].join(";");
   }
-  return x`
-    <div class=${rowClass} style=${rowStyle}>
-      ${!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x`
-        <button class="button" @click=${() => onControlClick("prev")} title="Previous">
-          <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
-        </button>
-      ` : E}
-      ${!hiddenControls.play_pause && (supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY)) ? x`
-        <button class="button" @click=${() => onControlClick("play_pause")} title="Play/Pause">
-          <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-        </button>
-      ` : E}
-      ${!hiddenControls.stop && showStop ? x`
-        <button class="button" @click=${() => onControlClick("stop")} title="Stop">
-          <ha-icon .icon=${"mdi:stop"}></ha-icon>
-        </button>
-      ` : E}
-      ${!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x`
-        <button class="button" @click=${() => onControlClick("next")} title="Next">
-          <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
-        </button>
-      ` : E}
-      ${!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x`
-        <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="Shuffle">
-          <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
-        </button>
-      ` : E}
-      ${!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x`
-        <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
-          <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
-        </button>
-      ` : E}
-      ${!hiddenControls.favorite && showFavorite ? x`
-        <button class="button${favoriteActive ? ' active' : ''}" @click=${() => onControlClick("favorite")} title="Favorite">
-          <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
-        </button>
-      ` : E}
-      ${!hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON)) ? x`
-            <button
-              class="button${stateObj.state !== "off" ? " active" : ""}"
-              @click=${() => onControlClick("power")}
-              title="Power"
-            >
-              <ha-icon .icon=${"mdi:power"}></ha-icon>
-            </button>
-          ` : E}
-    </div>
-  `;
+  return x(_templateObject$7 || (_templateObject$7 = _taggedTemplateLiteral(["\n    <div class=", " style=", ">\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n    </div>\n  "])), rowClass, rowStyle, !hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? x(_templateObject2$6 || (_templateObject2$6 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Previous\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("prev"), "mdi:skip-previous") : E, !hiddenControls.play_pause && (supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY)) ? x(_templateObject3$4 || (_templateObject3$4 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Play/Pause\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("play_pause"), stateObj.state === "playing" ? "mdi:pause" : "mdi:play") : E, !hiddenControls.stop && showStop ? x(_templateObject4$4 || (_templateObject4$4 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Stop\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("stop"), "mdi:stop") : E, !hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? x(_templateObject5$3 || (_templateObject5$3 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Next\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("next"), "mdi:skip-next") : E, !hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE) ? x(_templateObject6$3 || (_templateObject6$3 = _taggedTemplateLiteral(["\n        <button class=\"button", "\" @click=", " title=\"Shuffle\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), shuffleActive ? ' active' : '', () => onControlClick("shuffle"), "mdi:shuffle") : E, !hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? x(_templateObject7$3 || (_templateObject7$3 = _taggedTemplateLiteral(["\n        <button class=\"button", "\" @click=", " title=\"Repeat\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), repeatActive ? ' active' : '', () => onControlClick("repeat"), stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat") : E, !hiddenControls.favorite && showFavorite ? x(_templateObject8$3 || (_templateObject8$3 = _taggedTemplateLiteral(["\n        <button class=\"button", "\" @click=", " title=\"Favorite\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), favoriteActive ? ' active' : '', () => onControlClick("favorite"), favoriteActive ? "mdi:heart" : "mdi:heart-outline") : E, !hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON)) ? x(_templateObject9$3 || (_templateObject9$3 = _taggedTemplateLiteral(["\n            <button\n              class=\"button", "\"\n              @click=", "\n              title=\"Power\"\n            >\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), stateObj.state !== "off" ? " active" : "", () => onControlClick("power"), "mdi:power") : E);
 }
 
 // Export a small helper used by the card for layout decisions
@@ -1216,7 +1169,7 @@ function countMainControls(stateObj, supportsFeature) {
   return count;
 }
 
-// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+var _templateObject$6, _templateObject2$5, _templateObject3$3, _templateObject4$3;
 function renderVolumeRow(_ref) {
   let {
     isRemoteVolumeEntity,
@@ -1240,52 +1193,10 @@ function renderVolumeRow(_ref) {
     if (volume < 0.5) return "mdi:volume-medium";
     return "mdi:volume-high";
   };
-  return x`
-    <div class="volume-row">
-      ${isRemoteVolumeEntity ? x`
-            <div class="vol-stepper">
-              <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
-              <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
-            </div>
-          ` : showSlider ? x`
-            <div class="volume-controls">
-              <button 
-                class="volume-icon-btn" 
-                @click=${onMuteToggle} 
-                title=${(supportsMute ? isMuted : vol === 0) ? "Unmute" : "Mute"}
-              >
-                <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
-              </button>
-              <div class="volume-slider-container">
-                <input
-                  class="vol-slider"
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  .value=${vol}
-                  @mousedown=${onVolumeDragStart}
-                  @touchstart=${onVolumeDragStart}
-                  @change=${onVolumeChange}
-                  @mouseup=${onVolumeDragEnd}
-                  @touchend=${onVolumeDragEnd}
-                  title="Volume"
-                />
-              </div>
-            </div>
-          ` : x`
-            <div class="vol-stepper">
-              <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
-              <span>${Math.round(vol * 100)}%</span>
-              <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
-            </div>
-          `}
-      ${moreInfoMenu}
-    </div>
-  `;
+  return x(_templateObject$6 || (_templateObject$6 = _taggedTemplateLiteral(["\n    <div class=\"volume-row\">\n      ", "\n      ", "\n    </div>\n  "])), isRemoteVolumeEntity ? x(_templateObject2$5 || (_templateObject2$5 = _taggedTemplateLiteral(["\n            <div class=\"vol-stepper\">\n              <button class=\"button\" @click=", " title=\"Vol Down\">\u2013</button>\n              <button class=\"button\" @click=", " title=\"Vol Up\">+</button>\n            </div>\n          "])), () => onVolumeStep(-1), () => onVolumeStep(1)) : showSlider ? x(_templateObject3$3 || (_templateObject3$3 = _taggedTemplateLiteral(["\n            <div class=\"volume-controls\">\n              <button \n                class=\"volume-icon-btn\" \n                @click=", " \n                title=", "\n              >\n                <ha-icon icon=", "></ha-icon>\n              </button>\n              <div class=\"volume-slider-container\">\n                <input\n                  class=\"vol-slider\"\n                  type=\"range\"\n                  min=\"0\"\n                  max=\"1\"\n                  step=\"0.01\"\n                  .value=", "\n                  @mousedown=", "\n                  @touchstart=", "\n                  @change=", "\n                  @mouseup=", "\n                  @touchend=", "\n                  title=\"Volume\"\n                />\n              </div>\n            </div>\n          "])), onMuteToggle, (supportsMute ? isMuted : vol === 0) ? "Unmute" : "Mute", getVolumeIcon(vol, isMuted), vol, onVolumeDragStart, onVolumeDragStart, onVolumeChange, onVolumeDragEnd, onVolumeDragEnd) : x(_templateObject4$3 || (_templateObject4$3 = _taggedTemplateLiteral(["\n            <div class=\"vol-stepper\">\n              <button class=\"button\" @click=", " title=\"Vol Down\">\u2013</button>\n              <span>", "%</span>\n              <button class=\"button\" @click=", " title=\"Vol Up\">+</button>\n            </div>\n          "])), () => onVolumeStep(-1), Math.round(vol * 100), () => onVolumeStep(1)), moreInfoMenu);
 }
 
-// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+var _templateObject$5, _templateObject2$4;
 function renderProgressBar(_ref) {
   let {
     progress,
@@ -1300,31 +1211,12 @@ function renderProgressBar(_ref) {
   const barColor = accent || "var(--custom-accent, #ff9800)";
   // Collapsed bar is typically smaller and positioned differently
   if (collapsed) {
-    return x`
-      <div
-        class="collapsed-progress-bar"
-        style="width: ${progress * 100}%; background: ${barColor}; height: 4px; ${style}"
-      ></div>
-    `;
+    return x(_templateObject$5 || (_templateObject$5 = _taggedTemplateLiteral(["\n      <div\n        class=\"collapsed-progress-bar\"\n        style=\"width: ", "%; background: ", "; height: 4px; ", "\"\n      ></div>\n    "])), progress * 100, barColor, style);
   }
-  return x`
-    <div class="progress-bar-container">
-      <div
-        class="progress-bar"
-        style="height:${height}px; background:rgba(255,255,255,0.22); ${style}"
-        @click=${seekEnabled ? onSeek : null}
-        title=${seekEnabled ? "Seek" : ""}
-      >
-        <div
-          class="progress-inner"
-          style="width: ${progress * 100}%; background: ${barColor}; height:${height}px;"
-        ></div>
-      </div>
-    </div>
-  `;
+  return x(_templateObject2$4 || (_templateObject2$4 = _taggedTemplateLiteral(["\n    <div class=\"progress-bar-container\">\n      <div\n        class=\"progress-bar\"\n        style=\"height:", "px; background:rgba(255,255,255,0.22); ", "\"\n        @click=", "\n        title=", "\n      >\n        <div\n          class=\"progress-inner\"\n          style=\"width: ", "%; background: ", "; height:", "px;\"\n        ></div>\n      </div>\n    </div>\n  "])), height, style, seekEnabled ? onSeek : null, seekEnabled ? "Seek" : "", progress * 100, barColor, height);
 }
 
-// import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+var _templateObject$4;
 const Z_LAYERS = Object.freeze({
   MEDIA_BACKGROUND: 0,
   MEDIA_OVERLAY: 1,
@@ -1336,2601 +1228,9 @@ const Z_LAYERS = Object.freeze({
   MODAL_BACKDROP: 8,
   MODAL_TOAST: 9
 });
-const yampCardStyles = i$4`
-  /* CSS Custom Properties for consistency */
-  :host {
-    --custom-accent: #ff9800;
-    --card-bg: var(--card-background-color, #222);
-    --primary-text: var(--primary-text-color, #fff);
-    --secondary-text: var(--secondary-text-color, #aaa);
-    --chip-bg: var(--chip-background, #333);
-    --transition-fast: 0.13s;
-    --transition-normal: 0.2s;
-    --transition-slow: 0.4s;
-    --border-radius: 16px;
-    --chip-border-radius: 24px;
-    --button-border-radius: 8px;
-    --shadow-light: 0 2px 8px rgba(0,0,0,0.13);
-    --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);
-    --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
-    --yamp-artwork-fit: cover;
-    --yamp-text-scale: 1;
-    --yamp-text-scale-details: 1;
-    --yamp-text-scale-menu: 1;
-    --yamp-text-scale-action-chips: 1;
-    --yamp-details-scale: var(--yamp-text-scale-details, 1);
-    --yamp-details-line-height: 1.2;
-    --yamp-details-max-lines: 3;
-    --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));
-    --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));
-    --yamp-section-radius: 12px;
-    --yamp-section-divider: rgba(255,255,255,0.06);
-    --yamp-section-title-size: 1em;
-    --yamp-section-title-weight: 600;
-    --yamp-section-description-size: 0.9em;
-    --yamp-section-description-color: var(--secondary-text-color, #888);
-  }
+const yampCardStyles = i$4(_templateObject$4 || (_templateObject$4 = _taggedTemplateLiteral(["\n  /* CSS Custom Properties for consistency */\n  :host {\n    --custom-accent: #ff9800;\n    --card-bg: var(--card-background-color, #222);\n    --primary-text: var(--primary-text-color, #fff);\n    --secondary-text: var(--secondary-text-color, #aaa);\n    --chip-bg: var(--chip-background, #333);\n    --transition-fast: 0.13s;\n    --transition-normal: 0.2s;\n    --transition-slow: 0.4s;\n    --border-radius: 16px;\n    --chip-border-radius: 24px;\n    --button-border-radius: 8px;\n    --shadow-light: 0 2px 8px rgba(0,0,0,0.13);\n    --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);\n    --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);\n    --yamp-artwork-fit: cover;\n    --yamp-text-scale: 1;\n    --yamp-text-scale-details: 1;\n    --yamp-text-scale-menu: 1;\n    --yamp-text-scale-action-chips: 1;\n    --yamp-details-scale: var(--yamp-text-scale-details, 1);\n    --yamp-details-line-height: 1.2;\n    --yamp-details-max-lines: 3;\n    --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));\n    --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));\n    --yamp-section-radius: 12px;\n    --yamp-section-divider: rgba(255,255,255,0.06);\n    --yamp-section-title-size: 1em;\n    --yamp-section-title-weight: 600;\n    --yamp-section-description-size: 0.9em;\n    --yamp-section-description-color: var(--secondary-text-color, #888);\n  }\n\n  :host([data-match-theme=\"false\"]) {\n    --custom-accent: #ff9800 !important;\n    \n    /* Search sheet default theme variables when match_theme is false */\n    --search-overlay-bg: rgba(0, 0, 0, 0.8);\n    --search-input-bg: #333;\n    --search-input-text: #fff;\n    --search-text: #fff;\n    --search-error: #ff6b6b;\n    --search-success: #4caf50;\n    --search-success-bg: rgba(76, 175, 80, 0.95);\n    --search-border: rgba(255, 255, 255, 0.1);\n    --search-hover-bg: rgba(255, 255, 255, 0.1);\n    --search-play-hover: #e68900;\n    --search-queue-bg: #4a4a4a;\n    --search-queue-border: #666;\n    --search-queue-hover: #5a5a5a;\n    --search-queue-hover-border: #777;\n  }\n  \n  :host([data-match-theme=\"true\"]) {\n    /* Override custom-accent to use theme accent when match_theme is true */\n    --custom-accent: var(--accent-color, #ff9800);\n    \n    /* Search sheet theme-aware variables */\n    --search-overlay-bg: var(--ha-card-background, rgba(0, 0, 0, 0.8));\n    --search-input-bg: var(--ha-card-background, #333);\n    --search-input-text: var(--primary-text-color, #fff);\n    --search-text: var(--primary-text-color, #fff);\n    --search-error: var(--error-color, #ff6b6b);\n    --search-success: var(--success-color, #4caf50);\n    --search-success-bg: var(--success-color, rgba(76, 175, 80, 0.95));\n    --search-border: var(--divider-color, rgba(255, 255, 255, 0.1));\n    --search-hover-bg: var(--divider-color, rgba(255, 255, 255, 0.1));\n    --search-play-hover: var(--accent-color, #e68900);\n    --search-queue-bg: var(--ha-card-background, #4a4a4a);\n    --search-queue-border: var(--divider-color, #666);\n    --search-queue-hover: var(--secondary-background-color, #5a5a5a);\n    --search-queue-hover-border: var(--divider-color, #777);\n  }\n\n  /* Base card styles - set once, inherit everywhere */\n  :host {\n    display: block;\n    border-radius: var(--border-radius);\n    box-shadow: none;\n    background: transparent;\n    color: var(--primary-text);\n    transition: background var(--transition-normal);\n    overflow: hidden;\n  }\n\n  ha-card.yamp-card {\n    display: block;\n    border-radius: var(--border-radius);\n    box-shadow: none;\n    background: transparent;\n    color: var(--primary-text);\n    transition: background var(--transition-normal);\n    overflow: hidden;\n    font-size: inherit;\n  }\n\n  .yamp-card-inner {\n    position: relative;\n    z-index: ", ";\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n  }\n\n  .full-bleed-artwork-bg {\n    position: absolute;\n    inset: 0;\n    z-index: ", ";\n    background-size: var(--yamp-artwork-bg-size, cover);\n    background-position: top center;\n    background-repeat: no-repeat;\n    pointer-events: none;\n  }\n\n  .full-bleed-artwork-fade {\n    position: absolute;\n    inset: 0;\n    z-index: ", ";\n    pointer-events: none;\n    background: linear-gradient(\n      to bottom,\n      rgba(0,0,0,0.0) 0%,\n      rgba(0,0,0,0.40) 55%,\n      rgba(0,0,0,0.92) 100%\n    );\n  }\n\n  /* Idle state dimming */\n  .dim-idle .details,\n  .dim-idle .controls-row,\n  .dim-idle .volume-row,\n  .dim-idle .chip-row,\n  .dim-idle .action-chip-row {\n    opacity: 0.28;\n    transition: opacity 0.5s;\n  }\n\n  /* Improve selected chip readability while idle */\n  .dim-idle .chip[selected] {\n    color: rgba(255,255,255,0.94);\n    text-shadow: 0 0 6px rgba(0,0,0,0.35);\n  }\n\n  /* More info menu */\n  .more-info-menu {\n    display: flex;\n    align-items: center;\n    margin-right: 0;\n    position: relative;\n    z-index: ", ";\n  }\n\n  .more-info-btn {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    height: 36px;\n    width: 36px;\n    padding: 0;\n    margin: 0 4px;\n    background: none;\n    border: none;\n    color: var(--primary-text);\n    font: inherit;\n    cursor: pointer;\n    outline: none;\n  }\n\n  .more-info-btn ha-icon {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 1.5em;\n    width: 28px;\n    height: 28px;\n    line-height: 1;\n    vertical-align: middle;\n    position: relative;\n    margin: 0 0 2px 0;\n    color: #fff;\n    transition: color var(--transition-normal, 0.2s);\n  }\n\n  .dim-idle .more-info-btn ha-icon {\n    color: #9ea2a8;\n  }\n\n  .more-info-icon {\n    font-size: 1.7em;\n    line-height: 1;\n    color: #fff;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: color var(--transition-normal, 0.2s);\n  }\n\n  .dim-idle .more-info-icon {\n    color: #9ea2a8;\n  }\n\n  /* Card artwork spacer */\n  .card-artwork-spacer {\n    width: 100%;\n    flex: 1 1 0;\n    height: auto;\n    min-height: 180px;\n    pointer-events: none;\n    position: relative;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  :host([data-has-custom-height=\"true\"]) .card-artwork-spacer {\n    min-height: 0;\n  }\n\n  /* Media background */\n  .media-bg-full {\n    position: absolute;\n    inset: 0;\n    width: 100%;\n    height: 100%;\n    z-index: ", ";\n    background-size: var(--yamp-artwork-bg-size, cover);\n    background-position: top center;\n    background-repeat: no-repeat;\n    pointer-events: none;\n  }\n\n  .media-bg-dim {\n    position: absolute;\n    inset: 0;\n    width: 100%;\n    height: 100%;\n    background: rgba(0,0,0,0.5);\n    z-index: ", ";\n    pointer-events: none;\n  }\n\n  /* Source menu */\n  .source-menu {\n    position: relative;\n    display: flex;\n    flex-direction: column;\n    align-items: flex-end;\n    padding: 0;\n    margin: 0;\n  }\n\n  .source-menu-btn {\n    background: none;\n    border: none;\n    color: var(--primary-text);\n    font: inherit;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    gap: 1px;\n    padding: 2px 10px;\n    font-size: 1em;\n    outline: none;\n  }\n\n  .source-selected {\n    min-width: 64px;\n    font-weight: 500;\n    padding-right: 4px;\n    text-align: left;\n  }\n\n  .source-dropdown {\n    position: absolute;\n    top: 32px;\n    right: 0;\n    left: auto;\n    background: var(--card-bg);\n    color: var(--primary-text);\n    border-radius: var(--button-border-radius);\n    box-shadow: var(--shadow-light);\n    min-width: 110px;\n    z-index: ", ";\n    margin-top: 2px;\n    border: 1px solid #444;\n    overflow: hidden;\n    max-height: 220px;\n    overflow-y: auto;\n  }\n\n  .source-dropdown.up {\n    top: auto;\n    bottom: 38px;\n    border-radius: var(--button-border-radius);\n  }\n\n  .source-option {\n    padding: 8px 16px;\n    cursor: pointer;\n    transition: background var(--transition-fast);\n    white-space: nowrap;\n  }\n\n  .source-option:hover,\n  .source-option:focus {\n    background: var(--accent-color, #1976d2);\n    color: #fff;\n  }\n\n  .source-row {\n    display: flex;\n    align-items: center;\n    padding: 0 16px 8px 16px;\n    margin-top: 8px;\n  }\n\n  .source-select {\n    font-size: 1em;\n    padding: 4px 10px;\n    border-radius: var(--button-border-radius);\n    border: 1px solid #ccc;\n    background: var(--card-bg);\n    color: var(--primary-text);\n    outline: none;\n    margin-top: 2px;\n  }\n\n  /* Chip styles */\n  .chip-icon {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    width: 28px;\n    height: 28px;\n    margin-right: 8px;\n    background: transparent;\n    border-radius: 50%;\n    overflow: hidden;\n    padding: 0;\n  }\n\n  .chip[playing] .chip-icon {\n    background: #fff;\n  }\n\n  .chip-icon ha-icon {\n    width: 100%;\n    height: 100%;\n    font-size: 28px;\n    line-height: 1;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    margin: 0;\n    padding: 0;\n    color: var(--custom-accent);\n  }\n\n  .chip[selected] .chip-icon ha-icon {\n    color: #fff;\n  }\n\n  .chip[selected][playing] .chip-icon ha-icon {\n    color: var(--custom-accent);\n  }\n\n  .chip:hover .chip-icon ha-icon {\n    color: #fff;\n  }\n\n  .chip-mini-art {\n    width: 28px;\n    height: 28px;\n    border-radius: 50%;\n    object-fit: var(--yamp-artwork-fit, cover);\n    box-shadow: 0 1px 4px rgba(0,0,0,0.18);\n    display: block;\n  }\n\n  /* Chip rows */\n  .chip-row.grab-scroll-active,\n  .action-chip-row.grab-scroll-active,\n  .search-filter-chips.grab-scroll-active {\n    cursor: grabbing;\n  }\n\n  .chip-row,\n  .action-chip-row,\n  .search-filter-chips {\n    cursor: grab;\n  }\n\n  .chip-row {\n    display: flex;\n    gap: 8px;\n    padding: 8px 12px 0 12px;\n    margin-bottom: 12px;\n    position: relative;\n    z-index: ", ";\n    overflow-x: auto;\n    overflow-y: hidden;\n    white-space: nowrap;\n    scrollbar-width: none;\n    scrollbar-color: var(--accent-color, #1976d2) #222;\n    -webkit-overflow-scrolling: touch;\n    touch-action: pan-x;\n    max-width: 100vw;\n    background: var(--ha-chip-row-background, transparent);\n  }\n\n  .chip-row::-webkit-scrollbar {\n    display: none;\n  }\n\n  .chip-row::-webkit-scrollbar-thumb {\n    background: var(--accent-color, #1976d2);\n    border-radius: 6px;\n  }\n\n  .chip-row::-webkit-scrollbar-track {\n    background: #222;\n  }\n\n  .action-chip-row {\n    display: flex;\n    gap: 8px;\n    padding: 2px 12px 0 12px;\n    margin-bottom: 8px;\n    position: relative;\n    z-index: ", ";\n    overflow-x: auto;\n    white-space: nowrap;\n    scrollbar-width: none;\n    font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));\n    background: var(--ha-action-row-background, transparent);\n  }\n\n  .action-chip-row::-webkit-scrollbar {\n    display: none;\n  }\n\n  /* Action chips */\n  .action-chip {\n    background: transparent;\n    opacity: 1;\n    border-radius: var(--button-border-radius);\n    color: var(--primary-text);\n    box-shadow: none;\n    text-shadow: none;\n    border: none;\n    outline: none;\n    padding: 4px 12px;\n    font-weight: 500;\n    font-size: 0.95em;\n    cursor: pointer;\n    margin: 4px 0;\n    transition: background var(--transition-normal) ease, transform 0.1s ease;\n    flex: 0 0 auto;\n    white-space: nowrap;\n    display: inline-flex;\n    align-items: center;\n    gap: 6px;\n  }\n\n  .action-chip:hover {\n    background: var(--custom-accent);\n    color: #fff;\n    box-shadow: none;\n    text-shadow: none;\n  }\n\n  .action-chip:active {\n    background: var(--custom-accent);\n    color: #fff;\n    transform: scale(0.96);\n    box-shadow: none;\n    text-shadow: none;\n  }\n\n  /* Override action chip colors when match_theme is false */\n  :host([data-match-theme=\"false\"]) .action-chip:hover,\n  :host([data-match-theme=\"false\"]) .action-chip:active {\n    background: #ff9800 !important;\n  }\n\n  /* Main chips */\n  .chip {\n    display: flex;\n    align-items: center;\n    border-radius: var(--chip-border-radius);\n    padding: 6px 6px 6px 8px;\n    background: var(--chip-bg);\n    color: var(--primary-text);\n    cursor: pointer;\n    font-weight: 500;\n    opacity: 0.85;\n    border: none;\n    outline: none;\n    transition: background var(--transition-normal), opacity var(--transition-normal);\n    flex: 0 0 auto;\n    white-space: nowrap;\n    position: relative;\n  }\n\n  .chip:hover {\n    background: var(--custom-accent);\n    color: #fff;\n  }\n\n  .chip[selected] {\n    background: var(--custom-accent);\n    color: #fff;\n    opacity: 1;\n  }\n\n  .chip[playing] {\n    padding-right: 6px;\n  }\n\n  /* Chip pin */\n  .chip-pin {\n    position: absolute;\n    top: -6px;\n    right: -6px;\n    background: #fff;\n    border-radius: 50%;\n    padding: 2px;\n    z-index: ", ";\n    width: 22px;\n    height: 22px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    border: 2px solid var(--custom-accent);\n    box-shadow: 0 1px 5px rgba(0,0,0,0.11);\n    cursor: pointer;\n    transition: box-shadow 0.18s;\n  }\n\n  .chip-pin:hover {\n    box-shadow: 0 2px 12px rgba(33,33,33,0.17);\n  }\n\n  .chip-pin ha-icon {\n    color: var(--custom-accent);\n    font-size: 16px;\n    background: transparent;\n    border-radius: 50%;\n    margin: 0;\n    padding: 0;\n  }\n\n  .chip-pin-inside {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    margin-left: 8px;\n    background: transparent;\n    border-radius: 50%;\n    padding: 2px;\n    cursor: pointer;\n  }\n\n  .chip-pin-inside ha-icon {\n    color: var(--custom-accent);\n    font-size: 17px;\n    margin: 0;\n  }\n\n  .chip[selected] .chip-pin-inside ha-icon {\n    color: #fff;\n  }\n\n  .chip-pin:hover ha-icon,\n  .chip-pin-inside:hover ha-icon {\n    color: #fff;\n  }\n\n  .chip:hover .chip-pin ha-icon,\n  .chip:hover .chip-pin-inside ha-icon {\n    color: #fff;\n  }\n\n  .chip-pin-spacer {\n    display: flex;\n    width: 24px;\n    min-width: 24px;\n    height: 1px;\n  }\n\n  /* Group icon */\n  .chip-icon.group-icon {\n    background: var(--custom-accent);\n    color: #fff;\n    position: relative;\n  }\n\n  .group-count {\n    font-weight: 700;\n    font-size: 0.9em;\n    line-height: 28px;\n    text-align: center;\n    width: 100%;\n    color: inherit;\n  }\n\n  /* Media artwork */\n  .media-artwork-bg {\n    position: relative;\n    width: 100%;\n    aspect-ratio: 1.75/1;\n    overflow: hidden;\n    background-size: var(--yamp-artwork-bg-size, cover);\n    background-repeat: no-repeat;\n    background-position: top center;\n  }\n\n  .artwork {\n    width: 96px;\n    height: 96px;\n    object-fit: var(--yamp-artwork-fit, cover);\n    border-radius: 12px;\n    box-shadow: var(--shadow-medium);\n    background: #222;\n  }\n\n  /* Details section */\n  .details {\n    padding-top: 0;\n    padding-right: calc(16px * var(--yamp-details-scale, 1));\n    padding-bottom: calc(12px * var(--yamp-details-scale, 1));\n    padding-left: calc(16px * var(--yamp-details-scale, 1));\n    display: flex;\n    flex-direction: column;\n    gap: calc(8px * var(--yamp-details-scale, 1));\n    margin-top: calc(8px * var(--yamp-details-scale, 1));\n    min-height: calc(48px * var(--yamp-details-scale, 1));\n    font-size: calc(1em * var(--yamp-details-scale, 1));\n  }\n\n  .details .title {\n    font-size: calc(1.1em * var(--yamp-details-scale, 1));\n    font-weight: 600;\n    line-height: var(--yamp-details-line-height, 1.2);\n    white-space: normal;\n    word-break: break-word;\n    overflow: visible;\n    text-overflow: unset;\n    display: -webkit-box;\n    -webkit-box-orient: vertical;\n    -webkit-line-clamp: var(--yamp-details-max-lines, 3);\n    overflow: hidden;\n    padding-top: calc(8px * var(--yamp-details-scale, 1));\n  }\n\n  .details .artist {\n    font-size: calc(1em * var(--yamp-details-scale, 1));\n    line-height: var(--yamp-details-line-height, 1.2);\n  }\n\n  .title {\n    font-size: 1.1em;\n    font-weight: 600;\n    line-height: 1.2;\n    white-space: normal;\n    word-break: break-word;\n    overflow: visible;\n    text-overflow: unset;\n    display: block;\n    padding-top: 8px;\n  }\n\n  .artist {\n    font-size: 1em;\n    font-weight: 400;\n    color: var(--secondary-text);\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    color: #fff;\n  }\n\n  /* Controls */\n  .controls-row {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    gap: 12px;\n    padding: 4px 16px;\n  }\n\n  .controls-row.adaptive {\n    justify-content: center;\n    gap: var(--yamp-control-gap, 10px);\n    flex-wrap: nowrap;\n  }\n\n  .controls-row.adaptive .button {\n    flex: 1 1 calc(\n      (100% - (var(--yamp-control-gap, 10px) * (var(--yamp-control-count, 5) - 1))) /\n      var(--yamp-control-count, 5)\n    );\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    min-width: var(--yamp-control-min-width, 48px);\n    max-width: var(--yamp-control-max-width, 120px);\n    min-height: var(--yamp-control-min-height, 48px);\n    padding: var(--yamp-control-padding, 8px);\n  }\n\n  .controls-row.adaptive .button ha-icon {\n    --mdc-icon-size: var(--yamp-control-icon-size, 36px);\n    width: var(--yamp-control-icon-size, 36px);\n    height: var(--yamp-control-icon-size, 36px);\n    font-size: var(--yamp-control-icon-size, 36px);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .controls-row.adaptive .button ha-icon svg,\n  .controls-row.adaptive .button ha-icon iron-icon {\n    width: 100%;\n    height: 100%;\n  }\n\n  /* Tighter spacing for collapsed mode with artwork */\n  .card-lower-content.collapsed.has-artwork .controls-row {\n    gap: 8px;\n    padding: 4px 12px 4px 16px;\n  }\n\n  .button {\n    background: none;\n    border: none;\n    color: inherit;\n    font-size: 1.5em;\n    cursor: pointer;\n    padding: 6px;\n    border-radius: var(--button-border-radius);\n    transition: background var(--transition-normal);\n  }\n\n  .button:active {\n    background: rgba(0,0,0,0.10);\n  }\n\n  .button.active ha-icon,\n  .button.active {\n    color: var(--custom-accent);\n  }\n\n  /* Progress bar */\n  .progress-bar-container {\n    padding-left: 24px;\n    padding-right: 24px;\n    box-sizing: border-box;\n  }\n\n  .progress-bar {\n    width: 100%;\n    height: 6px;\n    background: rgba(255,255,255,0.22);\n    border-radius: 3px;\n    margin: 8px 0;\n    cursor: pointer;\n    position: relative;\n    box-shadow: var(--shadow-heavy);\n  }\n\n  .progress-inner {\n    height: 100%;\n    background: var(--custom-accent);\n    border-radius: 3px 0 0 3px;\n    box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);\n  }\n\n  /* Volume controls */\n  .volume-row {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    padding: 0 12px 12px 25px;\n    justify-content: space-between;\n  }\n\n  .volume-controls {\n    display: flex;\n    align-items: center;\n    gap: 25px;\n    flex: 1;\n  }\n\n  .volume-icon-btn {\n    background: none;\n    border: none;\n    color: var(--primary-text);\n    cursor: pointer;\n    padding: 0px;\n    border-radius: 50%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: background-color var(--transition-normal);\n    min-width: 36px;\n    min-height: 36px;\n    margin-right: 0px;\n    margin-left: -7px;\n  }\n\n  .volume-icon-btn:hover {\n    color: var(--custom-accent);\n  }\n\n  .volume-icon-btn ha-icon {\n    font-size: 1.2em;\n    color: #fff;\n  }\n\n  .volume-slider-container {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    flex: 1;\n    position: relative;\n  }\n\n  .volume-slider-icon {\n    font-size: 1em;\n    color: var(--primary-text);\n    opacity: 0.7;\n    min-width: 20px;\n  }\n\n  .vol-slider {\n    -webkit-appearance: none;\n    appearance: none;\n    height: 6px;\n    background: hsla(0, 0.00%, 100.00%, 0.22);\n    border-radius: 3px;\n    outline: none;\n    box-shadow: var(--shadow-heavy);\n    flex: 1 1 auto;\n    min-width: 80px;\n    max-width: none;\n    margin-right: 12px;\n    margin-top: 10px;\n    margin-bottom: 10px;\n  }\n\n  .volume-row .source-menu {\n    flex: 0 0 auto;\n  }\n\n  /* Volume slider thumbs */\n  .vol-slider::-webkit-slider-thumb {\n    -webkit-appearance: none;\n    appearance: none;\n    width: 18px;\n    height: 18px;\n    border-radius: 50%;\n    background: var(--custom-accent);\n    cursor: pointer;\n    box-shadow: 0 2px 8px rgba(0,0,0,0.12);\n    border: 2px solid #fff;\n  }\n\n  .vol-slider::-moz-range-thumb {\n    width: 18px;\n    height: 18px;\n    border-radius: 50%;\n    background: var(--custom-accent);\n    cursor: pointer;\n    border: 2px solid #fff;\n  }\n\n  .vol-slider::-moz-range-track {\n    height: 6px;\n    background: rgba(255,255,255,0.22);\n    border-radius: 3px;\n  }\n\n  .vol-slider::-ms-thumb {\n    width: 18px;\n    height: 18px;\n    border-radius: 50%;\n    background: var(--custom-accent);\n    cursor: pointer;\n    border: 2px solid #fff;\n  }\n\n  .vol-slider::-ms-fill-lower,\n  .vol-slider::-ms-fill-upper {\n    height: 6px;\n    background: rgba(255,255,255,0.22);\n    border-radius: 3px;\n  }\n\n  /* Touch device improvements */\n  @media (pointer: coarse) {\n    .vol-slider::-webkit-slider-thumb {\n      box-shadow: 0 0 0 18px rgba(0,0,0,0);\n    }\n    .vol-slider::-moz-range-thumb {\n      box-shadow: 0 0 0 18px rgba(0,0,0,0);\n    }\n    .vol-slider::-ms-thumb {\n      box-shadow: 0 0 0 18px rgba(0,0,0,0);\n    }\n  }\n\n  .vol-stepper {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n  }\n\n  .vol-stepper .button {\n    min-width: 36px;\n    min-height: 36px;\n    font-size: 1.5em;\n    padding: 6px 0;\n    border-radius: 50%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  /* Light mode styles */\n  @media (prefers-color-scheme: light) {\n    :host {\n      background: var(--card-background-color, #fff);\n    }\n\n    .chip {\n      background: #f0f0f0;\n      color: #222;\n    }\n\n    :host([data-match-theme=\"true\"]) .chip[selected] {\n      background: var(--accent-color, #1976d2);\n      color: #fff;\n    }\n\n    .artwork {\n      background: #eee;\n    }\n\n    .progress-bar {\n      background: #eee;\n    }\n\n    .source-menu-btn {\n      color: #222;\n    }\n\n    .source-dropdown {\n      background: #fff;\n      color: #222;\n      border: 1px solid #bbb;\n    }\n\n    .source-option {\n      color: #222;\n      background: #fff;\n      transition: background var(--transition-fast), color var(--transition-fast);\n    }\n\n    .source-option:hover,\n    .source-option:focus {\n      background: var(--custom-accent);\n      color: #222;\n    }\n\n    .source-select {\n      background: #fff;\n      color: #222;\n      border: 1px solid #aaa;\n    }\n\n    .action-chip {\n      background: var(--card-background-color, #fff);\n      opacity: 1;\n      border-radius: var(--button-border-radius);\n      color: var(--primary-text-color, #222);\n      box-shadow: none;\n      text-shadow: none;\n      border: none;\n      outline: none;\n    }\n\n    .action-chip:active {\n      background: var(--accent-color, #1976d2);\n      color: #fff;\n      opacity: 1;\n      transform: scale(0.98);\n      box-shadow: none;\n      text-shadow: none;\n    }\n\n    .card-lower-content:not(.collapsed) .source-menu-btn,\n    .card-lower-content:not(.collapsed) .source-selected {\n      color: #fff;\n    }\n  }\n\n  /* Artwork overlay */\n  .artwork-dim-overlay {\n    position: absolute;\n    left: 0;\n    right: 0;\n    top: 0;\n    bottom: 0;\n    pointer-events: none;\n    background: linear-gradient(to bottom, \n      rgba(0,0,0,0.0) 0%,\n      rgba(0,0,0,0.40) 55%,\n      rgba(0,0,0,0.70) 100%);\n    z-index: ", ";\n  }\n\n  /* Card lower content */\n  .card-lower-content-container {\n    position: relative;\n    width: 100%;\n    min-height: auto;\n    height: 100%;\n    display: flex;\n    flex: 1 1 auto;\n    flex-direction: column;\n    border-radius: 0 0 var(--border-radius) var(--border-radius);\n    overflow: hidden;\n  }\n\n  .card-lower-content-bg {\n    position: absolute;\n    inset: 0;\n    z-index: ", ";\n    background-size: var(--yamp-artwork-bg-size, cover);\n    background-position: top center;\n    background-repeat: no-repeat;\n    pointer-events: none;\n    height: 100%;\n  }\n\n  .card-lower-fade {\n    position: absolute;\n    inset: 0;\n    pointer-events: none;\n    z-index: ", ";\n    background: linear-gradient(\n      to bottom,\n      rgba(0,0,0,0.0) 0%,\n      rgba(0,0,0,0.40) 55%,\n      rgba(0,0,0,0.92) 100%\n    );\n  }\n\n  .card-lower-content {\n    position: relative;\n    z-index: ", ";\n    display: flex;\n    flex-direction: column;\n    height: 100%;\n  }\n\n  .card-lower-content.transitioning .details,\n  .card-lower-content.transitioning .card-artwork-spacer {\n    transition: opacity 0.3s;\n  }\n\n  .card-lower-content.collapsed .details {\n    opacity: 1;\n    pointer-events: auto;\n    margin-right: var(--yamp-collapsed-details-offset, 120px);\n    transition: margin var(--transition-normal);\n  }\n\n  @media (max-width: 420px) {\n    .card-lower-content.collapsed .details {\n      margin-right: var(--yamp-collapsed-details-offset, 74px);\n    }\n  }\n\n  .card-lower-content.collapsed .card-artwork-spacer {\n    opacity: 0;\n    pointer-events: none;\n  }\n\n  .card-lower-content.collapsed .card-artwork-spacer.show-placeholder {\n    opacity: 1;\n    pointer-events: auto;\n  }\n\n  .collapsed-flex-spacer {\n    flex: 1 1 auto;\n    width: 100%;\n    min-height: 0;\n  }\n\n  /* Force white text for important UI elements */\n  .details,\n  .title,\n  .artist,\n  .controls-row,\n  .button,\n  .vol-stepper span {\n    color: #fff;\n  }\n\n  .card-lower-content.collapsed .details .title,\n  .card-lower-content.collapsed .title {\n    font-size: calc(1.1em * var(--yamp-collapsed-title-scale, 1));\n    line-height: calc(1.2 * var(--yamp-collapsed-title-scale, 1));\n  }\n\n  .card-lower-content.collapsed .artist {\n    font-size: calc(1em * var(--yamp-collapsed-artist-scale, 1));\n  }\n  \n\n\n  /* Media artwork placeholder */\n  .media-artwork-placeholder {\n    position: relative;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    width: clamp(96px, 50%, 184px);\n    aspect-ratio: 1;\n    pointer-events: none;\n  }\n\n  .media-artwork-placeholder svg {\n    width: 100%;\n    height: 100%;\n    display: block;\n    opacity: 0.85;\n  }\n\n  /* Collapsed artwork */\n  .card-lower-content.collapsed .collapsed-artwork-container {\n    position: absolute;\n    top: 16px;\n    right: 6px;\n    width: 110px;\n    height: calc(100% - 60px);\n    display: flex;\n    align-items: flex-start;\n    justify-content: flex-end;\n    z-index: ", ";\n    background: transparent;\n    pointer-events: none;\n    box-shadow: none;\n    padding: 0;\n    transition: background var(--transition-slow);\n  }\n\n  .card-lower-content.collapsed .collapsed-artwork {\n    width: 102px;\n    height: 102px;\n    border-radius: 16px;\n    object-fit: var(--yamp-artwork-fit, cover);\n    background: transparent;\n    box-shadow: 0 1px 6px rgba(0,0,0,0.22);\n    pointer-events: none;\n    user-select: none;\n    display: block;\n    margin: 2px;\n  }\n\n  .card-lower-content.collapsed.has-artwork .controls-row {\n    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) !important;\n    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) !important;\n    width: auto !important;\n  }\n\n  /* Medium screens */\n  @media (max-width: 600px) {\n    .card-lower-content.collapsed.has-artwork .controls-row {\n      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) !important;\n      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) !important;\n      width: auto !important;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork-container {\n      width: 105px;\n      right: 4px;\n      top: 14px;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork {\n      width: 98px;\n      height: 98px;\n    }\n  }\n\n  /* Small screens */\n  @media (max-width: 420px) {\n    .card-lower-content.collapsed.has-artwork .controls-row {\n      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) !important;\n      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) !important;\n      width: auto !important;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork-container {\n      width: 90px;\n      right: 3px;\n      top: 12px;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork {\n      width: 84px;\n      height: 84px;\n    }\n  }\n\n  /* Very small screens */\n  @media (max-width: 320px) {\n    .card-lower-content.collapsed.has-artwork .controls-row {\n      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) !important;\n      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) !important;\n      width: auto !important;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork-container {\n      width: 80px;\n      right: 2px;\n      top: 10px;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork {\n      width: 74px;\n      height: 74px;\n    }\n  }\n\n  /* Collapsed progress bar */\n  .collapsed-progress-bar {\n    position: absolute;\n    left: 0;\n    bottom: 0;\n    height: 4px;\n    background: var(--custom-accent);\n    border-radius: 0 0 12px 12px;\n    z-index: ", ";\n    transition: width var(--transition-normal) linear;\n    pointer-events: none;\n  }\n\n  /* Entity options overlay */\n  .entity-options-overlay {\n    position: absolute;\n    left: 0;\n    right: 0;\n    top: 0;\n    bottom: 0;\n    z-index: ", ";\n    background: var(--ha-entity-menu-overlay, rgba(0,0,0,0.82));\n    display: flex;\n    align-items: flex-start;\n    justify-content: center;\n  }\n\n  /* Opening animations for hamburger menu */\n  @keyframes overlayFadeIn {\n    from {\n      opacity: 0;\n    }\n    to {\n      opacity: 1;\n    }\n  }\n\n  @keyframes containerSlideIn {\n    from {\n      transform: translateY(-20px);\n      opacity: 0;\n    }\n    to {\n      transform: translateY(0);\n      opacity: 1;\n    }\n  }\n\n  @keyframes sheetSlideIn {\n    from {\n      transform: translateY(10px);\n      opacity: 0;\n    }\n    to {\n      transform: translateY(0);\n      opacity: 1;\n    }\n  }\n\n  .entity-options-overlay-opening {\n    animation: overlayFadeIn 0.2s ease-out;\n  }\n\n  .entity-options-container-opening {\n    animation: containerSlideIn 0.3s ease-out;\n  }\n\n  .entity-options-sheet-opening {\n    animation: sheetSlideIn 0.25s ease-out 0.05s both;\n  }\n\n  /* Closing animations for hamburger menu */\n  @keyframes overlayFadeOut {\n    from {\n      opacity: 1;\n    }\n    to {\n      opacity: 0;\n    }\n  }\n\n  @keyframes containerSlideOut {\n    from {\n      transform: translateY(0);\n      opacity: 1;\n    }\n    to {\n      transform: translateY(-20px);\n      opacity: 0;\n    }\n  }\n\n  @keyframes sheetSlideOut {\n    from {\n      transform: translateY(0);\n      opacity: 1;\n    }\n    to {\n      transform: translateY(10px);\n      opacity: 0;\n    }\n  }\n\n  .entity-options-overlay-closing {\n    animation: overlayFadeOut 0.15s ease-in forwards;\n    pointer-events: none;\n  }\n\n  .entity-options-container-closing {\n    animation: containerSlideOut 0.2s ease-in forwards;\n  }\n\n  .entity-options-sheet-closing {\n    animation: sheetSlideOut 0.15s ease-in 0.05s both forwards;\n  }\n\n  .entity-options-container {\n    width: 98%;\n    max-width: 430px;\n    margin: 2% auto;\n    display: flex;\n    flex-direction: column;\n    max-height: calc(96% - 70px);\n    min-height: 90px;\n    position: relative;\n  }\n\n  /* Expand container height when hide_menu_player is enabled (no persistent controls) */\n  :host([data-hide-menu-player=\"true\"]) .entity-options-container {\n    max-height: 96%;\n  }\n\n  /* Expand container height when persistent controls are hidden due to layout constraints */\n  :host([data-hide-persistent-controls=\"true\"]) .entity-options-container {\n    max-height: 96%;\n  }\n\n  /* Persistent Media Controls */\n  .persistent-media-controls {\n    display: flex;\n    align-items: center;\n    gap: 10px;\n    padding: 14px 22px 18px 22px;\n    margin: 0;\n    background: rgba(0, 0, 0, 0.1);\n    border-radius: 0;\n    border: none;\n    flex-shrink: 0;\n    position: absolute;\n    bottom: 0;\n    left: 0;\n    width: 100%;\n    z-index: ", ";\n  }\n\n  /* Hide persistent controls when hide_menu_player is enabled */\n  :host([data-hide-menu-player=\"true\"]) .persistent-media-controls {\n    display: none;\n  }\n\n  /* Hide persistent controls when layout constraints require it */\n  :host([data-hide-persistent-controls=\"true\"]) .persistent-media-controls {\n    display: none;\n  }\n\n  .persistent-controls-artwork {\n    flex-shrink: 0;\n  }\n\n  .persistent-artwork {\n    width: 40px;\n    height: 40px;\n    border-radius: 6px;\n    object-fit: var(--yamp-artwork-fit, cover);\n    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);\n  }\n\n  .persistent-artwork-placeholder {\n    width: 40px;\n    height: 40px;\n    border-radius: 6px;\n    background: rgba(255, 255, 255, 0.1);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);\n  }\n\n  .persistent-artwork-placeholder ha-icon {\n    color: rgba(255, 255, 255, 0.6);\n    font-size: 16px;\n  }\n\n  .persistent-controls-buttons {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    flex: 1;\n    justify-content: center;\n    position: absolute;\n    left: calc(50% - 15px);\n    top: 50%;\n    transform: translate(-50%, -50%);\n  }\n\n  .persistent-volume-stepper {\n    margin-left: auto;\n    display: flex;\n    align-items: center;\n    gap: 0px;  transform: translateX(-25px);\n\n  }\n\n  .persistent-volume-stepper .stepper-btn {\n    background: none;\n    border: none;\n    color: #fff;\n    font-size: 20px;\n    width: 36px;\n    height: 36px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    cursor: pointer;\n    transition: color 0.2s ease;\n  }\n\n  .persistent-volume-stepper .stepper-btn:hover {\n    color: var(--custom-accent);\n  }\n\n  .persistent-volume-stepper .stepper-btn:active {\n    transform: scale(0.92);\n  }\n\n  .persistent-volume-stepper .stepper-value {\n    font-size: 0.95em;\n    opacity: 0.85;\n    min-width: 36px;\n    text-align: center;\n    color: #fff;\n  }\n\n  .persistent-control-btn {\n    background: rgba(255, 255, 255, 0.1);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    border-radius: 50%;\n    width: 36px;\n    height: 36px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    color: #fff;\n  }\n\n  .persistent-control-btn:hover {\n    background: var(--custom-accent);\n    border-color: var(--custom-accent);\n    transform: scale(1.05);\n  }\n\n  .persistent-control-btn:active {\n    transform: scale(0.95);\n  }\n\n  .persistent-control-btn ha-icon {\n    font-size: 16px;\n    color: inherit;\n  }\n\n  .entity-options-sheet {\n    --custom-accent: var(--accent-color, #ff9800);\n    background: none;\n    border-radius: var(--border-radius);\n    box-shadow: none;\n    width: 100%;\n    padding: 18px 8px 70px 8px;\n    padding-top: clamp(12px, 6vh, 18px);\n    display: flex;\n    flex-direction: column;\n    align-items: stretch;\n    flex: 1;\n    overflow-y: auto;\n    overflow-x: hidden;\n    overscroll-behavior: contain;\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n    font-size: calc(1em * var(--yamp-text-scale-menu, 1));\n  }\n\n  /* Main menu specific styling - move options down, adapt to card height */\n  .entity-options-sheet .entity-options-menu {\n    margin-top: clamp(36px, 12vh, 150px);\n    margin-bottom: 16px;\n  }\n\n  .in-menu-active-label {\n    position: absolute;\n    left: 50%;\n    bottom: 6px;\n    transform: translateX(-50%);\n    font-size: 0.78em;\n    font-weight: 500;\n    letter-spacing: 0.05em;\n    color: rgba(255, 255, 255, 0.78);\n    pointer-events: none;\n    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);\n  }\n\n  /* When always collapsed is enabled, keep menu at top */\n:host([data-always-collapsed=\"true\"]) .entity-options-sheet .entity-options-menu {\n  margin-top: 0px;\n}\n\n  /* Remove spacing between menu items */\n  .entity-options-sheet .entity-options-menu .entity-options-item {\n    margin-top: 0px;\n    margin-bottom: 0px;\n  }\n\n  .entity-options-container,\n  .entity-options-container-opening {\n    position: relative;\n  }\n\n  .entity-options-chips-wrapper {\n    position: sticky;\n    top: 0;\n    z-index: ", ";\n    padding: 6px 4px 6px 4px;\n    background: transparent;\n  }\n\n  .entity-options-chips-strip {\n    display: flex;\n    gap: 10px;\n    justify-content: flex-start;\n    align-items: center;\n    overflow-x: auto;\n    padding: 6px 8px 6px 8px;\n    background: var(--ha-menu-chip-row-background, transparent);\n  }\n\n  .entity-options-chips-strip .chip {\n    background: var(--chip-bg);\n    color: var(--primary-text);\n  }\n\n  .entity-options-chips-strip .chip:hover {\n    background: var(--custom-accent);\n    color: #fff;\n  }\n\n  .entity-options-chips-strip .chip[selected] {\n    background: var(--custom-accent);\n    color: #fff;\n  }\n\n  .entity-options-chips-strip::-webkit-scrollbar {\n    display: none;\n  }\n\n  .entity-options-menu.chips-in-menu {\n    margin-top: 4px;\n  }\n\n  .entity-options-sheet.chips-mode {\n    padding-top: 12px;\n  }\n\n\n  /* Ensure entity-options-sheet honors match_theme for accent color */\n  :host([data-match-theme=\"false\"]) .entity-options-sheet {\n    --custom-accent: #ff9800 !important;\n  }\n  :host([data-match-theme=\"true\"]) .entity-options-sheet {\n    --custom-accent: var(--accent-color, #ff9800) !important;\n  }\n\n  .entity-options-sheet::-webkit-scrollbar {\n    display: none;\n  }\n\n  .entity-options-sheet {\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n  }\n\n  /* Hide scrollbar for group list scroll container */\n  .group-list-scroll {\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n  }\n\n  .group-list-scroll::-webkit-scrollbar {\n    display: none;\n  }\n\n  .entity-options-title {\n    font-size: 1.1em;\n    font-weight: bold;\n    margin-bottom: 18px;\n    text-align: center;\n    color: #fff;\n    background: none;\n    text-shadow: 0 2px 8px #0009;\n  }\n\n  .entity-options-item {\n    background: none;\n    color: #fff;\n    border: none;\n    border-radius: 10px;\n    font-size: 1.12em;\n    font-weight: 500;\n    margin: 4px 0;\n    padding: 6px 0 8px 0;\n    cursor: pointer;\n    transition: color var(--transition-fast), text-shadow var(--transition-fast);\n    text-align: center;\n    text-shadow: 0 2px 8px #0009;\n  }\n\n  .entity-options-item.menu-action-item {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    gap: 12px;\n    width: 100%;\n  }\n\n  .entity-options-item.menu-action-item .menu-action-icon {\n    color: inherit;\n    --mdc-icon-color: currentColor;\n    --icon-color: currentColor;\n    --paper-item-icon-color: currentColor;\n    --ha-icon-color: currentColor;\n    fill: currentColor;\n  }\n\n  .entity-options-item.menu-action-item .menu-action-label {\n    color: inherit;\n  }\n\n  .entity-options-item:hover {\n    color: var(--custom-accent, #ff9800);\n    text-shadow: none;\n    background: none;\n  }\n\n  .entity-options-item.close-item {\n    font-weight: 600;\n    margin: 1px 0;\n    padding: 4px 0 5px 0;\n    display: block;\n    width: 100%;\n  }\n\n  .entity-options-divider {\n    height: 1px;\n    background: rgba(255, 255, 255, 0.28);\n    margin: 1px 0 8px 0;\n    width: 100%;\n    display: block;\n  }\n\n  /* Ensure Group Players header always shows a single divider */\n  .grouping-header {\n    width: 100%;\n  }\n  .grouping-header .entity-options-item.close-item {\n    border-bottom: 1px solid rgba(255, 255, 255, 0.28);\n    margin-bottom: 6px;\n    padding-bottom: 6px;\n  }\n\n  /* Source index */\n  .source-index-letter:focus {\n    background: rgba(255,255,255,0.11);\n    outline: 1px solid #ff9800;\n  }\n\n  .entity-options-sheet.source-list-sheet {\n    position: relative;\n    overflow: visible;\n  }\n\n  .source-list-scroll {\n    overflow-y: auto;\n    max-height: 340px;\n    scrollbar-width: none;\n  }\n\n  .source-list-scroll::-webkit-scrollbar {\n    display: none;\n  }\n\n  .floating-source-index.grab-scroll-active,\n  .floating-source-index.grab-scroll-active * {\n    cursor: grabbing;\n  }\n\n  .floating-source-index {\n    position: absolute;\n    top: 0;\n    bottom: 0;\n    right: 0;\n    width: 28px;\n    display: flex;\n    flex-direction: column;\n    justify-content: space-between;\n    align-items: flex-start;\n    pointer-events: auto;\n    overscroll-behavior: contain;\n    z-index: ", ";\n    padding: 12px 8px 8px 0;\n    overflow-y: auto;\n    max-height: 100%;\n    min-width: 32px;\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n    cursor: grab;\n  }\n\n  .entity-options-sheet.chips-mode .floating-source-index {\n    top: clamp(72px, 15vh, 120px);\n    height: calc(100% - clamp(72px, 15vh, 120px));\n  }\n\n  .floating-source-index::-webkit-scrollbar {\n    display: none;\n  }\n\n  .floating-source-index .source-index-letter {\n    background: none;\n    border: none;\n    color: #fff;\n    font-size: 1.08em;\n    cursor: pointer;\n    margin: 2px 0;\n    padding: 2px 2px;\n    pointer-events: auto;\n    outline: none;\n    transition: color var(--transition-fast), background var(--transition-fast), transform 0.16s cubic-bezier(.35,1.8,.4,1.04);\n    transform: scale(1);\n    z-index: ", ";\n    min-height: 32px;\n    min-width: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .floating-source-index .source-index-letter[data-scale=\"max\"] {\n    transform: scale(1.38);\n    z-index: ", ";\n  }\n\n  .floating-source-index .source-index-letter[data-scale=\"large\"] {\n    transform: scale(1.19);\n    z-index: ", ";\n  }\n\n  .floating-source-index .source-index-letter[data-scale=\"med\"] {\n    transform: scale(1.10);\n    z-index: ", ";\n  }\n\n  .floating-source-index .source-index-letter::after {\n    display: none;\n  }\n\n  .floating-source-index .source-index-letter:hover,\n  .floating-source-index .source-index-letter:focus {\n    color: #fff;\n  }\n\n  /* Group toggle buttons */\n  .group-toggle-btn {\n    background: none;\n    border: none;\n    border-radius: 50%;\n    width: 32px;\n    height: 32px;\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 1.2em;\n    margin-right: 10px;\n    cursor: pointer;\n    transition: background 0.15s ease;\n    color: #fff;\n  }\n\n  .group-toggle-btn ha-icon {\n    width: 22px;\n    height: 22px;\n  }\n\n  .group-toggle-transparent {\n    background: none;\n    border: none;\n    box-shadow: none;\n    color: transparent;\n    pointer-events: none;\n  }\n\n  .group-toggle-transparent:hover {\n    background: none;\n  }\n\n  /* Force white text in grouping sheet */\n  .entity-options-sheet,\n  .entity-options-sheet * {\n    color: #fff;\n  }\n\n  /* Search functionality */\n  .entity-options-search {\n    padding: 2px 0 80px 0;\n  }\n\n  .entity-options-search-row {\n    display: flex;\n    gap: 8px;\n    margin-bottom: 4px;\n    margin-top: 2px;\n  }\n\n  .entity-options-search-result {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding: 9px 0;\n    border-bottom: 1px solid #2227;\n    font-size: 1.10em;\n    color: var(--primary-text);\n    background: none;\n  }\n\n  .entity-options-search-result:last-child {\n    border-bottom: none;\n  }\n\n  .entity-options-search-result.placeholder {\n    visibility: hidden;\n    border-bottom: 1px solid transparent;\n    min-height: 46px;\n    box-sizing: border-box;\n  }\n\n  .entity-options-search-thumb {\n    height: 38px;\n    width: 38px;\n    border-radius: var(--button-border-radius);\n    object-fit: var(--yamp-artwork-fit, cover);\n    box-shadow: 0 1px 5px rgba(0,0,0,0.16);\n    margin-right: 12px;\n  }\n\n  .entity-options-search-buttons {\n    display: flex;\n    gap: 6px;\n    margin-left: 7px;\n  }\n\n  .entity-options-search-play,\n  .entity-options-search-queue {\n    min-width: 34px;\n    font-size: 1.13em;\n    border: none;\n    background: transparent;\n    color: #fff;\n    border-radius: 10px;\n    padding: 6px 10px;\n    cursor: pointer;\n    box-shadow: none;\n    transition: background var(--transition-normal), color var(--transition-normal);\n    text-shadow: none;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .entity-options-search-play ha-icon,\n  .entity-options-search-queue ha-icon {\n    width: 16px;\n    height: 16px;\n  }\n\n  .entity-options-search-play:hover,\n  .entity-options-search-play:focus {\n    background: transparent;\n    color: var(--custom-accent);\n    opacity: 0.8;\n  }\n\n  .entity-options-search-queue {\n    background: transparent;\n    border: none;\n    color: #666;\n    padding-right: 20px; /* Add right padding to prevent cutoff on mobile */\n    padding-bottom: 12px;\n  }\n\n  .entity-options-search-queue:hover,\n  .entity-options-search-queue:focus {\n    background: transparent;\n    border: none;\n    color: var(--custom-accent);\n    opacity: 0.8;\n  }\n\n  /* Queue control buttons */\n  .queue-controls {\n    display: flex;\n    gap: 4px;\n    padding-right: 8px; /* Add padding to prevent cutoff on mobile */\n  }\n\n  .queue-btn {\n    min-width: 28px;\n    height: 28px;\n    font-size: 0.9em;\n    border: none;\n    background: transparent;\n    color: #fff;\n    border-radius: 6px;\n    padding: 4px;\n    cursor: pointer;\n    box-shadow: none;\n    transition: all 0.2s ease;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .queue-btn ha-icon {\n    width: 14px;\n    height: 14px;\n  }\n\n  .queue-btn-up:hover,\n  .queue-btn-up:focus {\n    background: transparent;\n    color: #4caf50;\n  }\n\n  .queue-btn-down:hover,\n  .queue-btn-down:focus {\n    background: transparent;\n    color: #4caf50;\n  }\n\n  .queue-btn-next:hover,\n  .queue-btn-next:focus {\n    background: transparent;\n    color: var(--custom-accent);\n  }\n\n  .queue-btn-remove:hover,\n  .queue-btn-remove:focus {\n    background: transparent;\n    color: #f44336;\n  }\n\n  /* Visual feedback for moved queue items */\n  .entity-options-search-result.just-moved {\n    background: rgba(76, 175, 80, 0.2) !important;\n    border-left: 3px solid #4caf50 !important;\n    animation: queueMoveHighlight 1s ease-out;\n  }\n\n  @keyframes queueMoveHighlight {\n    0% { background: rgba(76, 175, 80, 0.4); transform: scale(1.02); }\n    100% { background: rgba(76, 175, 80, 0.2); transform: scale(1); }\n  }\n\n  .entity-options-search-input {\n    border: 1px solid #333;\n    border-radius: var(--button-border-radius);\n    background: var(--card-bg);\n    color: var(--primary-text);\n    font-size: 1.12em;\n    outline: none;\n    transition: border var(--transition-fast);\n    margin-right: 7px;\n    box-sizing: border-box;\n  }\n\n  .entity-options-search-row .entity-options-search-input {\n    padding: 4px 10px;\n    height: 32px;\n    min-height: 32px;\n    line-height: 1.18;\n    box-sizing: border-box;\n    border: 1.5px solid var(--custom-accent);\n    background: #232323;\n    color: #fff;\n    transition: border var(--transition-fast), background var(--transition-fast);\n    outline: none;\n  }\n\n  .entity-options-search-input:focus {\n    border: 1.5px solid var(--custom-accent);\n    background: #232323;\n    color: #fff;\n    outline: none;\n  }\n\n  .entity-options-search-loading,\n  .entity-options-search-error,\n  .entity-options-search-empty {\n    padding: 8px 6px;\n    font-size: 1.09em;\n    opacity: 0.90;\n    color: var(--primary-text);\n    background: none;\n    text-align: left;\n  }\n\n  .entity-options-search-loading {\n    color: #fff;\n  }\n\n  .entity-options-search-error {\n    color: #e44747;\n    font-weight: 500;\n  }\n\n  .entity-options-search-empty {\n    color: #999;\n    font-style: italic;\n  }\n\n  .entity-options-search-row .entity-options-item {\n    height: 32px;\n    min-height: 32px;\n    box-sizing: border-box;\n    padding-top: 0;\n    padding-bottom: 0;\n    margin-top: 0;\n    margin-bottom: 0;\n    font-size: 1.12em;\n    vertical-align: middle;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  /* Search filter chips */\n  .search-filter-chips .chip {\n    color: #fff;\n  }\n\n  .search-filter-chips .chip[selected],\n  .search-filter-chips .chip[style*=\"background: var(--customAccent\"],\n  .search-filter-chips .chip[style*=\"background: var(--custom-accent\"] {\n    color: #111;\n  }\n\n  .entity-options-sheet .search-filter-chips .chip:not([selected]) {\n    color: #fff;\n  }\n\n  .entity-options-sheet .search-filter-chips .chip[selected] {\n    color: #111;\n  }\n\n  .entity-options-sheet .search-filter-chips .chip {\n    text-align: center;\n    justify-content: center;\n  }\n\n  .entity-options-sheet .search-filter-chips .chip:hover {\n    background: var(--custom-accent);\n    color: #111;\n    opacity: 1;\n  }\n\n  /* Override filter chip hover text color when match_theme is false */\n  :host([data-match-theme=\"false\"]) .entity-options-sheet .search-filter-chips .chip:hover {\n    color: #fff !important;\n  }\n\n  /* Add hover effect for inactive filter chips when match_theme is false */\n  :host([data-match-theme=\"false\"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {\n    background: var(--custom-accent) !important;\n    color: #fff !important;\n    opacity: 1;\n  }\n\n  /* Add hover effect for inactive filter chips when match_theme is true */\n  :host([data-match-theme=\"true\"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {\n    background: var(--custom-accent) !important;\n    color: #111 !important;\n    opacity: 1;\n  }\n\n  .entity-options-sheet .entity-options-search-results {\n    min-height: 210px;\n  }\n\n  /* Search layout */\n  .entity-options-sheet .entity-options-search {\n    display: flex;\n    flex-direction: column;\n    height: 100%;\n  }\n\n  .entity-options-sheet .entity-options-search-row,\n  .entity-options-sheet .search-filter-chips {\n    flex: 0 0 auto;\n  }\n\n  .entity-options-sheet .entity-options-search-results {\n    flex: 1;\n    overflow-y: auto;\n    margin: 12px 0;\n    padding-bottom: 80px;\n    /* Hide scrollbars */\n    scrollbar-width: none; /* Firefox */\n    -ms-overflow-style: none; /* IE and Edge */\n  }\n\n  /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */\n  .entity-options-sheet .entity-options-search-results::-webkit-scrollbar {\n    display: none;\n  }\n\n  .entity-options-resolved-entities {\n    --custom-accent: var(--accent-color, #ff9800);\n    display: flex;\n    flex-direction: column;\n    height: 100%;\n  }\n\n  .entity-options-resolved-entities-list {\n    flex: 1;\n    overflow-y: auto;\n    margin: 12px 0;\n    /* Hide scrollbars */\n    scrollbar-width: none; /* Firefox */\n    -ms-overflow-style: none; /* IE and Edge */\n  }\n\n  .entity-options-resolved-entities-list::-webkit-scrollbar {\n    display: none;\n  }\n\n  .entity-options-resolved-entities .entity-options-item {\n    background: none;\n    color: #fff;\n    border: none;\n    border-radius: 10px;\n    font-size: 1.12em;\n    font-weight: 500;\n    margin: 4px 0;\n    padding: 6px 0 8px 0;\n    cursor: pointer;\n    transition: color var(--transition-fast), text-shadow var(--transition-fast);\n    text-align: left;\n    text-shadow: 0 2px 8px #0009;\n    width: 100%;\n    display: flex;\n    align-items: center;\n    gap: 12px;\n  }\n\n  .entity-options-resolved-entities .entity-options-item:hover,\n  .entity-options-resolved-entities .entity-options-item:focus {\n    color: var(--custom-accent) !important;\n    text-shadow: none !important;\n    background: none !important;\n  }\n\n  .entity-options-resolved-entities .entity-options-item:last-child {\n    border-bottom: none;\n  }\n\n  /* Clickable artist */\n  .clickable-artist {\n    cursor: pointer;\n  }\n\n  .clickable-artist:hover {\n    text-decoration: underline;\n  }\n\n  /* Clickable search results */\n  .clickable-search-result {\n    cursor: pointer;\n    color: var(--custom-accent);\n    transition: color var(--transition-fast);\n  }\n\n  .clickable-search-result:hover {\n    text-decoration: underline;\n    color: #fff;\n  }\n\n  /* Search breadcrumb */\n  .entity-options-search-breadcrumb {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  }\n\n  .entity-options-search-breadcrumb-text {\n    font-size: 0.9em;\n    color: #fff;\n    font-style: italic;\n  }\n\n  /* Search sheet styles */\n  .search-sheet {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n    background: rgba(0, 0, 0, 0.8);\n    z-index: ", ";\n    display: flex;\n    flex-direction: column;\n    padding: 20px;\n  }\n\n  .search-sheet-header {\n    display: flex;\n    gap: 10px;\n    margin-bottom: 20px;\n  }\n\n  .search-sheet-header input {\n    flex: 1;\n    padding: 12px;\n    border: none;\n    border-radius: 8px;\n    background: #333;\n    color: #fff;\n    font-size: 16px;\n  }\n\n  .search-sheet-header button {\n    padding: 12px 20px;\n    border: none;\n    border-radius: 8px;\n    background: var(--custom-accent);\n    color: #fff;\n    cursor: pointer;\n    font-size: 16px;\n  }\n\n  .search-sheet-header button:disabled {\n    opacity: 0.5;\n    cursor: not-allowed;\n  }\n\n  .search-sheet-loading,\n  .search-sheet-error,\n  .search-sheet-success,\n  .search-sheet-empty {\n    text-align: center;\n    padding: 40px;\n    color: #fff;\n    font-size: 18px;\n  }\n\n  .search-sheet-error {\n    color: #ff6b6b;\n  }\n\n  .search-sheet-success {\n    color: #4caf50;\n    font-weight: 600;\n    background: rgba(76, 175, 80, 0.95);\n    border: 2px solid #4caf50;\n    border-radius: 8px;\n    padding: 20px;\n    margin: 20px;\n    font-size: 20px;\n    animation: fadeInOut 3s ease-in-out;\n    position: fixed;\n    top: 50%;\n    left: 50%;\n    transform: translate(-50%, -50%);\n    z-index: ", ";\n    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);\n    min-width: 200px;\n    text-align: center;\n  }\n\n  @keyframes fadeInOut {\n    0% { opacity: 0; transform: translate(-50%, -60%); }\n    10% { opacity: 1; transform: translate(-50%, -50%); }\n    90% { opacity: 1; transform: translate(-50%, -50%); }\n    100% { opacity: 0; transform: translate(-50%, -40%); }\n  }\n\n  .search-sheet-results {\n    flex: 1;\n    overflow-y: auto;\n    /* Hide scrollbars */\n    scrollbar-width: none; /* Firefox */\n    -ms-overflow-style: none; /* IE and Edge */\n  }\n\n  .search-sheet-results::-webkit-scrollbar {\n    display: none;\n  }\n\n  .search-sheet-result {\n    display: flex;\n    align-items: center;\n    gap: 15px;\n    padding: 15px;\n    border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n    cursor: pointer;\n    transition: background-color 0.2s;\n  }\n\n  .search-sheet-result:hover {\n    background: rgba(255, 255, 255, 0.1);\n  }\n\n  .search-sheet-thumb {\n    width: 50px;\n    height: 50px;\n    border-radius: 8px;\n    object-fit: var(--yamp-artwork-fit, cover);\n  }\n\n  .search-sheet-title {\n    flex: 1;\n    color: #fff;\n    font-size: 16px;\n  }\n\n  .search-sheet-buttons {\n    display: flex;\n    gap: 8px;\n  }\n\n  .search-sheet-play,\n  .search-sheet-queue {\n    width: 40px;\n    height: 40px;\n    border: none;\n    border-radius: 8px;\n    background: var(--custom-accent);\n    color: #fff;\n    cursor: pointer;\n    font-size: 18px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: background-color 0.2s;\n  }\n\n  .search-sheet-play ha-icon,\n  .search-sheet-queue ha-icon {\n    width: 20px;\n    height: 20px;\n  }\n\n  .search-sheet-play:hover,\n  .search-sheet-queue:hover {\n    background: #e68900;\n  }\n\n  .search-sheet-queue {\n    background: #4a4a4a;\n    border: 1px solid #666;\n  }\n\n  .search-sheet-queue:hover {\n    background: #5a5a5a;\n    border-color: #777;\n  }\n\n  /* Override styles when match_theme is false - force default colors */\n  .search-sheet[data-match-theme=\"false\"] {\n    background: rgba(0, 0, 0, 0.8) !important;\n    \n    /* Define CSS custom properties directly on the search sheet when match_theme is false */\n    --custom-accent: #ff9800 !important;\n    --search-overlay-bg: rgba(0, 0, 0, 0.8) !important;\n    --search-input-bg: #333 !important;\n    --search-input-text: #fff !important;\n    --search-text: #fff !important;\n    --search-error: #ff6b6b !important;\n    --search-success: #4caf50 !important;\n    --search-success-bg: rgba(76, 175, 80, 0.95) !important;\n    --search-border: rgba(255, 255, 255, 0.1) !important;\n    --search-hover-bg: rgba(255, 255, 255, 0.1) !important;\n    --search-play-hover: #e68900 !important;\n    --search-queue-bg: #4a4a4a !important;\n    --search-queue-border: #666 !important;\n    --search-queue-hover: #5a5a5a !important;\n    --search-queue-hover-border: #777 !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-header input {\n    background: #333 !important;\n    color: #fff !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-header button {\n    background: #ff9800 !important;\n    color: #fff !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-loading,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-error,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-success,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-empty {\n    color: #fff !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-error {\n    color: #ff6b6b !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-success {\n    color: #4caf50 !important;\n    background: rgba(76, 175, 80, 0.95) !important;\n    border: 2px solid #4caf50 !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-result {\n    color: #fff !important;\n    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-result:hover {\n    background: rgba(255, 255, 255, 0.1) !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-title {\n    color: #fff !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-play {\n    background: var(--custom-accent) !important;\n    color: #fff !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-play:hover {\n    background: #e68900 !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-queue {\n    background: #4a4a4a !important;\n    color: #fff !important;\n    border: 1px solid #666 !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-queue:hover {\n    background: #5a5a5a !important;\n    border-color: #777 !important;\n  }\n\n  /* Additional overrides for search sheet elements that might inherit theme colors */\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result {\n    color: #ff9800 !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result:hover {\n    color: #fff !important;\n  }\n\n  /* Override the base clickable-search-result styles when match_theme is false */\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result,\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result:hover {\n    color: #ff9800 !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result:hover {\n    color: #fff !important;\n  }\n\n  /* Override any other elements that might be using theme variables */\n  .search-sheet[data-match-theme=\"false\"] * {\n    color: #fff !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result {\n    color: #ff9800 !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-play,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-queue {\n    color: #fff !important;\n  }\n\n  /* Force all text to be white when match_theme is false */\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-title,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-loading,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-empty {\n    color: #fff !important;\n  }\n\n  /* Nuclear option: Override ALL elements that might be using --custom-accent or theme colors */\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"color\"] {\n    color: #fff !important;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"background\"] {\n    background: rgba(0, 0, 0, 0.8) !important;\n  }\n\n  /* Force override any CSS custom properties that might be inherited */\n  .search-sheet[data-match-theme=\"false\"] {\n    --custom-accent: #ff9800 !important;\n    --accent-color: #ff9800 !important;\n    --primary-color: #ff9800 !important;\n    --ha-accent-color: #ff9800 !important;\n  }\n\n  /* Also redefine --custom-accent locally in the search sheet, just like entity-options-resolved-entities does */\n  .search-sheet[data-match-theme=\"false\"] {\n    --custom-accent: #ff9800 !important;\n  }\n\n  /* Also override at the root level when match_theme is false */\n  yet-another-media-player[data-match-theme=\"false\"] {\n    --custom-accent: #ff9800 !important;\n    --accent-color: #ff9800 !important;\n    --primary-color: #ff9800 !important;\n    --ha-accent-color: #ff9800 !important;\n  }\n\n  /* Override any elements that might be using CSS custom properties */\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-play,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-header button,\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"background: var(--custom-accent)\"],\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"background: var(--accent-color)\"],\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"background: var(--primary-color)\"] {\n    background: #ff9800 !important;\n    color: #fff !important;\n  }\n\n  /* Override any elements that might be using CSS custom properties for color */\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"color: var(--custom-accent)\"],\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"color: var(--accent-color)\"],\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"color: var(--primary-color)\"] {\n    color: #ff9800 !important;\n  }\n"])), Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.MEDIA_BACKGROUND, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.FLOATING_CONTROLS, Z_LAYERS.MEDIA_BACKGROUND, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.FLOATING_CONTROLS, Z_LAYERS.STICKY_CHIPS, Z_LAYERS.STICKY_CHIPS, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.MEDIA_BACKGROUND, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.ACCENT_FOREGROUND, Z_LAYERS.OVERLAY_BASE, Z_LAYERS.FLOATING_CONTROLS, Z_LAYERS.STICKY_CHIPS, Z_LAYERS.ACCENT_FOREGROUND, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.OVERLAY_BASE, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.MODAL_BACKDROP, Z_LAYERS.MODAL_TOAST);
 
-  :host([data-match-theme="false"]) {
-    --custom-accent: #ff9800 !important;
-    
-    /* Search sheet default theme variables when match_theme is false */
-    --search-overlay-bg: rgba(0, 0, 0, 0.8);
-    --search-input-bg: #333;
-    --search-input-text: #fff;
-    --search-text: #fff;
-    --search-error: #ff6b6b;
-    --search-success: #4caf50;
-    --search-success-bg: rgba(76, 175, 80, 0.95);
-    --search-border: rgba(255, 255, 255, 0.1);
-    --search-hover-bg: rgba(255, 255, 255, 0.1);
-    --search-play-hover: #e68900;
-    --search-queue-bg: #4a4a4a;
-    --search-queue-border: #666;
-    --search-queue-hover: #5a5a5a;
-    --search-queue-hover-border: #777;
-  }
-  
-  :host([data-match-theme="true"]) {
-    /* Override custom-accent to use theme accent when match_theme is true */
-    --custom-accent: var(--accent-color, #ff9800);
-    
-    /* Search sheet theme-aware variables */
-    --search-overlay-bg: var(--ha-card-background, rgba(0, 0, 0, 0.8));
-    --search-input-bg: var(--ha-card-background, #333);
-    --search-input-text: var(--primary-text-color, #fff);
-    --search-text: var(--primary-text-color, #fff);
-    --search-error: var(--error-color, #ff6b6b);
-    --search-success: var(--success-color, #4caf50);
-    --search-success-bg: var(--success-color, rgba(76, 175, 80, 0.95));
-    --search-border: var(--divider-color, rgba(255, 255, 255, 0.1));
-    --search-hover-bg: var(--divider-color, rgba(255, 255, 255, 0.1));
-    --search-play-hover: var(--accent-color, #e68900);
-    --search-queue-bg: var(--ha-card-background, #4a4a4a);
-    --search-queue-border: var(--divider-color, #666);
-    --search-queue-hover: var(--secondary-background-color, #5a5a5a);
-    --search-queue-hover-border: var(--divider-color, #777);
-  }
-
-  /* Base card styles - set once, inherit everywhere */
-  :host {
-    display: block;
-    border-radius: var(--border-radius);
-    box-shadow: none;
-    background: transparent;
-    color: var(--primary-text);
-    transition: background var(--transition-normal);
-    overflow: hidden;
-  }
-
-  ha-card.yamp-card {
-    display: block;
-    border-radius: var(--border-radius);
-    box-shadow: none;
-    background: transparent;
-    color: var(--primary-text);
-    transition: background var(--transition-normal);
-    overflow: hidden;
-    font-size: inherit;
-  }
-
-  .yamp-card-inner {
-    position: relative;
-    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .full-bleed-artwork-bg {
-    position: absolute;
-    inset: 0;
-    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
-    background-size: var(--yamp-artwork-bg-size, cover);
-    background-position: top center;
-    background-repeat: no-repeat;
-    pointer-events: none;
-  }
-
-  .full-bleed-artwork-fade {
-    position: absolute;
-    inset: 0;
-    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
-    pointer-events: none;
-    background: linear-gradient(
-      to bottom,
-      rgba(0,0,0,0.0) 0%,
-      rgba(0,0,0,0.40) 55%,
-      rgba(0,0,0,0.92) 100%
-    );
-  }
-
-  /* Idle state dimming */
-  .dim-idle .details,
-  .dim-idle .controls-row,
-  .dim-idle .volume-row,
-  .dim-idle .chip-row,
-  .dim-idle .action-chip-row {
-    opacity: 0.28;
-    transition: opacity 0.5s;
-  }
-
-  /* Improve selected chip readability while idle */
-  .dim-idle .chip[selected] {
-    color: rgba(255,255,255,0.94);
-    text-shadow: 0 0 6px rgba(0,0,0,0.35);
-  }
-
-  /* More info menu */
-  .more-info-menu {
-    display: flex;
-    align-items: center;
-    margin-right: 0;
-    position: relative;
-    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
-  }
-
-  .more-info-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 36px;
-    width: 36px;
-    padding: 0;
-    margin: 0 4px;
-    background: none;
-    border: none;
-    color: var(--primary-text);
-    font: inherit;
-    cursor: pointer;
-    outline: none;
-  }
-
-  .more-info-btn ha-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5em;
-    width: 28px;
-    height: 28px;
-    line-height: 1;
-    vertical-align: middle;
-    position: relative;
-    margin: 0 0 2px 0;
-    color: #fff;
-    transition: color var(--transition-normal, 0.2s);
-  }
-
-  .dim-idle .more-info-btn ha-icon {
-    color: #9ea2a8;
-  }
-
-  .more-info-icon {
-    font-size: 1.7em;
-    line-height: 1;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color var(--transition-normal, 0.2s);
-  }
-
-  .dim-idle .more-info-icon {
-    color: #9ea2a8;
-  }
-
-  /* Card artwork spacer */
-  .card-artwork-spacer {
-    width: 100%;
-    flex: 1 1 0;
-    height: auto;
-    min-height: 180px;
-    pointer-events: none;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  :host([data-has-custom-height="true"]) .card-artwork-spacer {
-    min-height: 0;
-  }
-
-  /* Media background */
-  .media-bg-full {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
-    background-size: var(--yamp-artwork-bg-size, cover);
-    background-position: top center;
-    background-repeat: no-repeat;
-    pointer-events: none;
-  }
-
-  .media-bg-dim {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
-    pointer-events: none;
-  }
-
-  /* Source menu */
-  .source-menu {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    padding: 0;
-    margin: 0;
-  }
-
-  .source-menu-btn {
-    background: none;
-    border: none;
-    color: var(--primary-text);
-    font: inherit;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 1px;
-    padding: 2px 10px;
-    font-size: 1em;
-    outline: none;
-  }
-
-  .source-selected {
-    min-width: 64px;
-    font-weight: 500;
-    padding-right: 4px;
-    text-align: left;
-  }
-
-  .source-dropdown {
-    position: absolute;
-    top: 32px;
-    right: 0;
-    left: auto;
-    background: var(--card-bg);
-    color: var(--primary-text);
-    border-radius: var(--button-border-radius);
-    box-shadow: var(--shadow-light);
-    min-width: 110px;
-    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
-    margin-top: 2px;
-    border: 1px solid #444;
-    overflow: hidden;
-    max-height: 220px;
-    overflow-y: auto;
-  }
-
-  .source-dropdown.up {
-    top: auto;
-    bottom: 38px;
-    border-radius: var(--button-border-radius);
-  }
-
-  .source-option {
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: background var(--transition-fast);
-    white-space: nowrap;
-  }
-
-  .source-option:hover,
-  .source-option:focus {
-    background: var(--accent-color, #1976d2);
-    color: #fff;
-  }
-
-  .source-row {
-    display: flex;
-    align-items: center;
-    padding: 0 16px 8px 16px;
-    margin-top: 8px;
-  }
-
-  .source-select {
-    font-size: 1em;
-    padding: 4px 10px;
-    border-radius: var(--button-border-radius);
-    border: 1px solid #ccc;
-    background: var(--card-bg);
-    color: var(--primary-text);
-    outline: none;
-    margin-top: 2px;
-  }
-
-  /* Chip styles */
-  .chip-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    margin-right: 8px;
-    background: transparent;
-    border-radius: 50%;
-    overflow: hidden;
-    padding: 0;
-  }
-
-  .chip[playing] .chip-icon {
-    background: #fff;
-  }
-
-  .chip-icon ha-icon {
-    width: 100%;
-    height: 100%;
-    font-size: 28px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    padding: 0;
-    color: var(--custom-accent);
-  }
-
-  .chip[selected] .chip-icon ha-icon {
-    color: #fff;
-  }
-
-  .chip[selected][playing] .chip-icon ha-icon {
-    color: var(--custom-accent);
-  }
-
-  .chip:hover .chip-icon ha-icon {
-    color: #fff;
-  }
-
-  .chip-mini-art {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: var(--yamp-artwork-fit, cover);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-    display: block;
-  }
-
-  /* Chip rows */
-  .chip-row.grab-scroll-active,
-  .action-chip-row.grab-scroll-active,
-  .search-filter-chips.grab-scroll-active {
-    cursor: grabbing;
-  }
-
-  .chip-row,
-  .action-chip-row,
-  .search-filter-chips {
-    cursor: grab;
-  }
-
-  .chip-row {
-    display: flex;
-    gap: 8px;
-    padding: 8px 12px 0 12px;
-    margin-bottom: 12px;
-    position: relative;
-    z-index: ${Z_LAYERS.STICKY_CHIPS};
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    scrollbar-width: none;
-    scrollbar-color: var(--accent-color, #1976d2) #222;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
-    max-width: 100vw;
-    background: var(--ha-chip-row-background, transparent);
-  }
-
-  .chip-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  .chip-row::-webkit-scrollbar-thumb {
-    background: var(--accent-color, #1976d2);
-    border-radius: 6px;
-  }
-
-  .chip-row::-webkit-scrollbar-track {
-    background: #222;
-  }
-
-  .action-chip-row {
-    display: flex;
-    gap: 8px;
-    padding: 2px 12px 0 12px;
-    margin-bottom: 8px;
-    position: relative;
-    z-index: ${Z_LAYERS.STICKY_CHIPS};
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: none;
-    font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));
-    background: var(--ha-action-row-background, transparent);
-  }
-
-  .action-chip-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Action chips */
-  .action-chip {
-    background: transparent;
-    opacity: 1;
-    border-radius: var(--button-border-radius);
-    color: var(--primary-text);
-    box-shadow: none;
-    text-shadow: none;
-    border: none;
-    outline: none;
-    padding: 4px 12px;
-    font-weight: 500;
-    font-size: 0.95em;
-    cursor: pointer;
-    margin: 4px 0;
-    transition: background var(--transition-normal) ease, transform 0.1s ease;
-    flex: 0 0 auto;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .action-chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
-    box-shadow: none;
-    text-shadow: none;
-  }
-
-  .action-chip:active {
-    background: var(--custom-accent);
-    color: #fff;
-    transform: scale(0.96);
-    box-shadow: none;
-    text-shadow: none;
-  }
-
-  /* Override action chip colors when match_theme is false */
-  :host([data-match-theme="false"]) .action-chip:hover,
-  :host([data-match-theme="false"]) .action-chip:active {
-    background: #ff9800 !important;
-  }
-
-  /* Main chips */
-  .chip {
-    display: flex;
-    align-items: center;
-    border-radius: var(--chip-border-radius);
-    padding: 6px 6px 6px 8px;
-    background: var(--chip-bg);
-    color: var(--primary-text);
-    cursor: pointer;
-    font-weight: 500;
-    opacity: 0.85;
-    border: none;
-    outline: none;
-    transition: background var(--transition-normal), opacity var(--transition-normal);
-    flex: 0 0 auto;
-    white-space: nowrap;
-    position: relative;
-  }
-
-  .chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
-  }
-
-  .chip[selected] {
-    background: var(--custom-accent);
-    color: #fff;
-    opacity: 1;
-  }
-
-  .chip[playing] {
-    padding-right: 6px;
-  }
-
-  /* Chip pin */
-  .chip-pin {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #fff;
-    border-radius: 50%;
-    padding: 2px;
-    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--custom-accent);
-    box-shadow: 0 1px 5px rgba(0,0,0,0.11);
-    cursor: pointer;
-    transition: box-shadow 0.18s;
-  }
-
-  .chip-pin:hover {
-    box-shadow: 0 2px 12px rgba(33,33,33,0.17);
-  }
-
-  .chip-pin ha-icon {
-    color: var(--custom-accent);
-    font-size: 16px;
-    background: transparent;
-    border-radius: 50%;
-    margin: 0;
-    padding: 0;
-  }
-
-  .chip-pin-inside {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 8px;
-    background: transparent;
-    border-radius: 50%;
-    padding: 2px;
-    cursor: pointer;
-  }
-
-  .chip-pin-inside ha-icon {
-    color: var(--custom-accent);
-    font-size: 17px;
-    margin: 0;
-  }
-
-  .chip[selected] .chip-pin-inside ha-icon {
-    color: #fff;
-  }
-
-  .chip-pin:hover ha-icon,
-  .chip-pin-inside:hover ha-icon {
-    color: #fff;
-  }
-
-  .chip:hover .chip-pin ha-icon,
-  .chip:hover .chip-pin-inside ha-icon {
-    color: #fff;
-  }
-
-  .chip-pin-spacer {
-    display: flex;
-    width: 24px;
-    min-width: 24px;
-    height: 1px;
-  }
-
-  /* Group icon */
-  .chip-icon.group-icon {
-    background: var(--custom-accent);
-    color: #fff;
-    position: relative;
-  }
-
-  .group-count {
-    font-weight: 700;
-    font-size: 0.9em;
-    line-height: 28px;
-    text-align: center;
-    width: 100%;
-    color: inherit;
-  }
-
-  /* Media artwork */
-  .media-artwork-bg {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1.75/1;
-    overflow: hidden;
-    background-size: var(--yamp-artwork-bg-size, cover);
-    background-repeat: no-repeat;
-    background-position: top center;
-  }
-
-  .artwork {
-    width: 96px;
-    height: 96px;
-    object-fit: var(--yamp-artwork-fit, cover);
-    border-radius: 12px;
-    box-shadow: var(--shadow-medium);
-    background: #222;
-  }
-
-  /* Details section */
-  .details {
-    padding-top: 0;
-    padding-right: calc(16px * var(--yamp-details-scale, 1));
-    padding-bottom: calc(12px * var(--yamp-details-scale, 1));
-    padding-left: calc(16px * var(--yamp-details-scale, 1));
-    display: flex;
-    flex-direction: column;
-    gap: calc(8px * var(--yamp-details-scale, 1));
-    margin-top: calc(8px * var(--yamp-details-scale, 1));
-    min-height: calc(48px * var(--yamp-details-scale, 1));
-    font-size: calc(1em * var(--yamp-details-scale, 1));
-  }
-
-  .details .title {
-    font-size: calc(1.1em * var(--yamp-details-scale, 1));
-    font-weight: 600;
-    line-height: var(--yamp-details-line-height, 1.2);
-    white-space: normal;
-    word-break: break-word;
-    overflow: visible;
-    text-overflow: unset;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: var(--yamp-details-max-lines, 3);
-    overflow: hidden;
-    padding-top: calc(8px * var(--yamp-details-scale, 1));
-  }
-
-  .details .artist {
-    font-size: calc(1em * var(--yamp-details-scale, 1));
-    line-height: var(--yamp-details-line-height, 1.2);
-  }
-
-  .title {
-    font-size: 1.1em;
-    font-weight: 600;
-    line-height: 1.2;
-    white-space: normal;
-    word-break: break-word;
-    overflow: visible;
-    text-overflow: unset;
-    display: block;
-    padding-top: 8px;
-  }
-
-  .artist {
-    font-size: 1em;
-    font-weight: 400;
-    color: var(--secondary-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #fff;
-  }
-
-  /* Controls */
-  .controls-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 4px 16px;
-  }
-
-  .controls-row.adaptive {
-    justify-content: center;
-    gap: var(--yamp-control-gap, 10px);
-    flex-wrap: nowrap;
-  }
-
-  .controls-row.adaptive .button {
-    flex: 1 1 calc(
-      (100% - (var(--yamp-control-gap, 10px) * (var(--yamp-control-count, 5) - 1))) /
-      var(--yamp-control-count, 5)
-    );
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: var(--yamp-control-min-width, 48px);
-    max-width: var(--yamp-control-max-width, 120px);
-    min-height: var(--yamp-control-min-height, 48px);
-    padding: var(--yamp-control-padding, 8px);
-  }
-
-  .controls-row.adaptive .button ha-icon {
-    --mdc-icon-size: var(--yamp-control-icon-size, 36px);
-    width: var(--yamp-control-icon-size, 36px);
-    height: var(--yamp-control-icon-size, 36px);
-    font-size: var(--yamp-control-icon-size, 36px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .controls-row.adaptive .button ha-icon svg,
-  .controls-row.adaptive .button ha-icon iron-icon {
-    width: 100%;
-    height: 100%;
-  }
-
-  /* Tighter spacing for collapsed mode with artwork */
-  .card-lower-content.collapsed.has-artwork .controls-row {
-    gap: 8px;
-    padding: 4px 12px 4px 16px;
-  }
-
-  .button {
-    background: none;
-    border: none;
-    color: inherit;
-    font-size: 1.5em;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: var(--button-border-radius);
-    transition: background var(--transition-normal);
-  }
-
-  .button:active {
-    background: rgba(0,0,0,0.10);
-  }
-
-  .button.active ha-icon,
-  .button.active {
-    color: var(--custom-accent);
-  }
-
-  /* Progress bar */
-  .progress-bar-container {
-    padding-left: 24px;
-    padding-right: 24px;
-    box-sizing: border-box;
-  }
-
-  .progress-bar {
-    width: 100%;
-    height: 6px;
-    background: rgba(255,255,255,0.22);
-    border-radius: 3px;
-    margin: 8px 0;
-    cursor: pointer;
-    position: relative;
-    box-shadow: var(--shadow-heavy);
-  }
-
-  .progress-inner {
-    height: 100%;
-    background: var(--custom-accent);
-    border-radius: 3px 0 0 3px;
-    box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
-  }
-
-  /* Volume controls */
-  .volume-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 12px 12px 25px;
-    justify-content: space-between;
-  }
-
-  .volume-controls {
-    display: flex;
-    align-items: center;
-    gap: 25px;
-    flex: 1;
-  }
-
-  .volume-icon-btn {
-    background: none;
-    border: none;
-    color: var(--primary-text);
-    cursor: pointer;
-    padding: 0px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color var(--transition-normal);
-    min-width: 36px;
-    min-height: 36px;
-    margin-right: 0px;
-    margin-left: -7px;
-  }
-
-  .volume-icon-btn:hover {
-    color: var(--custom-accent);
-  }
-
-  .volume-icon-btn ha-icon {
-    font-size: 1.2em;
-    color: #fff;
-  }
-
-  .volume-slider-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    position: relative;
-  }
-
-  .volume-slider-icon {
-    font-size: 1em;
-    color: var(--primary-text);
-    opacity: 0.7;
-    min-width: 20px;
-  }
-
-  .vol-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    height: 6px;
-    background: hsla(0, 0.00%, 100.00%, 0.22);
-    border-radius: 3px;
-    outline: none;
-    box-shadow: var(--shadow-heavy);
-    flex: 1 1 auto;
-    min-width: 80px;
-    max-width: none;
-    margin-right: 12px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-
-  .volume-row .source-menu {
-    flex: 0 0 auto;
-  }
-
-  /* Volume slider thumbs */
-  .vol-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--custom-accent);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    border: 2px solid #fff;
-  }
-
-  .vol-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--custom-accent);
-    cursor: pointer;
-    border: 2px solid #fff;
-  }
-
-  .vol-slider::-moz-range-track {
-    height: 6px;
-    background: rgba(255,255,255,0.22);
-    border-radius: 3px;
-  }
-
-  .vol-slider::-ms-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--custom-accent);
-    cursor: pointer;
-    border: 2px solid #fff;
-  }
-
-  .vol-slider::-ms-fill-lower,
-  .vol-slider::-ms-fill-upper {
-    height: 6px;
-    background: rgba(255,255,255,0.22);
-    border-radius: 3px;
-  }
-
-  /* Touch device improvements */
-  @media (pointer: coarse) {
-    .vol-slider::-webkit-slider-thumb {
-      box-shadow: 0 0 0 18px rgba(0,0,0,0);
-    }
-    .vol-slider::-moz-range-thumb {
-      box-shadow: 0 0 0 18px rgba(0,0,0,0);
-    }
-    .vol-slider::-ms-thumb {
-      box-shadow: 0 0 0 18px rgba(0,0,0,0);
-    }
-  }
-
-  .vol-stepper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .vol-stepper .button {
-    min-width: 36px;
-    min-height: 36px;
-    font-size: 1.5em;
-    padding: 6px 0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Light mode styles */
-  @media (prefers-color-scheme: light) {
-    :host {
-      background: var(--card-background-color, #fff);
-    }
-
-    .chip {
-      background: #f0f0f0;
-      color: #222;
-    }
-
-    :host([data-match-theme="true"]) .chip[selected] {
-      background: var(--accent-color, #1976d2);
-      color: #fff;
-    }
-
-    .artwork {
-      background: #eee;
-    }
-
-    .progress-bar {
-      background: #eee;
-    }
-
-    .source-menu-btn {
-      color: #222;
-    }
-
-    .source-dropdown {
-      background: #fff;
-      color: #222;
-      border: 1px solid #bbb;
-    }
-
-    .source-option {
-      color: #222;
-      background: #fff;
-      transition: background var(--transition-fast), color var(--transition-fast);
-    }
-
-    .source-option:hover,
-    .source-option:focus {
-      background: var(--custom-accent);
-      color: #222;
-    }
-
-    .source-select {
-      background: #fff;
-      color: #222;
-      border: 1px solid #aaa;
-    }
-
-    .action-chip {
-      background: var(--card-background-color, #fff);
-      opacity: 1;
-      border-radius: var(--button-border-radius);
-      color: var(--primary-text-color, #222);
-      box-shadow: none;
-      text-shadow: none;
-      border: none;
-      outline: none;
-    }
-
-    .action-chip:active {
-      background: var(--accent-color, #1976d2);
-      color: #fff;
-      opacity: 1;
-      transform: scale(0.98);
-      box-shadow: none;
-      text-shadow: none;
-    }
-
-    .card-lower-content:not(.collapsed) .source-menu-btn,
-    .card-lower-content:not(.collapsed) .source-selected {
-      color: #fff;
-    }
-  }
-
-  /* Artwork overlay */
-  .artwork-dim-overlay {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    pointer-events: none;
-    background: linear-gradient(to bottom, 
-      rgba(0,0,0,0.0) 0%,
-      rgba(0,0,0,0.40) 55%,
-      rgba(0,0,0,0.70) 100%);
-    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
-  }
-
-  /* Card lower content */
-  .card-lower-content-container {
-    position: relative;
-    width: 100%;
-    min-height: auto;
-    height: 100%;
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-    overflow: hidden;
-  }
-
-  .card-lower-content-bg {
-    position: absolute;
-    inset: 0;
-    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
-    background-size: var(--yamp-artwork-bg-size, cover);
-    background-position: top center;
-    background-repeat: no-repeat;
-    pointer-events: none;
-    height: 100%;
-  }
-
-  .card-lower-fade {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
-    background: linear-gradient(
-      to bottom,
-      rgba(0,0,0,0.0) 0%,
-      rgba(0,0,0,0.40) 55%,
-      rgba(0,0,0,0.92) 100%
-    );
-  }
-
-  .card-lower-content {
-    position: relative;
-    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  .card-lower-content.transitioning .details,
-  .card-lower-content.transitioning .card-artwork-spacer {
-    transition: opacity 0.3s;
-  }
-
-  .card-lower-content.collapsed .details {
-    opacity: 1;
-    pointer-events: auto;
-    margin-right: var(--yamp-collapsed-details-offset, 120px);
-    transition: margin var(--transition-normal);
-  }
-
-  @media (max-width: 420px) {
-    .card-lower-content.collapsed .details {
-      margin-right: var(--yamp-collapsed-details-offset, 74px);
-    }
-  }
-
-  .card-lower-content.collapsed .card-artwork-spacer {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .card-lower-content.collapsed .card-artwork-spacer.show-placeholder {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .collapsed-flex-spacer {
-    flex: 1 1 auto;
-    width: 100%;
-    min-height: 0;
-  }
-
-  /* Force white text for important UI elements */
-  .details,
-  .title,
-  .artist,
-  .controls-row,
-  .button,
-  .vol-stepper span {
-    color: #fff;
-  }
-
-  .card-lower-content.collapsed .details .title,
-  .card-lower-content.collapsed .title {
-    font-size: calc(1.1em * var(--yamp-collapsed-title-scale, 1));
-    line-height: calc(1.2 * var(--yamp-collapsed-title-scale, 1));
-  }
-
-  .card-lower-content.collapsed .artist {
-    font-size: calc(1em * var(--yamp-collapsed-artist-scale, 1));
-  }
-  
-
-
-  /* Media artwork placeholder */
-  .media-artwork-placeholder {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: clamp(96px, 50%, 184px);
-    aspect-ratio: 1;
-    pointer-events: none;
-  }
-
-  .media-artwork-placeholder svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-    opacity: 0.85;
-  }
-
-  /* Collapsed artwork */
-  .card-lower-content.collapsed .collapsed-artwork-container {
-    position: absolute;
-    top: 16px;
-    right: 6px;
-    width: 110px;
-    height: calc(100% - 60px);
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-end;
-    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
-    background: transparent;
-    pointer-events: none;
-    box-shadow: none;
-    padding: 0;
-    transition: background var(--transition-slow);
-  }
-
-  .card-lower-content.collapsed .collapsed-artwork {
-    width: 102px;
-    height: 102px;
-    border-radius: 16px;
-    object-fit: var(--yamp-artwork-fit, cover);
-    background: transparent;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.22);
-    pointer-events: none;
-    user-select: none;
-    display: block;
-    margin: 2px;
-  }
-
-  .card-lower-content.collapsed.has-artwork .controls-row {
-    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) !important;
-    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) !important;
-    width: auto !important;
-  }
-
-  /* Medium screens */
-  @media (max-width: 600px) {
-    .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) !important;
-      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) !important;
-      width: auto !important;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 105px;
-      right: 4px;
-      top: 14px;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 98px;
-      height: 98px;
-    }
-  }
-
-  /* Small screens */
-  @media (max-width: 420px) {
-    .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) !important;
-      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) !important;
-      width: auto !important;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 90px;
-      right: 3px;
-      top: 12px;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 84px;
-      height: 84px;
-    }
-  }
-
-  /* Very small screens */
-  @media (max-width: 320px) {
-    .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) !important;
-      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) !important;
-      width: auto !important;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 80px;
-      right: 2px;
-      top: 10px;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 74px;
-      height: 74px;
-    }
-  }
-
-  /* Collapsed progress bar */
-  .collapsed-progress-bar {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    height: 4px;
-    background: var(--custom-accent);
-    border-radius: 0 0 12px 12px;
-    z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
-    transition: width var(--transition-normal) linear;
-    pointer-events: none;
-  }
-
-  /* Entity options overlay */
-  .entity-options-overlay {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    z-index: ${Z_LAYERS.OVERLAY_BASE};
-    background: var(--ha-entity-menu-overlay, rgba(0,0,0,0.82));
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-  }
-
-  /* Opening animations for hamburger menu */
-  @keyframes overlayFadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes containerSlideIn {
-    from {
-      transform: translateY(-20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes sheetSlideIn {
-    from {
-      transform: translateY(10px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  .entity-options-overlay-opening {
-    animation: overlayFadeIn 0.2s ease-out;
-  }
-
-  .entity-options-container-opening {
-    animation: containerSlideIn 0.3s ease-out;
-  }
-
-  .entity-options-sheet-opening {
-    animation: sheetSlideIn 0.25s ease-out 0.05s both;
-  }
-
-  /* Closing animations for hamburger menu */
-  @keyframes overlayFadeOut {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
-  }
-
-  @keyframes containerSlideOut {
-    from {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateY(-20px);
-      opacity: 0;
-    }
-  }
-
-  @keyframes sheetSlideOut {
-    from {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateY(10px);
-      opacity: 0;
-    }
-  }
-
-  .entity-options-overlay-closing {
-    animation: overlayFadeOut 0.15s ease-in forwards;
-    pointer-events: none;
-  }
-
-  .entity-options-container-closing {
-    animation: containerSlideOut 0.2s ease-in forwards;
-  }
-
-  .entity-options-sheet-closing {
-    animation: sheetSlideOut 0.15s ease-in 0.05s both forwards;
-  }
-
-  .entity-options-container {
-    width: 98%;
-    max-width: 430px;
-    margin: 2% auto;
-    display: flex;
-    flex-direction: column;
-    max-height: calc(96% - 70px);
-    min-height: 90px;
-    position: relative;
-  }
-
-  /* Expand container height when hide_menu_player is enabled (no persistent controls) */
-  :host([data-hide-menu-player="true"]) .entity-options-container {
-    max-height: 96%;
-  }
-
-  /* Expand container height when persistent controls are hidden due to layout constraints */
-  :host([data-hide-persistent-controls="true"]) .entity-options-container {
-    max-height: 96%;
-  }
-
-  /* Persistent Media Controls */
-  .persistent-media-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 22px 18px 22px;
-    margin: 0;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 0;
-    border: none;
-    flex-shrink: 0;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
-  }
-
-  /* Hide persistent controls when hide_menu_player is enabled */
-  :host([data-hide-menu-player="true"]) .persistent-media-controls {
-    display: none;
-  }
-
-  /* Hide persistent controls when layout constraints require it */
-  :host([data-hide-persistent-controls="true"]) .persistent-media-controls {
-    display: none;
-  }
-
-  .persistent-controls-artwork {
-    flex-shrink: 0;
-  }
-
-  .persistent-artwork {
-    width: 40px;
-    height: 40px;
-    border-radius: 6px;
-    object-fit: var(--yamp-artwork-fit, cover);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  }
-
-  .persistent-artwork-placeholder {
-    width: 40px;
-    height: 40px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  }
-
-  .persistent-artwork-placeholder ha-icon {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 16px;
-  }
-
-  .persistent-controls-buttons {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    justify-content: center;
-    position: absolute;
-    left: calc(50% - 15px);
-    top: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .persistent-volume-stepper {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 0px;  transform: translateX(-25px);
-
-  }
-
-  .persistent-volume-stepper .stepper-btn {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 20px;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: color 0.2s ease;
-  }
-
-  .persistent-volume-stepper .stepper-btn:hover {
-    color: var(--custom-accent);
-  }
-
-  .persistent-volume-stepper .stepper-btn:active {
-    transform: scale(0.92);
-  }
-
-  .persistent-volume-stepper .stepper-value {
-    font-size: 0.95em;
-    opacity: 0.85;
-    min-width: 36px;
-    text-align: center;
-    color: #fff;
-  }
-
-  .persistent-control-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: #fff;
-  }
-
-  .persistent-control-btn:hover {
-    background: var(--custom-accent);
-    border-color: var(--custom-accent);
-    transform: scale(1.05);
-  }
-
-  .persistent-control-btn:active {
-    transform: scale(0.95);
-  }
-
-  .persistent-control-btn ha-icon {
-    font-size: 16px;
-    color: inherit;
-  }
-
-  .entity-options-sheet {
-    --custom-accent: var(--accent-color, #ff9800);
-    background: none;
-    border-radius: var(--border-radius);
-    box-shadow: none;
-    width: 100%;
-    padding: 18px 8px 70px 8px;
-    padding-top: clamp(12px, 6vh, 18px);
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    font-size: calc(1em * var(--yamp-text-scale-menu, 1));
-  }
-
-  /* Main menu specific styling - move options down, adapt to card height */
-  .entity-options-sheet .entity-options-menu {
-    margin-top: clamp(36px, 12vh, 150px);
-    margin-bottom: 16px;
-  }
-
-  .in-menu-active-label {
-    position: absolute;
-    left: 50%;
-    bottom: 6px;
-    transform: translateX(-50%);
-    font-size: 0.78em;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    color: rgba(255, 255, 255, 0.78);
-    pointer-events: none;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
-  }
-
-  /* When always collapsed is enabled, keep menu at top */
-:host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
-  margin-top: 0px;
-}
-
-  /* Remove spacing between menu items */
-  .entity-options-sheet .entity-options-menu .entity-options-item {
-    margin-top: 0px;
-    margin-bottom: 0px;
-  }
-
-  .entity-options-container,
-  .entity-options-container-opening {
-    position: relative;
-  }
-
-  .entity-options-chips-wrapper {
-    position: sticky;
-    top: 0;
-    z-index: ${Z_LAYERS.STICKY_CHIPS};
-    padding: 6px 4px 6px 4px;
-    background: transparent;
-  }
-
-  .entity-options-chips-strip {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-start;
-    align-items: center;
-    overflow-x: auto;
-    padding: 6px 8px 6px 8px;
-    background: var(--ha-menu-chip-row-background, transparent);
-  }
-
-  .entity-options-chips-strip .chip {
-    background: var(--chip-bg);
-    color: var(--primary-text);
-  }
-
-  .entity-options-chips-strip .chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
-  }
-
-  .entity-options-chips-strip .chip[selected] {
-    background: var(--custom-accent);
-    color: #fff;
-  }
-
-  .entity-options-chips-strip::-webkit-scrollbar {
-    display: none;
-  }
-
-  .entity-options-menu.chips-in-menu {
-    margin-top: 4px;
-  }
-
-  .entity-options-sheet.chips-mode {
-    padding-top: 12px;
-  }
-
-
-  /* Ensure entity-options-sheet honors match_theme for accent color */
-  :host([data-match-theme="false"]) .entity-options-sheet {
-    --custom-accent: #ff9800 !important;
-  }
-  :host([data-match-theme="true"]) .entity-options-sheet {
-    --custom-accent: var(--accent-color, #ff9800) !important;
-  }
-
-  .entity-options-sheet::-webkit-scrollbar {
-    display: none;
-  }
-
-  .entity-options-sheet {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  /* Hide scrollbar for group list scroll container */
-  .group-list-scroll {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .group-list-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  .entity-options-title {
-    font-size: 1.1em;
-    font-weight: bold;
-    margin-bottom: 18px;
-    text-align: center;
-    color: #fff;
-    background: none;
-    text-shadow: 0 2px 8px #0009;
-  }
-
-  .entity-options-item {
-    background: none;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-size: 1.12em;
-    font-weight: 500;
-    margin: 4px 0;
-    padding: 6px 0 8px 0;
-    cursor: pointer;
-    transition: color var(--transition-fast), text-shadow var(--transition-fast);
-    text-align: center;
-    text-shadow: 0 2px 8px #0009;
-  }
-
-  .entity-options-item.menu-action-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 100%;
-  }
-
-  .entity-options-item.menu-action-item .menu-action-icon {
-    color: inherit;
-    --mdc-icon-color: currentColor;
-    --icon-color: currentColor;
-    --paper-item-icon-color: currentColor;
-    --ha-icon-color: currentColor;
-    fill: currentColor;
-  }
-
-  .entity-options-item.menu-action-item .menu-action-label {
-    color: inherit;
-  }
-
-  .entity-options-item:hover {
-    color: var(--custom-accent, #ff9800);
-    text-shadow: none;
-    background: none;
-  }
-
-  .entity-options-item.close-item {
-    font-weight: 600;
-    margin: 1px 0;
-    padding: 4px 0 5px 0;
-    display: block;
-    width: 100%;
-  }
-
-  .entity-options-divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.28);
-    margin: 1px 0 8px 0;
-    width: 100%;
-    display: block;
-  }
-
-  /* Ensure Group Players header always shows a single divider */
-  .grouping-header {
-    width: 100%;
-  }
-  .grouping-header .entity-options-item.close-item {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
-    margin-bottom: 6px;
-    padding-bottom: 6px;
-  }
-
-  /* Source index */
-  .source-index-letter:focus {
-    background: rgba(255,255,255,0.11);
-    outline: 1px solid #ff9800;
-  }
-
-  .entity-options-sheet.source-list-sheet {
-    position: relative;
-    overflow: visible;
-  }
-
-  .source-list-scroll {
-    overflow-y: auto;
-    max-height: 340px;
-    scrollbar-width: none;
-  }
-
-  .source-list-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  .floating-source-index.grab-scroll-active,
-  .floating-source-index.grab-scroll-active * {
-    cursor: grabbing;
-  }
-
-  .floating-source-index {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    width: 28px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-start;
-    pointer-events: auto;
-    overscroll-behavior: contain;
-    z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
-    padding: 12px 8px 8px 0;
-    overflow-y: auto;
-    max-height: 100%;
-    min-width: 32px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    cursor: grab;
-  }
-
-  .entity-options-sheet.chips-mode .floating-source-index {
-    top: clamp(72px, 15vh, 120px);
-    height: calc(100% - clamp(72px, 15vh, 120px));
-  }
-
-  .floating-source-index::-webkit-scrollbar {
-    display: none;
-  }
-
-  .floating-source-index .source-index-letter {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 1.08em;
-    cursor: pointer;
-    margin: 2px 0;
-    padding: 2px 2px;
-    pointer-events: auto;
-    outline: none;
-    transition: color var(--transition-fast), background var(--transition-fast), transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
-    transform: scale(1);
-    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
-    min-height: 32px;
-    min-width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .floating-source-index .source-index-letter[data-scale="max"] {
-    transform: scale(1.38);
-    z-index: ${Z_LAYERS.OVERLAY_BASE};
-  }
-
-  .floating-source-index .source-index-letter[data-scale="large"] {
-    transform: scale(1.19);
-    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
-  }
-
-  .floating-source-index .source-index-letter[data-scale="med"] {
-    transform: scale(1.10);
-    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
-  }
-
-  .floating-source-index .source-index-letter::after {
-    display: none;
-  }
-
-  .floating-source-index .source-index-letter:hover,
-  .floating-source-index .source-index-letter:focus {
-    color: #fff;
-  }
-
-  /* Group toggle buttons */
-  .group-toggle-btn {
-    background: none;
-    border: none;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2em;
-    margin-right: 10px;
-    cursor: pointer;
-    transition: background 0.15s ease;
-    color: #fff;
-  }
-
-  .group-toggle-btn ha-icon {
-    width: 22px;
-    height: 22px;
-  }
-
-  .group-toggle-transparent {
-    background: none;
-    border: none;
-    box-shadow: none;
-    color: transparent;
-    pointer-events: none;
-  }
-
-  .group-toggle-transparent:hover {
-    background: none;
-  }
-
-  /* Force white text in grouping sheet */
-  .entity-options-sheet,
-  .entity-options-sheet * {
-    color: #fff;
-  }
-
-  /* Search functionality */
-  .entity-options-search {
-    padding: 2px 0 80px 0;
-  }
-
-  .entity-options-search-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 4px;
-    margin-top: 2px;
-  }
-
-  .entity-options-search-result {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 9px 0;
-    border-bottom: 1px solid #2227;
-    font-size: 1.10em;
-    color: var(--primary-text);
-    background: none;
-  }
-
-  .entity-options-search-result:last-child {
-    border-bottom: none;
-  }
-
-  .entity-options-search-result.placeholder {
-    visibility: hidden;
-    border-bottom: 1px solid transparent;
-    min-height: 46px;
-    box-sizing: border-box;
-  }
-
-  .entity-options-search-thumb {
-    height: 38px;
-    width: 38px;
-    border-radius: var(--button-border-radius);
-    object-fit: var(--yamp-artwork-fit, cover);
-    box-shadow: 0 1px 5px rgba(0,0,0,0.16);
-    margin-right: 12px;
-  }
-
-  .entity-options-search-buttons {
-    display: flex;
-    gap: 6px;
-    margin-left: 7px;
-  }
-
-  .entity-options-search-play,
-  .entity-options-search-queue {
-    min-width: 34px;
-    font-size: 1.13em;
-    border: none;
-    background: transparent;
-    color: #fff;
-    border-radius: 10px;
-    padding: 6px 10px;
-    cursor: pointer;
-    box-shadow: none;
-    transition: background var(--transition-normal), color var(--transition-normal);
-    text-shadow: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .entity-options-search-play ha-icon,
-  .entity-options-search-queue ha-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .entity-options-search-play:hover,
-  .entity-options-search-play:focus {
-    background: transparent;
-    color: var(--custom-accent);
-    opacity: 0.8;
-  }
-
-  .entity-options-search-queue {
-    background: transparent;
-    border: none;
-    color: #666;
-    padding-right: 20px; /* Add right padding to prevent cutoff on mobile */
-    padding-bottom: 12px;
-  }
-
-  .entity-options-search-queue:hover,
-  .entity-options-search-queue:focus {
-    background: transparent;
-    border: none;
-    color: var(--custom-accent);
-    opacity: 0.8;
-  }
-
-  /* Queue control buttons */
-  .queue-controls {
-    display: flex;
-    gap: 4px;
-    padding-right: 8px; /* Add padding to prevent cutoff on mobile */
-  }
-
-  .queue-btn {
-    min-width: 28px;
-    height: 28px;
-    font-size: 0.9em;
-    border: none;
-    background: transparent;
-    color: #fff;
-    border-radius: 6px;
-    padding: 4px;
-    cursor: pointer;
-    box-shadow: none;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .queue-btn ha-icon {
-    width: 14px;
-    height: 14px;
-  }
-
-  .queue-btn-up:hover,
-  .queue-btn-up:focus {
-    background: transparent;
-    color: #4caf50;
-  }
-
-  .queue-btn-down:hover,
-  .queue-btn-down:focus {
-    background: transparent;
-    color: #4caf50;
-  }
-
-  .queue-btn-next:hover,
-  .queue-btn-next:focus {
-    background: transparent;
-    color: var(--custom-accent);
-  }
-
-  .queue-btn-remove:hover,
-  .queue-btn-remove:focus {
-    background: transparent;
-    color: #f44336;
-  }
-
-  /* Visual feedback for moved queue items */
-  .entity-options-search-result.just-moved {
-    background: rgba(76, 175, 80, 0.2) !important;
-    border-left: 3px solid #4caf50 !important;
-    animation: queueMoveHighlight 1s ease-out;
-  }
-
-  @keyframes queueMoveHighlight {
-    0% { background: rgba(76, 175, 80, 0.4); transform: scale(1.02); }
-    100% { background: rgba(76, 175, 80, 0.2); transform: scale(1); }
-  }
-
-  .entity-options-search-input {
-    border: 1px solid #333;
-    border-radius: var(--button-border-radius);
-    background: var(--card-bg);
-    color: var(--primary-text);
-    font-size: 1.12em;
-    outline: none;
-    transition: border var(--transition-fast);
-    margin-right: 7px;
-    box-sizing: border-box;
-  }
-
-  .entity-options-search-row .entity-options-search-input {
-    padding: 4px 10px;
-    height: 32px;
-    min-height: 32px;
-    line-height: 1.18;
-    box-sizing: border-box;
-    border: 1.5px solid var(--custom-accent);
-    background: #232323;
-    color: #fff;
-    transition: border var(--transition-fast), background var(--transition-fast);
-    outline: none;
-  }
-
-  .entity-options-search-input:focus {
-    border: 1.5px solid var(--custom-accent);
-    background: #232323;
-    color: #fff;
-    outline: none;
-  }
-
-  .entity-options-search-loading,
-  .entity-options-search-error,
-  .entity-options-search-empty {
-    padding: 8px 6px;
-    font-size: 1.09em;
-    opacity: 0.90;
-    color: var(--primary-text);
-    background: none;
-    text-align: left;
-  }
-
-  .entity-options-search-loading {
-    color: #fff;
-  }
-
-  .entity-options-search-error {
-    color: #e44747;
-    font-weight: 500;
-  }
-
-  .entity-options-search-empty {
-    color: #999;
-    font-style: italic;
-  }
-
-  .entity-options-search-row .entity-options-item {
-    height: 32px;
-    min-height: 32px;
-    box-sizing: border-box;
-    padding-top: 0;
-    padding-bottom: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    font-size: 1.12em;
-    vertical-align: middle;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Search filter chips */
-  .search-filter-chips .chip {
-    color: #fff;
-  }
-
-  .search-filter-chips .chip[selected],
-  .search-filter-chips .chip[style*="background: var(--customAccent"],
-  .search-filter-chips .chip[style*="background: var(--custom-accent"] {
-    color: #111;
-  }
-
-  .entity-options-sheet .search-filter-chips .chip:not([selected]) {
-    color: #fff;
-  }
-
-  .entity-options-sheet .search-filter-chips .chip[selected] {
-    color: #111;
-  }
-
-  .entity-options-sheet .search-filter-chips .chip {
-    text-align: center;
-    justify-content: center;
-  }
-
-  .entity-options-sheet .search-filter-chips .chip:hover {
-    background: var(--custom-accent);
-    color: #111;
-    opacity: 1;
-  }
-
-  /* Override filter chip hover text color when match_theme is false */
-  :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:hover {
-    color: #fff !important;
-  }
-
-  /* Add hover effect for inactive filter chips when match_theme is false */
-  :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
-    background: var(--custom-accent) !important;
-    color: #fff !important;
-    opacity: 1;
-  }
-
-  /* Add hover effect for inactive filter chips when match_theme is true */
-  :host([data-match-theme="true"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
-    background: var(--custom-accent) !important;
-    color: #111 !important;
-    opacity: 1;
-  }
-
-  .entity-options-sheet .entity-options-search-results {
-    min-height: 210px;
-  }
-
-  /* Search layout */
-  .entity-options-sheet .entity-options-search {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  .entity-options-sheet .entity-options-search-row,
-  .entity-options-sheet .search-filter-chips {
-    flex: 0 0 auto;
-  }
-
-  .entity-options-sheet .entity-options-search-results {
-    flex: 1;
-    overflow-y: auto;
-    margin: 12px 0;
-    padding-bottom: 80px;
-    /* Hide scrollbars */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
-
-  /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
-  .entity-options-sheet .entity-options-search-results::-webkit-scrollbar {
-    display: none;
-  }
-
-  .entity-options-resolved-entities {
-    --custom-accent: var(--accent-color, #ff9800);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  .entity-options-resolved-entities-list {
-    flex: 1;
-    overflow-y: auto;
-    margin: 12px 0;
-    /* Hide scrollbars */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
-
-  .entity-options-resolved-entities-list::-webkit-scrollbar {
-    display: none;
-  }
-
-  .entity-options-resolved-entities .entity-options-item {
-    background: none;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-size: 1.12em;
-    font-weight: 500;
-    margin: 4px 0;
-    padding: 6px 0 8px 0;
-    cursor: pointer;
-    transition: color var(--transition-fast), text-shadow var(--transition-fast);
-    text-align: left;
-    text-shadow: 0 2px 8px #0009;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .entity-options-resolved-entities .entity-options-item:hover,
-  .entity-options-resolved-entities .entity-options-item:focus {
-    color: var(--custom-accent) !important;
-    text-shadow: none !important;
-    background: none !important;
-  }
-
-  .entity-options-resolved-entities .entity-options-item:last-child {
-    border-bottom: none;
-  }
-
-  /* Clickable artist */
-  .clickable-artist {
-    cursor: pointer;
-  }
-
-  .clickable-artist:hover {
-    text-decoration: underline;
-  }
-
-  /* Clickable search results */
-  .clickable-search-result {
-    cursor: pointer;
-    color: var(--custom-accent);
-    transition: color var(--transition-fast);
-  }
-
-  .clickable-search-result:hover {
-    text-decoration: underline;
-    color: #fff;
-  }
-
-  /* Search breadcrumb */
-  .entity-options-search-breadcrumb {
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .entity-options-search-breadcrumb-text {
-    font-size: 0.9em;
-    color: #fff;
-    font-style: italic;
-  }
-
-  /* Search sheet styles */
-  .search-sheet {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: ${Z_LAYERS.MODAL_BACKDROP};
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-  }
-
-  .search-sheet-header {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  .search-sheet-header input {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    background: #333;
-    color: #fff;
-    font-size: 16px;
-  }
-
-  .search-sheet-header button {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    background: var(--custom-accent);
-    color: #fff;
-    cursor: pointer;
-    font-size: 16px;
-  }
-
-  .search-sheet-header button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .search-sheet-loading,
-  .search-sheet-error,
-  .search-sheet-success,
-  .search-sheet-empty {
-    text-align: center;
-    padding: 40px;
-    color: #fff;
-    font-size: 18px;
-  }
-
-  .search-sheet-error {
-    color: #ff6b6b;
-  }
-
-  .search-sheet-success {
-    color: #4caf50;
-    font-weight: 600;
-    background: rgba(76, 175, 80, 0.95);
-    border: 2px solid #4caf50;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px;
-    font-size: 20px;
-    animation: fadeInOut 3s ease-in-out;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: ${Z_LAYERS.MODAL_TOAST};
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    min-width: 200px;
-    text-align: center;
-  }
-
-  @keyframes fadeInOut {
-    0% { opacity: 0; transform: translate(-50%, -60%); }
-    10% { opacity: 1; transform: translate(-50%, -50%); }
-    90% { opacity: 1; transform: translate(-50%, -50%); }
-    100% { opacity: 0; transform: translate(-50%, -40%); }
-  }
-
-  .search-sheet-results {
-    flex: 1;
-    overflow-y: auto;
-    /* Hide scrollbars */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
-
-  .search-sheet-results::-webkit-scrollbar {
-    display: none;
-  }
-
-  .search-sheet-result {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .search-sheet-result:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .search-sheet-thumb {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    object-fit: var(--yamp-artwork-fit, cover);
-  }
-
-  .search-sheet-title {
-    flex: 1;
-    color: #fff;
-    font-size: 16px;
-  }
-
-  .search-sheet-buttons {
-    display: flex;
-    gap: 8px;
-  }
-
-  .search-sheet-play,
-  .search-sheet-queue {
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 8px;
-    background: var(--custom-accent);
-    color: #fff;
-    cursor: pointer;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-  }
-
-  .search-sheet-play ha-icon,
-  .search-sheet-queue ha-icon {
-    width: 20px;
-    height: 20px;
-  }
-
-  .search-sheet-play:hover,
-  .search-sheet-queue:hover {
-    background: #e68900;
-  }
-
-  .search-sheet-queue {
-    background: #4a4a4a;
-    border: 1px solid #666;
-  }
-
-  .search-sheet-queue:hover {
-    background: #5a5a5a;
-    border-color: #777;
-  }
-
-  /* Override styles when match_theme is false - force default colors */
-  .search-sheet[data-match-theme="false"] {
-    background: rgba(0, 0, 0, 0.8) !important;
-    
-    /* Define CSS custom properties directly on the search sheet when match_theme is false */
-    --custom-accent: #ff9800 !important;
-    --search-overlay-bg: rgba(0, 0, 0, 0.8) !important;
-    --search-input-bg: #333 !important;
-    --search-input-text: #fff !important;
-    --search-text: #fff !important;
-    --search-error: #ff6b6b !important;
-    --search-success: #4caf50 !important;
-    --search-success-bg: rgba(76, 175, 80, 0.95) !important;
-    --search-border: rgba(255, 255, 255, 0.1) !important;
-    --search-hover-bg: rgba(255, 255, 255, 0.1) !important;
-    --search-play-hover: #e68900 !important;
-    --search-queue-bg: #4a4a4a !important;
-    --search-queue-border: #666 !important;
-    --search-queue-hover: #5a5a5a !important;
-    --search-queue-hover-border: #777 !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-header input {
-    background: #333 !important;
-    color: #fff !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-header button {
-    background: #ff9800 !important;
-    color: #fff !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-loading,
-  .search-sheet[data-match-theme="false"] .search-sheet-error,
-  .search-sheet[data-match-theme="false"] .search-sheet-success,
-  .search-sheet[data-match-theme="false"] .search-sheet-empty {
-    color: #fff !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-error {
-    color: #ff6b6b !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-success {
-    color: #4caf50 !important;
-    background: rgba(76, 175, 80, 0.95) !important;
-    border: 2px solid #4caf50 !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-result {
-    color: #fff !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-result:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-title {
-    color: #fff !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-play {
-    background: var(--custom-accent) !important;
-    color: #fff !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-play:hover {
-    background: #e68900 !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-queue {
-    background: #4a4a4a !important;
-    color: #fff !important;
-    border: 1px solid #666 !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-queue:hover {
-    background: #5a5a5a !important;
-    border-color: #777 !important;
-  }
-
-  /* Additional overrides for search sheet elements that might inherit theme colors */
-  .search-sheet[data-match-theme="false"] .clickable-search-result {
-    color: #ff9800 !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
-    color: #fff !important;
-  }
-
-  /* Override the base clickable-search-result styles when match_theme is false */
-  .search-sheet[data-match-theme="false"] .clickable-search-result,
-  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
-    color: #ff9800 !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
-    color: #fff !important;
-  }
-
-  /* Override any other elements that might be using theme variables */
-  .search-sheet[data-match-theme="false"] * {
-    color: #fff !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .clickable-search-result {
-    color: #ff9800 !important;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-play,
-  .search-sheet[data-match-theme="false"] .search-sheet-queue {
-    color: #fff !important;
-  }
-
-  /* Force all text to be white when match_theme is false */
-  .search-sheet[data-match-theme="false"] .search-sheet-title,
-  .search-sheet[data-match-theme="false"] .search-sheet-loading,
-  .search-sheet[data-match-theme="false"] .search-sheet-empty {
-    color: #fff !important;
-  }
-
-  /* Nuclear option: Override ALL elements that might be using --custom-accent or theme colors */
-  .search-sheet[data-match-theme="false"] *[style*="color"] {
-    color: #fff !important;
-  }
-
-  .search-sheet[data-match-theme="false"] *[style*="background"] {
-    background: rgba(0, 0, 0, 0.8) !important;
-  }
-
-  /* Force override any CSS custom properties that might be inherited */
-  .search-sheet[data-match-theme="false"] {
-    --custom-accent: #ff9800 !important;
-    --accent-color: #ff9800 !important;
-    --primary-color: #ff9800 !important;
-    --ha-accent-color: #ff9800 !important;
-  }
-
-  /* Also redefine --custom-accent locally in the search sheet, just like entity-options-resolved-entities does */
-  .search-sheet[data-match-theme="false"] {
-    --custom-accent: #ff9800 !important;
-  }
-
-  /* Also override at the root level when match_theme is false */
-  yet-another-media-player[data-match-theme="false"] {
-    --custom-accent: #ff9800 !important;
-    --accent-color: #ff9800 !important;
-    --primary-color: #ff9800 !important;
-    --ha-accent-color: #ff9800 !important;
-  }
-
-  /* Override any elements that might be using CSS custom properties */
-  .search-sheet[data-match-theme="false"] .search-sheet-play,
-  .search-sheet[data-match-theme="false"] .search-sheet-header button,
-  .search-sheet[data-match-theme="false"] *[style*="background: var(--custom-accent)"],
-  .search-sheet[data-match-theme="false"] *[style*="background: var(--accent-color)"],
-  .search-sheet[data-match-theme="false"] *[style*="background: var(--primary-color)"] {
-    background: #ff9800 !important;
-    color: #fff !important;
-  }
-
-  /* Override any elements that might be using CSS custom properties for color */
-  .search-sheet[data-match-theme="false"] *[style*="color: var(--custom-accent)"],
-  .search-sheet[data-match-theme="false"] *[style*="color: var(--accent-color)"],
-  .search-sheet[data-match-theme="false"] *[style*="color: var(--primary-color)"] {
-    color: #ff9800 !important;
-  }
-`;
-
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+var _templateObject$3, _templateObject2$3, _templateObject3$2, _templateObject4$2, _templateObject5$2, _templateObject6$2, _templateObject7$2, _templateObject8$2, _templateObject9$2, _templateObject0$2;
 const resolveLimitValue = function (limit) {
   let {
     cap,
@@ -3985,62 +1285,11 @@ function renderSearchSheet(_ref) {
     upcomingFilterActive = false // Add upcoming filter parameter
   } = _ref;
   if (!open) return E;
-  return x`
-    <div class="search-sheet" data-match-theme="${matchTheme}">
-      <div class="search-sheet-header">
-        <input
-          type="text"
-          .value=${query || ""}
-          @input=${onQueryInput}
-          placeholder="Search music..."
-          autofocus
-        />
-        <button @click=${onSearch} ?disabled=${loading || !query}>Search</button>
-        <button @click=${onClose} title="Close Search">✕</button>
-      </div>
-      ${loading ? x`<div class="search-sheet-loading">Loading...</div>` : E}
-      ${error ? x`<div class="search-sheet-error">${error}</div>` : E}
-      ${showQueueSuccess ? x`<div class="search-sheet-success">✅ Added to queue!</div>` : E}
-      <div class="search-sheet-results">
-        ${(results || []).length === 0 && !loading ? x`<div class="search-sheet-empty">No results.</div>` : (results || []).map(item => x`
-                <div class="search-sheet-result">
-                  ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x`
-                    <img
-                      class="search-sheet-thumb"
-                      src=${item.thumbnail}
-                      alt=${item.title}
-                      onerror="this.style.display='none'"
-                    />
-                  ` : x`
-                    <div class="search-sheet-thumb-placeholder">
-                      <ha-icon icon="mdi:music"></ha-icon>
-                    </div>
-                  `}
-                  <span class="search-sheet-title">${item.title}</span>
-                  ${item.artist ? x`
-                    <span class="search-sheet-subtitle" style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;">
-                      ${item.artist}
-                    </span>
-                  ` : E}
-                  <div class="search-sheet-buttons">
-                    <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
-                      ▶
-                    </button>
-                    ${!(upcomingFilterActive && item.queue_item_id) ? x`
-                      <button class="search-sheet-queue" @click=${e => {
+  return x(_templateObject$3 || (_templateObject$3 = _taggedTemplateLiteral(["\n    <div class=\"search-sheet\" data-match-theme=\"", "\">\n      <div class=\"search-sheet-header\">\n        <input\n          type=\"text\"\n          .value=", "\n          @input=", "\n          placeholder=\"Search music...\"\n          autofocus\n        />\n        <button @click=", " ?disabled=", ">Search</button>\n        <button @click=", " title=\"Close Search\">\u2715</button>\n      </div>\n      ", "\n      ", "\n      ", "\n      <div class=\"search-sheet-results\">\n        ", "\n      </div>\n    </div>\n  "])), matchTheme, query || "", onQueryInput, onSearch, loading || !query, onClose, loading ? x(_templateObject2$3 || (_templateObject2$3 = _taggedTemplateLiteral(["<div class=\"search-sheet-loading\">Loading...</div>"]))) : E, error ? x(_templateObject3$2 || (_templateObject3$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-error\">", "</div>"])), error) : E, showQueueSuccess ? x(_templateObject4$2 || (_templateObject4$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-success\">\u2705 Added to queue!</div>"]))) : E, (results || []).length === 0 && !loading ? x(_templateObject5$2 || (_templateObject5$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-empty\">No results.</div>"]))) : (results || []).map(item => x(_templateObject6$2 || (_templateObject6$2 = _taggedTemplateLiteral(["\n                <div class=\"search-sheet-result\">\n                  ", "\n                  <span class=\"search-sheet-title\">", "</span>\n                  ", "\n                  <div class=\"search-sheet-buttons\">\n                    <button class=\"search-sheet-play\" @click=", " title=\"Play Now\">\n                      \u25B6\n                    </button>\n                    ", "\n                  </div>\n                </div>\n              "])), item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject7$2 || (_templateObject7$2 = _taggedTemplateLiteral(["\n                    <img\n                      class=\"search-sheet-thumb\"\n                      src=", "\n                      alt=", "\n                      onerror=\"this.style.display='none'\"\n                    />\n                  "])), item.thumbnail, item.title) : x(_templateObject8$2 || (_templateObject8$2 = _taggedTemplateLiteral(["\n                    <div class=\"search-sheet-thumb-placeholder\">\n                      <ha-icon icon=\"mdi:music\"></ha-icon>\n                    </div>\n                  "]))), item.title, item.artist ? x(_templateObject9$2 || (_templateObject9$2 = _taggedTemplateLiteral(["\n                    <span class=\"search-sheet-subtitle\" style=\"display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;\">\n                      ", "\n                    </span>\n                  "])), item.artist) : E, () => onPlay(item), !(upcomingFilterActive && item.queue_item_id) ? x(_templateObject0$2 || (_templateObject0$2 = _taggedTemplateLiteral(["\n                      <button class=\"search-sheet-queue\" @click=", " title=\"Add to Queue\">\n                        <ha-icon icon=\"mdi:playlist-play\"></ha-icon>\n                      </button>\n                    "])), e => {
     e.preventDefault();
     e.stopPropagation();
     onQueue(item);
-  }} title="Add to Queue">
-                        <ha-icon icon="mdi:playlist-play"></ha-icon>
-                      </button>
-                    ` : E}
-                  </div>
-                </div>
-              `)}
-      </div>
-    </div>
-  `;
+  }) : E)));
 }
 
 // Service helpers to keep search-related logic colocated with the search UI module
@@ -4087,19 +1336,17 @@ async function searchMedia(hass, entityId, query) {
           const favResponse = favRes === null || favRes === void 0 ? void 0 : favRes.response;
           const items = (favResponse === null || favResponse === void 0 ? void 0 : favResponse.items) || [];
           items.forEach(item => {
-            const transformedItem = {
+            const transformedItem = _objectSpread2$1(_objectSpread2$1({
               title: item.name,
               media_content_id: item.uri,
               media_content_type: item.media_type,
               media_class: item.media_type,
-              thumbnail: item.image,
-              ...(item.artists && {
-                artist: item.artists.map(a => a.name).join(', ')
-              }),
-              ...(item.album && {
-                album: item.album.name
-              })
-            };
+              thumbnail: item.image
+            }, item.artists && {
+              artist: item.artists.map(a => a.name).join(', ')
+            }), item.album && {
+              album: item.album.name
+            });
             flatResultsFav.push(transformedItem);
           });
         }));
@@ -4148,21 +1395,17 @@ async function searchMedia(hass, entityId, query) {
           if (Array.isArray(items)) {
             items.forEach(item => {
               // Transform Music Assistant format to media_player format
-              const transformedItem = {
+              const transformedItem = _objectSpread2$1(_objectSpread2$1({
                 title: item.name,
                 media_content_id: item.uri,
                 media_content_type: item.media_type,
                 media_class: item.media_type,
-                thumbnail: item.image,
-                // Add artist info if available
-                ...(item.artists && {
-                  artist: item.artists.map(a => a.name).join(', ')
-                }),
-                // Add album info if available
-                ...(item.album && {
-                  album: item.album.name
-                })
-              };
+                thumbnail: item.image
+              }, item.artists && {
+                artist: item.artists.map(a => a.name).join(', ')
+              }), item.album && {
+                album: item.album.name
+              });
               flatResults.push(transformedItem);
             });
           }
@@ -4237,20 +1480,16 @@ async function getRecentlyPlayed(hass, entityId) {
       }));
 
       // Transform Music Assistant format to media_player format
-      const transformedResults = allResults.map(item => ({
+      const transformedResults = allResults.map(item => _objectSpread2$1(_objectSpread2$1({
         title: item.name,
         media_content_id: item.uri,
         media_content_type: item.media_type,
         media_class: item.media_type,
-        thumbnail: item.image,
-        // Add artist info if available
-        ...(item.artists && {
-          artist: item.artists.map(a => a.name).join(', ')
-        }),
-        // Add album info if available
-        ...(item.album && {
-          album: item.album.name
-        })
+        thumbnail: item.image
+      }, item.artists && {
+        artist: item.artists.map(a => a.name).join(', ')
+      }), item.album && {
+        album: item.album.name
       }));
       return {
         results: transformedResults || [],
@@ -4278,20 +1517,16 @@ async function getRecentlyPlayed(hass, entityId) {
       const items = (response === null || response === void 0 || (_response$response2 = response.response) === null || _response$response2 === void 0 ? void 0 : _response$response2.items) || [];
 
       // Transform Music Assistant format to media_player format
-      const transformedResults = items.map(item => ({
+      const transformedResults = items.map(item => _objectSpread2$1(_objectSpread2$1({
         title: item.name,
         media_content_id: item.uri,
         media_content_type: item.media_type,
         media_class: item.media_type,
-        thumbnail: item.image,
-        // Add artist info if available
-        ...(item.artists && {
-          artist: item.artists.map(a => a.name).join(', ')
-        }),
-        // Add album info if available
-        ...(item.album && {
-          album: item.album.name
-        })
+        thumbnail: item.image
+      }, item.artists && {
+        artist: item.artists.map(a => a.name).join(', ')
+      }), item.album && {
+        album: item.album.name
       }));
       return {
         results: transformedResults || [],
@@ -4400,21 +1635,17 @@ async function getFavorites(hass, entityId) {
       if (Array.isArray(items)) {
         items.forEach(item => {
           // Transform Music Assistant format to media_player format
-          const transformedItem = {
+          const transformedItem = _objectSpread2$1(_objectSpread2$1({
             title: item.name,
             media_content_id: item.uri,
             media_content_type: item.media_type,
             media_class: item.media_type,
-            thumbnail: item.image,
-            // Add artist info if available
-            ...(item.artists && {
-              artist: item.artists.map(a => a.name).join(', ')
-            }),
-            // Add album info if available
-            ...(item.album && {
-              album: item.album.name
-            })
-          };
+            thumbnail: item.image
+          }, item.artists && {
+            artist: item.artists.map(a => a.name).join(', ')
+          }), item.album && {
+            album: item.album.name
+          });
           flatResults.push(transformedItem);
         });
       }
@@ -4536,7 +1767,7 @@ async function isTrackFavorited(hass, mediaContentId) {
         if (searchItems.length) {
           const idPart = (mediaContentId.split('/').pop() || '').trim();
           const byUri = searchItems.find(it => (it === null || it === void 0 ? void 0 : it.uri) === mediaContentId);
-          const byId = !byUri && /^\d+$/.test(idPart) ? searchItems.find(it => typeof (it === null || it === void 0 ? void 0 : it.uri) === 'string' && it.uri.endsWith(`/${idPart}`)) : null;
+          const byId = !byUri && /^\d+$/.test(idPart) ? searchItems.find(it => typeof (it === null || it === void 0 ? void 0 : it.uri) === 'string' && it.uri.endsWith("/".concat(idPart))) : null;
           const foundItem = byUri || byId || null;
           if (foundItem && typeof foundItem.favorite === 'boolean') {
             return !!foundItem.favorite;
@@ -10368,8 +7599,7 @@ _extends(Remove, {
 Sortable.mount(new AutoScrollPlugin());
 Sortable.mount(Remove, Revert);
 
-// import { LitElement, html, css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-// import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm";
+var _templateObject$2, _templateObject2$2;
 class YampSortable extends i$1 {
   static get properties() {
     return {
@@ -10385,38 +7615,7 @@ class YampSortable extends i$1 {
     };
   }
   static get styles() {
-    return i$4`
-      :host {
-        display: block;
-      }
-      .sortable-fallback {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-      .sortable-ghost {
-        box-shadow: 0 0 0 2px var(--primary-color);
-        background: rgba(var(--rgb-primary-color), 0.25);
-        border-radius: 4px;
-        opacity: 0.4;
-      }
-      .sortable-drag {
-        border-radius: 4px;
-        opacity: 1;
-        background: var(--card-background-color);
-        box-shadow: 0px 4px 8px 3px #00000026;
-        cursor: grabbing;
-      }
-      /* Hide any fallback elements that might appear (mobile fix)*/
-      .sortable-fallback,
-      .sortable-fallback * {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-    `;
+    return i$4(_templateObject$2 || (_templateObject$2 = _taggedTemplateLiteral(["\n      :host {\n        display: block;\n      }\n      .sortable-fallback {\n        display: none !important;\n        visibility: hidden !important;\n        opacity: 0 !important;\n        pointer-events: none !important;\n      }\n      .sortable-ghost {\n        box-shadow: 0 0 0 2px var(--primary-color);\n        background: rgba(var(--rgb-primary-color), 0.25);\n        border-radius: 4px;\n        opacity: 0.4;\n      }\n      .sortable-drag {\n        border-radius: 4px;\n        opacity: 1;\n        background: var(--card-background-color);\n        box-shadow: 0px 4px 8px 3px #00000026;\n        cursor: grabbing;\n      }\n      /* Hide any fallback elements that might appear (mobile fix)*/\n      .sortable-fallback,\n      .sortable-fallback * {\n        display: none !important;\n        visibility: hidden !important;\n        opacity: 0 !important;\n        pointer-events: none !important;\n      }\n    "])));
   }
   constructor() {
     super();
@@ -10429,9 +7628,7 @@ class YampSortable extends i$1 {
     return this;
   }
   render() {
-    return x`
-      <slot></slot>
-    `;
+    return x(_templateObject2$2 || (_templateObject2$2 = _taggedTemplateLiteral(["\n      <slot></slot>\n    "])));
   }
   connectedCallback() {
     super.connectedCallback();
@@ -10524,8 +7721,7 @@ class YampSortable extends i$1 {
 }
 customElements.define("yamp-sortable", YampSortable);
 
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-// import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
+var _templateObject$1, _templateObject2$1, _templateObject3$1, _templateObject4$1, _templateObject5$1, _templateObject6$1, _templateObject7$1, _templateObject8$1, _templateObject9$1, _templateObject0$1, _templateObject1$1, _templateObject10$1, _templateObject11$1, _templateObject12$1, _templateObject13$1, _templateObject14$1, _templateObject15$1, _templateObject16$1, _templateObject17$1, _templateObject18$1, _templateObject19$1, _templateObject20$1, _templateObject21$1, _templateObject22$1, _templateObject23$1, _templateObject24$1, _templateObject25$1, _templateObject26$1, _templateObject27$1, _templateObject28$1, _templateObject29$1, _templateObject30$1, _templateObject31$1, _templateObject32$1, _templateObject33$1, _templateObject34$1, _templateObject35$1, _templateObject36$1, _templateObject37$1, _templateObject38$1, _templateObject39$1, _templateObject40$1, _templateObject41$1, _templateObject42$1, _templateObject43$1, _templateObject44$1;
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([{
   value: "details",
   label: "Now Playing Details"
@@ -10592,6 +7788,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     if (!Array.isArray(overrides)) return [];
     const matchKeys = ["media_title", "media_artist", "media_album_name", "media_content_id", "media_channel", "app_name", "media_content_type", "entity_id"];
     return overrides.map(item => {
+      var _item$image_url;
       if (!item || typeof item !== "object") {
         return {
           match_type: "media_title",
@@ -10602,10 +7799,11 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       }
       const sizePercentage = item.size_percentage;
       if (item.missing_art_url !== undefined) {
+        var _item$missing_art_url;
         return {
           match_type: "missing_art",
           match_value: "",
-          image_url: item.missing_art_url ?? "",
+          image_url: (_item$missing_art_url = item.missing_art_url) !== null && _item$missing_art_url !== void 0 ? _item$missing_art_url : "",
           size_percentage: sizePercentage
         };
       }
@@ -10613,46 +7811,47 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       let matchValue = "";
       for (const key of matchKeys) {
         if (item[key] !== undefined) {
+          var _item$key;
           matchType = key;
-          matchValue = item[key] ?? "";
+          matchValue = (_item$key = item[key]) !== null && _item$key !== void 0 ? _item$key : "";
           break;
         }
-        const legacyKey = `${key}_equals`;
+        const legacyKey = "".concat(key, "_equals");
         if (item[legacyKey] !== undefined) {
+          var _item$legacyKey;
           matchType = key;
-          matchValue = item[legacyKey] ?? "";
+          matchValue = (_item$legacyKey = item[legacyKey]) !== null && _item$legacyKey !== void 0 ? _item$legacyKey : "";
           break;
         }
       }
       return {
         match_type: matchType,
-        match_value: matchValue ?? "",
-        image_url: item.image_url ?? "",
+        match_value: matchValue !== null && matchValue !== void 0 ? matchValue : "",
+        image_url: (_item$image_url = item.image_url) !== null && _item$image_url !== void 0 ? _item$image_url : "",
         size_percentage: sizePercentage
       };
     });
   }
   _serializeArtworkOverride(rule) {
+    var _rule$image_url, _rule$match_value;
     if (!rule) return null;
-    const image = (rule.image_url ?? "").trim();
+    const image = ((_rule$image_url = rule.image_url) !== null && _rule$image_url !== void 0 ? _rule$image_url : "").trim();
     if (!image) return null;
     if (rule.match_type === "missing_art") {
-      return {
-        missing_art_url: image,
-        ...(rule.size_percentage !== undefined ? {
-          size_percentage: rule.size_percentage
-        } : {})
-      };
-    }
-    const value = (rule.match_value ?? "").trim();
-    if (!value) return null;
-    return {
-      image_url: image,
-      [rule.match_type]: value,
-      ...(rule.size_percentage !== undefined ? {
+      return _objectSpread2$1({
+        missing_art_url: image
+      }, rule.size_percentage !== undefined ? {
         size_percentage: rule.size_percentage
-      } : {})
-    };
+      } : {});
+    }
+    const value = ((_rule$match_value = rule.match_value) !== null && _rule$match_value !== void 0 ? _rule$match_value : "").trim();
+    if (!value) return null;
+    return _objectSpread2$1({
+      image_url: image,
+      [rule.match_type]: value
+    }, rule.size_percentage !== undefined ? {
+      size_percentage: rule.size_percentage
+    } : {});
   }
   _writeArtworkOverrides(list) {
     this._artworkOverrides = list;
@@ -10665,8 +7864,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     return Object.entries(this.hass.services).flatMap(_ref => {
       let [domain, services] = _ref;
       return Object.keys(services).map(svc => ({
-        label: `${domain}.${svc}`,
-        value: `${domain}.${svc}`
+        label: "".concat(domain, ".").concat(svc),
+        value: "".concat(domain, ".").concat(svc)
       }));
     });
   }
@@ -10690,21 +7889,20 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     return typeof val === "string" && /^[a-z_]+\.[a-zA-Z0-9_]+$/.test(val.trim());
   }
   setConfig(config) {
-    const rawEntities = config.entities ?? [];
+    var _config$entities;
+    const rawEntities = (_config$entities = config.entities) !== null && _config$entities !== void 0 ? _config$entities : [];
     const normalizedEntities = rawEntities.map(e => typeof e === "string" ? {
       entity_id: e
     } : e);
-    this._config = {
-      ...config,
+    this._config = _objectSpread2$1(_objectSpread2$1({}, config), {}, {
       entities: normalizedEntities
-    };
+    });
     this._artworkOverrides = this._normalizeArtworkOverrides(config.media_artwork_overrides);
   }
   _updateConfig(key, value) {
-    const newConfig = {
-      ...this._config,
+    const newConfig = _objectSpread2$1(_objectSpread2$1({}, this._config), {}, {
       [key]: value
-    };
+    });
     this._config = newConfig;
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: {
@@ -10715,7 +7913,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     }));
   }
   _addArtworkOverride() {
-    const list = [...(this._artworkOverrides ?? [])];
+    var _this$_artworkOverrid;
+    const list = [...((_this$_artworkOverrid = this._artworkOverrides) !== null && _this$_artworkOverrid !== void 0 ? _this$_artworkOverrid : [])];
     list.push({
       match_type: "media_title",
       match_value: "",
@@ -10725,19 +7924,20 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     this._writeArtworkOverrides(list);
   }
   _removeArtworkOverride(index) {
-    const list = [...(this._artworkOverrides ?? [])];
+    var _this$_artworkOverrid2;
+    const list = [...((_this$_artworkOverrid2 = this._artworkOverrides) !== null && _this$_artworkOverrid2 !== void 0 ? _this$_artworkOverrid2 : [])];
     if (index < 0 || index >= list.length) return;
     list.splice(index, 1);
     this._writeArtworkOverrides(list);
   }
   _onArtworkMatchTypeChange(index, newType) {
+    var _this$_artworkOverrid3;
     if (!newType) return;
-    const list = [...(this._artworkOverrides ?? [])];
+    const list = [...((_this$_artworkOverrid3 = this._artworkOverrides) !== null && _this$_artworkOverrid3 !== void 0 ? _this$_artworkOverrid3 : [])];
     if (!list[index]) return;
-    const updated = {
-      ...list[index],
+    const updated = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
       match_type: newType
-    };
+    });
     if (newType === "missing_art") {
       updated.match_value = "";
     }
@@ -10745,29 +7945,30 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     this._writeArtworkOverrides(list);
   }
   _onArtworkMatchValueChange(index, value) {
-    const list = [...(this._artworkOverrides ?? [])];
+    var _this$_artworkOverrid4;
+    const list = [...((_this$_artworkOverrid4 = this._artworkOverrides) !== null && _this$_artworkOverrid4 !== void 0 ? _this$_artworkOverrid4 : [])];
     if (!list[index]) return;
-    list[index] = {
-      ...list[index],
+    list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
       match_value: value
-    };
+    });
     this._writeArtworkOverrides(list);
   }
   _onArtworkImageUrlChange(index, value) {
-    const list = [...(this._artworkOverrides ?? [])];
+    var _this$_artworkOverrid5;
+    const list = [...((_this$_artworkOverrid5 = this._artworkOverrides) !== null && _this$_artworkOverrid5 !== void 0 ? _this$_artworkOverrid5 : [])];
     if (!list[index]) return;
-    list[index] = {
-      ...list[index],
+    list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
       image_url: value
-    };
+    });
     this._writeArtworkOverrides(list);
   }
   _onArtworkMoved(e) {
+    var _e$detail, _this$_artworkOverrid6;
     const {
       oldIndex,
       newIndex
-    } = e.detail ?? {};
-    const list = [...(this._artworkOverrides ?? [])];
+    } = (_e$detail = e.detail) !== null && _e$detail !== void 0 ? _e$detail : {};
+    const list = [...((_this$_artworkOverrid6 = this._artworkOverrides) !== null && _this$_artworkOverrid6 !== void 0 ? _this$_artworkOverrid6 : [])];
     if (oldIndex === undefined || newIndex === undefined) return;
     if (oldIndex < 0 || newIndex < 0 || oldIndex >= list.length || newIndex >= list.length) return;
     const [moved] = list.splice(oldIndex, 1);
@@ -10775,24 +7976,24 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     this._writeArtworkOverrides(list);
   }
   _updateEntityProperty(key, value) {
-    const entities = [...(this._config.entities ?? [])];
+    var _this$_config$entitie;
+    const entities = [...((_this$_config$entitie = this._config.entities) !== null && _this$_config$entitie !== void 0 ? _this$_config$entitie : [])];
     const idx = this._entityEditorIndex;
     if (entities[idx]) {
-      entities[idx] = {
-        ...entities[idx],
+      entities[idx] = _objectSpread2$1(_objectSpread2$1({}, entities[idx]), {}, {
         [key]: value
-      };
+      });
       this._updateConfig("entities", entities);
     }
   }
   _updateActionProperty(key, value) {
-    const actions = [...(this._config.actions ?? [])];
+    var _this$_config$actions;
+    const actions = [...((_this$_config$actions = this._config.actions) !== null && _this$_config$actions !== void 0 ? _this$_config$actions : [])];
     const idx = this._actionEditorIndex;
     if (actions[idx]) {
-      actions[idx] = {
-        ...actions[idx],
+      actions[idx] = _objectSpread2$1(_objectSpread2$1({}, actions[idx]), {}, {
         [key]: value
-      };
+      });
       this._updateConfig("actions", actions);
     }
   }
@@ -10804,392 +8005,27 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     return "service";
   }
   static get styles() {
-    return i$4`
-        .form-row {
-          padding: 12px 16px;
-          gap: 8px;
-        }
-        .tabs {
-          display: flex;
-          gap: 4px;
-          padding: 8px 8px 0 8px;
-          border-bottom: 1px solid var(--divider-color, #444);
-          overflow-x: auto;
-          scrollbar-width: none;
-        }
-        .tabs::-webkit-scrollbar {
-          display: none;
-        }
-        .tab {
-          background: transparent;
-          border: none;
-          color: var(--primary-text-color, #fff);
-          cursor: pointer;
-          padding: 9px 14px;
-          border-radius: 8px 8px 0 0;
-          font-weight: 500;
-          opacity: 0.85;
-          border-bottom: 3px solid transparent;
-          transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);
-          font-size: 1.06em;
-          flex: 0 0 auto;
-        }
-        
-        
-        .tab:hover {
-          opacity: 1;
-          color: var(--custom-accent, var(--accent-color, #ff9800));
-          background: rgba(255,255,255,0.06);
-        }
-        .tab[selected] {
-          background: rgba(255,255,255,0.10);
-          color: var(--primary-text-color, #fff);
-          opacity: 1;
-          border-bottom-color: var(--custom-accent, var(--accent-color, #ff9800));
-          box-shadow: 0 2px 0 0 var(--custom-accent, var(--accent-color, #ff9800)) inset;
-        }
-        .tab:focus-visible {
-          outline: 2px solid var(--custom-accent, var(--accent-color, #ff9800));
-          outline-offset: 2px;
-        }
-        .tab-content {
-          padding-top: 4px;
-        }
-        /* add to rows with multiple elements to align the elements horizontally */
-        .form-row-multi-column {
-          display: flex;
-          /*gap: 12px;*/
-        }
-        .form-row-multi-column > div {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .form-row-multi-column > div.number-input-with-note {
-          flex-direction: column;
-          align-items: stretch;
-          gap: 4px;
-        }
-        .config-subtitle.warning {
-          color: var(--error-color, #f44336);
-          font-style: normal;
-          margin-top: 6px;
-        }
-        #search-limit-reset {
-          align-self: flex-start;
-          margin-top: 6px;
-        }
-        .config-subtitle {
-          font-size: 0.85em;
-          color: var(--secondary-text-color, #888);
-          margin-top: 4px;
-          line-height: 1.3;
-          font-style: italic;
-        }
-        .form-label {
-          display: block;
-          font-weight: 600;
-          font-size: 0.95em;
-          color: var(--primary-text-color, #fff);
-          margin-bottom: 2px;
-        }
-        .form-row-compact {
-          padding-top: 4px;
-          padding-bottom: 4px;
-        }
-        /* reduced padding for entity selection subrows */
-        .entity-row {
-          padding: 6px;
-        }
-        /* visually isolate grouped controls */
-        .config-section,
-        .entity-group,
-        .action-group {
-          background: var(--yamp-section-bg, var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02))));
-          border: 1px solid var(--yamp-section-border, var(--divider-color, rgba(255,255,255,0.1)));
-          border-radius: var(--yamp-section-radius, 12px);
-          margin: 16px 0;
-          overflow: hidden;
-        }
-        .config-section:first-of-type,
-        .entity-group:first-of-type,
-        .action-group:first-of-type {
-          margin-top: 8px;
-        }
-        .config-section .form-row + .form-row,
-        .entity-group .form-row + .form-row,
-        .action-group .form-row + .form-row {
-          border-top: 1px solid var(--yamp-section-divider, rgba(255,255,255,0.06));
-        }
-        .section-header,
-        .entity-group-header,
-        .action-group-header {
-          display: block;
-          padding: 12px 16px 0 16px;
-          width: 100%;
-        }
-        .section-title,
-        .entity-group-title,
-        .action-group-title {
-          font-size: var(--yamp-section-title-size, 1em);
-          font-weight: var(--yamp-section-title-weight, 600);
-        }
-        .section-description {
-          display: block;
-          align-self: stretch;
-          font-size: var(--yamp-section-description-size, 0.9em);
-          color: var(--yamp-section-description-color, var(--secondary-text-color, #888));
-          margin-top: 2px;
-          line-height: 1.4;
-          width: 100%;
-          box-sizing: border-box;
-          padding-right: 24px;
-          white-space: normal;
-          word-break: break-word;
-          overflow-wrap: anywhere;
-        }
-        /* wraps the entity selector and edit button */
-        .entity-row-inner {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px;
-          margin: 0px;
-        }
-        /* wraps the action icon, name textbox and edit button */
-        .action-row-inner {
-          display: flex;
-          align-items: flex-start;
-          gap: 8px;
-          padding: 6px;
-          margin: 0px;
-        }
-        .action-row-inner > ha-icon {
-          margin-right: 5px;
-          margin-top: 0px;
-        }
-        /* allow children to fill all available space */
-        .grow-children {
-          flex: 1;
-          display: flex;
-        }
-        .grow-children > * {
-          flex: 1;
-          min-width: 0;
-        }
-        .entity-editor-header, .action-editor-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 8px;
-        }
-        .entity-editor-title, .action-editor-title {
-          font-weight: 500;
-          font-size: 1.1em;
-          line-height: 1;
-        }
-        .action-icon-placeholder {
-          width: 29px; 
-          height: 24px; 
-          display: inline-block;
-        }
-        .full-width {
-          width: 100%;
-        }
-        .entity-group-header,
-        .action-group-header {
-          width: 100%;
-        }
-        .entity-group-actions,
-        .action-group-actions {
-          display: flex;
-          align-items: center;
-        }
-        entity-row-actions {
-          display: flex;
-          align-items: center;
-        }
-        .action-row-actions {
-          display: flex;
-          align-items: flex-start;
-        }
-        .handle {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-          cursor: grab;
-          color: var(--secondary-text-color);
-          opacity: 0.7;
-          transition: opacity 0.2s ease;
-        }
-        .handle:hover {
-          opacity: 1;
-        }
-        .handle:active {
-          cursor: grabbing;
-        }
-        .handle-disabled {
-          opacity: 0.3;
-          cursor: default;
-          pointer-events: none;
-        }
-        .handle-disabled:hover {
-          opacity: 0.3;
-        }
-        .action-icon {
-          align-self: flex-start;
-          padding-top: 16px;
-        }
-        .action-handle {
-          align-self: flex-start;
-          padding-top: 18px;
-        }
-        .action-row-actions {
-          padding-top: 2px;
-        }
-        .service-data-editor-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding-bottom: 4px;
-        }
-        .service-data-editor-title {
-          font-weight: 500;
-        }
-        .service-data-editor-actions {
-          display: flex;
-          gap: 8px;
-        }
-        .code-editor-wrapper.error {
-          border: 1px solid color: var(--error-color, red);
-          border-radius: 4px;
-          padding: 1px;
-        }
-        .yaml-error-message {
-          color: var(--error-color, red);
-          font-size: 14px;
-          margin: 6px;
-          white-space: pre-wrap;
-          font-family: Consolas, Menlo, Monaco, monospace;
-          line-height: 1.4;
-        }
-        .help-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 8px;
-          font-size: 0.9em;
-        }
-        .help-table th,
-        .help-table td {
-          border: 1px solid var(--divider-color, #444);
-          padding: 8px;
-          text-align: left;
-          vertical-align: top;
-        }
-        .help-table thead {
-          background: var(--card-background-color, #222);
-          font-weight: bold;
-        }
-        .help-title {
-          font-weight: bold;
-          margin-top: 16px;
-          font-size: 1em;
-        }
-        code {
-          font-family: monospace;
-          background: rgba(255, 255, 255, 0.05);
-          padding: 2px 4px;
-          border-radius: 4px;
-        }
-        .help-text pre {
-          margin: 8px 0 0 0;
-          background: rgba(255, 255, 255, 0.05);
-          padding: 8px 12px;
-          border-radius: 8px;
-          font-family: monospace;
-          font-size: 0.92em;
-          white-space: pre-wrap;
-        } 
-        .icon-button {
-          display: inline-flex;
-          cursor: pointer;
-          position: relative;
-          transition: color 0.2s;
-          align-self: center;
-          align-items: center;
-          padding: 12px;
-        }
-        .icon-button-compact {
-          padding: 6px;
-        }
-        .icon-button:hover {
-          color: var(--primary-color, #2196f3);
-        }
-        .icon-button-disabled {
-          opacity: 0.4;
-          pointer-events: none;
-        }
-        .icon-button-toggle {
-          opacity: 0.8;
-        }
-        .icon-button-toggle.active {
-          color: var(--custom-accent, var(--accent-color, #ff9800));
-          opacity: 1;
-        }
-        .help-text {
-          padding: 12px 25px;
-        }
-        .add-action-button-wrapper {
-          display: flex;
-          justify-content: center;
-        }
-        .artwork-row .artwork-fields {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          flex: 1;
-        }
-        .config-subtitle.small {
-          font-size: 0.9em;
-          opacity: 0.75;
-          margin: 2px 0 0 0;
-        }
-      `;
+    return i$4(_templateObject$1 || (_templateObject$1 = _taggedTemplateLiteral(["\n        .form-row {\n          padding: 12px 16px;\n          gap: 8px;\n        }\n        .tabs {\n          display: flex;\n          gap: 4px;\n          padding: 8px 8px 0 8px;\n          border-bottom: 1px solid var(--divider-color, #444);\n          overflow-x: auto;\n          scrollbar-width: none;\n        }\n        .tabs::-webkit-scrollbar {\n          display: none;\n        }\n        .tab {\n          background: transparent;\n          border: none;\n          color: var(--primary-text-color, #fff);\n          cursor: pointer;\n          padding: 9px 14px;\n          border-radius: 8px 8px 0 0;\n          font-weight: 500;\n          opacity: 0.85;\n          border-bottom: 3px solid transparent;\n          transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);\n          font-size: 1.06em;\n          flex: 0 0 auto;\n        }\n        \n        \n        .tab:hover {\n          opacity: 1;\n          color: var(--custom-accent, var(--accent-color, #ff9800));\n          background: rgba(255,255,255,0.06);\n        }\n        .tab[selected] {\n          background: rgba(255,255,255,0.10);\n          color: var(--primary-text-color, #fff);\n          opacity: 1;\n          border-bottom-color: var(--custom-accent, var(--accent-color, #ff9800));\n          box-shadow: 0 2px 0 0 var(--custom-accent, var(--accent-color, #ff9800)) inset;\n        }\n        .tab:focus-visible {\n          outline: 2px solid var(--custom-accent, var(--accent-color, #ff9800));\n          outline-offset: 2px;\n        }\n        .tab-content {\n          padding-top: 4px;\n        }\n        /* add to rows with multiple elements to align the elements horizontally */\n        .form-row-multi-column {\n          display: flex;\n          /*gap: 12px;*/\n        }\n        .form-row-multi-column > div {\n          flex: 1;\n          display: flex;\n          align-items: center;\n          gap: 8px;\n        }\n        .form-row-multi-column > div.number-input-with-note {\n          flex-direction: column;\n          align-items: stretch;\n          gap: 4px;\n        }\n        .config-subtitle.warning {\n          color: var(--error-color, #f44336);\n          font-style: normal;\n          margin-top: 6px;\n        }\n        #search-limit-reset {\n          align-self: flex-start;\n          margin-top: 6px;\n        }\n        .config-subtitle {\n          font-size: 0.85em;\n          color: var(--secondary-text-color, #888);\n          margin-top: 4px;\n          line-height: 1.3;\n          font-style: italic;\n        }\n        .form-label {\n          display: block;\n          font-weight: 600;\n          font-size: 0.95em;\n          color: var(--primary-text-color, #fff);\n          margin-bottom: 2px;\n        }\n        .form-row-compact {\n          padding-top: 4px;\n          padding-bottom: 4px;\n        }\n        /* reduced padding for entity selection subrows */\n        .entity-row {\n          padding: 6px;\n        }\n        /* visually isolate grouped controls */\n        .config-section,\n        .entity-group,\n        .action-group {\n          background: var(--yamp-section-bg, var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02))));\n          border: 1px solid var(--yamp-section-border, var(--divider-color, rgba(255,255,255,0.1)));\n          border-radius: var(--yamp-section-radius, 12px);\n          margin: 16px 0;\n          overflow: hidden;\n        }\n        .config-section:first-of-type,\n        .entity-group:first-of-type,\n        .action-group:first-of-type {\n          margin-top: 8px;\n        }\n        .config-section .form-row + .form-row,\n        .entity-group .form-row + .form-row,\n        .action-group .form-row + .form-row {\n          border-top: 1px solid var(--yamp-section-divider, rgba(255,255,255,0.06));\n        }\n        .section-header,\n        .entity-group-header,\n        .action-group-header {\n          display: block;\n          padding: 12px 16px 0 16px;\n          width: 100%;\n        }\n        .section-title,\n        .entity-group-title,\n        .action-group-title {\n          font-size: var(--yamp-section-title-size, 1em);\n          font-weight: var(--yamp-section-title-weight, 600);\n        }\n        .section-description {\n          display: block;\n          align-self: stretch;\n          font-size: var(--yamp-section-description-size, 0.9em);\n          color: var(--yamp-section-description-color, var(--secondary-text-color, #888));\n          margin-top: 2px;\n          line-height: 1.4;\n          width: 100%;\n          box-sizing: border-box;\n          padding-right: 24px;\n          white-space: normal;\n          word-break: break-word;\n          overflow-wrap: anywhere;\n        }\n        /* wraps the entity selector and edit button */\n        .entity-row-inner {\n          display: flex;\n          align-items: center;\n          gap: 8px;\n          padding: 6px;\n          margin: 0px;\n        }\n        /* wraps the action icon, name textbox and edit button */\n        .action-row-inner {\n          display: flex;\n          align-items: flex-start;\n          gap: 8px;\n          padding: 6px;\n          margin: 0px;\n        }\n        .action-row-inner > ha-icon {\n          margin-right: 5px;\n          margin-top: 0px;\n        }\n        /* allow children to fill all available space */\n        .grow-children {\n          flex: 1;\n          display: flex;\n        }\n        .grow-children > * {\n          flex: 1;\n          min-width: 0;\n        }\n        .entity-editor-header, .action-editor-header {\n          display: flex;\n          align-items: center;\n          gap: 12px;\n          padding: 8px;\n        }\n        .entity-editor-title, .action-editor-title {\n          font-weight: 500;\n          font-size: 1.1em;\n          line-height: 1;\n        }\n        .action-icon-placeholder {\n          width: 29px; \n          height: 24px; \n          display: inline-block;\n        }\n        .full-width {\n          width: 100%;\n        }\n        .entity-group-header,\n        .action-group-header {\n          width: 100%;\n        }\n        .entity-group-actions,\n        .action-group-actions {\n          display: flex;\n          align-items: center;\n        }\n        entity-row-actions {\n          display: flex;\n          align-items: center;\n        }\n        .action-row-actions {\n          display: flex;\n          align-items: flex-start;\n        }\n        .handle {\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          width: 24px;\n          height: 24px;\n          cursor: grab;\n          color: var(--secondary-text-color);\n          opacity: 0.7;\n          transition: opacity 0.2s ease;\n        }\n        .handle:hover {\n          opacity: 1;\n        }\n        .handle:active {\n          cursor: grabbing;\n        }\n        .handle-disabled {\n          opacity: 0.3;\n          cursor: default;\n          pointer-events: none;\n        }\n        .handle-disabled:hover {\n          opacity: 0.3;\n        }\n        .action-icon {\n          align-self: flex-start;\n          padding-top: 16px;\n        }\n        .action-handle {\n          align-self: flex-start;\n          padding-top: 18px;\n        }\n        .action-row-actions {\n          padding-top: 2px;\n        }\n        .service-data-editor-header {\n          display: flex;\n          align-items: center;\n          justify-content: space-between;\n          padding-bottom: 4px;\n        }\n        .service-data-editor-title {\n          font-weight: 500;\n        }\n        .service-data-editor-actions {\n          display: flex;\n          gap: 8px;\n        }\n        .code-editor-wrapper.error {\n          border: 1px solid color: var(--error-color, red);\n          border-radius: 4px;\n          padding: 1px;\n        }\n        .yaml-error-message {\n          color: var(--error-color, red);\n          font-size: 14px;\n          margin: 6px;\n          white-space: pre-wrap;\n          font-family: Consolas, Menlo, Monaco, monospace;\n          line-height: 1.4;\n        }\n        .help-table {\n          width: 100%;\n          border-collapse: collapse;\n          margin-top: 8px;\n          font-size: 0.9em;\n        }\n        .help-table th,\n        .help-table td {\n          border: 1px solid var(--divider-color, #444);\n          padding: 8px;\n          text-align: left;\n          vertical-align: top;\n        }\n        .help-table thead {\n          background: var(--card-background-color, #222);\n          font-weight: bold;\n        }\n        .help-title {\n          font-weight: bold;\n          margin-top: 16px;\n          font-size: 1em;\n        }\n        code {\n          font-family: monospace;\n          background: rgba(255, 255, 255, 0.05);\n          padding: 2px 4px;\n          border-radius: 4px;\n        }\n        .help-text pre {\n          margin: 8px 0 0 0;\n          background: rgba(255, 255, 255, 0.05);\n          padding: 8px 12px;\n          border-radius: 8px;\n          font-family: monospace;\n          font-size: 0.92em;\n          white-space: pre-wrap;\n        } \n        .icon-button {\n          display: inline-flex;\n          cursor: pointer;\n          position: relative;\n          transition: color 0.2s;\n          align-self: center;\n          align-items: center;\n          padding: 12px;\n        }\n        .icon-button-compact {\n          padding: 6px;\n        }\n        .icon-button:hover {\n          color: var(--primary-color, #2196f3);\n        }\n        .icon-button-disabled {\n          opacity: 0.4;\n          pointer-events: none;\n        }\n        .icon-button-toggle {\n          opacity: 0.8;\n        }\n        .icon-button-toggle.active {\n          color: var(--custom-accent, var(--accent-color, #ff9800));\n          opacity: 1;\n        }\n        .help-text {\n          padding: 12px 25px;\n        }\n        .add-action-button-wrapper {\n          display: flex;\n          justify-content: center;\n        }\n        .artwork-row .artwork-fields {\n          display: flex;\n          flex-direction: column;\n          gap: 8px;\n          flex: 1;\n        }\n        .config-subtitle.small {\n          font-size: 0.9em;\n          opacity: 0.75;\n          margin: 2px 0 0 0;\n        }\n      "])));
   }
   render() {
-    var _this$_config$entitie, _this$_config$actions;
-    if (!this._config) return x``;
+    var _this$_config$entitie2, _this$_config$actions2;
+    if (!this._config) return x(_templateObject2$1 || (_templateObject2$1 = _taggedTemplateLiteral([""])));
 
     // When editing an entity/action, keep tabs visible but show editor content
     const editingEntity = this._entityEditorIndex !== null;
     const editingAction = this._actionEditorIndex !== null;
-    return x`
-        <div class="tabs">
-          ${["Entities", "Behavior", "Look and Feel", "Artwork", "Actions"].map(name => x`
-            <button
-              class="tab" ${this._activeTab === name ? 'selected' : ''}
-              @click=${() => {
+    return x(_templateObject3$1 || (_templateObject3$1 = _taggedTemplateLiteral(["\n        <div class=\"tabs\">\n          ", "\n        </div>\n        <div class=\"tab-content\">\n          ", "\n        </div>\n      "])), ["Entities", "Behavior", "Look and Feel", "Artwork", "Actions"].map(name => x(_templateObject4$1 || (_templateObject4$1 = _taggedTemplateLiteral(["\n            <button\n              class=\"tab\" ", "\n              @click=", "\n              ?selected=", "\n            >", "</button>\n          "])), this._activeTab === name ? 'selected' : '', () => {
       this._activeTab = name;
       // Exit any sub-editor when switching tabs
       this._entityEditorIndex = null;
       this._actionEditorIndex = null;
       this._useTemplate = null;
       this._useVolTemplate = null;
-    }}
-              ?selected=${this._activeTab === name}
-            >${name}</button>
-          `)}
-        </div>
-        <div class="tab-content">
-          ${editingEntity ? this._renderEntityEditor((_this$_config$entitie = this._config.entities) === null || _this$_config$entitie === void 0 ? void 0 : _this$_config$entitie[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions = this._config.actions) === null || _this$_config$actions === void 0 ? void 0 : _this$_config$actions[this._actionEditorIndex]) : this._renderActiveTab()}
-        </div>
-      `;
+    }, this._activeTab === name, name)), editingEntity ? this._renderEntityEditor((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions2 = this._config.actions) === null || _this$_config$actions2 === void 0 ? void 0 : _this$_config$actions2[this._actionEditorIndex]) : this._renderActiveTab());
   }
   _renderArtworkTab() {
-    const overrides = [...(this._artworkOverrides ?? [])];
+    var _this$_artworkOverrid7, _this$_config$artwork, _this$_config$extend_, _this$_useIdleImageUr, _this$_config$idle_im, _this$_config$idle_im2;
+    const overrides = [...((_this$_artworkOverrid7 = this._artworkOverrides) !== null && _this$_artworkOverrid7 !== void 0 ? _this$_artworkOverrid7 : [])];
     const matchOptions = [{
       value: "media_title",
       label: "Media Title"
@@ -11218,18 +8054,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       value: "missing_art",
       label: "Missing Artwork"
     }];
-    return x`
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">Artwork Fit</div>
-            <div class="section-description">Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                label="Artwork Fit"
-                .selector=${{
+    return x(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Artwork Fit</div>\n            <div class=\"section-description\">Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"Artwork Fit\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"display:flex;align-items:center;gap:12px;flex:1;\">\n              <ha-switch\n                id=\"extend-artwork-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <div>\n                <div>Extend artwork</div>\n                <div class=\"config-subtitle small\">Let the artwork background continue underneath the chip and action rows.</div>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle Artwork</div>\n            <div class=\"section-description\">Show a static image or entity snapshot whenever nothing is playing.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"display: flex; align-items: center; gap: 8px; flex: 1;\">\n              <ha-switch\n                id=\"idle-image-url-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"idle-image-url-toggle\">Use URL or Path</label>\n            </div>\n            <div style=\"flex: 2;\">\n              ", "\n            </div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Artwork Overrides</div>\n            <div class=\"section-description\">Overrides are evaluated from top to bottom. Drag to reorder.</div>\n          </div>\n          <yamp-sortable @item-moved=", ">\n            <div class=\"sortable-container\">\n              ", "\n            </div>\n          </yamp-sortable>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Artwork Override\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n        </div>\n\n      "])), this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -11249,151 +8074,25 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "None"
         }]
       }
-    }}
-                .value=${this._config.artwork_object_fit ?? "cover"}
-                @value-changed=${e => {
+    }, (_this$_config$artwork = this._config.artwork_object_fit) !== null && _this$_config$artwork !== void 0 ? _this$_config$artwork : "cover", e => {
       const value = e.detail.value;
       this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
-    }}
-              ></ha-selector>
-            </div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div style="display:flex;align-items:center;gap:12px;flex:1;">
-              <ha-switch
-                id="extend-artwork-toggle"
-                .checked=${this._config.extend_artwork ?? false}
-                @change=${e => this._updateConfig("extend_artwork", e.target.checked)}
-              ></ha-switch>
-              <div>
-                <div>Extend artwork</div>
-                <div class="config-subtitle small">Let the artwork background continue underneath the chip and action rows.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">Idle Artwork</div>
-            <div class="section-description">Show a static image or entity snapshot whenever nothing is playing.</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-              <ha-switch
-                id="idle-image-url-toggle"
-                .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
-                @change=${e => {
+    }, (_this$_config$extend_ = this._config.extend_artwork) !== null && _this$_config$extend_ !== void 0 ? _this$_config$extend_ : false, e => this._updateConfig("extend_artwork", e.target.checked), (_this$_useIdleImageUr = this._useIdleImageUrl) !== null && _this$_useIdleImageUr !== void 0 ? _this$_useIdleImageUr : this._looksLikeUrlOrPath(this._config.idle_image), e => {
       this._useIdleImageUrl = e.target.checked;
       if (e.target.checked) {
         this._updateConfig("idle_image", "");
       } else {
         this._updateConfig("idle_image", "");
       }
-    }}
-              ></ha-switch>
-              <label for="idle-image-url-toggle">Use URL or Path</label>
-            </div>
-            <div style="flex: 2;">
-              ${this._useIdleImageUrl ? x`
-                <ha-textfield
-                  class="full-width"
-                  placeholder="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
-                  .value=${this._config.idle_image ?? ""}
-                  @input=${e => this._updateConfig("idle_image", e.target.value)}
-                  helper="Enter a direct URL to an image or a local file path"
-                  .helperPersistent=${true}
-                ></ha-textfield>
-              ` : x`
-                <ha-entity-picker
-                  class="full-width"
-                  .hass=${this.hass}
-                  .value=${this._config.idle_image ?? ""}
-                  .includeDomains=${["camera", "image"]}
-                  clearable
-                  @value-changed=${e => this._updateConfig("idle_image", e.detail.value)}
-                ></ha-entity-picker>
-              `}
-            </div>
-          </div>
-        </div>
-
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">Artwork Overrides</div>
-            <div class="section-description">Overrides are evaluated from top to bottom. Drag to reorder.</div>
-          </div>
-          <yamp-sortable @item-moved=${e => this._onArtworkMoved(e)}>
-            <div class="sortable-container">
-              ${overrides.length ? overrides.map((rule, idx) => x`
-                    <div class="action-row-inner sortable-item artwork-row">
-                      <div class="handle action-handle">
-                        <ha-icon icon="mdi:drag"></ha-icon>
-                      </div>
-                      <div class="artwork-fields">
-                        <ha-selector
-                          .hass=${this.hass}
-                          label="Match Field"
-                          .selector=${{
-      select: {
-        mode: "dropdown",
-        options: matchOptions
-      }
-    }}
-                          .value=${rule.match_type ?? "media_title"}
-                          @value-changed=${e => this._onArtworkMatchTypeChange(idx, e.detail.value)}
-                        ></ha-selector>
-                        ${rule.match_type === "missing_art" ? x`
-                                <div class="config-subtitle small">
-                                  Applies when the selected media provides no artwork.
-                                </div>
-                              ` : rule.match_type === "entity_id" ? x`
-                                  <ha-entity-picker
-                                    class="full-width"
-                                    .hass=${this.hass}
-                                    .includeDomains=${["media_player"]}
-                                    .value=${rule.match_value ?? ""}
-                                    @value-changed=${e => this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                  ></ha-entity-picker>
-                                ` : x`
-                                  <ha-textfield
-                                    class="full-width"
-                                    label="Match Value"
-                                    .value=${rule.match_value ?? ""}
-                                    @input=${e => this._onArtworkMatchValueChange(idx, e.target.value)}
-                                  ></ha-textfield>
-                                `}
-                        <ha-textfield
-                          class="full-width"
-                          label=${rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL"}
-                          .value=${rule.image_url ?? ""}
-                          @input=${e => this._onArtworkImageUrlChange(idx, e.target.value)}
-                        ></ha-textfield>
-                      </div>
-                      <div class="action-row-actions">
-                        <ha-icon
-                          class="icon-button"
-                          icon="mdi:trash-can"
-                          title="Delete Override"
-                          @click=${() => this._removeArtworkOverride(idx)}
-                        ></ha-icon>
-                      </div>
-                    </div>
-                  `) : x`<div class="config-subtitle" style="padding:12px 0;text-align:center;">No artwork overrides configured. Use the plus button below to add one.</div>`}
-            </div>
-          </yamp-sortable>
-          <div class="add-action-button-wrapper">
-            <ha-icon
-              class="icon-button"
-              icon="mdi:plus"
-              title="Add Artwork Override"
-              @click=${this._addArtworkOverride}
-            ></ha-icon>
-          </div>
-        </div>
-        </div>
-
-      `;
+    }, this._useIdleImageUrl ? x(_templateObject6$1 || (_templateObject6$1 = _taggedTemplateLiteral(["\n                <ha-textfield\n                  class=\"full-width\"\n                  placeholder=\"e.g., https://example.com/image.jpg or /local/custom/image.jpg\"\n                  .value=", "\n                  @input=", "\n                  helper=\"Enter a direct URL to an image or a local file path\"\n                  .helperPersistent=", "\n                ></ha-textfield>\n              "])), (_this$_config$idle_im = this._config.idle_image) !== null && _this$_config$idle_im !== void 0 ? _this$_config$idle_im : "", e => this._updateConfig("idle_image", e.target.value), true) : x(_templateObject7$1 || (_templateObject7$1 = _taggedTemplateLiteral(["\n                <ha-entity-picker\n                  class=\"full-width\"\n                  .hass=", "\n                  .value=", "\n                  .includeDomains=", "\n                  clearable\n                  @value-changed=", "\n                ></ha-entity-picker>\n              "])), this.hass, (_this$_config$idle_im2 = this._config.idle_image) !== null && _this$_config$idle_im2 !== void 0 ? _this$_config$idle_im2 : "", ["camera", "image"], e => this._updateConfig("idle_image", e.detail.value)), e => this._onArtworkMoved(e), overrides.length ? overrides.map((rule, idx) => {
+      var _rule$match_type, _rule$match_value2, _rule$match_value3, _rule$image_url2;
+      return x(_templateObject8$1 || (_templateObject8$1 = _taggedTemplateLiteral(["\n                    <div class=\"action-row-inner sortable-item artwork-row\">\n                      <div class=\"handle action-handle\">\n                        <ha-icon icon=\"mdi:drag\"></ha-icon>\n                      </div>\n                      <div class=\"artwork-fields\">\n                        <ha-selector\n                          .hass=", "\n                          label=\"Match Field\"\n                          .selector=", "\n                          .value=", "\n                          @value-changed=", "\n                        ></ha-selector>\n                        ", "\n                        <ha-textfield\n                          class=\"full-width\"\n                          label=", "\n                          .value=", "\n                          @input=", "\n                        ></ha-textfield>\n                      </div>\n                      <div class=\"action-row-actions\">\n                        <ha-icon\n                          class=\"icon-button\"\n                          icon=\"mdi:trash-can\"\n                          title=\"Delete Override\"\n                          @click=", "\n                        ></ha-icon>\n                      </div>\n                    </div>\n                  "])), this.hass, {
+        select: {
+          mode: "dropdown",
+          options: matchOptions
+        }
+      }, (_rule$match_type = rule.match_type) !== null && _rule$match_type !== void 0 ? _rule$match_type : "media_title", e => this._onArtworkMatchTypeChange(idx, e.detail.value), rule.match_type === "missing_art" ? x(_templateObject9$1 || (_templateObject9$1 = _taggedTemplateLiteral(["\n                                <div class=\"config-subtitle small\">\n                                  Applies when the selected media provides no artwork.\n                                </div>\n                              "]))) : rule.match_type === "entity_id" ? x(_templateObject0$1 || (_templateObject0$1 = _taggedTemplateLiteral(["\n                                  <ha-entity-picker\n                                    class=\"full-width\"\n                                    .hass=", "\n                                    .includeDomains=", "\n                                    .value=", "\n                                    @value-changed=", "\n                                  ></ha-entity-picker>\n                                "])), this.hass, ["media_player"], (_rule$match_value2 = rule.match_value) !== null && _rule$match_value2 !== void 0 ? _rule$match_value2 : "", e => this._onArtworkMatchValueChange(idx, e.detail.value)) : x(_templateObject1$1 || (_templateObject1$1 = _taggedTemplateLiteral(["\n                                  <ha-textfield\n                                    class=\"full-width\"\n                                    label=\"Match Value\"\n                                    .value=", "\n                                    @input=", "\n                                  ></ha-textfield>\n                                "])), (_rule$match_value3 = rule.match_value) !== null && _rule$match_value3 !== void 0 ? _rule$match_value3 : "", e => this._onArtworkMatchValueChange(idx, e.target.value)), rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL", (_rule$image_url2 = rule.image_url) !== null && _rule$image_url2 !== void 0 ? _rule$image_url2 : "", e => this._onArtworkImageUrlChange(idx, e.target.value), () => this._removeArtworkOverride(idx));
+    }) : x(_templateObject10$1 || (_templateObject10$1 = _taggedTemplateLiteral(["<div class=\"config-subtitle\" style=\"padding:12px 0;text-align:center;\">No artwork overrides configured. Use the plus button below to add one.</div>"]))), this._addArtworkOverride);
   }
   _renderActiveTab() {
     switch (this._activeTab) {
@@ -11412,107 +8111,34 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     }
   }
   _renderEntitiesTab() {
-    if (!this._config) return x``;
-    let entities = [...(this._config.entities ?? [])];
+    var _this$_config$entitie3;
+    if (!this._config) return x(_templateObject11$1 || (_templateObject11$1 = _taggedTemplateLiteral([""])));
+    let entities = [...((_this$_config$entitie3 = this._config.entities) !== null && _this$_config$entitie3 !== void 0 ? _this$_config$entitie3 : [])];
     if (entities.length === 0 || entities[entities.length - 1].entity_id) {
       entities.push({
         entity_id: ""
       });
     }
-    return x`
-        <div class="entity-group">
-          <div class="entity-group-header section-header">
-            <div class="entity-group-title section-title">Entities*</div>
-            <div class="section-description">Add the media players you want to control. Drag entities to reorder the chip row.</div>
-          </div>
-          <div class="form-row">
-            <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
-              <div class="sortable-container">
-                ${entities.map((ent, idx) => {
-      var _this$_config$entitie2;
-      return x`
-                  <div class="entity-row-inner ${idx < entities.length - 1 ? 'sortable-item' : ''}" data-index="${idx}">
-                    <div class="handle ${idx === entities.length - 1 ? 'handle-disabled' : ''}">
-                      <ha-icon icon="mdi:drag"></ha-icon>
-                    </div>
-                    <div class="grow-children">
-                      ${idx === entities.length - 1 && !ent.entity_id ? x`
-                            <ha-entity-picker
-                              .hass=${this.hass}
-                              .value=${ent.entity_id}
-                              .includeDomains=${["media_player"]}
-                              .excludeEntities=${((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2.map(e => e.entity_id)) ?? []}
-                              clearable
-                              @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                            ></ha-entity-picker>
-                          ` : x`
-                            <ha-selector
-                              .hass=${this.hass}
-                              .selector=${{
+    return x(_templateObject12$1 || (_templateObject12$1 = _taggedTemplateLiteral(["\n        <div class=\"entity-group\">\n          <div class=\"entity-group-header section-header\">\n            <div class=\"entity-group-title section-title\">Entities*</div>\n            <div class=\"section-description\">Add the media players you want to control. Drag entities to reorder the chip row.</div>\n          </div>\n          <div class=\"form-row\">\n            <yamp-sortable @item-moved=", ">\n              <div class=\"sortable-container\">\n                ", "\n              </div>\n            </yamp-sortable>\n          </div>\n        </div>\n      "])), e => this._onEntityMoved(e), entities.map((ent, idx) => {
+      var _this$_config$entitie4, _this$_config$entitie5;
+      return x(_templateObject13$1 || (_templateObject13$1 = _taggedTemplateLiteral(["\n                  <div class=\"entity-row-inner ", "\" data-index=\"", "\">\n                    <div class=\"handle ", "\">\n                      <ha-icon icon=\"mdi:drag\"></ha-icon>\n                    </div>\n                    <div class=\"grow-children\">\n                      ", "\n                    </div>\n                    <div class=\"entity-row-actions\">\n                      <ha-icon\n                        class=\"icon-button ", "\"\n                        icon=\"mdi:pencil\"\n                        title=\"Edit Entity Settings\"\n                        @click=", "\n                      ></ha-icon>\n                    </div>\n                  </div>\n                "])), idx < entities.length - 1 ? 'sortable-item' : '', idx, idx === entities.length - 1 ? 'handle-disabled' : '', idx === entities.length - 1 && !ent.entity_id ? x(_templateObject14$1 || (_templateObject14$1 = _taggedTemplateLiteral(["\n                            <ha-entity-picker\n                              .hass=", "\n                              .value=", "\n                              .includeDomains=", "\n                              .excludeEntities=", "\n                              clearable\n                              @value-changed=", "\n                            ></ha-entity-picker>\n                          "])), this.hass, ent.entity_id, ["media_player"], (_this$_config$entitie4 = (_this$_config$entitie5 = this._config.entities) === null || _this$_config$entitie5 === void 0 ? void 0 : _this$_config$entitie5.map(e => e.entity_id)) !== null && _this$_config$entitie4 !== void 0 ? _this$_config$entitie4 : [], e => this._onEntityChanged(idx, e.detail.value)) : x(_templateObject15$1 || (_templateObject15$1 = _taggedTemplateLiteral(["\n                            <ha-selector\n                              .hass=", "\n                              .selector=", "\n                              .value=", "\n                              clearable\n                              @value-changed=", "\n                            ></ha-selector>\n                          "])), this.hass, {
         entity: {
           domain: "media_player"
         }
-      }}
-                              .value=${ent.entity_id}
-                              clearable
-                              @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                            ></ha-selector>
-                          `}
-                    </div>
-                    <div class="entity-row-actions">
-                      <ha-icon
-                        class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
-                        icon="mdi:pencil"
-                        title="Edit Entity Settings"
-                        @click=${() => this._onEditEntity(idx)}
-                      ></ha-icon>
-                    </div>
-                  </div>
-                `;
-    })}
-              </div>
-            </yamp-sortable>
-          </div>
-        </div>
-      `;
+      }, ent.entity_id, e => this._onEntityChanged(idx, e.detail.value)), !ent.entity_id ? "icon-button-disabled" : "", () => this._onEditEntity(idx));
+    }));
   }
   _renderBehaviorTab() {
+    var _this$_config$idle_ti, _this$_config$show_ch, _this$_config$hold_to, _this$_config$search_, _this$_config$search_2;
     const searchLimitWarningActive = Number(this._config.search_results_limit) > 100;
-    return x`
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">Idle & Chips</div>
-            <div class="section-description">Choose when the card goes idle and how entity chips behave.</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                .selector=${{
+    return x(_templateObject16$1 || (_templateObject16$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle & Chips</div>\n            <div class=\"section-description\">Choose when the card goes idle and how entity chips behave.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                .selector=", "\n                .value=", "\n                label=\"Idle Timeout (ms)\"\n                @value-changed=", "\n              ></ha-selector>\n              <div class=\"config-subtitle\">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Show Chip Row\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay.</div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Interactions & Search</div>\n            <div class=\"section-description\">Fine-tune how entities are pinned and how many results show at once.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"hold-to-pin-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Hold to Pin</span>\n            </div>\n            <div class=\"config-subtitle\">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>\n          </div>\n            <div class=\"form-row form-row-multi-column\">\n              <div class=\"grow-children number-input-with-note\">\n                <ha-selector-number\n                  .selector=", "\n                  .value=", "\n                  label=\"Search Results Limit\"\n                  helper=\"Maximum number of search results to display (1-1000, default: 20)\"\n                  @value-changed=", "\n                ></ha-selector-number>\n                ", "\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              id=\"search-limit-reset\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Result Sorting\"\n              helper=\"Choose how search results are ordered. Default keeps the source order.\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n      "])), this.hass, {
       number: {
         min: 0,
         step: 1000,
         unit_of_measurement: "ms",
         mode: "box"
       }
-    }}
-                .value=${this._config.idle_timeout_ms ?? 60000}
-                label="Idle Timeout (ms)"
-                @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
-              ></ha-selector>
-              <div class="config-subtitle">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>
-            </div>
-            <ha-icon
-              class="icon-button"
-              icon="mdi:restore"
-              title="Reset to default"
-              @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
-            ></ha-icon>
-          </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
+    }, (_this$_config$idle_ti = this._config.idle_timeout_ms) !== null && _this$_config$idle_ti !== void 0 ? _this$_config$idle_ti : 60000, e => this._updateConfig("idle_timeout_ms", e.detail.value), () => this._updateConfig("idle_timeout_ms", 60000), this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -11526,65 +8152,14 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "In Menu"
         }]
       }
-    }}
-              .value=${this._config.show_chip_row ?? "auto"}
-              label="Show Chip Row"
-              @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
-            ></ha-selector>
-            <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
-          </div>
-        </div>
-
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">Interactions & Search</div>
-            <div class="section-description">Fine-tune how entities are pinned and how many results show at once.</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="hold-to-pin-toggle"
-                .checked=${this._config.hold_to_pin ?? false}
-                @change=${e => this._updateConfig("hold_to_pin", e.target.checked)}
-              ></ha-switch>
-              <span>Hold to Pin</span>
-            </div>
-            <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
-          </div>
-            <div class="form-row form-row-multi-column">
-              <div class="grow-children number-input-with-note">
-                <ha-selector-number
-                  .selector=${{
+    }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", e => this._updateConfig("show_chip_row", e.detail.value), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), {
       number: {
         min: 0,
         max: 1000,
         step: 1,
         mode: "box"
       }
-    }}
-                  .value=${this._config.search_results_limit ?? 20}
-                  label="Search Results Limit"
-                  helper="Maximum number of search results to display (1-1000, default: 20)"
-                  @value-changed=${e => this._updateConfig("search_results_limit", e.detail.value)}
-                ></ha-selector-number>
-                ${searchLimitWarningActive ? x`
-                  <div class="config-subtitle warning">
-                    Warning: requesting higher results can cause performance issues.
-                  </div>
-                ` : E}
-            </div>
-            <ha-icon
-              class="icon-button"
-              id="search-limit-reset"
-              icon="mdi:restore"
-              title="Reset to default"
-              @click=${() => this._updateConfig("search_results_limit", 20)}
-            ></ha-icon>
-          </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
+    }, (_this$_config$search_ = this._config.search_results_limit) !== null && _this$_config$search_ !== void 0 ? _this$_config$search_ : 20, e => this._updateConfig("search_results_limit", e.detail.value), searchLimitWarningActive ? x(_templateObject17$1 || (_templateObject17$1 = _taggedTemplateLiteral(["\n                  <div class=\"config-subtitle warning\">\n                    Warning: requesting higher results can cause performance issues.\n                  </div>\n                "]))) : E, () => this._updateConfig("search_results_limit", 20), this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -11604,23 +8179,11 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "Artist Descending"
         }]
       }
-    }}
-              .value=${this._config.search_results_sort ?? "default"}
-              label="Result Sorting"
-              helper="Choose how search results are ordered. Default keeps the source order."
-              @value-changed=${e => this._updateConfig("search_results_sort", e.detail.value)}
-            ></ha-selector>
-          </div>
-        </div>
-      `;
+    }, (_this$_config$search_2 = this._config.search_results_sort) !== null && _this$_config$search_2 !== void 0 ? _this$_config$search_2 : "default", e => this._updateConfig("search_results_sort", e.detail.value));
   }
   _renderVisualTab() {
-    const renderVolumeStep = this._config.volume_mode === "stepper" ? x`
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                .selector=${{
+    var _this$_config$volume_, _this$_config$match_t, _this$_config$alterna, _this$_config$card_he, _this$_config$adaptiv, _this$_config$hide_ac, _this$_config$volume_2, _this$_config$collaps, _this$_config$hide_me, _this$_config$always_, _this$_config$expand_, _this$_config$idle_sc;
+    const renderVolumeStep = this._config.volume_mode === "stepper" ? x(_templateObject18$1 || (_templateObject18$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                .selector=", "\n                .value=", "\n                label=\"Volume Step (0.05 = 5%)\"\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        "])), this.hass, {
       number: {
         min: 0.01,
         max: 1,
@@ -11628,55 +8191,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         unit_of_measurement: "",
         mode: "box"
       }
-    }}
-                .value=${this._config.volume_step ?? 0.05}
-                label="Volume Step (0.05 = 5%)"
-                @value-changed=${e => this._updateConfig("volume_step", e.detail.value)}
-              ></ha-selector>
-            </div>
-            <ha-icon
-              class="icon-button"
-              icon="mdi:restore"
-              title="Reset to default"
-              @click=${() => this._updateConfig("volume_step", 0.05)}
-            ></ha-icon>
-          </div>
-        ` : E;
-    return x`
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">Theme & Layout</div>
-            <div class="section-description">Match dashboard styling and control the overall footprint.</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="match-theme-toggle"
-                .checked=${this._config.match_theme ?? false}
-                @change=${e => this._updateConfig("match_theme", e.target.checked)}
-              ></ha-switch>
-              <span>Match Theme</span>
-            </div>
-            <div>
-              <ha-switch
-                id="alternate-progress-bar-toggle"
-                .checked=${this._config.alternate_progress_bar ?? false}
-                @change=${e => this._updateConfig("alternate_progress_bar", e.target.checked)}
-              ></ha-switch>
-              <span>Alternate Progress Bar</span>
-            </div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-textfield
-                class="full-width"
-                type="number"
-                min="0"
-                label="Card Height (px)"
-                .value=${this._config.card_height ?? ""}
-                helper="Leave blank for automatic height"
-                .helperPersistent=${true}
-                @input=${e => {
+    }, (_this$_config$volume_ = this._config.volume_step) !== null && _this$_config$volume_ !== void 0 ? _this$_config$volume_ : 0.05, e => this._updateConfig("volume_step", e.detail.value), () => this._updateConfig("volume_step", 0.05)) : E;
+    return x(_templateObject19$1 || (_templateObject19$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Theme & Layout</div>\n            <div class=\"section-description\">Match dashboard styling and control the overall footprint.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"match-theme-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Match Theme</span>\n            </div>\n            <div>\n              <ha-switch\n                id=\"alternate-progress-bar-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Alternate Progress Bar</span>\n            </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-textfield\n                class=\"full-width\"\n                type=\"number\"\n                min=\"0\"\n                label=\"Card Height (px)\"\n                .value=", "\n                helper=\"Leave blank for automatic height\"\n                .helperPersistent=", "\n                @input=", "\n              ></ha-textfield>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Controls & Typography</div>\n            <div class=\"section-description\">Tune button sizing, entity labels, and adaptive text.</div>\n          </div>\n          <div class=\"form-row\">\n            <div>\n              <ha-switch\n                id=\"adaptive-controls-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Adaptive Control Size</span>\n            </div>\n            <div class=\"config-subtitle\">Let the playback buttons grow or shrink to fit the available space.</div>\n          </div>\n          <div class=\"form-row\">\n            <div>\n              <ha-switch\n                id=\"hide-active-entity-label-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Hide Active Entity Label</span>\n            </div>\n            <div class=\"config-subtitle\">When chips live in the menu, hide the entity label at the bottom of the card.</div>\n          </div>\n        <div class=\"form-row\">\n          <div class=\"full-width\">\n            <span class=\"form-label\">Adaptive Text Size Elements</span>\n            <div class=\"config-subtitle\">Choose which text groups should scale with available space (leave empty to disable adaptive text).</div>\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Volume Mode\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n          ", "\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Collapsed & Idle States</div>\n            <div class=\"section-description\">Control when the card collapses and which views show while idle.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"collapse-on-idle-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Collapse on Idle</span>\n            </div>\n            ", "\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"always-collapsed-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Always Collapsed</span>\n            </div>\n            ", "\n          </div>\n          <div class=\"form-row\">\n            <div class=\"config-subtitle\">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Idle Screen\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">Choose which screen to display automatically when the card becomes idle.</div>\n          </div>\n        </div>\n\n      "])), (_this$_config$match_t = this._config.match_theme) !== null && _this$_config$match_t !== void 0 ? _this$_config$match_t : false, e => this._updateConfig("match_theme", e.target.checked), (_this$_config$alterna = this._config.alternate_progress_bar) !== null && _this$_config$alterna !== void 0 ? _this$_config$alterna : false, e => this._updateConfig("alternate_progress_bar", e.target.checked), (_this$_config$card_he = this._config.card_height) !== null && _this$_config$card_he !== void 0 ? _this$_config$card_he : "", true, e => {
       const raw = e.target.value;
       if (raw === "") {
         this._updateConfig("card_height", undefined);
@@ -11684,66 +8200,12 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       }
       const parsed = Number(raw);
       this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
-    }}
-              ></ha-textfield>
-            </div>
-            <ha-icon
-              class="icon-button"
-              icon="mdi:restore"
-              title="Reset to default"
-              @click=${() => this._updateConfig("card_height", undefined)}
-            ></ha-icon>
-          </div>
-        </div>
-
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">Controls & Typography</div>
-            <div class="section-description">Tune button sizing, entity labels, and adaptive text.</div>
-          </div>
-          <div class="form-row">
-            <div>
-              <ha-switch
-                id="adaptive-controls-toggle"
-                .checked=${this._config.adaptive_controls ?? false}
-                @change=${e => this._updateConfig("adaptive_controls", e.target.checked)}
-              ></ha-switch>
-              <span>Adaptive Control Size</span>
-            </div>
-            <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
-          </div>
-          <div class="form-row">
-            <div>
-              <ha-switch
-                id="hide-active-entity-label-toggle"
-                .checked=${this._config.hide_active_entity_label ?? false}
-                @change=${e => this._updateConfig("hide_active_entity_label", e.target.checked)}
-              ></ha-switch>
-              <span>Hide Active Entity Label</span>
-            </div>
-            <div class="config-subtitle">When chips live in the menu, hide the entity label at the bottom of the card.</div>
-          </div>
-        <div class="form-row">
-          <div class="full-width">
-            <span class="form-label">Adaptive Text Size Elements</span>
-            <div class="config-subtitle">Choose which text groups should scale with available space (leave empty to disable adaptive text).</div>
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
+    }, () => this._updateConfig("card_height", undefined), (_this$_config$adaptiv = this._config.adaptive_controls) !== null && _this$_config$adaptiv !== void 0 ? _this$_config$adaptiv : false, e => this._updateConfig("adaptive_controls", e.target.checked), (_this$_config$hide_ac = this._config.hide_active_entity_label) !== null && _this$_config$hide_ac !== void 0 ? _this$_config$hide_ac : false, e => this._updateConfig("hide_active_entity_label", e.target.checked), this.hass, {
       select: {
         multiple: true,
         options: ADAPTIVE_TEXT_SELECTOR_OPTIONS
       }
-    }}
-              .value=${this._getAdaptiveTextTargetsValue()}
-              @value-changed=${e => this._onAdaptiveTextTargetsChanged(e.detail.value)}
-            ></ha-selector>
-          </div>
-        </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
+    }, this._getAdaptiveTextTargetsValue(), e => this._onAdaptiveTextTargetsChanged(e.detail.value), this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -11754,67 +8216,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "Stepper"
         }]
       }
-    }}
-              .value=${this._config.volume_mode ?? "slider"}
-              label="Volume Mode"
-              @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
-            ></ha-selector>
-          </div>
-          ${renderVolumeStep}
-        </div>
-
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">Collapsed & Idle States</div>
-            <div class="section-description">Control when the card collapses and which views show while idle.</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="collapse-on-idle-toggle"
-                .checked=${this._config.collapse_on_idle ?? false}
-                @change=${e => this._updateConfig("collapse_on_idle", e.target.checked)}
-              ></ha-switch>
-              <span>Collapse on Idle</span>
-            </div>
-            ${!this._config.always_collapsed ? x`
-              <div>
-                <ha-switch
-                  id="hide-menu-player-toggle"
-                  .checked=${this._config.hide_menu_player ?? false}
-                  @change=${e => this._updateConfig("hide_menu_player", e.target.checked)}
-                ></ha-switch>
-                <span>Hide Menu Player</span>
-              </div>
-            ` : E}
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="always-collapsed-toggle"
-                .checked=${this._config.always_collapsed ?? false}
-                @change=${e => this._updateConfig("always_collapsed", e.target.checked)}
-              ></ha-switch>
-              <span>Always Collapsed</span>
-            </div>
-            ${this._config.always_collapsed ? x`
-              <div>
-                <ha-switch
-                  id="expand-on-search-toggle"
-                  .checked=${this._config.expand_on_search ?? false}
-                  @change=${e => this._updateConfig("expand_on_search", e.target.checked)}
-                ></ha-switch>
-                <span>Expand on Search</span>
-              </div>
-            ` : E}
-          </div>
-          <div class="form-row">
-            <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
-          </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
+    }, (_this$_config$volume_2 = this._config.volume_mode) !== null && _this$_config$volume_2 !== void 0 ? _this$_config$volume_2 : "slider", e => this._updateConfig("volume_mode", e.detail.value), renderVolumeStep, (_this$_config$collaps = this._config.collapse_on_idle) !== null && _this$_config$collaps !== void 0 ? _this$_config$collaps : false, e => this._updateConfig("collapse_on_idle", e.target.checked), !this._config.always_collapsed ? x(_templateObject20$1 || (_templateObject20$1 = _taggedTemplateLiteral(["\n              <div>\n                <ha-switch\n                  id=\"hide-menu-player-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>Hide Menu Player</span>\n              </div>\n            "])), (_this$_config$hide_me = this._config.hide_menu_player) !== null && _this$_config$hide_me !== void 0 ? _this$_config$hide_me : false, e => this._updateConfig("hide_menu_player", e.target.checked)) : E, (_this$_config$always_ = this._config.always_collapsed) !== null && _this$_config$always_ !== void 0 ? _this$_config$always_ : false, e => this._updateConfig("always_collapsed", e.target.checked), this._config.always_collapsed ? x(_templateObject21$1 || (_templateObject21$1 = _taggedTemplateLiteral(["\n              <div>\n                <ha-switch\n                  id=\"expand-on-search-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>Expand on Search</span>\n              </div>\n            "])), (_this$_config$expand_ = this._config.expand_on_search) !== null && _this$_config$expand_ !== void 0 ? _this$_config$expand_ : false, e => this._updateConfig("expand_on_search", e.target.checked)) : E, this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -11831,142 +8233,44 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "Next Up"
         }]
       }
-    }}
-              .value=${this._config.idle_screen ?? "default"}
-              label="Idle Screen"
-              @value-changed=${e => this._updateConfig("idle_screen", e.detail.value)}
-            ></ha-selector>
-            <div class="config-subtitle">Choose which screen to display automatically when the card becomes idle.</div>
-          </div>
-        </div>
-
-      `;
+    }, (_this$_config$idle_sc = this._config.idle_screen) !== null && _this$_config$idle_sc !== void 0 ? _this$_config$idle_sc : "default", e => this._updateConfig("idle_screen", e.detail.value));
   }
   _renderActionsTab() {
-    let actions = [...(this._config.actions ?? [])];
-    return x`
-        <div class="action-group config-section">
-          <div class="action-group-header section-header">
-            <div class="action-group-title section-title">Actions</div>
-            <div class="section-description">Build the action chips that appear in the card or its menu. Drag to reorder, click the pencil to configure each action.</div>
-          </div>
-          <div class="form-row">
-            <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
-              <div class="sortable-container">
-                ${actions.map((act, idx) => x`
-                  <div class="action-row-inner sortable-item">
-                    <div class="handle action-handle">
-                      <ha-icon icon="mdi:drag"></ha-icon>
-                    </div>
-                    ${act !== null && act !== void 0 && act.icon ? x`
-                      <ha-icon class="action-icon" icon="${act === null || act === void 0 ? void 0 : act.icon}"></ha-icon>
-                    ` : x`<span class="action-icon-placeholder"></span>`}
-                    <div class="grow-children">
-                      <ha-textfield
-                        placeholder="(Icon Only)"
-                        .value=${(act === null || act === void 0 ? void 0 : act.name) ?? ""}
-                        .helper=${(() => {
-      const inMenu = act !== null && act !== void 0 && act.in_menu ? " \u2022 In Menu" : "";
-      if (act !== null && act !== void 0 && act.menu_item) {
-        return `Open Menu Item: ${act.menu_item}${inMenu}`;
-      }
-      if (act !== null && act !== void 0 && act.service) {
-        return `Call Service: ${act.service}${inMenu}`;
-      }
-      if (act !== null && act !== void 0 && act.navigation_path || (act === null || act === void 0 ? void 0 : act.action) === "navigate") {
-        const newTab = act !== null && act !== void 0 && act.navigation_new_tab ? " (New Tab)" : "";
-        return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${inMenu}`;
-      }
-      return act !== null && act !== void 0 && act.in_menu ? `Not Configured${inMenu}` : "Not Configured";
-    })()}
-                        .helperPersistent=${true}
-                        @input=${a => this._onActionChanged(idx, a.target.value)}
-                      ></ha-textfield>
-                    </div>
-                    <div class="action-row-actions">
-                      <ha-icon
-                        class="icon-button icon-button-compact"
-                        icon="mdi:pencil"
-                        title="Edit Action Settings"
-                        @click=${() => this._onEditAction(idx)}
-                      ></ha-icon>
-                      <ha-icon
-                        class="icon-button icon-button-compact icon-button-toggle ${act !== null && act !== void 0 && act.in_menu ? "active" : ""}"
-                        icon="${act !== null && act !== void 0 && act.in_menu ? "mdi:menu" : "mdi:view-grid-outline"}"
-                        title="${act !== null && act !== void 0 && act.in_menu ? "Move action to main chips" : "Move action into menu"}"
-                        role="button"
-                        aria-label="${act !== null && act !== void 0 && act.in_menu ? "Move action to main chips" : "Move action into menu"}"
-                        @click=${() => this._toggleActionInMenu(idx)}
-                      ></ha-icon>
-                      <ha-icon
-                        class="icon-button icon-button-compact"
-                        icon="mdi:trash-can"
-                        title="Delete Action"
-                        @click=${() => this._removeAction(idx)}
-                      ></ha-icon>
-                    </div>
-                  </div>
-                `)}
-              </div>
-            </yamp-sortable>
-          </div>
-          <div class="add-action-button-wrapper">
-            <ha-icon
-              class="icon-button"
-              icon="mdi:plus"
-              title="Add Action"
-              @click=${() => {
-      const newActions = [...(this._config.actions ?? []), {}];
+    var _this$_config$actions3;
+    let actions = [...((_this$_config$actions3 = this._config.actions) !== null && _this$_config$actions3 !== void 0 ? _this$_config$actions3 : [])];
+    return x(_templateObject22$1 || (_templateObject22$1 = _taggedTemplateLiteral(["\n        <div class=\"action-group config-section\">\n          <div class=\"action-group-header section-header\">\n            <div class=\"action-group-title section-title\">Actions</div>\n            <div class=\"section-description\">Build the action chips that appear in the card or its menu. Drag to reorder, click the pencil to configure each action.</div>\n          </div>\n          <div class=\"form-row\">\n            <yamp-sortable @item-moved=", ">\n              <div class=\"sortable-container\">\n                ", "\n              </div>\n            </yamp-sortable>\n          </div>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Action\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n      "])), e => this._onActionMoved(e), actions.map((act, idx) => {
+      var _act$name;
+      return x(_templateObject23$1 || (_templateObject23$1 = _taggedTemplateLiteral(["\n                  <div class=\"action-row-inner sortable-item\">\n                    <div class=\"handle action-handle\">\n                      <ha-icon icon=\"mdi:drag\"></ha-icon>\n                    </div>\n                    ", "\n                    <div class=\"grow-children\">\n                      <ha-textfield\n                        placeholder=\"(Icon Only)\"\n                        .value=", "\n                        .helper=", "\n                        .helperPersistent=", "\n                        @input=", "\n                      ></ha-textfield>\n                    </div>\n                    <div class=\"action-row-actions\">\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:pencil\"\n                        title=\"Edit Action Settings\"\n                        @click=", "\n                      ></ha-icon>\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-toggle ", "\"\n                        icon=\"", "\"\n                        title=\"", "\"\n                        role=\"button\"\n                        aria-label=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:trash-can\"\n                        title=\"Delete Action\"\n                        @click=", "\n                      ></ha-icon>\n                    </div>\n                  </div>\n                "])), act !== null && act !== void 0 && act.icon ? x(_templateObject24$1 || (_templateObject24$1 = _taggedTemplateLiteral(["\n                      <ha-icon class=\"action-icon\" icon=\"", "\"></ha-icon>\n                    "])), act === null || act === void 0 ? void 0 : act.icon) : x(_templateObject25$1 || (_templateObject25$1 = _taggedTemplateLiteral(["<span class=\"action-icon-placeholder\"></span>"]))), (_act$name = act === null || act === void 0 ? void 0 : act.name) !== null && _act$name !== void 0 ? _act$name : "", (() => {
+        const inMenu = act !== null && act !== void 0 && act.in_menu ? " \u2022 In Menu" : "";
+        if (act !== null && act !== void 0 && act.menu_item) {
+          return "Open Menu Item: ".concat(act.menu_item).concat(inMenu);
+        }
+        if (act !== null && act !== void 0 && act.service) {
+          return "Call Service: ".concat(act.service).concat(inMenu);
+        }
+        if (act !== null && act !== void 0 && act.navigation_path || (act === null || act === void 0 ? void 0 : act.action) === "navigate") {
+          const newTab = act !== null && act !== void 0 && act.navigation_new_tab ? " (New Tab)" : "";
+          return "Navigate to ".concat(act.navigation_path || "(missing path)").concat(newTab).concat(inMenu);
+        }
+        return act !== null && act !== void 0 && act.in_menu ? "Not Configured".concat(inMenu) : "Not Configured";
+      })(), true, a => this._onActionChanged(idx, a.target.value), () => this._onEditAction(idx), act !== null && act !== void 0 && act.in_menu ? "active" : "", act !== null && act !== void 0 && act.in_menu ? "mdi:menu" : "mdi:view-grid-outline", act !== null && act !== void 0 && act.in_menu ? "Move action to main chips" : "Move action into menu", act !== null && act !== void 0 && act.in_menu ? "Move action to main chips" : "Move action into menu", () => this._toggleActionInMenu(idx), () => this._removeAction(idx));
+    }), () => {
+      var _this$_config$actions4;
+      const newActions = [...((_this$_config$actions4 = this._config.actions) !== null && _this$_config$actions4 !== void 0 ? _this$_config$actions4 : []), {}];
       const newIndex = newActions.length - 1;
       this._updateConfig("actions", newActions);
       this._onEditAction(newIndex);
-    }}
-            ></ha-icon>
-          </div>
-        </div>
-      `;
+    });
   }
   _renderEntityEditor(entity) {
-    var _this$hass2;
+    var _this$hass2, _entity$entity_id, _entity$name, _this$_useTemplate, _entity$music_assista, _entity$music_assista2, _this$_useTemplate2, _this$_useTemplate3, _entity$music_assista3, _entity$music_assista4, _entity$group_volume, _entity$follow_active, _entity$follow_active2, _this$_useVolTemplate, _entity$follow_active3, _this$_useVolTemplate2, _entity$volume_entity, _entity$volume_entity2, _entity$entity_id2, _entity$follow_active4, _entity$sync_power;
     const stateObj = (_this$hass2 = this.hass) === null || _this$hass2 === void 0 || (_this$hass2 = _this$hass2.states) === null || _this$hass2 === void 0 ? void 0 : _this$hass2[entity === null || entity === void 0 ? void 0 : entity.entity_id];
     const showGroupVolume = this._isGroupCapable(stateObj);
-    return x`
-        <div class="entity-editor-header">
-          <ha-icon
-            class="icon-button"
-            icon="mdi:chevron-left"
-            @click=${this._onBackFromEntityEditor}>
-          </ha-icon>
-          <div class="entity-editor-title">Edit Entity</div>
-        </div>
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
+    return x(_templateObject26$1 || (_templateObject26$1 = _taggedTemplateLiteral(["\n        <div class=\"entity-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"entity-editor-title\">Edit Entity</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n          \n            disabled\n          ></ha-selector>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"Name\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n            .required=", "\n            .invalid=", "\n            label=\"Hidden Controls\"\n            helper=\"Select which controls to hide for this entity (all are shown by default)\"\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n        ", "\n\n \n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"ma-template-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"ma-template-toggle\">Use template for Music Assistant Entity</label>\n          </div>\n        </div>\n\n        ", "\n\n \n\n        ", "\n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"follow-active-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"follow-active-toggle\">Volume Entity Follows Active Entity</label>\n          </div>\n          ", "\n        </div>\n\n        ", "\n\n        ", "\n\n        ", "\n        </div>\n      "])), this._onBackFromEntityEditor, this.hass, {
       entity: {
         domain: "media_player"
       }
-    }}
-            .value=${(entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
-          
-            disabled
-          ></ha-selector>
-        </div>
-
-        <div class="form-row">
-          <ha-textfield
-            class="full-width"
-            label="Name"
-            .value=${(entity === null || entity === void 0 ? void 0 : entity.name) ?? ""}
-            @input=${e => this._updateEntityProperty("name", e.target.value)}
-          ></ha-textfield>
-        </div>
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
+    }, (_entity$entity_id = entity === null || entity === void 0 ? void 0 : entity.entity_id) !== null && _entity$entity_id !== void 0 ? _entity$entity_id : "", (_entity$name = entity === null || entity === void 0 ? void 0 : entity.name) !== null && _entity$name !== void 0 ? _entity$name : "", e => this._updateEntityProperty("name", e.target.value), this.hass, {
       select: {
         mode: "dropdown",
         multiple: true,
@@ -11996,94 +8300,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "Power"
         }]
       }
-    }}
-            .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ? entity.hidden_controls : []}
-            .required=${false}
-            .invalid=${false}
-            label="Hidden Controls"
-            helper="Select which controls to hide for this entity (all are shown by default)"
-            @value-changed=${e => this._updateEntityProperty("hidden_controls", e.detail.value)}
-          ></ha-selector>
-        </div>
-
-        ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
-      <div class="form-row">
-        <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
-          <ha-code-editor
-            id="ma-template-editor"
-            label="Music Assistant Entity Template (Jinja)"
-            .hass=${this.hass}
-            mode="jinja2"
-            autocomplete-entities
-            .value=${(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? ""}
-            @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
-          ></ha-code-editor>
-          <div class="help-text">
-            <ha-icon icon="mdi:information-outline"></ha-icon>
-            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
-            <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
-  media_player.picore_house
-{% else %}
-  media_player.ma_wiim_mini
-{% endif %}</pre>
-           </pre>
-          </div>
-        </div>
-      </div>
-    ` : E}
-
- 
-
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="ma-template-toggle"
-              .checked=${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)}
-              @change=${e => {
+    }, Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ? entity.hidden_controls : [], false, false, e => this._updateEntityProperty("hidden_controls", e.detail.value), ((_this$_useTemplate = this._useTemplate) !== null && _this$_useTemplate !== void 0 ? _this$_useTemplate : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)) ? x(_templateObject27$1 || (_templateObject27$1 = _taggedTemplateLiteral(["\n      <div class=\"form-row\">\n        <div class=", ">\n          <ha-code-editor\n            id=\"ma-template-editor\"\n            label=\"Music Assistant Entity Template (Jinja)\"\n            .hass=", "\n            mode=\"jinja2\"\n            autocomplete-entities\n            .value=", "\n            @value-changed=", "\n          ></ha-code-editor>\n          <div class=\"help-text\">\n            <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:\n            <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}\n  media_player.picore_house\n{% else %}\n  media_player.ma_wiim_mini\n{% endif %}</pre>\n           </pre>\n          </div>\n        </div>\n      </div>\n    "])), this._yamlError && ((_entity$music_assista = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista !== void 0 ? _entity$music_assista : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", this.hass, (_entity$music_assista2 = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista2 !== void 0 ? _entity$music_assista2 : "", e => this._updateEntityProperty("music_assistant_entity", e.detail.value)) : E, (_this$_useTemplate2 = this._useTemplate) !== null && _this$_useTemplate2 !== void 0 ? _this$_useTemplate2 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity), e => {
       this._useTemplate = e.target.checked;
-    }}
-            ></ha-switch>
-            <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
-          </div>
-        </div>
-
-        ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
-      <div class="form-row">
-        <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
-          <ha-code-editor
-            id="ma-template-editor"
-            label="Music Assistant Entity Template (Jinja)"
-            .hass=${this.hass}
-            mode="jinja2"
-            autocomplete-entities
-            .value=${(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? ""}
-            @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
-          ></ha-code-editor>
-          <div class="help-text">
-            <ha-icon icon="mdi:information-outline"></ha-icon>
-            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
-            <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
-  media_player.picore_house
-{% else %}
-  media_player.ma_wiim_mini
-{% endif %}</pre>
-           </pre>
-          </div>
-        </div>
-      </div>
-    ` : x`
-      <div class="form-row">
-        <ha-entity-picker
-          .hass=${this.hass}
-          .value=${this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? entity.music_assistant_entity : ""}
-          .includeDomains=${["media_player"]}
-          label="Music Assistant Entity (optional)"
-          helper="Pick a Music Assistant player for search."
-          clearable
-          @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
-        ></ha-entity-picker>
-      </div>
-      ${((_this$hass3, _mainState$attributes, _this$_looksLikeTempl, _this$hass4, _maState$attributes) => {
+    }, ((_this$_useTemplate3 = this._useTemplate) !== null && _this$_useTemplate3 !== void 0 ? _this$_useTemplate3 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)) ? x(_templateObject28$1 || (_templateObject28$1 = _taggedTemplateLiteral(["\n      <div class=\"form-row\">\n        <div class=", ">\n          <ha-code-editor\n            id=\"ma-template-editor\"\n            label=\"Music Assistant Entity Template (Jinja)\"\n            .hass=", "\n            mode=\"jinja2\"\n            autocomplete-entities\n            .value=", "\n            @value-changed=", "\n          ></ha-code-editor>\n          <div class=\"help-text\">\n            <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:\n            <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}\n  media_player.picore_house\n{% else %}\n  media_player.ma_wiim_mini\n{% endif %}</pre>\n           </pre>\n          </div>\n        </div>\n      </div>\n    "])), this._yamlError && ((_entity$music_assista3 = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista3 !== void 0 ? _entity$music_assista3 : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", this.hass, (_entity$music_assista4 = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista4 !== void 0 ? _entity$music_assista4 : "", e => this._updateEntityProperty("music_assistant_entity", e.detail.value)) : x(_templateObject29$1 || (_templateObject29$1 = _taggedTemplateLiteral(["\n      <div class=\"form-row\">\n        <ha-entity-picker\n          .hass=", "\n          .value=", "\n          .includeDomains=", "\n          label=\"Music Assistant Entity (optional)\"\n          helper=\"Pick a Music Assistant player for search.\"\n          clearable\n          @value-changed=", "\n        ></ha-entity-picker>\n      </div>\n      ", "\n    "])), this.hass, this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? entity.music_assistant_entity : "", ["media_player"], e => this._updateEntityProperty("music_assistant_entity", e.detail.value), ((_this$hass3, _mainState$attributes, _this$_looksLikeTempl, _this$hass4, _maState$attributes) => {
       const mainId = entity === null || entity === void 0 ? void 0 : entity.entity_id;
       const mainState = mainId ? (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[mainId] : undefined;
       const mainIsMA = !!(mainState && ((_mainState$attributes = mainState.attributes) === null || _mainState$attributes === void 0 ? void 0 : _mainState$attributes.app_id) === 'music_assistant');
@@ -12095,11 +8314,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       // Only show under the dropdown (non-template path)
       const showHiddenFilterChips = mainIsMA || maIsMA;
       if (!showHiddenFilterChips) return E;
-      return x`
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
+      return x(_templateObject30$1 || (_templateObject30$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              .required=", "\n              .invalid=", "\n              label=\"Hidden Search Filter Chips\"\n              helper=\"Hide specific search filter chips for this entity\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, {
         select: {
           mode: "dropdown",
           multiple: true,
@@ -12126,163 +8341,22 @@ class YetAnotherMediaPlayerEditor extends i$1 {
             label: "Episode"
           }]
         }
-      }}
-              .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ? entity.hidden_filter_chips : []}
-              .required=${false}
-              .invalid=${false}
-              label="Hidden Search Filter Chips"
-              helper="Hide specific search filter chips for this entity"
-              @value-changed=${e => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
-            ></ha-selector>
-          </div>
-        `;
-    })()}
-    `}
-
- 
-
-        ${showGroupVolume ? x`
-          <div class="form-row">
-            <ha-switch
-              id="group-volume-toggle"
-              .checked=${(entity === null || entity === void 0 ? void 0 : entity.group_volume) ?? true}
-              @change=${e => this._updateEntityProperty("group_volume", e.target.checked)}
-            ></ha-switch>
-            <label for="group-volume-toggle">Group Volume</label>
-          </div>
-        ` : E}
-
-        <div class="form-row form-row-multi-column">
-          <div>
-            <ha-switch
-              id="follow-active-toggle"
-              .checked=${(entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false}
-              @change=${e => this._updateEntityProperty("follow_active_volume", e.target.checked)}
-            ></ha-switch>
-            <label for="follow-active-toggle">Volume Entity Follows Active Entity</label>
-          </div>
-          ${!((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
-            <div>
-              <ha-switch
-                id="vol-template-toggle"
-                .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)}
-                @change=${e => {
+      }, Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ? entity.hidden_filter_chips : [], false, false, e => this._updateEntityProperty("hidden_filter_chips", e.detail.value));
+    })()), showGroupVolume ? x(_templateObject31$1 || (_templateObject31$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-switch\n              id=\"group-volume-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"group-volume-toggle\">Group Volume</label>\n          </div>\n        "])), (_entity$group_volume = entity === null || entity === void 0 ? void 0 : entity.group_volume) !== null && _entity$group_volume !== void 0 ? _entity$group_volume : true, e => this._updateEntityProperty("group_volume", e.target.checked)) : E, (_entity$follow_active = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active !== void 0 ? _entity$follow_active : false, e => this._updateEntityProperty("follow_active_volume", e.target.checked), !((_entity$follow_active2 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active2 !== void 0 ? _entity$follow_active2 : false) ? x(_templateObject32$1 || (_templateObject32$1 = _taggedTemplateLiteral(["\n            <div>\n              <ha-switch\n                id=\"vol-template-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"vol-template-toggle\">Use template for Volume Entity</label>\n            </div>\n          "])), (_this$_useVolTemplate = this._useVolTemplate) !== null && _this$_useVolTemplate !== void 0 ? _this$_useVolTemplate : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity), e => {
       this._useVolTemplate = e.target.checked;
-    }}
-              ></ha-switch>
-              <label for="vol-template-toggle">Use template for Volume Entity</label>
-            </div>
-          ` : E}
-        </div>
-
-        ${!((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
-          ${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? x`
-                <div class="form-row">
-                  <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
-                    <ha-code-editor
-                      id="vol-template-editor"
-                      label="Volume Entity Template (Jinja)"
-                      .hass=${this.hass}
-                      mode="jinja2"
-                      autocomplete-entities
-                      .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? ""}
-                      @value-changed=${e => this._updateEntityProperty("volume_entity", e.detail.value)}
-                    ></ha-code-editor>
-                    <div class="help-text">
-                      <ha-icon icon="mdi:information-outline"></ha-icon>
-                      Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).
-                      Example switching volume entity based on a boolean:
-                      <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
-  remote.soundbar
-{% else %}
-  media_player.office_homepod
-{% endif %}</pre>
-                    </div>
-                  </div>
-                </div>
-              ` : x`
-                <div class="form-row">
-                  <ha-entity-picker
-                    .hass=${this.hass}
-                    .value=${this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
-                    .includeDomains=${["media_player", "remote"]}
-                    label="Volume Entity"
-                    clearable
-                    @value-changed=${e => {
+    }) : E, !((_entity$follow_active3 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active3 !== void 0 ? _entity$follow_active3 : false) ? x(_templateObject33$1 || (_templateObject33$1 = _taggedTemplateLiteral(["\n          ", "\n        "])), ((_this$_useVolTemplate2 = this._useVolTemplate) !== null && _this$_useVolTemplate2 !== void 0 ? _this$_useVolTemplate2 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)) ? x(_templateObject34$1 || (_templateObject34$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <div class=", ">\n                    <ha-code-editor\n                      id=\"vol-template-editor\"\n                      label=\"Volume Entity Template (Jinja)\"\n                      .hass=", "\n                      mode=\"jinja2\"\n                      autocomplete-entities\n                      .value=", "\n                      @value-changed=", "\n                    ></ha-code-editor>\n                    <div class=\"help-text\">\n                      <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n                      Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).\n                      Example switching volume entity based on a boolean:\n                      <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_boolean.tv_volume','on') %}\n  remote.soundbar\n{% else %}\n  media_player.office_homepod\n{% endif %}</pre>\n                    </div>\n                  </div>\n                </div>\n              "])), this._yamlError && ((_entity$volume_entity = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity !== void 0 ? _entity$volume_entity : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", this.hass, (_entity$volume_entity2 = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity2 !== void 0 ? _entity$volume_entity2 : "", e => this._updateEntityProperty("volume_entity", e.detail.value)) : x(_templateObject35$1 || (_templateObject35$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <ha-entity-picker\n                    .hass=", "\n                    .value=", "\n                    .includeDomains=", "\n                    label=\"Volume Entity\"\n                    clearable\n                    @value-changed=", "\n                  ></ha-entity-picker>\n                </div>\n              "])), this.hass, this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (_entity$entity_id2 = entity === null || entity === void 0 ? void 0 : entity.entity_id) !== null && _entity$entity_id2 !== void 0 ? _entity$entity_id2 : "", ["media_player", "remote"], e => {
       const value = e.detail.value;
       this._updateEntityProperty("volume_entity", value);
       if (!value || value === entity.entity_id) {
         // sync_power is meaningless in these cases
         this._updateEntityProperty("sync_power", false);
       }
-    }}
-                  ></ha-entity-picker>
-                </div>
-              `}
-        ` : E}
-
-        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
-              <div class="form-row form-row-multi-column">
-                <div>
-                  <ha-switch
-                    id="sync-power-toggle"
-                    .checked=${(entity === null || entity === void 0 ? void 0 : entity.sync_power) ?? false}
-                    @change=${e => this._updateEntityProperty("sync_power", e.target.checked)}
-                  ></ha-switch>
-                  <label for="sync-power-toggle">Sync Power</label>
-                </div>
-              </div>
-            ` : E}
-
-        ${entity !== null && entity !== void 0 && entity.follow_active_volume ? x`
-          <div class="form-row">
-            <div class="help-text">
-              <ha-icon icon="mdi:information-outline"></ha-icon>
-              When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.
-              <br><br>
-             
-            </div>
-          </div>
-        ` : E}
-        </div>
-      `;
+    })) : E, entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((_entity$follow_active4 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active4 !== void 0 ? _entity$follow_active4 : false) ? x(_templateObject36$1 || (_templateObject36$1 = _taggedTemplateLiteral(["\n              <div class=\"form-row form-row-multi-column\">\n                <div>\n                  <ha-switch\n                    id=\"sync-power-toggle\"\n                    .checked=", "\n                    @change=", "\n                  ></ha-switch>\n                  <label for=\"sync-power-toggle\">Sync Power</label>\n                </div>\n              </div>\n            "])), (_entity$sync_power = entity === null || entity === void 0 ? void 0 : entity.sync_power) !== null && _entity$sync_power !== void 0 ? _entity$sync_power : false, e => this._updateEntityProperty("sync_power", e.target.checked)) : E, entity !== null && entity !== void 0 && entity.follow_active_volume ? x(_templateObject37$1 || (_templateObject37$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <div class=\"help-text\">\n              <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n              When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.\n              <br><br>\n             \n            </div>\n          </div>\n        "]))) : E);
   }
   _renderActionEditor(action) {
-    const actionMode = this._actionMode ?? this._deriveActionMode(action);
-    return x`
-        <div class="action-editor-header">
-          <ha-icon
-            class="icon-button"
-            icon="mdi:chevron-left"
-            @click=${this._onBackFromActionEditor}>
-          </ha-icon>
-          <div class="action-editor-title">Edit Action</div>
-        </div>
-
-        <div class="form-row">
-          <ha-textfield
-            class="full-width"
-            label="Name"
-            placeholder="(Icon Only)"
-            .value=${(action === null || action === void 0 ? void 0 : action.name) ?? ""}
-            @input=${e => this._updateActionProperty("name", e.target.value)}
-          ></ha-textfield>
-        </div>
-
-        <div class="form-row">
-          <ha-icon-picker
-            label="Icon"
-            .hass=${this.hass}
-            .value=${(action === null || action === void 0 ? void 0 : action.icon) ?? ""}
-            @value-changed=${e => this._updateActionProperty("icon", e.detail.value)}
-          ></ha-icon-picker>
-        </div>
-
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            label="Action Type"
-            .selector=${{
+    var _this$_actionMode, _action$name, _action$icon, _this$_actionMode2, _action$menu_item, _action$navigation_pa, _action$navigation_ne, _action$service, _this$_serviceItems, _action$script_variab;
+    const actionMode = (_this$_actionMode = this._actionMode) !== null && _this$_actionMode !== void 0 ? _this$_actionMode : this._deriveActionMode(action);
+    return x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n        <div class=\"action-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"action-editor-title\">Edit Action</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"Name\"\n            placeholder=\"(Icon Only)\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-icon-picker\n            label=\"Icon\"\n            .hass=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-icon-picker>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            label=\"Action Type\"\n            .selector=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n        \n        ", " \n        ", "\n        ", "\n      </div>"])), this._onBackFromActionEditor, (_action$name = action === null || action === void 0 ? void 0 : action.name) !== null && _action$name !== void 0 ? _action$name : "", e => this._updateActionProperty("name", e.target.value), this.hass, (_action$icon = action === null || action === void 0 ? void 0 : action.icon) !== null && _action$icon !== void 0 ? _action$icon : "", e => this._updateActionProperty("icon", e.detail.value), this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -12296,9 +8370,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "Navigate"
         }]
       }
-    }}
-            .value=${this._actionMode ?? this._deriveActionMode(action)}
-            @value-changed=${e => {
+    }, (_this$_actionMode2 = this._actionMode) !== null && _this$_actionMode2 !== void 0 ? _this$_actionMode2 : this._deriveActionMode(action), e => {
       const mode = e.detail.value;
       this._actionMode = mode;
       if (mode === "service") {
@@ -12323,16 +8395,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           this._updateActionProperty("navigation_path", "");
         }
       }
-    }}
-          ></ha-selector>
-        </div>
-        
-        ${actionMode === "menu" ? x`
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              label="Menu Item"
-              .selector=${{
+    }, actionMode === "menu" ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"Menu Item\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -12361,120 +8424,10 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "Transfer Queue"
         }]
       }
-    }}
-              .value=${(action === null || action === void 0 ? void 0 : action.menu_item) ?? ""}
-              @value-changed=${e => this._updateActionProperty("menu_item", e.detail.value || undefined)}
-            ></ha-selector>
-          </div>
-        ` : E} 
-        ${actionMode === "navigate" ? x`
-          <div class="form-row">
-            <ha-textfield
-              class="full-width"
-              label="Navigation Path"
-              placeholder="/lovelace/music or #popup"
-              .value=${(action === null || action === void 0 ? void 0 : action.navigation_path) ?? ""}
-              @input=${e => {
+    }, (_action$menu_item = action === null || action === void 0 ? void 0 : action.menu_item) !== null && _action$menu_item !== void 0 ? _action$menu_item : "", e => this._updateActionProperty("menu_item", e.detail.value || undefined)) : E, actionMode === "navigate" ? x(_templateObject40$1 || (_templateObject40$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-textfield\n              class=\"full-width\"\n              label=\"Navigation Path\"\n              placeholder=\"/lovelace/music or #popup\"\n              .value=", "\n              @input=", "\n            ></ha-textfield>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"navigation-new-tab-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"navigation-new-tab-toggle\">Open External URLs in New Tab</label>\n            </div>\n          </div>\n          <div class=\"form-row\">\n            <div class=\"config-subtitle\">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>\n          </div>\n        "])), (_action$navigation_pa = action === null || action === void 0 ? void 0 : action.navigation_path) !== null && _action$navigation_pa !== void 0 ? _action$navigation_pa : "", e => {
       this._updateActionProperty("navigation_path", e.target.value);
       this._updateActionProperty("action", "navigate");
-    }}
-            ></ha-textfield>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="navigation-new-tab-toggle"
-                .checked=${(action === null || action === void 0 ? void 0 : action.navigation_new_tab) ?? false}
-                @change=${e => this._updateActionProperty("navigation_new_tab", e.target.checked)}
-              ></ha-switch>
-              <label for="navigation-new-tab-toggle">Open External URLs in New Tab</label>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="config-subtitle">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>
-          </div>
-        ` : E}
-        ${actionMode === 'service' ? x`
-          <div class="form-row">
-            <ha-combo-box
-              label="Service"
-              .hass=${this.hass}
-              .value=${action.service ?? ""}
-              .items=${this._serviceItems ?? []}
-              item-value-path="value"
-              item-label-path="label"
-              required
-              @value-changed=${e => this._updateActionProperty("service", e.detail.value)}
-            ></ha-combo-box>
-          </div>
-
-          ${typeof action.service === "string" && action.service.startsWith("script.") ? x`
-            <div class="form-row form-row-multi-column">
-              <div>
-                <ha-switch
-                  id="script-variable-toggle"
-                  .checked=${(action === null || action === void 0 ? void 0 : action.script_variable) ?? false}
-                  @change=${e => this._updateActionProperty("script_variable", e.target.checked)}
-                ></ha-switch>
-                <span>Script Variable (yamp_entity)</span>
-              </div>
-            </div>
-          ` : E}
-
-          ${action.service ? x`
-            <div class="help-text">
-              <ha-icon
-                icon="mdi:information-outline"
-              ></ha-icon>
-
-              Use <code>entity_id: current</code> to target the card's currently selected
-              media player entity. The <ha-icon icon="mdi:play-circle-outline"></ha-icon> button
-              below does not work if you use this feature.
-
-            </div>
-            <div class="help-text">
-              <ha-icon
-                icon="mdi:information-outline"
-              ></ha-icon>
-            Changes to the service data below are not committed to the config until 
-            <ha-icon icon="mdi:content-save"></ha-icon> is clicked!
-            </div>
-            <div class="form-row">
-              <div class="service-data-editor-header">
-                <div class="service-data-editor-title">Service Data</div>
-                <div class="service-data-editor-actions">
-                  <ha-icon
-                    class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
-                    icon="mdi:content-save"
-                    title="Save Service Data"
-                    @click=${this._saveYamlEditor}
-                  ></ha-icon>
-                  <ha-icon
-                    class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
-                    icon="mdi:backup-restore"
-                    title="Revert to Saved Service Data"
-                    @click=${this._revertYamlEditor}
-                  ></ha-icon>
-                  <ha-icon
-
-                    class="icon-button ${this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : ""}"
-
-                    icon="mdi:play-circle-outline"
-                    title="Test Action"
-                    @click=${this._testServiceCall}
-                  ></ha-icon>              
-                </div>
-            </div>
-            <div class=${this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
-              <ha-code-editor
-                id="service-data-editor"
-                label="Service Data"
-                autocomplete-entities
-                autocomplete-icons
-                .hass=${this.hass}
-                mode="yaml"
-                .value=${action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : ""}
-                @value-changed=${e => {
+    }, (_action$navigation_ne = action === null || action === void 0 ? void 0 : action.navigation_new_tab) !== null && _action$navigation_ne !== void 0 ? _action$navigation_ne : false, e => this._updateActionProperty("navigation_new_tab", e.target.checked)) : E, actionMode === 'service' ? x(_templateObject41$1 || (_templateObject41$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-combo-box\n              label=\"Service\"\n              .hass=", "\n              .value=", "\n              .items=", "\n              item-value-path=\"value\"\n              item-label-path=\"label\"\n              required\n              @value-changed=", "\n            ></ha-combo-box>\n          </div>\n\n          ", "\n\n          ", "\n        "])), this.hass, (_action$service = action.service) !== null && _action$service !== void 0 ? _action$service : "", (_this$_serviceItems = this._serviceItems) !== null && _this$_serviceItems !== void 0 ? _this$_serviceItems : [], e => this._updateActionProperty("service", e.detail.value), typeof action.service === "string" && action.service.startsWith("script.") ? x(_templateObject42$1 || (_templateObject42$1 = _taggedTemplateLiteral(["\n            <div class=\"form-row form-row-multi-column\">\n              <div>\n                <ha-switch\n                  id=\"script-variable-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>Script Variable (yamp_entity)</span>\n              </div>\n            </div>\n          "])), (_action$script_variab = action === null || action === void 0 ? void 0 : action.script_variable) !== null && _action$script_variab !== void 0 ? _action$script_variab : false, e => this._updateActionProperty("script_variable", e.target.checked)) : E, action.service ? x(_templateObject43$1 || (_templateObject43$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n\n              Use <code>entity_id: current</code> to target the card's currently selected\n              media player entity. The <ha-icon icon=\"mdi:play-circle-outline\"></ha-icon> button\n              below does not work if you use this feature.\n\n            </div>\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n            Changes to the service data below are not committed to the config until \n            <ha-icon icon=\"mdi:content-save\"></ha-icon> is clicked!\n            </div>\n            <div class=\"form-row\">\n              <div class=\"service-data-editor-header\">\n                <div class=\"service-data-editor-title\">Service Data</div>\n                <div class=\"service-data-editor-actions\">\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:content-save\"\n                    title=\"Save Service Data\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:backup-restore\"\n                    title=\"Revert to Saved Service Data\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n\n                    class=\"icon-button ", "\"\n\n                    icon=\"mdi:play-circle-outline\"\n                    title=\"Test Action\"\n                    @click=", "\n                  ></ha-icon>              \n                </div>\n            </div>\n            <div class=", ">\n              <ha-code-editor\n                id=\"service-data-editor\"\n                label=\"Service Data\"\n                autocomplete-entities\n                autocomplete-icons\n                .hass=", "\n                mode=\"yaml\"\n                .value=", "\n                @value-changed=", "\n              ></ha-code-editor>\n              ", "\n            </div>\n          "])), !this._yamlModified ? "icon-button-disabled" : "", this._saveYamlEditor, !this._yamlModified ? "icon-button-disabled" : "", this._revertYamlEditor, this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : "", this._testServiceCall, this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", this.hass, action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : "", e => {
       /* the yaml will be parsed in real time to detect errors, but we will defer 
         updating the config until the save button above the editor is clicked.
       */
@@ -12490,25 +8443,19 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       } catch (err) {
         this._yamlError = err.message;
       }
-    }}
-              ></ha-code-editor>
-              ${this._yamlError && this._yamlDraft.trim() !== "" ? x`<div class="yaml-error-message">${this._yamlError}</div>` : E}
-            </div>
-          ` : E}
-        ` : E}
-      </div>`;
+    }, this._yamlError && this._yamlDraft.trim() !== "" ? x(_templateObject44$1 || (_templateObject44$1 = _taggedTemplateLiteral(["<div class=\"yaml-error-message\">", "</div>"])), this._yamlError) : E) : E) : E);
   }
   _onEntityChanged(index, newValue) {
-    const original = this._config.entities ?? [];
+    var _this$_config$entitie6;
+    const original = (_this$_config$entitie6 = this._config.entities) !== null && _this$_config$entitie6 !== void 0 ? _this$_config$entitie6 : [];
     const updated = [...original];
     if (!newValue) {
       // Remove empty row
       updated.splice(index, 1);
     } else {
-      updated[index] = {
-        ...updated[index],
+      updated[index] = _objectSpread2$1(_objectSpread2$1({}, updated[index]), {}, {
         entity_id: newValue
-      };
+      });
     }
 
     // Always strip blank row before writing to config
@@ -12516,27 +8463,27 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     this._updateConfig("entities", cleaned);
   }
   _onActionChanged(index, newValue) {
-    const original = this._config.actions ?? [];
+    var _this$_config$actions5;
+    const original = (_this$_config$actions5 = this._config.actions) !== null && _this$_config$actions5 !== void 0 ? _this$_config$actions5 : [];
     const updated = [...original];
-    updated[index] = {
-      ...updated[index],
+    updated[index] = _objectSpread2$1(_objectSpread2$1({}, updated[index]), {}, {
       name: newValue
-    };
+    });
     this._updateConfig("actions", updated);
   }
   _onEditEntity(index) {
-    var _this$_config$entitie3;
+    var _this$_config$entitie7;
     this._entityEditorIndex = index;
-    const ent = (_this$_config$entitie3 = this._config.entities) === null || _this$_config$entitie3 === void 0 ? void 0 : _this$_config$entitie3[index];
+    const ent = (_this$_config$entitie7 = this._config.entities) === null || _this$_config$entitie7 === void 0 ? void 0 : _this$_config$entitie7[index];
     const mae = ent === null || ent === void 0 ? void 0 : ent.music_assistant_entity;
     this._useTemplate = this._looksLikeTemplate(mae) ? true : false;
     const vol = ent === null || ent === void 0 ? void 0 : ent.volume_entity;
     this._useVolTemplate = this._looksLikeTemplate(vol) ? true : false;
   }
   _onEditAction(index) {
-    var _this$_config$actions2;
+    var _this$_config$actions6;
     this._actionEditorIndex = index;
-    const action = (_this$_config$actions2 = this._config.actions) === null || _this$_config$actions2 === void 0 ? void 0 : _this$_config$actions2[index];
+    const action = (_this$_config$actions6 = this._config.actions) === null || _this$_config$actions6 === void 0 ? void 0 : _this$_config$actions6[index];
     this._actionMode = this._deriveActionMode(action);
   }
   _onBackFromEntityEditor() {
@@ -12577,19 +8524,20 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     this._updateConfig("actions", actions);
   }
   _removeAction(index) {
-    const actions = [...(this._config.actions ?? [])];
+    var _this$_config$actions7;
+    const actions = [...((_this$_config$actions7 = this._config.actions) !== null && _this$_config$actions7 !== void 0 ? _this$_config$actions7 : [])];
     if (index < 0 || index >= actions.length) return;
     actions.splice(index, 1);
     this._updateConfig("actions", actions);
   }
   _toggleActionInMenu(index) {
-    const actions = [...(this._config.actions ?? [])];
+    var _this$_config$actions8;
+    const actions = [...((_this$_config$actions8 = this._config.actions) !== null && _this$_config$actions8 !== void 0 ? _this$_config$actions8 : [])];
     if (!actions[index]) return;
     const current = !!actions[index].in_menu;
-    actions[index] = {
-      ...actions[index],
+    actions[index] = _objectSpread2$1(_objectSpread2$1({}, actions[index]), {}, {
       in_menu: !current
-    };
+    });
     this._updateConfig("actions", actions);
   }
   _saveYamlEditor() {
@@ -12608,9 +8556,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     }
   }
   _revertYamlEditor() {
-    var _this$_config$actions3;
+    var _this$_config$actions9;
     const editor = this.shadowRoot.querySelector("#service-data-editor");
-    const currentAction = (_this$_config$actions3 = this._config.actions) === null || _this$_config$actions3 === void 0 ? void 0 : _this$_config$actions3[this._actionEditorIndex];
+    const currentAction = (_this$_config$actions9 = this._config.actions) === null || _this$_config$actions9 === void 0 ? void 0 : _this$_config$actions9[this._actionEditorIndex];
     if (!editor || !currentAction) return;
     const yamlText = currentAction.service_data ? jsYaml.dump(currentAction.service_data) : "";
     editor.value = yamlText;
@@ -12625,7 +8573,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     return result;
   }
   async _testServiceCall() {
-    var _this$_yamlDraft, _this$_config$actions4;
+    var _this$_yamlDraft, _this$_config$actions0;
     if (this._yamlError || !((_this$_yamlDraft = this._yamlDraft) !== null && _this$_yamlDraft !== void 0 && _this$_yamlDraft.trim())) {
       return;
     }
@@ -12640,7 +8588,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       this._yamlError = e.message;
       return;
     }
-    const action = (_this$_config$actions4 = this._config.actions) === null || _this$_config$actions4 === void 0 ? void 0 : _this$_config$actions4[this._actionEditorIndex];
+    const action = (_this$_config$actions0 = this._config.actions) === null || _this$_config$actions0 === void 0 ? void 0 : _this$_config$actions0[this._actionEditorIndex];
     const service = action === null || action === void 0 ? void 0 : action.service;
     if (!service || !this.hass) {
       return;
@@ -12656,10 +8604,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     }
   }
   _onToggleChanged(e) {
-    const newConfig = {
-      ...this._config,
+    const newConfig = _objectSpread2$1(_objectSpread2$1({}, this._config), {}, {
       always_collapsed: e.target.checked
-    };
+    });
     this._config = newConfig;
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: {
@@ -12779,7 +8726,7 @@ function getSearchResultClickTitle(item) {
     var _item$artists;
     const title = item.name || item.media_title || 'Unknown Track';
     const artist = ((_item$artists = item.artists) === null || _item$artists === void 0 ? void 0 : _item$artists[0]) || item.media_artist || 'Unknown Artist';
-    return `${title} - ${artist}`;
+    return "".concat(title, " - ").concat(artist);
   }
 
   // For albums, show "Album Name - Artist"
@@ -12787,7 +8734,7 @@ function getSearchResultClickTitle(item) {
     var _item$artists2;
     const title = item.name || item.media_album_name || 'Unknown Album';
     const artist = ((_item$artists2 = item.artists) === null || _item$artists2 === void 0 ? void 0 : _item$artists2[0]) || item.media_artist || 'Unknown Artist';
-    return `${title} - ${artist}`;
+    return "".concat(title, " - ").concat(artist);
   }
 
   // For artists, just show the name
@@ -12804,6 +8751,7 @@ function getSearchResultClickTitle(item) {
   return item.name || item.media_title || 'Unknown';
 }
 
+var _templateObject, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7, _templateObject8, _templateObject9, _templateObject0, _templateObject1, _templateObject10, _templateObject11, _templateObject12, _templateObject13, _templateObject14, _templateObject15, _templateObject16, _templateObject17, _templateObject18, _templateObject19, _templateObject20, _templateObject21, _templateObject22, _templateObject23, _templateObject24, _templateObject25, _templateObject26, _templateObject27, _templateObject28, _templateObject29, _templateObject30, _templateObject31, _templateObject32, _templateObject33, _templateObject34, _templateObject35, _templateObject36, _templateObject37, _templateObject38, _templateObject39, _templateObject40, _templateObject41, _templateObject42, _templateObject43, _templateObject44, _templateObject45, _templateObject46, _templateObject47, _templateObject48, _templateObject49, _templateObject50, _templateObject51, _templateObject52, _templateObject53, _templateObject54, _templateObject55, _templateObject56, _templateObject57, _templateObject58, _templateObject59, _templateObject60, _templateObject61, _templateObject62, _templateObject63, _templateObject64, _templateObject65, _templateObject66, _templateObject67, _templateObject68, _templateObject69, _templateObject70, _templateObject71, _templateObject72, _templateObject73, _templateObject74;
 const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
 const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
@@ -12880,10 +8828,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._holdHandler.pointerUp(e, idx);
     }
   }
-  _hoveredSourceLetterIndex = null;
-  // Stores the last grouping master id for group chip selection
-  _lastGroupingMasterId = null;
-  _debouncedVolumeTimer = null;
   _supportsFeature(stateObj, featureBit) {
     if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
     return (stateObj.attributes.supported_features & featureBit) !== 0;
@@ -13063,31 +9007,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     return Object.values(map).sort((a, b) => b.ts - a.ts) // sort groups by recency
     .map(g => g.ids.sort()); // sort ids alphabetically inside each group
   }
-  static properties = {
-    hass: {},
-    config: {},
-    _selectedIndex: {
-      state: true
-    },
-    _lastPlaying: {
-      state: true
-    },
-    _shouldDropdownOpenUp: {
-      state: true
-    },
-    _pinnedIndex: {
-      state: true
-    },
-    _showSourceList: {
-      state: true
-    },
-    _holdToPin: {
-      state: true
-    }
-  };
-  static styles = (() => yampCardStyles)();
   constructor() {
     super();
+    _defineProperty$1(this, "_hoveredSourceLetterIndex", null);
+    // Stores the last grouping master id for group chip selection
+    _defineProperty$1(this, "_lastGroupingMasterId", null);
+    _defineProperty$1(this, "_debouncedVolumeTimer", null);
     this._selectedIndex = 0;
     this._lastPlaying = null;
     this._manualSelect = false;
@@ -13640,9 +9565,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
   _sortSearchResults(results) {
-    var _this$config;
+    var _ref2, _this$config;
     let sortModeOverride = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    const sortMode = sortModeOverride ?? ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_sort) ?? "default";
+    const sortMode = (_ref2 = sortModeOverride !== null && sortModeOverride !== void 0 ? sortModeOverride : (_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_sort) !== null && _ref2 !== void 0 ? _ref2 : "default";
     const list = Array.isArray(results) ? [...results] : [];
     if (sortMode === "default") {
       return list;
@@ -13651,9 +9576,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
       sensitivity: "base",
       numeric: true
     });
-    const normalize = val => typeof val === "string" ? val : (val ?? "").toString();
-    const getTitle = item => normalize((item === null || item === void 0 ? void 0 : item.title) ?? (item === null || item === void 0 ? void 0 : item.name) ?? "");
-    const getArtist = item => normalize((item === null || item === void 0 ? void 0 : item.artist) ?? (item === null || item === void 0 ? void 0 : item.artist_name) ?? "");
+    const normalize = val => typeof val === "string" ? val : (val !== null && val !== void 0 ? val : "").toString();
+    const getTitle = item => {
+      var _ref3, _item$title;
+      return normalize((_ref3 = (_item$title = item === null || item === void 0 ? void 0 : item.title) !== null && _item$title !== void 0 ? _item$title : item === null || item === void 0 ? void 0 : item.name) !== null && _ref3 !== void 0 ? _ref3 : "");
+    };
+    const getArtist = item => {
+      var _ref4, _item$artist;
+      return normalize((_ref4 = (_item$artist = item === null || item === void 0 ? void 0 : item.artist) !== null && _item$artist !== void 0 ? _item$artist : item === null || item === void 0 ? void 0 : item.artist_name) !== null && _ref4 !== void 0 ? _ref4 : "");
+    };
     const compareWithFallback = function (primaryGetter, secondaryGetter) {
       let direction = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
       return (a, b) => {
@@ -13703,7 +9634,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     const [, field, direction] = match;
     const oppositeDirection = direction === "asc" ? "desc" : "asc";
-    return `${field}_${oppositeDirection}`;
+    return "".concat(field, "_").concat(oppositeDirection);
   }
   _shouldShowSearchSortToggle() {
     return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
@@ -13752,7 +9683,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const [field, direction] = mode.split("_");
     const labelField = field === "artist" ? "artist" : "title";
     const labelDirection = direction === "asc" ? "ascending" : "descending";
-    return `Sort ${labelField} ${labelDirection}`;
+    return "Sort ".concat(labelField, " ").concat(labelDirection);
   }
   _getDisplaySearchResults() {
     const baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
@@ -13793,7 +9724,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
   _getSearchResultsCountLabel() {
     const count = this._getSearchResultsCount();
     const noun = count === 1 ? "result" : "results";
-    return `${count} ${noun}`;
+    return "".concat(count, " ").concat(noun);
   }
   async _doSearch() {
     var _this$config4;
@@ -13817,7 +9748,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
 
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}`;
+    const cacheKey = "".concat(mediaType || 'all').concat(isFavorites ? '_favorites' : '').concat(isRecentlyPlayed ? '_recently_played' : '').concat(isUpcoming ? '_upcoming' : '').concat(isRecommendations ? '_recommendations' : '');
     if (this._searchResultsByType[cacheKey]) {
       if (this._searchTimeoutHandle) {
         clearTimeout(this._searchTimeoutHandle);
@@ -13869,10 +9800,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
       } else if (isFavorites) {
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
-          ...searchParams,
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, _objectSpread2$1(_objectSpread2$1({}, searchParams), {}, {
           favorites: true
-        }, this._getSearchResultsLimit());
+        }), this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
         searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this._getSearchResultsLimit());
@@ -14030,12 +9960,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
       return snapshot;
     }
     entityIds.forEach(id => {
-      var _this$hass3, _stateObj$attributes2, _stateObj$attributes3;
+      var _this$hass3, _stateObj$state, _stateObj$attributes$, _stateObj$attributes2, _stateObj$attributes$2, _stateObj$attributes3;
       const stateObj = id ? (_this$hass3 = this.hass) === null || _this$hass3 === void 0 || (_this$hass3 = _this$hass3.states) === null || _this$hass3 === void 0 ? void 0 : _this$hass3[id] : null;
       snapshot[id] = {
-        state: (stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) ?? null,
-        mediaId: (stateObj === null || stateObj === void 0 || (_stateObj$attributes2 = stateObj.attributes) === null || _stateObj$attributes2 === void 0 ? void 0 : _stateObj$attributes2.media_content_id) ?? null,
-        mediaTitle: (stateObj === null || stateObj === void 0 || (_stateObj$attributes3 = stateObj.attributes) === null || _stateObj$attributes3 === void 0 ? void 0 : _stateObj$attributes3.media_title) ?? null
+        state: (_stateObj$state = stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== null && _stateObj$state !== void 0 ? _stateObj$state : null,
+        mediaId: (_stateObj$attributes$ = stateObj === null || stateObj === void 0 || (_stateObj$attributes2 = stateObj.attributes) === null || _stateObj$attributes2 === void 0 ? void 0 : _stateObj$attributes2.media_content_id) !== null && _stateObj$attributes$ !== void 0 ? _stateObj$attributes$ : null,
+        mediaTitle: (_stateObj$attributes$2 = stateObj === null || stateObj === void 0 || (_stateObj$attributes3 = stateObj.attributes) === null || _stateObj$attributes3 === void 0 ? void 0 : _stateObj$attributes3.media_title) !== null && _stateObj$attributes$2 !== void 0 ? _stateObj$attributes$2 : null
       };
     });
     return snapshot;
@@ -14049,7 +9979,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     while (Date.now() - start < timeout) {
       await this._delay(150);
       for (const id of entityIds) {
-        var _this$hass4, _stateObj$attributes4, _stateObj$attributes5;
+        var _this$hass4, _stateObj$attributes$3, _stateObj$attributes4, _stateObj$attributes$4, _stateObj$attributes5;
         if (!id) continue;
         const stateObj = (_this$hass4 = this.hass) === null || _this$hass4 === void 0 || (_this$hass4 = _this$hass4.states) === null || _this$hass4 === void 0 ? void 0 : _this$hass4[id];
         if (!stateObj) continue;
@@ -14057,8 +9987,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
           return true;
         }
         const previous = snapshot[id] || {};
-        const currentMediaId = ((_stateObj$attributes4 = stateObj.attributes) === null || _stateObj$attributes4 === void 0 ? void 0 : _stateObj$attributes4.media_content_id) ?? null;
-        const currentTitle = ((_stateObj$attributes5 = stateObj.attributes) === null || _stateObj$attributes5 === void 0 ? void 0 : _stateObj$attributes5.media_title) ?? null;
+        const currentMediaId = (_stateObj$attributes$3 = (_stateObj$attributes4 = stateObj.attributes) === null || _stateObj$attributes4 === void 0 ? void 0 : _stateObj$attributes4.media_content_id) !== null && _stateObj$attributes$3 !== void 0 ? _stateObj$attributes$3 : null;
+        const currentTitle = (_stateObj$attributes$4 = (_stateObj$attributes5 = stateObj.attributes) === null || _stateObj$attributes5 === void 0 ? void 0 : _stateObj$attributes5.media_title) !== null && _stateObj$attributes$4 !== void 0 ? _stateObj$attributes$4 : null;
         if (currentMediaId && currentMediaId !== previous.mediaId) {
           return true;
         }
@@ -14119,7 +10049,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       name: artistName,
       query: this._searchQuery
     });
-    this._searchBreadcrumb = `Albums by ${artistName}`;
+    this._searchBreadcrumb = "Albums by ".concat(artistName);
     this._searchQuery = artistName;
     this._searchResultsByType = {}; // Clear cache for new search
     this._currentSearchQuery = artistName;
@@ -14147,7 +10077,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       name: albumName,
       query: this._searchQuery
     });
-    this._searchBreadcrumb = `Tracks from ${albumName}`;
+    this._searchBreadcrumb = "Tracks from ".concat(albumName);
     this._searchResultsByType = {}; // Clear cache for new search
     this._currentSearchQuery = albumName;
     this._searchMediaClassFilter = 'track';
@@ -14155,7 +10085,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Create a more specific search query that includes both artist and album
     let searchQuery = albumName;
     if (artistName) {
-      searchQuery = `${artistName} ${albumName}`;
+      searchQuery = "".concat(artistName, " ").concat(albumName);
     }
     this._searchQuery = searchQuery;
 
@@ -14187,7 +10117,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       name: playlistName,
       query: this._searchQuery
     });
-    this._searchBreadcrumb = `Tracks in ${playlistName}`;
+    this._searchBreadcrumb = "Tracks in ".concat(playlistName);
     this._searchQuery = playlistName;
     this._searchMediaClassFilter = 'track';
 
@@ -14217,13 +10147,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
     } else {
       const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
       if (currentLevel.type === 'artist') {
-        this._searchBreadcrumb = `Albums by ${currentLevel.name}`;
+        this._searchBreadcrumb = "Albums by ".concat(currentLevel.name);
         this._searchMediaClassFilter = 'album';
         this._doSearch('album', {
           artist: currentLevel.name
         });
       } else if (currentLevel.type === 'album') {
-        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
+        this._searchBreadcrumb = "Tracks from ".concat(currentLevel.name);
         this._searchMediaClassFilter = 'track';
         // Get the artist name from the hierarchy if available
         const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
@@ -14235,7 +10165,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         }
         this._doSearch('track', searchParams);
       } else if (currentLevel.type === 'playlist') {
-        this._searchBreadcrumb = `Tracks in ${currentLevel.name}`;
+        this._searchBreadcrumb = "Tracks in ".concat(currentLevel.name);
         this._searchMediaClassFilter = 'track';
         this._doSearch('track');
       }
@@ -14356,7 +10286,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        const cacheKey = "".concat(this._searchMediaClassFilter || 'all');
         this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey] || []);
         this.requestUpdate();
       }
@@ -14397,7 +10327,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        const cacheKey = "".concat(this._searchMediaClassFilter || 'all');
         if (this._searchResultsByType[cacheKey]) {
           this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
           this.requestUpdate();
@@ -14427,7 +10357,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Clear search box since it's not used in upcoming mode
       this._searchQuery = '';
       // Clear cache to force fresh fetch
-      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+      const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
       delete this._searchResultsByType[cacheKey];
       // Subscribe to queue update events
       await this._subscribeToQueueUpdates();
@@ -14450,7 +10380,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        const cacheKey = "".concat(this._searchMediaClassFilter || 'all');
         if (this._searchResultsByType[cacheKey]) {
           this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
           this.requestUpdate();
@@ -14499,7 +10429,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const currentMediaType = this._searchMediaClassFilter;
         await this._doSearch(currentMediaType);
       } else {
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
+        const cacheKey = "".concat(this._searchMediaClassFilter || 'all');
         if (this._searchResultsByType[cacheKey]) {
           this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
           this.requestUpdate();
@@ -14734,7 +10664,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Process the upcoming items like the companion card does
       const itemsToRender = normalizedLimit > 0 ? upcomingItems.slice(0, normalizedLimit) : upcomingItems;
       const results = itemsToRender.map((item, index) => ({
-        media_content_id: item.media_content_id || `queue_${index}`,
+        media_content_id: item.media_content_id || "queue_".concat(index),
         media_content_type: 'track',
         media_class: 'track',
         title: item.media_title || 'Unknown Track',
@@ -14856,7 +10786,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Update queue items in UI immediately (like companion card does)
   _moveQueueItemInUI(queueItemId, direction) {
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
     const currentResults = this._searchResultsByType[cacheKey];
     if (!currentResults || !Array.isArray(currentResults.results)) {
       return;
@@ -14903,7 +10833,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
   // Remove queue item from UI immediately
   _removeQueueItemFromUI(queueItemId) {
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
     const currentResults = this._searchResultsByType[cacheKey];
     if (!currentResults || !Array.isArray(currentResults.results)) {
       return;
@@ -14926,7 +10856,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     // Check if the Music Assistant entity has the right attributes
     const hasMassAttributes = ((_maState$attributes5 = maState.attributes) === null || _maState$attributes5 === void 0 ? void 0 : _maState$attributes5.app_id) === "music_assistant" || ((_maState$attributes6 = maState.attributes) === null || _maState$attributes6 === void 0 ? void 0 : _maState$attributes6.mass_player_id) || ((_maState$attributes7 = maState.attributes) === null || _maState$attributes7 === void 0 ? void 0 : _maState$attributes7.active_queue) ||
     // If we're in upcoming mode and getting queue items, assume it's MA
-    this._upcomingFilterActive && ((_this$_searchResultsB = this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming`]) === null || _this$_searchResultsB === void 0 || (_this$_searchResultsB = _this$_searchResultsB.results) === null || _this$_searchResultsB === void 0 ? void 0 : _this$_searchResultsB.some(item => item.queue_item_id));
+    this._upcomingFilterActive && ((_this$_searchResultsB = this._searchResultsByType["".concat(this._searchMediaClassFilter || 'all', "_upcoming")]) === null || _this$_searchResultsB === void 0 || (_this$_searchResultsB = _this$_searchResultsB.results) === null || _this$_searchResultsB === void 0 ? void 0 : _this$_searchResultsB.some(item => item.queue_item_id));
     return hasMassAttributes;
   }
   _looksLikeMusicAssistantState(state) {
@@ -14992,7 +10922,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
 
     // Fall back to cached upcoming results if we've loaded them
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
     const cached = (_this$_searchResultsB2 = this._searchResultsByType) === null || _this$_searchResultsB2 === void 0 ? void 0 : _this$_searchResultsB2[cacheKey];
     if (cached && Array.isArray(cached.results) && cached.results.length > 0) {
       return true;
@@ -15076,7 +11006,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       await this.hass.callService("music_assistant", "transfer_queue", payload);
       this._transferQueueStatus = {
         type: "success",
-        message: `Queue sent to ${target.name}.`
+        message: "Queue sent to ".concat(target.name, ".")
       };
       const targetIdx = typeof target.index === "number" ? target.index : this.entityIds.indexOf(target.entityId);
       if (targetIdx !== undefined && targetIdx !== null && targetIdx >= 0) {
@@ -15171,7 +11101,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
   _refreshQueue() {
     if (this._upcomingFilterActive) {
       // Clear cache to force fresh fetch
-      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+      const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
       delete this._searchResultsByType[cacheKey];
       // Reload upcoming queue items
       this._doSearch('all', {
@@ -15244,7 +11174,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         var _item$media_item, _item$media_item2, _item$media_item3, _item$media_item4, _item$media_item5, _item$media_item6;
         const item = queueData.next_item;
         results.push({
-          media_content_id: ((_item$media_item = item.media_item) === null || _item$media_item === void 0 ? void 0 : _item$media_item.uri) || `queue_next`,
+          media_content_id: ((_item$media_item = item.media_item) === null || _item$media_item === void 0 ? void 0 : _item$media_item.uri) || "queue_next",
           media_content_type: ((_item$media_item2 = item.media_item) === null || _item$media_item2 === void 0 ? void 0 : _item$media_item2.media_type) || 'track',
           media_class: 'track',
           title: item.name || ((_item$media_item3 = item.media_item) === null || _item$media_item3 === void 0 ? void 0 : _item$media_item3.name) || 'Unknown Track',
@@ -15324,7 +11254,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         name: playlistItem.title,
         query: this._searchQuery
       });
-      this._searchBreadcrumb = `Tracks in ${playlistItem.title}`;
+      this._searchBreadcrumb = "Tracks in ".concat(playlistItem.title);
 
       // Try to get playlist tracks using media_player.browse_media
       if (playlistItem.media_content_id) {
@@ -15518,7 +11448,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const result = await this.hass.callApi('POST', 'template', {
         template: this._idleImageTemplate
       });
-      this._idleImageTemplateResult = (result ?? "").toString().trim();
+      this._idleImageTemplateResult = (result !== null && result !== void 0 ? result : "").toString().trim();
     } catch (error) {
       this._idleImageTemplateResult = "";
     } finally {
@@ -15542,10 +11472,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     var _this$_artworkOverrid;
     let type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "image";
     this._ensureArtworkOverrideIndexMap();
-    if (!override) return `generic:${type}`;
+    if (!override) return "generic:".concat(type);
     const idx = (_this$_artworkOverrid = this._artworkOverrideIndexMap) === null || _this$_artworkOverrid === void 0 ? void 0 : _this$_artworkOverrid.get(override);
-    if (typeof idx === "number") return `${idx}:${type}`;
-    return `generic:${type}`;
+    if (typeof idx === "number") return "".concat(idx, ":").concat(type);
+    return "generic:".concat(type);
   }
   _getResolvedArtworkOverrideSource(override, sourceValue) {
     let type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "image";
@@ -15571,7 +11501,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this.hass.callApi('POST', 'template', {
         template: sourceValue
       }).then(res => {
-        entry.value = this._normalizeImageSourceValue((res ?? "").toString());
+        entry.value = this._normalizeImageSourceValue((res !== null && res !== void 0 ? res : "").toString());
       }).catch(() => {
         entry.value = "";
       }).finally(() => {
@@ -15620,8 +11550,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return override[key];
       };
       const matchers = [["media_title", "media_title"], ["media_artist", "media_artist"], ["media_album_name", "media_album_name"], ["media_content_id", "media_content_id"], ["media_channel", "media_channel"], ["app_name", "app_name"], ["media_content_type", "media_content_type"], ["entity_id", "entity_id"], ["entity_state", "entity_state"]];
-      const findSpecificMatch = () => overrides.find(override => matchers.some(_ref2 => {
-        let [attrKey, overrideKey] = _ref2;
+      const findSpecificMatch = () => overrides.find(override => matchers.some(_ref5 => {
+        let [attrKey, overrideKey] = _ref5;
         const expected = getOverrideValue(override, overrideKey);
         if (expected === undefined) return false;
         const value = attrKey === "entity_id" ? entityId : attrKey === "entity_state" ? state === null || state === void 0 ? void 0 : state.state : attrs[attrKey];
@@ -15648,10 +11578,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (override && overrideSource) {
         const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType);
         if (resolvedOverride) {
-          var _override3, _override4;
+          var _override3, _override$object_fit, _override4;
           artworkUrl = resolvedOverride;
           sizePercentage = (_override3 = override) === null || _override3 === void 0 ? void 0 : _override3.size_percentage;
-          objectFit = ((_override4 = override) === null || _override4 === void 0 ? void 0 : _override4.object_fit) ?? null;
+          objectFit = (_override$object_fit = (_override4 = override) === null || _override4 === void 0 ? void 0 : _override4.object_fit) !== null && _override$object_fit !== void 0 ? _override$object_fit : null;
         }
       }
     }
@@ -15739,7 +11669,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     try {
       new URL(url);
       return true;
-    } catch {
+    } catch (_unused) {
       return false;
     }
   }
@@ -15757,7 +11687,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, 1, 1);
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-        resolve(`rgb(${r},${g},${b})`);
+        resolve("rgb(".concat(r, ",").concat(g, ",").concat(b, ")"));
       };
       img.onerror = function () {
         resolve("#888");
@@ -15850,8 +11780,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._currentDetailsScale = null;
     this._updateAdaptiveTextObserverState();
     if (this._adaptiveText) {
-      const initialScale = this._currentTextScale ?? 1;
-      const initialDetailsScale = this._currentDetailsScale ?? 1;
+      var _this$_currentTextSca, _this$_currentDetails;
+      const initialScale = (_this$_currentTextSca = this._currentTextScale) !== null && _this$_currentTextSca !== void 0 ? _this$_currentTextSca : 1;
+      const initialDetailsScale = (_this$_currentDetails = this._currentDetailsScale) !== null && _this$_currentDetails !== void 0 ? _this$_currentDetails : 1;
       this._setAdaptiveTextVars(initialScale, undefined, initialDetailsScale);
       this._updateAdaptiveTextScale();
     } else {
@@ -15912,7 +11843,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
           group_volume = visibleMembers.length > 0;
         }
       }
-      return {
+      return _objectSpread2$1({
         entity_id,
         name,
         volume_entity,
@@ -15920,11 +11851,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
         sync_power,
         follow_active_volume,
         hidden_controls,
-        hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
-        ...(typeof group_volume !== "undefined" ? {
-          group_volume
-        } : {})
-      };
+        hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips
+      }, typeof group_volume !== "undefined" ? {
+        group_volume
+      } : {});
     });
   }
 
@@ -16331,12 +12261,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
 
     // Next, prefer the entity whose group_members list starts with itself
-    const firstMemberMatch = candidates.find(_ref3 => {
+    const firstMemberMatch = candidates.find(_ref6 => {
       var _state$attributes4;
       let {
         groupingId,
         state
-      } = _ref3;
+      } = _ref6;
       const members = Array.isArray((_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.group_members) ? state.attributes.group_members : [];
       return members.length && members[0] === groupingId;
     });
@@ -16345,12 +12275,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
 
     // Fallback: choose an entity whose members list contains every other member
-    const coordinator = candidates.find(_ref4 => {
+    const coordinator = candidates.find(_ref7 => {
       var _state$attributes5;
       let {
         groupingId,
         state
-      } = _ref4;
+      } = _ref7;
       const members = Array.isArray((_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.group_members) ? state.attributes.group_members : [];
       return group.every(otherId => {
         const otherGroupingId = this._getGroupingEntityIdByEntityId(otherId);
@@ -16430,7 +12360,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     var _this$hass15, _this$hass16;
     // Cache the result to prevent continuous re-calling during renders
     // Only recalculate if the cache is invalid or if key state has changed
-    const cacheKey = `${this._selectedIndex}-${(_this$hass15 = this.hass) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15.states) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15[this.currentEntityId]) === null || _this$hass15 === void 0 ? void 0 : _this$hass15.state}-${(_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16[this._getSearchEntityId(this._selectedIndex)]) === null || _this$hass16 === void 0 ? void 0 : _this$hass16.state}`;
+    const cacheKey = "".concat(this._selectedIndex, "-").concat((_this$hass15 = this.hass) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15.states) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15[this.currentEntityId]) === null || _this$hass15 === void 0 ? void 0 : _this$hass15.state, "-").concat((_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16[this._getSearchEntityId(this._selectedIndex)]) === null || _this$hass16 === void 0 ? void 0 : _this$hass16.state);
     if (this._cachedActivePlaybackEntityId === undefined || this._cachedActivePlaybackEntityKey !== cacheKey) {
       this._cachedActivePlaybackEntityId = this._getActivePlaybackEntityId();
       this._cachedActivePlaybackEntityKey = cacheKey;
@@ -16484,7 +12414,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
             this._searchLoading = true;
             this.requestUpdate();
             // Clear cache and refresh with 4 second delay
-            const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+            const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
             delete this._searchResultsByType[cacheKey];
             setTimeout(() => {
               this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
@@ -16851,9 +12781,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     if (!action.service) return;
     const [domain, service] = action.service.split(".");
-    let data = {
-      ...(action.service_data || {})
-    };
+    let data = _objectSpread2$1({}, action.service_data || {});
     if (domain === "script" && action.script_variable === true) {
       const currentMainId = this.currentEntityId;
       const currentMaIdTemplate = this._getSearchEntityId(this._selectedIndex);
@@ -16900,6 +12828,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (hasName) return action.name.trim();
     const iconOnly = !!action.icon;
     if (action.menu_item) {
+      var _menuLabels$action$me;
       if (iconOnly) return "";
       const menuLabels = {
         "search": "Search",
@@ -16910,7 +12839,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         "group-players": "Group Players",
         "transfer-queue": "Transfer Queue"
       };
-      return menuLabels[action.menu_item] ?? action.menu_item;
+      return (_menuLabels$action$me = menuLabels[action.menu_item]) !== null && _menuLabels$action$me !== void 0 ? _menuLabels$action$me : action.menu_item;
     }
     if (typeof action.navigation_path === "string" && action.navigation_path.trim() !== "" || action.action === "navigate") {
       return iconOnly ? "" : "Navigate";
@@ -17238,15 +13167,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
   }
   async _onMuteToggle() {
-    var _state;
+    var _stateObj$attributes$5, _stateObj$attributes$6, _state;
     const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
     if (!entity) return;
     const isRemoteVolumeEntity = entity.startsWith && entity.startsWith("remote.");
     const stateObj = this.currentVolumeStateObj;
     if (!stateObj) return;
-    const isMuted = stateObj.attributes.is_volume_muted ?? false;
-    const currentVolume = stateObj.attributes.volume_level ?? 0;
+    const isMuted = (_stateObj$attributes$5 = stateObj.attributes.is_volume_muted) !== null && _stateObj$attributes$5 !== void 0 ? _stateObj$attributes$5 : false;
+    const currentVolume = (_stateObj$attributes$6 = stateObj.attributes.volume_level) !== null && _stateObj$attributes$6 !== void 0 ? _stateObj$attributes$6 : 0;
     if (isRemoteVolumeEntity) {
       // For remote entities, we can't easily toggle mute, so just set volume to 0 or restore
       if (isMuted) {
@@ -17277,8 +13206,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
           volume_level: 0
         });
       } else {
+        var _this$_previousVolume;
         // Restore previous volume
-        const restoreVolume = this._previousVolume ?? 0.5;
+        const restoreVolume = (_this$_previousVolume = this._previousVolume) !== null && _this$_previousVolume !== void 0 ? _this$_previousVolume : 0.5;
         this.hass.callService("media_player", "volume_set", {
           entity_id: entity,
           volume_level: restoreVolume
@@ -17310,9 +13240,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
             is_volume_muted: !isMuted
           });
         } else {
-          var _targetState$attribut;
+          var _targetState$attribut, _targetState$attribut2;
           // For entities that don't support mute, set volume to 0 or restore
-          const targetVolume = (targetState === null || targetState === void 0 || (_targetState$attribut = targetState.attributes) === null || _targetState$attribut === void 0 ? void 0 : _targetState$attribut.volume_level) ?? 0;
+          const targetVolume = (_targetState$attribut = targetState === null || targetState === void 0 || (_targetState$attribut2 = targetState.attributes) === null || _targetState$attribut2 === void 0 ? void 0 : _targetState$attribut2.volume_level) !== null && _targetState$attribut !== void 0 ? _targetState$attribut : 0;
           if (targetVolume > 0) {
             // Store current volume and mute (simplified - in a real implementation you'd want to store per entity)
             this.hass.callService("media_player", "volume_set", {
@@ -17423,7 +13353,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback;
+    var _this$config$actions2, _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -17445,25 +13375,25 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const hasMultipleEntities = this.entityObjs.length > 1;
     const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
     const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
-    const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({
+    const decoratedActions = ((_this$config$actions2 = this.config.actions) !== null && _this$config$actions2 !== void 0 ? _this$config$actions2 : []).map((action, idx) => ({
       action,
       idx
     }));
-    const rowActions = decoratedActions.filter(_ref5 => {
+    const rowActions = decoratedActions.filter(_ref8 => {
       let {
         action
-      } = _ref5;
+      } = _ref8;
       return !(action !== null && action !== void 0 && action.in_menu);
     });
-    const menuOnlyActions = decoratedActions.filter(_ref6 => {
+    const menuOnlyActions = decoratedActions.filter(_ref9 => {
       let {
         action
-      } = _ref6;
+      } = _ref9;
       return action === null || action === void 0 ? void 0 : action.in_menu;
     });
     const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj) return x`<div class="details">Entity not found.</div>`;
+    if (!stateObj) return x(_templateObject || (_templateObject = _taggedTemplateLiteral(["<div class=\"details\">Entity not found.</div>"])));
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -17636,8 +13566,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const shouldShowPersistentControls = this.config.hide_menu_player === true ? false : !collapsed || meetsPersistentHeight;
     const releaseControlsRow = controlSpacerSize >= 48;
     const collapsedDetailsOffset = collapsedExtraSpace > 0 ? Math.max(100, Math.round(collapsedArtworkSize + 24 + Math.min(40, collapsedExtraSpace * 0.12))) : null;
-    const collapsedControlsOffset = releaseControlsRow ? 0 : collapsedDetailsOffset ?? 0;
-    let cardWidth = this.offsetWidth || (((_this$shadowRoot = this.shadowRoot) === null || _this$shadowRoot === void 0 || (_this$shadowRoot = _this$shadowRoot.host) === null || _this$shadowRoot === void 0 ? void 0 : _this$shadowRoot.offsetWidth) ?? 0);
+    const collapsedControlsOffset = releaseControlsRow ? 0 : collapsedDetailsOffset !== null && collapsedDetailsOffset !== void 0 ? collapsedDetailsOffset : 0;
+    let cardWidth = this.offsetWidth || ((_this$shadowRoot$host = (_this$shadowRoot = this.shadowRoot) === null || _this$shadowRoot === void 0 || (_this$shadowRoot = _this$shadowRoot.host) === null || _this$shadowRoot === void 0 ? void 0 : _this$shadowRoot.offsetWidth) !== null && _this$shadowRoot$host !== void 0 ? _this$shadowRoot$host : 0);
     const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
     const heightScale = collapsedExtraSpace > 0 ? Math.min(1.45, 1 + effectiveExtraSpace / 180) : 1;
     const titleScale = heightScale > 1 || widthScale > 1 ? Math.min(1.6, Math.max(heightScale, widthScale)) : 1;
@@ -17645,9 +13575,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (this.shadowRoot && this.shadowRoot.host) {
       if (collapsedExtraSpace > 0) {
         if (collapsedDetailsOffset != null) {
-          this.shadowRoot.host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
+          this.shadowRoot.host.style.setProperty('--yamp-collapsed-details-offset', "".concat(collapsedDetailsOffset, "px"));
         }
-        this.shadowRoot.host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-controls-offset', "".concat(collapsedControlsOffset, "px"));
         this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
         this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
       }
@@ -17692,27 +13622,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._lastRenderedHideControls = hideControlsNow;
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
-    const backgroundImageValue = idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none";
+    const backgroundImageValue = idleImageUrl ? "url('".concat(idleImageUrl, "')") : artworkUrl ? "url('".concat(artworkUrl, "')") : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
     const backgroundFilter = collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none";
-    const sharedBackgroundStyle = [`background-image: ${backgroundImageValue}`, `background-size: ${backgroundSize}`, "background-position: top center", "background-repeat: no-repeat", `filter: ${backgroundFilter}`].join('; ');
+    const sharedBackgroundStyle = ["background-image: ".concat(backgroundImageValue), "background-size: ".concat(backgroundSize), "background-position: top center", "background-repeat: no-repeat", "filter: ".concat(backgroundFilter)].join('; ');
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
       this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
     }
-    return x`
-        <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : E}>
-          <div
-            data-match-theme="${String(this.config.match_theme === true)}"
-            class="yamp-card-inner ${shouldDimIdle ? 'dim-idle' : ''}"
-          >
-            ${artworkFullBleed && hasBackgroundImage ? x`
-              <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!dimIdleFrame ? x`<div class="full-bleed-artwork-fade"></div>` : E}
-            ` : E}
-            ${showChipsInline ? x`
-                <div class="chip-row">
-                  ${renderChipRow({
+    return x(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["\n        <ha-card class=\"yamp-card\" style=", ">\n          <div\n            data-match-theme=\"", "\"\n            class=\"yamp-card-inner ", "\"\n          >\n            ", "\n            ", "\n            ", "\n            <div class=\"card-lower-content-container\" style=\"", "\">\n              <div class=\"card-lower-content-bg\"\n                style=\"", "\"\n              ></div>\n              ", "\n              <div class=\"card-lower-content", "", "\" style=\"", "\">\n                ", "\n                ", "\n                <div class=\"details\" style=\"", "\">\n                  <div class=\"title\">\n                    ", "\n                  </div>\n                  ", "\n                </div>\n                ", "\n                ", "\n                ", "\n                ", "\n            ", "\n            ", "\n          </div>\n        </div>\n      </div>\n      ", "\n          ", "\n        </ha-card>\n      "])), hasCustomCardHeight ? "height:".concat(customCardHeight, "px;") : E, String(this.config.match_theme === true), shouldDimIdle ? 'dim-idle' : '', artworkFullBleed && hasBackgroundImage ? x(_templateObject3 || (_templateObject3 = _taggedTemplateLiteral(["\n              <div class=\"full-bleed-artwork-bg\" style=\"", "\"></div>\n              ", "\n            "])), sharedBackgroundStyle, !dimIdleFrame ? x(_templateObject4 || (_templateObject4 = _taggedTemplateLiteral(["<div class=\"full-bleed-artwork-fade\"></div>"]))) : E) : E, showChipsInline ? x(_templateObject5 || (_templateObject5 = _taggedTemplateLiteral(["\n                <div class=\"chip-row\">\n                  ", "\n                </div>\n            "])), renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
       selectedEntityId: this.currentEntityId,
@@ -17737,7 +13655,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass28, _this$hass29, _ref7;
+        var _this$hass28, _this$hass29, _ref0;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -17751,7 +13669,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         // Prefer playback entity artwork, fallback to main entity
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return ((_ref7 = playbackArtwork || mainArtwork) === null || _ref7 === void 0 ? void 0 : _ref7.url) || null;
+        return ((_ref0 = playbackArtwork || mainArtwork) === null || _ref0 === void 0 ? void 0 : _ref0.url) || null;
       },
       getIsMaActive: id => {
         var _this$hass30;
@@ -17793,14 +13711,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
       onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
       onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
       onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
-    })}
-                </div>
-            ` : E}
-            ${renderActionChipRow({
-      actions: rowActions.map(_ref8 => {
+    })) : E, renderActionChipRow({
+      actions: rowActions.map(_ref1 => {
         let {
           action
-        } = _ref8;
+        } = _ref1;
         return action;
       }),
       onActionChipClick: idx => {
@@ -17808,77 +13723,28 @@ class YetAnotherMediaPlayerCard extends i$1 {
         if (!target) return;
         this._onActionChipClick(target.idx);
       }
-    })}
-            <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
-              <div class="card-lower-content-bg"
-                style="${(() => {
+    }), idleMinHeight ? "min-height:".concat(idleMinHeight, "px;") : '', (() => {
       const styles = [];
       if (!(artworkFullBleed && hasBackgroundImage)) {
         styles.push(sharedBackgroundStyle);
       } else {
         styles.push('background-image: none', 'filter: none');
       }
-      styles.push(`min-height: ${collapsed ? hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px' : hideControlsNow ? '350px' : '350px'}`);
+      styles.push("min-height: ".concat(collapsed ? hideControlsNow ? "".concat(this._collapsedBaselineHeight || 220, "px") : '0px' : hideControlsNow ? '350px' : '350px'));
       styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
       return styles.join('; ');
-    })()}"
-              ></div>
-              ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
+    })(), !dimIdleFrame ? x(_templateObject6 || (_templateObject6 = _taggedTemplateLiteral(["<div class=\"card-lower-fade\"></div>"]))) : E, collapsed ? ' collapsed transitioning' : ' transitioning', collapsed && artworkUrl ? ' has-artwork' : '', (() => {
       if (!hideControlsNow) return '';
-      return collapsed ? `min-height: ${this._collapsedBaselineHeight || 220}px;` : 'min-height: 350px;';
-    })()}">
-                ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x`
-                  <div
-                    class="collapsed-artwork-container"
-                    style="${[`background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`, collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : ''].filter(Boolean).join('; ')}"
-                  >
-                    <img
-                      class="collapsed-artwork"
-                      src="${artworkUrl}" 
-                      style="${[this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize)}px; height:${Math.round(collapsedArtworkSize)}px;` : ''].filter(Boolean).join(' ')}" 
-                      onload="this.style.display='block'"
-                      onerror="this.style.display='none'" />
-                  </div>
-                ` : E}
-                ${showCollapsedPlaceholder || !collapsed ? x`
-                  <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}">
-                    ${!artworkUrl && !idleImageUrl ? x`
-                      <div class="media-artwork-placeholder">
-                        <svg
-                          viewBox="0 0 184 184"
-                          style="${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
-                          xmlns="http://www.w3.org/2000/svg">
-                          <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"></rect>
-                          <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"></rect>
-                          <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"></rect>
-                          <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"></rect>
-                        </svg>
-                      </div>
-                    ` : E}
-                  </div>
-                ` : E}
-                <div class="details" style="${(() => {
+      return collapsed ? "min-height: ".concat(this._collapsedBaselineHeight || 220, "px;") : 'min-height: 350px;';
+    })(), collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x(_templateObject7 || (_templateObject7 = _taggedTemplateLiteral(["\n                  <div\n                    class=\"collapsed-artwork-container\"\n                    style=\"", "\"\n                  >\n                    <img\n                      class=\"collapsed-artwork\"\n                      src=\"", "\" \n                      style=\"", "\" \n                      onload=\"this.style.display='block'\"\n                      onerror=\"this.style.display='none'\" />\n                  </div>\n                "])), ["background: linear-gradient(120deg, ".concat(this._collapsedArtDominantColor, "bb 60%, transparent 100%)"), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize + 8), "px") : ''].filter(Boolean).join('; '), artworkUrl, [this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize), "px; height:").concat(Math.round(collapsedArtworkSize), "px;") : ''].filter(Boolean).join(' ')) : E, showCollapsedPlaceholder || !collapsed ? x(_templateObject8 || (_templateObject8 = _taggedTemplateLiteral(["\n                  <div class=\"card-artwork-spacer", "\">\n                    ", "\n                  </div>\n                "])), showCollapsedPlaceholder ? ' show-placeholder' : '', !artworkUrl && !idleImageUrl ? x(_templateObject9 || (_templateObject9 = _taggedTemplateLiteral(["\n                      <div class=\"media-artwork-placeholder\">\n                        <svg\n                          viewBox=\"0 0 184 184\"\n                          style=\"", "\"\n                          xmlns=\"http://www.w3.org/2000/svg\">\n                          <rect x=\"36\" y=\"86\" width=\"22\" height=\"62\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"68\" y=\"58\" width=\"22\" height=\"90\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"100\" y=\"34\" width=\"22\" height=\"114\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"132\" y=\"74\" width=\"22\" height=\"74\" rx=\"8\" fill=\"currentColor\"></rect>\n                        </svg>\n                      </div>\n                    "])), this.config.match_theme === true ? 'color:#fff;' : "color:".concat(this._customAccent, ";")) : E) : E, (() => {
       const detailStyleParts = [];
       if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
-      detailStyleParts.push(`min-height:${detailsMinHeight}px`);
+      detailStyleParts.push("min-height:".concat(detailsMinHeight, "px"));
       if (!shouldShowDetails) detailStyleParts.push('opacity:0');
       return detailStyleParts.join(';');
-    })()}">
-                  <div class="title">
-                    ${shouldShowDetails ? title : ""}
-                  </div>
-                  ${shouldShowDetails && artist ? x`
-                    <div
-                      class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
-                      @click=${() => {
+    })(), shouldShowDetails ? title : "", shouldShowDetails && artist ? x(_templateObject0 || (_templateObject0 = _taggedTemplateLiteral(["\n                    <div\n                      class=\"artist ", "\"\n                      @click=", "\n                      title=", "\n                    >", "</div>\n                  "])), stateObj.attributes.media_artist ? 'clickable-artist' : '', () => {
       if (stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-    }}
-                      title=${stateObj.attributes.media_artist ? "Search for this artist" : ""}
-                    >${artist}</div>
-                  ` : E}
-                </div>
-                ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
+    }, stateObj.attributes.media_artist ? "Search for this artist" : "", artist) : E, !collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
       seekEnabled: true,
       onSeek: e => this._onProgressBarClick(e),
@@ -17891,19 +13757,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
       collapsed: false,
       accent: this._customAccent,
       style: "visibility:hidden"
-    }) : E}
-                ${(collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
+    }) : E, (collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
       accent: this._customAccent,
       style: this._showEntityOptions ? "visibility:hidden" : ""
-    }) : E}
-                ${!hideControlsNow && controlSpacerSize > 0 ? x`
-                  <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
-                ` : E}
-                ${!hideControlsNow ? x`
-                  <div style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
-                    ${renderControlsRow({
+    }) : E, !hideControlsNow && controlSpacerSize > 0 ? x(_templateObject1 || (_templateObject1 = _taggedTemplateLiteral(["\n                  <div class=\"collapsed-flex-spacer\" style=\"flex: 1 0 ", "px;\"></div>\n                "])), Math.round(controlSpacerSize)) : E, !hideControlsNow ? x(_templateObject10 || (_templateObject10 = _taggedTemplateLiteral(["\n                  <div style=\"", "\">\n                    ", "\n\n                    ", "\n                  </div>\n                "])), this._showEntityOptions ? 'visibility:hidden' : '', renderControlsRow({
       stateObj: playbackStateObj,
       showStop: this._shouldShowStopButton(playbackStateObj),
       shuffleActive,
@@ -17914,50 +13773,19 @@ class YetAnotherMediaPlayerCard extends i$1 {
       favoriteActive: this._isCurrentTrackFavorited(),
       hiddenControls: this._getHiddenControlsForCurrentEntity(),
       adaptiveControls: this._adaptiveControls
-    })}
-
-                    ${renderVolumeRow({
+    }), renderVolumeRow({
       isRemoteVolumeEntity,
       showSlider,
       vol,
-      isMuted: ((_this$currentVolumeSt3 = this.currentVolumeStateObj) === null || _this$currentVolumeSt3 === void 0 || (_this$currentVolumeSt3 = _this$currentVolumeSt3.attributes) === null || _this$currentVolumeSt3 === void 0 ? void 0 : _this$currentVolumeSt3.is_volume_muted) ?? false,
+      isMuted: (_this$currentVolumeSt3 = (_this$currentVolumeSt4 = this.currentVolumeStateObj) === null || _this$currentVolumeSt4 === void 0 || (_this$currentVolumeSt4 = _this$currentVolumeSt4.attributes) === null || _this$currentVolumeSt4 === void 0 ? void 0 : _this$currentVolumeSt4.is_volume_muted) !== null && _this$currentVolumeSt3 !== void 0 ? _this$currentVolumeSt3 : false,
       supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
       onVolumeDragStart: e => this._onVolumeDragStart(e),
       onVolumeDragEnd: e => this._onVolumeDragEnd(e),
       onVolumeChange: e => this._onVolumeChange(e),
       onVolumeStep: dir => this._onVolumeStep(dir),
       onMuteToggle: () => this._onMuteToggle(),
-      moreInfoMenu: x`
-                        <div class="more-info-menu">
-                          <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                            <span class="more-info-icon">&#9776;</span>
-                          </button>
-                        </div>
-                      `
-    })}
-                  </div>
-                ` : E}
-            ${hideControlsNow && !this._showEntityOptions ? x`
-              <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
-                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span class="more-info-icon">&#9776;</span>
-                </button>
-              </div>
-            ` : E}
-            ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x`
-              <div class="in-menu-active-label">${activeChipName}</div>
-            ` : E}
-          </div>
-        </div>
-      </div>
-      ${this._showEntityOptions ? x`
-      <div class="entity-options-overlay entity-options-overlay-opening" @click=${e => this._closeEntityOptions(e)}>
-        <div class="entity-options-container entity-options-container-opening">
-          <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
-            ${showChipsInMenu ? x`
-                <div class="entity-options-chips-wrapper" @click=${e => e.stopPropagation()}>
-                <div class="chip-row entity-options-chips-strip">
-                  ${renderChipRow({
+      moreInfoMenu: x(_templateObject11 || (_templateObject11 = _taggedTemplateLiteral(["\n                        <div class=\"more-info-menu\">\n                          <button class=\"more-info-btn\" @click=", ">\n                            <span class=\"more-info-icon\">&#9776;</span>\n                          </button>\n                        </div>\n                      "])), async () => await this._openEntityOptions())
+    })) : E, hideControlsNow && !this._showEntityOptions ? x(_templateObject12 || (_templateObject12 = _taggedTemplateLiteral(["\n              <div class=\"more-info-menu\" style=\"position: absolute; right: 18px; bottom: 18px; z-index: 10;\">\n                <button class=\"more-info-btn\" @click=", ">\n                  <span class=\"more-info-icon\">&#9776;</span>\n                </button>\n              </div>\n            "])), async () => await this._openEntityOptions()) : E, showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x(_templateObject13 || (_templateObject13 = _taggedTemplateLiteral(["\n              <div class=\"in-menu-active-label\">", "</div>\n            "])), activeChipName) : E, this._showEntityOptions ? x(_templateObject14 || (_templateObject14 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-overlay entity-options-overlay-opening\" @click=", ">\n        <div class=\"entity-options-container entity-options-container-opening\">\n          <div class=\"entity-options-sheet", " entity-options-sheet-opening\" @click=", ">\n            ", "\n              ", "\n              </div>\n            </div>\n            <!-- Persistent Media Controls Section - Outside Scrollable Area -->\n            ", "\n          </div>\n        "])), e => this._closeEntityOptions(e), showChipsInMenu ? ' chips-mode' : '', e => e.stopPropagation(), showChipsInMenu ? x(_templateObject15 || (_templateObject15 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-chips-wrapper\" @click=", ">\n                <div class=\"chip-row entity-options-chips-strip\">\n                  ", "\n                </div>\n              </div>\n            "])), e => e.stopPropagation(), renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
       selectedEntityId: this.currentEntityId,
@@ -17977,7 +13805,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass32, _this$hass33, _ref9;
+        var _this$hass32, _this$hass33, _ref10;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -17987,7 +13815,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const mainState = (_this$hass33 = this.hass) === null || _this$hass33 === void 0 || (_this$hass33 = _this$hass33.states) === null || _this$hass33 === void 0 ? void 0 : _this$hass33[mainId];
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return ((_ref9 = playbackArtwork || mainArtwork) === null || _ref9 === void 0 ? void 0 : _ref9.url) || null;
+        return ((_ref10 = playbackArtwork || mainArtwork) === null || _ref10 === void 0 ? void 0 : _ref10.url) || null;
       },
       getIsMaActive: id => {
         var _this$hass34;
@@ -18024,17 +13852,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
       onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
       onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
-    })}
-                </div>
-              </div>
-            ` : E}
-              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue ? x`
-                <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''}" style="display:flex; flex-direction:column;">
-                  <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
-                    Close
-                  </button>
-                  <div class="entity-options-divider"></div>
-                  <button class="entity-options-item" @click=${() => {
+    })) : E, !this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue ? x(_templateObject16 || (_templateObject16 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-menu ", "\" style=\"display:flex; flex-direction:column;\">\n                  <button class=\"entity-options-item close-item\" @click=", ">\n                    Close\n                  </button>\n                  <div class=\"entity-options-divider\"></div>\n                  <button class=\"entity-options-item\" @click=", ">More Info</button>\n                  <button class=\"entity-options-item\" @click=", ">Search</button>\n\n                  ", "\n                  ", "\n                  ", "\n                  ", "\n                </div>\n              "])), showChipsInMenu ? 'chips-in-menu' : '', () => this._closeEntityOptions(), () => {
       const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
       if (resolvedEntities.length === 1) {
         this._openMoreInfoForEntity(resolvedEntities[0]);
@@ -18043,18 +13861,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._showResolvedEntities = true;
       }
       this.requestUpdate();
-    }}>More Info</button>
-                  <button class="entity-options-item" @click=${() => {
+    }, () => {
       this._showSearchSheetInOptions();
-    }}>Search</button>
-
-                  ${Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x`
-                      <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
-                    ` : E}
-                  ${this._canShowTransferQueueOption() ? x`
-                    <button class="entity-options-item" @click=${() => this._openTransferQueue()}>Transfer Queue</button>
-                  ` : E}
-                  ${(() => {
+    }, Array.isArray((_this$currentStateObj = this.currentStateObj) === null || _this$currentStateObj === void 0 || (_this$currentStateObj = _this$currentStateObj.attributes) === null || _this$currentStateObj === void 0 ? void 0 : _this$currentStateObj.source_list) && this.currentStateObj.attributes.source_list.length > 0 ? x(_templateObject17 || (_templateObject17 = _taggedTemplateLiteral(["\n                      <button class=\"entity-options-item\" @click=", ">Source</button>\n                    "])), () => this._openSourceList()) : E, this._canShowTransferQueueOption() ? x(_templateObject18 || (_templateObject18 = _taggedTemplateLiteral(["\n                    <button class=\"entity-options-item\" @click=", ">Transfer Queue</button>\n                  "])), () => this._openTransferQueue()) : E, (() => {
       const totalEntities = this.entityIds.length;
       const groupableCount = this.entityIds.reduce((acc, id) => {
         var _this$_maResolveCache4;
@@ -18096,97 +13905,32 @@ class YetAnotherMediaPlayerCard extends i$1 {
       }
       const currGroupState = this.hass.states[currGroupId];
       if (totalEntities > 1 && groupableCount > 1 && this._isGroupCapable(currGroupState)) {
-        return x`
-                          <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
-                        `;
+        return x(_templateObject19 || (_templateObject19 = _taggedTemplateLiteral(["\n                          <button class=\"entity-options-item\" @click=", ">Group Players</button>\n                        "])), () => this._openGrouping());
       }
       return E;
-    })()}
-                  ${menuOnlyActions.length ? x`
-                    ${menuOnlyActions.map(_ref0 => {
+    })(), menuOnlyActions.length ? x(_templateObject20 || (_templateObject20 = _taggedTemplateLiteral(["\n                    ", "\n                  "])), menuOnlyActions.map(_ref11 => {
       let {
         action,
         idx
-      } = _ref0;
+      } = _ref11;
       const label = this._getActionLabel(action);
-      return x`
-                        <button
-                          class="entity-options-item menu-action-item"
-                          @click=${() => this._onMenuActionClick(idx)}
-                        >
-                          ${action.icon ? x`
-                            <ha-icon
-                              class="menu-action-icon"
-                              .icon=${action.icon}
-                            ></ha-icon>
-                          ` : E}
-                          ${label ? x`<span class="menu-action-label">${label}</span>` : E}
-                        </button>
-                      `;
-    })}
-                  ` : E}
-                </div>
-              ` : this._showTransferQueue ? x`
-                <button class="entity-options-item close-item" @click=${() => {
+      return x(_templateObject21 || (_templateObject21 = _taggedTemplateLiteral(["\n                        <button\n                          class=\"entity-options-item menu-action-item\"\n                          @click=", "\n                        >\n                          ", "\n                          ", "\n                        </button>\n                      "])), () => this._onMenuActionClick(idx), action.icon ? x(_templateObject22 || (_templateObject22 = _taggedTemplateLiteral(["\n                            <ha-icon\n                              class=\"menu-action-icon\"\n                              .icon=", "\n                            ></ha-icon>\n                          "])), action.icon) : E, label ? x(_templateObject23 || (_templateObject23 = _taggedTemplateLiteral(["<span class=\"menu-action-label\">", "</span>"])), label) : E);
+    })) : E) : this._showTransferQueue ? x(_templateObject24 || (_templateObject24 = _taggedTemplateLiteral(["\n                <button class=\"entity-options-item close-item\" @click=", ">\n                  Back\n                </button>\n                <div class=\"entity-options-divider\"></div>\n                <div class=\"entity-options-title\" style=\"margin-bottom:12px;\">Transfer Queue To</div>\n                ", "\n                ", "\n              "])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeTransferQueue();
       }
-    }}>
-                  Back
-                </button>
-                <div class="entity-options-divider"></div>
-                <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
-                ${(() => {
+    }, (() => {
       const targets = this._getTransferQueueTargets();
       if (!targets.length) {
-        return x`<div style="padding: 12px; opacity: 0.75;">No other Music Assistant players available.</div>`;
+        return x(_templateObject25 || (_templateObject25 = _taggedTemplateLiteral(["<div style=\"padding: 12px; opacity: 0.75;\">No other Music Assistant players available.</div>"])));
       }
-      return x`
-                      <div style="display:flex;flex-direction:column;gap:8px;">
-                        ${targets.map(target => x`
-                          <button
-                            class="entity-options-item"
-                            ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                            @click=${() => this._transferQueueTo(target)}
-                            style="display:flex;align-items:center;justify-content:flex-start;gap:12px;${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
-                            <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
-                            <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                              <div>${target.name}</div>
-                              <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
-                            </div>
-                            ${target.state ? x`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : E}
-                          </button>
-                        `)}
-                      </div>
-                    `;
-    })()}
-                ${this._transferQueueStatus ? x`
-                  <div style="
-                    margin-top: 14px;
-                    padding: 10px 12px;
-                    border-radius: 8px;
-                    font-weight: 600;
-                    text-align: center;
-                    background: ${this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)'};
-                    color: ${this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a'};
-                  ">
-                    ${this._transferQueueStatus.message}
-                  </div>
-                ` : E}
-              ` : this._showResolvedEntities ? x`
-                <button class="entity-options-item close-item" @click=${() => {
+      return x(_templateObject26 || (_templateObject26 = _taggedTemplateLiteral(["\n                      <div style=\"display:flex;flex-direction:column;gap:8px;\">\n                        ", "\n                      </div>\n                    "])), targets.map(target => x(_templateObject27 || (_templateObject27 = _taggedTemplateLiteral(["\n                          <button\n                            class=\"entity-options-item\"\n                            ?disabled=", "\n                            @click=", "\n                            style=\"display:flex;align-items:center;justify-content:flex-start;gap:12px;", "\">\n                            <ha-icon .icon=", " style=\"margin-right:4px;\"></ha-icon>\n                            <div style=\"display:flex;flex-direction:column;align-items:flex-start;\">\n                              <div>", "</div>\n                              <div style=\"font-size:0.82em;opacity:0.7;\">", "</div>\n                            </div>\n                            ", "\n                          </button>\n                        "])), this._transferQueuePendingTarget === target.maEntityId, () => this._transferQueueTo(target), this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : '', target.icon, target.name, target.subtitle, target.state ? x(_templateObject28 || (_templateObject28 = _taggedTemplateLiteral(["<div style=\"margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;\">", "</div>"])), target.state) : E)));
+    })(), this._transferQueueStatus ? x(_templateObject29 || (_templateObject29 = _taggedTemplateLiteral(["\n                  <div style=\"\n                    margin-top: 14px;\n                    padding: 10px 12px;\n                    border-radius: 8px;\n                    font-weight: 600;\n                    text-align: center;\n                    background: ", ";\n                    color: ", ";\n                  \">\n                    ", "\n                  </div>\n                "])), this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)', this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a', this._transferQueueStatus.message) : E) : this._showResolvedEntities ? x(_templateObject30 || (_templateObject30 = _taggedTemplateLiteral(["\n                <button class=\"entity-options-item close-item\" @click=", ">\n                  Back\n                </button>\n                <div class=\"entity-options-divider\"></div>\n                <div class=\"entity-options-resolved-entities\" style=\"margin-top:12px;\">\n                  <div class=\"entity-options-title\">Select Entity for More Info</div>\n                  <div class=\"entity-options-resolved-entities-list\">\n                    ", "\n                  </div>\n                </div>\n              "])), () => {
       this._showResolvedEntities = false;
       this.requestUpdate();
-    }}>
-                  Back
-                </button>
-                <div class="entity-options-divider"></div>
-                <div class="entity-options-resolved-entities" style="margin-top:12px;">
-                  <div class="entity-options-title">Select Entity for More Info</div>
-                  <div class="entity-options-resolved-entities-list">
-                    ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
+    }, this._getResolvedEntitiesForCurrentChip().map(entityId => {
       var _this$hass35, _state$attributes8, _state$attributes9;
       const state = (_this$hass35 = this.hass) === null || _this$hass35 === void 0 || (_this$hass35 = _this$hass35.states) === null || _this$hass35 === void 0 ? void 0 : _this$hass35[entityId];
       const name = (state === null || state === void 0 || (_state$attributes8 = state.attributes) === null || _state$attributes8 === void 0 ? void 0 : _state$attributes8.friendly_name) || entityId;
@@ -18208,54 +13952,22 @@ class YetAnotherMediaPlayerCard extends i$1 {
           role = "Volume Entity";
         }
       }
-      return x`
-                        <button class="entity-options-item" @click=${() => {
+      return x(_templateObject31 || (_templateObject31 = _taggedTemplateLiteral(["\n                        <button class=\"entity-options-item\" @click=", ">\n                          <ha-icon .icon=", " style=\"margin-right: 8px;\"></ha-icon>\n                          <div style=\"display: flex; flex-direction: column; align-items: flex-start;\">\n                            <div>", "</div>\n                            <div style=\"font-size: 0.85em; opacity: 0.7;\">", "</div>\n                          </div>\n                        </button>\n                      "])), () => {
         this._openMoreInfoForEntity(entityId);
         this._showEntityOptions = false;
         this._showResolvedEntities = false;
         this.requestUpdate();
-      }}>
-                          <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
-                          <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                            <div>${isActive ? `${name} (Active)` : name}</div>
-                            <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
-                          </div>
-                        </button>
-                      `;
-    })}
-                  </div>
-                </div>
-              ` : this._showSearchInSheet ? x`
-                <div class="entity-options-search" style="margin-top:12px;">
-                  ${this._searchHierarchy.length > 0 ? x`
-                    <button class="entity-options-item close-item" @click=${() => {
+      }, icon, isActive ? "".concat(name, " (Active)") : name, role);
+    })) : this._showSearchInSheet ? x(_templateObject32 || (_templateObject32 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-search\" style=\"margin-top:12px;\">\n                  ", "\n                  ", "\n                  <div class=\"entity-options-search-row\">\n                      <input\n                        type=\"text\"\n                        id=\"search-input-box\"\n                        autofocus\n                        class=\"entity-options-search-input\"\n                        .value=", "\n                        @input=", "\n                        @keydown=", "\n                        placeholder=\"Search music...\"\n                        style=\"flex:1; min-width:0; font-size:1.1em;\"\n                      />\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", "\n                      ?disabled=", ">\n                      Search\n                    </button>\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", ">\n                      Cancel\n                    </button>\n                  </div>\n                  <!-- FILTER CHIPS -->\n                  ", "\n                  ", "\n                  ", "\n                  \n                  ", "\n                  \n                  <div class=\"entity-options-search-results\">\n                    ", "\n                  </div>\n                </div>\n              "])), this._searchHierarchy.length > 0 ? x(_templateObject33 || (_templateObject33 = _taggedTemplateLiteral(["\n                    <button class=\"entity-options-item close-item\" @click=", ">\n                      Back\n                    </button>\n                    <div class=\"entity-options-divider\"></div>\n                  "])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._goBackInSearch();
       }
-    }}>
-                      Back
-                    </button>
-                    <div class="entity-options-divider"></div>
-                  ` : E}
-                  ${this._searchBreadcrumb ? x`
-                    <div class="entity-options-search-breadcrumb">
-                      <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
-                    </div>
-                  ` : E}
-                  <div class="entity-options-search-row">
-                      <input
-                        type="text"
-                        id="search-input-box"
-                        autofocus
-                        class="entity-options-search-input"
-                        .value=${this._searchQuery}
-                        @input=${e => {
+    }) : E, this._searchBreadcrumb ? x(_templateObject34 || (_templateObject34 = _taggedTemplateLiteral(["\n                    <div class=\"entity-options-search-breadcrumb\">\n                      <div class=\"entity-options-search-breadcrumb-text\">", "</div>\n                    </div>\n                  "])), this._searchBreadcrumb) : E, this._searchQuery, e => {
       this._searchQuery = e.target.value;
       this.requestUpdate();
-    }}
-                        @keydown=${e => {
+    }, e => {
       if (e.key === "Enter") {
         e.preventDefault();
         // Clear recently played filter when user initiates search
@@ -18267,38 +13979,19 @@ class YetAnotherMediaPlayerCard extends i$1 {
         e.preventDefault();
         this._hideSearchSheetInOptions();
       }
-    }}
-                        placeholder="Search music..."
-                        style="flex:1; min-width:0; font-size:1.1em;"
-                      />
-                    <button
-                      class="entity-options-item"
-                      style="min-width:80px;"
-                      @click=${() => {
+    }, () => {
       // Clear recently played filter when user initiates search
       this._recentlyPlayedFilterActive = false;
       this._upcomingFilterActive = false;
       this._recommendationsFilterActive = false;
       this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
-    }}
-                      ?disabled=${this._searchLoading}>
-                      Search
-                    </button>
-                    <button
-                      class="entity-options-item"
-                      style="min-width:80px;"
-                      @click=${() => {
+    }, this._searchLoading, () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._hideSearchSheetInOptions();
       }
-    }}>
-                      Cancel
-                    </button>
-                  </div>
-                  <!-- FILTER CHIPS -->
-                  ${(() => {
+    }, (() => {
       const classes = this._getVisibleSearchFilterClasses();
       const filter = this._searchMediaClassFilter || "all";
 
@@ -18307,187 +14000,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
 
       // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
       if (classes.length < 2 && !this._usingMusicAssistant) return E;
-      return x`
-                      <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
-                        <button
-                          class="chip"
-                          style="
-                            width: 72px;
-                            background: ${filter === 'all' ? this._customAccent : '#282828'};
-                            opacity: ${filter === 'all' ? '1' : '0.8'};
-                            font-weight: ${filter === 'all' ? 'bold' : 'normal'};
-                          "
-                          ?selected=${filter === 'all'}
-                          @click=${() => this._doSearch()}
-                        >All</button>
-                        ${classes.map(c => x`
-                          <button
-                            class="chip"
-                            style="
-                              width: 72px;
-                              background: ${filter === c ? this._customAccent : '#282828'};
-                              opacity: ${filter === c ? '1' : '0.8'};
-                              font-weight: ${filter === c ? 'bold' : 'normal'};
-                            "
-                            ?selected=${filter === c}
-                            @click=${() => this._doSearch(c)}
-                          >
-                            ${c.charAt(0).toUpperCase() + c.slice(1)}
-                          </button>
-                        `)}
-                      </div>
-                    `;
-    })()}
-                  ${this._searchLoading ? x`<div class="entity-options-search-loading">Loading...</div>` : E}
-                  ${this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
-                  
-                  ${this._usingMusicAssistant && !this._searchLoading ? x`
-                    <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
-                      <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
-                        <button
-                          class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
-                          style="
-                            background: none;
-                            border: none;
-                            font-size: 1.2em;
-                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px 8px;
-                            border-radius: 50%;
-                            transition: all 0.2s ease;
-                            margin-right: 8px;
-                            display: flex;
-                            align-items: center;
-                            opacity: ${this._searchAttempted ? '1' : '0.5'};
-                          "
-                          @click=${this._searchAttempted ? () => {
+      return x(_templateObject35 || (_templateObject35 = _taggedTemplateLiteral(["\n                      <div class=\"chip-row search-filter-chips\" id=\"search-filter-chip-row\" style=\"margin-bottom:12px; justify-content: center; align-items: center;\">\n                        <button\n                          class=\"chip\"\n                          style=\"\n                            width: 72px;\n                            background: ", ";\n                            opacity: ", ";\n                            font-weight: ", ";\n                          \"\n                          ?selected=", "\n                          @click=", "\n                        >All</button>\n                        ", "\n                      </div>\n                    "])), filter === 'all' ? this._customAccent : '#282828', filter === 'all' ? '1' : '0.8', filter === 'all' ? 'bold' : 'normal', filter === 'all', () => this._doSearch(), classes.map(c => x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                          <button\n                            class=\"chip\"\n                            style=\"\n                              width: 72px;\n                              background: ", ";\n                              opacity: ", ";\n                              font-weight: ", ";\n                            \"\n                            ?selected=", "\n                            @click=", "\n                          >\n                            ", "\n                          </button>\n                        "])), filter === c ? this._customAccent : '#282828', filter === c ? '1' : '0.8', filter === c ? 'bold' : 'normal', filter === c, () => this._doSearch(c), c.charAt(0).toUpperCase() + c.slice(1))));
+    })(), this._searchLoading ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["<div class=\"entity-options-search-loading\">Loading...</div>"]))) : E, this._searchError ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["<div class=\"entity-options-search-error\">", "</div>"])), this._searchError) : E, this._usingMusicAssistant && !this._searchLoading ? x(_templateObject39 || (_templateObject39 = _taggedTemplateLiteral(["\n                    <div style=\"display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;\">\n                      <div style=\"display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;\">\n                        <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"Favorites\"\n                        >\n                                                  <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"Recently Played\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      ", "\n                      ", "\n                      ", "\n                    </div>\n                  "])), this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleFavoritesFilter();
-    } : () => {}}
-                          title="Favorites"
-                        >
-                                                  <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
-                          ${this._initialFavoritesLoaded || this._favoritesFilterActive ? x`
-                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
-                              Favorites
-                            </span>
-                          ` : E}
-                      </button>
-                      <button
-                          class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
-                          style="
-                            background: none;
-                            border: none;
-                            font-size: 1.2em;
-                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px 8px;
-                            border-radius: 50%;
-                            transition: all 0.2s ease;
-                            margin-right: 8px;
-                            display: flex;
-                            align-items: center;
-                            opacity: ${this._searchAttempted ? '1' : '0.5'};
-                          "
-                          @click=${this._searchAttempted ? () => {
+    } : () => {}, this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline', this._initialFavoritesLoaded || this._favoritesFilterActive ? x(_templateObject40 || (_templateObject40 = _taggedTemplateLiteral(["\n                            <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                              Favorites\n                            </span>\n                          "]))) : E, this._recentlyPlayedFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleRecentlyPlayedFilter();
-    } : () => {}}
-                          title="Recently Played"
-                        >
-                          <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
-                          ${this._recentlyPlayedFilterActive ? x`
-                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
-                              Recently Played
-                            </span>
-                          ` : E}
-                      </button>
-                      ${this._isMusicAssistantEntity() ? x`
-                        <button
-                            class="button${this._upcomingFilterActive ? ' active' : ''}"
-                            style="
-                              background: none;
-                              border: none;
-                              font-size: 1.2em;
-                              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                              padding: 4px 8px;
-                              border-radius: 50%;
-                              transition: all 0.2s ease;
-                              margin-right: 8px;
-                              display: flex;
-                              align-items: center;
-                              opacity: ${this._searchAttempted ? '1' : '0.5'};
-                            "
-                            @click=${this._searchAttempted ? () => {
+    } : () => {}, this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline', this._recentlyPlayedFilterActive ? x(_templateObject41 || (_templateObject41 = _taggedTemplateLiteral(["\n                            <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                              Recently Played\n                            </span>\n                          "]))) : E, this._isMusicAssistantEntity() ? x(_templateObject42 || (_templateObject42 = _taggedTemplateLiteral(["\n                        <button\n                            class=\"button", "\"\n                            style=\"\n                              background: none;\n                              border: none;\n                              font-size: 1.2em;\n                              cursor: ", ";\n                              padding: 4px 8px;\n                              border-radius: 50%;\n                              transition: all 0.2s ease;\n                              margin-right: 8px;\n                              display: flex;\n                              align-items: center;\n                              opacity: ", ";\n                            \"\n                            @click=", "\n                            title=\"Next Up\"\n                          >\n                            <ha-icon .icon=", "></ha-icon>\n                            ", "\n                        </button>\n                        ", "\n                      "])), this._upcomingFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleUpcomingFilter();
-    } : () => {}}
-                            title="Next Up"
-                          >
-                            <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
-                            ${this._upcomingFilterActive ? x`
-                              <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
-                                Next Up
-                              </span>
-                            ` : E}
-                        </button>
-                        ${this._hasMassQueueIntegration ? x`
-                          <button
-                              class="button${this._recommendationsFilterActive ? ' active' : ''}"
-                              style="
-                                background: none;
-                                border: none;
-                                font-size: 1.2em;
-                                cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                                padding: 4px 8px;
-                                border-radius: 50%;
-                                transition: all 0.2s ease;
-                                margin-right: 8px;
-                                display: flex;
-                                align-items: center;
-                                opacity: ${this._searchAttempted ? '1' : '0.5'};
-                              "
-                              @click=${this._searchAttempted ? () => {
+    } : () => {}, this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline', this._upcomingFilterActive ? x(_templateObject43 || (_templateObject43 = _taggedTemplateLiteral(["\n                              <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                Next Up\n                              </span>\n                            "]))) : E, this._hasMassQueueIntegration ? x(_templateObject44 || (_templateObject44 = _taggedTemplateLiteral(["\n                          <button\n                              class=\"button", "\"\n                              style=\"\n                                background: none;\n                                border: none;\n                                font-size: 1.2em;\n                                cursor: ", ";\n                                padding: 4px 8px;\n                                border-radius: 50%;\n                                transition: all 0.2s ease;\n                                margin-right: 8px;\n                                display: flex;\n                                align-items: center;\n                                opacity: ", ";\n                              \"\n                              @click=", "\n                              title=\"Recommendations\"\n                            >\n                              <ha-icon .icon=", "></ha-icon>\n                              ", "\n                          </button>\n                        "])), this._recommendationsFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleRecommendationsFilter();
-    } : () => {}}
-                              title="Recommendations"
-                            >
-                              <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:lightbulb-on' : 'mdi:lightbulb-on-outline'}></ha-icon>
-                              ${this._recommendationsFilterActive ? x`
-                                <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
-                                  Recommendations
-                                </span>
-                              ` : E}
-                          </button>
-                        ` : E}
-                      ` : E}
-                      ${this._shouldShowSearchSortToggle() ? x`
-                        <button
-                          class="button"
-                          style="
-                            background: none;
-                            border: none;
-                            font-size: 1.2em;
-                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                            padding: 4px 8px;
-                            border-radius: 50%;
-                            transition: all 0.2s ease;
-                            margin-right: 8px;
-                            display: flex;
-                            align-items: center;
-                            opacity: ${this._searchAttempted ? '1' : '0.5'};
-                          "
-                          @click=${this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}}
-                          title=${this._getSearchSortToggleTitle()}
-                        >
-                          <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
-                        </button>
-                      ` : E}
-                      ${this._shouldShowSearchResultsCount() ? x`
-                        <span style="margin-left:auto;padding-left:8px;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;text-align:right;flex-shrink:0;">
-                          ${this._getSearchResultsCountLabel()}
-                        </span>
-                      ` : E}
-                    </div>
-                  ` : E}
-                  
-                  <div class="entity-options-search-results">
-                    ${(() => {
+    } : () => {}, this._recommendationsFilterActive ? 'mdi:lightbulb-on' : 'mdi:lightbulb-on-outline', this._recommendationsFilterActive ? x(_templateObject45 || (_templateObject45 = _taggedTemplateLiteral(["\n                                <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                  Recommendations\n                                </span>\n                              "]))) : E) : E) : E, this._shouldShowSearchSortToggle() ? x(_templateObject46 || (_templateObject46 = _taggedTemplateLiteral(["\n                        <button\n                          class=\"button\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=", "\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                        </button>\n                      "])), this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}, this._getSearchSortToggleTitle(), this._getSearchSortToggleIcon()) : E, this._shouldShowSearchResultsCount() ? x(_templateObject47 || (_templateObject47 = _taggedTemplateLiteral(["\n                        <span style=\"margin-left:auto;padding-left:8px;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;text-align:right;flex-shrink:0;\">\n                          ", "\n                        </span>\n                      "])), this._getSearchResultsCountLabel()) : E) : E, (() => {
       this._searchMediaClassFilter || "all";
       const currentResults = this._getDisplaySearchResults();
       // Build padded array so row‑count stays constant
@@ -18496,32 +14018,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         length: Math.max(0, totalRows - currentResults.length)
       }, () => null)];
       // Always render paddedResults, even before first search
-      return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
-                            <!-- EXISTING non‑placeholder row markup -->
-                            <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''}">
-                              ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x`
-                                <img
-                                  class="entity-options-search-thumb"
-                                  src=${item.thumbnail}
-                                  alt=${item.title}
-                                  style="height:38px;width:38px;object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;margin-right:12px;"
-                                  onerror="this.style.display='none'"
-                                />
-                              ` : x`
-                                <div class="entity-options-search-thumb-placeholder" 
-                                     style="height:38px;width:38px;border-radius:5px;margin-right:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
-                                  <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
-                                </div>
-                              `}
-                              <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-                                <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
-                                      @touchstart=${e => this._handleSearchResultTouch(item, e)}
-                                      @click=${() => this._handleSearchResultClick(item)}
-                                      title=${this._getSearchResultClickTitle(item)}>
-                                  ${item.title}
-                                </span>
-                                <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
-                                  ${(() => {
+      return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x(_templateObject48 || (_templateObject48 = _taggedTemplateLiteral(["<div class=\"entity-options-search-empty\" style=\"color: white;\">No results.</div>"]))) : paddedResults.map(item => item ? x(_templateObject49 || (_templateObject49 = _taggedTemplateLiteral(["\n                            <!-- EXISTING non\u2011placeholder row markup -->\n                            <div class=\"entity-options-search-result ", "\">\n                              ", "\n                              <div style=\"flex:1; display:flex; flex-direction:column; justify-content:center;\">\n                                <span class=\"", "\"\n                                      @touchstart=", "\n                                      @click=", "\n                                      title=", ">\n                                  ", "\n                                </span>\n                                <span style=\"font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;\">\n                                  ", "\n                                </span>\n                              </div>\n                              <div class=\"entity-options-search-buttons\">\n                                <button class=\"entity-options-search-play\" @click=", " title=\"Play Now\">\n                                  \u25B6\n                                </button>\n                                ", "\n                              </div>\n                            </div>\n                          "])), item._justMoved ? 'just-moved' : '', item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject50 || (_templateObject50 = _taggedTemplateLiteral(["\n                                <img\n                                  class=\"entity-options-search-thumb\"\n                                  src=", "\n                                  alt=", "\n                                  style=\"height:38px;width:38px;object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;margin-right:12px;\"\n                                  onerror=\"this.style.display='none'\"\n                                />\n                              "])), item.thumbnail, item.title) : x(_templateObject51 || (_templateObject51 = _taggedTemplateLiteral(["\n                                <div class=\"entity-options-search-thumb-placeholder\" \n                                     style=\"height:38px;width:38px;border-radius:5px;margin-right:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;\">\n                                  <ha-icon icon=\"mdi:music\" style=\"color:rgba(255,255,255,0.6);font-size:16px;\"></ha-icon>\n                                </div>\n                              "]))), this._isClickableSearchResult(item) ? 'clickable-search-result' : '', e => this._handleSearchResultTouch(item, e), () => this._handleSearchResultClick(item), this._getSearchResultClickTitle(item), item.title, (() => {
         // Prefer artist when available for tracks/albums and special filters
         const isTrackOrAlbum = this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album';
         const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
@@ -18532,86 +14029,38 @@ class YetAnotherMediaPlayerCard extends i$1 {
         }
         // Otherwise show media class as before
         return item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : "";
-      })()}
-                                </span>
-                              </div>
-                              <div class="entity-options-search-buttons">
-                                <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
-                                  ▶
-                                </button>
-                                ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? x`
-                                  <button class="entity-options-search-queue" @click=${e => {
+      })(), () => this._playMediaFromSearch(item), !(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? x(_templateObject52 || (_templateObject52 = _taggedTemplateLiteral(["\n                                  <button class=\"entity-options-search-queue\" @click=", " title=\"Add to Queue\">\n                                    <ha-icon icon=\"mdi:playlist-play\"></ha-icon>\n                                  </button>\n                                "])), e => {
         e.preventDefault();
         e.stopPropagation();
         this._queueMediaFromSearch(item);
-      }} title="Add to Queue">
-                                    <ha-icon icon="mdi:playlist-play"></ha-icon>
-                                  </button>
-                                ` : x`
-                                  <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->
-                                  ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? x`
-                                    <div class="queue-controls">
-                                      <button class="queue-btn queue-btn-up" @click=${e => {
+      }) : x(_templateObject53 || (_templateObject53 = _taggedTemplateLiteral(["\n                                  <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->\n                                  ", "\n                                "])), this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? x(_templateObject54 || (_templateObject54 = _taggedTemplateLiteral(["\n                                    <div class=\"queue-controls\">\n                                      <button class=\"queue-btn queue-btn-up\" @click=", " title=\"Move Up\">\n                                        <ha-icon icon=\"mdi:arrow-up\"></ha-icon>\n                                      </button>\n                                      <button class=\"queue-btn queue-btn-down\" @click=", " title=\"Move Down\">\n                                        <ha-icon icon=\"mdi:arrow-down\"></ha-icon>\n                                      </button>\n                                      <button class=\"queue-btn queue-btn-next\" @click=", " title=\"Move to Next\">\n                                        <ha-icon icon=\"mdi:format-vertical-align-top\"></ha-icon>\n                                      </button>\n                                      <button class=\"queue-btn queue-btn-remove\" @click=", " title=\"Remove from Queue\">\n                                        <ha-icon icon=\"mdi:close\"></ha-icon>\n                                      </button>\n                                    </div>\n                                  "])), e => {
         e.preventDefault();
         e.stopPropagation();
         this._moveQueueItemUp(item.queue_item_id);
-      }} title="Move Up">
-                                        <ha-icon icon="mdi:arrow-up"></ha-icon>
-                                      </button>
-                                      <button class="queue-btn queue-btn-down" @click=${e => {
+      }, e => {
         e.preventDefault();
         e.stopPropagation();
         this._moveQueueItemDown(item.queue_item_id);
-      }} title="Move Down">
-                                        <ha-icon icon="mdi:arrow-down"></ha-icon>
-                                      </button>
-                                      <button class="queue-btn queue-btn-next" @click=${e => {
+      }, e => {
         e.preventDefault();
         e.stopPropagation();
         this._moveQueueItemNext(item.queue_item_id);
-      }} title="Move to Next">
-                                        <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
-                                      </button>
-                                      <button class="queue-btn queue-btn-remove" @click=${e => {
+      }, e => {
         e.preventDefault();
         e.stopPropagation();
         this._removeQueueItem(item.queue_item_id);
-      }} title="Remove from Queue">
-                                        <ha-icon icon="mdi:close"></ha-icon>
-                                      </button>
-                                    </div>
-                                  ` : x`
-                                    <button class="entity-options-search-queue" @click=${e => {
+      }) : x(_templateObject55 || (_templateObject55 = _taggedTemplateLiteral(["\n                                    <button class=\"entity-options-search-queue\" @click=", " title=\"Add to Queue\">\n                                      <ha-icon icon=\"mdi:playlist-play\"></ha-icon>\n                                    </button>\n                                  "])), e => {
         e.preventDefault();
         e.stopPropagation();
         this._queueMediaFromSearch(item);
-      }} title="Add to Queue">
-                                      <ha-icon icon="mdi:playlist-play"></ha-icon>
-                                    </button>
-                                  `}
-                                `}
-                              </div>
-                            </div>
-                          ` : x`
-                            <!-- placeholder row keeps height -->
-                            <div class="entity-options-search-result placeholder"></div>
-                          `);
-    })()}
-                  </div>
-                </div>
-              ` : this._showGrouping ? x`
-                <div class="grouping-header">
-                  <button class="entity-options-item close-item" @click=${() => {
+      }))) : x(_templateObject56 || (_templateObject56 = _taggedTemplateLiteral(["\n                            <!-- placeholder row keeps height -->\n                            <div class=\"entity-options-search-result placeholder\"></div>\n                          "]))));
+    })()) : this._showGrouping ? x(_templateObject57 || (_templateObject57 = _taggedTemplateLiteral(["\n                <div class=\"grouping-header\">\n                  <button class=\"entity-options-item close-item\" @click=", ">\n                    Back\n                  </button>\n                </div>\n                ", "\n              "])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeGrouping();
       }
-    }}>
-                    Back
-                  </button>
-                </div>
-                ${(_masterState$attribut => {
+    }, (_masterState$attribut => {
       const masterId = this._getGroupingMasterId();
       const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
       let masterGroupId = null;
@@ -18676,12 +14125,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const activeState = activeGroupId ? this.hass.states[activeGroupId] : activeId ? this.hass.states[activeId] : null;
       const activeIsGroupCapable = activeState ? this._isGroupCapable(activeState) : false;
       if (!groupedAny && !activeIsGroupCapable) {
-        return x`
-                        <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
-                        <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-                          No group-capable players.
-                        </div>
-                      `;
+        return x(_templateObject58 || (_templateObject58 = _taggedTemplateLiteral(["\n                        <div class=\"entity-options-title\" style=\"margin-bottom:8px;\">Group Players</div>\n                        <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n                          No group-capable players.\n                        </div>\n                      "])));
       }
       let sortedGroupIds;
       if (groupedAny) {
@@ -18693,28 +14137,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const others = currentFirst ? groupPlayerIds.filter(item => item.id !== activeId) : groupPlayerIds;
         sortedGroupIds = currentFirst ? [currentFirst, ...others] : groupPlayerIds;
       }
-      return x`
-                      <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
-                      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                        ${groupedAny ? x`
-                          <button class="entity-options-item"
-                            @click=${() => this._syncGroupVolume()}
-                            style="flex:0 0 auto; min-width:140px; text-align:center;">
-                            Sync Volume
-                          </button>
-                        ` : E}
-                        <button class="entity-options-item"
-                          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
-                          ${groupedAny ? "Ungroup All" : "Group All"}
-                        </button>
-                      </div>
-                      <div class="group-list-scroll">
-                        ${sortedGroupIds.length === 0 ? x`
-                          <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-                            No group-capable players.
-                          </div>
-                        ` : sortedGroupIds.map(item => {
+      return x(_templateObject59 || (_templateObject59 = _taggedTemplateLiteral(["\n                      <div class=\"entity-options-title\" style=\"margin-bottom:8px;\">Group Players</div>\n                      <div style=\"display:flex; align-items:center; gap:8px; margin-bottom:12px;\">\n                        ", "\n                        <button class=\"entity-options-item\"\n                          @click=", "\n                          style=\"flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;\">\n                          ", "\n                        </button>\n                      </div>\n                      <div class=\"group-list-scroll\">\n                        ", "\n                      </div>\n                    "])), groupedAny ? x(_templateObject60 || (_templateObject60 = _taggedTemplateLiteral(["\n                          <button class=\"entity-options-item\"\n                            @click=", "\n                            style=\"flex:0 0 auto; min-width:140px; text-align:center;\">\n                            Sync Volume\n                          </button>\n                        "])), () => this._syncGroupVolume()) : E, () => groupedAny ? this._ungroupAll() : this._groupAll(), groupedAny ? "Ungroup All" : "Group All", sortedGroupIds.length === 0 ? x(_templateObject61 || (_templateObject61 = _taggedTemplateLiteral(["\n                          <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n                            No group-capable players.\n                          </div>\n                        "]))) : sortedGroupIds.map(item => {
         var _displayVolumeState$a;
         const id = item.id;
         const actualGroupId = item.groupId;
@@ -18743,156 +14166,45 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const showToggleButton = groupedAny ? !isPrimaryRow : id !== masterId;
         const isCurrent = id === activeId;
         const stateLabel = groupedAny ? isPrimaryRow ? "Master" : grouped ? "Joined" : "Available" : isCurrent ? "Current" : "Available";
-        return x`
-                            <div class="entity-options-item group-player-row" style="
-                              display:flex;
-                              align-items:center;
-                              gap:6px;
-                              padding:4px 8px;
-                              margin-bottom:1px;
-                            ">
-                              <div style="flex:1; min-width:120px;">
-                                <div style="font-weight:600; text-align:left;">${name}</div>
-                                <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
-                              </div>
-                              <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
-                                ${isRemoteVol ? x`
-                                        <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
-                                          <button @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                                            <ha-icon icon="mdi:minus"></ha-icon>
-                                          </button>
-                                          <button @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                                            <ha-icon icon="mdi:plus"></ha-icon>
-                                          </button>
-                                        </div>
-                                      ` : x`
-                                        <input
-                                          class="vol-slider"
-                                          type="range"
-                                          min="0"
-                                          max="1"
-                                          step="0.01"
-                                          .value=${volVal}
-                                          @change=${e => this._onGroupVolumeChange(id, volumeEntity, e)}
-                                          title="Volume"
-                                          style="width:100%;max-width:260px;"
-                                        />
-                                      `}
-                                <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
-                              </div>
-                              ${showToggleButton ? x`
-                                    <button class="group-toggle-btn"
-                                            @click=${() => this._toggleGroup(id)}
-                                            title=${grouped ? "Unjoin" : "Join"}
-                                            style="margin-left:4px;">
-                                      <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
-                                    </button>
-                                  ` : x`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`}
-                            </div>
-                          `;
-      })}
-                      </div>
-                    `;
+        return x(_templateObject62 || (_templateObject62 = _taggedTemplateLiteral(["\n                            <div class=\"entity-options-item group-player-row\" style=\"\n                              display:flex;\n                              align-items:center;\n                              gap:6px;\n                              padding:4px 8px;\n                              margin-bottom:1px;\n                            \">\n                              <div style=\"flex:1; min-width:120px;\">\n                                <div style=\"font-weight:600; text-align:left;\">", "</div>\n                                <div style=\"font-size:0.8em; opacity:0.7; text-align:left;\">", "</div>\n                              </div>\n                              <div style=\"flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;\">\n                                ", "\n                                <span style=\"min-width:36px;display:inline-block;text-align:right;\">", "</span>\n                              </div>\n                              ", "\n                            </div>\n                          "])), name, stateLabel, isRemoteVol ? x(_templateObject63 || (_templateObject63 = _taggedTemplateLiteral(["\n                                        <div class=\"vol-stepper\" style=\"display:flex;align-items:center;gap:4px;\">\n                                          <button @click=", " title=\"Vol Down\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                                            <ha-icon icon=\"mdi:minus\"></ha-icon>\n                                          </button>\n                                          <button @click=", " title=\"Vol Up\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                                            <ha-icon icon=\"mdi:plus\"></ha-icon>\n                                          </button>\n                                        </div>\n                                      "])), () => this._onGroupVolumeStep(volumeEntity, -1), () => this._onGroupVolumeStep(volumeEntity, 1)) : x(_templateObject64 || (_templateObject64 = _taggedTemplateLiteral(["\n                                        <input\n                                          class=\"vol-slider\"\n                                          type=\"range\"\n                                          min=\"0\"\n                                          max=\"1\"\n                                          step=\"0.01\"\n                                          .value=", "\n                                          @change=", "\n                                          title=\"Volume\"\n                                          style=\"width:100%;max-width:260px;\"\n                                        />\n                                      "])), volVal, e => this._onGroupVolumeChange(id, volumeEntity, e)), typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--", showToggleButton ? x(_templateObject65 || (_templateObject65 = _taggedTemplateLiteral(["\n                                    <button class=\"group-toggle-btn\"\n                                            @click=", "\n                                            title=", "\n                                            style=\"margin-left:4px;\">\n                                      <ha-icon icon=", "></ha-icon>\n                                    </button>\n                                  "])), () => this._toggleGroup(id), grouped ? "Unjoin" : "Join", grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline") : x(_templateObject66 || (_templateObject66 = _taggedTemplateLiteral(["<span style=\"margin-left:4px;margin-right:10px;width:32px;display:inline-block;\"></span>"]))));
+      }));
       // --- End new group player rows logic ---
-    })()}
-              ` : x`
-                <button class="entity-options-item close-item" @click=${() => {
+    })()) : x(_templateObject67 || (_templateObject67 = _taggedTemplateLiteral(["\n                <button class=\"entity-options-item close-item\" @click=", ">\n                  Back\n                </button>\n                <div class=\"entity-options-divider\"></div>\n                <div class=\"entity-options-sheet source-list-sheet\" style=\"position:relative;\">\n                  <div class=\"source-list-scroll\" style=\"overflow-y:auto;max-height:340px;\">\n                    ", "\n                  </div>\n                </div>\n                <div class=\"floating-source-index\">\n                  ", "\n                </div>\n              "])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeSourceList();
       }
-    }}>
-                  Back
-                </button>
-                <div class="entity-options-divider"></div>
-                <div class="entity-options-sheet source-list-sheet" style="position:relative;">
-                  <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
-                    ${sourceList.map(src => x`
-                      <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
-                    `)}
-                  </div>
-                </div>
-                <div class="floating-source-index">
-                  ${sourceLetters.map((letter, i) => {
+    }, sourceList.map(src => x(_templateObject68 || (_templateObject68 = _taggedTemplateLiteral(["\n                      <div class=\"entity-options-item\" data-source-name=\"", "\" @click=", ">", "</div>\n                    "])), src, () => this._selectSource(src), src)), sourceLetters.map((letter, i) => {
       const hovered = this._hoveredSourceLetterIndex;
       let scale = "";
       if (hovered !== null && hovered !== undefined) {
         const dist = Math.abs(hovered - i);
         if (dist === 0) scale = "max";else if (dist === 1) scale = "large";else if (dist === 2) scale = "med";
       }
-      return x`
-                      <button
-                        class="source-index-letter"
-                        data-scale=${scale}
-                        @mouseenter=${() => {
+      return x(_templateObject69 || (_templateObject69 = _taggedTemplateLiteral(["\n                      <button\n                        class=\"source-index-letter\"\n                        data-scale=", "\n                        @mouseenter=", "\n                        @mouseleave=", "\n                        @click=", "\n                      >\n                        ", "\n                      </button>\n                    "])), scale, () => {
         this._hoveredSourceLetterIndex = i;
         this.requestUpdate();
-      }}
-                        @mouseleave=${() => {
+      }, () => {
         this._hoveredSourceLetterIndex = null;
         this.requestUpdate();
-      }}
-                        @click=${() => this._scrollToSourceLetter(letter)}
-                      >
-                        ${letter}
-                      </button>
-                    `;
-    })}
-                </div>
-              `}
-              </div>
-            </div>
-            <!-- Persistent Media Controls Section - Outside Scrollable Area -->
-            ${shouldShowPersistentControls ? x`
-              <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
-                <div class="persistent-controls-artwork">
-                  ${(() => {
+      }, () => this._scrollToSourceLetter(letter), letter);
+    })), shouldShowPersistentControls ? x(_templateObject70 || (_templateObject70 = _taggedTemplateLiteral(["\n              <div class=\"persistent-media-controls\" @click=", ">\n                <div class=\"persistent-controls-artwork\">\n                  ", "\n                </div>\n                <div class=\"persistent-controls-buttons\">\n                  <button class=\"persistent-control-btn\" @click=", " title=\"Previous\">\n                    <ha-icon icon=\"mdi:skip-previous\"></ha-icon>\n                  </button>\n                  <button class=\"persistent-control-btn\" @click=", " title=\"Play/Pause\">\n                    <ha-icon icon=", "></ha-icon>\n                  </button>\n                  <button class=\"persistent-control-btn\" @click=", " title=\"Next\">\n                    <ha-icon icon=\"mdi:skip-next\"></ha-icon>\n                  </button>\n                </div>\n                ", "\n              </div>\n            "])), e => e.stopPropagation(), (() => {
       // Use the same entity resolution as the main card
       const playbackStateObj = this.currentPlaybackStateObj;
       const mainState = this.currentStateObj;
       const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
-      return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x`
-                      <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
-                    ` : x`
-                      <div class="persistent-artwork-placeholder">
-                        <ha-icon icon="mdi:music"></ha-icon>
-                      </div>
-                    `;
-    })()}
-                </div>
-                <div class="persistent-controls-buttons">
-                  <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
-                    <ha-icon icon="mdi:skip-previous"></ha-icon>
-                  </button>
-                  <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
-                    <ha-icon icon=${((_this$currentPlayback = this.currentPlaybackStateObj) === null || _this$currentPlayback === void 0 ? void 0 : _this$currentPlayback.state) === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-                  </button>
-                  <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
-                    <ha-icon icon="mdi:skip-next"></ha-icon>
-                  </button>
-                </div>
-                ${(_volumeState$attribut => {
+      return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x(_templateObject71 || (_templateObject71 = _taggedTemplateLiteral(["\n                      <img src=\"", "\" alt=\"Album Art\" class=\"persistent-artwork\" onerror=\"this.style.display='none'\">\n                    "])), artwork.url) : x(_templateObject72 || (_templateObject72 = _taggedTemplateLiteral(["\n                      <div class=\"persistent-artwork-placeholder\">\n                        <ha-icon icon=\"mdi:music\"></ha-icon>\n                      </div>\n                    "])));
+    })(), () => this._onControlClick("prev"), () => this._onControlClick("play_pause"), ((_this$currentPlayback = this.currentPlaybackStateObj) === null || _this$currentPlayback === void 0 ? void 0 : _this$currentPlayback.state) === "playing" ? "mdi:pause" : "mdi:play", () => this._onControlClick("next"), ((_volumeState$attribut, _volumeState$attribut2) => {
       const idx = this._selectedIndex;
       const volumeEntity = this._getVolumeEntity(idx);
       if (!volumeEntity) return E;
       const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
       const volumeState = this.currentVolumeStateObj;
-      const volumeLevel = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) ?? 0);
-      const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
-      return x`
-                    <div class="persistent-volume-stepper">
-                      <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
-                      ${percentLabel ? x`<span class="stepper-value">${percentLabel}</span>` : E}
-                      <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
-                    </div>
-                  `;
-    })()}
-              </div>
-            ` : E}
-          </div>
-        ` : E}
-          ${this._searchOpen ? renderSearchSheet({
+      const volumeLevel = Number((_volumeState$attribut = volumeState === null || volumeState === void 0 || (_volumeState$attribut2 = volumeState.attributes) === null || _volumeState$attribut2 === void 0 ? void 0 : _volumeState$attribut2.volume_level) !== null && _volumeState$attribut !== void 0 ? _volumeState$attribut : 0);
+      const percentLabel = !isRemote ? "".concat(Math.round((volumeLevel || 0) * 100), "%") : null;
+      return x(_templateObject73 || (_templateObject73 = _taggedTemplateLiteral(["\n                    <div class=\"persistent-volume-stepper\">\n                      <button class=\"stepper-btn\" @click=", " title=\"Volume Down\">\u2013</button>\n                      ", "\n                      <button class=\"stepper-btn\" @click=", " title=\"Volume Up\">+</button>\n                    </div>\n                  "])), () => this._onVolumeStep(-1), percentLabel ? x(_templateObject74 || (_templateObject74 = _taggedTemplateLiteral(["<span class=\"stepper-value\">", "</span>"])), percentLabel) : E, () => this._onVolumeStep(1));
+    })()) : E) : E, this._searchOpen ? renderSearchSheet({
       open: this._searchOpen,
       query: this._searchQuery,
       loading: this._searchLoading,
@@ -18916,9 +14228,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       onQueue: item => this._queueMediaFromSearch(item),
       showQueueSuccess: this._showQueueSuccessMessage,
       upcomingFilterActive: this._upcomingFilterActive
-    }) : E}
-        </ha-card>
-      `;
+    }) : E);
   }
   _updateIdleState() {
     var _this$hass36, _this$hass37;
@@ -19674,4 +14984,27 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }));
   }
 }
+_defineProperty$1(YetAnotherMediaPlayerCard, "properties", {
+  hass: {},
+  config: {},
+  _selectedIndex: {
+    state: true
+  },
+  _lastPlaying: {
+    state: true
+  },
+  _shouldDropdownOpenUp: {
+    state: true
+  },
+  _pinnedIndex: {
+    state: true
+  },
+  _showSourceList: {
+    state: true
+  },
+  _holdToPin: {
+    state: true
+  }
+});
+_defineProperty$1(YetAnotherMediaPlayerCard, "styles", yampCardStyles);
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
