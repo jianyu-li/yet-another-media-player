@@ -12,6 +12,7 @@ export function renderControlsRow({
   favoriteActive,
   hiddenControls = {},
   adaptiveControls = false,
+  controlLayout = "classic",
 }) {
   if (!stateObj) return nothing;
 
@@ -31,8 +32,34 @@ export function renderControlsRow({
   const SUPPORT_TURN_OFF = 256;
   const SUPPORT_PLAY = 16384;
 
-  const controlCount = countMainControls(stateObj, supportsFeature, showFavorite, hiddenControls, showStop);
-  const rowClass = adaptiveControls ? "controls-row adaptive" : "controls-row";
+  const normalizedLayout = controlLayout === "modern" ? "modern" : "classic";
+
+  let showPrevious = !hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK);
+  let showPlayPause = !hiddenControls.play_pause && (supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY));
+  let showStopButton = !hiddenControls.stop && showStop;
+  let showNext = !hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK);
+  let showShuffleButton = !hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE);
+  let showRepeatButton = !hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET);
+  let showFavoriteButton = !hiddenControls.favorite && showFavorite;
+  let showPowerButton = !hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON));
+
+  if (normalizedLayout === "modern") {
+    showStopButton = false;
+    showFavoriteButton = false;
+    showPowerButton = false;
+  }
+
+  const controlCount = countMainControls(
+    stateObj,
+    supportsFeature,
+    showFavorite,
+    hiddenControls,
+    showStop,
+    normalizedLayout
+  );
+
+  const baseRowClass = adaptiveControls ? "controls-row adaptive" : "controls-row";
+  const rowClass = normalizedLayout === "modern" ? `${baseRowClass} modern` : baseRowClass;
   let rowStyle = adaptiveControls ? `--yamp-control-count:${Math.max(controlCount, 1)};` : nothing;
 
   if (adaptiveControls) {
@@ -61,34 +88,70 @@ export function renderControlsRow({
     ].join(";");
   }
 
+  if (normalizedLayout === "modern") {
+    return html`
+      <div class=${rowClass} style=${rowStyle}>
+        ${showShuffleButton ? html`
+          <button class="modern-button small${shuffleActive ? " active" : ""}" @click=${() => onControlClick("shuffle")} title="Shuffle">
+            <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
+          </button>
+        ` : nothing}
+        ${showPrevious ? html`
+          <button class="modern-button medium" @click=${() => onControlClick("prev")} title="Previous">
+            <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+          </button>
+        ` : nothing}
+        ${showPlayPause ? html`
+          <button class="modern-button primary${stateObj.state === "playing" ? " active" : ""}" @click=${() => onControlClick("play_pause")} title="Play/Pause">
+            <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+          </button>
+        ` : nothing}
+        ${showNext ? html`
+          <button class="modern-button medium" @click=${() => onControlClick("next")} title="Next">
+            <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+          </button>
+        ` : nothing}
+        ${showRepeatButton ? html`
+          <button class="modern-button small${repeatActive ? " active" : ""}" @click=${() => onControlClick("repeat")} title="Repeat">
+            <ha-icon .icon=${
+              stateObj.attributes.repeat === "one"
+                ? "mdi:repeat-once"
+                : "mdi:repeat"
+            }></ha-icon>
+          </button>
+        ` : nothing}
+      </div>
+    `;
+  }
+
   return html`
     <div class=${rowClass} style=${rowStyle}>
-      ${!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) ? html`
+      ${showPrevious ? html`
         <button class="button" @click=${() => onControlClick("prev")} title="Previous">
           <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
         </button>
       ` : nothing}
-      ${!hiddenControls.play_pause && (supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY)) ? html`
+      ${showPlayPause ? html`
         <button class="button" @click=${() => onControlClick("play_pause")} title="Play/Pause">
           <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
         </button>
       ` : nothing}
-      ${!hiddenControls.stop && showStop ? html`
+      ${showStopButton ? html`
         <button class="button" @click=${() => onControlClick("stop")} title="Stop">
           <ha-icon .icon=${"mdi:stop"}></ha-icon>
         </button>
       ` : nothing}
-      ${!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK) ? html`
+      ${showNext ? html`
         <button class="button" @click=${() => onControlClick("next")} title="Next">
           <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
         </button>
       ` : nothing}
-      ${!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE) ? html`
+      ${showShuffleButton ? html`
         <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="Shuffle">
           <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
         </button>
       ` : nothing}
-      ${!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET) ? html`
+      ${showRepeatButton ? html`
         <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
           <ha-icon .icon=${
             stateObj.attributes.repeat === "one"
@@ -97,30 +160,26 @@ export function renderControlsRow({
           }></ha-icon>
         </button>
       ` : nothing}
-      ${!hiddenControls.favorite && showFavorite ? html`
+      ${showFavoriteButton ? html`
         <button class="button${favoriteActive ? ' active' : ''}" @click=${() => onControlClick("favorite")} title="Favorite">
           <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
         </button>
       ` : nothing}
-      ${
-        !hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON))
-          ? html`
-            <button
-              class="button${stateObj.state !== "off" ? " active" : ""}"
-              @click=${() => onControlClick("power")}
-              title="Power"
-            >
-              <ha-icon .icon=${"mdi:power"}></ha-icon>
-            </button>
-          `
-          : nothing
-      }
+      ${showPowerButton ? html`
+        <button
+          class="button${stateObj.state !== "off" ? " active" : ""}"
+          @click=${() => onControlClick("power")}
+          title="Power"
+        >
+          <ha-icon .icon=${"mdi:power"}></ha-icon>
+        </button>
+      ` : nothing}
     </div>
   `;
 }
 
 // Export a small helper used by the card for layout decisions
-export function countMainControls(stateObj, supportsFeature, showFavorite = false, hiddenControls = {}, showStop = false) {
+export function countMainControls(stateObj, supportsFeature, showFavorite = false, hiddenControls = {}, showStop = false, controlLayout = "classic") {
   const SUPPORT_PREVIOUS_TRACK = 16;
   const SUPPORT_NEXT_TRACK = 32;
   const SUPPORT_SHUFFLE = 32768;
@@ -128,14 +187,16 @@ export function countMainControls(stateObj, supportsFeature, showFavorite = fals
   const SUPPORT_TURN_ON = 128;
   const SUPPORT_TURN_OFF = 256;
 
+  const normalizedLayout = controlLayout === "modern" ? "modern" : "classic";
+
   let count = 0;
   if (!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
   if (!hiddenControls.play_pause) count++; // play/pause button always present if row exists
-  if (!hiddenControls.stop && showStop) count++;
+  if (normalizedLayout !== "modern" && !hiddenControls.stop && showStop) count++;
   if (!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
   if (!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
   if (!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
-  if (!hiddenControls.favorite && showFavorite) count++; // favorite button
-  if (!hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON))) count++;
+  if (normalizedLayout !== "modern" && !hiddenControls.favorite && showFavorite) count++; // favorite button
+  if (normalizedLayout !== "modern" && !hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON))) count++;
   return count;
 }

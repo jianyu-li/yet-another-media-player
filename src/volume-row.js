@@ -13,6 +13,9 @@ export function renderVolumeRow({
   onVolumeStep,
   onMuteToggle,
   moreInfoMenu,
+  favoriteButtonTemplate = nothing,
+  showRightPlaceholder = false,
+  rightSlotTemplate = nothing,
 }) {
   // Determine volume icon based on volume level and mute state
   const getVolumeIcon = (volume, muted) => {
@@ -36,6 +39,7 @@ export function renderVolumeRow({
         : showSlider
         ? html`
             <div class="volume-controls">
+              ${favoriteButtonTemplate || nothing}
               <button 
                 class="volume-icon-btn" 
                 @click=${onMuteToggle} 
@@ -69,6 +73,11 @@ export function renderVolumeRow({
             </div>
           `
       }
+      ${showRightPlaceholder ? html`
+        <div class="volume-placeholder">
+          ${rightSlotTemplate || nothing}
+        </div>
+      ` : nothing}
       ${moreInfoMenu}
     </div>
   `;

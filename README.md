@@ -78,6 +78,7 @@ Below you will find a list of all configuration options.
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
+| `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite toggle next to the mute button |
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |

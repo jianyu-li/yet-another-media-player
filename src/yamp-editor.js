@@ -1129,6 +1129,24 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <div class="section-description">Tune button sizing, entity labels, and adaptive text.</div>
           </div>
           <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+                select: {
+                  mode: "dropdown",
+                  options: [
+                    { value: "classic", label: "Classic" },
+                    { value: "modern", label: "Modern" },
+                  ],
+                },
+              }}
+              .value=${this._config.control_layout ?? "classic"}
+              label="Control Layout"
+              helper="Choose between the legacy evenly sized controls or the modern Home Assistant layout."
+              @value-changed=${(e) => this._updateConfig("control_layout", e.detail.value)}
+            ></ha-selector>
+          </div>
+          <div class="form-row">
             <div>
               <ha-switch
                 id="adaptive-controls-toggle"
