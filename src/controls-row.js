@@ -13,6 +13,7 @@ export function renderControlsRow({
   hiddenControls = {},
   adaptiveControls = false,
   controlLayout = "classic",
+  swapPauseForStop = false,
 }) {
   if (!stateObj) return nothing;
 
@@ -36,12 +37,18 @@ export function renderControlsRow({
 
   let showPrevious = !hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK);
   let showPlayPause = !hiddenControls.play_pause && (supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY));
-  let showStopButton = !hiddenControls.stop && showStop;
+  const canShowStop = !hiddenControls.stop && showStop;
+  let showStopButton = canShowStop;
   let showNext = !hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK);
   let showShuffleButton = !hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE);
   let showRepeatButton = !hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET);
   let showFavoriteButton = !hiddenControls.favorite && showFavorite;
   let showPowerButton = !hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON));
+
+  const showPrimaryStop = normalizedLayout === "modern" && swapPauseForStop && canShowStop;
+  if (showPrimaryStop) {
+    showPlayPause = false;
+  }
 
   if (normalizedLayout === "modern") {
     showStopButton = false;
@@ -101,9 +108,9 @@ export function renderControlsRow({
             <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
           </button>
         ` : nothing}
-        ${showPlayPause ? html`
-          <button class="modern-button primary${stateObj.state === "playing" ? " active" : ""}" @click=${() => onControlClick("play_pause")} title="Play/Pause">
-            <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+        ${showPlayPause || showPrimaryStop ? html`
+          <button class="modern-button primary${showPlayPause && stateObj.state === "playing" ? " active" : ""}" @click=${() => onControlClick(showPrimaryStop ? "stop" : "play_pause")} title=${showPrimaryStop ? "Stop" : "Play/Pause"}>
+            <ha-icon .icon=${showPrimaryStop ? "mdi:stop" : (stateObj.state === "playing" ? "mdi:pause" : "mdi:play")}></ha-icon>
           </button>
         ` : nothing}
         ${showNext ? html`

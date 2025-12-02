@@ -375,6 +375,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._latestSearchToken = 0;
     this._searchTimeoutHandle = null;
     this._controlLayout = "classic";
+    this._swapPauseForStop = false;
+    this._controlLayout = "classic";
     // Search hierarchy tracking
     this._searchHierarchy = []; // Array of {type: 'artist'|'album', name: string, query: string}
     this._searchBreadcrumb = ""; // Display string for current search context
@@ -3156,6 +3158,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.config = config;
     const layoutPref = typeof config.control_layout === "string" ? config.control_layout.toLowerCase() : "classic";
     this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
+    this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
     if (this._holdToPin) {
       this._holdHandler = createHoldToPinHandler({
@@ -5450,6 +5453,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       hiddenControls: currentHiddenControls,
                       adaptiveControls: this._adaptiveControls,
                       controlLayout: this._controlLayout,
+                      swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop,
                     })}
 
                     ${renderVolumeRow({

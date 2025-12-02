@@ -1146,6 +1146,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               @value-changed=${(e) => this._updateConfig("control_layout", e.detail.value)}
             ></ha-selector>
           </div>
+          ${ (this._config.control_layout ?? "classic") === "modern" ? html`
+            <div class="form-row">
+              <div>
+                <ha-switch
+                  .checked=${this._config.swap_pause_for_stop ?? false}
+                  @change=${(e) => this._updateConfig("swap_pause_for_stop", e.target.checked)}
+                ></ha-switch>
+                <span>Swap Play/Pause with Stop</span>
+              </div>
+              <div class="config-subtitle">Replace the central play/pause button with stop while using the modern layout.</div>
+            </div>
+          ` : nothing}
           <div class="form-row">
             <div>
               <ha-switch
