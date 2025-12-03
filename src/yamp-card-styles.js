@@ -751,7 +751,7 @@ export const yampCardStyles = css`
   }
 
   .modern-button {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.15);
     border: none;
     color: inherit;
     cursor: pointer;
@@ -807,7 +807,7 @@ export const yampCardStyles = css`
   }
 
   .modern-button:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.25);
   }
 
   .modern-button:active {

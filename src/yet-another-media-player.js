@@ -4901,7 +4901,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
             @click=${() => this._onControlClick("favorite")}
             title="Favorite"
           >
-            <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
+            <ha-icon
+              style=${favoriteActive ? "color: var(--custom-accent);" : nothing}
+              .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}
+            ></ha-icon>
           </button>
         `
         : showVolumePowerLeft ? html`
