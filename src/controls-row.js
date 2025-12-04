@@ -45,10 +45,9 @@ export function renderControlsRow({
   let showFavoriteButton = !hiddenControls.favorite && showFavorite;
   let showPowerButton = !hiddenControls.power && (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON));
 
-  const showPrimaryStop = normalizedLayout === "modern" && swapPauseForStop && canShowStop;
-  if (showPrimaryStop) {
-    showPlayPause = false;
-  }
+  const swapPauseWithStop = normalizedLayout === "modern" && swapPauseForStop && canShowStop;
+  const isPlayingState = stateObj.state === "playing";
+  const primaryUsesStop = swapPauseWithStop && isPlayingState;
 
   if (normalizedLayout === "modern") {
     showStopButton = false;
@@ -108,9 +107,13 @@ export function renderControlsRow({
             <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
           </button>
         ` : nothing}
-        ${showPlayPause || showPrimaryStop ? html`
-          <button class="modern-button primary${showPlayPause && stateObj.state === "playing" ? " active" : ""}" @click=${() => onControlClick(showPrimaryStop ? "stop" : "play_pause")} title=${showPrimaryStop ? "Stop" : "Play/Pause"}>
-            <ha-icon .icon=${showPrimaryStop ? "mdi:stop" : (stateObj.state === "playing" ? "mdi:pause" : "mdi:play")}></ha-icon>
+        ${showPlayPause ? html`
+          <button
+            class="modern-button primary${isPlayingState ? " active" : ""}"
+            @click=${() => onControlClick(primaryUsesStop ? "stop" : "play_pause")}
+            title=${primaryUsesStop ? "Stop" : "Play/Pause"}
+          >
+            <ha-icon .icon=${primaryUsesStop ? "mdi:stop" : (isPlayingState ? "mdi:pause" : "mdi:play")}></ha-icon>
           </button>
         ` : nothing}
         ${showNext ? html`
