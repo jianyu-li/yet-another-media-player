@@ -166,6 +166,7 @@ export const yampCardStyles = css`
     margin-right: 0;
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+    margin-top: -6px;
   }
 
   .more-info-btn {
@@ -743,6 +744,84 @@ export const yampCardStyles = css`
     height: 100%;
   }
 
+  .controls-row.modern {
+    justify-content: center;
+    gap: 12px;
+    padding: 6px 16px 10px 16px;
+  }
+
+  .modern-button {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: background var(--transition-normal), transform 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  }
+
+  .modern-button.small,
+  .modern-button.medium,
+  .modern-button.primary {
+    font-size: inherit;
+  }
+
+  .modern-button.small {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+  }
+
+  .modern-button.medium {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+  }
+
+  .modern-button.primary {
+    width: 70px;
+    height: 70px;
+    font-size: 1.9em;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .modern-button ha-icon {
+    --mdc-icon-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .modern-button.medium ha-icon {
+    --mdc-icon-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .modern-button.primary ha-icon {
+    --mdc-icon-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .modern-button:hover {
+    background: rgba(255,255,255,0.25);
+  }
+
+  .modern-button:active {
+    transform: scale(0.95);
+  }
+
+  .modern-button.active:not(.primary) {
+    color: var(--custom-accent);
+  }
+
+  .modern-button.primary.active {
+    color: inherit;
+  }
+
   /* Tighter spacing for collapsed mode with artwork */
   .card-lower-content.collapsed.has-artwork .controls-row {
     gap: 8px;
@@ -806,8 +885,9 @@ export const yampCardStyles = css`
   .volume-controls {
     display: flex;
     align-items: center;
-    gap: 25px;
+    gap: 14px;
     flex: 1;
+    padding-right: 8px;
   }
 
   .volume-icon-btn {
@@ -836,12 +916,30 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
+  .volume-icon-btn.favorite-volume-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.7);
+    margin-left: -8px;
+    margin-right: 2px;
+  }
+
+  .volume-icon-btn.favorite-volume-btn.active {
+    color: var(--custom-accent);
+  }
+
   .volume-slider-container {
     display: flex;
     align-items: center;
     gap: 8px;
     flex: 1;
     position: relative;
+    padding-left: 6px;
   }
 
   .volume-slider-icon {
@@ -869,6 +967,15 @@ export const yampCardStyles = css`
 
   .volume-row .source-menu {
     flex: 0 0 auto;
+  }
+
+  .volume-placeholder {
+    min-width: 15px;
+    min-height: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Volume slider thumbs */

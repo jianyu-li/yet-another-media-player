@@ -273,7 +273,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
     const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
-    const controls = countMainControls(stateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity(), true);
+    const controls = countMainControls(
+      stateObj,
+      (s, f) => this._supportsFeature(s, f),
+      showFavorite,
+      this._getHiddenControlsForCurrentEntity(),
+      true,
+      this._controlLayout
+    );
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
@@ -367,6 +374,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchTimeoutHandle = null;
     this._latestSearchToken = 0;
     this._searchTimeoutHandle = null;
+    this._controlLayout = "classic";
+    this._swapPauseForStop = false;
+    this._controlLayout = "classic";
     // Search hierarchy tracking
     this._searchHierarchy = []; // Array of {type: 'artist'|'album', name: string, query: string}
     this._searchBreadcrumb = ""; // Display string for current search context
@@ -2930,7 +2940,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getCollapsedArtworkStyle() {
     if (this._alwaysCollapsed) {
       const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
-      const controls = countMainControls(this.currentActivePlaybackStateObj, (s, f) => this._supportsFeature(s, f), showFavorite, this._getHiddenControlsForCurrentEntity(), true);
+      const controls = countMainControls(
+        this.currentActivePlaybackStateObj,
+        (s, f) => this._supportsFeature(s, f),
+        showFavorite,
+        this._getHiddenControlsForCurrentEntity(),
+        true,
+        this._controlLayout
+      );
       if (controls > 6) {
         // Check if we're on a mobile screen (width <= 768px is typical mobile breakpoint)
         const isMobile = window.innerWidth <= 768;
@@ -3167,6 +3184,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       throw new Error("You must define at least one media_player entity.");
     }
     this.config = config;
+    const layoutPref = typeof config.control_layout === "string" ? config.control_layout.toLowerCase() : "classic";
+    this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
+    this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
     if (this._holdToPin) {
       this._holdHandler = createHoldToPinHandler({
@@ -4871,17 +4891,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
       const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
-      if (this.shadowRoot && this.shadowRoot.host) {
-        this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
-        this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
-        this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
-        this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
-        if (hasCustomCardHeight) {
-          this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
-        } else {
-          this.shadowRoot.host.removeAttribute("data-has-custom-height");
-        }
+    if (this.shadowRoot && this.shadowRoot.host) {
+      this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
+      this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+      this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
+      this.shadowRoot.host.setAttribute("data-control-layout", this._controlLayout);
+      if (hasCustomCardHeight) {
+        this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
+      } else {
+        this.shadowRoot.host.removeAttribute("data-has-custom-height");
       }
+    }
       
       const showChipRow = this.config.show_chip_row || "auto";
       const hasMultipleEntities = this.entityObjs.length > 1;
@@ -4893,6 +4914,34 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
       const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
       if (!stateObj) return html`<div class="details">Entity not found.</div>`;
+
+      const currentHiddenControls = this._getHiddenControlsForCurrentEntity();
+      const showFavoriteButton = !!this._getFavoriteButtonEntity() && !currentHiddenControls.favorite;
+      const favoriteActive = this._isCurrentTrackFavorited();
+      const powerSupported = !currentHiddenControls.power && (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON));
+      const showModernPowerButton = this._controlLayout === "modern" && powerSupported;
+      const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
+      const powerVolumeButton = showModernPowerButton ? html`
+        <button
+          class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
+          @click=${() => this._onControlClick("power")}
+          title="Power"
+        >
+          <ha-icon .icon=${"mdi:power"}></ha-icon>
+        </button>
+      ` : nothing;
+      const rightSlotTemplate = showModernFavoriteButton ? html`
+        <button
+          class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
+          @click=${() => this._onControlClick("favorite")}
+          title="Favorite"
+        >
+          <ha-icon
+            style=${favoriteActive ? "color: var(--custom-accent);" : nothing}
+            .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}
+          ></ha-icon>
+        </button>
+      ` : nothing;
 
       // Collect unique, sorted first letters of source names
       const sourceList = stateObj.attributes.source_list || [];
@@ -5419,10 +5468,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       repeatActive,
                       onControlClick: (action) => this._onControlClick(action),
                       supportsFeature: (state, feature) => this._supportsFeature(state, feature),
-                      showFavorite: !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite,
-                      favoriteActive: this._isCurrentTrackFavorited(),
-                      hiddenControls: this._getHiddenControlsForCurrentEntity(),
-                      adaptiveControls: this._adaptiveControls
+                      showFavorite: showFavoriteButton,
+                      favoriteActive,
+                      hiddenControls: currentHiddenControls,
+                      adaptiveControls: this._adaptiveControls,
+                      controlLayout: this._controlLayout,
+                      swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop,
                     })}
 
                     ${renderVolumeRow({
@@ -5436,6 +5487,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       onVolumeChange: (e) => this._onVolumeChange(e),
                       onVolumeStep: (dir) => this._onVolumeStep(dir),
                       onMuteToggle: () => this._onMuteToggle(),
+                      leadingControlTemplate: powerVolumeButton,
+                      showRightPlaceholder: this._controlLayout === "modern",
+                      rightSlotTemplate,
                       moreInfoMenu: html`
                         <div class="more-info-menu">
                           <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
