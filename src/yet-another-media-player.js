@@ -759,6 +759,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }, focusDelay);
   }
 
+  _openQuickSearchOverlay(mode = "default") {
+    this._quickMenuInvoke = true;
+    this._showEntityOptions = true;
+    this._showSearchSheetInOptions(mode);
+    setTimeout(() => {
+      this._notifyResize();
+    }, 0);
+  }
+
   _handleNavigate(path, openInNewTab = false) {
     if (typeof path !== "string") return;
     const target = path.trim();
@@ -4279,11 +4288,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this.requestUpdate();
           break;
         case "search":
-          this._showEntityOptions = true;
-          this._showSearchSheetInOptions("default");
-          setTimeout(() => {
-            this._notifyResize();
-          }, 0);
+          this._openQuickSearchOverlay();
           break;
         case "search-recently-played":
           this._showEntityOptions = true;
@@ -4921,15 +4926,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const powerSupported = !currentHiddenControls.power && (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON));
       const showModernPowerButton = this._controlLayout === "modern" && powerSupported;
       const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
-      const powerVolumeButton = showModernPowerButton ? html`
-        <button
-          class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
-          @click=${() => this._onControlClick("power")}
-          title="Power"
-        >
-          <ha-icon .icon=${"mdi:power"}></ha-icon>
-        </button>
-      ` : nothing;
+      let leadingVolumeControl = nothing;
+      if (showModernPowerButton) {
+        leadingVolumeControl = html`
+          <button
+            class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
+            @click=${() => this._onControlClick("power")}
+            title="Power"
+          >
+            <ha-icon .icon=${"mdi:power"}></ha-icon>
+          </button>
+        `;
+      } else if (this._controlLayout === "modern") {
+        leadingVolumeControl = html`
+          <button
+            class="volume-icon-btn favorite-volume-btn"
+            @click=${() => this._openQuickSearchOverlay()}
+            title="Search"
+          >
+            <ha-icon .icon=${"mdi:magnify"}></ha-icon>
+          </button>
+        `;
+      }
       const rightSlotTemplate = showModernFavoriteButton ? html`
         <button
           class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
@@ -5487,7 +5505,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       onVolumeChange: (e) => this._onVolumeChange(e),
                       onVolumeStep: (dir) => this._onVolumeStep(dir),
                       onMuteToggle: () => this._onMuteToggle(),
-                      leadingControlTemplate: powerVolumeButton,
+                      leadingControlTemplate: leadingVolumeControl,
                       reserveLeadingControlSpace: this._controlLayout === "modern",
                       showRightPlaceholder: this._controlLayout === "modern",
                       rightSlotTemplate,
