@@ -35,6 +35,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ## Screenshots
 
 ![Card overview](preview/layouts.png)
+![Modern Controls Preview](preview/modern_controls_preview.png)
 ![Collapsed card](preview/collapsed.png)
 ![Minimal layout](preview/minimal-preview.png)
 ![Chips in menu mode](preview/in-menu-mode.png)
@@ -290,6 +291,8 @@ Some dashboards give the card a ton of horizontal space which previously resulte
 
 ### Control Layouts
 Use `control_layout` to swap between the legacy `classic` row and the new `modern` Home Assistant–style buttons. `classic` keeps every transport/favorite/stop control in one evenly sized row. `modern` mirrors the more-info pop-out: shuffle → previous → play/pause → next → repeat stay inline with a larger center button, the stop button is hidden, and the favorite toggle moves next to the mute button in the volume row so it stays easy to reach without crowding the main transport cluster. When `control_layout` is set to `modern`, you can also enable `swap_pause_for_stop` to replace the center play/pause button with a stop button.
+
+![Modern Controls Preview](preview/modern_controls_preview.png)
 
 ### Adaptive Text Size
 Enable adaptive text when you’d like titles, menu entries, or chips to scale with the space your dashboard gives the card. Smaller cards tighten the typography to avoid wrapping, while roomy layouts increase the font size for easier readability. You can either set `adaptive_text: true` to scale everything, or specify the exact sections via `adaptive_text_targets`:
