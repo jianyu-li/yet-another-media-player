@@ -929,6 +929,18 @@ export const yampCardStyles = css`
     margin-right: 2px;
   }
 
+  .volume-leading-placeholder {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -8px;
+    margin-right: 2px;
+  }
+
   .volume-icon-btn.favorite-volume-btn.active {
     color: var(--custom-accent);
   }

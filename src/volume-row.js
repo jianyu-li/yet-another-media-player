@@ -14,9 +14,11 @@ export function renderVolumeRow({
   onMuteToggle,
   moreInfoMenu,
   leadingControlTemplate = nothing,
+  reserveLeadingControlSpace = false,
   showRightPlaceholder = false,
   rightSlotTemplate = nothing,
 }) {
+  const hasLeadingControl = leadingControlTemplate !== nothing && leadingControlTemplate !== undefined && leadingControlTemplate !== null;
   // Determine volume icon based on volume level and mute state
   const getVolumeIcon = (volume, muted) => {
     // For entities that don't support mute, consider them muted when volume is 0
@@ -39,7 +41,10 @@ export function renderVolumeRow({
         : showSlider
         ? html`
             <div class="volume-controls">
-              ${leadingControlTemplate || nothing}
+              ${hasLeadingControl
+                ? leadingControlTemplate
+                : (reserveLeadingControlSpace ? html`<div class="volume-leading-placeholder"></div>` : nothing)
+              }
               <button 
                 class="volume-icon-btn" 
                 @click=${onMuteToggle} 

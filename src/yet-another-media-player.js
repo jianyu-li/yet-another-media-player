@@ -5488,6 +5488,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       onVolumeStep: (dir) => this._onVolumeStep(dir),
                       onMuteToggle: () => this._onMuteToggle(),
                       leadingControlTemplate: powerVolumeButton,
+                      reserveLeadingControlSpace: this._controlLayout === "modern",
                       showRightPlaceholder: this._controlLayout === "modern",
                       rightSlotTemplate,
                       moreInfoMenu: html`
