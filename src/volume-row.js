@@ -13,7 +13,7 @@ export function renderVolumeRow({
   onVolumeStep,
   onMuteToggle,
   moreInfoMenu,
-  favoriteButtonTemplate = nothing,
+  leadingControlTemplate = nothing,
   showRightPlaceholder = false,
   rightSlotTemplate = nothing,
 }) {
@@ -39,7 +39,7 @@ export function renderVolumeRow({
         : showSlider
         ? html`
             <div class="volume-controls">
-              ${favoriteButtonTemplate || nothing}
+              ${leadingControlTemplate || nothing}
               <button 
                 class="volume-icon-btn" 
                 @click=${onMuteToggle} 

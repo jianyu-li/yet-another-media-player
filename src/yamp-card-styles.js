@@ -970,10 +970,12 @@ export const yampCardStyles = css`
   }
 
   .volume-placeholder {
-    width: 15px;
-    height: 36px;
     min-width: 15px;
     min-height: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Volume slider thumbs */

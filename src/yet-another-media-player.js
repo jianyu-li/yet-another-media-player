@@ -4919,38 +4919,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const showFavoriteButton = !!this._getFavoriteButtonEntity() && !currentHiddenControls.favorite;
       const favoriteActive = this._isCurrentTrackFavorited();
       const powerSupported = !currentHiddenControls.power && (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON));
-      const showVolumeFavorite = this._controlLayout === "modern" && showFavoriteButton;
-      const showVolumePowerLeft = this._controlLayout === "modern" && !showFavoriteButton && powerSupported;
-      const showVolumePowerRight = this._controlLayout === "modern" && showFavoriteButton && powerSupported;
-      const favoriteVolumeButton = showVolumeFavorite
-        ? html`
-          <button
-            class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
-            @click=${() => this._onControlClick("favorite")}
-            title="Favorite"
-          >
-            <ha-icon
-              style=${favoriteActive ? "color: var(--custom-accent);" : nothing}
-              .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}
-            ></ha-icon>
-          </button>
-        `
-        : showVolumePowerLeft ? html`
-          <button
-            class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
-            @click=${() => this._onControlClick("power")}
-            title="Power"
-          >
-            <ha-icon .icon=${"mdi:power"}></ha-icon>
-          </button>
-        ` : nothing;
-      const rightSlotTemplate = showVolumePowerRight ? html`
+      const showModernPowerButton = this._controlLayout === "modern" && powerSupported;
+      const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
+      const powerVolumeButton = showModernPowerButton ? html`
         <button
           class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
           @click=${() => this._onControlClick("power")}
           title="Power"
         >
           <ha-icon .icon=${"mdi:power"}></ha-icon>
+        </button>
+      ` : nothing;
+      const rightSlotTemplate = showModernFavoriteButton ? html`
+        <button
+          class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
+          @click=${() => this._onControlClick("favorite")}
+          title="Favorite"
+        >
+          <ha-icon
+            style=${favoriteActive ? "color: var(--custom-accent);" : nothing}
+            .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}
+          ></ha-icon>
         </button>
       ` : nothing;
 
@@ -5498,7 +5487,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       onVolumeChange: (e) => this._onVolumeChange(e),
                       onVolumeStep: (dir) => this._onVolumeStep(dir),
                       onMuteToggle: () => this._onMuteToggle(),
-                      favoriteButtonTemplate: favoriteVolumeButton,
+                      leadingControlTemplate: powerVolumeButton,
                       showRightPlaceholder: this._controlLayout === "modern",
                       rightSlotTemplate,
                       moreInfoMenu: html`
