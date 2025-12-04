@@ -155,6 +155,8 @@ match_theme: true
 show_chip_row: in_menu
 alternate_progress_bar: true
 adaptive_controls: true
+control_layout: modern
+swap_pause_for_stop: true
 adaptive_text:
   - details
   - action_chips
