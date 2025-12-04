@@ -9693,7 +9693,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._searchError = "Search timed out. Try again.";
         this.requestUpdate();
       }
-    }, (_this$config4 = this.config) !== null && _this$config4 !== void 0 && _this$config4.search_timeout_ms ? Number(this.config.search_timeout_ms) : 12000);
+    }, (_this$config4 = this.config) !== null && _this$config4 !== void 0 && _this$config4.search_timeout_ms ? Number(this.config.search_timeout_ms) : 15000);
     try {
       const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
       const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);

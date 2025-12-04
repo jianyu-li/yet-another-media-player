@@ -1078,7 +1078,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._searchError = "Search timed out. Try again.";
         this.requestUpdate();
       }
-    }, this.config?.search_timeout_ms ? Number(this.config.search_timeout_ms) : 12000);
+    }, this.config?.search_timeout_ms ? Number(this.config.search_timeout_ms) : 15000);
     
     try {
       const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
