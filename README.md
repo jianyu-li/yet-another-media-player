@@ -79,8 +79,8 @@ Below you will find a list of all configuration options.
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
-| `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite toggle next to the mute button |
-| `swap_pause_for_stop`      | boolean      | No           | `false`     | Only for `control_layout: modern`; when `true`, the center play/pause button is replaced with a stop button |
+| `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card |
+| `swap_pause_for_stop`      | boolean      | No           | `false`     | Only for `control_layout: modern`; when `true`, the center pause button is replaced with a stop button |
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
@@ -290,7 +290,7 @@ idle_screen: search-recently-played
 Some dashboards give the card a ton of horizontal space which previously resulted in big gaps between the playback controls. Set `adaptive_controls: true` to have each control button stretch and gain padding as space becomes available, producing larger and easier-to-press targets without impacting compact layouts.
 
 ### Control Layouts
-Use `control_layout` to swap between the legacy `classic` row and the new `modern` Home Assistant–style buttons. `classic` keeps every transport/favorite/stop control in one evenly sized row. `modern` mirrors the more-info pop-out: shuffle → previous → play/pause → next → repeat stay inline with a larger center button, the stop button is hidden, and the favorite toggle moves next to the mute button in the volume row so it stays easy to reach without crowding the main transport cluster. When `control_layout` is set to `modern`, you can also enable `swap_pause_for_stop` to replace the center play/pause button with a stop button.
+Use `control_layout` to swap between the legacy `classic` row and the new `modern` Home Assistant–style buttons. `classic` keeps every control in one evenly sized row. `modern` mirrors the more-info pop-out: shuffle → previous → play/pause → next → repeat stay inline with a larger center button, and moves the favorite and power buttons in the volume row. When `control_layout` is set to `modern`, you can also enable `swap_pause_for_stop` to replace the center pause button with a stop button.
 
 ![Modern Controls Preview](preview/modern_controls_preview.png)
 
