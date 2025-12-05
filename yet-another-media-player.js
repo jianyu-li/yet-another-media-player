@@ -1332,6 +1332,7 @@ function transformMusicAssistantItem(item) {
  * @param {string} [opts.error] - Optional error message.
  * @param {boolean} [opts.showQueueSuccess] - Whether to show queue success message.
  * @param {boolean} [opts.matchTheme] - Whether to match the theme of the parent.
+ * @param {boolean} [opts.disableAutofocus] - Whether to disable search input autofocus.
  */
 function renderSearchSheet(_ref) {
   let {
@@ -1348,10 +1349,12 @@ function renderSearchSheet(_ref) {
     showQueueSuccess,
     matchTheme = false,
     // Add matchTheme parameter
-    upcomingFilterActive = false // Add upcoming filter parameter
+    upcomingFilterActive = false,
+    // Add upcoming filter parameter
+    disableAutofocus = false
   } = _ref;
   if (!open) return E;
-  return x(_templateObject$3 || (_templateObject$3 = _taggedTemplateLiteral(["\n    <div class=\"search-sheet\" data-match-theme=\"", "\">\n      <div class=\"search-sheet-header\">\n        <input\n          type=\"text\"\n          .value=", "\n          @input=", "\n          placeholder=\"Search music...\"\n          autofocus\n        />\n        <button @click=", " ?disabled=", ">Search</button>\n        <button @click=", " title=\"Close Search\">\u2715</button>\n      </div>\n      ", "\n      ", "\n      ", "\n      <div class=\"search-sheet-results\">\n        ", "\n      </div>\n    </div>\n  "])), matchTheme, query || "", onQueryInput, onSearch, loading || !query, onClose, loading ? x(_templateObject2$3 || (_templateObject2$3 = _taggedTemplateLiteral(["<div class=\"search-sheet-loading\">Loading...</div>"]))) : E, error ? x(_templateObject3$2 || (_templateObject3$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-error\">", "</div>"])), error) : E, showQueueSuccess ? x(_templateObject4$2 || (_templateObject4$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-success\">\u2705 Added to queue!</div>"]))) : E, (results || []).length === 0 && !loading ? x(_templateObject5$2 || (_templateObject5$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-empty\">No results.</div>"]))) : (results || []).map(item => x(_templateObject6$2 || (_templateObject6$2 = _taggedTemplateLiteral(["\n                <div class=\"search-sheet-result\">\n                  ", "\n                  <span class=\"search-sheet-title\">", "</span>\n                  ", "\n                  <div class=\"search-sheet-buttons\">\n                    <button class=\"search-sheet-play\" @click=", " title=\"Play Now\">\n                      \u25B6\n                    </button>\n                    ", "\n                  </div>\n                </div>\n              "])), item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject7$2 || (_templateObject7$2 = _taggedTemplateLiteral(["\n                    <img\n                      class=\"search-sheet-thumb\"\n                      src=", "\n                      alt=", "\n                      onerror=\"this.style.display='none'\"\n                    />\n                  "])), item.thumbnail, item.title) : x(_templateObject8$2 || (_templateObject8$2 = _taggedTemplateLiteral(["\n                    <div class=\"search-sheet-thumb-placeholder\">\n                      <ha-icon icon=\"mdi:music\"></ha-icon>\n                    </div>\n                  "]))), item.title, item.artist ? x(_templateObject9$2 || (_templateObject9$2 = _taggedTemplateLiteral(["\n                    <span class=\"search-sheet-subtitle\" style=\"display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;\">\n                      ", "\n                    </span>\n                  "])), item.artist) : E, () => onPlay(item), !(upcomingFilterActive && item.queue_item_id) ? x(_templateObject0$2 || (_templateObject0$2 = _taggedTemplateLiteral(["\n                      <button class=\"search-sheet-queue\" @click=", " title=\"Add to Queue\">\n                        <ha-icon icon=\"mdi:playlist-play\"></ha-icon>\n                      </button>\n                    "])), e => {
+  return x(_templateObject$3 || (_templateObject$3 = _taggedTemplateLiteral(["\n    <div class=\"search-sheet\" data-match-theme=\"", "\">\n      <div class=\"search-sheet-header\">\n        <input\n          type=\"text\"\n          .value=", "\n          @input=", "\n          placeholder=\"Search music...\"\n          ?autofocus=", "\n        />\n        <button @click=", " ?disabled=", ">Search</button>\n        <button @click=", " title=\"Close Search\">\u2715</button>\n      </div>\n      ", "\n      ", "\n      ", "\n      <div class=\"search-sheet-results\">\n        ", "\n      </div>\n    </div>\n  "])), matchTheme, query || "", onQueryInput, !disableAutofocus, onSearch, loading || !query, onClose, loading ? x(_templateObject2$3 || (_templateObject2$3 = _taggedTemplateLiteral(["<div class=\"search-sheet-loading\">Loading...</div>"]))) : E, error ? x(_templateObject3$2 || (_templateObject3$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-error\">", "</div>"])), error) : E, showQueueSuccess ? x(_templateObject4$2 || (_templateObject4$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-success\">\u2705 Added to queue!</div>"]))) : E, (results || []).length === 0 && !loading ? x(_templateObject5$2 || (_templateObject5$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-empty\">No results.</div>"]))) : (results || []).map(item => x(_templateObject6$2 || (_templateObject6$2 = _taggedTemplateLiteral(["\n                <div class=\"search-sheet-result\">\n                  ", "\n                  <span class=\"search-sheet-title\">", "</span>\n                  ", "\n                  <div class=\"search-sheet-buttons\">\n                    <button class=\"search-sheet-play\" @click=", " title=\"Play Now\">\n                      \u25B6\n                    </button>\n                    ", "\n                  </div>\n                </div>\n              "])), item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject7$2 || (_templateObject7$2 = _taggedTemplateLiteral(["\n                    <img\n                      class=\"search-sheet-thumb\"\n                      src=", "\n                      alt=", "\n                      onerror=\"this.style.display='none'\"\n                    />\n                  "])), item.thumbnail, item.title) : x(_templateObject8$2 || (_templateObject8$2 = _taggedTemplateLiteral(["\n                    <div class=\"search-sheet-thumb-placeholder\">\n                      <ha-icon icon=\"mdi:music\"></ha-icon>\n                    </div>\n                  "]))), item.title, item.artist ? x(_templateObject9$2 || (_templateObject9$2 = _taggedTemplateLiteral(["\n                    <span class=\"search-sheet-subtitle\" style=\"display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;\">\n                      ", "\n                    </span>\n                  "])), item.artist) : E, () => onPlay(item), !(upcomingFilterActive && item.queue_item_id) ? x(_templateObject0$2 || (_templateObject0$2 = _taggedTemplateLiteral(["\n                      <button class=\"search-sheet-queue\" @click=", " title=\"Add to Queue\">\n                        <ha-icon icon=\"mdi:playlist-play\"></ha-icon>\n                      </button>\n                    "])), e => {
     e.preventDefault();
     e.stopPropagation();
     onQueue(item);
@@ -8078,9 +8081,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     }));
   }
   _renderBehaviorTab() {
-    var _this$_config$idle_ti, _this$_config$show_ch, _this$_config$hold_to, _this$_config$search_, _this$_config$search_2;
+    var _this$_config$idle_ti, _this$_config$show_ch, _this$_config$hold_to, _this$_config$disable, _this$_config$search_, _this$_config$search_2;
     const searchLimitWarningActive = Number(this._config.search_results_limit) > 100;
-    return x(_templateObject16$1 || (_templateObject16$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle & Chips</div>\n            <div class=\"section-description\">Choose when the card goes idle and how entity chips behave.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                .selector=", "\n                .value=", "\n                label=\"Idle Timeout (ms)\"\n                @value-changed=", "\n              ></ha-selector>\n              <div class=\"config-subtitle\">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Show Chip Row\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay.</div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Interactions & Search</div>\n            <div class=\"section-description\">Fine-tune how entities are pinned and how many results show at once.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"hold-to-pin-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Hold to Pin</span>\n            </div>\n            <div class=\"config-subtitle\">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>\n          </div>\n            <div class=\"form-row form-row-multi-column\">\n              <div class=\"grow-children number-input-with-note\">\n                <ha-selector-number\n                  .selector=", "\n                  .value=", "\n                  label=\"Search Results Limit\"\n                  helper=\"Maximum number of search results to display (1-1000, default: 20)\"\n                  @value-changed=", "\n                ></ha-selector-number>\n                ", "\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              id=\"search-limit-reset\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Result Sorting\"\n              helper=\"Choose how search results are ordered. Default keeps the source order.\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n      "])), this.hass, {
+    return x(_templateObject16$1 || (_templateObject16$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle & Chips</div>\n            <div class=\"section-description\">Choose when the card goes idle and how entity chips behave.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                .selector=", "\n                .value=", "\n                label=\"Idle Timeout (ms)\"\n                @value-changed=", "\n              ></ha-selector>\n              <div class=\"config-subtitle\">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Show Chip Row\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay.</div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Interactions & Search</div>\n            <div class=\"section-description\">Fine-tune how entities are pinned and how many results show at once.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"hold-to-pin-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Hold to Pin</span>\n            </div>\n            <div class=\"config-subtitle\">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"disable-autofocus-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Disable Search Autofocus</span>\n            </div>\n            <div class=\"config-subtitle\">Keep the search box from stealing focus so on-screen keyboards stay hidden.</div>\n          </div>\n            <div class=\"form-row form-row-multi-column\">\n              <div class=\"grow-children number-input-with-note\">\n                <ha-selector-number\n                  .selector=", "\n                  .value=", "\n                  label=\"Search Results Limit\"\n                  helper=\"Maximum number of search results to display (1-1000, default: 20)\"\n                  @value-changed=", "\n                ></ha-selector-number>\n                ", "\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              id=\"search-limit-reset\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Result Sorting\"\n              helper=\"Choose how search results are ordered. Default keeps the source order.\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n      "])), this.hass, {
       number: {
         min: 0,
         step: 1000,
@@ -8101,7 +8104,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "In Menu"
         }]
       }
-    }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", e => this._updateConfig("show_chip_row", e.detail.value), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), {
+    }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", e => this._updateConfig("show_chip_row", e.detail.value), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), (_this$_config$disable = this._config.disable_autofocus) !== null && _this$_config$disable !== void 0 ? _this$_config$disable : false, e => this._updateConfig("disable_autofocus", e.target.checked), {
       number: {
         min: 0,
         max: 1000,
@@ -9107,6 +9110,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._idleTimeoutMs = 60000;
     this._volumeStep = 0.05;
     this._searchInputAutoFocused = false;
+    this._disableSearchAutofocus = false;
     // Optimistic playback state after control clicks
     this._optimisticPlayback = null;
     // Debounce entity switching to prevent rapid state changes
@@ -9411,23 +9415,24 @@ class YetAnotherMediaPlayerCard extends i$1 {
         });
       }
     }, 100);
-
-    // Handle focus for expand on search
-    const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
-    setTimeout(() => {
-      const inp = this.renderRoot.querySelector('#search-input-box');
-      if (inp) {
-        inp.focus();
-      } else {
-        // If input not found, try again with a longer delay
-        setTimeout(() => {
-          const retryInp = this.renderRoot.querySelector('#search-input-box');
-          if (retryInp) {
-            retryInp.focus();
-          }
-        }, 200);
-      }
-    }, focusDelay);
+    if (!this._disableSearchAutofocus) {
+      // Handle focus for expand on search
+      const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
+      setTimeout(() => {
+        const inp = this.renderRoot.querySelector('#search-input-box');
+        if (inp) {
+          inp.focus();
+        } else {
+          // If input not found, try again with a longer delay
+          setTimeout(() => {
+            const retryInp = this.renderRoot.querySelector('#search-input-box');
+            if (retryInp) {
+              retryInp.focus();
+            }
+          }, 200);
+        }
+      }, focusDelay);
+    }
   }
   _openQuickSearchOverlay() {
     let mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "default";
@@ -11721,6 +11726,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
+    this._disableSearchAutofocus = config.disable_autofocus === true;
     if (this._holdToPin) {
       this._holdHandler = createHoldToPinHandler({
         onPin: idx => this._pinChip(idx),
@@ -12562,12 +12568,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
           }
           return false;
         };
-        if (!this._searchInputAutoFocused) {
+        if (!this._disableSearchAutofocus && !this._searchInputAutoFocused) {
           const focusedNow = focusSearchInput();
           if (!focusedNow) {
             // If input not found yet, try again with a longer delay
             setTimeout(() => {
-              if (this._showSearchInSheet && !this._searchInputAutoFocused) {
+              if (this._showSearchInSheet && !this._disableSearchAutofocus && !this._searchInputAutoFocused) {
                 focusSearchInput();
               }
             }, 200);
@@ -13343,7 +13349,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   render() {
-    var _this$config$actions2, _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback;
+    var _this$config$actions2, _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback, _this$config17;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -13968,13 +13974,13 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._showResolvedEntities = false;
         this.requestUpdate();
       }, icon, isActive ? "".concat(name, " (Active)") : name, role);
-    })) : this._showSearchInSheet ? x(_templateObject35 || (_templateObject35 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-search\" style=\"margin-top:12px;\">\n                  ", "\n                  ", "\n                  <div class=\"entity-options-search-row\">\n                      <input\n                        type=\"text\"\n                        id=\"search-input-box\"\n                        autofocus\n                        class=\"entity-options-search-input\"\n                        .value=", "\n                        @input=", "\n                        @keydown=", "\n                        placeholder=\"Search music...\"\n                        style=\"flex:1; min-width:0; font-size:1.1em;\"\n                      />\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", "\n                      ?disabled=", ">\n                      Search\n                    </button>\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", ">\n                      Cancel\n                    </button>\n                  </div>\n                  <!-- FILTER CHIPS -->\n                  ", "\n                  ", "\n                  ", "\n                  \n                  ", "\n                  \n                  <div class=\"entity-options-search-results\">\n                    ", "\n                  </div>\n                </div>\n              "])), this._searchHierarchy.length > 0 ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                    <button class=\"entity-options-item close-item\" @click=", ">\n                      Back\n                    </button>\n                    <div class=\"entity-options-divider\"></div>\n                  "])), () => {
+    })) : this._showSearchInSheet ? x(_templateObject35 || (_templateObject35 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-search\" style=\"margin-top:12px;\">\n                  ", "\n                  ", "\n                  <div class=\"entity-options-search-row\">\n                      <input\n                        type=\"text\"\n                        id=\"search-input-box\"\n                        ?autofocus=", "\n                        class=\"entity-options-search-input\"\n                        .value=", "\n                        @input=", "\n                        @keydown=", "\n                        placeholder=\"Search music...\"\n                        style=\"flex:1; min-width:0; font-size:1.1em;\"\n                      />\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", "\n                      ?disabled=", ">\n                      Search\n                    </button>\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", ">\n                      Cancel\n                    </button>\n                  </div>\n                  <!-- FILTER CHIPS -->\n                  ", "\n                  ", "\n                  ", "\n                  \n                  ", "\n                  \n                  <div class=\"entity-options-search-results\">\n                    ", "\n                  </div>\n                </div>\n              "])), this._searchHierarchy.length > 0 ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                    <button class=\"entity-options-item close-item\" @click=", ">\n                      Back\n                    </button>\n                    <div class=\"entity-options-divider\"></div>\n                  "])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._goBackInSearch();
       }
-    }) : E, this._searchBreadcrumb ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                    <div class=\"entity-options-search-breadcrumb\">\n                      <div class=\"entity-options-search-breadcrumb-text\">", "</div>\n                    </div>\n                  "])), this._searchBreadcrumb) : E, this._searchQuery, e => {
+    }) : E, this._searchBreadcrumb ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                    <div class=\"entity-options-search-breadcrumb\">\n                      <div class=\"entity-options-search-breadcrumb-text\">", "</div>\n                    </div>\n                  "])), this._searchBreadcrumb) : E, !this._disableSearchAutofocus, this._searchQuery, e => {
       this._searchQuery = e.target.value;
       this.requestUpdate();
     }, e => {
@@ -14220,7 +14226,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       loading: this._searchLoading,
       results: this._getDisplaySearchResults(),
       error: this._searchError,
-      matchTheme: this._config.match_theme,
+      matchTheme: (_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.match_theme,
       // Add matchTheme parameter
       onClose: () => this._searchCloseSheet(),
       onQueryInput: e => {
@@ -14237,7 +14243,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
       onPlay: item => this._playMediaFromSearch(item),
       onQueue: item => this._queueMediaFromSearch(item),
       showQueueSuccess: this._showQueueSuccessMessage,
-      upcomingFilterActive: this._upcomingFilterActive
+      upcomingFilterActive: this._upcomingFilterActive,
+      disableAutofocus: this._disableSearchAutofocus
     }) : E);
   }
   _updateIdleState() {
@@ -14369,6 +14376,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
       required: false
     }, {
       name: "hold_to_pin",
+      selector: {
+        boolean: {}
+      },
+      required: false
+    }, {
+      name: "disable_autofocus",
       selector: {
         boolean: {}
       },
