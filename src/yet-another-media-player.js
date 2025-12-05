@@ -455,6 +455,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._idleTimeoutMs = 60000;
     this._volumeStep = 0.05;
     this._searchInputAutoFocused = false;
+    this._disableSearchAutofocus = false;
     // Optimistic playback state after control clicks
     this._optimisticPlayback = null;
     // Debounce entity switching to prevent rapid state changes
@@ -741,22 +742,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     }, 100);
     
-    // Handle focus for expand on search
-    const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
-    setTimeout(() => {
-      const inp = this.renderRoot.querySelector('#search-input-box');
-      if (inp) {
-        inp.focus();
-      } else {
-        // If input not found, try again with a longer delay
-        setTimeout(() => {
-          const retryInp = this.renderRoot.querySelector('#search-input-box');
-          if (retryInp) {
-            retryInp.focus();
-          }
-        }, 200);
-      }
-    }, focusDelay);
+    if (!this._disableSearchAutofocus) {
+      // Handle focus for expand on search
+      const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
+      setTimeout(() => {
+        const inp = this.renderRoot.querySelector('#search-input-box');
+        if (inp) {
+          inp.focus();
+        } else {
+          // If input not found, try again with a longer delay
+          setTimeout(() => {
+            const retryInp = this.renderRoot.querySelector('#search-input-box');
+            if (retryInp) {
+              retryInp.focus();
+            }
+          }, 200);
+        }
+      }, focusDelay);
+    }
   }
 
   _openQuickSearchOverlay(mode = "default") {
@@ -3197,6 +3200,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
+    this._disableSearchAutofocus = config.disable_autofocus === true;
     if (this._holdToPin) {
       this._holdHandler = createHoldToPinHandler({
         onPin: (idx) => this._pinChip(idx),
@@ -4100,12 +4104,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
           return false;
         };
 
-        if (!this._searchInputAutoFocused) {
+        if (!this._disableSearchAutofocus && !this._searchInputAutoFocused) {
           const focusedNow = focusSearchInput();
           if (!focusedNow) {
             // If input not found yet, try again with a longer delay
             setTimeout(() => {
-              if (this._showSearchInSheet && !this._searchInputAutoFocused) {
+              if (this._showSearchInSheet && !this._disableSearchAutofocus && !this._searchInputAutoFocused) {
                 focusSearchInput();
               }
             }, 200);
@@ -5821,7 +5825,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       <input
                         type="text"
                         id="search-input-box"
-                        autofocus
+                        ?autofocus=${!this._disableSearchAutofocus}
                         class="entity-options-search-input"
                         .value=${this._searchQuery}
                         @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
@@ -6451,7 +6455,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 loading: this._searchLoading,
                 results: this._getDisplaySearchResults(),
                 error: this._searchError,
-                matchTheme: this._config.match_theme, // Add matchTheme parameter
+                matchTheme: this.config?.match_theme, // Add matchTheme parameter
                 onClose: () => this._searchCloseSheet(),
                 onQueryInput: e => {
                   this._searchQuery = e.target.value;
@@ -6468,6 +6472,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 onQueue: item => this._queueMediaFromSearch(item),
                 showQueueSuccess: this._showQueueSuccessMessage,
                 upcomingFilterActive: this._upcomingFilterActive,
+                disableAutofocus: this._disableSearchAutofocus,
               })
             : nothing}
         </ha-card>
@@ -6597,6 +6602,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         },
         {
           name: "hold_to_pin",
+          selector: {
+            boolean: {}
+          },
+          required: false
+        },
+        {
+          name: "disable_autofocus",
           selector: {
             boolean: {}
           },

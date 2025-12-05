@@ -1003,6 +1003,17 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
             <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
           </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="disable-autofocus-toggle"
+                .checked=${this._config.disable_autofocus ?? false}
+                @change=${(e) => this._updateConfig("disable_autofocus", e.target.checked)}
+              ></ha-switch>
+              <span>Disable Search Autofocus</span>
+            </div>
+            <div class="config-subtitle">Keep the search box from stealing focus so on-screen keyboards stay hidden.</div>
+          </div>
             <div class="form-row form-row-multi-column">
               <div class="grow-children number-input-with-note">
                 <ha-selector-number

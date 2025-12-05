@@ -68,6 +68,7 @@ function transformMusicAssistantItem(item) {
  * @param {string} [opts.error] - Optional error message.
  * @param {boolean} [opts.showQueueSuccess] - Whether to show queue success message.
  * @param {boolean} [opts.matchTheme] - Whether to match the theme of the parent.
+ * @param {boolean} [opts.disableAutofocus] - Whether to disable search input autofocus.
  */
 export function renderSearchSheet({
   open,
@@ -83,6 +84,7 @@ export function renderSearchSheet({
   showQueueSuccess,
   matchTheme = false, // Add matchTheme parameter
   upcomingFilterActive = false, // Add upcoming filter parameter
+  disableAutofocus = false,
 }) {
   if (!open) return nothing;
   return html`
@@ -93,7 +95,7 @@ export function renderSearchSheet({
           .value=${query || ""}
           @input=${onQueryInput}
           placeholder="Search music..."
-          autofocus
+          ?autofocus=${!disableAutofocus}
         />
         <button @click=${onSearch} ?disabled=${loading || !query}>Search</button>
         <button @click=${onClose} title="Close Search">✕</button>
