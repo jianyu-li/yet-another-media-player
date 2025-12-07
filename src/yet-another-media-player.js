@@ -1052,13 +1052,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
   async _doSearch(mediaType = null, searchParams = {}) {
+    console.log('yamp: _doSearch called with', { mediaType, searchParams, currentFilter: this._searchMediaClassFilter });
     this._searchAttempted = true;
     this._closeMenuIfOpen();
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
 
     // Respect favorites toggle across chip changes, but allow explicit filter clearing
-    const isFavorites = !!(searchParams.favorites || (this._favoritesFilterActive && !searchParams.clearFilters));
+    // FIX: Include _initialFavoritesLoaded AND _lastSearchUsedServerFavorites to persist implicit favorites state
+    const isFavorites = !!(searchParams.favorites || ((this._favoritesFilterActive || this._initialFavoritesLoaded || this._lastSearchUsedServerFavorites) && !searchParams.clearFilters));
+
+    // FIX: Explicitly persist the favorites filter state if we determined we are in favorites mode
+    if (isFavorites) {
+      this._favoritesFilterActive = true;
+    }
+
     const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || (this._recentlyPlayedFilterActive && !searchParams.clearFilters));
     const isUpcoming = !!(searchParams.isUpcoming || (this._upcomingFilterActive && !searchParams.clearFilters));
     const isRecommendations = !!(searchParams.isRecommendations || (this._recommendationsFilterActive && !searchParams.clearFilters));
@@ -1146,7 +1154,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._getSearchResultsLimit()
         );
         this._lastSearchUsedServerFavorites = true;
-      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
+      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
         searchResponse = await getFavorites(
           this.hass,
           searchEntityId,
@@ -1154,7 +1162,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._getSearchResultsLimit(),
           { onChunk: progressiveUpdate }
         );
-        // Mark that initial favorites have been loaded
+        // Mark that initial favorites have been loaded only if we're in default view
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
         }
@@ -1614,33 +1622,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // This aligns with how initial favorites loading works
       const currentMediaType = this._searchMediaClassFilter;
 
-      // Try to search with favorites parameter first
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Search for favorites matching the query
-        try {
-          await this._doSearch(currentMediaType, { favorites: true });
-        } catch (error) {
-          console.error('yamp: Error searching favorites:', error);
-        }
-      } else {
-        // No search query - load all favorites (same as initial load)
-        try {
-          // Reset the favorites filter state temporarily to use the default favorites path
-          const tempFavoritesActive = this._favoritesFilterActive;
-          this._favoritesFilterActive = false;
-          await this._doSearch('favorites');
-          this._favoritesFilterActive = tempFavoritesActive;
-        } catch (error) {
-          console.error('yamp: Error loading favorites:', error);
-        }
+      // FIX: Always use the structured search with favorites: true
+      // This ensures we respect the current filter (e.g., Radio) and don't pass invalid 'favorites' media type
+      try {
+        await this._doSearch(currentMediaType, { favorites: true });
+      } catch (error) {
+        console.error('yamp: Error searching favorites:', error);
       }
     } else {
       // Favorites filter turned OFF:
       // We must reload the standard items for the current filter.
-      // We rely on _doSearch to check the cache or fetch fresh data if needed.
       const currentMediaType = this._searchMediaClassFilter;
-      // Pass empty object to use default search params (effectively clearing the favorites flag)
-      await this._doSearch(currentMediaType);
+      console.log('yamp: Toggling favorites OFF. Current Filter:', currentMediaType);
+
+      // FIX: Explicitly clear the persistence flags so _doSearch doesn't immediately re-enable favorites
+      this._lastSearchUsedServerFavorites = false;
+      this._initialFavoritesLoaded = false;
+
+      // Pass clearFilters: true to ensure we don't pick up any lingering filter states from the isFavorites calculation
+      await this._doSearch(currentMediaType, { clearFilters: true });
     }
   }
 

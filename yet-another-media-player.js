@@ -1406,6 +1406,50 @@ async function searchMedia(hass, entityId, query) {
           usedMusicAssistant: true
         };
       }
+
+      // If query is empty and we have a specific media type (not 'all'), treat as browsing the library
+      if ((!query || query.trim() === '') && mediaType && mediaType !== 'all' && !searchParams.favorites) {
+        // Validate media type strictly
+        const allowedMediaTypes = ['artist', 'album', 'track', 'playlist', 'radio', 'audiobook', 'podcast'];
+        if (!allowedMediaTypes.includes(mediaType)) {
+          console.warn("yamp: Unsupported media type for browsing: ".concat(mediaType, ". Skipping get_library call."));
+          return {
+            results: [],
+            usedMusicAssistant: true
+          };
+        }
+        console.log('yamp: Browsing library for', mediaType);
+        const message = {
+          type: "call_service",
+          domain: "music_assistant",
+          service: "get_library",
+          service_data: {
+            config_entry_id: configEntryId,
+            media_type: mediaType
+            // favorite param omitted to get ALL items
+          },
+          return_response: true
+        };
+        const limit = resolveLimitValue(searchResultsLimit);
+        if (limit !== undefined) {
+          message.service_data.limit = limit;
+        }
+        const res = await hass.connection.sendMessagePromise(message);
+        console.log('yamp: Browse response', res);
+        const response = res === null || res === void 0 ? void 0 : res.response;
+        const items = (response === null || response === void 0 ? void 0 : response.items) || [];
+        const browseResults = [];
+        items.forEach(item => {
+          const transformedItem = transformMusicAssistantItem(item);
+          if (transformedItem) {
+            browseResults.push(transformedItem);
+          }
+        });
+        return {
+          results: browseResults,
+          usedMusicAssistant: true
+        };
+      }
       const serviceData = {
         name: query,
         config_entry_id: configEntryId
@@ -9707,13 +9751,24 @@ class YetAnotherMediaPlayerCard extends i$1 {
     var _this$config4;
     let mediaType = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     let searchParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    console.log('yamp: _doSearch called with', {
+      mediaType,
+      searchParams,
+      currentFilter: this._searchMediaClassFilter
+    });
     this._searchAttempted = true;
     this._closeMenuIfOpen();
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = mediaType && mediaType !== 'favorites' ? mediaType : 'all';
 
     // Respect favorites toggle across chip changes, but allow explicit filter clearing
-    const isFavorites = !!(searchParams.favorites || this._favoritesFilterActive && !searchParams.clearFilters);
+    // FIX: Include _initialFavoritesLoaded AND _lastSearchUsedServerFavorites to persist implicit favorites state
+    const isFavorites = !!(searchParams.favorites || (this._favoritesFilterActive || this._initialFavoritesLoaded || this._lastSearchUsedServerFavorites) && !searchParams.clearFilters);
+
+    // FIX: Explicitly persist the favorites filter state if we determined we are in favorites mode
+    if (isFavorites) {
+      this._favoritesFilterActive = true;
+    }
     const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || this._recentlyPlayedFilterActive && !searchParams.clearFilters);
     const isUpcoming = !!(searchParams.isUpcoming || this._upcomingFilterActive && !searchParams.clearFilters);
     const isRecommendations = !!(searchParams.isRecommendations || this._recommendationsFilterActive && !searchParams.clearFilters);
@@ -9784,11 +9839,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
           favorites: true
         }), this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = true;
-      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
+      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
         searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this._getSearchResultsLimit(), {
           onChunk: progressiveUpdate
         });
-        // Mark that initial favorites have been loaded
+        // Mark that initial favorites have been loaded only if we're in default view
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
         }
@@ -10251,41 +10306,29 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // This aligns with how initial favorites loading works
       const currentMediaType = this._searchMediaClassFilter;
 
-      // Try to search with favorites parameter first
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Search for favorites matching the query
-        try {
-          await this._doSearch(currentMediaType, {
-            favorites: true
-          });
-        } catch (error) {
-          console.error('yamp: Error searching favorites:', error);
-        }
-      } else {
-        // No search query - load all favorites (same as initial load)
-        try {
-          // Reset the favorites filter state temporarily to use the default favorites path
-          const tempFavoritesActive = this._favoritesFilterActive;
-          this._favoritesFilterActive = false;
-          await this._doSearch('favorites');
-          this._favoritesFilterActive = tempFavoritesActive;
-        } catch (error) {
-          console.error('yamp: Error loading favorites:', error);
-        }
+      // FIX: Always use the structured search with favorites: true
+      // This ensures we respect the current filter (e.g., Radio) and don't pass invalid 'favorites' media type
+      try {
+        await this._doSearch(currentMediaType, {
+          favorites: true
+        });
+      } catch (error) {
+        console.error('yamp: Error searching favorites:', error);
       }
     } else {
-      // Restore original search results
+      // Favorites filter turned OFF:
+      // We must reload the standard items for the current filter.
+      const currentMediaType = this._searchMediaClassFilter;
+      console.log('yamp: Toggling favorites OFF. Current Filter:', currentMediaType);
 
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Resubmit the original search without favorites filter
-        const currentMediaType = this._searchMediaClassFilter;
-        await this._doSearch(currentMediaType);
-      } else {
-        // Restore from cache
-        const cacheKey = "".concat(this._searchMediaClassFilter || 'all');
-        this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey] || []);
-        this.requestUpdate();
-      }
+      // FIX: Explicitly clear the persistence flags so _doSearch doesn't immediately re-enable favorites
+      this._lastSearchUsedServerFavorites = false;
+      this._initialFavoritesLoaded = false;
+
+      // Pass clearFilters: true to ensure we don't pick up any lingering filter states from the isFavorites calculation
+      await this._doSearch(currentMediaType, {
+        clearFilters: true
+      });
     }
   }
 
