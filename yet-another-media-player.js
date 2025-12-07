@@ -12301,7 +12301,9 @@ class YetAnotherMediaPlayerCard extends i$1 {
     let preferred = currentId;
     if (this._lastGroupingMasterId && this.entityIds.includes(this._lastGroupingMasterId)) {
       const lastGroup = groups.find(g => g.includes(this._lastGroupingMasterId));
-      if (lastGroup && lastGroup.length > 1) {
+      // Only stick to the last group if the *current* entity is actually part of it.
+      // Otherwise, we've switched context to a different entity (e.g. ungrouped one).
+      if (lastGroup && lastGroup.length > 1 && lastGroup.includes(currentId)) {
         preferred = this._lastGroupingMasterId;
       }
     }
@@ -14100,6 +14102,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
       const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) && masterState.attributes.group_members.length > 0;
       const groupPlayerIds = [];
+      const currentMaster = groupedAny ? masterGroupId : this._getGroupingEntityIdByEntityId(this.currentEntityId);
       for (const id of this.entityIds) {
         const obj = this.entityObjs.find(e => e.entity_id === id);
         if (!obj) continue;
@@ -14129,9 +14132,29 @@ class YetAnotherMediaPlayerCard extends i$1 {
           }
         }
         if (entityToCheck && entityName) {
+          // Calculate busy status
+          const activeActualKey = this._getGroupKey(id);
+          let isBusy = false;
+          let busyLabel = "";
+          if (activeActualKey && activeActualKey !== id && activeActualKey !== currentMaster) {
+            isBusy = true;
+            const masterName = this.getChipName(activeActualKey);
+            busyLabel = "Joined ".concat(masterName);
+          } else if (activeActualKey === id && activeActualKey !== currentMaster) {
+            var _checkState$attribute;
+            const checkObj = this.entityObjs.find(e => e.entity_id === id);
+            const checkEntityId = checkObj ? this._getGroupingEntityIdByEntityId(checkObj.entity_id) : id;
+            const checkState = this.hass.states[checkEntityId];
+            if ((checkState === null || checkState === void 0 || (_checkState$attribute = checkState.attributes) === null || _checkState$attribute === void 0 || (_checkState$attribute = _checkState$attribute.group_members) === null || _checkState$attribute === void 0 ? void 0 : _checkState$attribute.length) > 1) {
+              isBusy = true;
+              busyLabel = "Master (".concat(checkState.attributes.group_members.length, " players)");
+            }
+          }
           groupPlayerIds.push({
             id: entityName,
-            groupId: entityToCheck
+            groupId: entityToCheck,
+            isBusy,
+            busyLabel
           });
         }
       }
@@ -14147,11 +14170,23 @@ class YetAnotherMediaPlayerCard extends i$1 {
       if (groupedAny) {
         const masterFirst = masterId ? groupPlayerIds.find(item => item.id === masterId) : null;
         const others = masterFirst ? groupPlayerIds.filter(item => item.id !== masterId) : groupPlayerIds;
-        sortedGroupIds = masterFirst ? [masterFirst, ...others] : groupPlayerIds;
+        // Sort others: Available first, then Busy
+        others.sort((a, b) => {
+          if (a.isBusy && !b.isBusy) return 1;
+          if (!a.isBusy && b.isBusy) return -1;
+          return 0;
+        });
+        sortedGroupIds = masterFirst ? [masterFirst, ...others] : others;
       } else {
         const currentFirst = activeId ? groupPlayerIds.find(item => item.id === activeId) : null;
         const others = currentFirst ? groupPlayerIds.filter(item => item.id !== activeId) : groupPlayerIds;
-        sortedGroupIds = currentFirst ? [currentFirst, ...others] : groupPlayerIds;
+        // Sort others: Available first, then Busy
+        others.sort((a, b) => {
+          if (a.isBusy && !b.isBusy) return 1;
+          if (!a.isBusy && b.isBusy) return -1;
+          return 0;
+        });
+        sortedGroupIds = currentFirst ? [currentFirst, ...others] : others;
       }
       return x(_templateObject62 || (_templateObject62 = _taggedTemplateLiteral(["\n                      <div class=\"entity-options-title\" style=\"margin-bottom:8px;\">Group Players</div>\n                      <div style=\"display:flex; align-items:center; gap:8px; margin-bottom:12px;\">\n                        ", "\n                        <button class=\"entity-options-item\"\n                          @click=", "\n                          style=\"flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;\">\n                          ", "\n                        </button>\n                      </div>\n                      <div class=\"group-list-scroll\">\n                        ", "\n                      </div>\n                    "])), groupedAny ? x(_templateObject63 || (_templateObject63 = _taggedTemplateLiteral(["\n                          <button class=\"entity-options-item\"\n                            @click=", "\n                            style=\"flex:0 0 auto; min-width:140px; text-align:center;\">\n                            Sync Volume\n                          </button>\n                        "])), () => this._syncGroupVolume()) : E, () => groupedAny ? this._ungroupAll() : this._groupAll(), groupedAny ? "Ungroup All" : "Group All", sortedGroupIds.length === 0 ? x(_templateObject64 || (_templateObject64 = _taggedTemplateLiteral(["\n                          <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n                            No group-capable players.\n                          </div>\n                        "]))) : sortedGroupIds.map(item => {
         var _displayVolumeState$a;
@@ -14160,6 +14195,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const obj = this.entityObjs.find(e => e.entity_id === id);
         if (!obj) return E;
         const name = this.getChipName(id);
+        // Use pre-calculated busy status
+        const {
+          isBusy,
+          busyLabel
+        } = item;
         let grouped = false;
         if (groupedAny && masterState) {
           if (actualGroupId === masterGroupId) {
@@ -14181,8 +14221,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const isPrimaryRow = groupedAny ? actualGroupId === masterGroupId : id === masterId;
         const showToggleButton = groupedAny ? !isPrimaryRow : id !== masterId;
         const isCurrent = id === activeId;
-        const stateLabel = groupedAny ? isPrimaryRow ? "Master" : grouped ? "Joined" : "Available" : isCurrent ? "Current" : "Available";
-        return x(_templateObject65 || (_templateObject65 = _taggedTemplateLiteral(["\n                            <div class=\"entity-options-item group-player-row\" style=\"\n                              display:flex;\n                              align-items:center;\n                              gap:6px;\n                              padding:4px 8px;\n                              margin-bottom:1px;\n                            \">\n                              <div style=\"flex:1; min-width:120px;\">\n                                <div style=\"font-weight:600; text-align:left;\">", "</div>\n                                <div style=\"font-size:0.8em; opacity:0.7; text-align:left;\">", "</div>\n                              </div>\n                              <div style=\"flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;\">\n                                ", "\n                                <span style=\"min-width:36px;display:inline-block;text-align:right;\">", "</span>\n                              </div>\n                              ", "\n                            </div>\n                          "])), name, stateLabel, isRemoteVol ? x(_templateObject66 || (_templateObject66 = _taggedTemplateLiteral(["\n                                        <div class=\"vol-stepper\" style=\"display:flex;align-items:center;gap:4px;\">\n                                          <button @click=", " title=\"Vol Down\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                                            <ha-icon icon=\"mdi:minus\"></ha-icon>\n                                          </button>\n                                          <button @click=", " title=\"Vol Up\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                                            <ha-icon icon=\"mdi:plus\"></ha-icon>\n                                          </button>\n                                        </div>\n                                      "])), () => this._onGroupVolumeStep(volumeEntity, -1), () => this._onGroupVolumeStep(volumeEntity, 1)) : x(_templateObject67 || (_templateObject67 = _taggedTemplateLiteral(["\n                                        <input\n                                          class=\"vol-slider\"\n                                          type=\"range\"\n                                          min=\"0\"\n                                          max=\"1\"\n                                          step=\"0.01\"\n                                          .value=", "\n                                          @change=", "\n                                          title=\"Volume\"\n                                          style=\"width:100%;max-width:260px;\"\n                                        />\n                                      "])), volVal, e => this._onGroupVolumeChange(id, volumeEntity, e)), typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--", showToggleButton ? x(_templateObject68 || (_templateObject68 = _taggedTemplateLiteral(["\n                                    <button class=\"group-toggle-btn\"\n                                            @click=", "\n                                            title=", "\n                                            style=\"margin-left:4px;\">\n                                      <ha-icon icon=", "></ha-icon>\n                                    </button>\n                                  "])), () => this._toggleGroup(id), grouped ? "Unjoin" : "Join", grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline") : x(_templateObject69 || (_templateObject69 = _taggedTemplateLiteral(["<span style=\"margin-left:4px;margin-right:10px;width:32px;display:inline-block;\"></span>"]))));
+        let stateLabel = groupedAny ? isPrimaryRow ? "Master" : grouped ? "Joined" : "Available" : isCurrent ? "Current" : "Available";
+        if (isBusy) {
+          stateLabel = busyLabel || "Unavailable";
+        }
+        return x(_templateObject65 || (_templateObject65 = _taggedTemplateLiteral(["\n                            <div class=\"entity-options-item group-player-row\" style=\"\n                              display:flex;\n                              align-items:center;\n                              gap:6px;\n                              padding:4px 8px;\n                              margin-bottom:1px;\n                              ", "\n                            \">\n                              <div style=\"flex:1; min-width:120px;\">\n                                <div style=\"font-weight:600; text-align:left;\">", "</div>\n                                <div style=\"font-size:0.8em; opacity:0.7; text-align:left;\">", "</div>\n                              </div>\n                              <div style=\"flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;\">\n                                ", "\n                                <span style=\"min-width:36px;display:inline-block;text-align:right;\">", "</span>\n                              </div>\n                              ", "\n                            </div>\n                          "])), isBusy ? "opacity: 0.5;" : "", name, stateLabel, isRemoteVol ? x(_templateObject66 || (_templateObject66 = _taggedTemplateLiteral(["\n                                        <div class=\"vol-stepper\" style=\"display:flex;align-items:center;gap:4px;\">\n                                          <button @click=", " title=\"Vol Down\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                                            <ha-icon icon=\"mdi:minus\"></ha-icon>\n                                          </button>\n                                          <button @click=", " title=\"Vol Up\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                                            <ha-icon icon=\"mdi:plus\"></ha-icon>\n                                          </button>\n                                        </div>\n                                      "])), () => this._onGroupVolumeStep(volumeEntity, -1), () => this._onGroupVolumeStep(volumeEntity, 1)) : x(_templateObject67 || (_templateObject67 = _taggedTemplateLiteral(["\n                                        <input\n                                          class=\"vol-slider\"\n                                          type=\"range\"\n                                          min=\"0\"\n                                          max=\"1\"\n                                          step=\"0.01\"\n                                          .value=", "\n                                          @change=", "\n                                          title=\"Volume\"\n                                          style=\"width:100%;max-width:260px;\"\n                                        />\n                                      "])), volVal, e => this._onGroupVolumeChange(id, volumeEntity, e)), typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--", showToggleButton ? x(_templateObject68 || (_templateObject68 = _taggedTemplateLiteral(["\n                                    <button class=\"group-toggle-btn\"\n                                            @click=", "\n                                            title=", "\n                                            style=\"margin-left:4px; ", "\">\n                                      <ha-icon icon=", "></ha-icon>\n                                    </button>\n                                  "])), () => !isBusy && this._toggleGroup(id), isBusy ? "Player is unavailable" : grouped ? "Unjoin" : "Join", isBusy ? "cursor: not-allowed; opacity: 0.5;" : "", grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline") : x(_templateObject69 || (_templateObject69 = _taggedTemplateLiteral(["<span style=\"margin-left:4px;margin-right:10px;width:32px;display:inline-block;\"></span>"]))));
       }));
       // --- End new group player rows logic ---
     })()) : x(_templateObject70 || (_templateObject70 = _taggedTemplateLiteral(["\n                <button class=\"entity-options-item close-item\" @click=", ">\n                  Back\n                </button>\n                <div class=\"entity-options-divider\"></div>\n                <div class=\"entity-options-sheet source-list-sheet\" style=\"position:relative;\">\n                  <div class=\"source-list-scroll\" style=\"overflow-y:auto;max-height:340px;\">\n                    ", "\n                  </div>\n                </div>\n                <div class=\"floating-source-index\">\n                  ", "\n                </div>\n              "])), () => {
