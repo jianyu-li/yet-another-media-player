@@ -106,13 +106,177 @@ Below you will find a list of all configuration options.
 | `in_menu`                  | boolean      | No           | `false`     | When `true`, moves actions alongside the built-in menu options instead of forward facing chips           |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 
-# Group Players
+
+# Entities
+
+## Entities
+> Add the media players you want to control. Drag entities to reorder the chip row.
+
+### Music Assistant Entity Configuration
+
+You can associate a Music Assistant entity with any media player to enable search and grouping functionality. Since Music Assistant creates a "duplicate" companion entity, you can essentially use this function to combine the main entity with the music assistant companion entity into a single chip.
+
+This is also particularly useful for Universal Media Player (UMP) setups where you want physical control (amp power, source switching) through the main entity while using Music Assistant for advanced media features. When the card is actively using the music assistant entity, the chip will have an indicator outline.
+
+**Favorite Button**: When using a Music Assistant entity, a favorite button (heart icon) will appear in the controls, allowing you to favorite the currently playing track. The button will only appear if you have a button entity configured with "favorite" or "like" in its name (e.g., `button.favorite_track` or `button.like_song`).
+
+#### Basic Example
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    music_assistant_entity: media_player.kitchen_homepod_2
+```
+
+#### Jinja Template Example
+For advanced users, you can use Jinja templates to dynamically select the Music Assistant entity:
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    music_assistant_entity: |
+      {% if is_state('input_boolean.target_office','on') %}
+        media_player.office_homepod_2
+      {% else %}
+        media_player.kitchen_homepod_2
+      {% endif %}
+```
+
+### Hidden Search Filter Chips (Per-Entity)
+
+You can hide specific search filter chips on a per-entity basis using `hidden_filter_chips`. This only affects the chip UI; it does not change the underlying search results or API calls. It’s useful for focusing the search UI on the media types you care about.
+
+#### Available Chip Names
+- `artist`
+- `album`
+- `track`
+- `playlist`
+- `radio`
+- `podcast`
+- `episode`
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.office_homepod
+    name: Office
+    music_assistant_entity: media_player.office_homepod_2
+    hidden_filter_chips:
+      - artist
+      - album
+      - track
+      - podcast
+```
+
+### Group Players
 Player entities can be grouped together for supported entities. Access the hamburger menu and choose "Group Players" to see a list of supported players that are currently configured on your card. If no players are supported (or only one entity is) then the "Group Players" option will not be visible. 
 - Grouped entities will increase and decrease proportionately with the main entity. 
   - If only one entity is configured, and it is part of a group, only the volume for that entity will change. See `group_volume` for additional configuration options.
 - Use the Grouped Players menu to adjust individual player volume or to sync the volume percentage across all grouped players to the main entity
 
-# Search
+### Volume Entity Configuration
+
+You can use a separate `volume_entity` for volume display and control. This can be a static entity or a Jinja template that resolves to an entity id (e.g., `media_player.*` or `remote.*`). If `sync_power` is enabled, the resolved volume entity will be powered on/off along with the main entity.
+
+#### Follow Active Entity
+
+You can also enable `follow_active_volume` to make the volume entity automatically follow the active playback entity. This is useful when you want volume controls to always target the entity that is currently playing, regardless of which chip is selected.
+
+**Note**: When `follow_active_volume` is enabled, the sync power toggle will be automatically hidden in the config editor since it's not applicable in this mode.
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+    follow_active_volume: true
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    follow_active_volume: true
+```
+
+#### Basic Example
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+    volume_entity: remote.living_room_apple_tv
+    sync_power: true
+```
+
+#### Jinja Template Example
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.office_homepod
+    name: Office
+    volume_entity: |
+      {% if is_state('input_boolean.tv_volume','on') %}
+        remote.soundbar
+      {% else %}
+        media_player.office_homepod
+      {% endif %}
+    sync_power: true
+```
+
+### Hidden Controls Configuration
+
+You can hide specific media player controls on a per-entity basis using the `hidden_controls` option. This is useful when you want to simplify the interface for certain entities or hide controls that aren't needed.
+
+**Important**: The entity must still support the control for it to be visible in the first place. Hidden controls only hide controls that would normally be displayed based on the entity's capabilities.
+
+#### Available Control Names
+- `previous` - Previous Track button
+- `play_pause` - Play/Pause button  
+- `stop` - Stop button
+- `next` - Next Track button
+- `shuffle` - Shuffle button
+- `repeat` - Repeat button
+- `favorite` - Favorite button (requires Music Assistant entity)
+- `power` - Power on/off button
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+    hidden_controls:
+      - favorite
+      - shuffle
+      - repeat
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    hidden_controls:
+      - power
+```
+
+In this example:
+- The Living Room entity will hide the favorite, shuffle, and repeat buttons
+- The Kitchen entity will hide only the power button
+- All other controls will remain visible (if supported by the entity)
+
+
+# Behavior
+
+## Idle & Chips
+> Choose when the card goes idle and how entity chips behave.
+
+- **Idle Timeout**: Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.
+- **Show Chip Row**: "Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.
+
+## Interactions & Search
+> Fine-tune how entities are pinned and how many results show at once.
+
+- **Hold to Pin**: Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.
+- **Disable Search Autofocus**: Keep the search box from stealing focus so on-screen keyboards stay hidden.
+
+### Search
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
 - **Favorites Filter**: Toggle the favorites button to show only favorited tracks
 - **Recently Played Filter**: Toggle the recently played button to show your most recently played items. When enabled, results are fetched from Music Assistant ordered by most recently played. Only items that are part of your library will appear. You can still use the media-type chips to narrow the list. Submitting a new search query will start a normal search and turn off filters.
@@ -121,6 +285,336 @@ Initiate a search using the hamburger menu and selecting `search`. Press Enter o
 - **Enqueue**: Use the enqueue button (playlist icon) to add tracks to your queue
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
 ![preview Image Search](preview/search.png)
+
+### Search Results Limit Configuration
+
+You can configure the maximum number of search results to display using the `search_results_limit` option. This value is applied to each media category (e.g., artists, albums, tracks, playlists) that Music Assistant returns before the results are flattened together, so the total count in the UI can exceed the configured limit when multiple categories are shown. Setting the limit to `0` tells the card not to constrain the request; Music Assistant will still apply its own default caps, so the results are not truly unlimited.
+
+#### Configuration Options
+- **Default**: 20 results
+- **Range**: 0-1000 results
+- **Music Assistant default**: Set to `0` to defer to Music Assistant’s built-in limits (not unlimited)
+- **Note**: Higher limits may increase load time and memory usage when rendering large result sets.
+- **Scope**: Global setting that applies to all entities and search types
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player-alpha
+search_results_limit: 50
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+```
+
+### Result Sorting Configuration
+
+Use the `search_results_sort` option to change how search results are ordered. The default behavior keeps the original order returned by the music service. Sorting is applied within the results already constrained by `search_results_limit`. Available values are:
+
+- `default` (source order)
+- `title_asc`
+- `title_desc`
+- `artist_asc`
+- `artist_desc`
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player-alpha
+search_results_sort: title_asc
+entities:
+  - entity_id: media_player.office_homepod
+    name: Office
+```
+
+### Optional: Music Assistant Queue Actions (mass_queue)
+
+For enhanced queue controls in the Search sheet (e.g., viewing and reordering the upcoming queue, moving items up/down/next, and removing items), you can optionally install the community integration that adds Music Assistant queue services.
+
+- Integration: `mass_queue` — Actions to control player queues for Music Assistant
+- Install via HACS or manual install as described in the integration’s README
+- Repository link: [droans/mass_queue](https://github.com/droans/mass_queue)
+
+Once installed and configured, YAMP will automatically detect the integration and enable:
+- Fetching the upcoming queue with `mass_queue.get_queue_items` (the existing ```search_results_limit``` will be used for this)
+- Queue item reordering: move up, move down, move next
+- Queue item removal
+
+These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
+
+
+# Look and Feel
+
+## Theme & Layout
+> Match dashboard styling and control the overall footprint.
+
+- **Match Theme**: Updates card accent colors to match your Home Assistant theme.
+- **Alternate Progress Bar**: Uses the collapsed progress bar when expanded.
+- **Card Height**: Override the card height (in px); leave unset to use the default layout.
+
+## Controls & Typography
+> Tune button sizing, entity labels, and adaptive text.
+
+### Control Layouts
+Use `control_layout` to swap between the legacy `classic` row and the new `modern` Home Assistant–style buttons. `classic` keeps every control in one evenly sized row. `modern` mirrors the more-info pop-out: shuffle → previous → play/pause → next → repeat stay inline with a larger center button, and moves the favorite and power buttons in the volume row. When `control_layout` is set to `modern`, you can also enable `swap_pause_for_stop` to replace the center pause button with a stop button.
+
+![Modern Controls Preview](preview/modern_controls_preview.png)
+
+### Adaptive Control Size
+Some dashboards give the card a ton of horizontal space which previously resulted in big gaps between the playback controls. Set `adaptive_controls: true` to have each control button stretch and gain padding as space becomes available, producing larger and easier-to-press targets without impacting compact layouts.
+
+### Adaptive Text Size
+Enable adaptive text when you’d like titles, menu entries, or chips to scale with the space your dashboard gives the card. Smaller cards tighten the typography to avoid wrapping, while roomy layouts increase the font size for easier readability. You can either set `adaptive_text: true` to scale everything, or specify the exact sections via `adaptive_text_targets`:
+
+```yaml
+adaptive_text_targets:
+  - details        # now playing title/artist
+  - menu           # menu + search sheets
+  - action_chips   # action chips on the card
+```
+
+### Card Mod Examples
+
+#### Increase font size for details row
+Even if `adaptive_text_targets` is configured, the text still won't grow until the card goes over 300px. To adjust sizing for shorter cards, you can use this card-mod and adjust to your liking
+```
+card_mod:
+  style: |
+    .details {
+      font-size: 2.4em !important;      # overall scaling
+    }
+    .details .title {
+      font-size: 1.6em !important;      # optional: title only
+    }
+    .details .artist {
+      font-size: 1.2em !important;      # optional: artist only
+    }
+```
+
+## Collapsed & Idle States
+> Control when the card collapses and which views show while idle.
+
+- **Collapse on Idle**: Collapse the card when nothing is playing.
+- **Always Collapsed**: Keep the card collapsed even when something is playing.
+- **Hide Menu Player**: Hide the persistent media controls in the bottom sheet menu to reclaim space.
+
+### Expand on Search Example
+When using `always_collapsed: true`, you can enable `expand_on_search: true` to temporarily expand the card to its normal size when the search interface is open:
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - media_player.living_room_apple_tv
+  - media_player.kitchen_homepod
+actions:
+  - icon: mdi:magnify
+    menu_item: search
+always_collapsed: true
+expand_on_search: true
+```
+
+### Idle Screen Search Mode
+Prefer jumping straight into browsing? Set `idle_screen` to one of the search shortcuts to skip the idle artwork splash automatically:
+
+- `idle_screen: search` opens the standard search view
+- `idle_screen: search-recently-played` jumps directly to the Recently Played filter
+- `idle_screen: search-next-up` shows the Next Up queue
+
+```yaml
+idle_screen: search-recently-played
+```
+
+
+# Artwork
+
+## Artwork Fit
+> Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.
+
+- **Artwork Fit**: Control how artwork scales: `cover`, `contain`, `fill`, `scale-down`, or `none`.
+- **Extend Artwork**: When `true`, extends the artwork background up behind the chip and action rows for a full-bleed look.
+
+## Idle Artwork
+> Show a static image or entity snapshot whenever nothing is playing.
+
+- **Idle Image**: Background image when player is idle (supports local files, cameras, URLs, or templates that return either).
+
+## Artwork Overrides
+> Overrides are evaluated from top to bottom. Drag to reorder.
+
+Use `media_artwork_overrides` to replace missing or low-resolution art with higher quality images. Rules are evaluated from top to bottom; the first match wins. Supply an `image_url` along with a single match key (`media_title`, `media_artist`, `media_album_name`, `media_content_id`, `media_channel`, `app_name`, `media_content_type`, or `entity_id`). To cover any track that ships without art, use `missing_art_url` instead of a match value. Optionally include `size_percentage` to scale the replacement relative to the card.
+
+```yaml
+media_artwork_overrides:
+  - image_url: >-
+      https://upload.wikimedia.org/wikipedia/commons/6/62/YouTube_social_white_square_%282024%29.svg
+    app_name: YouTube
+  - image_url: https://shine1049.org/files/Stack%20Images/shine104.9.png?ade9fb8c3c
+    media_content_id: library://radio/2
+  - image_url: >-
+      https://www.freepnglogos.com/uploads/youtube-tv-png/youtube-tv-youtube-watch-record-live-apk-download-from-moboplay-21.png
+    app_name: YouTube TV
+  - image_url: /local/images/KROQ.png
+    media_artist: KROQ
+  - missing_art_url: /local/images/default_station.png
+  - image_url: "{{ states('sensor.bg_img_url') }}"
+    entity_id: media_player.office_homepod_2
+```
+
+
+# Actions
+
+## Actions
+> Build the action chips that appear in the card or its menu. Drag to reorder, click the pencil to configure each action.
+
+### Transfer Queue
+
+The card can surface a **Transfer Queue** menu option for Music Assistant players. When the active entity supports queue transfers, selecting *Transfer Queue* opens a list of compatible targets and the queue moves instantly to the chosen player. The option only appears when a Music Assistant entity with a queue is selected.
+
+### Custom Actions
+You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
+
+```yaml
+actions:
+  - icon: mdi:magnify
+    menu_item: search
+  - name: Grunge
+    service: music_assistant.play_media
+    icon: mdi:music
+    service_data:
+      entity_id: current
+      media_id: apple_music://playlist/pl.5feba9fd5ea441a29aeb3597c8314384
+      enqueue: replace
+  - name: Play Bluey
+    icon: mdi:television-play
+    service: script.play_bluey_on_living    
+```
+
+### Menu-only Actions
+When configuring an action you can enable the **In Menu** toggle (or set `in_menu: true` in YAML) to move that action out of the chip row. Menu-only actions appear with the built-in options at the bottom of the entity menu, preserving the same hover styling and icon color as items like *More Info* or *Transfer Queue*.
+
+```yaml
+actions:
+  - name: Group Players
+    icon: mdi:account-multiple-plus
+    in_menu: true
+    service: media_player.join
+    service_data:
+      entity_id: current
+      group_members:
+        - media_player.kitchen_homepod
+```
+
+### Navigation Actions
+Jump straight to another dashboard view or pop-up by creating a navigation action. Choose **Navigate** in the editor (or set `action: navigate`) and supply the target with `navigation_path`.
+
+```yaml
+actions:
+  - name: Living Room View
+    icon: mdi:television
+    action: navigate
+    navigation_path: "#living"
+```
+
+To launch an external site in a new browser tab:
+
+```yaml
+actions:
+  - name: Player Docs
+    icon: mdi:open-in-new
+    action: navigate
+    navigation_path: "https://example.com/docs"
+    navigation_new_tab: true
+```
+
+### Passing Current Entity to a Script
+
+#### Example YAML config
+```yaml
+type: custom:yet-another-media-player-beta
+entities:
+  - media_player.office_speaker_airplay
+actions:
+  - name: Set the Mood
+    icon: mdi:heart
+    service: script.set_mood
+    script_variable: true
+```    
+
+#### Example Script
+```yaml
+alias: set_mood
+mode: single
+fields:
+  yamp_entity:
+    description: Target media player (MA entity if configured, else main entity)
+  yamp_main_entity:
+    description: Main configured entity
+  yamp_playback_entity:
+    description: Currently active playback entity
+sequence:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.bedroom
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.fireplace
+  - service: music_assistant.play_media
+    data:
+      entity_id: "{{ yamp_entity }}"
+      media_id: apple_music://track/1445094678
+      enqueue: replace
+```
+
+**Available Script Variables:**
+- `yamp_entity`: The Music Assistant entity if configured, otherwise the main entity
+- `yamp_main_entity`: The main configured entity
+- `yamp_playback_entity`: The currently active playback entity (MA or main)  
+
+### Input Source Actions
+With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also available on HACS), you can set up source actions with the providers logo.
+Use the "name" argument to include a name or leave it off for icon only
+
+```yaml
+actions:
+  - icon: phu:netflix
+    service: media_player.select_source
+    service_data:
+      entity_id: current
+      source: Netflix
+  - icon: phu:youtube
+    service: media_player.select_source
+    service_data:
+      entity_id: current
+      source: YouTube
+  - icon: phu:hulu
+    service: media_player.select_source
+    service_data:
+      entity_id: current
+      source: Hulu
+```
+
+### Radio Station Service Action
+Example action for playing a radio station on [Chromecast](https://www.home-assistant.io/integrations/cast/). This also pushes an image to chromecast devices with a screen with the station (submitted by @rafaelmagic). 
+
+```yaml
+- name: 🎷 Jazz
+  service: media_player.play_media
+  service_data:
+    entity_id: current
+    media_content_id: https://streaming.live365.com/a49833
+    media_content_type: music
+    extra:
+      metadata:
+        metadataType: 3
+        title: KJazz 88.1
+        subtitle: KJazz 88.1
+        images:
+          - url: https://cdn-profiles.tunein.com/s37062/images/logod.jpg
+```
 
 
 ## Config Examples
@@ -203,448 +697,12 @@ actions:
     navigation_new_tab: true
 ```
 
-### Expand on Search Example
-When using `always_collapsed: true`, you can enable `expand_on_search: true` to temporarily expand the card to its normal size when the search interface is open:
-
-```yaml
-type: custom:yet-another-media-player
-entities:
-  - media_player.living_room_apple_tv
-  - media_player.kitchen_homepod
-actions:
-  - icon: mdi:magnify
-    menu_item: search
-always_collapsed: true
-expand_on_search: true
-```
-
-### Transfer Queue
-
-The card can surface a **Transfer Queue** menu option for Music Assistant players. When the active entity supports queue transfers, selecting *Transfer Queue* opens a list of compatible targets and the queue moves instantly to the chosen player. The option only appears when a Music Assistant entity with a queue is selected.
-
-### Custom Actions
-You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
-
-```yaml
-actions:
-  - icon: mdi:magnify
-    menu_item: search
-  - name: Grunge
-    service: music_assistant.play_media
-    icon: mdi:music
-    service_data:
-      entity_id: current
-      media_id: apple_music://playlist/pl.5feba9fd5ea441a29aeb3597c8314384
-      enqueue: replace
-  - name: Play Bluey
-    icon: mdi:television-play
-    service: script.play_bluey_on_living    
-```
-
-### Menu-only Actions
-When configuring an action you can enable the **In Menu** toggle (or set `in_menu: true` in YAML) to move that action out of the chip row. Menu-only actions appear with the built-in options at the bottom of the entity menu, preserving the same hover styling and icon color as items like *More Info* or *Transfer Queue*.
-
-```yaml
-actions:
-  - name: Group Players
-    icon: mdi:account-multiple-plus
-    in_menu: true
-    service: media_player.join
-    service_data:
-      entity_id: current
-      group_members:
-        - media_player.kitchen_homepod
-```
-
-### Navigation Actions
-Jump straight to another dashboard view or pop-up by creating a navigation action. Choose **Navigate** in the editor (or set `action: navigate`) and supply the target with `navigation_path`.
-
-```yaml
-actions:
-  - name: Living Room View
-    icon: mdi:television
-    action: navigate
-    navigation_path: "#living"
-```
-
-To launch an external site in a new browser tab:
-
-```yaml
-actions:
-  - name: Player Docs
-    icon: mdi:open-in-new
-    action: navigate
-    navigation_path: "https://example.com/docs"
-    navigation_new_tab: true
-```
-
-### Idle Screen Search Mode
-Prefer jumping straight into browsing? Set `idle_screen` to one of the search shortcuts to skip the idle artwork splash automatically:
-
-- `idle_screen: search` opens the standard search view
-- `idle_screen: search-recently-played` jumps directly to the Recently Played filter
-- `idle_screen: search-next-up` shows the Next Up queue
-
-```yaml
-idle_screen: search-recently-played
-```
-
-### Adaptive Control Size
-Some dashboards give the card a ton of horizontal space which previously resulted in big gaps between the playback controls. Set `adaptive_controls: true` to have each control button stretch and gain padding as space becomes available, producing larger and easier-to-press targets without impacting compact layouts.
-
-### Control Layouts
-Use `control_layout` to swap between the legacy `classic` row and the new `modern` Home Assistant–style buttons. `classic` keeps every control in one evenly sized row. `modern` mirrors the more-info pop-out: shuffle → previous → play/pause → next → repeat stay inline with a larger center button, and moves the favorite and power buttons in the volume row. When `control_layout` is set to `modern`, you can also enable `swap_pause_for_stop` to replace the center pause button with a stop button.
-
-![Modern Controls Preview](preview/modern_controls_preview.png)
-
-### Adaptive Text Size
-Enable adaptive text when you’d like titles, menu entries, or chips to scale with the space your dashboard gives the card. Smaller cards tighten the typography to avoid wrapping, while roomy layouts increase the font size for easier readability. You can either set `adaptive_text: true` to scale everything, or specify the exact sections via `adaptive_text_targets`:
-
-```yaml
-adaptive_text_targets:
-  - details        # now playing title/artist
-  - menu           # menu + search sheets
-  - action_chips   # action chips on the card
-```
-
-### Artwork Overrides
-Use `media_artwork_overrides` to replace missing or low-resolution art with higher quality images. Rules are evaluated from top to bottom; the first match wins. Supply an `image_url` along with a single match key (`media_title`, `media_artist`, `media_album_name`, `media_content_id`, `media_channel`, `app_name`, `media_content_type`, or `entity_id`). To cover any track that ships without art, use `missing_art_url` instead of a match value. Optionally include `size_percentage` to scale the replacement relative to the card.
-
-```yaml
-media_artwork_overrides:
-  - image_url: >-
-      https://upload.wikimedia.org/wikipedia/commons/6/62/YouTube_social_white_square_%282024%29.svg
-    app_name: YouTube
-  - image_url: https://shine1049.org/files/Stack%20Images/shine104.9.png?ade9fb8c3c
-    media_content_id: library://radio/2
-  - image_url: >-
-      https://www.freepnglogos.com/uploads/youtube-tv-png/youtube-tv-youtube-watch-record-live-apk-download-from-moboplay-21.png
-    app_name: YouTube TV
-  - image_url: /local/images/KROQ.png
-    media_artist: KROQ
-  - missing_art_url: /local/images/default_station.png
-  - image_url: "{{ states('sensor.bg_img_url') }}"
-    entity_id: media_player.office_homepod_2
-```
-
-Adjust `artwork_object_fit` (`cover`, `contain`, `fill`, `scale-down`, or `none`) to control how the replacement scales inside the card’s media frame.
-
-## Music Assistant Entity Configuration
-
-You can associate a Music Assistant entity with any media player to enable search and grouping functionality. Since Music Assistant creates a "duplicate" companion entity, you can essentially use this function to combine the main entity with the music assistant companion entity into a single chip.
-
-This is also particularly useful for Universal Media Player (UMP) setups where you want physical control (amp power, source switching) through the main entity while using Music Assistant for advanced media features. When the card is actively using the music assistant entity, the chip will have an indicator outline.
-
-**Favorite Button**: When using a Music Assistant entity, a favorite button (heart icon) will appear in the controls, allowing you to favorite the currently playing track. The button will only appear if you have a button entity configured with "favorite" or "like" in its name (e.g., `button.favorite_track` or `button.like_song`).
-
-### Basic Example
-```yaml
-type: custom:yet-another-media-player
-entities:
-  - entity_id: media_player.kitchen_homepod
-    name: Kitchen
-    music_assistant_entity: media_player.kitchen_homepod_2
-```
-
-### Jinja Template Example
-For advanced users, you can use Jinja templates to dynamically select the Music Assistant entity:
-
-```yaml
-type: custom:yet-another-media-player
-entities:
-  - entity_id: media_player.kitchen_homepod
-    name: Kitchen
-    music_assistant_entity: |
-      {% if is_state('input_boolean.target_office','on') %}
-        media_player.office_homepod_2
-      {% else %}
-        media_player.kitchen_homepod_2
-      {% endif %}
-```
-
-## Volume Entity Configuration
-
-You can use a separate `volume_entity` for volume display and control. This can be a static entity or a Jinja template that resolves to an entity id (e.g., `media_player.*` or `remote.*`). If `sync_power` is enabled, the resolved volume entity will be powered on/off along with the main entity.
-
-### Follow Active Entity
-
-You can also enable `follow_active_volume` to make the volume entity automatically follow the active playback entity. This is useful when you want volume controls to always target the entity that is currently playing, regardless of which chip is selected.
-
-**Note**: When `follow_active_volume` is enabled, the sync power toggle will be automatically hidden in the config editor since it's not applicable in this mode.
-
-```yaml
-type: custom:yet-another-media-player
-entities:
-  - entity_id: media_player.living_room_apple_tv
-    name: Living Room
-    follow_active_volume: true
-  - entity_id: media_player.kitchen_homepod
-    name: Kitchen
-    follow_active_volume: true
-```
-
-### Basic Example
-```yaml
-type: custom:yet-another-media-player
-entities:
-  - entity_id: media_player.living_room_apple_tv
-    name: Living Room
-    volume_entity: remote.living_room_apple_tv
-    sync_power: true
-```
-
-### Jinja Template Example
-```yaml
-type: custom:yet-another-media-player
-entities:
-  - entity_id: media_player.office_homepod
-    name: Office
-    volume_entity: |
-      {% if is_state('input_boolean.tv_volume','on') %}
-        remote.soundbar
-      {% else %}
-        media_player.office_homepod
-      {% endif %}
-    sync_power: true
-```
-
-## Hidden Controls Configuration
-
-You can hide specific media player controls on a per-entity basis using the `hidden_controls` option. This is useful when you want to simplify the interface for certain entities or hide controls that aren't needed.
-
-**Important**: The entity must still support the control for it to be visible in the first place. Hidden controls only hide controls that would normally be displayed based on the entity's capabilities.
-
-### Available Control Names
-- `previous` - Previous Track button
-- `play_pause` - Play/Pause button  
-- `stop` - Stop button
-- `next` - Next Track button
-- `shuffle` - Shuffle button
-- `repeat` - Repeat button
-- `favorite` - Favorite button (requires Music Assistant entity)
-- `power` - Power on/off button
-
-### Example Configuration
-```yaml
-type: custom:yet-another-media-player
-entities:
-  - entity_id: media_player.living_room_apple_tv
-    name: Living Room
-    hidden_controls:
-      - favorite
-      - shuffle
-      - repeat
-  - entity_id: media_player.kitchen_homepod
-    name: Kitchen
-    hidden_controls:
-      - power
-```
-
-In this example:
-- The Living Room entity will hide the favorite, shuffle, and repeat buttons
-- The Kitchen entity will hide only the power button
-- All other controls will remain visible (if supported by the entity)
-
-## Hidden Search Filter Chips (Per-Entity)
-
-You can hide specific search filter chips on a per-entity basis using `hidden_filter_chips`. This only affects the chip UI; it does not change the underlying search results or API calls. It’s useful for focusing the search UI on the media types you care about.
-
-### Available Chip Names
-- `artist`
-- `album`
-- `track`
-- `playlist`
-- `radio`
-- `podcast`
-- `episode`
-
-### Example Configuration
-```yaml
-type: custom:yet-another-media-player
-entities:
-  - entity_id: media_player.office_homepod
-    name: Office
-    music_assistant_entity: media_player.office_homepod_2
-    hidden_filter_chips:
-      - artist
-      - album
-      - track
-      - podcast
-```
-
-## Search Results Limit Configuration
-
-You can configure the maximum number of search results to display using the `search_results_limit` option. This value is applied to each media category (e.g., artists, albums, tracks, playlists) that Music Assistant returns before the results are flattened together, so the total count in the UI can exceed the configured limit when multiple categories are shown. Setting the limit to `0` tells the card not to constrain the request; Music Assistant will still apply its own default caps, so the results are not truly unlimited.
-
-### Configuration Options
-- **Default**: 20 results
-- **Range**: 0-1000 results
-- **Music Assistant default**: Set to `0` to defer to Music Assistant’s built-in limits (not unlimited)
-- **Note**: Higher limits may increase load time and memory usage when rendering large result sets.
-- **Scope**: Global setting that applies to all entities and search types
-
-### Example Configuration
-```yaml
-type: custom:yet-another-media-player-alpha
-search_results_limit: 50
-entities:
-  - entity_id: media_player.living_room_apple_tv
-    name: Living Room
-  - entity_id: media_player.kitchen_homepod
-    name: Kitchen
-```
-
-## Result Sorting Configuration
-
-Use the `search_results_sort` option to change how search results are ordered. The default behavior keeps the original order returned by the music service. Sorting is applied within the results already constrained by `search_results_limit`. Available values are:
-
-- `default` (source order)
-- `title_asc`
-- `title_desc`
-- `artist_asc`
-- `artist_desc`
-
-### Example Configuration
-```yaml
-type: custom:yet-another-media-player-alpha
-search_results_sort: title_asc
-entities:
-  - entity_id: media_player.office_homepod
-    name: Office
-```
-
-## Passing Current Entity to a Script
-
-### Example YAML config
-```yaml
-type: custom:yet-another-media-player-beta
-entities:
-  - media_player.office_speaker_airplay
-actions:
-  - name: Set the Mood
-    icon: mdi:heart
-    service: script.set_mood
-    script_variable: true
-```    
-
-### Example Script
-```yaml
-alias: set_mood
-mode: single
-fields:
-  yamp_entity:
-    description: Target media player (MA entity if configured, else main entity)
-  yamp_main_entity:
-    description: Main configured entity
-  yamp_playback_entity:
-    description: Currently active playback entity
-sequence:
-  - action: light.turn_off
-    metadata: {}
-    data: {}
-    target:
-      entity_id: light.bedroom
-  - action: switch.turn_on
-    metadata: {}
-    data: {}
-    target:
-      entity_id: switch.fireplace
-  - service: music_assistant.play_media
-    data:
-      entity_id: "{{ yamp_entity }}"
-      media_id: apple_music://track/1445094678
-      enqueue: replace
-```
-
-**Available Script Variables:**
-- `yamp_entity`: The Music Assistant entity if configured, otherwise the main entity
-- `yamp_main_entity`: The main configured entity
-- `yamp_playback_entity`: The currently active playback entity (MA or main)  
-
-### Input Source Actions
-With [custom brand icons](https://github.com/elax46/custom-brand-icons) (also available on HACS), you can set up source actions with the providers logo.
-Use the "name" argument to include a name or leave it off for icon only
-
-```yaml
-actions:
-  - icon: phu:netflix
-    service: media_player.select_source
-    service_data:
-      entity_id: current
-      source: Netflix
-  - icon: phu:youtube
-    service: media_player.select_source
-    service_data:
-      entity_id: current
-      source: YouTube
-  - icon: phu:hulu
-    service: media_player.select_source
-    service_data:
-      entity_id: current
-      source: Hulu
-```
-
-### Radio Station Service Action
-Example action for playing a radio station on [Chromecast](https://www.home-assistant.io/integrations/cast/). This also pushes an image to chromecast devices with a screen with the station (submitted by @rafaelmagic). 
-
-```yaml
-- name: 🎷 Jazz
-  service: media_player.play_media
-  service_data:
-    entity_id: current
-    media_content_id: https://streaming.live365.com/a49833
-    media_content_type: music
-    extra:
-      metadata:
-        metadataType: 3
-        title: KJazz 88.1
-        subtitle: KJazz 88.1
-        images:
-          - url: https://cdn-profiles.tunein.com/s37062/images/logod.jpg
-```
-
-## Card Mod Examples
-
-### Increase font size for details row
-Even if `adaptive_text_targets` is configured, the text still won't grow until the card goes over 300px. To adjust sizing for shorter cards, you can use this card-mod and adjust to your liking
-```
-card_mod:
-  style: |
-    .details {
-      font-size: 2.4em !important;      # overall scaling
-    }
-    .details .title {
-      font-size: 1.6em !important;      # optional: title only
-    }
-    .details .artist {
-      font-size: 1.2em !important;      # optional: artist only
-    }
-```
 
 ## Notes
 
 - When an entity is manually selected it will be pinned in place and will not auto-switch to the more recently playing entity for that session. Tap or click the pin icon that appears to unpin the entity.
 - Actions can run any home assistant service, not just media services. Specifying "current" in the entity_id field will target the currently selected entity. 
 - Grouping players only works on supported entities, if the entity is not supported the option will not be visible
-
-
----
-
-## Optional: Music Assistant Queue Actions (mass_queue)
-
-For enhanced queue controls in the Search sheet (e.g., viewing and reordering the upcoming queue, moving items up/down/next, and removing items), you can optionally install the community integration that adds Music Assistant queue services.
-
-- Integration: `mass_queue` — Actions to control player queues for Music Assistant
-- Install via HACS or manual install as described in the integration’s README
-- Repository link: [droans/mass_queue](https://github.com/droans/mass_queue)
-
-Once installed and configured, YAMP will automatically detect the integration and enable:
-- Fetching the upcoming queue with `mass_queue.get_queue_items` (the existing ```search_results_limit``` will be used for this)
-- Queue item reordering: move up, move down, move next
-- Queue item removal
-
-These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
-
 
 
 ---
