@@ -1418,7 +1418,6 @@ async function searchMedia(hass, entityId, query) {
             usedMusicAssistant: true
           };
         }
-        console.log('yamp: Browsing library for', mediaType);
         const message = {
           type: "call_service",
           domain: "music_assistant",
@@ -1435,7 +1434,6 @@ async function searchMedia(hass, entityId, query) {
           message.service_data.limit = limit;
         }
         const res = await hass.connection.sendMessagePromise(message);
-        console.log('yamp: Browse response', res);
         const response = res === null || res === void 0 ? void 0 : res.response;
         const items = (response === null || response === void 0 ? void 0 : response.items) || [];
         const browseResults = [];
@@ -9751,11 +9749,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
     var _this$config4;
     let mediaType = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     let searchParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    console.log('yamp: _doSearch called with', {
-      mediaType,
-      searchParams,
-      currentFilter: this._searchMediaClassFilter
-    });
     this._searchAttempted = true;
     this._closeMenuIfOpen();
     // Set the current filter - but don't use "favorites" as a media type
@@ -10319,7 +10312,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Favorites filter turned OFF:
       // We must reload the standard items for the current filter.
       const currentMediaType = this._searchMediaClassFilter;
-      console.log('yamp: Toggling favorites OFF. Current Filter:', currentMediaType);
 
       // FIX: Explicitly clear the persistence flags so _doSearch doesn't immediately re-enable favorites
       this._lastSearchUsedServerFavorites = false;

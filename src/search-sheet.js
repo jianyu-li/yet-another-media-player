@@ -200,7 +200,6 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
           return { results: [], usedMusicAssistant: true };
         }
 
-        console.log('yamp: Browsing library for', mediaType);
         const message = {
           type: "call_service",
           domain: "music_assistant",
@@ -219,7 +218,6 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
         }
 
         const res = await hass.connection.sendMessagePromise(message);
-        console.log('yamp: Browse response', res);
         const response = res?.response;
         const items = response?.items || [];
 

@@ -1052,7 +1052,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
   async _doSearch(mediaType = null, searchParams = {}) {
-    console.log('yamp: _doSearch called with', { mediaType, searchParams, currentFilter: this._searchMediaClassFilter });
     this._searchAttempted = true;
     this._closeMenuIfOpen();
     // Set the current filter - but don't use "favorites" as a media type
@@ -1633,7 +1632,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Favorites filter turned OFF:
       // We must reload the standard items for the current filter.
       const currentMediaType = this._searchMediaClassFilter;
-      console.log('yamp: Toggling favorites OFF. Current Filter:', currentMediaType);
 
       // FIX: Explicitly clear the persistence flags so _doSearch doesn't immediately re-enable favorites
       this._lastSearchUsedServerFavorites = false;
