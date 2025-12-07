@@ -1635,18 +1635,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       }
     } else {
-      // Restore original search results
-
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Resubmit the original search without favorites filter
-        const currentMediaType = this._searchMediaClassFilter;
-        await this._doSearch(currentMediaType);
-      } else {
-        // Restore from cache
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey] || []);
-        this.requestUpdate();
-      }
+      // Favorites filter turned OFF:
+      // We must reload the standard items for the current filter.
+      // We rely on _doSearch to check the cache or fetch fresh data if needed.
+      const currentMediaType = this._searchMediaClassFilter;
+      // Pass empty object to use default search params (effectively clearing the favorites flag)
+      await this._doSearch(currentMediaType);
     }
   }
 
