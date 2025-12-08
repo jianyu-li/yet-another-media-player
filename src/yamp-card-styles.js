@@ -2463,7 +2463,7 @@ export const yampCardStyles = css`
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 9999;
+    z-index: ${Z_LAYERS.MODAL_TOAST};
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     min-width: 200px;
     text-align: center;
