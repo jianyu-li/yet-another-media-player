@@ -314,7 +314,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _shouldDropdownOpenUp: { state: true },
     _pinnedIndex: { state: true },
     _showSourceList: { state: true },
-    _holdToPin: { state: true }
+    _holdToPin: { state: true },
+    _showQueueSuccessMessage: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -1268,11 +1269,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    if (this._showSearchInSheet) {
-      this._closeEntityOptions();
-      this._showSearchInSheet = false;
+    // Default to true if config option is missing (backward compatibility)
+    const shouldDismiss = this.config.dismiss_search_on_play !== false;
+
+    if (shouldDismiss) {
+      if (this._showSearchInSheet) {
+        this._closeEntityOptions();
+        this._showSearchInSheet = false;
+      }
+      this._searchCloseSheet();
+    } else {
+      // If staying open, force a repaint to reflect playing state if needed
+      this.requestUpdate();
     }
-    this._searchCloseSheet();
   }
 
   async _performSearchPlayback(item, targetEntityId) {
@@ -1663,7 +1672,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._searchQuery = '';
       // Load recently played items - always use "all" for recently played
       try {
-        await this._doSearch('all', { isRecentlyPlayed: true, clearFilters: !isStateChanging });
+        await this._doSearch('all', { isRecentlyPlayed: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recently played:', error);
       }
@@ -1713,7 +1722,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       await this._subscribeToQueueUpdates();
       // Load upcoming queue items - always use "all" for upcoming
       try {
-        await this._doSearch('all', { isUpcoming: true, clearFilters: !isStateChanging });
+        await this._doSearch('all', { isUpcoming: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for upcoming queue:', error);
       }
@@ -1766,7 +1775,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           return;
         }
 
-        await this._doSearch('all', { isRecommendations: true, clearFilters: !isStateChanging });
+        await this._doSearch('all', { isRecommendations: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recommendations:', error);
         this._searchError = "Unable to load recommendations.";
@@ -6504,11 +6513,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
           },
           onPlay: item => this._playMediaFromSearch(item),
           onQueue: item => this._queueMediaFromSearch(item),
-          showQueueSuccess: this._showQueueSuccessMessage,
           upcomingFilterActive: this._upcomingFilterActive,
           disableAutofocus: this._disableSearchAutofocus,
         })
         : nothing}
+        ${this._showQueueSuccessMessage ? html`<div class="priority-toast-success">✅ Added to queue!</div>` : nothing}
         </ha-card>
       `;
   }

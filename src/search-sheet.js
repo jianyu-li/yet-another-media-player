@@ -102,7 +102,6 @@ export function renderSearchSheet({
       </div>
       ${loading ? html`<div class="search-sheet-loading">Loading...</div>` : nothing}
       ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
-      ${showQueueSuccess ? html`<div class="search-sheet-success">✅ Added to queue!</div>` : nothing}
       <div class="search-sheet-results">
         ${(results || []).length === 0 && !loading
       ? html`<div class="search-sheet-empty">No results.</div>`
