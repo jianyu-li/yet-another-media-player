@@ -112,14 +112,12 @@ export function getSearchResultClickTitle(item) {
   const title = item.name || item.title || item.media_title || 'Unknown Title';
 
   // Handle artist normalization
-  let artist = 'Unknown Artist';
-  if (item.artist) {
-    artist = item.artist;
-  } else if (item.artists && item.artists.length > 0) {
-    artist = item.artists[0]?.name || item.artists[0];
-  } else if (item.media_artist) {
-    artist = item.media_artist;
-  }
+  const artist =
+    item.artist ||
+    item.artists?.[0]?.name ||
+    (typeof item.artists?.[0] === 'string' ? item.artists?.[0] : undefined) ||
+    item.media_artist ||
+    'Unknown Artist';
 
   // For tracks, show "Track Name - Artist"
   if (mediaType === 'track') {

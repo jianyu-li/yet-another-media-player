@@ -8723,6 +8723,7 @@ function getMusicAssistantState(hass, entityId) {
  * @returns {string} Title to display
  */
 function getSearchResultClickTitle(item) {
+  var _item$artists, _item$artists2, _item$artists3;
   if (!item) return '';
 
   // Normalize properties
@@ -8730,15 +8731,7 @@ function getSearchResultClickTitle(item) {
   const title = item.name || item.title || item.media_title || 'Unknown Title';
 
   // Handle artist normalization
-  let artist = 'Unknown Artist';
-  if (item.artist) {
-    artist = item.artist;
-  } else if (item.artists && item.artists.length > 0) {
-    var _item$artists$;
-    artist = ((_item$artists$ = item.artists[0]) === null || _item$artists$ === void 0 ? void 0 : _item$artists$.name) || item.artists[0];
-  } else if (item.media_artist) {
-    artist = item.media_artist;
-  }
+  const artist = item.artist || ((_item$artists = item.artists) === null || _item$artists === void 0 || (_item$artists = _item$artists[0]) === null || _item$artists === void 0 ? void 0 : _item$artists.name) || (typeof ((_item$artists2 = item.artists) === null || _item$artists2 === void 0 ? void 0 : _item$artists2[0]) === 'string' ? (_item$artists3 = item.artists) === null || _item$artists3 === void 0 ? void 0 : _item$artists3[0] : undefined) || item.media_artist || 'Unknown Artist';
 
   // For tracks, show "Track Name - Artist"
   if (mediaType === 'track') {
