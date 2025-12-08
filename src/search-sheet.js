@@ -102,12 +102,11 @@ export function renderSearchSheet({
       </div>
       ${loading ? html`<div class="search-sheet-loading">Loading...</div>` : nothing}
       ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
-      ${showQueueSuccess ? html`<div class="search-sheet-success">✅ Added to queue!</div>` : nothing}
       <div class="search-sheet-results">
         ${(results || []).length === 0 && !loading
-          ? html`<div class="search-sheet-empty">No results.</div>`
-          : (results || []).map(
-              (item) => html`
+      ? html`<div class="search-sheet-empty">No results.</div>`
+      : (results || []).map(
+        (item) => html`
                 <div class="search-sheet-result">
                   ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? html`
                     <img
@@ -139,7 +138,7 @@ export function renderSearchSheet({
                   </div>
                 </div>
               `
-            )}
+      )}
       </div>
     </div>
   `;
@@ -151,8 +150,8 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
   // Try Music Assistant search if we have a config entry
   if (configEntryId) {
     try {
-    
-      
+
+
       // If favorites are requested, use Music Assistant get_library with favorite + search
       if (searchParams.favorites) {
         const mediaTypes = (mediaType && mediaType !== 'all')
@@ -191,6 +190,47 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
         return { results: flatResultsFav, usedMusicAssistant: true };
       }
 
+      // If query is empty and we have a specific media type (not 'all'), treat as browsing the library
+      if ((!query || query.trim() === '') && mediaType && mediaType !== 'all' && !searchParams.favorites) {
+        // Validate media type strictly
+        const allowedMediaTypes = ['artist', 'album', 'track', 'playlist', 'radio', 'audiobook', 'podcast'];
+        if (!allowedMediaTypes.includes(mediaType)) {
+          console.warn(`yamp: Unsupported media type for browsing: ${mediaType}. Skipping get_library call.`);
+          return { results: [], usedMusicAssistant: true };
+        }
+
+        const message = {
+          type: "call_service",
+          domain: "music_assistant",
+          service: "get_library",
+          service_data: {
+            config_entry_id: configEntryId,
+            media_type: mediaType
+            // favorite param omitted to get ALL items
+          },
+          return_response: true,
+        };
+
+        const limit = resolveLimitValue(searchResultsLimit);
+        if (limit !== undefined) {
+          message.service_data.limit = limit;
+        }
+
+        const res = await hass.connection.sendMessagePromise(message);
+        const response = res?.response;
+        const items = response?.items || [];
+
+        const browseResults = [];
+        items.forEach(item => {
+          const transformedItem = transformMusicAssistantItem(item);
+          if (transformedItem) {
+            browseResults.push(transformedItem);
+          }
+        });
+
+        return { results: browseResults, usedMusicAssistant: true };
+      }
+
       const serviceData = {
         name: query,
         config_entry_id: configEntryId,
@@ -202,12 +242,12 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
       if (searchLimit !== undefined) {
         serviceData.limit = searchLimit; // Use configurable limit for filtered searches
       }
-      
+
       // Add media_type if specified and not "all"
       if (mediaType && mediaType !== 'all') {
         serviceData.media_type = mediaType;
       }
-      
+
       // Add search parameters for hierarchical search
       if (searchParams.artist) {
         serviceData.artist = searchParams.artist;
@@ -215,10 +255,10 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
       if (searchParams.album) {
         serviceData.album = searchParams.album;
       }
-      
-      
-      
-      
+
+
+
+
       const msg = {
         type: "call_service",
         domain: "music_assistant",
@@ -226,14 +266,14 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
         service_data: serviceData,
         return_response: true,
       };
-      
+
       const res = await hass.connection.sendMessagePromise(msg);
-    
-      
+
+
       const response = res?.response;
       if (response) {
-      
-        
+
+
         // Convert grouped results to flat array and transform to expected format
         const flatResults = [];
         Object.entries(response).forEach(([mediaType, items]) => {
@@ -247,17 +287,17 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
             });
           }
         });
-        
+
 
         return { results: flatResults, usedMusicAssistant: true };
       }
-      
+
 
     } catch (error) {
       console.error('yamp: Error in searchMedia:', error);
     }
   }
-  
+
   // Fallback to media_player search
   const fallbackResults = await fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, searchParams);
   return { results: fallbackResults, usedMusicAssistant: false };
@@ -397,14 +437,14 @@ async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, sea
     entity_id: entityId,
     search_query: query,
   };
-  
+
   if (mediaType && mediaType !== 'all') {
     fallbackData.media_content_type = mediaType;
   }
-  
+
   // Note: Standard media_player search doesn't support advanced filtering
   // This would need to be handled by filtering results after the search
-  
+
   const fallbackMsg = {
     type: "call_service",
     domain: "media_player",
@@ -412,10 +452,10 @@ async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, sea
     service_data: fallbackData,
     return_response: true,
   };
-  
+
   const fallbackRes = await hass.connection.sendMessagePromise(fallbackMsg);
   const results = fallbackRes?.response?.[entityId]?.result || fallbackRes?.result || [];
-  
+
 
   return results;
 }
@@ -445,8 +485,8 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
     if (!targetEntityId) {
       // Try to find a Music Assistant entity
       const states = Object.values(hass.states);
-      const maEntity = states.find(state => 
-        state.attributes?.app_id === 'music_assistant' && 
+      const maEntity = states.find(state =>
+        state.attributes?.app_id === 'music_assistant' &&
         state.entity_id.startsWith('media_player.')
       );
       if (maEntity) {
@@ -520,10 +560,10 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
             },
             return_response: true,
           };
-        const trackSearchLimit = resolveLimitValue(searchResultsLimit);
-        if (trackSearchLimit !== undefined) {
-          message.service_data.limit = trackSearchLimit; // Use configurable limit
-        }
+          const trackSearchLimit = resolveLimitValue(searchResultsLimit);
+          if (trackSearchLimit !== undefined) {
+            message.service_data.limit = trackSearchLimit; // Use configurable limit
+          }
           const response = await hass.connection.sendMessagePromise(message);
           const favoriteTracks = response?.response?.items || [];
           if (favoriteTracks.some(track => track.uri === mediaContentId)) {
@@ -541,17 +581,17 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
         type: "call_service",
         domain: "music_assistant",
         service: "get_library",
-          service_data: {
-            config_entry_id: configEntryId,
-            media_type: "track",
-            favorite: true,
-          },
-          return_response: true,
-        };
-        const fallbackLimit = resolveLimitValue(searchResultsLimit, { floor: 100 });
-        if (fallbackLimit !== undefined) {
-          message.service_data.limit = fallbackLimit; // Check at least 100 favorites for better matching
-        }
+        service_data: {
+          config_entry_id: configEntryId,
+          media_type: "track",
+          favorite: true,
+        },
+        return_response: true,
+      };
+      const fallbackLimit = resolveLimitValue(searchResultsLimit, { floor: 100 });
+      if (fallbackLimit !== undefined) {
+        message.service_data.limit = fallbackLimit; // Check at least 100 favorites for better matching
+      }
       const response = await hass.connection.sendMessagePromise(message);
       const favoriteTracks = response?.response?.items || [];
       return favoriteTracks.some(t => t.uri === mediaContentId);

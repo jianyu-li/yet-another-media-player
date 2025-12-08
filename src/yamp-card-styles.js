@@ -109,6 +109,7 @@ export const yampCardStyles = css`
     transition: background var(--transition-normal);
     overflow: hidden;
     font-size: inherit;
+    position: relative;
   }
 
   .yamp-card-inner {
@@ -2448,8 +2449,8 @@ export const yampCardStyles = css`
     color: #ff6b6b;
   }
 
-  .search-sheet-success {
-    color: #4caf50;
+  .priority-toast-success {
+    color: #fff;
     font-weight: 600;
     background: rgba(76, 175, 80, 0.95);
     border: 2px solid #4caf50;
@@ -2458,7 +2459,7 @@ export const yampCardStyles = css`
     margin: 20px;
     font-size: 20px;
     animation: fadeInOut 3s ease-in-out;
-    position: fixed;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -2466,7 +2467,9 @@ export const yampCardStyles = css`
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     min-width: 200px;
     text-align: center;
+    pointer-events: none;
   }
+
 
   @keyframes fadeInOut {
     0% { opacity: 0; transform: translate(-50%, -60%); }

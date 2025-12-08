@@ -314,7 +314,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _shouldDropdownOpenUp: { state: true },
     _pinnedIndex: { state: true },
     _showSourceList: { state: true },
-    _holdToPin: { state: true }
+    _holdToPin: { state: true },
+    _showQueueSuccessMessage: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -1058,7 +1059,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
 
     // Respect favorites toggle across chip changes, but allow explicit filter clearing
-    const isFavorites = !!(searchParams.favorites || (this._favoritesFilterActive && !searchParams.clearFilters));
+    // FIX: Include _initialFavoritesLoaded AND _lastSearchUsedServerFavorites to persist implicit favorites state
+    const isFavorites = !!(searchParams.favorites || ((this._favoritesFilterActive || this._initialFavoritesLoaded || this._lastSearchUsedServerFavorites) && !searchParams.clearFilters));
+
+    // FIX: Explicitly persist the favorites filter state if we determined we are in favorites mode
+    if (isFavorites) {
+      this._favoritesFilterActive = true;
+    }
+
     const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || (this._recentlyPlayedFilterActive && !searchParams.clearFilters));
     const isUpcoming = !!(searchParams.isUpcoming || (this._upcomingFilterActive && !searchParams.clearFilters));
     const isRecommendations = !!(searchParams.isRecommendations || (this._recommendationsFilterActive && !searchParams.clearFilters));
@@ -1146,7 +1154,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._getSearchResultsLimit()
         );
         this._lastSearchUsedServerFavorites = true;
-      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed) {
+      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
         searchResponse = await getFavorites(
           this.hass,
           searchEntityId,
@@ -1154,7 +1162,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._getSearchResultsLimit(),
           { onChunk: progressiveUpdate }
         );
-        // Mark that initial favorites have been loaded
+        // Mark that initial favorites have been loaded only if we're in default view
         if (!this._searchQuery || this._searchQuery.trim() === '') {
           this._initialFavoritesLoaded = true;
         }
@@ -1261,11 +1269,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    if (this._showSearchInSheet) {
-      this._closeEntityOptions();
-      this._showSearchInSheet = false;
+    // Default to true if config option is missing (backward compatibility)
+    const shouldDismiss = this.config.dismiss_search_on_play !== false;
+
+    if (shouldDismiss) {
+      if (this._showSearchInSheet) {
+        this._closeEntityOptions();
+        this._showSearchInSheet = false;
+      }
+      this._searchCloseSheet();
+    } else {
+      // If staying open, force a repaint to reflect playing state if needed
+      this.requestUpdate();
     }
-    this._searchCloseSheet();
   }
 
   async _performSearchPlayback(item, targetEntityId) {
@@ -1614,39 +1630,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // This aligns with how initial favorites loading works
       const currentMediaType = this._searchMediaClassFilter;
 
-      // Try to search with favorites parameter first
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Search for favorites matching the query
-        try {
-          await this._doSearch(currentMediaType, { favorites: true });
-        } catch (error) {
-          console.error('yamp: Error searching favorites:', error);
-        }
-      } else {
-        // No search query - load all favorites (same as initial load)
-        try {
-          // Reset the favorites filter state temporarily to use the default favorites path
-          const tempFavoritesActive = this._favoritesFilterActive;
-          this._favoritesFilterActive = false;
-          await this._doSearch('favorites');
-          this._favoritesFilterActive = tempFavoritesActive;
-        } catch (error) {
-          console.error('yamp: Error loading favorites:', error);
-        }
+      // FIX: Always use the structured search with favorites: true
+      // This ensures we respect the current filter (e.g., Radio) and don't pass invalid 'favorites' media type
+      try {
+        await this._doSearch(currentMediaType, { favorites: true });
+      } catch (error) {
+        console.error('yamp: Error searching favorites:', error);
       }
     } else {
-      // Restore original search results
+      // Favorites filter turned OFF:
+      // We must reload the standard items for the current filter.
+      const currentMediaType = this._searchMediaClassFilter;
 
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Resubmit the original search without favorites filter
-        const currentMediaType = this._searchMediaClassFilter;
-        await this._doSearch(currentMediaType);
-      } else {
-        // Restore from cache
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey] || []);
-        this.requestUpdate();
-      }
+      // FIX: Explicitly clear the persistence flags so _doSearch doesn't immediately re-enable favorites
+      this._lastSearchUsedServerFavorites = false;
+      this._initialFavoritesLoaded = false;
+
+      // Pass clearFilters: true to ensure we don't pick up any lingering filter states from the isFavorites calculation
+      await this._doSearch(currentMediaType, { clearFilters: true });
     }
   }
 
@@ -1671,7 +1672,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._searchQuery = '';
       // Load recently played items - always use "all" for recently played
       try {
-        await this._doSearch('all', { isRecentlyPlayed: true, clearFilters: !isStateChanging });
+        await this._doSearch('all', { isRecentlyPlayed: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recently played:', error);
       }
@@ -1721,7 +1722,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       await this._subscribeToQueueUpdates();
       // Load upcoming queue items - always use "all" for upcoming
       try {
-        await this._doSearch('all', { isUpcoming: true, clearFilters: !isStateChanging });
+        await this._doSearch('all', { isUpcoming: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for upcoming queue:', error);
       }
@@ -1774,7 +1775,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           return;
         }
 
-        await this._doSearch('all', { isRecommendations: true, clearFilters: !isStateChanging });
+        await this._doSearch('all', { isRecommendations: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recommendations:', error);
         this._searchError = "Unable to load recommendations.";
@@ -6512,11 +6513,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
           },
           onPlay: item => this._playMediaFromSearch(item),
           onQueue: item => this._queueMediaFromSearch(item),
-          showQueueSuccess: this._showQueueSuccessMessage,
           upcomingFilterActive: this._upcomingFilterActive,
           disableAutofocus: this._disableSearchAutofocus,
         })
         : nothing}
+        ${this._showQueueSuccessMessage ? html`<div class="priority-toast-success">✅ Added to queue!</div>` : nothing}
         </ha-card>
       `;
   }
