@@ -3977,6 +3977,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       // Auto-switch unless manually pinned
+      // Update idle state before checking for auto-switch
+      // This ensures we respect the idle timeout if the current entity just stopped
+      this._updateIdleState();
+
       if (!this._manualSelect) {
         // Switch to most recent if applicable
         const sortedIds = this.sortedEntityIds;
@@ -4002,7 +4006,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           if (
             mostRecentActiveState &&
             mostRecentActiveState.state === "playing" &&
-            this.entityIds[this._selectedIndex] !== mostRecentId
+            this.entityIds[this._selectedIndex] !== mostRecentId &&
+            !this._idleTimeout
           ) {
             this._selectedIndex = this.entityIds.indexOf(mostRecentId);
           }
@@ -4043,7 +4048,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // Update idle state after all other state checks
-    this._updateIdleState();
+
 
     // Notify HA if collapsed state changes
     // If expand on search is enabled and search is open, force expanded state
@@ -6564,6 +6569,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._isIdle = true;
           this._idleTimeout = null;
           this._idleScreenApplied = false;
+
+          // If not explicitly pinned, clear manual select on idle timeout
+          // so we can switch to other playing entities if needed
+          if (this._pinnedIndex === null) {
+            this._manualSelect = false;
+            this._manualSelectPlayingSet = null;
+          }
+
           this._applyIdleScreen();
           this.requestUpdate();
         }, this._idleTimeoutMs);
