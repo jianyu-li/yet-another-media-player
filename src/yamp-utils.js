@@ -112,10 +112,11 @@ export function getSearchResultClickTitle(item) {
   const title = item.name || item.title || item.media_title || 'Unknown Title';
 
   // Handle artist normalization
+  const firstArtist = item.artists?.[0];
   const artist =
     item.artist ||
-    item.artists?.[0]?.name ||
-    (typeof item.artists?.[0] === 'string' ? item.artists?.[0] : undefined) ||
+    firstArtist?.name ||
+    (typeof firstArtist === 'string' ? firstArtist : undefined) ||
     item.media_artist ||
     'Unknown Artist';
 
