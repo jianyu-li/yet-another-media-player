@@ -8723,36 +8723,38 @@ function getMusicAssistantState(hass, entityId) {
  * @returns {string} Title to display
  */
 function getSearchResultClickTitle(item) {
+  var _item$artists, _item$artists2, _item$artists3;
   if (!item) return '';
 
+  // Normalize properties
+  const mediaType = item.media_type || item.media_class || item.media_content_type;
+  const title = item.name || item.title || item.media_title || 'Unknown Title';
+
+  // Handle artist normalization
+  const artist = item.artist || ((_item$artists = item.artists) === null || _item$artists === void 0 || (_item$artists = _item$artists[0]) === null || _item$artists === void 0 ? void 0 : _item$artists.name) || (typeof ((_item$artists2 = item.artists) === null || _item$artists2 === void 0 ? void 0 : _item$artists2[0]) === 'string' ? (_item$artists3 = item.artists) === null || _item$artists3 === void 0 ? void 0 : _item$artists3[0] : undefined) || item.media_artist || 'Unknown Artist';
+
   // For tracks, show "Track Name - Artist"
-  if (item.media_type === 'track') {
-    var _item$artists;
-    const title = item.name || item.media_title || 'Unknown Track';
-    const artist = ((_item$artists = item.artists) === null || _item$artists === void 0 ? void 0 : _item$artists[0]) || item.media_artist || 'Unknown Artist';
+  if (mediaType === 'track') {
     return "".concat(title, " - ").concat(artist);
   }
 
   // For albums, show "Album Name - Artist"
-  if (item.media_type === 'album') {
-    var _item$artists2;
-    const title = item.name || item.media_album_name || 'Unknown Album';
-    const artist = ((_item$artists2 = item.artists) === null || _item$artists2 === void 0 ? void 0 : _item$artists2[0]) || item.media_artist || 'Unknown Artist';
+  if (mediaType === 'album') {
     return "".concat(title, " - ").concat(artist);
   }
 
   // For artists, just show the name
-  if (item.media_type === 'artist') {
-    return item.name || 'Unknown Artist';
+  if (mediaType === 'artist') {
+    return title;
   }
 
   // For playlists, show the name
-  if (item.media_type === 'playlist') {
-    return item.name || 'Unknown Playlist';
+  if (mediaType === 'playlist') {
+    return title;
   }
 
   // Default fallback
-  return item.name || item.media_title || 'Unknown';
+  return title;
 }
 
 var _templateObject, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7, _templateObject8, _templateObject9, _templateObject0, _templateObject1, _templateObject10, _templateObject11, _templateObject12, _templateObject13, _templateObject14, _templateObject15, _templateObject16, _templateObject17, _templateObject18, _templateObject19, _templateObject20, _templateObject21, _templateObject22, _templateObject23, _templateObject24, _templateObject25, _templateObject26, _templateObject27, _templateObject28, _templateObject29, _templateObject30, _templateObject31, _templateObject32, _templateObject33, _templateObject34, _templateObject35, _templateObject36, _templateObject37, _templateObject38, _templateObject39, _templateObject40, _templateObject41, _templateObject42, _templateObject43, _templateObject44, _templateObject45, _templateObject46, _templateObject47, _templateObject48, _templateObject49, _templateObject50, _templateObject51, _templateObject52, _templateObject53, _templateObject54, _templateObject55, _templateObject56, _templateObject57, _templateObject58, _templateObject59, _templateObject60, _templateObject61, _templateObject62, _templateObject63, _templateObject64, _templateObject65, _templateObject66, _templateObject67, _templateObject68, _templateObject69, _templateObject70, _templateObject71, _templateObject72, _templateObject73, _templateObject74, _templateObject75, _templateObject76, _templateObject77, _templateObject78;

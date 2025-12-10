@@ -34,22 +34,22 @@ export async function resolveTemplateAtActionTime(hass, templateString, fallback
  */
 export function findAssociatedButtonEntities(hass, maEntityId) {
   if (!hass?.states || !maEntityId) return [];
-  
+
   const buttonEntities = [];
   const maEntity = hass.states[maEntityId];
   if (!maEntity) return [];
-  
+
   // Look for button entities that might be associated with this MA entity
   // Common patterns: device_id matching, friendly_name similarity, or device_class
   const maDeviceId = maEntity.attributes?.device_id;
   const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
-  
+
   // Search through all button entities
   for (const [entityId, state] of Object.entries(hass.states)) {
     if (entityId.startsWith('button.') && state.attributes) {
       const buttonDeviceId = state.attributes.device_id;
       const buttonFriendlyName = state.attributes.friendly_name || entityId;
-      
+
       // Check if this button is associated with the same device
       if (maDeviceId && buttonDeviceId === maDeviceId) {
         buttonEntities.push({
@@ -61,7 +61,7 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
       }
       // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
       else if (buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) ||
-               maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())) {
+        maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())) {
         buttonEntities.push({
           entity_id: entityId,
           friendly_name: buttonFriendlyName,
@@ -71,7 +71,7 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
       }
     }
   }
-  
+
   return buttonEntities;
 }
 
@@ -83,10 +83,10 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
  */
 export function getMusicAssistantState(hass, entityId) {
   if (!hass?.states || !entityId) return null;
-  
+
   const state = hass.states[entityId];
   if (!state) return null;
-  
+
   // Check if this entity has Music Assistant attributes
   const hasMaAttributes = state.attributes && (
     state.attributes.media_content_id ||
@@ -95,7 +95,7 @@ export function getMusicAssistantState(hass, entityId) {
     state.attributes.media_artist ||
     state.attributes.media_title
   );
-  
+
   return hasMaAttributes ? state : null;
 }
 
@@ -106,31 +106,39 @@ export function getMusicAssistantState(hass, entityId) {
  */
 export function getSearchResultClickTitle(item) {
   if (!item) return '';
-  
+
+  // Normalize properties
+  const mediaType = item.media_type || item.media_class || item.media_content_type;
+  const title = item.name || item.title || item.media_title || 'Unknown Title';
+
+  // Handle artist normalization
+  const artist =
+    item.artist ||
+    item.artists?.[0]?.name ||
+    (typeof item.artists?.[0] === 'string' ? item.artists?.[0] : undefined) ||
+    item.media_artist ||
+    'Unknown Artist';
+
   // For tracks, show "Track Name - Artist"
-  if (item.media_type === 'track') {
-    const title = item.name || item.media_title || 'Unknown Track';
-    const artist = item.artists?.[0] || item.media_artist || 'Unknown Artist';
+  if (mediaType === 'track') {
     return `${title} - ${artist}`;
   }
-  
+
   // For albums, show "Album Name - Artist"
-  if (item.media_type === 'album') {
-    const title = item.name || item.media_album_name || 'Unknown Album';
-    const artist = item.artists?.[0] || item.media_artist || 'Unknown Artist';
+  if (mediaType === 'album') {
     return `${title} - ${artist}`;
   }
-  
+
   // For artists, just show the name
-  if (item.media_type === 'artist') {
-    return item.name || 'Unknown Artist';
+  if (mediaType === 'artist') {
+    return title;
   }
-  
+
   // For playlists, show the name
-  if (item.media_type === 'playlist') {
-    return item.name || 'Unknown Playlist';
+  if (mediaType === 'playlist') {
+    return title;
   }
-  
+
   // Default fallback
-  return item.name || item.media_title || 'Unknown';
+  return title;
 }
