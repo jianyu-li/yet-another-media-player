@@ -1172,7 +1172,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = false;
-        this._lastSearchUsedServerFavorites = false;
       }
 
       // Client-side filtering for lists that don't support server-side search (Recent, Upcoming, Recommendations)
@@ -1231,6 +1230,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     this._searchLoading = false;
     this.requestUpdate();
+  }
+
+  // Handle explicit search submission from UI (Enter key or Search Button)
+  _handleSearchSubmit() {
+    const keepFilters = this._keepFiltersOnSearch;
+    if (!keepFilters) {
+      this._favoritesFilterActive = false;
+      this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
+      this._recommendationsFilterActive = false;
+    }
+    const clearFilters = !keepFilters;
+    this._doSearch(
+      this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter,
+      { clearFilters }
+    );
   }
 
   _handleProgressiveSearchResults(chunk, cacheKey, searchToken) {
@@ -5920,18 +5935,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         @keydown=${e => {
             if (e.key === "Enter") {
               e.preventDefault();
-              const keepFilters = this._keepFiltersOnSearch;
-              if (!keepFilters) {
-                this._favoritesFilterActive = false;
-                this._recentlyPlayedFilterActive = false;
-                this._upcomingFilterActive = false;
-                this._recommendationsFilterActive = false;
-              }
-              const clearFilters = !keepFilters;
-              this._doSearch(
-                this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter,
-                { clearFilters }
-              );
+              this._handleSearchSubmit();
             }
             else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
           }}
@@ -5941,20 +5945,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
-                      @click=${() => {
-            const keepFilters = this._keepFiltersOnSearch;
-            if (!keepFilters) {
-              this._favoritesFilterActive = false;
-              this._recentlyPlayedFilterActive = false;
-              this._upcomingFilterActive = false;
-              this._recommendationsFilterActive = false;
-            }
-            const clearFilters = !keepFilters;
-            this._doSearch(
-              this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter,
-              { clearFilters }
-            );
-          }}
+                      @click=${() => this._handleSearchSubmit()}
                       ?disabled=${this._searchLoading}>
                       Search
                     </button>

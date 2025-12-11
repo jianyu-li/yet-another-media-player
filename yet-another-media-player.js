@@ -8154,7 +8154,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "In Menu"
         }]
       }
-    }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", e => this._updateConfig("show_chip_row", e.detail.value), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), (_this$_config$disable = this._config.disable_search_autofocus) !== null && _this$_config$disable !== void 0 ? _this$_config$disable : false, e => this._updateConfig("disable_search_autofocus", e.target.checked), (_this$_config$keep_fi = this._config.keep_filters_on_search) !== null && _this$_config$keep_fi !== void 0 ? _this$_config$keep_fi : false, e => this._updateConfig("keep_filters_on_search", e.target.checked), (_this$_config$dismiss = this._config.dismiss_search_on_play) !== null && _this$_config$dismiss !== void 0 ? _this$_config$dismiss : true, e => this._updateConfig("dismiss_search_on_play", e.target.checked), {
+    }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", e => this._updateConfig("show_chip_row", e.detail.value), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), (_this$_config$disable = this._config.disable_autofocus) !== null && _this$_config$disable !== void 0 ? _this$_config$disable : false, e => this._updateConfig("disable_autofocus", e.target.checked), (_this$_config$keep_fi = this._config.keep_filters_on_search) !== null && _this$_config$keep_fi !== void 0 ? _this$_config$keep_fi : false, e => this._updateConfig("keep_filters_on_search", e.target.checked), (_this$_config$dismiss = this._config.dismiss_search_on_play) !== null && _this$_config$dismiss !== void 0 ? _this$_config$dismiss : true, e => this._updateConfig("dismiss_search_on_play", e.target.checked), {
       number: {
         min: 0,
         max: 1000,
@@ -9857,7 +9857,6 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = false;
-        this._lastSearchUsedServerFavorites = false;
       }
 
       // Client-side filtering for lists that don't support server-side search (Recent, Upcoming, Recommendations)
@@ -9914,6 +9913,21 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     this._searchLoading = false;
     this.requestUpdate();
+  }
+
+  // Handle explicit search submission from UI (Enter key or Search Button)
+  _handleSearchSubmit() {
+    const keepFilters = this._keepFiltersOnSearch;
+    if (!keepFilters) {
+      this._favoritesFilterActive = false;
+      this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
+      this._recommendationsFilterActive = false;
+    }
+    const clearFilters = !keepFilters;
+    this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, {
+      clearFilters
+    });
   }
   _handleProgressiveSearchResults(chunk, cacheKey, searchToken) {
     if (!Array.isArray(chunk) || !chunk.length) {
@@ -14117,34 +14131,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }, e => {
       if (e.key === "Enter") {
         e.preventDefault();
-        const keepFilters = this._keepFiltersOnSearch;
-        if (!keepFilters) {
-          this._favoritesFilterActive = false;
-          this._recentlyPlayedFilterActive = false;
-          this._upcomingFilterActive = false;
-          this._recommendationsFilterActive = false;
-        }
-        const clearFilters = !keepFilters;
-        this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, {
-          clearFilters
-        });
+        this._handleSearchSubmit();
       } else if (e.key === "Escape") {
         e.preventDefault();
         this._hideSearchSheetInOptions();
       }
-    }, () => {
-      const keepFilters = this._keepFiltersOnSearch;
-      if (!keepFilters) {
-        this._favoritesFilterActive = false;
-        this._recentlyPlayedFilterActive = false;
-        this._upcomingFilterActive = false;
-        this._recommendationsFilterActive = false;
-      }
-      const clearFilters = !keepFilters;
-      this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, {
-        clearFilters
-      });
-    }, this._searchLoading, () => {
+    }, () => this._handleSearchSubmit(), this._searchLoading, () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
