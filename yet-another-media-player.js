@@ -13365,51 +13365,77 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }));
   }
   async _onProgressBarClick(e) {
-    var _this$hass22, _this$hass23, _this$hass24;
-    // For seeking, we want to target the entity that is actually playing
-    const mainId = this.currentEntityId;
-    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const mainState = mainId ? (_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[mainId] : null;
-    const maState = maId ? (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[maId] : null;
-    let targetEntity;
-    if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
-      targetEntity = this._controlFocusEntityId;
-    } else if ((maState === null || maState === void 0 ? void 0 : maState.state) === "playing") {
-      targetEntity = maId;
-    } else if ((mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing") {
-      targetEntity = mainId;
-    } else {
-      var _this$_lastPlayingEnt8;
-      // When neither is playing, prefer the last playing entity for better resume behavior
-      const lastPlayingForChip = (_this$_lastPlayingEnt8 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt8 === void 0 ? void 0 : _this$_lastPlayingEnt8[this._selectedIndex];
-      if (lastPlayingForChip && (lastPlayingForChip === maId || lastPlayingForChip === mainId)) {
-        targetEntity = lastPlayingForChip;
+    try {
+      var _this$hass22, _this$hass23, _this$hass24;
+      e.stopPropagation();
+      // For seeking, we want to target the entity that is actually playing
+      const mainId = this.currentEntityId;
+      const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+      const mainState = mainId ? (_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[mainId] : null;
+      const maState = maId ? (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[maId] : null;
+      let targetEntity;
+      if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
+        targetEntity = this._controlFocusEntityId;
+      } else if ((maState === null || maState === void 0 ? void 0 : maState.state) === "playing") {
+        targetEntity = maId;
+      } else if ((mainState === null || mainState === void 0 ? void 0 : mainState.state) === "playing") {
+        targetEntity = mainId;
       } else {
-        // Fallback to the configured playback entity
-        const entityTemplate = this._getPlaybackEntityId(this._selectedIndex);
-        targetEntity = await this._resolveTemplateAtActionTime(entityTemplate, this.currentEntityId);
+        var _this$_lastPlayingEnt8;
+        // When neither is playing, prefer the last playing entity for better resume behavior
+        const lastPlayingForChip = (_this$_lastPlayingEnt8 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt8 === void 0 ? void 0 : _this$_lastPlayingEnt8[this._selectedIndex];
+        if (lastPlayingForChip && (lastPlayingForChip === maId || lastPlayingForChip === mainId)) {
+          targetEntity = lastPlayingForChip;
+        } else {
+          // Fallback to the configured playback entity
+          const entityTemplate = this._getPlaybackEntityId(this._selectedIndex);
+          targetEntity = await this._resolveTemplateAtActionTime(entityTemplate, this.currentEntityId);
+        }
       }
-    }
-    const stateObj = ((_this$hass24 = this.hass) === null || _this$hass24 === void 0 || (_this$hass24 = _this$hass24.states) === null || _this$hass24 === void 0 ? void 0 : _this$hass24[targetEntity]) || this.currentStateObj;
-    if (!targetEntity || !stateObj) return;
-    const duration = stateObj.attributes.media_duration;
-    if (!duration) return;
-    const rect = e.target.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    const seekTime = Math.floor(percent * duration);
-    if (stateObj.state === "playing") {
-      // Optimistically update local progress position for smooth UI
-      stateObj.attributes.media_position = seekTime;
-      stateObj.attributes.media_position_updated_at = new Date().toISOString();
+      const stateObj = ((_this$hass24 = this.hass) === null || _this$hass24 === void 0 || (_this$hass24 = _this$hass24.states) === null || _this$hass24 === void 0 ? void 0 : _this$hass24[targetEntity]) || this.currentStateObj;
+      if (!targetEntity || !stateObj || !stateObj.attributes) {
+        console.warn("YAMP: Cannot seek - invalid target or state", targetEntity, stateObj);
+        return;
+      }
+      const duration = stateObj.attributes.media_duration;
+      if (!duration) return;
+      const rect = e.target.getBoundingClientRect();
+      const percent = (e.clientX - rect.left) / rect.width;
+      const seekTime = Math.floor(percent * duration);
+
+      // Optimistically update local progress position via offset strategy
+      const currentBackendPos = stateObj.attributes.media_position || 0;
+      let effectiveBackendPos = currentBackendPos;
+      if (stateObj.state === 'playing') {
+        const updatedAt = stateObj.attributes.media_position_updated_at ? Date.parse(stateObj.attributes.media_position_updated_at) : stateObj.last_changed ? Date.parse(stateObj.last_changed) : Date.now();
+        if (!isNaN(updatedAt)) {
+          effectiveBackendPos += (Date.now() - updatedAt) / 1000;
+        }
+      }
+
+      // Optimistically update local progress position via Simulated Playback
+      // We ignore backend position entirely and simulate playback from the seek point
+      this._seekAnchor = {
+        position: seekTime,
+        timestamp: Date.now(),
+        trackId: stateObj.attributes.media_content_id || stateObj.attributes.media_title
+      };
+      // Lock convergence check for 2 seconds to avoid accidental sync with lagging backend
+      this._seekConvergenceLock = Date.now() + 2000;
+      this._seekOffset = null; // Clear old offset if any
+
+      // Force immediate update
       this.requestUpdate();
+      this.hass.callService("media_player", "media_seek", {
+        entity_id: targetEntity,
+        seek_position: seekTime
+      });
+    } catch (err) {
+      console.error("YAMP: Error in _onProgressBarClick", err);
     }
-    this.hass.callService("media_player", "media_seek", {
-      entity_id: targetEntity,
-      seek_position: seekTime
-    });
   }
   render() {
-    var _this$config$actions2, _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback, _this$config17;
+    var _this$config$actions2, _this$_optimisticPlay, _this$hass25, _this$_lastPlayingEnt9, _this$_lastPlayingEnt0, _this$_playbackLinger4, _this$config$entities, _this$_lastPlayingEnt1, _this$_maResolveCache3, _this$_playbackLinger5, _this$hass26, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$currentStateObj, _this$currentPlayback, _this$config17;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -13594,12 +13620,49 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     let pos = (displaySource === null || displaySource === void 0 || (_displaySource$attrib5 = displaySource.attributes) === null || _displaySource$attrib5 === void 0 ? void 0 : _displaySource$attrib5.media_position) || 0;
     const duration = (displaySource === null || displaySource === void 0 || (_displaySource$attrib6 = displaySource.attributes) === null || _displaySource$attrib6 === void 0 ? void 0 : _displaySource$attrib6.media_duration) || 0;
+
+    // Calculate raw backend position
+    let rawBackendPos = pos;
     if (isPlaying && displaySource) {
       var _displaySource$attrib7;
       const updatedAt = (_displaySource$attrib7 = displaySource.attributes) !== null && _displaySource$attrib7 !== void 0 && _displaySource$attrib7.media_position_updated_at ? Date.parse(displaySource.attributes.media_position_updated_at) : displaySource.last_changed ? Date.parse(displaySource.last_changed) : Date.now();
       const elapsed = (Date.now() - updatedAt) / 1000;
-      pos += elapsed;
+      rawBackendPos += elapsed;
     }
+
+    // Apply persistent seek simulation if valid
+    const currentTrackId = (displaySource === null || displaySource === void 0 || (_displaySource$attrib8 = displaySource.attributes) === null || _displaySource$attrib8 === void 0 ? void 0 : _displaySource$attrib8.media_content_id) || (displaySource === null || displaySource === void 0 || (_displaySource$attrib9 = displaySource.attributes) === null || _displaySource$attrib9 === void 0 ? void 0 : _displaySource$attrib9.media_title);
+    const now = Date.now();
+    if (this._seekAnchor && this._seekAnchor.trackId === currentTrackId) {
+      // Calculated simulated position
+      let simulatedPos = this._seekAnchor.position;
+      if (isPlaying) {
+        simulatedPos += (now - this._seekAnchor.timestamp) / 1000;
+      }
+
+      // Check for convergence
+      const lockedOut = this._seekConvergenceLock && now < this._seekConvergenceLock;
+      const diff = Math.abs(rawBackendPos - simulatedPos);
+
+      // If backend is close to simulated pos, we are synced
+      if (!lockedOut && diff < 2) {
+        // Backend caught up! Clear anchor.
+        this._seekAnchor = null;
+        this._seekConvergenceLock = null;
+        pos = rawBackendPos;
+      } else {
+        // Use simulated pos
+        pos = simulatedPos;
+      }
+    } else {
+      // No anchor or track changed
+      this._seekAnchor = null;
+      this._seekConvergenceLock = null;
+      pos = rawBackendPos;
+    }
+
+    // Store for next frame convergence check
+    this._lastRenderedPos = pos;
     const progress = duration ? Math.min(1, pos / duration) : 0;
 
     // Volume entity determination
