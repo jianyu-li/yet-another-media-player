@@ -74,9 +74,11 @@ Below you will find a list of all configuration options.
 | `search_results_limit`     | number       | No           | `20`        | Maximum number of results to request per media category (artist/album/track/etc.) across favorites, recently played, and standard searches; set to `0` to fall back to Music Assistant’s own limits |
 | `search_results_sort`      | choice       | No           | `default`   | Order search results by `default`, `title_asc`, `title_desc`, `artist_asc`, or `artist_desc`; sorting happens within the results returned by `search_results_limit` |
 | `disable_autofocus`        | boolean      | No           | `false`     | Prevent the search box from auto-focusing so on-screen keyboards stay hidden when opening search sheets |
+| `keep_filters_on_search`   | boolean      | No           | `false`     | Enable this to search within the current active filter (Favorites, etc) instead of clearing it |
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
+| `display_timestamps`       | boolean      | No           | `false`     | Display timestamps on the progress bar                                                          |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
@@ -275,6 +277,7 @@ In this example:
 
 - **Hold to Pin**: Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.
 - **Disable Search Autofocus**: Keep the search box from stealing focus so on-screen keyboards stay hidden.
+- **Keep Filters on Search**: Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.
 
 ### Search
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 
@@ -349,6 +352,7 @@ These features are optional. Without the integration, YAMP will fall back to a b
 > Match dashboard styling and control the overall footprint.
 
 - **Match Theme**: Updates card accent colors to match your Home Assistant theme.
+- **Display Timestamps**: Display timestamps on the progress bar.
 - **Alternate Progress Bar**: Uses the collapsed progress bar when expanded.
 - **Card Height**: Override the card height (in px); leave unset to use the default layout.
 

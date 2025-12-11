@@ -1174,6 +1174,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._lastSearchUsedServerFavorites = false;
       }
 
+      // Client-side filtering for lists that don't support server-side search (Recent, Upcoming, Recommendations)
+      if ((isRecentlyPlayed || isUpcoming || isRecommendations) && this._searchQuery && this._searchQuery.trim() !== '') {
+        const query = this._searchQuery.trim().toLowerCase();
+        if (searchResponse && searchResponse.results) {
+          searchResponse.results = searchResponse.results.filter(item => {
+            const title = (item.title || "").toLowerCase();
+            const artist = (item.artist || "").toLowerCase();
+            const album = (item.album || "").toLowerCase();
+            return title.includes(query) || artist.includes(query) || album.includes(query);
+          });
+        }
+      }
+
       // Handle the new response format
       const arr = searchResponse.results || [];
       this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
@@ -1217,6 +1230,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     this._searchLoading = false;
     this.requestUpdate();
+  }
+
+  // Handle explicit search submission from UI (Enter key or Search Button)
+  _handleSearchSubmit() {
+    const keepFilters = this._keepFiltersOnSearch;
+    if (!keepFilters) {
+      this._favoritesFilterActive = false;
+      this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
+      this._recommendationsFilterActive = false;
+    }
+    const clearFilters = !keepFilters;
+    this._doSearch(
+      this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter,
+      { clearFilters }
+    );
   }
 
   _handleProgressiveSearchResults(chunk, cacheKey, searchToken) {
@@ -3252,6 +3281,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._alternateProgressBar = !!config.alternate_progress_bar;
     // Display timestamps on progress bar
     this._displayTimestamps = !!config.display_timestamps;
+    // Keep search filters on submit
+    this._keepFiltersOnSearch = !!config.keep_filters_on_search;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space
@@ -5904,11 +5935,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         @keydown=${e => {
             if (e.key === "Enter") {
               e.preventDefault();
-              // Clear recently played filter when user initiates search
-              this._recentlyPlayedFilterActive = false;
-              this._upcomingFilterActive = false;
-              this._recommendationsFilterActive = false;
-              this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
+              this._handleSearchSubmit();
             }
             else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
           }}
@@ -5918,13 +5945,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
-                      @click=${() => {
-            // Clear recently played filter when user initiates search
-            this._recentlyPlayedFilterActive = false;
-            this._upcomingFilterActive = false;
-            this._recommendationsFilterActive = false;
-            this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
-          }}
+                      @click=${() => this._handleSearchSubmit()}
                       ?disabled=${this._searchLoading}>
                       Search
                     </button>
