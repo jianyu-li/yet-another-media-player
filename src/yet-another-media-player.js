@@ -3250,6 +3250,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._expandOnSearch = !!config.expand_on_search;
     // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
+    // Display timestamps on progress bar
+    this._displayTimestamps = !!config.display_timestamps;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space
@@ -5465,7 +5467,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
             onSeek: (e) => this._onProgressBarClick(e),
             collapsed: false,
             accent: this._customAccent,
-            style: this._showEntityOptions ? "visibility:hidden" : ""
+            style: this._showEntityOptions ? "visibility:hidden" : "",
+            displayTimestamps: this._displayTimestamps,
+            currentTime: pos,
+            duration: duration
           })
           : renderProgressBar({
             progress: 0,

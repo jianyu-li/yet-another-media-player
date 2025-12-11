@@ -1,6 +1,13 @@
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { html, nothing } from "lit";
 
+function formatTime(seconds) {
+  if (seconds === undefined || seconds === null || isNaN(seconds)) return "0:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
 export function renderProgressBar({
   progress,
   seekEnabled,
@@ -8,7 +15,10 @@ export function renderProgressBar({
   collapsed,
   accent,
   height = 6,
-  style = ""
+  style = "",
+  displayTimestamps = false,
+  currentTime = 0,
+  duration = 0
 }) {
   // Use `accent` for color, fallback to default if not set
   const barColor = accent || "var(--custom-accent, #ff9800)";
@@ -34,6 +44,12 @@ export function renderProgressBar({
           style="width: ${progress * 100}%; background: ${barColor}; height:${height}px;"
         ></div>
       </div>
+      ${displayTimestamps ? html`
+        <div class="timestamps-container" style="display: flex; justify-content: space-between; font-size: 10px; margin-top: -4px; margin-bottom: 4px; color: rgba(255, 255, 255, 0.9); padding: 0 2px;">
+           <span>${formatTime(currentTime)}</span>
+           <span>-${formatTime(Math.max(0, duration - currentTime))}</span>
+        </div>
+      ` : nothing}
     </div>
   `;
 }
