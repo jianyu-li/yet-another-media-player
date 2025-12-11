@@ -4897,18 +4897,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const seekTime = Math.floor(percent * duration);
 
       // Optimistically update local progress position via offset strategy
-      const currentBackendPos = stateObj.attributes.media_position || 0;
 
-      let effectiveBackendPos = currentBackendPos;
-      if (stateObj.state === 'playing') {
-        const updatedAt = stateObj.attributes.media_position_updated_at
-          ? Date.parse(stateObj.attributes.media_position_updated_at)
-          : (stateObj.last_changed ? Date.parse(stateObj.last_changed) : Date.now());
-
-        if (!isNaN(updatedAt)) {
-          effectiveBackendPos += (Date.now() - updatedAt) / 1000;
-        }
-      }
 
 
 
@@ -5206,8 +5195,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       pos = rawBackendPos;
     }
 
-    // Store for next frame convergence check
-    this._lastRenderedPos = pos;
+
     const progress = duration ? Math.min(1, pos / duration) : 0;
 
     // Volume entity determination

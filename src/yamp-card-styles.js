@@ -874,6 +874,16 @@ export const yampCardStyles = css`
     box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
   }
 
+  .timestamps-container {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-top: -4px;
+    margin-bottom: 4px;
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0 2px;
+  }
+
   /* Volume controls */
   .volume-row {
     display: flex;

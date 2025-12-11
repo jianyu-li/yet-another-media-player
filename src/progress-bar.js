@@ -45,7 +45,7 @@ export function renderProgressBar({
         ></div>
       </div>
       ${displayTimestamps ? html`
-        <div class="timestamps-container" style="display: flex; justify-content: space-between; font-size: 10px; margin-top: -4px; margin-bottom: 4px; color: rgba(255, 255, 255, 0.9); padding: 0 2px;">
+        <div class="timestamps-container">
            <span>${formatTime(currentTime)}</span>
            <span>-${formatTime(Math.max(0, duration - currentTime))}</span>
         </div>
