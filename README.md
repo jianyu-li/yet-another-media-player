@@ -78,6 +78,7 @@ Below you will find a list of all configuration options.
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
+| `display_timestamps`       | boolean      | No           | `false`     | Display timestamps on the progress bar                                                          |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
@@ -351,6 +352,7 @@ These features are optional. Without the integration, YAMP will fall back to a b
 > Match dashboard styling and control the overall footprint.
 
 - **Match Theme**: Updates card accent colors to match your Home Assistant theme.
+- **Display Timestamps**: Display timestamps on the progress bar.
 - **Alternate Progress Bar**: Uses the collapsed progress bar when expanded.
 - **Card Height**: Override the card height (in px); leave unset to use the default layout.
 
