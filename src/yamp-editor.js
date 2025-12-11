@@ -1007,7 +1007,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
-                id="disable-autofocus-toggle"
                 .checked=${this._config.disable_autofocus ?? false}
                 @change=${(e) => this._updateConfig("disable_autofocus", e.target.checked)}
               ></ha-switch>
@@ -1015,6 +1014,17 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
             <div class="config-subtitle">Keep the search box from stealing focus so on-screen keyboards stay hidden.</div>
           </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                .checked=${this._config.keep_filters_on_search ?? false}
+                @change=${(e) => this._updateConfig("keep_filters_on_search", e.target.checked)}
+              ></ha-switch>
+              <span>Keep Filters on Search</span>
+            </div>
+            <div class="config-subtitle">Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.</div>
+          </div>
+
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch

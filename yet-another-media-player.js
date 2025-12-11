@@ -8131,9 +8131,9 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     }));
   }
   _renderBehaviorTab() {
-    var _this$_config$idle_ti, _this$_config$show_ch, _this$_config$hold_to, _this$_config$disable, _this$_config$dismiss, _this$_config$search_, _this$_config$search_2;
+    var _this$_config$idle_ti, _this$_config$show_ch, _this$_config$hold_to, _this$_config$disable, _this$_config$keep_fi, _this$_config$dismiss, _this$_config$search_, _this$_config$search_2;
     const searchLimitWarningActive = Number(this._config.search_results_limit) > 100;
-    return x(_templateObject16$1 || (_templateObject16$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle & Chips</div>\n            <div class=\"section-description\">Choose when the card goes idle and how entity chips behave.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                .selector=", "\n                .value=", "\n                label=\"Idle Timeout (ms)\"\n                @value-changed=", "\n              ></ha-selector>\n              <div class=\"config-subtitle\">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Show Chip Row\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay.</div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Interactions & Search</div>\n            <div class=\"section-description\">Fine-tune how entities are pinned and how many results show at once.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"hold-to-pin-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Hold to Pin</span>\n            </div>\n            <div class=\"config-subtitle\">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"disable-autofocus-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Disable Search Autofocus</span>\n            </div>\n            <div class=\"config-subtitle\">Keep the search box from stealing focus so on-screen keyboards stay hidden.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"dismiss-search-on-play-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Dismiss search on play</span>\n            </div>\n            <div class=\"config-subtitle\">Automatically close the search screen when a track is played.</div>\n          </div>\n            <div class=\"form-row form-row-multi-column\">\n              <div class=\"grow-children number-input-with-note\">\n                <ha-selector-number\n                  .selector=", "\n                  .value=", "\n                  label=\"Search Results Limit\"\n                  helper=\"Maximum number of search results to display (1-1000, default: 20)\"\n                  @value-changed=", "\n                ></ha-selector-number>\n                ", "\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              id=\"search-limit-reset\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Result Sorting\"\n              helper=\"Choose how search results are ordered. Default keeps the source order.\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n      "])), this.hass, {
+    return x(_templateObject16$1 || (_templateObject16$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle & Chips</div>\n            <div class=\"section-description\">Choose when the card goes idle and how entity chips behave.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                .selector=", "\n                .value=", "\n                label=\"Idle Timeout (ms)\"\n                @value-changed=", "\n              ></ha-selector>\n              <div class=\"config-subtitle\">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Show Chip Row\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay.</div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Interactions & Search</div>\n            <div class=\"section-description\">Fine-tune how entities are pinned and how many results show at once.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"hold-to-pin-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Hold to Pin</span>\n            </div>\n            <div class=\"config-subtitle\">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Disable Search Autofocus</span>\n            </div>\n            <div class=\"config-subtitle\">Keep the search box from stealing focus so on-screen keyboards stay hidden.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Keep Filters on Search</span>\n            </div>\n            <div class=\"config-subtitle\">Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.</div>\n          </div>\n\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"dismiss-search-on-play-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>Dismiss search on play</span>\n            </div>\n            <div class=\"config-subtitle\">Automatically close the search screen when a track is played.</div>\n          </div>\n            <div class=\"form-row form-row-multi-column\">\n              <div class=\"grow-children number-input-with-note\">\n                <ha-selector-number\n                  .selector=", "\n                  .value=", "\n                  label=\"Search Results Limit\"\n                  helper=\"Maximum number of search results to display (1-1000, default: 20)\"\n                  @value-changed=", "\n                ></ha-selector-number>\n                ", "\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              id=\"search-limit-reset\"\n              icon=\"mdi:restore\"\n              title=\"Reset to default\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"Result Sorting\"\n              helper=\"Choose how search results are ordered. Default keeps the source order.\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n      "])), this.hass, {
       number: {
         min: 0,
         step: 1000,
@@ -8154,7 +8154,7 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           label: "In Menu"
         }]
       }
-    }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", e => this._updateConfig("show_chip_row", e.detail.value), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), (_this$_config$disable = this._config.disable_autofocus) !== null && _this$_config$disable !== void 0 ? _this$_config$disable : false, e => this._updateConfig("disable_autofocus", e.target.checked), (_this$_config$dismiss = this._config.dismiss_search_on_play) !== null && _this$_config$dismiss !== void 0 ? _this$_config$dismiss : true, e => this._updateConfig("dismiss_search_on_play", e.target.checked), {
+    }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", e => this._updateConfig("show_chip_row", e.detail.value), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), (_this$_config$disable = this._config.disable_search_autofocus) !== null && _this$_config$disable !== void 0 ? _this$_config$disable : false, e => this._updateConfig("disable_search_autofocus", e.target.checked), (_this$_config$keep_fi = this._config.keep_filters_on_search) !== null && _this$_config$keep_fi !== void 0 ? _this$_config$keep_fi : false, e => this._updateConfig("keep_filters_on_search", e.target.checked), (_this$_config$dismiss = this._config.dismiss_search_on_play) !== null && _this$_config$dismiss !== void 0 ? _this$_config$dismiss : true, e => this._updateConfig("dismiss_search_on_play", e.target.checked), {
       number: {
         min: 0,
         max: 1000,
@@ -9857,6 +9857,20 @@ class YetAnotherMediaPlayerCard extends i$1 {
         this._initialFavoritesLoaded = false;
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = false;
+        this._lastSearchUsedServerFavorites = false;
+      }
+
+      // Client-side filtering for lists that don't support server-side search (Recent, Upcoming, Recommendations)
+      if ((isRecentlyPlayed || isUpcoming || isRecommendations) && this._searchQuery && this._searchQuery.trim() !== '') {
+        const query = this._searchQuery.trim().toLowerCase();
+        if (searchResponse && searchResponse.results) {
+          searchResponse.results = searchResponse.results.filter(item => {
+            const title = (item.title || "").toLowerCase();
+            const artist = (item.artist || "").toLowerCase();
+            const album = (item.album || "").toLowerCase();
+            return title.includes(query) || artist.includes(query) || album.includes(query);
+          });
+        }
       }
 
       // Handle the new response format
@@ -11827,6 +11841,8 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._alternateProgressBar = !!config.alternate_progress_bar;
     // Display timestamps on progress bar
     this._displayTimestamps = !!config.display_timestamps;
+    // Keep search filters on submit
+    this._keepFiltersOnSearch = !!config.keep_filters_on_search;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space
@@ -14101,21 +14117,33 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }, e => {
       if (e.key === "Enter") {
         e.preventDefault();
-        // Clear recently played filter when user initiates search
-        this._recentlyPlayedFilterActive = false;
-        this._upcomingFilterActive = false;
-        this._recommendationsFilterActive = false;
-        this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
+        const keepFilters = this._keepFiltersOnSearch;
+        if (!keepFilters) {
+          this._favoritesFilterActive = false;
+          this._recentlyPlayedFilterActive = false;
+          this._upcomingFilterActive = false;
+          this._recommendationsFilterActive = false;
+        }
+        const clearFilters = !keepFilters;
+        this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, {
+          clearFilters
+        });
       } else if (e.key === "Escape") {
         e.preventDefault();
         this._hideSearchSheetInOptions();
       }
     }, () => {
-      // Clear recently played filter when user initiates search
-      this._recentlyPlayedFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._recommendationsFilterActive = false;
-      this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
+      const keepFilters = this._keepFiltersOnSearch;
+      if (!keepFilters) {
+        this._favoritesFilterActive = false;
+        this._recentlyPlayedFilterActive = false;
+        this._upcomingFilterActive = false;
+        this._recommendationsFilterActive = false;
+      }
+      const clearFilters = !keepFilters;
+      this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, {
+        clearFilters
+      });
     }, this._searchLoading, () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
