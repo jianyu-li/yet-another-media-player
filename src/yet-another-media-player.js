@@ -3250,6 +3250,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._expandOnSearch = !!config.expand_on_search;
     // Alternate progress‑bar mode
     this._alternateProgressBar = !!config.alternate_progress_bar;
+    // Display timestamps on progress bar
+    this._displayTimestamps = !!config.display_timestamps;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space
@@ -4853,52 +4855,76 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   async _onProgressBarClick(e) {
-    // For seeking, we want to target the entity that is actually playing
-    const mainId = this.currentEntityId;
-    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const mainState = mainId ? this.hass?.states?.[mainId] : null;
-    const maState = maId ? this.hass?.states?.[maId] : null;
+    try {
+      e.stopPropagation();
+      // For seeking, we want to target the entity that is actually playing
+      const mainId = this.currentEntityId;
+      const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+      const mainState = mainId ? this.hass?.states?.[mainId] : null;
+      const maState = maId ? this.hass?.states?.[maId] : null;
 
-    let targetEntity;
-    if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
-      targetEntity = this._controlFocusEntityId;
-    } else if (maState?.state === "playing") {
-      targetEntity = maId;
-    } else if (mainState?.state === "playing") {
-      targetEntity = mainId;
-    } else {
-      // When neither is playing, prefer the last playing entity for better resume behavior
-      const lastPlayingForChip = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
-      if (lastPlayingForChip &&
-        (lastPlayingForChip === maId || lastPlayingForChip === mainId)) {
-        targetEntity = lastPlayingForChip;
+      let targetEntity;
+      if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
+        targetEntity = this._controlFocusEntityId;
+      } else if (maState?.state === "playing") {
+        targetEntity = maId;
+      } else if (mainState?.state === "playing") {
+        targetEntity = mainId;
       } else {
-        // Fallback to the configured playback entity
-        const entityTemplate = this._getPlaybackEntityId(this._selectedIndex);
-        targetEntity = await this._resolveTemplateAtActionTime(entityTemplate, this.currentEntityId);
+        // When neither is playing, prefer the last playing entity for better resume behavior
+        const lastPlayingForChip = this._lastPlayingEntityIdByChip?.[this._selectedIndex];
+        if (lastPlayingForChip &&
+          (lastPlayingForChip === maId || lastPlayingForChip === mainId)) {
+          targetEntity = lastPlayingForChip;
+        } else {
+          // Fallback to the configured playback entity
+          const entityTemplate = this._getPlaybackEntityId(this._selectedIndex);
+          targetEntity = await this._resolveTemplateAtActionTime(entityTemplate, this.currentEntityId);
+        }
       }
-    }
 
-    const stateObj = this.hass?.states?.[targetEntity] || this.currentStateObj;
-    if (!targetEntity || !stateObj) return;
-    const duration = stateObj.attributes.media_duration;
-    if (!duration) return;
-    const rect = e.target.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    const seekTime = Math.floor(percent * duration);
+      const stateObj = this.hass?.states?.[targetEntity] || this.currentStateObj;
+      if (!targetEntity || !stateObj || !stateObj.attributes) {
+        console.warn("YAMP: Cannot seek - invalid target or state", targetEntity, stateObj);
+        return;
+      }
 
-    if (stateObj.state === "playing") {
-      // Optimistically update local progress position for smooth UI
-      stateObj.attributes.media_position = seekTime;
-      stateObj.attributes.media_position_updated_at = new Date().toISOString();
+      const duration = stateObj.attributes.media_duration;
+      if (!duration) return;
+
+      const rect = e.target.getBoundingClientRect();
+      const percent = (e.clientX - rect.left) / rect.width;
+      const seekTime = Math.floor(percent * duration);
+
+      // Optimistically update local progress position via offset strategy
+
+
+
+
+      // Optimistically update local progress position via Simulated Playback
+      // We ignore backend position entirely and simulate playback from the seek point
+      this._seekAnchor = {
+        position: seekTime,
+        timestamp: Date.now(),
+        trackId: stateObj.attributes.media_content_id || stateObj.attributes.media_title
+      };
+      // Lock convergence check for 2 seconds to avoid accidental sync with lagging backend
+      this._seekConvergenceLock = Date.now() + 2000;
+      this._seekOffset = null; // Clear old offset if any
+
+      // Force immediate update
       this.requestUpdate();
-    }
 
-    this.hass.callService("media_player", "media_seek", { entity_id: targetEntity, seek_position: seekTime });
+      this.hass.callService("media_player", "media_seek", { entity_id: targetEntity, seek_position: seekTime });
+    } catch (err) {
+      console.error("YAMP: Error in _onProgressBarClick", err);
+    }
   }
 
   render() {
     if (!this.hass || !this.config) return nothing;
+
+
 
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string"
@@ -5126,13 +5152,50 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     let pos = displaySource?.attributes?.media_position || 0;
     const duration = displaySource?.attributes?.media_duration || 0;
+
+    // Calculate raw backend position
+    let rawBackendPos = pos;
     if (isPlaying && displaySource) {
       const updatedAt = displaySource.attributes?.media_position_updated_at
         ? Date.parse(displaySource.attributes.media_position_updated_at)
         : (displaySource.last_changed ? Date.parse(displaySource.last_changed) : Date.now());
       const elapsed = (Date.now() - updatedAt) / 1000;
-      pos += elapsed;
+      rawBackendPos += elapsed;
     }
+
+    // Apply persistent seek simulation if valid
+    const currentTrackId = displaySource?.attributes?.media_content_id || displaySource?.attributes?.media_title;
+    const now = Date.now();
+
+    if (this._seekAnchor && this._seekAnchor.trackId === currentTrackId) {
+      // Calculated simulated position
+      let simulatedPos = this._seekAnchor.position;
+      if (isPlaying) {
+        simulatedPos += (now - this._seekAnchor.timestamp) / 1000;
+      }
+
+      // Check for convergence
+      const lockedOut = this._seekConvergenceLock && now < this._seekConvergenceLock;
+      const diff = Math.abs(rawBackendPos - simulatedPos);
+
+      // If backend is close to simulated pos, we are synced
+      if (!lockedOut && diff < 2) {
+        // Backend caught up! Clear anchor.
+        this._seekAnchor = null;
+        this._seekConvergenceLock = null;
+        pos = rawBackendPos;
+      } else {
+        // Use simulated pos
+        pos = simulatedPos;
+      }
+    } else {
+      // No anchor or track changed
+      this._seekAnchor = null;
+      this._seekConvergenceLock = null;
+      pos = rawBackendPos;
+    }
+
+
     const progress = duration ? Math.min(1, pos / duration) : 0;
 
     // Volume entity determination
@@ -5465,7 +5528,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
             onSeek: (e) => this._onProgressBarClick(e),
             collapsed: false,
             accent: this._customAccent,
-            style: this._showEntityOptions ? "visibility:hidden" : ""
+            style: this._showEntityOptions ? "visibility:hidden" : "",
+            displayTimestamps: this._displayTimestamps,
+            currentTime: pos,
+            duration: duration
           })
           : renderProgressBar({
             progress: 0,

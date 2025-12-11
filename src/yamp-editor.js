@@ -1121,6 +1121,17 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
           </div>
           <div class="form-row form-row-multi-column">
+            <div title=${(this._config.alternate_progress_bar || this._config.always_collapsed) ? "Not available with Alternate Progress Bar or Always Collapsed mode" : ""}>
+              <ha-switch
+                id="display-timestamps-toggle"
+                .checked=${this._config.display_timestamps ?? false}
+                @change=${(e) => this._updateConfig("display_timestamps", e.target.checked)}
+                .disabled=${this._config.alternate_progress_bar || this._config.always_collapsed}
+              ></ha-switch>
+              <span>Display Timestamps</span>
+            </div>
+          </div>
+          <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-textfield
                 class="full-width"
@@ -1173,18 +1184,19 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               @value-changed=${(e) => this._updateConfig("control_layout", e.detail.value)}
             ></ha-selector>
           </div>
-          ${(this._config.control_layout ?? "classic") === "modern" ? html`
-            <div class="form-row">
-              <div>
-                <ha-switch
-                  .checked=${this._config.swap_pause_for_stop ?? false}
-                  @change=${(e) => this._updateConfig("swap_pause_for_stop", e.target.checked)}
-                ></ha-switch>
-                <span>Swap Pause with Stop</span>
-              </div>
-              <div class="config-subtitle">Replace the pause button with stop while using the modern layout.</div>
+          <div class="form-row"
+            style="${(this._config.control_layout ?? "classic") === "modern" ? "" : "opacity: 0.5;"}"
+            title="${(this._config.control_layout ?? "classic") === "modern" ? "" : "Only available with Modern layout"}">
+            <div>
+              <ha-switch
+                .checked=${this._config.swap_pause_for_stop ?? false}
+                @change=${(e) => this._updateConfig("swap_pause_for_stop", e.target.checked)}
+                .disabled=${(this._config.control_layout ?? "classic") !== "modern"}
+              ></ha-switch>
+              <span>Swap Pause with Stop</span>
             </div>
-          ` : nothing}
+            <div class="config-subtitle">Replace the pause button with stop while using the modern layout.</div>
+          </div>
           <div class="form-row">
             <div>
               <ha-switch
@@ -1257,16 +1269,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-switch>
               <span>Collapse on Idle</span>
             </div>
-            ${!this._config.always_collapsed ? html`
-              <div>
-                <ha-switch
-                  id="hide-menu-player-toggle"
-                  .checked=${this._config.hide_menu_player ?? false}
-                  @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
-                ></ha-switch>
-                <span>Hide Menu Player</span>
-              </div>
-            ` : nothing}
+            <div style="${!this._config.always_collapsed ? "" : "opacity: 0.5;"}"
+              title="${!this._config.always_collapsed ? "" : "Not available when Always Collapsed is enabled"}">
+              <ha-switch
+                id="hide-menu-player-toggle"
+                .checked=${this._config.hide_menu_player ?? false}
+                @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
+                .disabled=${!!this._config.always_collapsed}
+              ></ha-switch>
+              <span>Hide Menu Player</span>
+            </div>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
@@ -1277,16 +1289,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-switch>
               <span>Always Collapsed</span>
             </div>
-            ${this._config.always_collapsed ? html`
-              <div>
-                <ha-switch
-                  id="expand-on-search-toggle"
-                  .checked=${this._config.expand_on_search ?? false}
-                  @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
-                ></ha-switch>
-                <span>Expand on Search</span>
-              </div>
-            ` : nothing}
+            <div style="${this._config.always_collapsed ? "" : "opacity: 0.5;"}"
+              title="${this._config.always_collapsed ? "" : "Only available when Always Collapsed is enabled"}">
+              <ha-switch
+                id="expand-on-search-toggle"
+                .checked=${this._config.expand_on_search ?? false}
+                @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
+                .disabled=${!this._config.always_collapsed}
+              ></ha-switch>
+              <span>Expand on Search</span>
+            </div>
           </div>
           <div class="form-row">
             <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
