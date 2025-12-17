@@ -1036,6 +1036,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
             <div class="config-subtitle">Automatically close the search screen when a track is played.</div>
           </div>
+
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="disable-mass-queue-toggle"
+                .checked=${this._config.disable_mass_queue ?? false}
+                @change=${(e) => this._updateConfig("disable_mass_queue", e.target.checked)}
+              ></ha-switch>
+              <span>Disable Mass Queue</span>
+            </div>
+            <div class="config-subtitle">Disable the optional Mass Queue integration even if it is installed.</div>
+          </div>
             <div class="form-row form-row-multi-column">
               <div class="grow-children number-input-with-note">
                 <ha-selector-number

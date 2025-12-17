@@ -75,6 +75,7 @@ Below you will find a list of all configuration options.
 | `search_results_sort`      | choice       | No           | `default`   | Order search results by `default`, `title_asc`, `title_desc`, `artist_asc`, or `artist_desc`; sorting happens within the results returned by `search_results_limit` |
 | `disable_autofocus`        | boolean      | No           | `false`     | Prevent the search box from auto-focusing so on-screen keyboards stay hidden when opening search sheets |
 | `keep_filters_on_search`   | boolean      | No           | `false`     | Enable this to search within the current active filter (Favorites, etc) instead of clearing it |
+| `disable_mass_queue`       | boolean      | No           | `false`     | Disable the optional mass_queue integration even if it is installed |
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
