@@ -1192,7 +1192,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
 
 
-      // Only reset filter states if this is a completely new search (not just switching filters)
+      // Initialize/Reset internal states when config changes is a completely new search (not just switching filters)
       const isNewSearch = this._currentSearchQuery !== this._searchQuery;
       if (isNewSearch) {
         this._favoritesFilterActive = false;
@@ -1999,6 +1999,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Check if mass_queue integration is available and enabled
   async _isMassQueueIntegrationAvailable(hass) {
+    if (this.config.disable_mass_queue) {
+      return false;
+    }
     try {
       // First check if the mass_queue domain is available in services
       const services = await hass.callWS({
@@ -3225,7 +3228,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
-    this.config = config;
+    this.config = { ...config };
     const layoutPref = typeof config.control_layout === "string" ? config.control_layout.toLowerCase() : "classic";
     this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
     this._swapPauseForStop = config.swap_pause_for_stop === true;
@@ -7248,7 +7251,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return document.createElement("yet-another-media-player-editor");
   }
   static getStubConfig(hass, entities) {
-    return { entities: (entities || []).filter(e => e.startsWith("media_player.")).slice(0, 2) };
+    return {
+      entities: (entities || []).filter(e => e.startsWith("media_player.")).slice(0, 2),
+      disable_mass_queue: false,
+    };
   }
 
   // Group all supported entities to current master
