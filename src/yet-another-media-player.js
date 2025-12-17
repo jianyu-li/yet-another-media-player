@@ -1999,7 +1999,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Check if mass_queue integration is available and enabled
   async _isMassQueueIntegrationAvailable(hass) {
-    if (this.config.disable_mass_queue) {
+    if (this.config.disable_mass_queue === true) {
       return false;
     }
     try {
