@@ -85,6 +85,9 @@ export function renderSearchSheet({
   matchTheme = false, // Add matchTheme parameter
   upcomingFilterActive = false, // Add upcoming filter parameter
   disableAutofocus = false,
+  activeOptionsItem,
+  onOptionsToggle,
+  onPlayOption,
 }) {
   if (!open) return nothing;
   return html`
@@ -131,14 +134,54 @@ export function renderSearchSheet({
                       ▶
                     </button>
                     ${!(upcomingFilterActive && item.queue_item_id) ? html`
-                      <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onQueue(item); }} title="Add to Queue">
-                        <ha-icon icon="mdi:playlist-play"></ha-icon>
+                      <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="More Options">
+                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
                       </button>
                     ` : nothing}
                   </div>
                 </div>
               `
       )}
+      </div>
+    </div>
+  `;
+}
+
+export function renderSearchOptionsOverlay({ item, onClose, onPlayOption }) {
+  if (!item) return nothing;
+
+  return html`
+    <div class="entity-options-overlay entity-options-overlay-opening" @click=${onClose}>
+      <div class="entity-options-container entity-options-sheet-opening" @click=${(e) => e.stopPropagation()}>
+        <div class="entity-options-sheet">
+          <div class="entity-options-title">${item.title}</div>
+          
+          <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, 'replace')}>
+            <ha-icon class="menu-action-icon" icon="mdi:playlist-remove"></ha-icon>
+            <span class="menu-action-label">Replace</span>
+          </button>
+          
+          <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, 'next')}>
+            <ha-icon class="menu-action-icon" icon="mdi:playlist-play"></ha-icon>
+            <span class="menu-action-label">Play Next</span>
+          </button>
+          
+          <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, 'replace_next')}>
+            <ha-icon class="menu-action-icon" icon="mdi:playlist-music"></ha-icon>
+            <span class="menu-action-label">Replace Next</span>
+          </button>
+          
+          <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, 'add')}>
+            <ha-icon class="menu-action-icon" icon="mdi:playlist-plus"></ha-icon>
+            <span class="menu-action-label">Add to Queue</span>
+          </button>
+          
+          <div class="entity-options-divider"></div>
+          
+          <button class="entity-options-item close-item" @click=${onClose}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   `;
