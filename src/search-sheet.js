@@ -1,6 +1,13 @@
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { LitElement, html, css, nothing } from "lit";
 
+const playOptions = [
+  { mode: 'replace', icon: 'mdi:playlist-remove', label: 'Replace' },
+  { mode: 'next', icon: 'mdi:playlist-play', label: 'Play Next' },
+  { mode: 'replace_next', icon: 'mdi:playlist-music', label: 'Replace Next' },
+  { mode: 'add', icon: 'mdi:playlist-plus', label: 'Add to Queue' },
+];
+
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
   const numericLimit = Number(limit);
   if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
@@ -194,25 +201,12 @@ export function renderSearchOptionsOverlay({ item, onClose, onPlayOption }) {
         <div class="entity-options-sheet">
           <div class="entity-options-title">${item.title}</div>
           
-          <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, 'replace')}>
-            <ha-icon class="menu-action-icon" icon="mdi:playlist-remove"></ha-icon>
-            <span class="menu-action-label">Replace</span>
-          </button>
-          
-          <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, 'next')}>
-            <ha-icon class="menu-action-icon" icon="mdi:playlist-play"></ha-icon>
-            <span class="menu-action-label">Play Next</span>
-          </button>
-          
-          <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, 'replace_next')}>
-            <ha-icon class="menu-action-icon" icon="mdi:playlist-music"></ha-icon>
-            <span class="menu-action-label">Replace Next</span>
-          </button>
-          
-          <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, 'add')}>
-            <ha-icon class="menu-action-icon" icon="mdi:playlist-plus"></ha-icon>
-            <span class="menu-action-label">Add to Queue</span>
-          </button>
+          ${playOptions.map(option => html`
+            <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
+              <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
+              <span class="menu-action-label">${option.label}</span>
+            </button>
+          `)}
           
           <div class="entity-options-divider"></div>
           
