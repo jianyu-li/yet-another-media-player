@@ -2032,12 +2032,15 @@ export const yampCardStyles = css`
     position: absolute;
     inset: 0;
     left: 100%;
-    background: var(--search-input-bg, #1a1a1a);
+    background: rgba(0, 0, 0, 0.01) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 10;
     display: flex;
     align-items: center;
     padding: 0 8px;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 15px 0 0 15px;
     overflow-x: auto;
     scrollbar-width: none;
     gap: 4px;
@@ -2057,7 +2060,7 @@ export const yampCardStyles = css`
     border: none;
     color: #fff;
     padding: 6px 10px;
-    border-radius: 8px;
+    border-radius: 18px;
     cursor: pointer;
     font-size: 0.88em;
     font-weight: 500;
