@@ -318,7 +318,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _showQueueSuccessMessage: { state: true },
     _searchActiveOptionsItem: { state: true },
     _activeSearchRowMenuId: { state: true },
-    _successSearchRowMenuId: { state: true }
+    _successSearchRowMenuId: { state: true },
+    _radioModeActive: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -399,6 +400,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._recentlyPlayedFilterActive = false;
     this._upcomingFilterActive = false;
     this._recommendationsFilterActive = false;
+    this._radioModeActive = false;
     // mass_queue availability tracking
     this._massQueueAvailable = false;
     this._hasMassQueueIntegration = null;
@@ -1438,12 +1440,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
 
     try {
-      await this.hass.callService("music_assistant", "play_media", {
+      const playParams = {
         entity_id: targetEntityId,
         media_id: item.media_content_id,
         media_type: item.media_content_type,
         enqueue: mode
-      });
+      };
+      if (this._radioModeActive) {
+        playParams.radio_mode = true;
+      }
+
+      await this.hass.callService("music_assistant", "play_media", playParams);
       // Invalidate the "Next Up" cache because we've modified the queue
       this._invalidateUpcomingCache();
 
@@ -1473,7 +1480,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   async _invokePlayMedia(targetEntityId, item) {
     try {
-      await playSearchedMedia(this.hass, targetEntityId, item);
+      if (this._radioModeActive) {
+        await this.hass.callService("music_assistant", "play_media", {
+          entity_id: targetEntityId,
+          media_id: item.media_content_id,
+          media_type: item.media_content_type,
+          radio_mode: true
+        });
+      } else {
+        await playSearchedMedia(this.hass, targetEntityId, item);
+      }
       return true;
     } catch (error) {
       console.error("yamp: Error starting playback from search:", error);
@@ -1492,12 +1508,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     // Use enqueue: next to add to queue
-    this.hass.callService("media_player", "play_media", {
-      entity_id: targetEntityId,
-      media_content_type: item.media_content_type,
-      media_content_id: item.media_content_id,
-      enqueue: "next"
-    });
+    if (this._radioModeActive) {
+      this.hass.callService("music_assistant", "play_media", {
+        entity_id: targetEntityId,
+        media_id: item.media_content_id,
+        media_type: item.media_content_type,
+        enqueue: "add",
+        radio_mode: true
+      });
+    } else {
+      this.hass.callService("media_player", "play_media", {
+        entity_id: targetEntityId,
+        media_content_type: item.media_content_type,
+        media_content_id: item.media_content_id,
+        enqueue: "next"
+      });
+    }
 
     // Invalidate the "Next Up" cache
     this._invalidateUpcomingCache();
@@ -1650,6 +1676,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       delete this._searchResultsByType[cacheKey];
       this.requestUpdate();
     }
+  }
+
+  _toggleRadioMode() {
+    this._radioModeActive = !this._radioModeActive;
+    this.requestUpdate();
   }
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
@@ -6141,6 +6172,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           </button>
                         ` : nothing}
                       ` : nothing}
+                      <button
+                          class="button${this._radioModeActive ? ' active' : ''}"
+                          style="
+                            background: none;
+                            border: none;
+                            font-size: 1.25em;
+                            cursor: pointer;
+                            padding: 4px 8px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            display: flex;
+                            align-items: center;
+                            color: ${this._radioModeActive ? (this._customAccent || 'var(--accent-color)') : 'white'};
+                          "
+                          @click=${() => this._toggleRadioMode()}
+                          title="Radio Mode"
+                        >
+                          <ha-icon .icon=${this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off'}></ha-icon>
+                      </button>
                       ${this._shouldShowSearchSortToggle() ? html`
                         <button
                           class="button"

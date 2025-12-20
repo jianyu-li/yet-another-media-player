@@ -9123,6 +9123,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._recentlyPlayedFilterActive = false;
     this._upcomingFilterActive = false;
     this._recommendationsFilterActive = false;
+    this._radioModeActive = false;
     // mass_queue availability tracking
     this._massQueueAvailable = false;
     this._hasMassQueueIntegration = null;
@@ -10124,12 +10125,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     try {
-      await this.hass.callService("music_assistant", "play_media", {
+      const playParams = {
         entity_id: targetEntityId,
         media_id: item.media_content_id,
         media_type: item.media_content_type,
         enqueue: mode
-      });
+      };
+      if (this._radioModeActive) {
+        playParams.radio_mode = true;
+      }
+      await this.hass.callService("music_assistant", "play_media", playParams);
       // Invalidate the "Next Up" cache because we've modified the queue
       this._invalidateUpcomingCache();
 
@@ -10158,7 +10163,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
   }
   async _invokePlayMedia(targetEntityId, item) {
     try {
-      await playSearchedMedia(this.hass, targetEntityId, item);
+      if (this._radioModeActive) {
+        await this.hass.callService("music_assistant", "play_media", {
+          entity_id: targetEntityId,
+          media_id: item.media_content_id,
+          media_type: item.media_content_type,
+          radio_mode: true
+        });
+      } else {
+        await playSearchedMedia(this.hass, targetEntityId, item);
+      }
       return true;
     } catch (error) {
       console.error("yamp: Error starting playback from search:", error);
@@ -10175,12 +10189,22 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     // Use enqueue: next to add to queue
-    this.hass.callService("media_player", "play_media", {
-      entity_id: targetEntityId,
-      media_content_type: item.media_content_type,
-      media_content_id: item.media_content_id,
-      enqueue: "next"
-    });
+    if (this._radioModeActive) {
+      this.hass.callService("music_assistant", "play_media", {
+        entity_id: targetEntityId,
+        media_id: item.media_content_id,
+        media_type: item.media_content_type,
+        enqueue: "add",
+        radio_mode: true
+      });
+    } else {
+      this.hass.callService("media_player", "play_media", {
+        entity_id: targetEntityId,
+        media_content_type: item.media_content_type,
+        media_content_id: item.media_content_id,
+        enqueue: "next"
+      });
+    }
 
     // Invalidate the "Next Up" cache
     this._invalidateUpcomingCache();
@@ -10346,6 +10370,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
       delete this._searchResultsByType[cacheKey];
       this.requestUpdate();
     }
+  }
+  _toggleRadioMode() {
+    this._radioModeActive = !this._radioModeActive;
+    this.requestUpdate();
   }
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
@@ -14198,7 +14226,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
       if (classes.length < 2 && !this._usingMusicAssistant) return E;
       return x(_templateObject39 || (_templateObject39 = _taggedTemplateLiteral(["\n                      <div class=\"chip-row search-filter-chips\" id=\"search-filter-chip-row\" style=\"margin-bottom:12px; justify-content: center; align-items: center;\">\n                        <button\n                          class=\"chip\"\n                          style=\"\n                            width: 72px;\n                            background: ", ";\n                            opacity: ", ";\n                            font-weight: ", ";\n                          \"\n                          ?selected=", "\n                          @click=", "\n                        >All</button>\n                        ", "\n                      </div>\n                    "])), filter === 'all' ? this._customAccent : '#282828', filter === 'all' ? '1' : '0.8', filter === 'all' ? 'bold' : 'normal', filter === 'all', () => this._doSearch(), classes.map(c => x(_templateObject40 || (_templateObject40 = _taggedTemplateLiteral(["\n                          <button\n                            class=\"chip\"\n                            style=\"\n                              width: 72px;\n                              background: ", ";\n                              opacity: ", ";\n                              font-weight: ", ";\n                            \"\n                            ?selected=", "\n                            @click=", "\n                          >\n                            ", "\n                          </button>\n                        "])), filter === c ? this._customAccent : '#282828', filter === c ? '1' : '0.8', filter === c ? 'bold' : 'normal', filter === c, () => this._doSearch(c), c.charAt(0).toUpperCase() + c.slice(1))));
-    })(), this._searchLoading ? x(_templateObject41 || (_templateObject41 = _taggedTemplateLiteral(["<div class=\"entity-options-search-loading\">Loading...</div>"]))) : E, this._searchError ? x(_templateObject42 || (_templateObject42 = _taggedTemplateLiteral(["<div class=\"entity-options-search-error\">", "</div>"])), this._searchError) : E, this._usingMusicAssistant && !this._searchLoading ? x(_templateObject43 || (_templateObject43 = _taggedTemplateLiteral(["\n                    <div style=\"display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;\">\n                      <div style=\"display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;\">\n                        <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"Favorites\"\n                        >\n                                                  <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"Recently Played\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      ", "\n                      ", "\n                      ", "\n                    </div>\n                  "])), this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
+    })(), this._searchLoading ? x(_templateObject41 || (_templateObject41 = _taggedTemplateLiteral(["<div class=\"entity-options-search-loading\">Loading...</div>"]))) : E, this._searchError ? x(_templateObject42 || (_templateObject42 = _taggedTemplateLiteral(["<div class=\"entity-options-search-error\">", "</div>"])), this._searchError) : E, this._usingMusicAssistant && !this._searchLoading ? x(_templateObject43 || (_templateObject43 = _taggedTemplateLiteral(["\n                    <div style=\"display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;\">\n                      <div style=\"display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;\">\n                        <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"Favorites\"\n                        >\n                                                  <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"Recently Played\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      ", "\n                      <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.25em;\n                            cursor: pointer;\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            color: ", ";\n                          \"\n                          @click=", "\n                          title=\"Radio Mode\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                      </button>\n                      ", "\n                      ", "\n                    </div>\n                  "])), this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleFavoritesFilter();
     } : () => {}, this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline', this._initialFavoritesLoaded || this._favoritesFilterActive ? x(_templateObject44 || (_templateObject44 = _taggedTemplateLiteral(["\n                            <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                              Favorites\n                            </span>\n                          "]))) : E, this._recentlyPlayedFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleRecentlyPlayedFilter();
@@ -14206,7 +14234,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       this._toggleUpcomingFilter();
     } : () => {}, this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline', this._upcomingFilterActive ? x(_templateObject47 || (_templateObject47 = _taggedTemplateLiteral(["\n                              <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                Next Up\n                              </span>\n                            "]))) : E, this._hasMassQueueIntegration ? x(_templateObject48 || (_templateObject48 = _taggedTemplateLiteral(["\n                          <button\n                              class=\"button", "\"\n                              style=\"\n                                background: none;\n                                border: none;\n                                font-size: 1.2em;\n                                cursor: ", ";\n                                padding: 4px 8px;\n                                border-radius: 50%;\n                                transition: all 0.2s ease;\n                                margin-right: 8px;\n                                display: flex;\n                                align-items: center;\n                                opacity: ", ";\n                              \"\n                              @click=", "\n                              title=\"Recommendations\"\n                            >\n                              <ha-icon .icon=", "></ha-icon>\n                              ", "\n                          </button>\n                        "])), this._recommendationsFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleRecommendationsFilter();
-    } : () => {}, this._recommendationsFilterActive ? 'mdi:lightbulb-on' : 'mdi:lightbulb-on-outline', this._recommendationsFilterActive ? x(_templateObject49 || (_templateObject49 = _taggedTemplateLiteral(["\n                                <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                  Recommendations\n                                </span>\n                              "]))) : E) : E) : E, this._shouldShowSearchSortToggle() ? x(_templateObject50 || (_templateObject50 = _taggedTemplateLiteral(["\n                        <button\n                          class=\"button\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=", "\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                        </button>\n                      "])), this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}, this._getSearchSortToggleTitle(), this._getSearchSortToggleIcon()) : E, this._shouldShowSearchResultsCount() ? x(_templateObject51 || (_templateObject51 = _taggedTemplateLiteral(["\n                        <span style=\"margin-left:auto;padding-left:8px;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;text-align:right;flex-shrink:0;\">\n                          ", "\n                        </span>\n                      "])), this._getSearchResultsCountLabel()) : E) : E, (() => {
+    } : () => {}, this._recommendationsFilterActive ? 'mdi:lightbulb-on' : 'mdi:lightbulb-on-outline', this._recommendationsFilterActive ? x(_templateObject49 || (_templateObject49 = _taggedTemplateLiteral(["\n                                <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                  Recommendations\n                                </span>\n                              "]))) : E) : E) : E, this._radioModeActive ? ' active' : '', this._radioModeActive ? this._customAccent || 'var(--accent-color)' : 'white', () => this._toggleRadioMode(), this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off', this._shouldShowSearchSortToggle() ? x(_templateObject50 || (_templateObject50 = _taggedTemplateLiteral(["\n                        <button\n                          class=\"button\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=", "\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                        </button>\n                      "])), this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}, this._getSearchSortToggleTitle(), this._getSearchSortToggleIcon()) : E, this._shouldShowSearchResultsCount() ? x(_templateObject51 || (_templateObject51 = _taggedTemplateLiteral(["\n                        <span style=\"margin-left:auto;padding-left:8px;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;text-align:right;flex-shrink:0;\">\n                          ", "\n                        </span>\n                      "])), this._getSearchResultsCountLabel()) : E) : E, (() => {
       this._searchMediaClassFilter || "all";
       const currentResults = this._getDisplaySearchResults();
       // Build padded array so row‑count stays constant
@@ -15288,6 +15316,9 @@ _defineProperty$1(YetAnotherMediaPlayerCard, "properties", {
     state: true
   },
   _successSearchRowMenuId: {
+    state: true
+  },
+  _radioModeActive: {
     state: true
   }
 });
