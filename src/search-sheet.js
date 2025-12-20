@@ -129,7 +129,6 @@ export function renderSearchSheet({
                   <div style="flex:1;min-width:0;">
                     <span 
                       class="search-sheet-title ${item.is_browsable ? 'browsable' : ''}" 
-                      style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${item.is_browsable ? 'cursor:pointer;' : ''}" 
                       @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
                     >
                       ${item.title}
@@ -137,7 +136,6 @@ export function renderSearchSheet({
                     ${item.artist ? html`
                       <span 
                         class="search-sheet-subtitle ${item.is_browsable ? 'browsable' : ''}" 
-                        style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${item.is_browsable ? 'cursor:pointer;' : ''}" 
                         @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
                       >
                         ${item.artist}

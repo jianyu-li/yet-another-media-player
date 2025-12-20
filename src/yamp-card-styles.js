@@ -901,6 +901,35 @@ export const yampCardStyles = css`
     padding-right: 8px;
   }
 
+  .search-sheet-play,
+  .search-sheet-queue {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background 0.2s;
+  }
+
+  .radio-mode-button {
+    background: none;
+    border: none;
+    font-size: 1.25em;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    color: #fff;
+  }
+
+  .radio-mode-button.active {
+    color: var(--custom-accent, var(--accent-color));
+  }
+
   .volume-icon-btn {
     background: none;
     border: none;
@@ -2618,12 +2647,27 @@ export const yampCardStyles = css`
     flex: 1;
     color: #fff;
     font-size: 16px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .search-sheet-subtitle {
+    display: block;
+    color: var(--secondary-text-color, #888);
+    font-size: 0.9em;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .search-sheet-title.browsable,
   .search-sheet-subtitle.browsable {
     color: var(--custom-accent) !important;
     text-decoration: none;
+    cursor: pointer;
   }
 
   .search-sheet-title.browsable:hover,

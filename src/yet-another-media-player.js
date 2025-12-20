@@ -6173,20 +6173,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         ` : nothing}
                       ` : nothing}
                       <button
-                          class="button${this._radioModeActive ? ' active' : ''}"
-                          style="
-                            background: none;
-                            border: none;
-                            font-size: 1.25em;
-                            cursor: pointer;
-                            padding: 4px 8px;
-                            border-radius: 50%;
-                            transition: all 0.2s ease;
-                            margin-right: 8px;
-                            display: flex;
-                            align-items: center;
-                            color: ${this._radioModeActive ? (this._customAccent || 'var(--accent-color)') : 'white'};
-                          "
+                          class="radio-mode-button${this._radioModeActive ? ' active' : ''}"
                           @click=${() => this._toggleRadioMode()}
                           title="Radio Mode"
                         >
