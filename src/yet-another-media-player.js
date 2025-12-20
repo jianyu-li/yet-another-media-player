@@ -6713,7 +6713,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
           disableAutofocus: this._disableSearchAutofocus,
         })
         : nothing}
-        : nothing}
         </ha-card>
       `;
   }
