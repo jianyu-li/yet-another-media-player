@@ -49,7 +49,7 @@ export const yampCardStyles = css`
   }
 
   :host([data-match-theme="false"]) {
-    --custom-accent: #ff9800 !important;
+    --custom-accent: #ff9800 ;
     
     /* Search sheet default theme variables when match_theme is false */
     --search-overlay-bg: rgba(0, 0, 0, 0.8);
@@ -500,7 +500,7 @@ export const yampCardStyles = css`
   /* Override action chip colors when match_theme is false */
   :host([data-match-theme="false"]) .action-chip:hover,
   :host([data-match-theme="false"]) .action-chip:active {
-    background: #ff9800 !important;
+    background: #ff9800 ;
   }
 
   /* Main chips */
@@ -1348,17 +1348,17 @@ export const yampCardStyles = css`
   }
 
   .card-lower-content.collapsed.has-artwork .controls-row {
-    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) !important;
-    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) !important;
-    width: auto !important;
+    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) ;
+    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) ;
+    width: auto ;
   }
 
   /* Medium screens */
   @media (max-width: 600px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) !important;
-      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) !important;
-      width: auto !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) ;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) ;
+      width: auto ;
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
@@ -1376,9 +1376,9 @@ export const yampCardStyles = css`
   /* Small screens */
   @media (max-width: 420px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) !important;
-      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) !important;
-      width: auto !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) ;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) ;
+      width: auto ;
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
@@ -1396,9 +1396,9 @@ export const yampCardStyles = css`
   /* Very small screens */
   @media (max-width: 320px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) !important;
-      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) !important;
-      width: auto !important;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) ;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) ;
+      width: auto ;
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
@@ -1788,10 +1788,10 @@ export const yampCardStyles = css`
 
   /* Ensure entity-options-sheet honors match_theme for accent color */
   :host([data-match-theme="false"]) .entity-options-sheet {
-    --custom-accent: #ff9800 !important;
+    --custom-accent: #ff9800 ;
   }
   :host([data-match-theme="true"]) .entity-options-sheet {
-    --custom-accent: var(--accent-color, #ff9800) !important;
+    --custom-accent: var(--accent-color, #ff9800) ;
   }
 
   .entity-options-sheet::-webkit-scrollbar {
@@ -2061,7 +2061,7 @@ export const yampCardStyles = css`
     position: absolute;
     inset: 0;
     left: 100%;
-    background: rgba(0, 0, 0, 0.01) !important;
+    background: rgba(0, 0, 0, 0.01) ;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: 10;
@@ -2276,8 +2276,8 @@ export const yampCardStyles = css`
 
   /* Visual feedback for moved queue items */
   .entity-options-search-result.just-moved {
-    background: rgba(76, 175, 80, 0.2) !important;
-    border-left: 3px solid #4caf50 !important;
+    background: rgba(76, 175, 80, 0.2) ;
+    border-left: 3px solid #4caf50 ;
     animation: queueMoveHighlight 1s ease-out;
   }
 
@@ -2390,20 +2390,20 @@ export const yampCardStyles = css`
 
   /* Override filter chip hover text color when match_theme is false */
   :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:hover {
-    color: #fff !important;
+    color: #fff ;
   }
 
   /* Add hover effect for inactive filter chips when match_theme is false */
   :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
-    background: var(--custom-accent) !important;
-    color: #fff !important;
+    background: var(--custom-accent) ;
+    color: #fff ;
     opacity: 1;
   }
 
   /* Add hover effect for inactive filter chips when match_theme is true */
   :host([data-match-theme="true"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
-    background: var(--custom-accent) !important;
-    color: #111 !important;
+    background: var(--custom-accent) ;
+    color: #111 ;
     opacity: 1;
   }
 
@@ -2479,9 +2479,9 @@ export const yampCardStyles = css`
 
   .entity-options-resolved-entities .entity-options-item:hover,
   .entity-options-resolved-entities .entity-options-item:focus {
-    color: var(--custom-accent) !important;
-    text-shadow: none !important;
-    background: none !important;
+    color: var(--custom-accent) ;
+    text-shadow: none ;
+    background: none ;
   }
 
   .entity-options-resolved-entities .entity-options-item:last-child {
@@ -2665,7 +2665,7 @@ export const yampCardStyles = css`
 
   .search-sheet-title.browsable,
   .search-sheet-subtitle.browsable {
-    color: var(--custom-accent) !important;
+    color: var(--custom-accent) ;
     text-decoration: none;
     cursor: pointer;
   }
@@ -2719,154 +2719,154 @@ export const yampCardStyles = css`
 
   /* Override styles when match_theme is false - force default colors */
   .search-sheet[data-match-theme="false"] {
-    background: rgba(0, 0, 0, 0.8) !important;
+    background: rgba(0, 0, 0, 0.8) ;
     
     /* Define CSS custom properties directly on the search sheet when match_theme is false */
-    --custom-accent: #ff9800 !important;
-    --search-overlay-bg: rgba(0, 0, 0, 0.8) !important;
-    --search-input-bg: #333 !important;
-    --search-input-text: #fff !important;
-    --search-text: #fff !important;
-    --search-error: #ff6b6b !important;
-    --search-success: #4caf50 !important;
-    --search-success-bg: rgba(76, 175, 80, 0.95) !important;
-    --search-border: rgba(255, 255, 255, 0.1) !important;
-    --search-hover-bg: rgba(255, 255, 255, 0.1) !important;
-    --search-play-hover: #e68900 !important;
-    --search-queue-bg: #4a4a4a !important;
-    --search-queue-border: #666 !important;
-    --search-queue-hover: #5a5a5a !important;
-    --search-queue-hover-border: #777 !important;
+    --custom-accent: #ff9800 ;
+    --search-overlay-bg: rgba(0, 0, 0, 0.8) ;
+    --search-input-bg: #333 ;
+    --search-input-text: #fff ;
+    --search-text: #fff ;
+    --search-error: #ff6b6b ;
+    --search-success: #4caf50 ;
+    --search-success-bg: rgba(76, 175, 80, 0.95) ;
+    --search-border: rgba(255, 255, 255, 0.1) ;
+    --search-hover-bg: rgba(255, 255, 255, 0.1) ;
+    --search-play-hover: #e68900 ;
+    --search-queue-bg: #4a4a4a ;
+    --search-queue-border: #666 ;
+    --search-queue-hover: #5a5a5a ;
+    --search-queue-hover-border: #777 ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-header input {
-    background: #333 !important;
-    color: #fff !important;
+    background: #333 ;
+    color: #fff ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-header button {
-    background: #ff9800 !important;
-    color: #fff !important;
+    background: #ff9800 ;
+    color: #fff ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-loading,
   .search-sheet[data-match-theme="false"] .search-sheet-error,
   .search-sheet[data-match-theme="false"] .search-sheet-success,
   .search-sheet[data-match-theme="false"] .search-sheet-empty {
-    color: #fff !important;
+    color: #fff ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-error {
-    color: #ff6b6b !important;
+    color: #ff6b6b ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-success {
-    color: #4caf50 !important;
-    background: rgba(76, 175, 80, 0.95) !important;
-    border: 2px solid #4caf50 !important;
+    color: #4caf50 ;
+    background: rgba(76, 175, 80, 0.95) ;
+    border: 2px solid #4caf50 ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-result {
-    color: #fff !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #fff ;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-result:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.1) ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-title {
-    color: #fff !important;
+    color: #fff ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-play {
-    background: var(--custom-accent) !important;
-    color: #fff !important;
+    background: var(--custom-accent) ;
+    color: #fff ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-play:hover {
-    background: #e68900 !important;
+    background: #e68900 ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-queue {
-    background: #4a4a4a !important;
-    color: #fff !important;
-    border: 1px solid #666 !important;
+    background: #4a4a4a ;
+    color: #fff ;
+    border: 1px solid #666 ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-queue:hover {
-    background: #5a5a5a !important;
-    border-color: #777 !important;
+    background: #5a5a5a ;
+    border-color: #777 ;
   }
 
   /* Additional overrides for search sheet elements that might inherit theme colors */
   .search-sheet[data-match-theme="false"] .clickable-search-result {
-    color: #ff9800 !important;
+    color: #ff9800 ;
   }
 
   .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
-    color: #fff !important;
+    color: #fff ;
   }
 
   /* Override the base clickable-search-result styles when match_theme is false */
   .search-sheet[data-match-theme="false"] .clickable-search-result,
   .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
-    color: #ff9800 !important;
+    color: #ff9800 ;
   }
 
   .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
-    color: #fff !important;
+    color: #fff ;
   }
 
   /* Override any other elements that might be using theme variables */
   .search-sheet[data-match-theme="false"] * {
-    color: #fff !important;
+    color: #fff ;
   }
 
   .search-sheet[data-match-theme="false"] .clickable-search-result {
-    color: #ff9800 !important;
+    color: #ff9800 ;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-play,
   .search-sheet[data-match-theme="false"] .search-sheet-queue {
-    color: #fff !important;
+    color: #fff ;
   }
 
   /* Force all text to be white when match_theme is false */
   .search-sheet[data-match-theme="false"] .search-sheet-title,
   .search-sheet[data-match-theme="false"] .search-sheet-loading,
   .search-sheet[data-match-theme="false"] .search-sheet-empty {
-    color: #fff !important;
+    color: #fff ;
   }
 
   /* Nuclear option: Override ALL elements that might be using --custom-accent or theme colors */
   .search-sheet[data-match-theme="false"] *[style*="color"] {
-    color: #fff !important;
+    color: #fff ;
   }
 
   .search-sheet[data-match-theme="false"] *[style*="background"] {
-    background: rgba(0, 0, 0, 0.8) !important;
+    background: rgba(0, 0, 0, 0.8) ;
   }
 
   /* Force override any CSS custom properties that might be inherited */
   .search-sheet[data-match-theme="false"] {
-    --custom-accent: #ff9800 !important;
-    --accent-color: #ff9800 !important;
-    --primary-color: #ff9800 !important;
-    --ha-accent-color: #ff9800 !important;
+    --custom-accent: #ff9800 ;
+    --accent-color: #ff9800 ;
+    --primary-color: #ff9800 ;
+    --ha-accent-color: #ff9800 ;
   }
 
   /* Also redefine --custom-accent locally in the search sheet, just like entity-options-resolved-entities does */
   .search-sheet[data-match-theme="false"] {
-    --custom-accent: #ff9800 !important;
+    --custom-accent: #ff9800 ;
   }
 
   /* Also override at the root level when match_theme is false */
   yet-another-media-player[data-match-theme="false"] {
-    --custom-accent: #ff9800 !important;
-    --accent-color: #ff9800 !important;
-    --primary-color: #ff9800 !important;
-    --ha-accent-color: #ff9800 !important;
+    --custom-accent: #ff9800 ;
+    --accent-color: #ff9800 ;
+    --primary-color: #ff9800 ;
+    --ha-accent-color: #ff9800 ;
   }
 
   /* Override any elements that might be using CSS custom properties */
@@ -2875,14 +2875,14 @@ export const yampCardStyles = css`
   .search-sheet[data-match-theme="false"] *[style*="background: var(--custom-accent)"],
   .search-sheet[data-match-theme="false"] *[style*="background: var(--accent-color)"],
   .search-sheet[data-match-theme="false"] *[style*="background: var(--primary-color)"] {
-    background: #ff9800 !important;
-    color: #fff !important;
+    background: #ff9800 ;
+    color: #fff ;
   }
 
   /* Override any elements that might be using CSS custom properties for color */
   .search-sheet[data-match-theme="false"] *[style*="color: var(--custom-accent)"],
   .search-sheet[data-match-theme="false"] *[style*="color: var(--accent-color)"],
   .search-sheet[data-match-theme="false"] *[style*="color: var(--primary-color)"] {
-    color: #ff9800 !important;
+    color: #ff9800 ;
   }
 `;
