@@ -85,7 +85,7 @@ export function renderSearchSheet({
   matchTheme = false, // Add matchTheme parameter
   upcomingFilterActive = false, // Add upcoming filter parameter
   disableAutofocus = false,
-  activeOptionsItem,
+  activeSearchRowMenuId,
   onOptionsToggle,
   onPlayOption,
 }) {
@@ -110,7 +110,7 @@ export function renderSearchSheet({
       ? html`<div class="search-sheet-empty">No results.</div>`
       : (results || []).map(
         (item) => html`
-                <div class="search-sheet-result">
+                <div class="search-sheet-result" style="position:relative;overflow:hidden;">
                   ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? html`
                     <img
                       class="search-sheet-thumb"
@@ -123,12 +123,14 @@ export function renderSearchSheet({
                       <ha-icon icon="mdi:music"></ha-icon>
                     </div>
                   `}
-                  <span class="search-sheet-title">${item.title}</span>
-                  ${item.artist ? html`
-                    <span class="search-sheet-subtitle" style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;">
-                      ${item.artist}
-                    </span>
-                  ` : nothing}
+                  <div style="flex:1;min-width:0;">
+                    <span class="search-sheet-title" style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title}</span>
+                    ${item.artist ? html`
+                      <span class="search-sheet-subtitle" style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        ${item.artist}
+                      </span>
+                    ` : nothing}
+                  </div>
                   <div class="search-sheet-buttons">
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
                       ▶
@@ -138,6 +140,25 @@ export function renderSearchSheet({
                         <ha-icon icon="mdi:dots-vertical"></ha-icon>
                       </button>
                     ` : nothing}
+                  </div>
+                  
+                  <!-- SLIDE-OUT MENU -->
+                  <div class="search-row-slide-out ${activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')}>
+                      <ha-icon icon="mdi:playlist-remove"></ha-icon> Replace
+                    </button>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')}>
+                      <ha-icon icon="mdi:playlist-play"></ha-icon> Next
+                    </button>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')}>
+                      <ha-icon icon="mdi:playlist-music"></ha-icon> Replace Next
+                    </button>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')}>
+                      <ha-icon icon="mdi:playlist-plus"></ha-icon> Add
+                    </button>
+                    <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); onOptionsToggle(null); }}>
+                      <ha-icon icon="mdi:close"></ha-icon>
+                    </div>
                   </div>
                 </div>
               `

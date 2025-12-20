@@ -2016,6 +2016,8 @@ export const yampCardStyles = css`
   }
 
   .entity-options-search-result {
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2024,6 +2026,70 @@ export const yampCardStyles = css`
     font-size: 1.10em;
     color: var(--primary-text);
     background: none;
+  }
+
+  .search-row-slide-out {
+    position: absolute;
+    inset: 0;
+    left: 100%;
+    background: var(--search-input-bg, #1a1a1a);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 4px;
+  }
+
+  .search-row-slide-out::-webkit-scrollbar {
+    display: none;
+  }
+
+  .search-row-slide-out.active {
+    left: 0;
+  }
+
+  .slide-out-button {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.88em;
+    font-weight: 500;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .slide-out-button:hover {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .slide-out-button ha-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .slide-out-close {
+    margin-left: auto;
+    color: #888;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .slide-out-close:hover {
+    color: #fff;
   }
 
   .entity-options-search-result:last-child {
