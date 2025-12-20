@@ -48,7 +48,8 @@ function transformMusicAssistantItem(item) {
     media_class: item.media_type,
     thumbnail: item.image,
     ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
-    ...(item.album && { album: item.album.name })
+    ...(item.album && { album: item.album.name }),
+    is_browsable: item.media_type === 'artist' || item.media_type === 'album'
   };
 }
 
@@ -89,6 +90,7 @@ export function renderSearchSheet({
   successSearchRowMenuId,
   onOptionsToggle,
   onPlayOption,
+  onResultClick,
 }) {
   if (!open) return nothing;
   return html`
@@ -125,9 +127,19 @@ export function renderSearchSheet({
                     </div>
                   `}
                   <div style="flex:1;min-width:0;">
-                    <span class="search-sheet-title" style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title}</span>
+                    <span 
+                      class="search-sheet-title ${item.is_browsable ? 'browsable' : ''}" 
+                      style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${item.is_browsable ? 'cursor:pointer;' : ''}" 
+                      @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
+                    >
+                      ${item.title}
+                    </span>
                     ${item.artist ? html`
-                      <span class="search-sheet-subtitle" style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      <span 
+                        class="search-sheet-subtitle ${item.is_browsable ? 'browsable' : ''}" 
+                        style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${item.is_browsable ? 'cursor:pointer;' : ''}" 
+                        @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
+                      >
                         ${item.artist}
                       </span>
                     ` : nothing}

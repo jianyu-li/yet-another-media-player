@@ -2620,6 +2620,17 @@ export const yampCardStyles = css`
     font-size: 16px;
   }
 
+  .search-sheet-title.browsable,
+  .search-sheet-subtitle.browsable {
+    color: var(--custom-accent) !important;
+    text-decoration: none;
+  }
+
+  .search-sheet-title.browsable:hover,
+  .search-sheet-subtitle.browsable:hover {
+    text-decoration: underline;
+  }
+
   .search-sheet-buttons {
     display: flex;
     gap: 8px;

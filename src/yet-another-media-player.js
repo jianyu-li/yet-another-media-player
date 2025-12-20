@@ -1535,55 +1535,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     await this._doSearch('album', { clearFilters: true });
   }
 
-  // Handle hierarchical search - search for tracks by album
-  async _searchAlbumTracks(albumName, artistName) {
-    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery });
-    this._searchBreadcrumb = `Tracks from ${albumName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = albumName;
-    this._searchMediaClassFilter = 'track';
-
-    // Create a more specific search query that includes both artist and album
-    let searchQuery = albumName;
-    if (artistName) {
-      searchQuery = `${artistName} ${albumName}`;
-    }
-    this._searchQuery = searchQuery;
-
-    // Clear filter states to ensure accurate album search results
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._initialFavoritesLoaded = false;
-
-    // Pass artist and album as search parameters for more precise results
-    const searchParams = { album: albumName, clearFilters: true };
-    if (artistName) {
-      searchParams.artist = artistName;
-    }
-
-    // Remove swipe handlers when entering hierarchy
-    this._removeSearchSwipeHandlers();
-
-    // Use Music Assistant search with specific parameters for tracks
-    await this._doSearch('track', searchParams);
-  }
-
-  // Handle hierarchical search - search for tracks in playlist
-  async _searchPlaylistTracks(playlistName) {
-    this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery });
-    this._searchBreadcrumb = `Tracks in ${playlistName}`;
-    this._searchQuery = playlistName;
-    this._searchMediaClassFilter = 'track';
-
-    // For now, just search for tracks with the playlist name as a fallback
-    // This is not ideal but will work for some playlists
-
-    await this._doSearch('track');
-  }
 
   // Go back in search hierarchy
   _goBackInSearch() {
     if (this._searchHierarchy.length === 0) return;
+
+    // Immediate loading state
+    this._searchResults = [];
+    this._searchLoading = true;
+    this.requestUpdate();
 
     const previousLevel = this._searchHierarchy.pop();
     this._searchQuery = previousLevel.query;
@@ -1594,11 +1554,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._searchBreadcrumb = "";
       this._searchMediaClassFilter = 'all';
       this._doSearch();
-
-      // Re-attach swipe handlers when returning to top level
-      // setTimeout(() => {
-      //   this._attachSearchSwipe(); // Disabled on mobile due to false positives
-      // }, 100);
     } else {
       const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
       if (currentLevel.type === 'artist') {
@@ -1608,7 +1563,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else if (currentLevel.type === 'album') {
         this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
         this._searchMediaClassFilter = 'track';
-        // Get the artist name from the hierarchy if available
+        if (currentLevel.uri && this._isMusicAssistantEntity()) {
+          this._searchQuery = currentLevel.name;
+          this._searchAlbumTracks(currentLevel.name, null, currentLevel.uri);
+          return;
+        }
+        // Fallback search
         const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
         const searchParams = { album: currentLevel.name };
         if (artistLevel) {
@@ -1618,6 +1578,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else if (currentLevel.type === 'playlist') {
         this._searchBreadcrumb = `Tracks in ${currentLevel.name}`;
         this._searchMediaClassFilter = 'track';
+        if (currentLevel.uri && this._isMusicAssistantEntity()) {
+          this._searchQuery = currentLevel.name;
+          this._showPlaylistTracks({ title: currentLevel.name, media_content_id: currentLevel.uri });
+          return;
+        }
         this._doSearch('track');
       }
     }
@@ -1625,22 +1590,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Check if a search result is clickable for hierarchical navigation
   _isClickableSearchResult(item) {
-    if (!item || !item.media_class) return false;
-
-    // Artist results are clickable when we're in the main search (to go to albums)
-    if (item.media_class === 'artist' && this._searchHierarchy.length === 0) {
-      return true;
-    }
-
-    // Album results are clickable when we're in the main search or viewing artist albums (to go to tracks)
-    if (item.media_class === 'album' &&
-      (this._searchHierarchy.length === 0 ||
-        (this._searchHierarchy.length > 0 && this._searchHierarchy[this._searchHierarchy.length - 1].type === 'artist'))) {
-      return true;
-    }
-
-    // Playlists are not clickable since track listing doesn't work properly
-    return false;
+    if (!item) return false;
+    return !!item.is_browsable;
   }
 
   // Handle touch events to prevent accidental clicks during scrolling
@@ -2757,26 +2708,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else if (item.artist) {
         artistName = item.artist;
       }
-      await this._searchAlbumTracks(item.title, artistName);
-    } else if (item.media_class === 'playlist') {
-      // Playlists are not clickable - just play the playlist directly
-      await this._playMediaFromSearch(item);
+      await this._searchAlbumTracks(item.title, artistName, item.media_content_id);
     }
   }
 
-  // Show playlist tracks
-  async _showPlaylistTracks(playlistItem) {
-    try {
+  // Handle hierarchical search - search for tracks by album
+  async _searchAlbumTracks(albumName, artistName, albumUri = null) {
+    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri });
+    this._searchBreadcrumb = `Tracks from ${albumName}`;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = albumName;
+    this._searchMediaClassFilter = 'track';
 
+    // Immediate loading state
+    this._searchResults = [];
+    this._searchLoading = true;
+    this.requestUpdate();
 
-      // Add to search hierarchy
-      this._searchHierarchy.push({ type: 'playlist', name: playlistItem.title, query: this._searchQuery });
-      this._searchBreadcrumb = `Tracks in ${playlistItem.title}`;
-
-      // Try to get playlist tracks using media_player.browse_media
-      if (playlistItem.media_content_id) {
-
-
+    // If we're using Music Assistant and have a URI, use browse_media for 100% consistency
+    if (albumUri && this._isMusicAssistantEntity()) {
+      try {
         const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
         const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
 
@@ -2786,44 +2737,53 @@ class YetAnotherMediaPlayerCard extends LitElement {
           service: "browse_media",
           service_data: {
             entity_id: searchEntityId,
-            media_content_id: playlistItem.media_content_id,
+            media_content_id: albumUri,
           },
           return_response: true,
         };
 
         const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
-
-
         const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
         const tracks = browseResult.children || [];
 
         if (tracks.length > 0) {
-
-
-          // Set the tracks as search results
+          this._searchQuery = albumName;
           this._searchResults = this._sortSearchResults(tracks);
-          this._searchMediaClassFilter = 'track';
           this._searchTotalRows = Math.max(15, tracks.length);
+          this._searchLoading = false;
           this.requestUpdate();
           return;
         }
+      } catch (e) {
+        console.error("yamp: Failed to browse album tracks:", e);
       }
-
-      // Fallback: show a message that playlist tracks aren't available
-
-      this._searchResults = [];
-      this._searchMediaClassFilter = 'track';
-      this._searchTotalRows = 15;
-      this.requestUpdate();
-    } catch (error) {
-
-      // Show empty results
-      this._searchResults = [];
-      this._searchMediaClassFilter = 'track';
-      this._searchTotalRows = 15;
-      this.requestUpdate();
     }
+
+    // Fallback to search-based navigation
+    let searchQuery = albumName;
+    if (artistName) {
+      searchQuery = `${artistName} ${albumName}`;
+    }
+    this._searchQuery = searchQuery;
+
+    // Clear filter states to ensure accurate album search results
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._initialFavoritesLoaded = false;
+
+    // Pass artist and album as search parameters for more precise results
+    const searchParams = { album: albumName, clearFilters: true };
+    if (artistName) {
+      searchParams.artist = artistName;
+    }
+
+    // Remove swipe handlers when entering hierarchy
+    this._removeSearchSwipeHandlers();
+
+    // Use Music Assistant search with specific parameters for tracks
+    await this._doSearch('track', searchParams);
   }
+
 
 
   // Notify Home Assistant to recalculate layout
@@ -6704,6 +6664,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           onPlay: item => this._playMediaFromSearch(item),
           onQueue: item => this._queueMediaFromSearch(item),
           onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
+          onResultClick: (item) => this._handleSearchResultClick(item),
           activeSearchRowMenuId: this._activeSearchRowMenuId,
           successSearchRowMenuId: this._successSearchRowMenuId,
           onOptionsToggle: (item) => {
