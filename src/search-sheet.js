@@ -86,6 +86,7 @@ export function renderSearchSheet({
   upcomingFilterActive = false, // Add upcoming filter parameter
   disableAutofocus = false,
   activeSearchRowMenuId,
+  successSearchRowMenuId,
   onOptionsToggle,
   onPlayOption,
 }) {
@@ -144,21 +145,27 @@ export function renderSearchSheet({
                   
                   <!-- SLIDE-OUT MENU -->
                   <div class="search-row-slide-out ${activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
-                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')}>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="Replace existing queue and play now">
                       <ha-icon icon="mdi:playlist-remove"></ha-icon> Replace
                     </button>
-                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')}>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="Play next">
                       <ha-icon icon="mdi:playlist-play"></ha-icon> Next
                     </button>
-                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')}>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="Replace queue">
                       <ha-icon icon="mdi:playlist-music"></ha-icon> Replace Next
                     </button>
-                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')}>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="Add to the end of the queue">
                       <ha-icon icon="mdi:playlist-plus"></ha-icon> Add
                     </button>
                     <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); onOptionsToggle(null); }}>
                       <ha-icon icon="mdi:close"></ha-icon>
                     </div>
+
+                    ${successSearchRowMenuId === item.media_content_id ? html`
+                      <div class="search-row-success-overlay">
+                        ✅ Added to queue!
+                      </div>
+                    ` : nothing}
                   </div>
                 </div>
               `

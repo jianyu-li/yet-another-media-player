@@ -317,7 +317,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _holdToPin: { state: true },
     _showQueueSuccessMessage: { state: true },
     _searchActiveOptionsItem: { state: true },
-    _activeSearchRowMenuId: { state: true }
+    _activeSearchRowMenuId: { state: true },
+    _successSearchRowMenuId: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -392,6 +393,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showQueueSuccessMessage = false;
     this._searchActiveOptionsItem = null;
     this._activeSearchRowMenuId = null;
+    this._successSearchRowMenuId = null;
     // Search filter toggles
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
@@ -1331,8 +1333,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
             entity: maEntityId,
             queue_item_id: item.queue_item_id
           });
+          this._invalidateUpcomingCache();
+          return true;
         }
-        return true;
       } catch (error) {
         console.error('yamp: Error playing queue item:', error);
         // Fallback to next track if service call fails
@@ -1441,22 +1444,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
         media_type: item.media_content_type,
         enqueue: mode
       });
+      // Invalidate the "Next Up" cache because we've modified the queue
+      this._invalidateUpcomingCache();
 
-      // As requested, these actions should only dismiss the overlay and return to the results list
-      // regardless of dismiss_search_on_play setting.
-      this._searchActiveOptionsItem = null;
-      this._showQueueSuccessMessage = true;
-      this.requestUpdate();
-      setTimeout(() => {
-        this._showQueueSuccessMessage = false;
+      // For 'replace' mode, we dismiss according to settings and don't show success overlay
+      if (mode === 'replace') {
+        const shouldDismiss = this.config.dismiss_search_on_play !== false;
+        if (shouldDismiss) {
+          this._closeEntityOptions();
+        }
+        this._activeSearchRowMenuId = null;
+      } else {
+        // For other modes, show the localized success message overlay within the slide-out
+        this._successSearchRowMenuId = item.media_content_id;
         this.requestUpdate();
-      }, 3000);
-      this._showQueueSuccessMessage = true;
-      this.requestUpdate();
-      setTimeout(() => {
-        this._showQueueSuccessMessage = false;
-        this.requestUpdate();
-      }, 3000);
+        setTimeout(() => {
+          this._successSearchRowMenuId = null;
+          this._activeSearchRowMenuId = null; // Also dismiss the slide-out after message fades
+          this.requestUpdate();
+        }, 2000);
+      }
     } catch (e) {
       console.error("Failed to perform search option action:", e);
       this._searchError = "Action failed: " + e.message;
@@ -1491,6 +1498,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       media_content_id: item.media_content_id,
       enqueue: "next"
     });
+
+    // Invalidate the "Next Up" cache
+    this._invalidateUpcomingCache();
 
     // Show success message
     this._showQueueSuccessMessage = true;
@@ -1679,6 +1689,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!this._isClickableSearchResult(item)) return "";
 
     return getSearchResultClickTitle(item);
+  }
+
+  // Force-invalidate the "Next Up" results cache
+  _invalidateUpcomingCache() {
+    const classFilter = this._searchMediaClassFilter || 'all';
+    const cacheKey = `${classFilter}_upcoming`;
+    if (this._searchResultsByType) {
+      delete this._searchResultsByType[cacheKey];
+      this.requestUpdate();
+    }
   }
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
@@ -2156,6 +2176,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         entity: maEntityId,
         queue_item_id: queueItemId
       });
+      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2180,6 +2201,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         entity: maEntityId,
         queue_item_id: queueItemId
       });
+      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2204,6 +2226,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         entity: maEntityId,
         queue_item_id: queueItemId
       });
+      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2228,6 +2251,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         entity: maEntityId,
         queue_item_id: queueItemId
       });
+      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -6275,21 +6299,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 </div>
                                 <!-- SLIDE-OUT MENU -->
                                 <div class="search-row-slide-out ${this._activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
-                                  <button class="slide-out-button" @click=${() => { this._performSearchOptionAction(item, 'replace'); this._activeSearchRowMenuId = null; }}>
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace')} title="Replace existing queue and play now">
                                     <ha-icon icon="mdi:playlist-remove"></ha-icon> Replace
                                   </button>
-                                  <button class="slide-out-button" @click=${() => { this._performSearchOptionAction(item, 'next'); this._activeSearchRowMenuId = null; }}>
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'next')} title="Play next">
                                     <ha-icon icon="mdi:playlist-play"></ha-icon> Next
                                   </button>
-                                  <button class="slide-out-button" @click=${() => { this._performSearchOptionAction(item, 'replace_next'); this._activeSearchRowMenuId = null; }}>
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace_next')} title="Replace queue">
                                     <ha-icon icon="mdi:playlist-music"></ha-icon> Replace Next
                                   </button>
-                                  <button class="slide-out-button" @click=${() => { this._performSearchOptionAction(item, 'add'); this._activeSearchRowMenuId = null; }}>
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'add')} title="Add to the end of the queue">
                                     <ha-icon icon="mdi:playlist-plus"></ha-icon> Add
                                   </button>
                                   <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); this._activeSearchRowMenuId = null; this.requestUpdate(); }}>
                                     <ha-icon icon="mdi:close"></ha-icon>
                                   </div>
+
+                                  ${this._successSearchRowMenuId === item.media_content_id ? html`
+                                    <div class="search-row-success-overlay">
+                                      ✅ Added to queue!
+                                    </div>
+                                  ` : nothing}
                                 </div>
                             </div>
                           ` : html`
@@ -6673,17 +6703,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
           },
           onPlay: item => this._playMediaFromSearch(item),
           onQueue: item => this._queueMediaFromSearch(item),
+          onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
           activeSearchRowMenuId: this._activeSearchRowMenuId,
+          successSearchRowMenuId: this._successSearchRowMenuId,
           onOptionsToggle: (item) => {
             this._activeSearchRowMenuId = item ? item.media_content_id : null;
             this.requestUpdate();
           },
-          onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
           upcomingFilterActive: this._upcomingFilterActive,
           disableAutofocus: this._disableSearchAutofocus,
         })
         : nothing}
-        ${this._showQueueSuccessMessage ? html`<div class="priority-toast-success">✅ Added to queue!</div>` : nothing}
+        : nothing}
         </ha-card>
       `;
   }

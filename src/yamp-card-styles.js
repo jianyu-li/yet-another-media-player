@@ -2054,6 +2054,30 @@ export const yampCardStyles = css`
     left: 0;
   }
 
+  .search-row-success-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95em;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    z-index: 20;
+    border-radius: inherit;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+    animation: success-fade-in 0.3s ease;
+  }
+
+  @keyframes success-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
   .slide-out-button {
     flex: 0 0 auto;
     background: transparent;
