@@ -1,6 +1,13 @@
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { LitElement, html, css, nothing } from "lit";
 
+const playOptions = [
+  { mode: 'replace', icon: 'mdi:playlist-remove', label: 'Replace' },
+  { mode: 'next', icon: 'mdi:playlist-play', label: 'Play Next' },
+  { mode: 'replace_next', icon: 'mdi:playlist-music', label: 'Replace Next' },
+  { mode: 'add', icon: 'mdi:playlist-plus', label: 'Add to Queue' },
+];
+
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
   const numericLimit = Number(limit);
   if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
@@ -48,7 +55,8 @@ function transformMusicAssistantItem(item) {
     media_class: item.media_type,
     thumbnail: item.image,
     ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
-    ...(item.album && { album: item.album.name })
+    ...(item.album && { album: item.album.name }),
+    is_browsable: item.media_type === 'artist' || item.media_type === 'album'
   };
 }
 
@@ -85,6 +93,11 @@ export function renderSearchSheet({
   matchTheme = false, // Add matchTheme parameter
   upcomingFilterActive = false, // Add upcoming filter parameter
   disableAutofocus = false,
+  activeSearchRowMenuId,
+  successSearchRowMenuId,
+  onOptionsToggle,
+  onPlayOption,
+  onResultClick,
 }) {
   if (!open) return nothing;
   return html`
@@ -107,7 +120,7 @@ export function renderSearchSheet({
       ? html`<div class="search-sheet-empty">No results.</div>`
       : (results || []).map(
         (item) => html`
-                <div class="search-sheet-result">
+                <div class="search-sheet-result" style="position:relative;overflow:hidden;">
                   ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? html`
                     <img
                       class="search-sheet-thumb"
@@ -120,25 +133,87 @@ export function renderSearchSheet({
                       <ha-icon icon="mdi:music"></ha-icon>
                     </div>
                   `}
-                  <span class="search-sheet-title">${item.title}</span>
-                  ${item.artist ? html`
-                    <span class="search-sheet-subtitle" style="display:block;color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:2px;">
-                      ${item.artist}
+                  <div style="flex:1;min-width:0;">
+                    <span 
+                      class="search-sheet-title ${item.is_browsable ? 'browsable' : ''}" 
+                      @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
+                    >
+                      ${item.title}
                     </span>
-                  ` : nothing}
+                    ${item.artist ? html`
+                      <span 
+                        class="search-sheet-subtitle ${item.is_browsable ? 'browsable' : ''}" 
+                        @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
+                      >
+                        ${item.artist}
+                      </span>
+                    ` : nothing}
+                  </div>
                   <div class="search-sheet-buttons">
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
                       ▶
                     </button>
                     ${!(upcomingFilterActive && item.queue_item_id) ? html`
-                      <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onQueue(item); }} title="Add to Queue">
-                        <ha-icon icon="mdi:playlist-play"></ha-icon>
+                      <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="More Options">
+                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
                       </button>
+                    ` : nothing}
+                  </div>
+                  
+                  <!-- SLIDE-OUT MENU -->
+                  <div class="search-row-slide-out ${activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="Replace existing queue and play now">
+                      <ha-icon icon="mdi:playlist-remove"></ha-icon> Replace
+                    </button>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="Play next">
+                      <ha-icon icon="mdi:playlist-play"></ha-icon> Next
+                    </button>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="Replace queue">
+                      <ha-icon icon="mdi:playlist-music"></ha-icon> Replace Next
+                    </button>
+                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="Add to the end of the queue">
+                      <ha-icon icon="mdi:playlist-plus"></ha-icon> Add
+                    </button>
+                    <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); onOptionsToggle(null); }}>
+                      <ha-icon icon="mdi:close"></ha-icon>
+                    </div>
+
+                    ${successSearchRowMenuId === item.media_content_id ? html`
+                      <div class="search-row-success-overlay">
+                        ✅ Added to queue!
+                      </div>
                     ` : nothing}
                   </div>
                 </div>
               `
       )}
+      </div>
+    </div>
+  `;
+}
+
+export function renderSearchOptionsOverlay({ item, onClose, onPlayOption }) {
+  if (!item) return nothing;
+
+  return html`
+    <div class="entity-options-overlay entity-options-overlay-opening" @click=${onClose}>
+      <div class="entity-options-container entity-options-sheet-opening" @click=${(e) => e.stopPropagation()}>
+        <div class="entity-options-sheet">
+          <div class="entity-options-title">${item.title}</div>
+          
+          ${playOptions.map(option => html`
+            <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
+              <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
+              <span class="menu-action-label">${option.label}</span>
+            </button>
+          `)}
+          
+          <div class="entity-options-divider"></div>
+          
+          <button class="entity-options-item close-item" @click=${onClose}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   `;

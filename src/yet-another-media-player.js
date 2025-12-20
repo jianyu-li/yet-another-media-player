@@ -6,7 +6,7 @@ import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
-import { renderSearchSheet, searchMedia, playSearchedMedia, getFavorites, getRecentlyPlayed, isTrackFavorited } from "./search-sheet.js";
+import { renderSearchSheet, renderSearchOptionsOverlay, searchMedia, playSearchedMedia, getFavorites, getRecentlyPlayed, isTrackFavorited } from "./search-sheet.js";
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
 import {
   resolveTemplateAtActionTime,
@@ -315,7 +315,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _pinnedIndex: { state: true },
     _showSourceList: { state: true },
     _holdToPin: { state: true },
-    _showQueueSuccessMessage: { state: true }
+    _showQueueSuccessMessage: { state: true },
+    _searchActiveOptionsItem: { state: true },
+    _activeSearchRowMenuId: { state: true },
+    _successSearchRowMenuId: { state: true },
+    _radioModeActive: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -388,11 +392,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showResolvedEntities = false;
     // Queue success message
     this._showQueueSuccessMessage = false;
+    this._searchActiveOptionsItem = null;
+    this._activeSearchRowMenuId = null;
+    this._successSearchRowMenuId = null;
     // Search filter toggles
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
     this._upcomingFilterActive = false;
     this._recommendationsFilterActive = false;
+    this._radioModeActive = false;
     // mass_queue availability tracking
     this._massQueueAvailable = false;
     this._hasMassQueueIntegration = null;
@@ -1327,8 +1335,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
             entity: maEntityId,
             queue_item_id: item.queue_item_id
           });
+          this._invalidateUpcomingCache();
+          return true;
         }
-        return true;
       } catch (error) {
         console.error('yamp: Error playing queue item:', error);
         // Fallback to next track if service call fails
@@ -1426,9 +1435,61 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return false;
   }
 
+  async _performSearchOptionAction(item, mode) {
+    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
+
+    try {
+      const playParams = {
+        entity_id: targetEntityId,
+        media_id: item.media_content_id,
+        media_type: item.media_content_type,
+        enqueue: mode
+      };
+      if (this._radioModeActive) {
+        playParams.radio_mode = true;
+      }
+
+      await this.hass.callService("music_assistant", "play_media", playParams);
+      // Invalidate the "Next Up" cache because we've modified the queue
+      this._invalidateUpcomingCache();
+
+      // For 'replace' mode, we dismiss according to settings and don't show success overlay
+      if (mode === 'replace') {
+        const shouldDismiss = this.config.dismiss_search_on_play !== false;
+        if (shouldDismiss) {
+          this._closeEntityOptions();
+        }
+        this._activeSearchRowMenuId = null;
+      } else {
+        // For other modes, show the localized success message overlay within the slide-out
+        this._successSearchRowMenuId = item.media_content_id;
+        this.requestUpdate();
+        setTimeout(() => {
+          this._successSearchRowMenuId = null;
+          this._activeSearchRowMenuId = null; // Also dismiss the slide-out after message fades
+          this.requestUpdate();
+        }, 2000);
+      }
+    } catch (e) {
+      console.error("Failed to perform search option action:", e);
+      this._searchError = "Action failed: " + e.message;
+      this.requestUpdate();
+    }
+  }
+
   async _invokePlayMedia(targetEntityId, item) {
     try {
-      await playSearchedMedia(this.hass, targetEntityId, item);
+      if (this._radioModeActive) {
+        await this.hass.callService("music_assistant", "play_media", {
+          entity_id: targetEntityId,
+          media_id: item.media_content_id,
+          media_type: item.media_content_type,
+          radio_mode: true
+        });
+      } else {
+        await playSearchedMedia(this.hass, targetEntityId, item);
+      }
       return true;
     } catch (error) {
       console.error("yamp: Error starting playback from search:", error);
@@ -1447,12 +1508,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     // Use enqueue: next to add to queue
-    this.hass.callService("media_player", "play_media", {
-      entity_id: targetEntityId,
-      media_content_type: item.media_content_type,
-      media_content_id: item.media_content_id,
-      enqueue: "next"
-    });
+    if (this._radioModeActive) {
+      this.hass.callService("music_assistant", "play_media", {
+        entity_id: targetEntityId,
+        media_id: item.media_content_id,
+        media_type: item.media_content_type,
+        enqueue: "add",
+        radio_mode: true
+      });
+    } else {
+      this.hass.callService("media_player", "play_media", {
+        entity_id: targetEntityId,
+        media_content_type: item.media_content_type,
+        media_content_id: item.media_content_id,
+        enqueue: "next"
+      });
+    }
+
+    // Invalidate the "Next Up" cache
+    this._invalidateUpcomingCache();
 
     // Show success message
     this._showQueueSuccessMessage = true;
@@ -1487,55 +1561,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     await this._doSearch('album', { clearFilters: true });
   }
 
-  // Handle hierarchical search - search for tracks by album
-  async _searchAlbumTracks(albumName, artistName) {
-    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery });
-    this._searchBreadcrumb = `Tracks from ${albumName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = albumName;
-    this._searchMediaClassFilter = 'track';
-
-    // Create a more specific search query that includes both artist and album
-    let searchQuery = albumName;
-    if (artistName) {
-      searchQuery = `${artistName} ${albumName}`;
-    }
-    this._searchQuery = searchQuery;
-
-    // Clear filter states to ensure accurate album search results
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._initialFavoritesLoaded = false;
-
-    // Pass artist and album as search parameters for more precise results
-    const searchParams = { album: albumName, clearFilters: true };
-    if (artistName) {
-      searchParams.artist = artistName;
-    }
-
-    // Remove swipe handlers when entering hierarchy
-    this._removeSearchSwipeHandlers();
-
-    // Use Music Assistant search with specific parameters for tracks
-    await this._doSearch('track', searchParams);
-  }
-
-  // Handle hierarchical search - search for tracks in playlist
-  async _searchPlaylistTracks(playlistName) {
-    this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery });
-    this._searchBreadcrumb = `Tracks in ${playlistName}`;
-    this._searchQuery = playlistName;
-    this._searchMediaClassFilter = 'track';
-
-    // For now, just search for tracks with the playlist name as a fallback
-    // This is not ideal but will work for some playlists
-
-    await this._doSearch('track');
-  }
 
   // Go back in search hierarchy
   _goBackInSearch() {
     if (this._searchHierarchy.length === 0) return;
+
+    // Immediate loading state
+    this._searchResults = [];
+    this._searchLoading = true;
+    this.requestUpdate();
 
     const previousLevel = this._searchHierarchy.pop();
     this._searchQuery = previousLevel.query;
@@ -1546,11 +1580,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._searchBreadcrumb = "";
       this._searchMediaClassFilter = 'all';
       this._doSearch();
-
-      // Re-attach swipe handlers when returning to top level
-      // setTimeout(() => {
-      //   this._attachSearchSwipe(); // Disabled on mobile due to false positives
-      // }, 100);
     } else {
       const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
       if (currentLevel.type === 'artist') {
@@ -1560,7 +1589,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else if (currentLevel.type === 'album') {
         this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
         this._searchMediaClassFilter = 'track';
-        // Get the artist name from the hierarchy if available
+        if (currentLevel.uri && this._isMusicAssistantEntity()) {
+          this._searchQuery = currentLevel.name;
+          this._searchAlbumTracks(currentLevel.name, null, currentLevel.uri);
+          return;
+        }
+        // Fallback search
         const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
         const searchParams = { album: currentLevel.name };
         if (artistLevel) {
@@ -1570,6 +1604,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else if (currentLevel.type === 'playlist') {
         this._searchBreadcrumb = `Tracks in ${currentLevel.name}`;
         this._searchMediaClassFilter = 'track';
+        if (currentLevel.uri && this._isMusicAssistantEntity()) {
+          this._searchQuery = currentLevel.name;
+          this._showPlaylistTracks({ title: currentLevel.name, media_content_id: currentLevel.uri });
+          return;
+        }
         this._doSearch('track');
       }
     }
@@ -1577,22 +1616,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Check if a search result is clickable for hierarchical navigation
   _isClickableSearchResult(item) {
-    if (!item || !item.media_class) return false;
-
-    // Artist results are clickable when we're in the main search (to go to albums)
-    if (item.media_class === 'artist' && this._searchHierarchy.length === 0) {
-      return true;
-    }
-
-    // Album results are clickable when we're in the main search or viewing artist albums (to go to tracks)
-    if (item.media_class === 'album' &&
-      (this._searchHierarchy.length === 0 ||
-        (this._searchHierarchy.length > 0 && this._searchHierarchy[this._searchHierarchy.length - 1].type === 'artist'))) {
-      return true;
-    }
-
-    // Playlists are not clickable since track listing doesn't work properly
-    return false;
+    if (!item) return false;
+    return !!item.is_browsable;
   }
 
   // Handle touch events to prevent accidental clicks during scrolling
@@ -1641,6 +1666,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!this._isClickableSearchResult(item)) return "";
 
     return getSearchResultClickTitle(item);
+  }
+
+  // Force-invalidate the "Next Up" results cache
+  _invalidateUpcomingCache() {
+    const classFilter = this._searchMediaClassFilter || 'all';
+    const cacheKey = `${classFilter}_upcoming`;
+    if (this._searchResultsByType) {
+      delete this._searchResultsByType[cacheKey];
+      this.requestUpdate();
+    }
+  }
+
+  _toggleRadioMode() {
+    this._radioModeActive = !this._radioModeActive;
+    this.requestUpdate();
   }
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
@@ -2118,6 +2158,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         entity: maEntityId,
         queue_item_id: queueItemId
       });
+      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2142,6 +2183,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         entity: maEntityId,
         queue_item_id: queueItemId
       });
+      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2166,6 +2208,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         entity: maEntityId,
         queue_item_id: queueItemId
       });
+      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2190,6 +2233,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         entity: maEntityId,
         queue_item_id: queueItemId
       });
+      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2695,26 +2739,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else if (item.artist) {
         artistName = item.artist;
       }
-      await this._searchAlbumTracks(item.title, artistName);
-    } else if (item.media_class === 'playlist') {
-      // Playlists are not clickable - just play the playlist directly
-      await this._playMediaFromSearch(item);
+      await this._searchAlbumTracks(item.title, artistName, item.media_content_id);
     }
   }
 
-  // Show playlist tracks
-  async _showPlaylistTracks(playlistItem) {
-    try {
+  // Handle hierarchical search - search for tracks by album
+  async _searchAlbumTracks(albumName, artistName, albumUri = null) {
+    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri });
+    this._searchBreadcrumb = `Tracks from ${albumName}`;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = albumName;
+    this._searchMediaClassFilter = 'track';
 
+    // Immediate loading state
+    this._searchResults = [];
+    this._searchLoading = true;
+    this.requestUpdate();
 
-      // Add to search hierarchy
-      this._searchHierarchy.push({ type: 'playlist', name: playlistItem.title, query: this._searchQuery });
-      this._searchBreadcrumb = `Tracks in ${playlistItem.title}`;
-
-      // Try to get playlist tracks using media_player.browse_media
-      if (playlistItem.media_content_id) {
-
-
+    // If we're using Music Assistant and have a URI, use browse_media for 100% consistency
+    if (albumUri && this._isMusicAssistantEntity()) {
+      try {
         const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
         const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
 
@@ -2724,44 +2768,53 @@ class YetAnotherMediaPlayerCard extends LitElement {
           service: "browse_media",
           service_data: {
             entity_id: searchEntityId,
-            media_content_id: playlistItem.media_content_id,
+            media_content_id: albumUri,
           },
           return_response: true,
         };
 
         const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
-
-
         const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
         const tracks = browseResult.children || [];
 
         if (tracks.length > 0) {
-
-
-          // Set the tracks as search results
+          this._searchQuery = albumName;
           this._searchResults = this._sortSearchResults(tracks);
-          this._searchMediaClassFilter = 'track';
           this._searchTotalRows = Math.max(15, tracks.length);
+          this._searchLoading = false;
           this.requestUpdate();
           return;
         }
+      } catch (e) {
+        console.error("yamp: Failed to browse album tracks:", e);
       }
-
-      // Fallback: show a message that playlist tracks aren't available
-
-      this._searchResults = [];
-      this._searchMediaClassFilter = 'track';
-      this._searchTotalRows = 15;
-      this.requestUpdate();
-    } catch (error) {
-
-      // Show empty results
-      this._searchResults = [];
-      this._searchMediaClassFilter = 'track';
-      this._searchTotalRows = 15;
-      this.requestUpdate();
     }
+
+    // Fallback to search-based navigation
+    let searchQuery = albumName;
+    if (artistName) {
+      searchQuery = `${artistName} ${albumName}`;
+    }
+    this._searchQuery = searchQuery;
+
+    // Clear filter states to ensure accurate album search results
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._initialFavoritesLoaded = false;
+
+    // Pass artist and album as search parameters for more precise results
+    const searchParams = { album: albumName, clearFilters: true };
+    if (artistName) {
+      searchParams.artist = artistName;
+    }
+
+    // Remove swipe handlers when entering hierarchy
+    this._removeSearchSwipeHandlers();
+
+    // Use Music Assistant search with specific parameters for tracks
+    await this._doSearch('track', searchParams);
   }
+
 
 
   // Notify Home Assistant to recalculate layout
@@ -5926,7 +5979,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
-                  ` : nothing}
+                  ` : html`<div class="entity-options-search-skeleton"></div>`}
                   <div class="entity-options-search-row">
                       <input
                         type="text"
@@ -6119,6 +6172,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           </button>
                         ` : nothing}
                       ` : nothing}
+                      <button
+                          class="radio-mode-button${this._radioModeActive ? ' active' : ''}"
+                          @click=${() => this._toggleRadioMode()}
+                          title="Radio Mode"
+                        >
+                          <ha-icon .icon=${this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off'}></ha-icon>
+                      </button>
                       ${this._shouldShowSearchSortToggle() ? html`
                         <button
                           class="button"
@@ -6203,44 +6263,69 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 })()}
                                 </span>
                               </div>
-                              <div class="entity-options-search-buttons">
-                                <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
-                                  ▶
-                                </button>
-                                ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
-                                  <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
-                                    <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                <div class="entity-options-search-buttons">
+                                  <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
+                                    ▶
                                   </button>
-                                ` : html`
-                                  <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->
-                                  ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? html`
-                                    <div class="queue-controls">
-                                      <button class="queue-btn queue-btn-up" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }} title="Move Up">
-                                        <ha-icon icon="mdi:arrow-up"></ha-icon>
-                                      </button>
-                                      <button class="queue-btn queue-btn-down" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }} title="Move Down">
-                                        <ha-icon icon="mdi:arrow-down"></ha-icon>
-                                      </button>
-                                      <button class="queue-btn queue-btn-next" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }} title="Move to Next">
-                                        <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
-                                      </button>
-                                      <button class="queue-btn queue-btn-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }} title="Remove from Queue">
-                                        <ha-icon icon="mdi:close"></ha-icon>
-                                      </button>
-                                    </div>
-                                  ` : html`
-                                    <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._queueMediaFromSearch(item); }} title="Add to Queue">
-                                      <ha-icon icon="mdi:playlist-play"></ha-icon>
+                                  ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
+                                    <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="More Options">
+                                      <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                     </button>
+                                  ` : html`
+                                    <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->
+                                    ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? html`
+                                      <div class="queue-controls">
+                                        <button class="queue-btn queue-btn-up" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }} title="Move Up">
+                                          <ha-icon icon="mdi:arrow-up"></ha-icon>
+                                        </button>
+                                        <button class="queue-btn queue-btn-down" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }} title="Move Down">
+                                          <ha-icon icon="mdi:arrow-down"></ha-icon>
+                                        </button>
+                                        <button class="queue-btn queue-btn-next" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }} title="Move to Next">
+                                          <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
+                                        </button>
+                                        <button class="queue-btn queue-btn-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }} title="Remove from Queue">
+                                          <ha-icon icon="mdi:close"></ha-icon>
+                                        </button>
+                                      </div>
+                                    ` : html`
+                                      <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="More Options">
+                                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                                      </button>
+                                    `}
                                   `}
-                                `}
-                              </div>
+                                </div>
+                                <!-- SLIDE-OUT MENU -->
+                                <div class="search-row-slide-out ${this._activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace')} title="Replace existing queue and play now">
+                                    <ha-icon icon="mdi:playlist-remove"></ha-icon> Replace
+                                  </button>
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'next')} title="Play next">
+                                    <ha-icon icon="mdi:playlist-play"></ha-icon> Next
+                                  </button>
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace_next')} title="Replace queue">
+                                    <ha-icon icon="mdi:playlist-music"></ha-icon> Replace Next
+                                  </button>
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'add')} title="Add to the end of the queue">
+                                    <ha-icon icon="mdi:playlist-plus"></ha-icon> Add
+                                  </button>
+                                  <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); this._activeSearchRowMenuId = null; this.requestUpdate(); }}>
+                                    <ha-icon icon="mdi:close"></ha-icon>
+                                  </div>
+
+                                  ${this._successSearchRowMenuId === item.media_content_id ? html`
+                                    <div class="search-row-success-overlay">
+                                      ✅ Added to queue!
+                                    </div>
+                                  ` : nothing}
+                                </div>
                             </div>
                           ` : html`
                             <!-- placeholder row keeps height -->
                             <div class="entity-options-search-result placeholder"></div>
                           `);
           })()}
+                  </div>
                   </div>
                 </div>
               ` : this._showGrouping ? html`
@@ -6586,6 +6671,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
             ` : nothing}
           </div>
         ` : nothing}
+          ${this._searchActiveOptionsItem ? renderSearchOptionsOverlay({
+            item: this._searchActiveOptionsItem,
+            onClose: () => {
+              this._searchActiveOptionsItem = null;
+              this.requestUpdate();
+            },
+            onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode)
+          }) : nothing}
           ${this._searchOpen
         ? renderSearchSheet({
           open: this._searchOpen,
@@ -6608,11 +6701,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
           },
           onPlay: item => this._playMediaFromSearch(item),
           onQueue: item => this._queueMediaFromSearch(item),
+          onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
+          onResultClick: (item) => this._handleSearchResultClick(item),
+          activeSearchRowMenuId: this._activeSearchRowMenuId,
+          successSearchRowMenuId: this._successSearchRowMenuId,
+          onOptionsToggle: (item) => {
+            this._activeSearchRowMenuId = item ? item.media_content_id : null;
+            this.requestUpdate();
+          },
           upcomingFilterActive: this._upcomingFilterActive,
           disableAutofocus: this._disableSearchAutofocus,
         })
         : nothing}
-        ${this._showQueueSuccessMessage ? html`<div class="priority-toast-success">✅ Added to queue!</div>` : nothing}
+        : nothing}
         </ha-card>
       `;
   }

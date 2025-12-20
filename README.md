@@ -180,6 +180,10 @@ Player entities can be grouped together for supported entities. Access the hambu
 - Grouped entities will increase and decrease proportionately with the main entity. 
   - If only one entity is configured, and it is part of a group, only the volume for that entity will change. See `group_volume` for additional configuration options.
 - Use the Grouped Players menu to adjust individual player volume or to sync the volume percentage across all grouped players to the main entity
+    
+### Transfer Queue
+
+The card can surface a **Transfer Queue** menu option for Music Assistant players. When the active entity supports queue transfers, selecting *Transfer Queue* opens a list of compatible targets and the queue moves instantly to the chosen player. The option only appears when a Music Assistant entity with a queue is selected.
 
 ### Volume Entity Configuration
 
@@ -286,7 +290,11 @@ Initiate a search using the hamburger menu and selecting `search`. Press Enter o
 - **Recently Played Filter**: Toggle the recently played button to show your most recently played items. When enabled, results are fetched from Music Assistant ordered by most recently played. Only items that are part of your library will appear. You can still use the media-type chips to narrow the list. Submitting a new search query will start a normal search and turn off filters.
 - **Next Up Filter**: Toggle the next up button to show the upcoming track in your queue. 
   - Install mass_queue to see and manage the entire upcoming queue! See documentation for Music Assistant Queue Actions below. 
-- **Enqueue**: Use the enqueue button (playlist icon) to add tracks to your queue
+- **Enqueue Actions**: Click the 3-dot menu (`dots-vertical`) on any search result to access four enqueue strategies:
+  - **Replace**: Clears the current queue and plays the selection immediately.
+  - **Next**: Adds the selection to the queue immediately after the currently playing track.
+  - **Replace Next**: Replaces all upcoming items in the queue with the selection, starting after the current track.
+  - **Add to Queue**: Adds the selection to the very end of the queue.
 - Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
 ![preview Image Search](preview/search.png)
 
@@ -471,9 +479,6 @@ media_artwork_overrides:
 ## Actions
 > Build the action chips that appear in the card or its menu. Drag to reorder, click the pencil to configure each action.
 
-### Transfer Queue
-
-The card can surface a **Transfer Queue** menu option for Music Assistant players. When the active entity supports queue transfers, selecting *Transfer Queue* opens a list of compatible targets and the queue moves instantly to the chosen player. The option only appears when a Music Assistant entity with a queue is selected.
 
 ### Custom Actions
 You can also set mdi icons in the custom actions. This helps differentiate between music related actions and tv related actions. 
