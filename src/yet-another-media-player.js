@@ -2993,15 +2993,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
     });
   }
 
-  _getArtworkOverrideCacheKey(override, type = "image") {
+  _getArtworkOverrideCacheKey(override, type = "image", stateObj = null) {
     this._ensureArtworkOverrideIndexMap();
     if (!override) return `generic:${type}`;
     const idx = this._artworkOverrideIndexMap?.get(override);
-    if (typeof idx === "number") return `${idx}:${type}`;
-    return `generic:${type}`;
+
+    // Include media title and artist in the key if available to ensure
+    // templates are re-evaluated when the track changes.
+    const mediaTitle = stateObj?.attributes?.media_title || "";
+    const mediaArtist = stateObj?.attributes?.media_artist || "";
+    const stateKey = `${mediaTitle}:${mediaArtist}`;
+
+    if (typeof idx === "number") return `${idx}:${type}:${stateKey}`;
+    return `generic:${type}:${stateKey}`;
   }
 
-  _getResolvedArtworkOverrideSource(override, sourceValue, type = "image") {
+  _getResolvedArtworkOverrideSource(override, sourceValue, type = "image", stateObj = null) {
     if (!sourceValue || typeof sourceValue !== "string") return null;
     const normalizedInput = this._normalizeImageSourceValue(sourceValue);
     if (!normalizedInput) return null;
@@ -3011,7 +3018,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!this._artworkOverrideTemplateCache) {
       this._artworkOverrideTemplateCache = {};
     }
-    const key = this._getArtworkOverrideCacheKey(override, type);
+    const key = this._getArtworkOverrideCacheKey(override, type, stateObj);
     if (!this._artworkOverrideTemplateCache[key]) {
       this._artworkOverrideTemplateCache[key] = { value: null, resolving: false };
     }
@@ -3129,7 +3136,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       if (override && overrideSource) {
-        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType);
+        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType, state);
         if (resolvedOverride) {
           artworkUrl = resolvedOverride;
           sizePercentage = override?.size_percentage;

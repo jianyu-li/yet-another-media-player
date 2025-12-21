@@ -11638,16 +11638,24 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   _getArtworkOverrideCacheKey(override) {
-    var _this$_artworkOverrid;
+    var _this$_artworkOverrid, _stateObj$attributes6, _stateObj$attributes7;
     let type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "image";
+    let stateObj = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     this._ensureArtworkOverrideIndexMap();
     if (!override) return "generic:".concat(type);
     const idx = (_this$_artworkOverrid = this._artworkOverrideIndexMap) === null || _this$_artworkOverrid === void 0 ? void 0 : _this$_artworkOverrid.get(override);
-    if (typeof idx === "number") return "".concat(idx, ":").concat(type);
-    return "generic:".concat(type);
+
+    // Include media title and artist in the key if available to ensure
+    // templates are re-evaluated when the track changes.
+    const mediaTitle = (stateObj === null || stateObj === void 0 || (_stateObj$attributes6 = stateObj.attributes) === null || _stateObj$attributes6 === void 0 ? void 0 : _stateObj$attributes6.media_title) || "";
+    const mediaArtist = (stateObj === null || stateObj === void 0 || (_stateObj$attributes7 = stateObj.attributes) === null || _stateObj$attributes7 === void 0 ? void 0 : _stateObj$attributes7.media_artist) || "";
+    const stateKey = "".concat(mediaTitle, ":").concat(mediaArtist);
+    if (typeof idx === "number") return "".concat(idx, ":").concat(type, ":").concat(stateKey);
+    return "generic:".concat(type, ":").concat(stateKey);
   }
   _getResolvedArtworkOverrideSource(override, sourceValue) {
     let type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "image";
+    let stateObj = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
     if (!sourceValue || typeof sourceValue !== "string") return null;
     const normalizedInput = this._normalizeImageSourceValue(sourceValue);
     if (!normalizedInput) return null;
@@ -11656,7 +11664,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (!this._artworkOverrideTemplateCache) {
       this._artworkOverrideTemplateCache = {};
     }
-    const key = this._getArtworkOverrideCacheKey(override, type);
+    const key = this._getArtworkOverrideCacheKey(override, type, stateObj);
     if (!this._artworkOverrideTemplateCache[key]) {
       this._artworkOverrideTemplateCache[key] = {
         value: null,
@@ -11745,7 +11753,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         }
       }
       if (override && overrideSource) {
-        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType);
+        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType, state);
         if (resolvedOverride) {
           var _override3, _override$object_fit, _override4;
           artworkUrl = resolvedOverride;
