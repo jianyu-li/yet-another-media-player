@@ -4092,11 +4092,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const mostRecentActiveState = mostRecentActiveEntity
             ? this.hass.states[mostRecentActiveEntity]
             : null;
+          const currentIdx = this._selectedIndex;
+          const currentMainId = this.entityIds[currentIdx];
+          const currentMaId = this._getActualResolvedMaEntityForState(currentIdx);
+          const currentMainState = currentMainId ? this.hass?.states?.[currentMainId]?.state : null;
+          const currentMaState = currentMaId ? this.hass?.states?.[currentMaId]?.state : null;
+          const isCurrentPlaying = currentMainState === "playing" || currentMaState === "playing";
+
           if (
             mostRecentActiveState &&
             mostRecentActiveState.state === "playing" &&
             this.entityIds[this._selectedIndex] !== mostRecentId &&
-            !this._idleTimeout
+            !this._idleTimeout &&
+            !isCurrentPlaying
           ) {
             this._selectedIndex = this.entityIds.indexOf(mostRecentId);
           }
