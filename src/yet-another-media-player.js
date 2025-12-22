@@ -3120,13 +3120,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 ? state?.state
                 : attrs[attrKey];
             if (expected === "*") return true;
-            if (typeof expected === "string" && expected.includes("*")) {
-              try {
-                const regexPattern = expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
-                return new RegExp(`^${regexPattern}$`, "i").test(String(value || ""));
-              } catch (e) {
-                return value === expected;
-              }
+            if (override.__cachedRegexes?.[overrideKey]) {
+              return override.__cachedRegexes[overrideKey].test(String(value || ""));
             }
             return value === expected;
           })
@@ -3383,6 +3378,34 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._hideActiveEntityLabel = config.hide_active_entity_label === true;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
+
+    // Pre-compile wildcard regexes for artwork overrides
+    if (Array.isArray(config.media_artwork_overrides)) {
+      // Create a copy of the overrides array and objects to avoid "not extensible" errors
+      // with Home Assistant's frozen config objects.
+      this.config.media_artwork_overrides = config.media_artwork_overrides.map(o => ({ ...o }));
+
+      const matchKeys = [
+        "media_title", "media_artist", "media_album_name",
+        "media_content_id", "media_channel", "app_name",
+        "media_content_type", "entity_id", "entity_state"
+      ];
+      this.config.media_artwork_overrides.forEach(override => {
+        if (!override || typeof override !== "object") return;
+        override.__cachedRegexes = {};
+        matchKeys.forEach(key => {
+          const pattern = override[key];
+          if (typeof pattern === "string" && pattern.includes("*") && pattern !== "*") {
+            try {
+              const regexPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
+              override.__cachedRegexes[key] = new RegExp(`^${regexPattern}$`, "i");
+            } catch (e) {
+              console.warn("yamp: Failed to compile artwork override regex for", key, pattern);
+            }
+          }
+        });
+      });
+    }
     // Handle idle image templates
     if (typeof config.idle_image === "string" &&
       (config.idle_image.includes("{{") || config.idle_image.includes("{%"))) {
