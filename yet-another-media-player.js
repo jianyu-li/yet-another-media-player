@@ -8812,6 +8812,7 @@ const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
   menu: "--yamp-text-scale-menu",
   action_chips: "--yamp-text-scale-action-chips"
 });
+const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze(["media_title", "media_artist", "media_album_name", "media_content_id", "media_channel", "app_name", "media_content_type", "entity_id", "entity_state"]);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
@@ -11648,16 +11649,23 @@ class YetAnotherMediaPlayerCard extends i$1 {
     });
   }
   _getArtworkOverrideCacheKey(override) {
-    var _this$_artworkOverrid;
+    var _stateObj$attributes6, _stateObj$attributes7, _this$_artworkOverrid;
     let type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "image";
+    let stateObj = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     this._ensureArtworkOverrideIndexMap();
-    if (!override) return "generic:".concat(type);
-    const idx = (_this$_artworkOverrid = this._artworkOverrideIndexMap) === null || _this$_artworkOverrid === void 0 ? void 0 : _this$_artworkOverrid.get(override);
-    if (typeof idx === "number") return "".concat(idx, ":").concat(type);
-    return "generic:".concat(type);
+
+    // Include media title and artist in the key if available to ensure
+    // templates are re-evaluated when the track changes.
+    const mediaTitle = (stateObj === null || stateObj === void 0 || (_stateObj$attributes6 = stateObj.attributes) === null || _stateObj$attributes6 === void 0 ? void 0 : _stateObj$attributes6.media_title) || "";
+    const mediaArtist = (stateObj === null || stateObj === void 0 || (_stateObj$attributes7 = stateObj.attributes) === null || _stateObj$attributes7 === void 0 ? void 0 : _stateObj$attributes7.media_artist) || "";
+    const stateKey = "".concat(mediaTitle, ":").concat(mediaArtist);
+    const idx = override && ((_this$_artworkOverrid = this._artworkOverrideIndexMap) === null || _this$_artworkOverrid === void 0 ? void 0 : _this$_artworkOverrid.get(override));
+    const prefix = typeof idx === "number" ? idx : "generic";
+    return "".concat(prefix, ":").concat(type, ":").concat(stateKey);
   }
   _getResolvedArtworkOverrideSource(override, sourceValue) {
     let type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "image";
+    let stateObj = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
     if (!sourceValue || typeof sourceValue !== "string") return null;
     const normalizedInput = this._normalizeImageSourceValue(sourceValue);
     if (!normalizedInput) return null;
@@ -11666,7 +11674,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     if (!this._artworkOverrideTemplateCache) {
       this._artworkOverrideTemplateCache = {};
     }
-    const key = this._getArtworkOverrideCacheKey(override, type);
+    const key = this._getArtworkOverrideCacheKey(override, type, stateObj);
     if (!this._artworkOverrideTemplateCache[key]) {
       this._artworkOverrideTemplateCache[key] = {
         value: null,
@@ -11724,16 +11732,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const overrides = Array.isArray((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
     if (overrides && overrides.length) {
       var _override, _override2;
-      const getOverrideValue = (override, key) => {
-        if (!override) return undefined;
-        return override[key];
-      };
-      const matchers = [["media_title", "media_title"], ["media_artist", "media_artist"], ["media_album_name", "media_album_name"], ["media_content_id", "media_content_id"], ["media_channel", "media_channel"], ["app_name", "app_name"], ["media_content_type", "media_content_type"], ["entity_id", "entity_id"], ["entity_state", "entity_state"]];
-      const findSpecificMatch = () => overrides.find(override => matchers.some(_ref5 => {
-        let [attrKey, overrideKey] = _ref5;
-        const expected = getOverrideValue(override, overrideKey);
+      const findSpecificMatch = () => overrides.find(override => ARTWORK_OVERRIDE_MATCH_KEYS.some(key => {
+        var _override$__cachedReg;
+        const expected = override[key];
         if (expected === undefined) return false;
-        const value = attrKey === "entity_id" ? entityId : attrKey === "entity_state" ? state === null || state === void 0 ? void 0 : state.state : attrs[attrKey];
+        const value = key === "entity_id" ? entityId : key === "entity_state" ? state === null || state === void 0 ? void 0 : state.state : attrs[key];
+        if (expected === "*") return true;
+        if ((_override$__cachedReg = override.__cachedRegexes) !== null && _override$__cachedReg !== void 0 && _override$__cachedReg[key]) {
+          return override.__cachedRegexes[key].test(String(value || ""));
+        }
         return value === expected;
       }));
       const hasExistingArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
@@ -11755,7 +11762,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         }
       }
       if (override && overrideSource) {
-        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType);
+        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType, state);
         if (resolvedOverride) {
           var _override3, _override$object_fit, _override4;
           artworkUrl = resolvedOverride;
@@ -11978,6 +11985,28 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._hideActiveEntityLabel = config.hide_active_entity_label === true;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
+
+    // Pre-compile wildcard regexes for artwork overrides
+    if (Array.isArray(config.media_artwork_overrides)) {
+      // Create a copy of the overrides array and objects to avoid "not extensible" errors
+      // with Home Assistant's frozen config objects.
+      this.config.media_artwork_overrides = config.media_artwork_overrides.map(o => _objectSpread2$1({}, o));
+      this.config.media_artwork_overrides.forEach(override => {
+        if (!override || typeof override !== "object") return;
+        override.__cachedRegexes = {};
+        ARTWORK_OVERRIDE_MATCH_KEYS.forEach(key => {
+          const pattern = override[key];
+          if (typeof pattern === "string" && pattern.includes("*") && pattern !== "*") {
+            try {
+              const regexPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
+              override.__cachedRegexes[key] = new RegExp("^".concat(regexPattern, "$"), "i");
+            } catch (e) {
+              console.warn("yamp: Failed to compile artwork override regex for", key, pattern);
+            }
+          }
+        });
+      });
+    }
     // Handle idle image templates
     if (typeof config.idle_image === "string" && (config.idle_image.includes("{{") || config.idle_image.includes("{%"))) {
       this._idleImageTemplate = config.idle_image;
@@ -12448,12 +12477,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
 
     // Next, prefer the entity whose group_members list starts with itself
-    const firstMemberMatch = candidates.find(_ref6 => {
+    const firstMemberMatch = candidates.find(_ref5 => {
       var _state$attributes4;
       let {
         groupingId,
         state
-      } = _ref6;
+      } = _ref5;
       const members = Array.isArray((_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.group_members) ? state.attributes.group_members : [];
       return members.length && members[0] === groupingId;
     });
@@ -12462,12 +12491,12 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
 
     // Fallback: choose an entity whose members list contains every other member
-    const coordinator = candidates.find(_ref7 => {
+    const coordinator = candidates.find(_ref6 => {
       var _state$attributes5;
       let {
         groupingId,
         state
-      } = _ref7;
+      } = _ref6;
       const members = Array.isArray((_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.group_members) ? state.attributes.group_members : [];
       return group.every(otherId => {
         const otherGroupingId = this._getGroupingEntityIdByEntityId(otherId);
@@ -13586,16 +13615,16 @@ class YetAnotherMediaPlayerCard extends i$1 {
       action,
       idx
     }));
-    const rowActions = decoratedActions.filter(_ref8 => {
+    const rowActions = decoratedActions.filter(_ref7 => {
+      let {
+        action
+      } = _ref7;
+      return !(action !== null && action !== void 0 && action.in_menu);
+    });
+    const menuOnlyActions = decoratedActions.filter(_ref8 => {
       let {
         action
       } = _ref8;
-      return !(action !== null && action !== void 0 && action.in_menu);
-    });
-    const menuOnlyActions = decoratedActions.filter(_ref9 => {
-      let {
-        action
-      } = _ref9;
       return action === null || action === void 0 ? void 0 : action.in_menu;
     });
     const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
@@ -13909,7 +13938,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass30, _this$hass31, _ref0;
+        var _this$hass30, _this$hass31, _ref9;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -13923,7 +13952,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         // Prefer playback entity artwork, fallback to main entity
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return ((_ref0 = playbackArtwork || mainArtwork) === null || _ref0 === void 0 ? void 0 : _ref0.url) || null;
+        return ((_ref9 = playbackArtwork || mainArtwork) === null || _ref9 === void 0 ? void 0 : _ref9.url) || null;
       },
       getIsMaActive: id => {
         var _this$hass32;
@@ -13966,10 +13995,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
       onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
       onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
     })) : E, renderActionChipRow({
-      actions: rowActions.map(_ref1 => {
+      actions: rowActions.map(_ref0 => {
         let {
           action
-        } = _ref1;
+        } = _ref0;
         return action;
       }),
       onActionChipClick: idx => {
@@ -14068,7 +14097,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass34, _this$hass35, _ref10;
+        var _this$hass34, _this$hass35, _ref1;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -14078,7 +14107,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const mainState = (_this$hass35 = this.hass) === null || _this$hass35 === void 0 || (_this$hass35 = _this$hass35.states) === null || _this$hass35 === void 0 ? void 0 : _this$hass35[mainId];
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return ((_ref10 = playbackArtwork || mainArtwork) === null || _ref10 === void 0 ? void 0 : _ref10.url) || null;
+        return ((_ref1 = playbackArtwork || mainArtwork) === null || _ref1 === void 0 ? void 0 : _ref1.url) || null;
       },
       getIsMaActive: id => {
         var _this$hass36;
@@ -14171,11 +14200,11 @@ class YetAnotherMediaPlayerCard extends i$1 {
         return x(_templateObject22 || (_templateObject22 = _taggedTemplateLiteral(["\n                          <button class=\"entity-options-item\" @click=", ">Group Players</button>\n                        "])), () => this._openGrouping());
       }
       return E;
-    })(), menuOnlyActions.length ? x(_templateObject23 || (_templateObject23 = _taggedTemplateLiteral(["\n                    ", "\n                  "])), menuOnlyActions.map(_ref11 => {
+    })(), menuOnlyActions.length ? x(_templateObject23 || (_templateObject23 = _taggedTemplateLiteral(["\n                    ", "\n                  "])), menuOnlyActions.map(_ref10 => {
       let {
         action,
         idx
-      } = _ref11;
+      } = _ref10;
       const label = this._getActionLabel(action);
       return x(_templateObject24 || (_templateObject24 = _taggedTemplateLiteral(["\n                        <button\n                          class=\"entity-options-item menu-action-item\"\n                          @click=", "\n                        >\n                          ", "\n                          ", "\n                        </button>\n                      "])), () => this._onMenuActionClick(idx), action.icon ? x(_templateObject25 || (_templateObject25 = _taggedTemplateLiteral(["\n                            <ha-icon\n                              class=\"menu-action-icon\"\n                              .icon=", "\n                            ></ha-icon>\n                          "])), action.icon) : E, label ? x(_templateObject26 || (_templateObject26 = _taggedTemplateLiteral(["<span class=\"menu-action-label\">", "</span>"])), label) : E);
     })) : E) : this._showTransferQueue ? x(_templateObject27 || (_templateObject27 = _taggedTemplateLiteral(["\n                <button class=\"entity-options-item close-item\" @click=", ">\n                  Back\n                </button>\n                <div class=\"entity-options-divider\"></div>\n                <div class=\"entity-options-title\" style=\"margin-bottom:12px;\">Transfer Queue To</div>\n                ", "\n                ", "\n              "])), () => {

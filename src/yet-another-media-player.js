@@ -40,6 +40,12 @@ const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
   action_chips: "--yamp-text-scale-action-chips"
 });
 
+const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
+  "media_title", "media_artist", "media_album_name",
+  "media_content_id", "media_channel", "app_name",
+  "media_content_type", "entity_id", "entity_state"
+]);
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
@@ -3002,15 +3008,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
     });
   }
 
-  _getArtworkOverrideCacheKey(override, type = "image") {
+  _getArtworkOverrideCacheKey(override, type = "image", stateObj = null) {
     this._ensureArtworkOverrideIndexMap();
-    if (!override) return `generic:${type}`;
-    const idx = this._artworkOverrideIndexMap?.get(override);
-    if (typeof idx === "number") return `${idx}:${type}`;
-    return `generic:${type}`;
+
+    // Include media title and artist in the key if available to ensure
+    // templates are re-evaluated when the track changes.
+    const mediaTitle = stateObj?.attributes?.media_title || "";
+    const mediaArtist = stateObj?.attributes?.media_artist || "";
+    const stateKey = `${mediaTitle}:${mediaArtist}`;
+
+    const idx = override && this._artworkOverrideIndexMap?.get(override);
+    const prefix = typeof idx === "number" ? idx : "generic";
+
+    return `${prefix}:${type}:${stateKey}`;
   }
 
-  _getResolvedArtworkOverrideSource(override, sourceValue, type = "image") {
+  _getResolvedArtworkOverrideSource(override, sourceValue, type = "image", stateObj = null) {
     if (!sourceValue || typeof sourceValue !== "string") return null;
     const normalizedInput = this._normalizeImageSourceValue(sourceValue);
     if (!normalizedInput) return null;
@@ -3020,7 +3033,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!this._artworkOverrideTemplateCache) {
       this._artworkOverrideTemplateCache = {};
     }
-    const key = this._getArtworkOverrideCacheKey(override, type);
+    const key = this._getArtworkOverrideCacheKey(override, type, stateObj);
     if (!this._artworkOverrideTemplateCache[key]) {
       this._artworkOverrideTemplateCache[key] = { value: null, resolving: false };
     }
@@ -3085,33 +3098,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ? this.config.media_artwork_overrides
       : null;
     if (overrides && overrides.length) {
-      const getOverrideValue = (override, key) => {
-        if (!override) return undefined;
-        return override[key];
-      };
-
-      const matchers = [
-        ["media_title", "media_title"],
-        ["media_artist", "media_artist"],
-        ["media_album_name", "media_album_name"],
-        ["media_content_id", "media_content_id"],
-        ["media_channel", "media_channel"],
-        ["app_name", "app_name"],
-        ["media_content_type", "media_content_type"],
-        ["entity_id", "entity_id"],
-        ["entity_state", "entity_state"],
-      ];
-
       const findSpecificMatch = () =>
         overrides.find((override) =>
-          matchers.some(([attrKey, overrideKey]) => {
-            const expected = getOverrideValue(override, overrideKey);
+          ARTWORK_OVERRIDE_MATCH_KEYS.some((key) => {
+            const expected = override[key];
             if (expected === undefined) return false;
-            const value = attrKey === "entity_id"
+            const value = key === "entity_id"
               ? entityId
-              : attrKey === "entity_state"
+              : key === "entity_state"
                 ? state?.state
-                : attrs[attrKey];
+                : attrs[key];
+            if (expected === "*") return true;
+            if (override.__cachedRegexes?.[key]) {
+              return override.__cachedRegexes[key].test(String(value || ""));
+            }
             return value === expected;
           })
         );
@@ -3138,7 +3138,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       if (override && overrideSource) {
-        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType);
+        const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType, state);
         if (resolvedOverride) {
           artworkUrl = resolvedOverride;
           sizePercentage = override?.size_percentage;
@@ -3367,6 +3367,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._hideActiveEntityLabel = config.hide_active_entity_label === true;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
+
+    // Pre-compile wildcard regexes for artwork overrides
+    if (Array.isArray(config.media_artwork_overrides)) {
+      // Create a copy of the overrides array and objects to avoid "not extensible" errors
+      // with Home Assistant's frozen config objects.
+      this.config.media_artwork_overrides = config.media_artwork_overrides.map(o => ({ ...o }));
+
+      this.config.media_artwork_overrides.forEach(override => {
+        if (!override || typeof override !== "object") return;
+        override.__cachedRegexes = {};
+        ARTWORK_OVERRIDE_MATCH_KEYS.forEach(key => {
+          const pattern = override[key];
+          if (typeof pattern === "string" && pattern.includes("*") && pattern !== "*") {
+            try {
+              const regexPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
+              override.__cachedRegexes[key] = new RegExp(`^${regexPattern}$`, "i");
+            } catch (e) {
+              console.warn("yamp: Failed to compile artwork override regex for", key, pattern);
+            }
+          }
+        });
+      });
+    }
     // Handle idle image templates
     if (typeof config.idle_image === "string" &&
       (config.idle_image.includes("{{") || config.idle_image.includes("{%"))) {
