@@ -11742,6 +11742,15 @@ class YetAnotherMediaPlayerCard extends i$1 {
         const expected = getOverrideValue(override, overrideKey);
         if (expected === undefined) return false;
         const value = attrKey === "entity_id" ? entityId : attrKey === "entity_state" ? state === null || state === void 0 ? void 0 : state.state : attrs[attrKey];
+        if (expected === "*") return true;
+        if (typeof expected === "string" && expected.includes("*")) {
+          try {
+            const regexPattern = expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
+            return new RegExp("^".concat(regexPattern, "$"), "i").test(String(value || ""));
+          } catch (e) {
+            return value === expected;
+          }
+        }
         return value === expected;
       }));
       const hasExistingArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;

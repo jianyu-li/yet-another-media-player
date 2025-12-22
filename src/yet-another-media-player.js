@@ -3119,6 +3119,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
               : attrKey === "entity_state"
                 ? state?.state
                 : attrs[attrKey];
+            if (expected === "*") return true;
+            if (typeof expected === "string" && expected.includes("*")) {
+              try {
+                const regexPattern = expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
+                return new RegExp(`^${regexPattern}$`, "i").test(String(value || ""));
+              } catch (e) {
+                return value === expected;
+              }
+            }
             return value === expected;
           })
         );
