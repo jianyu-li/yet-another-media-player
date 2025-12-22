@@ -878,9 +878,11 @@ function renderChip(_ref2) {
     onPinClick,
     onPointerDown,
     onPointerMove,
-    onPointerUp
+    onPointerUp,
+    sizePercentage
   } = _ref2;
-  return x(_templateObject$9 || (_templateObject$9 = _taggedTemplateLiteral(["\n    <button class=\"chip\"\n            ?selected=", "\n            ?playing=", "\n            ?ma-active=", "\n            @click=", "\n            @pointerdown=", "\n            @pointermove=", "\n            @pointerup=", "\n            @pointerleave=", "\n            style=\"display:flex;align-items:center;justify-content:space-between;\">\n      <span class=\"chip-icon\">\n        ", "\n      </span>\n      <span class=\"chip-label\" style=\"flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;\">\n        ", "\n      </span>\n      ", "\n    </button>\n  "])), selected, playing, maActive, () => onChipClick(idx), onPointerDown, onPointerMove, onPointerUp, onPointerUp, art ? x(_templateObject2$8 || (_templateObject2$8 = _taggedTemplateLiteral(["<img class=\"chip-mini-art\" src=\"", "\" onerror=\"this.style.display='none'\" />"])), art) : x(_templateObject3$7 || (_templateObject3$7 = _taggedTemplateLiteral(["<ha-icon .icon=", " style=\"font-size:28px;\"></ha-icon>"])), icon), name, pinned ? x(_templateObject4$5 || (_templateObject4$5 = _taggedTemplateLiteral(["\n            <span class=\"chip-pin-inside\" @click=", " title=\"Unpin\">\n              <ha-icon .icon=", "></ha-icon>\n            </span>\n          "])), e => {
+  const artStyle = sizePercentage ? "width: ".concat(sizePercentage, "%; height: ").concat(sizePercentage, "%;") : "";
+  return x(_templateObject$9 || (_templateObject$9 = _taggedTemplateLiteral(["\n    <button class=\"chip\"\n            ?selected=", "\n            ?playing=", "\n            ?ma-active=", "\n            @click=", "\n            @pointerdown=", "\n            @pointermove=", "\n            @pointerup=", "\n            @pointerleave=", "\n            style=\"display:flex;align-items:center;justify-content:space-between;\">\n      <span class=\"chip-icon\">\n        ", "\n      </span>\n      <span class=\"chip-label\" style=\"flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;\">\n        ", "\n      </span>\n      ", "\n    </button>\n  "])), selected, playing, maActive, () => onChipClick(idx), onPointerDown, onPointerMove, onPointerUp, onPointerUp, art ? x(_templateObject2$8 || (_templateObject2$8 = _taggedTemplateLiteral(["<img class=\"chip-mini-art\" src=\"", "\" style=\"", "\" onerror=\"this.style.display='none'\" />"])), art, artStyle) : x(_templateObject3$7 || (_templateObject3$7 = _taggedTemplateLiteral(["<ha-icon .icon=", " style=\"font-size:28px;\"></ha-icon>"])), icon), name, pinned ? x(_templateObject4$5 || (_templateObject4$5 = _taggedTemplateLiteral(["\n            <span class=\"chip-pin-inside\" @click=", " title=\"Unpin\">\n              <ha-icon .icon=", "></ha-icon>\n            </span>\n          "])), e => {
     e.stopPropagation();
     onPinClick(idx, e);
   }, "mdi:pin") : x(_templateObject5$5 || (_templateObject5$5 = _taggedTemplateLiteral(["<span class=\"chip-pin-spacer\"></span>"]))));
@@ -901,14 +903,16 @@ function renderGroupChip(_ref3) {
     onPinClick,
     onPointerDown,
     onPointerMove,
-    onPointerUp
+    onPointerUp,
+    sizePercentage
   } = _ref3;
+  const artStyle = sizePercentage ? "width: ".concat(sizePercentage, "%; height: ").concat(sizePercentage, "%;") : "";
   return x(_templateObject6$5 || (_templateObject6$5 = _taggedTemplateLiteral(["\n    <button class=\"chip group\"\n            ?selected=", "\n            ?ma-active=", "\n            @click=", "\n            @pointerdown=", "\n            @pointermove=", "\n            @pointerup=", "\n            @pointerleave=", "\n            style=\"display:flex;align-items:center;justify-content:space-between;\">\n      <span class=\"chip-icon\"\n            style=\"cursor:pointer;\"\n            @click=", ">\n        ", "\n      </span>\n      <span class=\"chip-label\" style=\"flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;\">\n        ", "\n      </span>\n      ", "\n    </button>\n  "])), selected, maActive, () => onChipClick(idx), onPointerDown, onPointerMove, onPointerUp, onPointerUp, e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
     }
-  }, art ? x(_templateObject7$4 || (_templateObject7$4 = _taggedTemplateLiteral(["<img class=\"chip-mini-art\"\n                      src=\"", "\"\n                      style=\"cursor:pointer;\"\n                      onerror=\"this.style.display='none'\"\n                      @click=", "/>"])), art, e => {
+  }, art ? x(_templateObject7$4 || (_templateObject7$4 = _taggedTemplateLiteral(["<img class=\"chip-mini-art\"\n                      src=\"", "\"\n                      style=\"cursor:pointer;", "\"\n                      onerror=\"this.style.display='none'\"\n                      @click=", "/>"])), art, artStyle, e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
@@ -997,11 +1001,15 @@ function renderChipRow(_ref5) {
   return x(_templateObject1$4 || (_templateObject1$4 = _taggedTemplateLiteral(["\n    ", "\n  "])), groupedSortedEntityIds.map(group => {
     // If it's a group (more than one entity)
     if (group.length > 1) {
-      var _hass$states, _getArtworkUrl, _state$attributes;
+      var _hass$states, _state$attributes;
       const id = getActualGroupMaster(group);
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states = hass.states) === null || _hass$states === void 0 ? void 0 : _hass$states[id];
-      const art = typeof getChipArt === "function" ? getChipArt(id) : (_getArtworkUrl = getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)) === null || _getArtworkUrl === void 0 ? void 0 : _getArtworkUrl.url;
+      const artObj = typeof getChipArt === "function" ? {
+        url: getChipArt(id)
+      } : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
+      const art = artObj === null || artObj === void 0 ? void 0 : artObj.url;
+      const sizePercentage = artObj === null || artObj === void 0 ? void 0 : artObj.sizePercentage;
       const icon = (state === null || state === void 0 || (_state$attributes = state.attributes) === null || _state$attributes === void 0 ? void 0 : _state$attributes.icon) || "mdi:cast";
       const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
       return renderGroupChip({
@@ -1017,16 +1025,21 @@ function renderChipRow(_ref5) {
         onPinClick,
         onPointerDown: e => onPointerDown(e, idx),
         onPointerMove: e => onPointerMove(e, idx),
-        onPointerUp: e => onPointerUp(e, idx)
+        onPointerUp: e => onPointerUp(e, idx),
+        sizePercentage
       });
     } else {
-      var _hass$states2, _getArtworkUrl2, _state$attributes2;
+      var _hass$states2, _state$attributes2;
       // Single chip
       const id = group[0];
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states2 = hass.states) === null || _hass$states2 === void 0 ? void 0 : _hass$states2[id];
       const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : (state === null || state === void 0 ? void 0 : state.state) === "playing";
-      const artSource = typeof getChipArt === "function" ? getChipArt(id) : (_getArtworkUrl2 = getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)) === null || _getArtworkUrl2 === void 0 ? void 0 : _getArtworkUrl2.url;
+      const artObj = typeof getChipArt === "function" ? {
+        url: getChipArt(id)
+      } : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
+      const artSource = artObj === null || artObj === void 0 ? void 0 : artObj.url;
+      const sizePercentage = artObj === null || artObj === void 0 ? void 0 : artObj.sizePercentage;
       const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
       const icon = (state === null || state === void 0 || (_state$attributes2 = state.attributes) === null || _state$attributes2 === void 0 ? void 0 : _state$attributes2.icon) || "mdi:cast";
       const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
@@ -1043,7 +1056,8 @@ function renderChipRow(_ref5) {
         onPinClick,
         onPointerDown: e => onPointerDown(e, idx),
         onPointerMove: e => onPointerMove(e, idx),
-        onPointerUp: e => onPointerUp(e, idx)
+        onPointerUp: e => onPointerUp(e, idx),
+        sizePercentage
       });
     }
   }));
@@ -13878,6 +13892,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     }
     // Use null if idle or no artwork available
     let artworkUrl = null;
+    let artworkSizePercentage = null;
     let artworkObjectFit = this._artworkObjectFit;
     if (!this._isIdle) {
       // Use the unified entity resolution system for artwork
@@ -13885,7 +13900,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
       const mainArtwork = this._getArtworkUrl(mainState);
       const artwork = playbackArtwork || mainArtwork;
       artworkUrl = (artwork === null || artwork === void 0 ? void 0 : artwork.url) || null;
-      artwork === null || artwork === void 0 ? void 0 : artwork.sizePercentage;
+      artworkSizePercentage = artwork === null || artwork === void 0 ? void 0 : artwork.sizePercentage;
       if (artwork !== null && artwork !== void 0 && artwork.objectFit) {
         artworkObjectFit = artwork.objectFit;
       }
@@ -13904,7 +13919,10 @@ class YetAnotherMediaPlayerCard extends i$1 {
     this._lastRenderedCollapsed = collapsed;
     this._lastRenderedHideControls = hideControlsNow;
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
-    const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
+    let backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
+    if (artworkSizePercentage) {
+      backgroundSize = "".concat(artworkSizePercentage, "%");
+    }
     const backgroundImageValue = idleImageUrl ? "url('".concat(idleImageUrl, "')") : artworkUrl ? "url('".concat(artworkUrl, "')") : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
     const backgroundFilter = collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none";

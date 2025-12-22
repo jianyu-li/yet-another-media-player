@@ -454,7 +454,11 @@ idle_screen: search-recently-played
 ## Artwork Overrides
 > Overrides are evaluated from top to bottom. Drag to reorder.
 
-Use `media_artwork_overrides` to replace missing or low-resolution art with higher quality images. Rules are evaluated from top to bottom; the first match wins. Supply an `image_url` along with a single match key (`media_title`, `media_artist`, `media_album_name`, `media_content_id`, `media_channel`, `app_name`, `media_content_type`, or `entity_id`). Matches support wildcards (e.g., `media_title: "*"` matches any title). To cover any track that ships without art, use `missing_art_url` instead of a match value. Optionally include `size_percentage` to scale the replacement relative to the card.
+Use `media_artwork_overrides` to replace missing or low-resolution art with higher quality images. Rules are evaluated from top to bottom; the first match wins. Supply an `image_url` along with a single match key (`media_title`, `media_artist`, `media_album_name`, `media_content_id`, `media_channel`, `app_name`, `media_content_type`, or `entity_id`). Matches support wildcards (e.g., `media_title: "*"` matches any title). To cover any track that ships without art, use `missing_art_url` instead of a match value.
+
+The following optional parameters can be used to style individual overrides (**YAML only**):
+- **`size_percentage`**: Scale the artwork relative to its container (e.g. `50`).
+- **`object_fit`**: Control scaling behavior for this specific override: `cover`, `contain`, `fill`, `scale-down`, or `none`.
 
 ```yaml
 media_artwork_overrides:

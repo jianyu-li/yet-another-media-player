@@ -4,14 +4,14 @@ import { html, nothing } from "lit";
 // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
 function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = null) {
   if (!state || !state.attributes) return null;
-  
+
   const attrs = state.attributes;
   const entityId = state.entity_id;
   const appId = attrs.app_id;
-  
+
   let artworkUrl = null;
   let sizePercentage = null;
-  
+
   // Check for media artwork overrides first
   if (overrides && Array.isArray(overrides) && overrides.length) {
     const getOverrideValue = (override, key) => {
@@ -62,20 +62,20 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
       sizePercentage = override?.size_percentage;
     }
   }
-  
+
   // If no override found, use standard artwork
   if (!artworkUrl) {
     // Always check entity_picture_local first, then entity_picture
     artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
   }
-  
+
   // If still no artwork, check for configured fallback artwork
   if (!artworkUrl && fallbackArtwork) {
     // Check if it's a smart fallback (TV vs Music)
     if (fallbackArtwork === 'smart') {
       // Use TV icon for TV content, music icon for everything else
-      const isTV = attrs.media_title === 'TV' || attrs.media_channel || 
-                  attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
+      const isTV = attrs.media_title === 'TV' || attrs.media_channel ||
+        attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
       if (isTV) {
         // TV icon
         artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI2OCIgeT0iMTIwIiB3aWR0aD0iNDgiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI4MCIgeT0iMTMwIiB3aWR0aD0iMjQiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8L3N2Zz4K';
@@ -88,12 +88,12 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
       artworkUrl = fallbackArtwork;
     }
   }
-  
+
   // Apply hostname prefix if configured and artwork URL is relative
   if (artworkUrl && hostname && !artworkUrl.startsWith('http')) {
     artworkUrl = hostname + artworkUrl;
   }
-  
+
   return { url: artworkUrl, sizePercentage };
 }
 
@@ -114,7 +114,9 @@ export function renderChip({
   onPointerDown,
   onPointerMove,
   onPointerUp,
+  sizePercentage,
 }) {
+  const artStyle = sizePercentage ? `width: ${sizePercentage}%; height: ${sizePercentage}%;` : "";
   return html`
     <button class="chip"
             ?selected=${selected}
@@ -128,20 +130,20 @@ export function renderChip({
             style="display:flex;align-items:center;justify-content:space-between;">
       <span class="chip-icon">
         ${art
-          ? html`<img class="chip-mini-art" src="${art}" onerror="this.style.display='none'" />`
-          : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+      ? html`<img class="chip-mini-art" src="${art}" style="${artStyle}" onerror="this.style.display='none'" />`
+      : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
       </span>
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${name}
       </span>
       ${pinned
-        ? html`
+      ? html`
             <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="Unpin">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           `
-        : html`<span class="chip-pin-spacer"></span>`
-      }
+      : html`<span class="chip-pin-spacer"></span>`
+    }
     </button>
   `;
 }
@@ -162,7 +164,9 @@ export function renderGroupChip({
   onPointerDown,
   onPointerMove,
   onPointerUp,
+  sizePercentage,
 }) {
+  const artStyle = sizePercentage ? `width: ${sizePercentage}%; height: ${sizePercentage}%;` : "";
   return html`
     <button class="chip group"
             ?selected=${selected}
@@ -176,44 +180,44 @@ export function renderGroupChip({
       <span class="chip-icon"
             style="cursor:pointer;"
             @click=${e => {
-              e.stopPropagation();
-              if (onIconClick) {
-                onIconClick(idx, e);
-              }
-            }}>
+      e.stopPropagation();
+      if (onIconClick) {
+        onIconClick(idx, e);
+      }
+    }}>
         ${art
-          ? html`<img class="chip-mini-art"
+      ? html`<img class="chip-mini-art"
                       src="${art}"
-                      style="cursor:pointer;"
+                      style="cursor:pointer;${artStyle}"
                       onerror="this.style.display='none'"
                       @click=${e => {
-                        e.stopPropagation();
-                        if (onIconClick) {
-                          onIconClick(idx, e);
-                        }
-                      }}/>`
+          e.stopPropagation();
+          if (onIconClick) {
+            onIconClick(idx, e);
+          }
+        }}/>`
 
-          : html`<ha-icon .icon=${icon}
+      : html`<ha-icon .icon=${icon}
                           style="font-size:28px;cursor:pointer;"
                           @click=${e => {
-                            e.stopPropagation();
-                            if (onIconClick) {
-                              onIconClick(idx, e);
-                            }
-                          }}></ha-icon>`
-        }
+          e.stopPropagation();
+          if (onIconClick) {
+            onIconClick(idx, e);
+          }
+        }}></ha-icon>`
+    }
       </span>
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${groupName}
       </span>
       ${pinned
-        ? html`
+      ? html`
             <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="Unpin">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           `
-        : html`<span class="chip-pin-spacer"></span>`
-      }
+      : html`<span class="chip-pin-spacer"></span>`
+    }
     </button>
   `;
 }
@@ -287,63 +291,71 @@ export function renderChipRow({
 
   return html`
     ${groupedSortedEntityIds.map((group) => {
-      // If it's a group (more than one entity)
-      if (group.length > 1) {
-        const id = getActualGroupMaster(group);
-        const idx = entityIds.indexOf(id);
-        const state = hass?.states?.[id];
-        const art = (typeof getChipArt === "function")
-          ? getChipArt(id)
-          : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)?.url;
-        const icon = state?.attributes?.icon || "mdi:cast";
-        const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
-        return renderGroupChip({
-          idx,
-          selected: selectedEntityId === id,
-          groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
-          art,
-          icon,
-          pinned: pinnedIndex === idx,
-          holdToPin,
-          maActive: isMaActive,
-          onChipClick,
-          onIconClick,
-          onPinClick,
-          onPointerDown: (e) => onPointerDown(e, idx),
-          onPointerMove: (e) => onPointerMove(e, idx),
-          onPointerUp: (e) => onPointerUp(e, idx),
-        });
-      } else {
-        // Single chip
-        const id = group[0];
-        const idx = entityIds.indexOf(id);
-        const state = hass?.states?.[id];
-        const isChipPlaying = (typeof getIsChipPlaying === "function")
-          ? getIsChipPlaying(id, selectedEntityId === id)
-          : (state?.state === "playing");
-        const artSource = (typeof getChipArt === "function")
-          ? getChipArt(id)
-          : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork)?.url;
-        const art = selectedEntityId === id ? (!isIdle && artSource) : (isChipPlaying && artSource);
-        const icon = state?.attributes?.icon || "mdi:cast";
-        const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
-        return renderChip({
-          idx,
-          selected: selectedEntityId === id,
-          playing: isChipPlaying,
-          name: getChipName(id),
-          art,
-          icon,
-          pinned: pinnedIndex === idx,
-          holdToPin,
-          maActive: isMaActive,
-          onChipClick,
-          onPinClick,
-          onPointerDown: (e) => onPointerDown(e, idx),
-          onPointerMove: (e) => onPointerMove(e, idx),
-          onPointerUp: (e) => onPointerUp(e, idx),
-        });
-      }
-    })}
+    // If it's a group (more than one entity)
+    if (group.length > 1) {
+      const id = getActualGroupMaster(group);
+      const idx = entityIds.indexOf(id);
+      const state = hass?.states?.[id];
+      const artObj = (typeof getChipArt === "function")
+        ? { url: getChipArt(id) }
+        : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
+      const art = artObj?.url;
+      const sizePercentage = artObj?.sizePercentage;
+
+      const icon = state?.attributes?.icon || "mdi:cast";
+      const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
+      return renderGroupChip({
+        idx,
+        selected: selectedEntityId === id,
+        groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
+        art,
+        icon,
+        pinned: pinnedIndex === idx,
+        holdToPin,
+        maActive: isMaActive,
+        onChipClick,
+        onIconClick,
+        onPinClick,
+        onPointerDown: (e) => onPointerDown(e, idx),
+        onPointerMove: (e) => onPointerMove(e, idx),
+        onPointerUp: (e) => onPointerUp(e, idx),
+        sizePercentage,
+      });
+    } else {
+      // Single chip
+      const id = group[0];
+      const idx = entityIds.indexOf(id);
+      const state = hass?.states?.[id];
+      const isChipPlaying = (typeof getIsChipPlaying === "function")
+        ? getIsChipPlaying(id, selectedEntityId === id)
+        : (state?.state === "playing");
+      const artObj = (typeof getChipArt === "function")
+        ? { url: getChipArt(id) }
+        : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
+      const artSource = artObj?.url;
+      const sizePercentage = artObj?.sizePercentage;
+
+      const art = selectedEntityId === id ? (!isIdle && artSource) : (isChipPlaying && artSource);
+      const icon = state?.attributes?.icon || "mdi:cast";
+      const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
+      return renderChip({
+        idx,
+        selected: selectedEntityId === id,
+        playing: isChipPlaying,
+        name: getChipName(id),
+        art,
+        icon,
+        pinned: pinnedIndex === idx,
+        holdToPin,
+        maActive: isMaActive,
+        onChipClick,
+        onPinClick,
+        onPointerDown: (e) => onPointerDown(e, idx),
+        onPointerMove: (e) => onPointerMove(e, idx),
+        onPointerUp: (e) => onPointerUp(e, idx),
+        sizePercentage,
+      });
+    }
+  })}
   `;
 }

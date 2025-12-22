@@ -5440,7 +5440,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastRenderedHideControls = hideControlsNow;
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
-    const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
+    let backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
+    if (artworkSizePercentage) {
+      backgroundSize = `${artworkSizePercentage}%`;
+    }
     const backgroundImageValue = idleImageUrl
       ? `url('${idleImageUrl}')`
       : artworkUrl
