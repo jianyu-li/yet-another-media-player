@@ -77,6 +77,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           match_value: "",
           image_url: "",
           size_percentage: undefined,
+          object_fit: undefined,
         };
       }
 
@@ -88,6 +89,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           match_value: "",
           image_url: item.missing_art_url ?? "",
           size_percentage: sizePercentage,
+          object_fit: item.object_fit,
         };
       }
 
@@ -113,6 +115,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         match_value: matchValue ?? "",
         image_url: item.image_url ?? "",
         size_percentage: sizePercentage,
+        object_fit: item.object_fit,
       };
     });
   }
@@ -122,10 +125,13 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     const image = (rule.image_url ?? "").trim();
     if (!image) return null;
 
+    const objectFit = rule.object_fit === "default" ? undefined : rule.object_fit;
+
     if (rule.match_type === "missing_art") {
       return {
         missing_art_url: image,
-        ...(rule.size_percentage !== undefined ? { size_percentage: rule.size_percentage } : {}),
+        ...(rule.size_percentage !== undefined ? { size_percentage: Number(rule.size_percentage) } : {}),
+        ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
       };
     }
 
@@ -135,7 +141,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     return {
       image_url: image,
       [rule.match_type]: value,
-      ...(rule.size_percentage !== undefined ? { size_percentage: rule.size_percentage } : {}),
+      ...(rule.size_percentage !== undefined ? { size_percentage: Number(rule.size_percentage) } : {}),
+      ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
     };
   }
 
@@ -213,7 +220,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   _addArtworkOverride() {
     const list = [...(this._artworkOverrides ?? [])];
-    list.push({ match_type: "media_title", match_value: "", image_url: "", size_percentage: undefined });
+    list.push({ match_type: "media_title", match_value: "", image_url: "", size_percentage: undefined, object_fit: undefined });
     this._writeArtworkOverrides(list);
   }
 
@@ -247,6 +254,30 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
     list[index] = { ...list[index], image_url: value };
+    this._writeArtworkOverrides(list);
+  }
+
+  _onArtworkSizePercentageChange(index, value) {
+    const list = [...(this._artworkOverrides ?? [])];
+    if (!list[index]) return;
+    if (value === "") {
+      list[index] = { ...list[index], size_percentage: undefined };
+    } else {
+      const num = Number(value);
+      if (Number.isFinite(num)) {
+        list[index] = { ...list[index], size_percentage: num };
+      } else {
+        return; // Ignore invalid numeric input
+      }
+    }
+    this._writeArtworkOverrides(list);
+  }
+
+  _onArtworkObjectFitChange(index, value) {
+    const list = [...(this._artworkOverrides ?? [])];
+    if (!list[index]) return;
+    const finalValue = value === "default" ? undefined : value;
+    list[index] = { ...list[index], object_fit: finalValue };
     this._writeArtworkOverrides(list);
   }
 
@@ -836,6 +867,40 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                           .value=${rule.image_url ?? ""}
                           @input=${(e) => this._onArtworkImageUrlChange(idx, e.target.value)}
                         ></ha-textfield>
+                        <div class="form-row-multi-column" style="gap:12px; display:flex; align-items:flex-start;">
+                          <div class="grow-children" style="flex:1;">
+                            <ha-textfield
+                              class="full-width"
+                              label="Size (%)"
+                              type="number"
+                              min="1"
+                              max="100"
+                              .value=${rule.size_percentage ?? ""}
+                              @input=${(e) => this._onArtworkSizePercentageChange(idx, e.target.value)}
+                            ></ha-textfield>
+                          </div>
+                          <div class="grow-children" style="flex:1.5;">
+                            <ha-selector
+                              .hass=${this.hass}
+                              label="Object Fit"
+                              .selector=${{
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "default", label: "Default" },
+                { value: "cover", label: "Cover" },
+                { value: "contain", label: "Contain" },
+                { value: "fill", label: "Fill" },
+                { value: "scale-down", label: "Scale Down" },
+                { value: "none", label: "None" }
+              ]
+            }
+          }}
+                              .value=${rule.object_fit || "default"}
+                              @value-changed=${(e) => this._onArtworkObjectFitChange(idx, e.detail.value)}
+                            ></ha-selector>
+                          </div>
+                        </div>
                       </div>
                       <div class="action-row-actions">
                         <ha-icon

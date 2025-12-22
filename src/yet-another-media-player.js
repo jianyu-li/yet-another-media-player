@@ -5440,7 +5440,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastRenderedHideControls = hideControlsNow;
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
-    const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
+    const fitBehavior = this._getBackgroundSizeForFit(activeArtworkFit);
+    let backgroundSize = fitBehavior;
+
+    if (artworkSizePercentage) {
+      backgroundSize = `${artworkSizePercentage}%`;
+    }
+
     const backgroundImageValue = idleImageUrl
       ? `url('${idleImageUrl}')`
       : artworkUrl
@@ -5453,7 +5459,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const sharedBackgroundStyle = [
       `background-image: ${backgroundImageValue}`,
       `background-size: ${backgroundSize}`,
-      "background-position: top center",
+      "background-position: center center",
       "background-repeat: no-repeat",
       `filter: ${backgroundFilter}`
     ].join('; ');
@@ -5512,7 +5518,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Prefer playback entity artwork, fallback to main entity
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return (playbackArtwork || mainArtwork)?.url || null;
+        return playbackArtwork || mainArtwork;
       },
       getIsMaActive: (id) => {
         const obj = this._findEntityObjByAnyId(id);
@@ -5767,7 +5773,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const mainState = this.hass?.states?.[mainId];
           const playbackArtwork = this._getArtworkUrl(playbackState);
           const mainArtwork = this._getArtworkUrl(mainState);
-          return (playbackArtwork || mainArtwork)?.url || null;
+          return playbackArtwork || mainArtwork;
         },
         getIsMaActive: (id) => {
           const obj = this._findEntityObjByAnyId(id);
