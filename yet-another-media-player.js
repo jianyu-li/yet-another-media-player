@@ -7847,7 +7847,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           match_type: "media_title",
           match_value: "",
           image_url: "",
-          size_percentage: undefined
+          size_percentage: undefined,
+          object_fit: undefined
         };
       }
       const sizePercentage = item.size_percentage;
@@ -7857,7 +7858,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
           match_type: "missing_art",
           match_value: "",
           image_url: (_item$missing_art_url = item.missing_art_url) !== null && _item$missing_art_url !== void 0 ? _item$missing_art_url : "",
-          size_percentage: sizePercentage
+          size_percentage: sizePercentage,
+          object_fit: item.object_fit
         };
       }
       let matchType = "media_title";
@@ -7881,7 +7883,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         match_type: matchType,
         match_value: matchValue !== null && matchValue !== void 0 ? matchValue : "",
         image_url: (_item$image_url = item.image_url) !== null && _item$image_url !== void 0 ? _item$image_url : "",
-        size_percentage: sizePercentage
+        size_percentage: sizePercentage,
+        object_fit: item.object_fit
       };
     });
   }
@@ -7890,20 +7893,25 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     if (!rule) return null;
     const image = ((_rule$image_url = rule.image_url) !== null && _rule$image_url !== void 0 ? _rule$image_url : "").trim();
     if (!image) return null;
+    const objectFit = rule.object_fit === "default" ? undefined : rule.object_fit;
     if (rule.match_type === "missing_art") {
-      return _objectSpread2$1({
+      return _objectSpread2$1(_objectSpread2$1({
         missing_art_url: image
       }, rule.size_percentage !== undefined ? {
-        size_percentage: rule.size_percentage
+        size_percentage: Number(rule.size_percentage)
+      } : {}), objectFit !== undefined ? {
+        object_fit: objectFit
       } : {});
     }
     const value = ((_rule$match_value = rule.match_value) !== null && _rule$match_value !== void 0 ? _rule$match_value : "").trim();
     if (!value) return null;
-    return _objectSpread2$1({
+    return _objectSpread2$1(_objectSpread2$1({
       image_url: image,
       [rule.match_type]: value
     }, rule.size_percentage !== undefined ? {
-      size_percentage: rule.size_percentage
+      size_percentage: Number(rule.size_percentage)
+    } : {}), objectFit !== undefined ? {
+      object_fit: objectFit
     } : {});
   }
   _writeArtworkOverrides(list) {
@@ -7972,7 +7980,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
       match_type: "media_title",
       match_value: "",
       image_url: "",
-      size_percentage: undefined
+      size_percentage: undefined,
+      object_fit: undefined
     });
     this._writeArtworkOverrides(list);
   }
@@ -8015,13 +8024,32 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     });
     this._writeArtworkOverrides(list);
   }
+  _onArtworkSizePercentageChange(index, value) {
+    var _this$_artworkOverrid6;
+    const list = [...((_this$_artworkOverrid6 = this._artworkOverrides) !== null && _this$_artworkOverrid6 !== void 0 ? _this$_artworkOverrid6 : [])];
+    if (!list[index]) return;
+    const num = value === "" ? undefined : Number(value);
+    list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+      size_percentage: num
+    });
+    this._writeArtworkOverrides(list);
+  }
+  _onArtworkObjectFitChange(index, value) {
+    var _this$_artworkOverrid7;
+    const list = [...((_this$_artworkOverrid7 = this._artworkOverrides) !== null && _this$_artworkOverrid7 !== void 0 ? _this$_artworkOverrid7 : [])];
+    if (!list[index]) return;
+    list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+      object_fit: value
+    });
+    this._writeArtworkOverrides(list);
+  }
   _onArtworkMoved(e) {
-    var _e$detail, _this$_artworkOverrid6;
+    var _e$detail, _this$_artworkOverrid8;
     const {
       oldIndex,
       newIndex
     } = (_e$detail = e.detail) !== null && _e$detail !== void 0 ? _e$detail : {};
-    const list = [...((_this$_artworkOverrid6 = this._artworkOverrides) !== null && _this$_artworkOverrid6 !== void 0 ? _this$_artworkOverrid6 : [])];
+    const list = [...((_this$_artworkOverrid8 = this._artworkOverrides) !== null && _this$_artworkOverrid8 !== void 0 ? _this$_artworkOverrid8 : [])];
     if (oldIndex === undefined || newIndex === undefined) return;
     if (oldIndex < 0 || newIndex < 0 || oldIndex >= list.length || newIndex >= list.length) return;
     const [moved] = list.splice(oldIndex, 1);
@@ -8077,8 +8105,8 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     }, this._activeTab === name, name)), editingEntity ? this._renderEntityEditor((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions2 = this._config.actions) === null || _this$_config$actions2 === void 0 ? void 0 : _this$_config$actions2[this._actionEditorIndex]) : this._renderActiveTab());
   }
   _renderArtworkTab() {
-    var _this$_artworkOverrid7, _this$_config$artwork, _this$_config$extend_, _this$_useIdleImageUr, _this$_config$idle_im, _this$_config$idle_im2;
-    const overrides = [...((_this$_artworkOverrid7 = this._artworkOverrides) !== null && _this$_artworkOverrid7 !== void 0 ? _this$_artworkOverrid7 : [])];
+    var _this$_artworkOverrid9, _this$_config$artwork, _this$_config$extend_, _this$_useIdleImageUr, _this$_config$idle_im, _this$_config$idle_im2;
+    const overrides = [...((_this$_artworkOverrid9 = this._artworkOverrides) !== null && _this$_artworkOverrid9 !== void 0 ? _this$_artworkOverrid9 : [])];
     const matchOptions = [{
       value: "media_title",
       label: "Media Title"
@@ -8138,13 +8166,36 @@ class YetAnotherMediaPlayerEditor extends i$1 {
         this._updateConfig("idle_image", "");
       }
     }, this._useIdleImageUrl ? x(_templateObject6$1 || (_templateObject6$1 = _taggedTemplateLiteral(["\n                <ha-textfield\n                  class=\"full-width\"\n                  placeholder=\"e.g., https://example.com/image.jpg or /local/custom/image.jpg\"\n                  .value=", "\n                  @input=", "\n                  helper=\"Enter a direct URL to an image or a local file path\"\n                  .helperPersistent=", "\n                ></ha-textfield>\n              "])), (_this$_config$idle_im = this._config.idle_image) !== null && _this$_config$idle_im !== void 0 ? _this$_config$idle_im : "", e => this._updateConfig("idle_image", e.target.value), true) : x(_templateObject7$1 || (_templateObject7$1 = _taggedTemplateLiteral(["\n                <ha-entity-picker\n                  class=\"full-width\"\n                  .hass=", "\n                  .value=", "\n                  .includeDomains=", "\n                  clearable\n                  @value-changed=", "\n                ></ha-entity-picker>\n              "])), this.hass, (_this$_config$idle_im2 = this._config.idle_image) !== null && _this$_config$idle_im2 !== void 0 ? _this$_config$idle_im2 : "", ["camera", "image"], e => this._updateConfig("idle_image", e.detail.value)), e => this._onArtworkMoved(e), overrides.length ? overrides.map((rule, idx) => {
-      var _rule$match_type, _rule$match_value2, _rule$match_value3, _rule$image_url2;
-      return x(_templateObject8$1 || (_templateObject8$1 = _taggedTemplateLiteral(["\n                    <div class=\"action-row-inner sortable-item artwork-row\">\n                      <div class=\"handle action-handle\">\n                        <ha-icon icon=\"mdi:drag\"></ha-icon>\n                      </div>\n                      <div class=\"artwork-fields\">\n                        <ha-selector\n                          .hass=", "\n                          label=\"Match Field\"\n                          .selector=", "\n                          .value=", "\n                          @value-changed=", "\n                        ></ha-selector>\n                        ", "\n                        <ha-textfield\n                          class=\"full-width\"\n                          label=", "\n                          .value=", "\n                          @input=", "\n                        ></ha-textfield>\n                      </div>\n                      <div class=\"action-row-actions\">\n                        <ha-icon\n                          class=\"icon-button\"\n                          icon=\"mdi:trash-can\"\n                          title=\"Delete Override\"\n                          @click=", "\n                        ></ha-icon>\n                      </div>\n                    </div>\n                  "])), this.hass, {
+      var _rule$match_type, _rule$match_value2, _rule$match_value3, _rule$image_url2, _rule$size_percentage;
+      return x(_templateObject8$1 || (_templateObject8$1 = _taggedTemplateLiteral(["\n                    <div class=\"action-row-inner sortable-item artwork-row\">\n                      <div class=\"handle action-handle\">\n                        <ha-icon icon=\"mdi:drag\"></ha-icon>\n                      </div>\n                      <div class=\"artwork-fields\">\n                        <ha-selector\n                          .hass=", "\n                          label=\"Match Field\"\n                          .selector=", "\n                          .value=", "\n                          @value-changed=", "\n                        ></ha-selector>\n                        ", "\n                        <ha-textfield\n                          class=\"full-width\"\n                          label=", "\n                          .value=", "\n                          @input=", "\n                        ></ha-textfield>\n                        <div class=\"form-row-multi-column\" style=\"gap:12px; display:flex; align-items:flex-start;\">\n                          <div class=\"grow-children\" style=\"flex:1;\">\n                            <ha-textfield\n                              class=\"full-width\"\n                              label=\"Size (%)\"\n                              type=\"number\"\n                              min=\"1\"\n                              max=\"100\"\n                              .value=", "\n                              @input=", "\n                            ></ha-textfield>\n                          </div>\n                          <div class=\"grow-children\" style=\"flex:1.5;\">\n                            <ha-selector\n                              .hass=", "\n                              label=\"Object Fit\"\n                              .selector=", "\n                              .value=", "\n                              @value-changed=", "\n                            ></ha-selector>\n                          </div>\n                        </div>\n                      </div>\n                      <div class=\"action-row-actions\">\n                        <ha-icon\n                          class=\"icon-button\"\n                          icon=\"mdi:trash-can\"\n                          title=\"Delete Override\"\n                          @click=", "\n                        ></ha-icon>\n                      </div>\n                    </div>\n                  "])), this.hass, {
         select: {
           mode: "dropdown",
           options: matchOptions
         }
-      }, (_rule$match_type = rule.match_type) !== null && _rule$match_type !== void 0 ? _rule$match_type : "media_title", e => this._onArtworkMatchTypeChange(idx, e.detail.value), rule.match_type === "missing_art" ? x(_templateObject9$1 || (_templateObject9$1 = _taggedTemplateLiteral(["\n                                <div class=\"config-subtitle small\">\n                                  Applies when the selected media provides no artwork.\n                                </div>\n                              "]))) : rule.match_type === "entity_id" ? x(_templateObject0$1 || (_templateObject0$1 = _taggedTemplateLiteral(["\n                                  <ha-entity-picker\n                                    class=\"full-width\"\n                                    .hass=", "\n                                    .includeDomains=", "\n                                    .value=", "\n                                    @value-changed=", "\n                                  ></ha-entity-picker>\n                                "])), this.hass, ["media_player"], (_rule$match_value2 = rule.match_value) !== null && _rule$match_value2 !== void 0 ? _rule$match_value2 : "", e => this._onArtworkMatchValueChange(idx, e.detail.value)) : x(_templateObject1$1 || (_templateObject1$1 = _taggedTemplateLiteral(["\n                                  <ha-textfield\n                                    class=\"full-width\"\n                                    label=\"Match Value\"\n                                    .value=", "\n                                    @input=", "\n                                  ></ha-textfield>\n                                "])), (_rule$match_value3 = rule.match_value) !== null && _rule$match_value3 !== void 0 ? _rule$match_value3 : "", e => this._onArtworkMatchValueChange(idx, e.target.value)), rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL", (_rule$image_url2 = rule.image_url) !== null && _rule$image_url2 !== void 0 ? _rule$image_url2 : "", e => this._onArtworkImageUrlChange(idx, e.target.value), () => this._removeArtworkOverride(idx));
+      }, (_rule$match_type = rule.match_type) !== null && _rule$match_type !== void 0 ? _rule$match_type : "media_title", e => this._onArtworkMatchTypeChange(idx, e.detail.value), rule.match_type === "missing_art" ? x(_templateObject9$1 || (_templateObject9$1 = _taggedTemplateLiteral(["\n                                <div class=\"config-subtitle small\">\n                                  Applies when the selected media provides no artwork.\n                                </div>\n                              "]))) : rule.match_type === "entity_id" ? x(_templateObject0$1 || (_templateObject0$1 = _taggedTemplateLiteral(["\n                                  <ha-entity-picker\n                                    class=\"full-width\"\n                                    .hass=", "\n                                    .includeDomains=", "\n                                    .value=", "\n                                    @value-changed=", "\n                                  ></ha-entity-picker>\n                                "])), this.hass, ["media_player"], (_rule$match_value2 = rule.match_value) !== null && _rule$match_value2 !== void 0 ? _rule$match_value2 : "", e => this._onArtworkMatchValueChange(idx, e.detail.value)) : x(_templateObject1$1 || (_templateObject1$1 = _taggedTemplateLiteral(["\n                                  <ha-textfield\n                                    class=\"full-width\"\n                                    label=\"Match Value\"\n                                    .value=", "\n                                    @input=", "\n                                  ></ha-textfield>\n                                "])), (_rule$match_value3 = rule.match_value) !== null && _rule$match_value3 !== void 0 ? _rule$match_value3 : "", e => this._onArtworkMatchValueChange(idx, e.target.value)), rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL", (_rule$image_url2 = rule.image_url) !== null && _rule$image_url2 !== void 0 ? _rule$image_url2 : "", e => this._onArtworkImageUrlChange(idx, e.target.value), (_rule$size_percentage = rule.size_percentage) !== null && _rule$size_percentage !== void 0 ? _rule$size_percentage : "", e => this._onArtworkSizePercentageChange(idx, e.target.value), this.hass, {
+        select: {
+          mode: "dropdown",
+          options: [{
+            value: "default",
+            label: "Default"
+          }, {
+            value: "cover",
+            label: "Cover"
+          }, {
+            value: "contain",
+            label: "Contain"
+          }, {
+            value: "fill",
+            label: "Fill"
+          }, {
+            value: "scale-down",
+            label: "Scale Down"
+          }, {
+            value: "none",
+            label: "None"
+          }]
+        }
+      }, rule.object_fit || "default", e => this._onArtworkObjectFitChange(idx, e.detail.value), () => this._removeArtworkOverride(idx));
     }) : x(_templateObject10$1 || (_templateObject10$1 = _taggedTemplateLiteral(["<div class=\"config-subtitle\" style=\"padding:12px 0;text-align:center;\">No artwork overrides configured. Use the plus button below to add one.</div>"]))), this._addArtworkOverride);
   }
   _renderActiveTab() {

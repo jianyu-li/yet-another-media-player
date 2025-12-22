@@ -92,7 +92,7 @@ Below you will find a list of all configuration options.
 | **Artwork**                |              |              |             |                                                                                                 |
 | `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `fill`, `scale-down`, or `none`                   |
 | `extend_artwork`           | boolean      | No           | `false`     | When `true`, extends the artwork background up behind the chip and action rows for a full-bleed look |
-| `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` scales the replacement. `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
+| `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` and `object_fit` can be used to style the replacement. `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
 | `idle_image`               | image/camera/url/template | No           | —           | Background image when player is idle (supports local files, cameras, URLs, or templates that return either)                   |
 | `idle_timeout_ms`          | number       | No           | `0`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
 |                                                                                                 |
@@ -456,7 +456,7 @@ idle_screen: search-recently-played
 
 Use `media_artwork_overrides` to replace missing or low-resolution art with higher quality images. Rules are evaluated from top to bottom; the first match wins. Supply an `image_url` along with a single match key (`media_title`, `media_artist`, `media_album_name`, `media_content_id`, `media_channel`, `app_name`, `media_content_type`, or `entity_id`). Matches support wildcards (e.g., `media_title: "*"` matches any title). To cover any track that ships without art, use `missing_art_url` instead of a match value.
 
-The following optional parameters can be used to style individual overrides (**YAML only**):
+The following optional parameters can be used to style individual overrides:
 - **`size_percentage`**: Scale the artwork relative to its container (e.g. `50`).
 - **`object_fit`**: Control scaling behavior for this specific override: `cover`, `contain`, `fill`, `scale-down`, or `none`.
 
