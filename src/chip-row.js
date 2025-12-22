@@ -114,9 +114,9 @@ export function renderChip({
   onPointerDown,
   onPointerMove,
   onPointerUp,
-  sizePercentage,
+  objectFit,
 }) {
-  const artStyle = sizePercentage ? `width: ${sizePercentage}%; height: ${sizePercentage}%;` : "";
+  const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
   return html`
     <button class="chip"
             ?selected=${selected}
@@ -164,9 +164,9 @@ export function renderGroupChip({
   onPointerDown,
   onPointerMove,
   onPointerUp,
-  sizePercentage,
+  objectFit,
 }) {
-  const artStyle = sizePercentage ? `width: ${sizePercentage}%; height: ${sizePercentage}%;` : "";
+  const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
   return html`
     <button class="chip group"
             ?selected=${selected}
@@ -228,6 +228,7 @@ export function createHoldToPinHandler({ onPin, onHoldEnd, holdTime = 600, moveT
   let startX = null;
   let startY = null;
   let moved = false;
+  let moveThresholdVal = moveThreshold;
 
   return {
     pointerDown: (e, idx) => {
@@ -245,7 +246,7 @@ export function createHoldToPinHandler({ onPin, onHoldEnd, holdTime = 600, moveT
       if (holdTimer && startX !== null && startY !== null) {
         const dx = Math.abs(e.clientX - startX);
         const dy = Math.abs(e.clientY - startY);
-        if (dx > moveThreshold || dy > moveThreshold) {
+        if (dx > moveThresholdVal || dy > moveThresholdVal) {
           moved = true;
           clearTimeout(holdTimer);
           holdTimer = null;
@@ -297,10 +298,10 @@ export function renderChipRow({
       const idx = entityIds.indexOf(id);
       const state = hass?.states?.[id];
       const artObj = (typeof getChipArt === "function")
-        ? { url: getChipArt(id) }
+        ? getChipArt(id)
         : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
       const art = artObj?.url;
-      const sizePercentage = artObj?.sizePercentage;
+      const objectFit = artObj?.objectFit;
 
       const icon = state?.attributes?.icon || "mdi:cast";
       const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
@@ -319,7 +320,7 @@ export function renderChipRow({
         onPointerDown: (e) => onPointerDown(e, idx),
         onPointerMove: (e) => onPointerMove(e, idx),
         onPointerUp: (e) => onPointerUp(e, idx),
-        sizePercentage,
+        objectFit,
       });
     } else {
       // Single chip
@@ -330,10 +331,10 @@ export function renderChipRow({
         ? getIsChipPlaying(id, selectedEntityId === id)
         : (state?.state === "playing");
       const artObj = (typeof getChipArt === "function")
-        ? { url: getChipArt(id) }
+        ? getChipArt(id)
         : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
       const artSource = artObj?.url;
-      const sizePercentage = artObj?.sizePercentage;
+      const objectFit = artObj?.objectFit;
 
       const art = selectedEntityId === id ? (!isIdle && artSource) : (isChipPlaying && artSource);
       const icon = state?.attributes?.icon || "mdi:cast";
@@ -353,7 +354,7 @@ export function renderChipRow({
         onPointerDown: (e) => onPointerDown(e, idx),
         onPointerMove: (e) => onPointerMove(e, idx),
         onPointerUp: (e) => onPointerUp(e, idx),
-        sizePercentage,
+        objectFit,
       });
     }
   })}
