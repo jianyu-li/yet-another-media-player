@@ -606,6 +606,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return obj.entity_id;
   }
 
+  // Check if the currently selected entity (or its MA equivalent) is playing
+  _isCurrentEntityPlaying() {
+    const mainId = this.currentEntityId;
+    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    const maState = maId ? this.hass?.states?.[maId] : null;
+    return (mainState?.state === "playing") || (maState?.state === "playing");
+  }
+
   // Resolve template at action time with fallback to main entity (async)
   async _resolveTemplateAtActionTime(templateString, fallbackEntityId) {
     return resolveTemplateAtActionTime(this.hass, templateString, fallbackEntityId);
@@ -4092,12 +4101,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const mostRecentActiveState = mostRecentActiveEntity
             ? this.hass.states[mostRecentActiveEntity]
             : null;
-          const currentIdx = this._selectedIndex;
-          const currentMainId = this.entityIds[currentIdx];
-          const currentMaId = this._getActualResolvedMaEntityForState(currentIdx);
-          const currentMainState = currentMainId ? this.hass?.states?.[currentMainId]?.state : null;
-          const currentMaState = currentMaId ? this.hass?.states?.[currentMaId]?.state : null;
-          const isCurrentPlaying = currentMainState === "playing" || currentMaState === "playing";
+          const isCurrentPlaying = this._isCurrentEntityPlaying();
 
           if (
             mostRecentActiveState &&
@@ -6728,11 +6732,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _updateIdleState() {
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
-    const mainId = this.currentEntityId;
-    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const mainState = mainId ? this.hass?.states?.[mainId] : null;
-    const maState = maId ? this.hass?.states?.[maId] : null;
-    const isAnyPlaying = (mainState?.state === "playing") || (maState?.state === "playing");
+    const isAnyPlaying = this._isCurrentEntityPlaying();
 
     if (isAnyPlaying) {
       // Became active, clear timer and set not idle
