@@ -5444,10 +5444,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let backgroundSize = fitBehavior;
 
     if (artworkSizePercentage) {
-      // If we have a size percentage, we want to apply the fit behavior within that percentage
-      // e.g. "contain 80%" or "80%" (which defaults to fill behavior basically)
-      // For background-size, we can use the keyword followed by the percentage for better behavior
-      backgroundSize = `${fitBehavior} ${artworkSizePercentage}%`;
+      backgroundSize = `${artworkSizePercentage}%`;
     }
 
     const backgroundImageValue = idleImageUrl

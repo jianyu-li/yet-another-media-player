@@ -228,8 +228,6 @@ export function createHoldToPinHandler({ onPin, onHoldEnd, holdTime = 600, moveT
   let startX = null;
   let startY = null;
   let moved = false;
-  let moveThresholdVal = moveThreshold;
-
   return {
     pointerDown: (e, idx) => {
       startX = e.clientX;
@@ -246,7 +244,7 @@ export function createHoldToPinHandler({ onPin, onHoldEnd, holdTime = 600, moveT
       if (holdTimer && startX !== null && startY !== null) {
         const dx = Math.abs(e.clientX - startX);
         const dy = Math.abs(e.clientY - startY);
-        if (dx > moveThresholdVal || dy > moveThresholdVal) {
+        if (dx > moveThreshold || dy > moveThreshold) {
           moved = true;
           clearTimeout(holdTimer);
           holdTimer = null;

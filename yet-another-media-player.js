@@ -939,7 +939,6 @@ function createHoldToPinHandler(_ref4) {
   let startX = null;
   let startY = null;
   let moved = false;
-  let moveThresholdVal = moveThreshold;
   return {
     pointerDown: (e, idx) => {
       startX = e.clientX;
@@ -955,7 +954,7 @@ function createHoldToPinHandler(_ref4) {
       if (holdTimer && startX !== null && startY !== null) {
         const dx = Math.abs(e.clientX - startX);
         const dy = Math.abs(e.clientY - startY);
-        if (dx > moveThresholdVal || dy > moveThresholdVal) {
+        if (dx > moveThreshold || dy > moveThreshold) {
           moved = true;
           clearTimeout(holdTimer);
           holdTimer = null;
@@ -8025,18 +8024,29 @@ class YetAnotherMediaPlayerEditor extends i$1 {
     var _this$_artworkOverrid6;
     const list = [...((_this$_artworkOverrid6 = this._artworkOverrides) !== null && _this$_artworkOverrid6 !== void 0 ? _this$_artworkOverrid6 : [])];
     if (!list[index]) return;
-    const num = value === "" ? undefined : Number(value);
-    list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
-      size_percentage: num
-    });
+    if (value === "") {
+      list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+        size_percentage: undefined
+      });
+    } else {
+      const num = Number(value);
+      if (Number.isFinite(num)) {
+        list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+          size_percentage: num
+        });
+      } else {
+        return; // Ignore invalid numeric input
+      }
+    }
     this._writeArtworkOverrides(list);
   }
   _onArtworkObjectFitChange(index, value) {
     var _this$_artworkOverrid7;
     const list = [...((_this$_artworkOverrid7 = this._artworkOverrides) !== null && _this$_artworkOverrid7 !== void 0 ? _this$_artworkOverrid7 : [])];
     if (!list[index]) return;
+    const finalValue = value === "default" ? undefined : value;
     list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
-      object_fit: value
+      object_fit: finalValue
     });
     this._writeArtworkOverrides(list);
   }
@@ -13970,10 +13980,7 @@ class YetAnotherMediaPlayerCard extends i$1 {
     const fitBehavior = this._getBackgroundSizeForFit(activeArtworkFit);
     let backgroundSize = fitBehavior;
     if (artworkSizePercentage) {
-      // If we have a size percentage, we want to apply the fit behavior within that percentage
-      // e.g. "contain 80%" or "80%" (which defaults to fill behavior basically)
-      // For background-size, we can use the keyword followed by the percentage for better behavior
-      backgroundSize = "".concat(fitBehavior, " ").concat(artworkSizePercentage, "%");
+      backgroundSize = "".concat(artworkSizePercentage, "%");
     }
     const backgroundImageValue = idleImageUrl ? "url('".concat(idleImageUrl, "')") : artworkUrl ? "url('".concat(artworkUrl, "')") : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";

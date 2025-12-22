@@ -260,15 +260,24 @@ class YetAnotherMediaPlayerEditor extends LitElement {
   _onArtworkSizePercentageChange(index, value) {
     const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
-    const num = value === "" ? undefined : Number(value);
-    list[index] = { ...list[index], size_percentage: num };
+    if (value === "") {
+      list[index] = { ...list[index], size_percentage: undefined };
+    } else {
+      const num = Number(value);
+      if (Number.isFinite(num)) {
+        list[index] = { ...list[index], size_percentage: num };
+      } else {
+        return; // Ignore invalid numeric input
+      }
+    }
     this._writeArtworkOverrides(list);
   }
 
   _onArtworkObjectFitChange(index, value) {
     const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
-    list[index] = { ...list[index], object_fit: value };
+    const finalValue = value === "default" ? undefined : value;
+    list[index] = { ...list[index], object_fit: finalValue };
     this._writeArtworkOverrides(list);
   }
 
