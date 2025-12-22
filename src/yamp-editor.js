@@ -373,13 +373,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         /* add to rows with multiple elements to align the elements horizontally */
         .form-row-multi-column {
           display: flex;
-          /*gap: 12px;*/
+          flex-wrap: wrap;
+          gap: 12px;
         }
         .form-row-multi-column > div {
           flex: 1;
           display: flex;
           align-items: center;
           gap: 8px;
+          min-width: 120px;
         }
         .form-row-multi-column > div.number-input-with-note {
           flex-direction: column;
@@ -867,7 +869,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                           .value=${rule.image_url ?? ""}
                           @input=${(e) => this._onArtworkImageUrlChange(idx, e.target.value)}
                         ></ha-textfield>
-                        <div class="form-row-multi-column" style="gap:12px; display:flex; align-items:flex-start;">
+                        <div class="form-row-multi-column" style="gap:12px; flex-wrap:wrap; align-items:flex-start;">
                           <div class="grow-children" style="flex:1;">
                             <ha-textfield
                               class="full-width"
