@@ -3004,14 +3004,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getArtworkOverrideCacheKey(override, type = "image", stateObj = null) {
     this._ensureArtworkOverrideIndexMap();
-    if (!override) return `generic:${type}`;
-    const idx = this._artworkOverrideIndexMap?.get(override);
 
     // Include media title and artist in the key if available to ensure
     // templates are re-evaluated when the track changes.
     const mediaTitle = stateObj?.attributes?.media_title || "";
     const mediaArtist = stateObj?.attributes?.media_artist || "";
     const stateKey = `${mediaTitle}:${mediaArtist}`;
+
+    if (!override) return `generic:${type}:${stateKey}`;
+    const idx = this._artworkOverrideIndexMap?.get(override);
 
     if (typeof idx === "number") return `${idx}:${type}:${stateKey}`;
     return `generic:${type}:${stateKey}`;
