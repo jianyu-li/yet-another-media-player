@@ -5725,7 +5725,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 ` : nothing}
             ${(hideControlsNow && !this._showEntityOptions) ? html`
-              <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: 10;">
+              <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: ${Z_LAYERS.FLOATING_ELEMENT};">
                 <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                   <span class="more-info-icon">&#9776;</span>
                 </button>
