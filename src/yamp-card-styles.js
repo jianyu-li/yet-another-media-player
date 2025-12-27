@@ -2044,6 +2044,12 @@ export const yampCardStyles = css`
     margin-top: 2px;
   }
 
+  .entity-options-search-result.menu-active > *:not(.search-row-slide-out) {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .entity-options-search-result {
     position: relative;
     overflow: hidden;
@@ -2056,7 +2062,6 @@ export const yampCardStyles = css`
     color: var(--primary-text);
     background: none;
   }
-
   .search-row-slide-out {
     position: absolute;
     inset: 0;
