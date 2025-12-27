@@ -1,7 +1,7 @@
 // import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { css } from "lit";
 
-const Z_LAYERS = Object.freeze({
+export const Z_LAYERS = Object.freeze({
   MEDIA_BACKGROUND: 0,
   MEDIA_OVERLAY: 1,
   FLOATING_ELEMENT: 2,
