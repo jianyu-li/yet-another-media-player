@@ -6243,7 +6243,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         </button>
                       ` : nothing}
                       ${this._shouldShowSearchResultsCount() ? html`
-                        <span style="margin-left:auto;padding-left:8px;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;text-align:right;flex-shrink:0;">
+                        <span class="search-results-count">
                           ${this._getSearchResultsCountLabel()}
                         </span>
                       ` : nothing}

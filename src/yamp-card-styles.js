@@ -2417,6 +2417,18 @@ export const yampCardStyles = css`
   }
 
   /* Search layout */
+  .search-results-count {
+    margin-left: auto;
+    padding-left: 0px;
+    padding-right: 15px;
+    font-size: 0.85em;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.75);
+    white-space: nowrap;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
   .entity-options-sheet .entity-options-search {
     display: flex;
     flex-direction: column;
