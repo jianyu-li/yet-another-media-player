@@ -6,11 +6,13 @@ export const Z_LAYERS = Object.freeze({
   MEDIA_OVERLAY: 1,
   FLOATING_ELEMENT: 2,
   STICKY_CHIPS: 3,
-  ACCENT_FOREGROUND: 4,
-  FLOATING_CONTROLS: 5,
-  OVERLAY_BASE: 6,
-  MODAL_BACKDROP: 7,
-  MODAL_TOAST: 8,
+  ACCENT_FOREGROUND: 3,
+  FLOATING_CONTROLS: 3,
+  OVERLAY_BASE: 4,
+  MODAL_BACKDROP: 4,
+  MODAL_TOAST: 5,
+  SEARCH_SLIDE_OUT: 1,
+  SEARCH_SUCCESS: 2
 });
 
 export const yampCardStyles = css`
@@ -2064,7 +2066,7 @@ export const yampCardStyles = css`
     background: rgba(0, 0, 0, 0.01) ;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    z-index: 10;
+    z-index: ${Z_LAYERS.SEARCH_SLIDE_OUT};
     display: flex;
     align-items: center;
     padding: 0 8px;
@@ -2096,7 +2098,7 @@ export const yampCardStyles = css`
     font-weight: 600;
     font-size: 0.95em;
     text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-    z-index: 20;
+    z-index: ${Z_LAYERS.SEARCH_SUCCESS};
     border-radius: inherit;
     box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
     animation: success-fade-in 0.3s ease;
