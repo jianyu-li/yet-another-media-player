@@ -1897,9 +1897,13 @@ export const yampCardStyles = css`
     outline: 1px solid #ff9800;
   }
 
-  .entity-options-sheet.source-list-sheet {
+  .source-list-sheet {
     position: relative;
     overflow: visible;
+    width: 100%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .source-list-scroll {
@@ -2880,6 +2884,14 @@ export const yampCardStyles = css`
 
   /* Also override at the root level when match_theme is false */
   yet-another-media-player[data-match-theme="false"] {
+    --custom-accent: #ff9800 ;
+    --accent-color: #ff9800 ;
+    --primary-color: #ff9800 ;
+    --ha-accent-color: #ff9800 ;
+  }
+
+  /* Also redefine --custom-accent locally in the search sheet, just like entity-options-resolved-entities does */
+  .search-sheet[data-match-theme="false"] {
     --custom-accent: #ff9800 ;
     --accent-color: #ff9800 ;
     --primary-color: #ff9800 ;

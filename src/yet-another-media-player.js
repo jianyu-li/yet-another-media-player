@@ -5122,7 +5122,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ` : nothing;
 
     // Collect unique, sorted first letters of source names
-    const sourceList = stateObj.attributes.source_list || [];
+    const sourceList = (stateObj.attributes.source_list && stateObj.attributes.source_list.length > 0)
+      ? stateObj.attributes.source_list
+      : (this.currentStateObj?.attributes?.source_list || []);
     const sourceLetters = Array.from(new Set(sourceList.map(s => (s && s[0] ? s[0].toUpperCase() : ""))))
       .filter(l => l && /^[A-Z]$/.test(l))
       .sort();
@@ -6628,7 +6630,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   Back
                 </button>
                 <div class="entity-options-divider"></div>
-                <div class="entity-options-sheet source-list-sheet" style="position:relative;">
+                <div class="source-list-sheet" style="position:relative;">
                   <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
                     ${sourceList.map(src => html`
                       <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
