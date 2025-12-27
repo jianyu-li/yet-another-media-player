@@ -5,7 +5,7 @@ import { renderActionChipRow } from "./action-chip-row.js";
 import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
-import { yampCardStyles } from "./yamp-card-styles.js";
+import { yampCardStyles, Z_LAYERS } from "./yamp-card-styles.js";
 import { renderSearchSheet, renderSearchOptionsOverlay, searchMedia, playSearchedMedia, getFavorites, getRecentlyPlayed, isTrackFavorited } from "./search-sheet.js";
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
 import {
@@ -3303,10 +3303,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
         holdTime: 650,
         moveThreshold: 8
       });
-    } else {
-      this._holdHandler = null;
     }
-    this._selectedIndex = 0;
+    const newSelectedIndex = this._selectedIndex || 0;
+    this._selectedIndex = (newSelectedIndex < this.entityIds.length) ? newSelectedIndex : 0;
     this._lastPlaying = null;
     this._lastActiveEntityId = null;
     // Set accent color
@@ -4130,7 +4129,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             mostRecentActiveState &&
             mostRecentActiveState.state === "playing" &&
             this.entityIds[this._selectedIndex] !== mostRecentId &&
-            !this._idleTimeout &&
+            (!this._idleTimeout || !this._hasSeenPlayback) &&
             !isCurrentPlaying
           ) {
             this._selectedIndex = this.entityIds.indexOf(mostRecentId);
@@ -6761,7 +6760,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _updateIdleState() {
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
-    const isAnyPlaying = this._isCurrentEntityPlaying();
+    const isAnyPlaying = this.entityIds.some((id, idx) => {
+      const activeId = this._getEntityForPurpose(idx, 'sorting');
+      return this.hass.states[activeId]?.state === "playing";
+    });
 
     if (isAnyPlaying) {
       // Became active, clear timer and set not idle
