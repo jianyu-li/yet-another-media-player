@@ -1919,6 +1919,11 @@ export const yampCardStyles = css`
     overflow-y: auto;
     max-height: 340px;
     scrollbar-width: none;
+    width: 100%;
+  }
+
+  .source-list-scroll .entity-options-item {
+    width: 100%;
   }
 
   .source-list-scroll::-webkit-scrollbar {
@@ -2002,6 +2007,11 @@ export const yampCardStyles = css`
   .floating-source-index .source-index-letter:hover,
   .floating-source-index .source-index-letter:focus {
     color: #fff;
+  }
+
+  .floating-source-index .source-index-letter[disabled] {
+    opacity: 0.25;
+    cursor: default;
   }
 
   /* Group toggle buttons */

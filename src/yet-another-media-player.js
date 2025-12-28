@@ -6621,15 +6621,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
             // --- End new group player rows logic ---
           })()}
               ` : html`
-                <div class="source-list-centering-wrapper" style="width:100%; display:flex; flex-direction:column; align-items:center;">
-                  <button class="entity-options-item close-item" style="width:100%;" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
+                <div class="source-list-centering-wrapper">
+                  <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
                     Back
                   </button>
-                  <div class="entity-options-divider" style="width:100%;"></div>
-                  <div class="source-list-sheet" style="width:100%;">
-                    <div class="source-list-scroll" style="overflow-y:auto; max-height:340px; width:100%;">
+                  <div class="entity-options-divider"></div>
+                  <div class="source-list-sheet">
+                    <div class="source-list-scroll" style="overflow-y:auto; max-height:340px;">
                       ${sourceList.map(src => html`
-                        <div class="entity-options-item" style="width:100%;" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
+                        <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
                       `)}
                     </div>
                   </div>
@@ -6649,7 +6649,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       <button
                         class="source-index-letter"
                         ?disabled=${!isAvailable}
-                        style="${!isAvailable ? 'opacity: 0.25; cursor: default;' : ''}"
                         data-scale=${scale}
                         @mouseenter=${isAvailable ? () => { this._hoveredSourceLetterIndex = i; this.requestUpdate(); } : nothing}
                         @mouseleave=${() => { this._hoveredSourceLetterIndex = null; this.requestUpdate(); }}
