@@ -6242,7 +6242,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         </button>
                       ` : nothing}
                       ${this._shouldShowSearchResultsCount() ? html`
-                        <span style="margin-left:auto;padding-left:8px;font-size:0.85em;font-style:italic;color:rgba(255,255,255,0.75);white-space:nowrap;text-align:right;flex-shrink:0;">
+                        <span class="search-results-count">
                           ${this._getSearchResultsCountLabel()}
                         </span>
                       ` : nothing}
@@ -6264,7 +6264,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ? html`<div class="entity-options-search-empty" style="color: white;">No results.</div>`
               : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
-                            <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''}">
+                            <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
                               ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
                                 <img
                                   class="entity-options-search-thumb"

@@ -2046,6 +2046,12 @@ export const yampCardStyles = css`
     margin-top: 2px;
   }
 
+  .entity-options-search-result.menu-active > *:not(.search-row-slide-out) {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .entity-options-search-result {
     position: relative;
     overflow: hidden;
@@ -2058,7 +2064,6 @@ export const yampCardStyles = css`
     color: var(--primary-text);
     background: none;
   }
-
   .search-row-slide-out {
     position: absolute;
     inset: 0;
@@ -2414,6 +2419,18 @@ export const yampCardStyles = css`
   }
 
   /* Search layout */
+  .search-results-count {
+    margin-left: auto;
+    padding-left: 0px;
+    padding-right: 15px;
+    font-size: 0.85em;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.75);
+    white-space: nowrap;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
   .entity-options-sheet .entity-options-search {
     display: flex;
     flex-direction: column;
