@@ -1705,6 +1705,7 @@ export const yampCardStyles = css`
     scrollbar-width: none;
     -ms-overflow-style: none;
     font-size: calc(1em * var(--yamp-text-scale-menu, 1));
+    position: relative;
   }
 
   /* Main menu specific styling - move options down, adapt to card height */
@@ -1899,7 +1900,17 @@ export const yampCardStyles = css`
     outline: 1px solid #ff9800;
   }
 
-  .entity-options-sheet.source-list-sheet {
+  .source-list-centering-wrapper {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .source-list-sheet {
+    width: 100%;
     position: relative;
     overflow: visible;
   }
@@ -1908,6 +1919,11 @@ export const yampCardStyles = css`
     overflow-y: auto;
     max-height: 340px;
     scrollbar-width: none;
+    width: 100%;
+  }
+
+  .source-list-scroll .entity-options-item {
+    width: 100%;
   }
 
   .source-list-scroll::-webkit-scrollbar {
@@ -1921,24 +1937,23 @@ export const yampCardStyles = css`
 
   .floating-source-index {
     position: absolute;
-    top: 0;
-    bottom: 0;
+    top: 55px;
+    bottom: 20px;
     right: 0;
-    width: 28px;
+    width: 32px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-start;
+    justify-content: flex-start;
+    align-items: center;
     pointer-events: auto;
     overscroll-behavior: contain;
     z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
-    padding: 12px 8px 8px 0;
+    padding: 0 8px 0 0;
     overflow-y: auto;
-    max-height: 100%;
-    min-width: 32px;
+    max-height: calc(100% - 75px);
+    min-width: 38px;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    cursor: grab;
   }
 
   .entity-options-sheet.chips-mode .floating-source-index {
@@ -1954,16 +1969,16 @@ export const yampCardStyles = css`
     background: none;
     border: none;
     color: #fff;
-    font-size: 1.08em;
+    font-size: 0.9em;
     cursor: pointer;
-    margin: 2px 0;
-    padding: 2px 2px;
+    margin: 1px 0;
+    padding: 0;
     pointer-events: auto;
     outline: none;
     transition: color var(--transition-fast), background var(--transition-fast), transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
     transform: scale(1);
     z-index: ${Z_LAYERS.MEDIA_OVERLAY};
-    min-height: 32px;
+    min-height: 22px;
     min-width: 100%;
     display: flex;
     align-items: center;
@@ -1992,6 +2007,11 @@ export const yampCardStyles = css`
   .floating-source-index .source-index-letter:hover,
   .floating-source-index .source-index-letter:focus {
     color: #fff;
+  }
+
+  .floating-source-index .source-index-letter[disabled] {
+    opacity: 0.25;
+    cursor: default;
   }
 
   /* Group toggle buttons */
