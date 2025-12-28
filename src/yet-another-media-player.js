@@ -5827,8 +5827,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }}>More Info</button>
                   <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>Search</button>
 
-                  ${Array.isArray(this.currentStateObj?.attributes?.source_list) &&
-            this.currentStateObj.attributes.source_list.length > 0 ? html`
+                  ${Array.isArray(sourceList) && sourceList.length > 0 ? html`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
                     ` : nothing}
                   ${this._canShowTransferQueueOption() ? html`
@@ -6622,15 +6621,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
             // --- End new group player rows logic ---
           })()}
               ` : html`
-                <div class="source-list-centering-wrapper" style="width:100%;">
-                  <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
+                <div class="source-list-centering-wrapper" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+                  <button class="entity-options-item close-item" style="width:100%;" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
                     Back
                   </button>
-                  <div class="entity-options-divider"></div>
-                  <div class="source-list-sheet" style="position:relative;">
-                    <div class="source-list-scroll" style="overflow-y:auto; max-height:340px;">
+                  <div class="entity-options-divider" style="width:100%;"></div>
+                  <div class="source-list-sheet" style="width:100%;">
+                    <div class="source-list-scroll" style="overflow-y:auto; max-height:340px; width:100%;">
                       ${sourceList.map(src => html`
-                        <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
+                        <div class="entity-options-item" style="width:100%;" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
                       `)}
                     </div>
                   </div>

@@ -1705,6 +1705,7 @@ export const yampCardStyles = css`
     scrollbar-width: none;
     -ms-overflow-style: none;
     font-size: calc(1em * var(--yamp-text-scale-menu, 1));
+    position: relative;
   }
 
   /* Main menu specific styling - move options down, adapt to card height */
@@ -1899,17 +1900,19 @@ export const yampCardStyles = css`
     outline: 1px solid #ff9800;
   }
 
-  .entity-options-sheet.source-list-sheet {
-    position: relative;
-    overflow: visible;
-  }
-
   .source-list-centering-wrapper {
     width: 100%;
     margin: 0;
     padding: 0;
-    display: block;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .source-list-sheet {
+    width: 100%;
+    position: relative;
+    overflow: visible;
   }
 
   .source-list-scroll {
