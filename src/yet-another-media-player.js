@@ -5122,9 +5122,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
-    const sourceLetters = Array.from(new Set(sourceList.map(s => (s && s[0] ? s[0].toUpperCase() : ""))))
-      .filter(l => l && /^[A-Z]$/.test(l))
-      .sort();
+    const availableSourceFirstLetters = new Set(sourceList.map(s => (s && s[0] ? s[0].toUpperCase() : "")));
+    const sourceLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
     if (this._idleImageTemplate && this._idleImageTemplateNeedsResolve && !this._resolvingIdleImageTemplate && this._isIdle) {
       void this._resolveIdleImageTemplate();
@@ -6623,22 +6622,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
             // --- End new group player rows logic ---
           })()}
               ` : html`
-                <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
-                  Back
-                </button>
-                <div class="entity-options-divider"></div>
-                <div class="entity-options-sheet source-list-sheet" style="position:relative;">
-                  <div class="source-list-scroll" style="overflow-y:auto;max-height:340px;">
-                    ${sourceList.map(src => html`
-                      <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
-                    `)}
+                <div class="source-list-centering-wrapper" style="width:100%;">
+                  <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
+                    Back
+                  </button>
+                  <div class="entity-options-divider"></div>
+                  <div class="source-list-sheet" style="position:relative;">
+                    <div class="source-list-scroll" style="overflow-y:auto; max-height:340px;">
+                      ${sourceList.map(src => html`
+                        <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
+                      `)}
+                    </div>
                   </div>
                 </div>
                 <div class="floating-source-index">
                   ${sourceLetters.map((letter, i) => {
+            const isAvailable = availableSourceFirstLetters.has(letter);
             const hovered = this._hoveredSourceLetterIndex;
             let scale = "";
-            if (hovered !== null && hovered !== undefined) {
+            if (isAvailable && hovered !== null && hovered !== undefined) {
               const dist = Math.abs(hovered - i);
               if (dist === 0) scale = "max";
               else if (dist === 1) scale = "large";
@@ -6647,10 +6649,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
             return html`
                       <button
                         class="source-index-letter"
+                        ?disabled=${!isAvailable}
+                        style="${!isAvailable ? 'opacity: 0.25; cursor: default;' : ''}"
                         data-scale=${scale}
-                        @mouseenter=${() => { this._hoveredSourceLetterIndex = i; this.requestUpdate(); }}
+                        @mouseenter=${isAvailable ? () => { this._hoveredSourceLetterIndex = i; this.requestUpdate(); } : nothing}
                         @mouseleave=${() => { this._hoveredSourceLetterIndex = null; this.requestUpdate(); }}
-                        @click=${() => this._scrollToSourceLetter(letter)}
+                        @click=${isAvailable ? () => this._scrollToSourceLetter(letter) : nothing}
                       >
                         ${letter}
                       </button>
