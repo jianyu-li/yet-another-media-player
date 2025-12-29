@@ -5471,7 +5471,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         <ha-card class="yamp-card" style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
-            class="yamp-card-inner ${shouldDimIdle ? 'dim-idle' : ''}"
+            class="yamp-card-inner ${shouldDimIdle ? 'dim-idle' : ''} ${this.config.dim_chips_on_idle === false ? 'no-chip-dim' : ''}"
           >
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
@@ -6987,6 +6987,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         name: "actions",
         selector: {
           object: {}
+        },
+        required: false
+      },
+      {
+        name: "dim_chips_on_idle",
+        selector: {
+          boolean: {}
         },
         required: false
       }
