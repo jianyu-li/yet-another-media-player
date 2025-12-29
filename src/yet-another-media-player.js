@@ -1,4 +1,5 @@
 import { LitElement, html, css, nothing } from "lit";
+import { classMap } from "lit/directives/class-map.js";
 
 import { renderChip, renderGroupChip, createHoldToPinHandler, renderChipRow } from "./chip-row.js";
 import { renderActionChipRow } from "./action-chip-row.js";
@@ -5471,7 +5472,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         <ha-card class="yamp-card" style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
-            class="yamp-card-inner ${shouldDimIdle ? 'dim-idle' : ''} ${this.config.dim_chips_on_idle === false ? 'no-chip-dim' : ''}"
+            class=${classMap({
+      "yamp-card-inner": true,
+      "dim-idle": shouldDimIdle,
+      "no-chip-dim": this.config.dim_chips_on_idle === false
+    })}
           >
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>

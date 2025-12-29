@@ -149,11 +149,7 @@ export const yampCardStyles = css`
   /* Idle state dimming */
   .dim-idle .details,
   .dim-idle .controls-row,
-  .dim-idle .volume-row {
-    opacity: 0.28;
-    transition: opacity 0.5s;
-  }
-
+  .dim-idle .volume-row,
   .dim-idle:not(.no-chip-dim) .chip-row,
   .dim-idle:not(.no-chip-dim) .action-chip-row {
     opacity: 0.28;
