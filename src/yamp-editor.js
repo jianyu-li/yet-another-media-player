@@ -1053,6 +1053,17 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-selector>
             <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
           </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="dim-chips-on-idle-toggle"
+                .checked=${this._config.dim_chips_on_idle ?? true}
+                @change=${(e) => this._updateConfig("dim_chips_on_idle", e.target.checked)}
+              ></ha-switch>
+              <span>Dim Chips on Idle</span>
+            </div>
+            <div class="config-subtitle">When the card enters idle mode with an image, dim the entity and action chips for a cleaner look.</div>
+          </div>
         </div>
 
         <div class="config-section">
