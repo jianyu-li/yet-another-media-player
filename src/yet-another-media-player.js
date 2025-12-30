@@ -5744,7 +5744,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
         <div class="entity-options-container entity-options-container-opening">
-          <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
+          <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" 
+               @click=${e => e.stopPropagation()}
+               data-pin-search-headers="${this.config?.pin_search_headers === true}">
             ${showChipsInMenu ? html`
                 <div class="entity-options-chips-wrapper" @click=${(e) => e.stopPropagation()}>
                 <div class="chip-row entity-options-chips-strip">
@@ -6101,7 +6103,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   
                   ${this._usingMusicAssistant && !this._searchLoading ? html`
-                    <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
+                    <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
                       <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
                         <button
                           class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
@@ -6997,6 +6999,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       },
       {
         name: "dim_chips_on_idle",
+        selector: {
+          boolean: {}
+        },
+        required: false
+      },
+      {
+        name: "pin_search_headers",
         selector: {
           boolean: {}
         },

@@ -2458,8 +2458,26 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet .entity-options-search-row,
-  .entity-options-sheet .search-filter-chips {
+  .entity-options-sheet .search-filter-chips,
+  .entity-options-sheet .search-sub-filters {
     flex: 0 0 auto;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] {
+    overflow-y: hidden !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
+    margin-bottom: 0;
+    padding-bottom: 80px; /* Keep padding for persistent controls */
   }
 
   .entity-options-sheet .entity-options-search-results {
