@@ -1694,7 +1694,7 @@ export const yampCardStyles = css`
     border-radius: var(--border-radius);
     box-shadow: none;
     width: 100%;
-    padding: 18px 8px 70px 8px;
+    padding: 18px 8px 0px 8px;
     padding-top: clamp(12px, 6vh, 18px);
     display: flex;
     flex-direction: column;
@@ -2477,7 +2477,7 @@ export const yampCardStyles = css`
     overflow-y: hidden ;
     display: flex;
     flex-direction: column;
-    padding-bottom: 72px ;
+    padding-bottom: 0px ;
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
@@ -2538,7 +2538,7 @@ export const yampCardStyles = css`
     flex: 1;
     overflow-y: auto;
     margin: 12px 0;
-    padding-bottom: 80px;
+    padding-bottom: 0px;
     /* Hide scrollbars */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
