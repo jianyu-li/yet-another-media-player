@@ -1817,6 +1817,34 @@ export const yampCardStyles = css`
     display: none;
   }
 
+  /* Seamless grouping header and scrolling list */
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-header {
+    z-index: 1;
+    padding-top: 4px;
+    margin-top: -4px;
+    padding-bottom: 4px;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    margin-bottom: 72px; /* Reserve space for controls */
+    padding-bottom: 0;
+    scrollbar-width: thin; /* Allow scrollbar if needed */
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+  }
+
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
+    margin-bottom: 12px;
+    padding-bottom: 0;
+  }
+
   .entity-options-title {
     font-size: 1.1em;
     font-weight: bold;

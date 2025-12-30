@@ -6476,7 +6476,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
             if (!groupedAny && !activeIsGroupCapable) {
               return html`
-                        <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
+                        <div class="group-list-header">
+                          <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
+                        </div>
                         <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
                           No group-capable players.
                         </div>
@@ -6510,20 +6512,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
               sortedGroupIds = currentFirst ? [currentFirst, ...others] : others;
             }
             return html`
-                      <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
-                      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                        ${groupedAny ? html`
+                      <div class="group-list-header">
+                        <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                          ${groupedAny ? html`
+                            <button class="entity-options-item"
+                              @click=${() => this._syncGroupVolume()}
+                              style="flex:0 0 auto; min-width:140px; text-align:center;">
+                              Sync Volume
+                            </button>
+                          ` : nothing}
                           <button class="entity-options-item"
-                            @click=${() => this._syncGroupVolume()}
-                            style="flex:0 0 auto; min-width:140px; text-align:center;">
-                            Sync Volume
+                            @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
+                            style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
+                            ${groupedAny ? "Ungroup All" : "Group All"}
                           </button>
-                        ` : nothing}
-                        <button class="entity-options-item"
-                          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
-                          ${groupedAny ? "Ungroup All" : "Group All"}
-                        </button>
+                        </div>
                       </div>
                       <div class="group-list-scroll">
                         ${sortedGroupIds.length === 0 ? html`
