@@ -2253,6 +2253,8 @@ export const yampCardStyles = css`
   .entity-options-search-queue ha-icon {
     width: 16px;
     height: 16px;
+    
+  
   }
 
   .entity-options-search-play:hover,
