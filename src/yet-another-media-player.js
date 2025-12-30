@@ -5056,13 +5056,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
+    const hasSingleEntity = this.entityObjs.length === 1;
+    const isMinHeight = hasSingleEntity && this.config.always_collapsed === true && this.config.expand_on_search !== true;
+    const effectivePinHeaders = this.config.pin_search_headers === true && !isMinHeight;
+
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
       this.shadowRoot.host.setAttribute("data-control-layout", this._controlLayout);
-      this.shadowRoot.host.setAttribute("data-pin-search-headers", String(this.config.pin_search_headers === true));
+      this.shadowRoot.host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
       if (hasCustomCardHeight) {
         this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
       } else {
@@ -5747,7 +5751,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         <div class="entity-options-container entity-options-container-opening">
           <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" 
                @click=${e => e.stopPropagation()}
-               data-pin-search-headers="${this.config?.pin_search_headers === true}">
+               data-pin-search-headers="${effectivePinHeaders}">
             ${showChipsInMenu ? html`
                 <div class="entity-options-chips-wrapper" @click=${(e) => e.stopPropagation()}>
                 <div class="chip-row entity-options-chips-strip">
