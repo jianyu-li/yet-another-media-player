@@ -2508,6 +2508,12 @@ export const yampCardStyles = css`
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .entity-options-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   /* Reserved space for persistent media controls when pinning is active */
