@@ -1712,7 +1712,7 @@ export const yampCardStyles = css`
 
   /* Main menu specific styling - move options down, adapt to card height */
   .entity-options-sheet .entity-options-menu {
-    margin-top: clamp(36px, 12vh, 150px);
+    margin-top: 0px;
     margin-bottom: 16px;
   }
 
