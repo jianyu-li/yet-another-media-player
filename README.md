@@ -69,12 +69,14 @@ Below you will find a list of all configuration options.
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
+| `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 |                                                                                                 |
 | **Search**                 |              |              |             |                                                                                                 |
 | `search_results_limit`     | number       | No           | `20`        | Maximum number of results to request per media category (artist/album/track/etc.) across favorites, recently played, and standard searches; set to `0` to fall back to Music Assistant’s own limits |
 | `search_results_sort`      | choice       | No           | `default`   | Order search results by `default`, `title_asc`, `title_desc`, `artist_asc`, or `artist_desc`; sorting happens within the results returned by `search_results_limit` |
 | `disable_autofocus`        | boolean      | No           | `false`     | Prevent the search box from auto-focusing so on-screen keyboards stay hidden when opening search sheets |
 | `keep_filters_on_search`   | boolean      | No           | `false`     | Enable this to search within the current active filter (Favorites, etc) instead of clearing it |
+| `pin_search_headers`       | boolean      | No           | `false`     | Always keep search and menu headers pinned at the top while scrolling through results           |
 | `disable_mass_queue`       | boolean      | No           | `false`     | Disable the optional mass_queue integration even if it is installed |
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
@@ -275,12 +277,14 @@ In this example:
 > Choose when the card goes idle and how entity chips behave.
 
 - **Idle Timeout**: Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.
+- **Dim Chips on Idle**: When enabled, entity and action chips will dim when the media player is idle.
 - **Show Chip Row**: "Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.
 
 ## Interactions & Search
 > Fine-tune how entities are pinned and how many results show at once.
 
 - **Hold to Pin**: Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.
+- **Pin Search Headers**: Enable this to pin the header of search and grouping sheets. This keeps the "Back" and "Close" buttons always accessible while you scroll through long lists of results or players.
 - **Disable Search Autofocus**: Keep the search box from stealing focus so on-screen keyboards stay hidden.
 - **Keep Filters on Search**: Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.
 
