@@ -6786,7 +6786,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         })
         : nothing
       }
-        </ha - card >
+        </ha-card>
       `;
   }
 
