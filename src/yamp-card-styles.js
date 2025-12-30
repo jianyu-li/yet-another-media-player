@@ -1707,6 +1707,7 @@ export const yampCardStyles = css`
     -ms-overflow-style: none;
     font-size: calc(1em * var(--yamp-text-scale-menu, 1));
     position: relative;
+    box-sizing: border-box;
   }
 
   /* Main menu specific styling - move options down, adapt to card height */
@@ -2476,11 +2477,13 @@ export const yampCardStyles = css`
     overflow-y: hidden ;
     display: flex;
     flex-direction: column;
-    padding-bottom: 0 ;
+    padding-bottom: 72px ;
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     min-height: 0;
     overflow: hidden;
     padding-bottom: 0px ;
@@ -2511,19 +2514,24 @@ export const yampCardStyles = css`
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
-    margin-bottom: 72px;
+    margin-bottom: 0px;
     padding-bottom: 0px ;
   }
 
   /* Adjust spacing when persistent controls are hidden */
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"],
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] {
+    padding-bottom: 12px ;
+  }
+
+  /* Clean up legacy margin override rules since we now use padding on parent */
   :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
   :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
   :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
-    margin-bottom: 12px;
-    padding-bottom: 0px ;
+    margin-bottom: 0px;
   }
 
   .entity-options-sheet .entity-options-search-results {
