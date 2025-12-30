@@ -2486,15 +2486,44 @@ export const yampCardStyles = css`
     padding-bottom: 0px !important;
   }
 
-  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
-    margin-bottom: 72px; /* Reserve space for controls */
-    padding-bottom: 0;
+  /* Unified Header and Scroll Containers for Menu Sheets */
+  .entity-options-header {
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 10;
   }
 
+  /* When pinning is active, the header is sticky and seamless */
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-header {
+    position: sticky;
+    top: 0;
+    background: none !important;
+  }
+
+  /* The scrollable area for all menus */
+  .entity-options-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  /* Reserved space for persistent media controls when pinning is active */
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
+    margin-bottom: 72px;
+    padding-bottom: 0px !important;
+  }
+
+  /* Adjust spacing when persistent controls are hidden */
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
   :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
-  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
     margin-bottom: 12px;
-    padding-bottom: 0;
+    padding-bottom: 0px !important;
   }
 
   .entity-options-sheet .entity-options-search-results {
