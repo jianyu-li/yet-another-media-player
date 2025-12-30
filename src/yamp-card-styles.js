@@ -1747,7 +1747,7 @@ export const yampCardStyles = css`
     position: sticky;
     top: 0;
     z-index: ${Z_LAYERS.STICKY_CHIPS};
-    padding: 6px 4px 6px 4px;
+    padding: 2px 4px 2px 4px;
     background: transparent;
   }
 
@@ -1757,7 +1757,7 @@ export const yampCardStyles = css`
     justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
-    padding: 6px 8px 6px 8px;
+    padding: 2px 8px 2px 8px;
     background: var(--ha-menu-chip-row-background, transparent);
   }
 
@@ -1785,7 +1785,7 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet.chips-mode {
-    padding-top: 12px;
+    padding-top: 4px;
   }
 
 
@@ -2467,6 +2467,7 @@ export const yampCardStyles = css`
     overflow-y: hidden !important;
     display: flex;
     flex-direction: column;
+    padding-bottom: 0 !important;
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
@@ -2477,7 +2478,12 @@ export const yampCardStyles = css`
 
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
     margin-bottom: 0;
-    padding-bottom: 80px; /* Keep padding for persistent controls */
+    padding-bottom: 72px; /* Standard margin for controls */
+  }
+
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
+    padding-bottom: 12px;
   }
 
   .entity-options-sheet .entity-options-search-results {
