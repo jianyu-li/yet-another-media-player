@@ -2229,6 +2229,7 @@ export const yampCardStyles = css`
     display: flex;
     gap: 6px;
     margin-left: 7px;
+    align-items: center;
   }
 
   .entity-options-search-play,
@@ -2247,6 +2248,7 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
+    padding-bottom: 16px;
   }
 
   .entity-options-search-play ha-icon,
@@ -2265,11 +2267,8 @@ export const yampCardStyles = css`
   }
 
   .entity-options-search-queue {
-    background: transparent;
-    border: none;
     color: #666;
     padding-right: 20px; /* Add right padding to prevent cutoff on mobile */
-    padding-bottom: 12px;
   }
 
   .entity-options-search-queue:hover,

@@ -6329,8 +6329,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 </span>
                               </div>
                                 <div class="entity-options-search-buttons">
-                                  <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
-                                    ▶
+                              <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
+                                    <ha-icon icon="mdi:play"></ha-icon>
                                   </button>
                                   ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
                                     <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="More Options">
