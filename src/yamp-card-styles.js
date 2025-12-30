@@ -1533,7 +1533,7 @@ export const yampCardStyles = css`
 
   .entity-options-container {
     width: 98%;
-    max-width: 430px;
+
     margin: 2% auto;
     display: flex;
     flex-direction: column;
