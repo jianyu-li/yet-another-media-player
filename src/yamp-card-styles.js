@@ -2402,36 +2402,16 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet .search-filter-chips .chip[selected] {
-    color: #111;
+    color: #fff;
   }
 
   .entity-options-sheet .search-filter-chips .chip {
-    text-align: center;
     justify-content: center;
   }
 
   .entity-options-sheet .search-filter-chips .chip:hover {
-    background: var(--custom-accent);
-    color: #111;
-    opacity: 1;
-  }
-
-  /* Override filter chip hover text color when match_theme is false */
-  :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:hover {
-    color: #fff ;
-  }
-
-  /* Add hover effect for inactive filter chips when match_theme is false */
-  :host([data-match-theme="false"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
-    background: var(--custom-accent) ;
-    color: #fff ;
-    opacity: 1;
-  }
-
-  /* Add hover effect for inactive filter chips when match_theme is true */
-  :host([data-match-theme="true"]) .entity-options-sheet .search-filter-chips .chip:not([selected]):hover {
-    background: var(--custom-accent) ;
-    color: #111 ;
+    background: var(--custom-accent) !important;
+    color: #fff !important;
     opacity: 1;
   }
 
