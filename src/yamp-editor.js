@@ -1389,7 +1389,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 id="hide-menu-player-toggle"
                 .checked=${this._config.hide_menu_player ?? false}
                 @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
-                .disabled=${!!this._config.always_collapsed}
+                .disabled=${!!this._config.always_collapsed || (this._config.always_collapsed === true && this._config.pin_search_headers === true && this._config.expand_on_search === true)}
               ></ha-switch>
               <span>Hide Menu Player</span>
             </div>

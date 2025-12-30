@@ -8406,7 +8406,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "Stepper"
         }]
       }
-    }, (_this$_config$volume_2 = this._config.volume_mode) !== null && _this$_config$volume_2 !== void 0 ? _this$_config$volume_2 : "slider", e => this._updateConfig("volume_mode", e.detail.value), renderVolumeStep, (_this$_config$collaps = this._config.collapse_on_idle) !== null && _this$_config$collaps !== void 0 ? _this$_config$collaps : false, e => this._updateConfig("collapse_on_idle", e.target.checked), !this._config.always_collapsed ? "" : "opacity: 0.5;", !this._config.always_collapsed ? "" : "Not available when Always Collapsed is enabled", (_this$_config$hide_me = this._config.hide_menu_player) !== null && _this$_config$hide_me !== void 0 ? _this$_config$hide_me : false, e => this._updateConfig("hide_menu_player", e.target.checked), !!this._config.always_collapsed, (_this$_config$always_ = this._config.always_collapsed) !== null && _this$_config$always_ !== void 0 ? _this$_config$always_ : false, e => this._updateConfig("always_collapsed", e.target.checked), this._config.always_collapsed ? "" : "opacity: 0.5;", this._config.always_collapsed ? "" : "Only available when Always Collapsed is enabled", (_this$_config$expand_ = this._config.expand_on_search) !== null && _this$_config$expand_ !== void 0 ? _this$_config$expand_ : false, e => this._updateConfig("expand_on_search", e.target.checked), !this._config.always_collapsed, this.hass, {
+    }, (_this$_config$volume_2 = this._config.volume_mode) !== null && _this$_config$volume_2 !== void 0 ? _this$_config$volume_2 : "slider", e => this._updateConfig("volume_mode", e.detail.value), renderVolumeStep, (_this$_config$collaps = this._config.collapse_on_idle) !== null && _this$_config$collaps !== void 0 ? _this$_config$collaps : false, e => this._updateConfig("collapse_on_idle", e.target.checked), !this._config.always_collapsed ? "" : "opacity: 0.5;", !this._config.always_collapsed ? "" : "Not available when Always Collapsed is enabled", (_this$_config$hide_me = this._config.hide_menu_player) !== null && _this$_config$hide_me !== void 0 ? _this$_config$hide_me : false, e => this._updateConfig("hide_menu_player", e.target.checked), !!this._config.always_collapsed || this._config.always_collapsed === true && this._config.pin_search_headers === true && this._config.expand_on_search === true, (_this$_config$always_ = this._config.always_collapsed) !== null && _this$_config$always_ !== void 0 ? _this$_config$always_ : false, e => this._updateConfig("always_collapsed", e.target.checked), this._config.always_collapsed ? "" : "opacity: 0.5;", this._config.always_collapsed ? "" : "Only available when Always Collapsed is enabled", (_this$_config$expand_ = this._config.expand_on_search) !== null && _this$_config$expand_ !== void 0 ? _this$_config$expand_ : false, e => this._updateConfig("expand_on_search", e.target.checked), !this._config.always_collapsed, this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -12089,7 +12089,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
-      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+      const forceHideMenuPlayer = this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true;
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this._extendArtwork));
     }
     // Collapse card when idle
@@ -13740,7 +13741,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
-      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+      const forceHideMenuPlayer = this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true;
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
       this.shadowRoot.host.setAttribute("data-control-layout", this._controlLayout);
       this.shadowRoot.host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
