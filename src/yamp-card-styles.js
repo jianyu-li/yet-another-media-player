@@ -1548,7 +1548,8 @@ export const yampCardStyles = css`
   }
 
   /* Expand container height when persistent controls are hidden due to layout constraints */
-  :host([data-hide-persistent-controls="true"]) .entity-options-container {
+  :host([data-hide-persistent-controls="true"]) .entity-options-container,
+  :host([data-pin-search-headers="true"]) .entity-options-container {
     max-height: 96%;
   }
 
@@ -2474,16 +2475,18 @@ export const yampCardStyles = css`
     flex: 1;
     min-height: 0;
     overflow: hidden;
+    padding-bottom: 0px !important;
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
-    margin-bottom: 0;
-    padding-bottom: 72px; /* Standard margin for controls */
+    margin-bottom: 72px; /* Reserve space for controls */
+    padding-bottom: 0;
   }
 
   :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
-    padding-bottom: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 0;
   }
 
   .entity-options-sheet .entity-options-search-results {

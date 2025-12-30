@@ -5062,6 +5062,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
       this.shadowRoot.host.setAttribute("data-control-layout", this._controlLayout);
+      this.shadowRoot.host.setAttribute("data-pin-search-headers", String(this.config.pin_search_headers === true));
       if (hasCustomCardHeight) {
         this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
       } else {
