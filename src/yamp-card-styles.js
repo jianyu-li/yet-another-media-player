@@ -2438,8 +2438,8 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet .search-filter-chips .chip:hover {
-    background: var(--custom-accent) !important;
-    color: #fff !important;
+    background: var(--custom-accent) ;
+    color: #fff ;
     opacity: 1;
   }
 
@@ -2473,17 +2473,17 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] {
-    overflow-y: hidden !important;
+    overflow-y: hidden ;
     display: flex;
     flex-direction: column;
-    padding-bottom: 0 !important;
+    padding-bottom: 0 ;
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    padding-bottom: 0px !important;
+    padding-bottom: 0px ;
   }
 
   /* Unified Header and Scroll Containers for Menu Sheets */
@@ -2497,7 +2497,7 @@ export const yampCardStyles = css`
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-header {
     position: sticky;
     top: 0;
-    background: none !important;
+    background: none ;
   }
 
   /* The scrollable area for all menus */
@@ -2512,7 +2512,7 @@ export const yampCardStyles = css`
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
     margin-bottom: 72px;
-    padding-bottom: 0px !important;
+    padding-bottom: 0px ;
   }
 
   /* Adjust spacing when persistent controls are hidden */
@@ -2523,7 +2523,7 @@ export const yampCardStyles = css`
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
     margin-bottom: 12px;
-    padding-bottom: 0px !important;
+    padding-bottom: 0px ;
   }
 
   .entity-options-sheet .entity-options-search-results {
