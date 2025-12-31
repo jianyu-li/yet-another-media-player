@@ -1560,7 +1560,7 @@ export const yampCardStyles = css`
     gap: 10px;
     padding: 14px 22px 18px 22px;
     margin: 0;
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--ha-entity-menu-overlay, rgba(0,0,0,0.82));
     border-radius: 0;
     border: none;
     flex-shrink: 0;
@@ -2086,7 +2086,7 @@ export const yampCardStyles = css`
 
   /* Search functionality */
   .entity-options-search {
-    padding: 2px 0 80px 0;
+    padding: 0px 0 80px 0;
   }
 
   .entity-options-search-row {
@@ -2523,6 +2523,7 @@ export const yampCardStyles = css`
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
     margin-bottom: 0px;
     padding-bottom: 0px ;
+    background: none ;
   }
 
   /* Adjust spacing when persistent controls are hidden */
