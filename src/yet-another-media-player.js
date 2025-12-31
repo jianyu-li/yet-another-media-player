@@ -13,7 +13,8 @@ import {
   resolveTemplateAtActionTime,
   findAssociatedButtonEntities,
   getMusicAssistantState,
-  getSearchResultClickTitle
+  getSearchResultClickTitle,
+  isMusicAssistantEntity
 } from "./yamp-utils.js";
 
 import {
@@ -153,7 +154,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Check if the active entity is a Music Assistant entity
     const activeState = this.hass?.states?.[activeEntityId];
-    if (!activeState || activeState.attributes?.app_id !== 'music_assistant') {
+    if (!activeState || !isMusicAssistantEntity(activeState)) {
       return null;
     }
 
@@ -2337,7 +2338,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!maState) return false;
 
     // Check if the Music Assistant entity has the right attributes
-    const hasMassAttributes = maState.attributes?.app_id === "music_assistant" ||
+    const hasMassAttributes = isMusicAssistantEntity(maState) ||
       maState.attributes?.mass_player_id ||
       maState.attributes?.active_queue ||
       // If we're in upcoming mode and getting queue items, assume it's MA
@@ -2348,7 +2349,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _looksLikeMusicAssistantState(state) {
     if (!state) return false;
-    return state.attributes?.app_id === "music_assistant" ||
+    return isMusicAssistantEntity(state) ||
       !!state.attributes?.mass_player_id ||
       !!state.attributes?.active_queue;
   }

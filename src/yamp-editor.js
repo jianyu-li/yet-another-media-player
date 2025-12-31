@@ -4,6 +4,7 @@ import { LitElement, html, css, nothing } from "lit";
 import yaml from 'js-yaml';
 
 import { SUPPORT_GROUPING } from "./constants.js";
+import { isMusicAssistantEntity } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
@@ -1677,12 +1678,12 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       ${(() => {
             const mainId = entity?.entity_id;
             const mainState = mainId ? this.hass?.states?.[mainId] : undefined;
-            const mainIsMA = !!(mainState && mainState.attributes?.app_id === 'music_assistant');
+            const mainIsMA = mainState ? isMusicAssistantEntity(mainState) : false;
             const rawMa = entity?.music_assistant_entity;
             const isTemplate = this._looksLikeTemplate?.(rawMa);
             const maId = (typeof rawMa === 'string' && !isTemplate) ? rawMa : undefined;
             const maState = maId ? this.hass?.states?.[maId] : undefined;
-            const maIsMA = !!(maState && maState.attributes?.app_id === 'music_assistant');
+            const maIsMA = maState ? isMusicAssistantEntity(maState) : false;
             // Only show under the dropdown (non-template path)
             const showHiddenFilterChips = mainIsMA || maIsMA;
             if (!showHiddenFilterChips) return nothing;
