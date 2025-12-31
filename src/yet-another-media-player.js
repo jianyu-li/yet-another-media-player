@@ -149,7 +149,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!obj) return null;
 
     // Get the active entity (the one currently selected or playing)
-    const activeEntityId = this._getActivePlaybackEntityId();
+    const activeEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
     if (!activeEntityId) return null;
 
     // Check if the active entity is a Music Assistant entity
@@ -171,7 +171,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Get the current Music Assistant state
   _getMusicAssistantState() {
-    const activeEntityId = this._getActivePlaybackEntityId();
+    const activeEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
     if (!activeEntityId) return null;
 
     return getMusicAssistantState(this.hass, activeEntityId);
@@ -387,7 +387,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchTimeoutHandle = null;
     this._latestSearchToken = 0;
     this._searchTimeoutHandle = null;
-    this._controlLayout = "classic";
     this._swapPauseForStop = false;
     this._controlLayout = "classic";
     // Search hierarchy tracking
@@ -493,6 +492,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastPlayingEntityId = null;
     // Control focus lock to prefer most-recently controlled entity in brief paused window
     this._controlFocusEntityId = null;
+    // Track the last active entity per chip index for intra-chip persistence
+    this._lastActiveEntityIdByChip = {};
+    // Cache for detecting entity state transitions (playing -> stopped)
+    this._playerStateCache = {};
   }
 
   // Resolve and cache the MA entity for a given chip index (template or static)
@@ -3607,66 +3610,62 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return this._getEntityForPurpose(idx, 'playback_control');
   }
   // Choose the active playback target dynamically: prefer the entity that is currently playing
-  _getActivePlaybackEntityId() {
-    const mainId = this.currentEntityId;
-    // Use actual resolved MA entity for active playback detection (can be unconfigured)
-    const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
+  _getActivePlaybackEntityId(idx = this._selectedIndex) {
+    const obj = this.entityObjs?.[idx];
+    if (!obj) return null;
+    const mainId = obj.entity_id;
+    const maId = this._getActualResolvedMaEntityForState(idx);
     const mainState = mainId ? this.hass?.states?.[mainId] : null;
     const maState = maId ? this.hass?.states?.[maId] : null;
 
-    return this._getActivePlaybackEntityIdInternal(mainId, maId, mainState, maState);
+    return this._getActivePlaybackEntityIdInternal(idx, mainId, maId, mainState, maState);
   }
 
-  _getActivePlaybackEntityIdInternal(mainId, maId, mainState, maState) {
+  _getActivePlaybackEntityIdInternal(idx, mainId, maId, mainState, maState) {
     if (maId === mainId) return mainId;
 
     const now = Date.now();
     const maPlayTime = this._playTimestamps?.[maId] || 0;
     const mainPlayTime = this._playTimestamps?.[mainId] || 0;
-    const maWasRecent = (now - maPlayTime) < 5000;
-    const mainWasRecent = (now - mainPlayTime) < 5000;
-    const defaultEntityId = (maId && maId !== mainId) ? maId : mainId;
+
+    // A conflict occurs if one entity is playing but the other STOPPED recently (< 5s).
+    // Transition detection: check if state changed from "playing" since last updated() run.
+    const maWasPlayingUntilNow = this._playerStateCache[maId] === "playing" && maState?.state !== "playing";
+    const mainWasPlayingUntilNow = this._playerStateCache[mainId] === "playing" && mainState?.state !== "playing";
+
+    const maWasRecent = maWasPlayingUntilNow || (now - maPlayTime) < 5000;
+    const mainWasRecent = mainWasPlayingUntilNow || (now - mainPlayTime) < 5000;
 
     // Prioritize the Music Assistant entity when it's playing
     if (maState?.state === "playing") {
-      this._lastActiveEntityId = maId;
+      this._lastActiveEntityIdByChip[idx] = maId;
       return maId;
     }
 
-    // If MA was playing recently, keep it as active playback target for a few seconds (debounce)
-    // even if the main entity is playing something else.
+    // Debounce: Stay on MA if it stopped recently, even if Main is playing.
     if (maWasRecent && maState?.state !== "playing") {
-      // Stay on MA to avoid jumping immediately on pause
       return maId;
     }
 
     // Prioritize the main entity when it's playing
     if (mainState?.state === "playing") {
-      this._lastActiveEntityId = mainId;
+      this._lastActiveEntityIdByChip[idx] = mainId;
       return mainId;
     }
 
-    // If main was playing recently, stay on it (debounce)
+    // Debounce: Stay on Main if it stopped recently, even if MA is playing.
     if (mainWasRecent && mainState?.state !== "playing") {
       return mainId;
     }
 
-    // When card is idle, stay on last active entity
-    if (this._isIdle) {
-      const lastActiveEntity = this._lastActiveEntityId || this._lastPlayingEntityIdByChip?.[this._selectedIndex];
-      if (lastActiveEntity && (lastActiveEntity === maId || lastActiveEntity === mainId)) {
-        return lastActiveEntity;
-      }
-      return defaultEntityId;
+    // Persistence: If no one is playing, stay on the last active entity for this chip indefinitely.
+    const lastActiveForChip = this._lastActiveEntityIdByChip?.[idx];
+    if (lastActiveForChip && (lastActiveForChip === maId || lastActiveForChip === mainId)) {
+      return lastActiveForChip;
     }
 
-    // Standard fallback to last active entity
-    if (this._lastActiveEntityId && (this._lastActiveEntityId === maId || this._lastActiveEntityId === mainId)) {
-      return this._lastActiveEntityId;
-    }
-
-    // Default to Music Assistant entity if configured, otherwise main entity
-    return defaultEntityId;
+    // Absolute fallback: music assistant entity if configured, otherwise main.
+    return (maId && maId !== mainId) ? maId : mainId;
   }
 
   // Get hidden controls configuration for the current entity
@@ -3693,23 +3692,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Get the active playback entity for a specific entity index (for follow_active_volume)
   _getActivePlaybackEntityIdForIndex(idx) {
-    const obj = this.entityObjs[idx];
-    if (!obj) return null;
-
-    const mainId = obj.entity_id;
-    // Use actual resolved MA entity for active playback detection (can be unconfigured)
-    const maId = this._getActualResolvedMaEntityForState(idx);
-    const mainState = mainId ? this.hass?.states?.[mainId] : null;
-    const maState = maId ? this.hass?.states?.[maId] : null;
-
-    if (maId === mainId) return mainId;
-
-    // Prioritize the entity that is actually playing
-    if (mainState?.state === "playing") return mainId;
-    if (maState?.state === "playing") return maId;
-
-    // When neither is playing, prefer the main entity for consistency
-    return mainId;
+    return this._getActivePlaybackEntityId(idx);
   }
   _getGroupingEntityIdByIndex(idx) {
     const obj = this.entityObjs[idx];
@@ -3939,7 +3922,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const cacheKey = `${this._selectedIndex}-${this.hass?.states?.[this.currentEntityId]?.state}-${this.hass?.states?.[this._getSearchEntityId(this._selectedIndex)]?.state}`;
 
     if (this._cachedActivePlaybackEntityId === undefined || this._cachedActivePlaybackEntityKey !== cacheKey) {
-      this._cachedActivePlaybackEntityId = this._getActivePlaybackEntityId();
+      this._cachedActivePlaybackEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
       this._cachedActivePlaybackEntityKey = cacheKey;
     }
     return this._cachedActivePlaybackEntityId;
@@ -4004,18 +3987,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       }
 
-      // Update timestamps for playing entities
+      // Robust state tracking and timestamp updates
       this.entityIds.forEach((id, idx) => {
         const obj = this.entityObjs[idx];
         const mainId = obj.entity_id;
         const maId = this._getActualResolvedMaEntityForState(idx);
 
-        if (mainId && this.hass.states[mainId]?.state === "playing") {
-          this._playTimestamps[mainId] = Date.now();
-        }
-        if (maId && maId !== mainId && this.hass.states[maId]?.state === "playing") {
-          this._playTimestamps[maId] = Date.now();
-        }
+        const idsToTrack = [mainId];
+        if (maId && maId !== mainId) idsToTrack.push(maId);
+
+        idsToTrack.forEach(eid => {
+          if (!eid) return;
+          const currState = this.hass.states[eid]?.state;
+          const prevState = this._playerStateCache[eid];
+
+          if (currState === "playing") {
+            this._playTimestamps[eid] = Date.now();
+            this._lastActiveEntityIdByChip[idx] = eid;
+          } else if (prevState === "playing" && currState !== "playing") {
+            // Just stopped playing - record fresh stop timestamp for debounce correctness
+            this._playTimestamps[eid] = Date.now();
+          }
+          this._playerStateCache[eid] = currState;
+        });
 
         // Also maintain chip-level timestamp for sorting
         const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
