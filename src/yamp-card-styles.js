@@ -1089,6 +1089,13 @@ export const yampCardStyles = css`
     }
   }
 
+  .vol-stepper-container {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+  }
+
   .vol-stepper {
     display: flex;
     align-items: center;

@@ -31,27 +31,28 @@ export function renderVolumeRow({
 
   return html`
     <div class="volume-row">
-      ${isRemoteVolumeEntity
+      <div class="volume-controls">
+        ${hasLeadingControl
+      ? leadingControlTemplate
+      : (reserveLeadingControlSpace ? html`<div class="volume-leading-placeholder"></div>` : nothing)
+    }
+        <button 
+          class="volume-icon-btn" 
+          @click=${onMuteToggle} 
+          title=${(supportsMute ? isMuted : (vol === 0)) ? "Unmute" : "Mute"}
+        >
+          <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
+        </button>
+
+        ${isRemoteVolumeEntity
+      ? html`
+              <div class="vol-stepper">
+                <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
+                <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
+              </div>
+            `
+      : showSlider
         ? html`
-            <div class="vol-stepper">
-              <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
-              <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
-            </div>
-          `
-        : showSlider
-        ? html`
-            <div class="volume-controls">
-              ${hasLeadingControl
-                ? leadingControlTemplate
-                : (reserveLeadingControlSpace ? html`<div class="volume-leading-placeholder"></div>` : nothing)
-              }
-              <button 
-                class="volume-icon-btn" 
-                @click=${onMuteToggle} 
-                title=${(supportsMute ? isMuted : (vol === 0)) ? "Unmute" : "Mute"}
-              >
-                <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
-              </button>
               <div class="volume-slider-container">
                 <input
                   class="vol-slider"
@@ -68,16 +69,18 @@ export function renderVolumeRow({
                   title="Volume"
                 />
               </div>
-            </div>
-          `
+            `
         : html`
-            <div class="vol-stepper">
-              <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
-              <span>${Math.round(vol * 100)}%</span>
-              <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
-            </div>
-          `
-      }
+              <div class="vol-stepper-container">
+                <div class="vol-stepper">
+                  <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
+                  <span>${Math.round(vol * 100)}%</span>
+                  <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
+                </div>
+              </div>
+            `
+    }
+      </div>
       ${showRightPlaceholder ? html`
         <div class="volume-placeholder">
           ${rightSlotTemplate || nothing}
