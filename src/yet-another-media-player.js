@@ -3333,7 +3333,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
-      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+      const forceHideMenuPlayer = this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true;
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this._extendArtwork));
     }
     // Collapse card when idle
@@ -5056,12 +5057,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
+    const hasSingleEntity = this.entityObjs.length === 1;
+    const isMinHeight = hasSingleEntity && this.config.always_collapsed === true && this.config.expand_on_search !== true;
+    const effectivePinHeaders = this.config.pin_search_headers === true && !isMinHeight;
+
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
-      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true));
+      const forceHideMenuPlayer = this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true;
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
       this.shadowRoot.host.setAttribute("data-control-layout", this._controlLayout);
+      this.shadowRoot.host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
       if (hasCustomCardHeight) {
         this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
       } else {
@@ -5744,7 +5751,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
         <div class="entity-options-container entity-options-container-opening">
-          <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
+          <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" 
+               @click=${e => e.stopPropagation()}
+               data-pin-search-headers="${effectivePinHeaders}">
             ${showChipsInMenu ? html`
                 <div class="entity-options-chips-wrapper" @click=${(e) => e.stopPropagation()}>
                 <div class="chip-row entity-options-chips-strip">
@@ -5815,11 +5824,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
               </div>
             ` : nothing}
               ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? html`
-                <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''}" style="display:flex; flex-direction:column;">
+                <div class="entity-options-header">
                   <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
                     Close
                   </button>
                   <div class="entity-options-divider"></div>
+                </div>
+                <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} entity-options-scroll" style="display:flex; flex-direction:column;">
                   <button class="entity-options-item" @click=${() => {
             const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
             if (resolvedEntities.length === 1) {
@@ -5832,12 +5843,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }}>More Info</button>
                   <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>Search</button>
 
-                  ${Array.isArray(sourceList) && sourceList.length > 0 ? html`
+                ${Array.isArray(sourceList) && sourceList.length > 0 ? html`
                       <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
-                    ` : nothing}
+                    ` : nothing
+          }
                   ${this._canShowTransferQueueOption() ? html`
                     <button class="entity-options-item" @click=${() => this._openTransferQueue()}>Transfer Queue</button>
-                  ` : nothing}
+                  ` : nothing
+          }
                   ${(() => {
             const totalEntities = this.entityIds.length;
             const groupableCount = this.entityIds.reduce((acc, id) => {
@@ -5915,11 +5928,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ` : nothing}
                 </div>
               ` : this._showTransferQueue ? html`
-                <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }}>
-                  Back
-                </button>
-                <div class="entity-options-divider"></div>
-                <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
+                <div class="entity-options-header">
+                  <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }}>
+                    Back
+                  </button>
+                  <div class="entity-options-divider"></div>
+                  <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
+                </div>
+              <div class="entity-options-scroll">
                 ${(() => {
             const targets = this._getTransferQueueTargets();
             if (!targets.length) {
@@ -5946,25 +5962,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
           })()
           }
                 ${this._transferQueueStatus ? html`
-                  <div style="
-                    margin-top: 14px;
-                    padding: 10px 12px;
-                    border-radius: 8px;
-                    font-weight: 600;
-                    text-align: center;
-                    background: ${this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)'};
-                    color: ${this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a'};
-                  ">
-                    ${this._transferQueueStatus.message}
-                  </div>
-                ` : nothing}
-              ` : this._showResolvedEntities ? html`
-                <button class="entity-options-item close-item" @click=${() => {
+                    <div style="
+                      margin-top: 14px;
+                      padding: 10px 12px;
+                      border-radius: 8px;
+                      font-weight: 600;
+                      text-align: center;
+                      background: ${this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)'};
+                      color: ${this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a'};
+                    ">
+                      ${this._transferQueueStatus.message}
+                    </div>
+                  ` : nothing}
+              </div>
+            ` : this._showResolvedEntities ? html`
+                <div class="entity-options-header">
+                  <button class="entity-options-item close-item" @click=${() => {
             this._showResolvedEntities = false;
             this.requestUpdate();
           }}>
-                  Back
-                </button>
+                    Back
+                  </button>
                 <div class="entity-options-divider"></div>
                 <div class="entity-options-resolved-entities" style="margin-top:12px;">
                   <div class="entity-options-title">Select Entity for More Info</div>
@@ -6010,19 +6028,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
           })}
                   </div>
                 </div>
-              ` : this._showSearchInSheet ? html`
-                <div class="entity-options-search" style="margin-top:12px;">
-                  ${this._searchHierarchy.length > 0 ? html`
+            ` : this._showSearchInSheet ? html`
+              <div class="entity-options-search" style = "margin-top:12px;" >
+                ${this._searchHierarchy.length > 0 ? html`
                     <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._goBackInSearch(); } }}>
                       Back
                     </button>
                     <div class="entity-options-divider"></div>
-                  ` : nothing}
+                  ` : nothing
+          }
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
-                  ` : html`<div class="entity-options-search-skeleton"></div>`}
+                  ` : html`<div class="entity-options-search-skeleton"></div>`
+          }
                   <div class="entity-options-search-row">
                       <input
                         type="text"
@@ -6052,11 +6072,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       class="entity-options-item"
                       style="min-width:80px;"
                       @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
-                      Cancel
+              Cancel
                     </button>
                   </div>
-                  <!-- FILTER CHIPS -->
-                  ${(() => {
+                  <!--FILTER CHIPS-->
+              ${(() => {
             const classes = this._getVisibleSearchFilterClasses();
             const filter = this._searchMediaClassFilter || "all";
 
@@ -6096,12 +6116,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         `)}
                       </div>
                     `;
-          })()}
+          })()
+          }
                   ${this._searchLoading ? html`<div class="entity-options-search-loading">Loading...</div>` : nothing}
                   ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   
                   ${this._usingMusicAssistant && !this._searchLoading ? html`
-                    <div style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
+                    <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
                       <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
                         <button
                           class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
@@ -6250,10 +6271,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         </span>
                       ` : nothing}
                     </div>
-                  ` : nothing}
-                  
-                  <div class="entity-options-search-results">
-                    ${(() => {
+                  ` : nothing
+          }
+
+            <div class="entity-options-search-results">
+              ${(() => {
             const filter = this._searchMediaClassFilter || "all";
             const currentResults = this._getDisplaySearchResults();
             // Build padded array so row‑count stays constant
@@ -6307,8 +6329,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 </span>
                               </div>
                                 <div class="entity-options-search-buttons">
-                                  <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
-                                    ▶
+                              <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
+                                    <ha-icon icon="mdi:play"></ha-icon>
                                   </button>
                                   ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
                                     <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="More Options">
@@ -6368,16 +6390,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             <div class="entity-options-search-result placeholder"></div>
                           `);
           })()}
-                  </div>
+            </div>
                   </div>
                 </div>
               ` : this._showGrouping ? html`
-                <div class="grouping-header">
-                  <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
-                    Back
+              <div class="grouping-header group-list-header" >
+                <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
+                  Back
                   </button>
                 </div>
-                ${(() => {
+              ${(() => {
             const masterId = this._getGroupingMasterId();
             const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
             let masterGroupId = null;
@@ -6507,21 +6529,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
               sortedGroupIds = currentFirst ? [currentFirst, ...others] : others;
             }
             return html`
-                      <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
-                      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                        ${groupedAny ? html`
+                        <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                          ${groupedAny ? html`
+                            <button class="entity-options-item"
+                              @click=${() => this._syncGroupVolume()}
+                              style="flex:0 0 auto; min-width:140px; text-align:center;">
+                              Sync Volume
+                            </button>
+                          ` : nothing}
                           <button class="entity-options-item"
-                            @click=${() => this._syncGroupVolume()}
-                            style="flex:0 0 auto; min-width:140px; text-align:center;">
-                            Sync Volume
+                            @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
+                            style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
+                            ${groupedAny ? "Ungroup All" : "Group All"}
                           </button>
-                        ` : nothing}
-                        <button class="entity-options-item"
-                          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                          style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
-                          ${groupedAny ? "Ungroup All" : "Group All"}
-                        </button>
-                      </div>
+                        </div>
                       <div class="group-list-scroll">
                         ${sortedGroupIds.length === 0 ? html`
                           <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
@@ -6624,15 +6646,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       </div>
                     `;
             // --- End new group player rows logic ---
-          })()}
-              ` : html`
-                <div class="source-list-centering-wrapper">
+          })()
+          }
+            ` : html`
+                <div class="entity-options-header">
                   <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
                     Back
                   </button>
                   <div class="entity-options-divider"></div>
+                </div>
+                <div class="entity-options-scroll source-list-centering-wrapper">
                   <div class="source-list-sheet">
-                    <div class="source-list-scroll" style="overflow-y:auto; max-height:340px;">
+                    <div class="source-list-scroll">
                       ${sourceList.map(src => html`
                         <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
                       `)}
@@ -6664,7 +6689,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     `;
           })}
                 </div>
-              `}
+            `}
               </div>
             </div>
             <!-- Persistent Media Controls Section - Outside Scrollable Area -->
@@ -6717,15 +6742,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
               </div>
             ` : nothing}
           </div>
-        ` : nothing}
+        ` : nothing
+      }
           ${this._searchActiveOptionsItem ? renderSearchOptionsOverlay({
-            item: this._searchActiveOptionsItem,
-            onClose: () => {
-              this._searchActiveOptionsItem = null;
-              this.requestUpdate();
-            },
-            onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode)
-          }) : nothing}
+        item: this._searchActiveOptionsItem,
+        onClose: () => {
+          this._searchActiveOptionsItem = null;
+          this.requestUpdate();
+        },
+        onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode)
+      }) : nothing
+      }
           ${this._searchOpen
         ? renderSearchSheet({
           open: this._searchOpen,
@@ -6759,7 +6786,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           upcomingFilterActive: this._upcomingFilterActive,
           disableAutofocus: this._disableSearchAutofocus,
         })
-        : nothing}
+        : nothing
+      }
         </ha-card>
       `;
   }
@@ -6997,6 +7025,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       },
       {
         name: "dim_chips_on_idle",
+        selector: {
+          boolean: {}
+        },
+        required: false
+      },
+      {
+        name: "pin_search_headers",
         selector: {
           boolean: {}
         },

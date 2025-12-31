@@ -1116,6 +1116,20 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
 
           <div class="form-row form-row-multi-column">
+            <div style="${(this._config.entities?.length === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true) ? "opacity: 0.5;" : ""}"
+              title="${(this._config.entities?.length === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true) ? "Not available with one entity in Always Collapsed mode unless Expand on Search is enabled" : ""}">
+              <ha-switch
+                id="pin-search-headers-toggle"
+                .checked=${this._config.pin_search_headers ?? false}
+                @change=${(e) => this._updateConfig("pin_search_headers", e.target.checked)}
+                .disabled=${(this._config.entities?.length === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true)}
+              ></ha-switch>
+              <span>Pin search headers</span>
+            </div>
+            <div class="config-subtitle">Keep search input and filters fixed at the top while scrolling results.</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
                 id="disable-mass-queue-toggle"
@@ -1375,7 +1389,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 id="hide-menu-player-toggle"
                 .checked=${this._config.hide_menu_player ?? false}
                 @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
-                .disabled=${!!this._config.always_collapsed}
+                .disabled=${!!this._config.always_collapsed || (this._config.always_collapsed === true && this._config.pin_search_headers === true && this._config.expand_on_search === true)}
               ></ha-switch>
               <span>Hide Menu Player</span>
             </div>
