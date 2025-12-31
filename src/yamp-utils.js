@@ -100,6 +100,19 @@ export function getMusicAssistantState(hass, entityId) {
 }
 
 /**
+ * Check if an entity state belongs to a Music Assistant player
+ * @param {Object} state - Home Assistant state object
+ * @returns {boolean} True if it's a Music Assistant player
+ */
+export function isMusicAssistantEntity(state) {
+  if (!state || !state.attributes) return false;
+  return (
+    state.attributes.app_id === 'music_assistant' ||
+    state.attributes.mass_player_type !== undefined
+  );
+}
+
+/**
  * Get search result click title for an item
  * @param {Object} item - Search result item
  * @returns {string} Title to display

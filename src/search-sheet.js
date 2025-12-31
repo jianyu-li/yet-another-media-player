@@ -1,5 +1,6 @@
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { LitElement, html, css, nothing } from "lit";
+import { isMusicAssistantEntity } from "./yamp-utils.js";
 
 const playOptions = [
   { mode: 'replace', icon: 'mdi:playlist-remove', label: 'Replace' },
@@ -561,7 +562,7 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
       // Try to find a Music Assistant entity
       const states = Object.values(hass.states);
       const maEntity = states.find(state =>
-        state.attributes?.app_id === 'music_assistant' &&
+        isMusicAssistantEntity(state) &&
         state.entity_id.startsWith('media_player.')
       );
       if (maEntity) {
