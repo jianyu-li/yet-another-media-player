@@ -1560,7 +1560,7 @@ export const yampCardStyles = css`
     gap: 10px;
     padding: 14px 22px 18px 22px;
     margin: 0;
-    background: var(--ha-entity-menu-overlay, rgba(0,0,0,0.82));
+    background: rgba(0, 0, 0, 0.1);
     border-radius: 0;
     border: none;
     flex-shrink: 0;
