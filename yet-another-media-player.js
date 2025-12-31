@@ -12363,6 +12363,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const mainPlayTime = ((_this$_playTimestamps2 = this._playTimestamps) === null || _this$_playTimestamps2 === void 0 ? void 0 : _this$_playTimestamps2[mainId]) || 0;
     const maWasRecent = now - maPlayTime < 5000;
     const mainWasRecent = now - mainPlayTime < 5000;
+    const defaultEntityId = maId && maId !== mainId ? maId : mainId;
 
     // Prioritize the Music Assistant entity when it's playing
     if ((maState === null || maState === void 0 ? void 0 : maState.state) === "playing") {
@@ -12395,7 +12396,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (lastActiveEntity && (lastActiveEntity === maId || lastActiveEntity === mainId)) {
         return lastActiveEntity;
       }
-      return maId && maId !== mainId ? maId : mainId;
+      return defaultEntityId;
     }
 
     // Standard fallback to last active entity
@@ -12404,7 +12405,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
 
     // Default to Music Assistant entity if configured, otherwise main entity
-    return maId && maId !== mainId ? maId : mainId;
+    return defaultEntityId;
   }
 
   // Get hidden controls configuration for the current entity

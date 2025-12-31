@@ -3625,6 +3625,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const mainPlayTime = this._playTimestamps?.[mainId] || 0;
     const maWasRecent = (now - maPlayTime) < 5000;
     const mainWasRecent = (now - mainPlayTime) < 5000;
+    const defaultEntityId = (maId && maId !== mainId) ? maId : mainId;
 
     // Prioritize the Music Assistant entity when it's playing
     if (maState?.state === "playing") {
@@ -3656,7 +3657,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (lastActiveEntity && (lastActiveEntity === maId || lastActiveEntity === mainId)) {
         return lastActiveEntity;
       }
-      return (maId && maId !== mainId) ? maId : mainId;
+      return defaultEntityId;
     }
 
     // Standard fallback to last active entity
@@ -3665,7 +3666,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // Default to Music Assistant entity if configured, otherwise main entity
-    return (maId && maId !== mainId) ? maId : mainId;
+    return defaultEntityId;
   }
 
   // Get hidden controls configuration for the current entity
