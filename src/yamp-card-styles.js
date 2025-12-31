@@ -2521,7 +2521,7 @@ export const yampCardStyles = css`
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
-    margin-bottom: 0px;
+    margin-bottom: 80px;
     padding-bottom: 0px ;
     background: none ;
   }
