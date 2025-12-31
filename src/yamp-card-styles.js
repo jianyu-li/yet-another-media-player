@@ -2262,7 +2262,7 @@ export const yampCardStyles = css`
   .entity-options-search-play:hover,
   .entity-options-search-play:focus {
     background: transparent;
-    color: var(--custom-accent);
+    color: var(--custom-accent) !important;
     opacity: 0.8;
   }
 
@@ -2440,7 +2440,7 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet .search-filter-chips .chip:hover {
-    background: var(--custom-accent) ;
+    background: var(--custom-accent) !important;
     color: #fff ;
     opacity: 1;
   }
