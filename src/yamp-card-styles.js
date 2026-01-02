@@ -2255,7 +2255,6 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-bottom: 16px;
   }
 
   .entity-options-search-play ha-icon,
