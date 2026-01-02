@@ -12657,6 +12657,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const entityId = this._getVolumeEntity(this._selectedIndex);
     return entityId ? this.hass.states[entityId] : null;
   }
+  get isAnyMenuOpen() {
+    return this._showEntityOptions || this._showGrouping || this._showSourceList || this._showTransferQueue || this._searchOpen || this._showSourceMenu || !!this._searchActiveOptionsItem || !!this._activeSearchRowMenuId || !!this._queueActionsMenuOpenId;
+  }
   updated(changedProps) {
     var _super$updated;
     if (this._idleImageTemplate && changedProps.has("hass")) {
@@ -12754,11 +12757,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
       }
 
-      // Auto-switch unless manually pinned
+      // Auto-switch unless manually pinned or a menu is open
       // Update idle state before checking for auto-switch
       // This ensures we respect the idle timeout if the current entity just stopped
       this._updateIdleState();
-      if (!this._manualSelect) {
+      if (!this._manualSelect && !this.isAnyMenuOpen) {
         // Switch to most recent if applicable
         const sortedIds = this.sortedEntityIds;
         if (sortedIds.length > 0) {
