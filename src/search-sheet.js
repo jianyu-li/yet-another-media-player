@@ -152,7 +152,7 @@ export function renderSearchSheet({
                   </div>
                   <div class="search-sheet-buttons">
                     <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
-                      ▶
+                      <ha-icon icon="mdi:play"></ha-icon>
                     </button>
                     ${!(upcomingFilterActive && item.queue_item_id) ? html`
                       <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="More Options">
