@@ -757,19 +757,31 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-selector>
             </div>
           </div>
+          </div>
           <div class="form-row form-row-multi-column">
-            <div style="display:flex;align-items:center;gap:12px;flex:1;">
-              <ha-switch
-                id="extend-artwork-toggle"
-                .checked=${this._config.extend_artwork ?? false}
-                @change=${(e) => this._updateConfig("extend_artwork", e.target.checked)}
-              ></ha-switch>
-              <div>
-                <div>Extend artwork</div>
-                <div class="config-subtitle small">Let the artwork background continue underneath the chip and action rows.</div>
-              </div>
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                label="Artwork Position"
+                .selector=${{
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "top center", label: "Top (default)" },
+            { value: "center center", label: "Center" },
+            { value: "bottom center", label: "Bottom" }
+          ]
+        }
+      }}
+                .value=${this._config.artwork_position ?? "top center"}
+                @value-changed=${(e) => {
+        const value = e.detail.value;
+        this._updateConfig("artwork_position", value === "top center" ? undefined : value);
+      }}
+              ></ha-selector>
             </div>
           </div>
+          <div class="form-row form-row-multi-column">
         </div>
 
         <div class="config-section">

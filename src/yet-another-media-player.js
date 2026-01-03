@@ -5419,7 +5419,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const sharedBackgroundStyle = [
       `background-image: ${backgroundImageValue}`,
       `background-size: ${backgroundSize}`,
-      "background-position: center center",
+      `background-position: ${this.config.artwork_position || "top center"}`,
       "background-repeat: no-repeat",
       `filter: ${backgroundFilter}`
     ].join('; ');

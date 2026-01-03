@@ -8320,7 +8320,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }, this._activeTab === name, name)), editingEntity ? this._renderEntityEditor((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions2 = this._config.actions) === null || _this$_config$actions2 === void 0 ? void 0 : _this$_config$actions2[this._actionEditorIndex]) : this._renderActiveTab());
   }
   _renderArtworkTab() {
-    var _this$_artworkOverrid9, _this$_config$artwork, _this$_config$extend_, _this$_useIdleImageUr, _this$_config$idle_im, _this$_config$idle_im2;
+    var _this$_artworkOverrid9, _this$_config$artwork, _this$_config$artwork2, _this$_useIdleImageUr, _this$_config$idle_im, _this$_config$idle_im2;
     const overrides = [...((_this$_artworkOverrid9 = this._artworkOverrides) !== null && _this$_artworkOverrid9 !== void 0 ? _this$_artworkOverrid9 : [])];
     const matchOptions = [{
       value: "media_title",
@@ -8350,7 +8350,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       value: "missing_art",
       label: "Missing Artwork"
     }];
-    return x(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Artwork Fit</div>\n            <div class=\"section-description\">Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"Artwork Fit\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"display:flex;align-items:center;gap:12px;flex:1;\">\n              <ha-switch\n                id=\"extend-artwork-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <div>\n                <div>Extend artwork</div>\n                <div class=\"config-subtitle small\">Let the artwork background continue underneath the chip and action rows.</div>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle Artwork</div>\n            <div class=\"section-description\">Show a static image or entity snapshot whenever nothing is playing.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"display: flex; align-items: center; gap: 8px; flex: 1;\">\n              <ha-switch\n                id=\"idle-image-url-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"idle-image-url-toggle\">Use URL or Path</label>\n            </div>\n            <div style=\"flex: 2;\">\n              ", "\n            </div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Artwork Overrides</div>\n            <div class=\"section-description\">Overrides are evaluated from top to bottom. Drag to reorder.</div>\n          </div>\n          <yamp-sortable @item-moved=", ">\n            <div class=\"sortable-container\">\n              ", "\n            </div>\n          </yamp-sortable>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Artwork Override\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n        </div>\n\n      "])), this.hass, {
+    return x(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Artwork Fit</div>\n            <div class=\"section-description\">Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"Artwork Fit\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n          </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"Artwork Position\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle Artwork</div>\n            <div class=\"section-description\">Show a static image or entity snapshot whenever nothing is playing.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"display: flex; align-items: center; gap: 8px; flex: 1;\">\n              <ha-switch\n                id=\"idle-image-url-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"idle-image-url-toggle\">Use URL or Path</label>\n            </div>\n            <div style=\"flex: 2;\">\n              ", "\n            </div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Artwork Overrides</div>\n            <div class=\"section-description\">Overrides are evaluated from top to bottom. Drag to reorder.</div>\n          </div>\n          <yamp-sortable @item-moved=", ">\n            <div class=\"sortable-container\">\n              ", "\n            </div>\n          </yamp-sortable>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Artwork Override\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n        </div>\n\n      "])), this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -8373,7 +8373,24 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }, (_this$_config$artwork = this._config.artwork_object_fit) !== null && _this$_config$artwork !== void 0 ? _this$_config$artwork : "cover", e => {
       const value = e.detail.value;
       this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
-    }, (_this$_config$extend_ = this._config.extend_artwork) !== null && _this$_config$extend_ !== void 0 ? _this$_config$extend_ : false, e => this._updateConfig("extend_artwork", e.target.checked), (_this$_useIdleImageUr = this._useIdleImageUrl) !== null && _this$_useIdleImageUr !== void 0 ? _this$_useIdleImageUr : this._looksLikeUrlOrPath(this._config.idle_image), e => {
+    }, this.hass, {
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "top center",
+          label: "Top (default)"
+        }, {
+          value: "center center",
+          label: "Center"
+        }, {
+          value: "bottom center",
+          label: "Bottom"
+        }]
+      }
+    }, (_this$_config$artwork2 = this._config.artwork_position) !== null && _this$_config$artwork2 !== void 0 ? _this$_config$artwork2 : "top center", e => {
+      const value = e.detail.value;
+      this._updateConfig("artwork_position", value === "top center" ? undefined : value);
+    }, (_this$_useIdleImageUr = this._useIdleImageUrl) !== null && _this$_useIdleImageUr !== void 0 ? _this$_useIdleImageUr : this._looksLikeUrlOrPath(this._config.idle_image), e => {
       this._useIdleImageUrl = e.target.checked;
       if (e.target.checked) {
         this._updateConfig("idle_image", "");
@@ -14004,7 +14021,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const backgroundImageValue = idleImageUrl ? "url('".concat(idleImageUrl, "')") : artworkUrl ? "url('".concat(artworkUrl, "')") : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
     const backgroundFilter = collapsed && artworkUrl ? "blur(18px) brightness(0.7) saturate(1.15)" : "none";
-    const sharedBackgroundStyle = ["background-image: ".concat(backgroundImageValue), "background-size: ".concat(backgroundSize), "background-position: center center", "background-repeat: no-repeat", "filter: ".concat(backgroundFilter)].join('; ');
+    const sharedBackgroundStyle = ["background-image: ".concat(backgroundImageValue), "background-size: ".concat(backgroundSize), "background-position: ".concat(this.config.artwork_position || "top center"), "background-repeat: no-repeat", "filter: ".concat(backgroundFilter)].join('; ');
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
       this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
