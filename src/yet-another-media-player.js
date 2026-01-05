@@ -5679,6 +5679,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         reserveLeadingControlSpace: this._controlLayout === "modern",
         showRightPlaceholder: this._controlLayout === "modern",
         rightSlotTemplate,
+        hideVolume: this.config.volume_mode === "hidden",
         moreInfoMenu: html`
                         <div class="more-info-menu">
                           <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
@@ -6684,6 +6685,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             const volumeState = this.currentVolumeStateObj;
             const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
             const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
+
+            if (this.config.volume_mode === "hidden") return nothing;
 
             return html`
                     <div class="persistent-volume-stepper">

@@ -1371,6 +1371,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           mode: "dropdown", options: [
             { value: "slider", label: "Slider" },
             { value: "stepper", label: "Stepper" },
+            { value: "hidden", label: "Hidden" },
           ]
         }
       }}
