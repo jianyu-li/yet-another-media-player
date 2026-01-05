@@ -31,13 +31,13 @@ export function renderVolumeRow({
   };
 
   return html`
-    <div class="volume-row">
-      <div class="volume-controls">
+    <div class="volume-row ${showSlider && !isRemoteVolumeEntity ? 'has-slider' : ''}">
+      <div class="volume-left">
         ${hasLeadingControl
       ? leadingControlTemplate
       : (reserveLeadingControlSpace ? html`<div class="volume-leading-placeholder"></div>` : nothing)
     }
-        ${!hideVolume ? html`
+        ${(!hideVolume && !isRemoteVolumeEntity) ? html`
           <button 
             class="volume-icon-btn" 
             @click=${onMuteToggle} 
@@ -45,14 +45,21 @@ export function renderVolumeRow({
           >
             <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
           </button>
+        ` : nothing}
+      </div>
 
+      <div class="volume-center">
+        ${!hideVolume ? html`
           ${isRemoteVolumeEntity
         ? html`
+              <div class="vol-stepper-container">
                 <div class="vol-stepper">
                   <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
+                  <span class="vol-label">vol</span>
                   <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
                 </div>
-              `
+              </div>
+            `
         : showSlider
           ? html`
                 <div class="volume-slider-container">
@@ -73,23 +80,26 @@ export function renderVolumeRow({
                 </div>
               `
           : html`
-                <div class="vol-stepper-container">
-                  <div class="vol-stepper">
-                    <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
-                    <span>${Math.round(vol * 100)}%</span>
-                    <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
-                  </div>
+              <div class="vol-stepper-container">
+                <div class="vol-stepper">
+                  <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
+                  <span>${Math.round(vol * 100)}%</span>
+                  <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
                 </div>
-              `
+              </div>
+            `
       }
         ` : nothing}
       </div>
-      ${showRightPlaceholder ? html`
-        <div class="volume-placeholder">
-          ${rightSlotTemplate || nothing}
-        </div>
-      ` : nothing}
-      ${moreInfoMenu}
+
+      <div class="volume-right">
+        ${showRightPlaceholder ? html`
+          <div class="volume-placeholder">
+            ${rightSlotTemplate || nothing}
+          </div>
+        ` : nothing}
+        ${moreInfoMenu}
+      </div>
     </div>
   `;
 }
