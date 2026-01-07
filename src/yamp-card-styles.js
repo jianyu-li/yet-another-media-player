@@ -1062,7 +1062,7 @@ export const yampCardStyles = css`
     gap: 8px;
     flex: 1;
     position: relative;
-    padding: 0 12px;
+    padding: 0 24px;
   }
 
   .volume-slider-icon {
@@ -1777,6 +1777,23 @@ export const yampCardStyles = css`
     cursor: pointer;
     transition: all 0.2s ease;
     color: #fff;
+  }
+
+  @media (max-width: 450px) {
+    .persistent-volume-stepper {
+      margin-right: -12px;
+    }
+    
+    .persistent-volume-stepper .stepper-value {
+      min-width: 36px;
+      padding-left: 2px;
+    }
+
+    .persistent-volume-stepper .stepper-btn {
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+    }
   }
 
   .persistent-control-btn:hover {
