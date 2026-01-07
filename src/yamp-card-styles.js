@@ -2210,7 +2210,7 @@ export const yampCardStyles = css`
 
   /* Search functionality */
   .entity-options-search {
-    padding: 0px 0 80px 0;
+    padding: 0px 10px 80px 10px;
   }
 
   .entity-options-search-row {
