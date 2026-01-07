@@ -123,6 +123,7 @@ export const yampCardStyles = css`
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    container-type: inline-size;
   }
 
   .full-bleed-artwork-bg {
@@ -1779,7 +1780,7 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
-  @media (max-width: 450px) {
+  @container (max-width: 450px) {
     .persistent-volume-stepper {
       margin-right: -12px;
     }

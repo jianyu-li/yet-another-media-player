@@ -6093,7 +6093,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             ` : nothing}
           </div>
         </div>
-      </div>
+
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
         <div class="entity-options-container entity-options-container-opening">
@@ -6680,6 +6680,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         })
         : nothing
       }
+          </div>
     </ha-card>
   `;
   }
