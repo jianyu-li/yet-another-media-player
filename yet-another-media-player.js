@@ -12610,7 +12610,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const idx = this._getGroupingMasterIndex();
     return idx >= 0 ? this.entityObjs[idx] : null;
   }
-  async _resolveGroupingEntityId(obj, fallbackEntityId) {
+  _resolveGroupingEntityId(obj, fallbackEntityId) {
     if (!(obj !== null && obj !== void 0 && obj.music_assistant_entity)) return fallbackEntityId;
     if (typeof obj.music_assistant_entity === 'string' && (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
       var _this$_maResolveCache4;
@@ -12713,8 +12713,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const groupPlayerIds = [];
     this.entityIds.indexOf(this.currentEntityId);
     const myGroupKey = this._getGroupKey(this.currentEntityId);
-    for (const id of this.entityIds) {
-      const idx = this.entityIds.indexOf(id);
+    this.entityIds.forEach((id, idx) => {
       const entityToCheck = this._getGroupingEntityId(idx);
       const st = this.hass.states[entityToCheck];
       if (st && this._isGroupCapable(st)) {
@@ -12742,7 +12741,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
           busyLabel
         });
       }
-    }
+    });
     const activeId = this.currentEntityId;
     const activeIdx = this.entityIds.indexOf(activeId);
     const activeGroupId = activeIdx >= 0 ? this._getGroupingEntityId(activeIdx) : null;
@@ -12761,18 +12760,17 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
       }, activeIsBusy ? "Player is unavailable" : "No group-capable players available.");
     }
-    let sortedGroupIds;
-    if (groupedAny) {
-      const masterFirst = groupPlayerIds.find(item => item.id === masterId);
-      const others = masterFirst ? groupPlayerIds.filter(item => item.id !== masterId) : groupPlayerIds;
-      others.sort((a, b) => a.isBusy === b.isBusy ? 0 : a.isBusy ? 1 : -1);
-      sortedGroupIds = masterFirst ? [masterFirst, ...others] : others;
-    } else {
-      const currentFirst = activeId ? groupPlayerIds.find(item => item.id === activeId) : null;
-      const others = currentFirst ? groupPlayerIds.filter(item => item.id !== activeId) : groupPlayerIds;
-      others.sort((a, b) => a.isBusy === b.isBusy ? 0 : a.isBusy ? 1 : -1);
-      sortedGroupIds = currentFirst ? [currentFirst, ...others] : others;
-    }
+    const sortedGroupIds = [...groupPlayerIds].sort((a, b) => {
+      if (groupedAny) {
+        if (a.id === masterId) return -1;
+        if (b.id === masterId) return 1;
+      } else {
+        if (a.id === activeId) return -1;
+        if (b.id === activeId) return 1;
+      }
+      if (a.isBusy === b.isBusy) return 0;
+      return a.isBusy ? 1 : -1;
+    });
     return x(_templateObject0 || (_templateObject0 = _taggedTemplateLiteral(["\n      <div class=\"grouping-header group-list-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          Back\n        </button>\n      </div>\n      <div class=\"entity-options-title\" style=\"margin-bottom:8px; margin-top:8px;\">Group Players</div>\n      <div style=\"display:flex; align-items:center; gap:8px; margin-bottom:12px;\">\n        ", "\n        <button class=\"entity-options-item\"\n          @click=", "\n          style=\"flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;\">\n          ", "\n        </button>\n      </div>\n      <div class=\"group-list-scroll\">\n        ", "\n      </div>\n    "])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
@@ -14207,7 +14205,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
       this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
     }
-    return x(_templateObject28 || (_templateObject28 = _taggedTemplateLiteral(["\n        <ha-card class=\"yamp-card\" style=", ">\n          <div\n            data-match-theme=\"", "\"\n            class=", "\n          >\n            ", "\n            ", "\n            ", "\n            <div class=\"card-lower-content-container\" style=\"", "\">\n              <div class=\"card-lower-content-bg\"\n                style=\"", "\"\n              ></div>\n              ", "\n              <div class=\"card-lower-content", "", "\" style=\"", "\">\n                ", "\n                ", "\n                <div class=\"details\" style=\"", "\">\n                  <div class=\"title\">\n                    ", "\n                  </div>\n                  ", "\n                </div>\n                ", "\n                ", "\n                ", "\n                ", "\n            ", "\n            ", "\n          </div>\n        </div>\n      </div>\n      ", "\n          ", "\n          ", "\n        </ha - card >\n  "])), hasCustomCardHeight && (!collapsed || this._alwaysCollapsed) ? "height:".concat(customCardHeight, "px;") : E, String(this.config.match_theme === true), e({
+    return x(_templateObject28 || (_templateObject28 = _taggedTemplateLiteral(["\n        <ha-card class=\"yamp-card\" style=", ">\n          <div\n            data-match-theme=\"", "\"\n            class=", "\n          >\n            ", "\n            ", "\n            ", "\n            <div class=\"card-lower-content-container\" style=\"", "\">\n              <div class=\"card-lower-content-bg\"\n                style=\"", "\"\n              ></div>\n              ", "\n              <div class=\"card-lower-content", "", "\" style=\"", "\">\n                ", "\n                ", "\n                <div class=\"details\" style=\"", "\">\n                  <div class=\"title\">\n                    ", "\n                  </div>\n                  ", "\n                </div>\n                ", "\n                ", "\n                ", "\n                ", "\n            ", "\n            ", "\n          </div>\n        </div>\n      </div>\n      ", "\n          ", "\n          ", "\n    </ha-card>\n  "])), hasCustomCardHeight && (!collapsed || this._alwaysCollapsed) ? "height:".concat(customCardHeight, "px;") : E, String(this.config.match_theme === true), e({
       "yamp-card-inner": true,
       "dim-idle": shouldDimIdle,
       "no-chip-dim": this.config.dim_chips_on_idle === false
@@ -15324,18 +15322,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const masterVol = Number(masterVolState === null || masterVolState === void 0 || (_masterVolState$attri = masterVolState.attributes) === null || _masterVolState$attri === void 0 ? void 0 : _masterVolState$attri.volume_level);
     if (isNaN(masterVol)) return;
     const members = Array.isArray(masterState.attributes.group_members) ? masterState.attributes.group_members : [];
+    const groupingIdToIdx = new Map();
+    this.entityObjs.forEach((obj, i) => {
+      groupingIdToIdx.set(this._getGroupingEntityId(i), i);
+    });
     for (const memberGroupId of members) {
       if (memberGroupId === masterGroupId) continue;
-
-      // Find which configured entity corresponds to this member
-      let foundIdx = -1;
-      for (let i = 0; i < this.entityObjs.length; i++) {
-        if (this._getGroupingEntityId(i) === memberGroupId) {
-          foundIdx = i;
-          break;
-        }
-      }
-      if (foundIdx !== -1) {
+      const foundIdx = groupingIdToIdx.get(memberGroupId);
+      if (foundIdx !== undefined) {
         const targetVolEntity = this._getVolumeEntityForGrouping(foundIdx) || memberGroupId;
         this.hass.callService("media_player", "volume_set", {
           entity_id: targetVolEntity,

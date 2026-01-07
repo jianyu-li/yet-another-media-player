@@ -4037,8 +4037,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const currentEntityIdx = this.entityIds.indexOf(this.currentEntityId);
     const myGroupKey = this._getGroupKey(this.currentEntityId);
 
-    for (const id of this.entityIds) {
-      const idx = this.entityIds.indexOf(id);
+    this.entityIds.forEach((id, idx) => {
       const entityToCheck = this._getGroupingEntityId(idx);
       const st = this.hass.states[entityToCheck];
 
@@ -4067,7 +4066,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           busyLabel
         });
       }
-    }
+    });
 
     const activeId = this.currentEntityId;
     const activeIdx = this.entityIds.indexOf(activeId);
@@ -4094,22 +4093,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
       `;
     }
 
-    let sortedGroupIds;
-    if (groupedAny) {
-      const masterFirst = groupPlayerIds.find(item => item.id === masterId);
-      const others = masterFirst
-        ? groupPlayerIds.filter(item => item.id !== masterId)
-        : groupPlayerIds;
-      others.sort((a, b) => (a.isBusy === b.isBusy ? 0 : a.isBusy ? 1 : -1));
-      sortedGroupIds = masterFirst ? [masterFirst, ...others] : others;
-    } else {
-      const currentFirst = activeId ? groupPlayerIds.find(item => item.id === activeId) : null;
-      const others = currentFirst
-        ? groupPlayerIds.filter(item => item.id !== activeId)
-        : groupPlayerIds;
-      others.sort((a, b) => (a.isBusy === b.isBusy ? 0 : a.isBusy ? 1 : -1));
-      sortedGroupIds = currentFirst ? [currentFirst, ...others] : others;
-    }
+    const sortedGroupIds = [...groupPlayerIds].sort((a, b) => {
+      if (groupedAny) {
+        if (a.id === masterId) return -1;
+        if (b.id === masterId) return 1;
+      } else {
+        if (a.id === activeId) return -1;
+        if (b.id === activeId) return 1;
+      }
+      if (a.isBusy === b.isBusy) return 0;
+      return a.isBusy ? 1 : -1;
+    });
 
     return html`
       <div class="grouping-header group-list-header">
@@ -6673,7 +6667,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         })
         : nothing
       }
-        </ha - card >
+    </ha-card>
   `;
   }
 
@@ -7430,19 +7424,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ? masterState.attributes.group_members
       : [];
 
+    const groupingIdToIdx = new Map();
+    this.entityObjs.forEach((obj, i) => {
+      groupingIdToIdx.set(this._getGroupingEntityId(i), i);
+    });
+
     for (const memberGroupId of members) {
       if (memberGroupId === masterGroupId) continue;
 
-      // Find which configured entity corresponds to this member
-      let foundIdx = -1;
-      for (let i = 0; i < this.entityObjs.length; i++) {
-        if (this._getGroupingEntityId(i) === memberGroupId) {
-          foundIdx = i;
-          break;
-        }
-      }
+      const foundIdx = groupingIdToIdx.get(memberGroupId);
 
-      if (foundIdx !== -1) {
+      if (foundIdx !== undefined) {
         const targetVolEntity = this._getVolumeEntityForGrouping(foundIdx) || memberGroupId;
         this.hass.callService("media_player", "volume_set", {
           entity_id: targetVolEntity,
