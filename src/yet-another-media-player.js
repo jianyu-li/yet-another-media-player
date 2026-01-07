@@ -126,6 +126,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
   _lastGroupingMasterId = null;
+  _groupedSortedCache = null;
+  _lastHassVersion = null;
   _debouncedVolumeTimer = null;
   _supportsFeature(stateObj, featureBit) {
     if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
@@ -303,16 +305,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Return array of groups, ordered by most recent play
   get groupedSortedEntityIds() {
     if (!this.entityIds || !Array.isArray(this.entityIds)) return [];
+
+    // Check if we can use the cache
+    if (this._groupedSortedCache && this.hass === this._lastHassVersion) {
+      return this._groupedSortedCache;
+    }
+
     const map = {};
     for (const id of this.entityIds) {
-      const key = this._getGroupKey(id);
+      let key = this._getGroupKey(id);
+      // If the group master is not in our configured entities, do not group them visually.
+      // treating them as separate chips avoids showing a false "master" (e.g. Kitchen leading Loft when Office is real master)
+      if (!this.entityIds.includes(key)) {
+        key = id;
+      }
+
       if (!map[key]) map[key] = { ids: [], ts: 0 };
       map[key].ids.push(id);
       map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
     }
-    return Object.values(map)
+    const result = Object.values(map)
       .sort((a, b) => b.ts - a.ts)   // sort groups by recency
       .map(g => g.ids.sort());       // sort ids alphabetically inside each group
+
+    this._groupedSortedCache = result;
+    this._lastHassVersion = this.hass;
+    return result;
   }
   static properties = {
     hass: {},
@@ -327,7 +345,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _searchActiveOptionsItem: { state: true },
     _activeSearchRowMenuId: { state: true },
     _successSearchRowMenuId: { state: true },
-    _radioModeActive: { state: true }
+    _radioModeActive: { state: true },
+    _showEntityOptions: { state: true },
+    _showGrouping: { state: true },
+    _showTransferQueue: { state: true },
+    _showResolvedEntities: { state: true },
+    _showSearchInSheet: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -3705,27 +3728,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getActivePlaybackEntityIdForIndex(idx) {
     return this._getActivePlaybackEntityId(idx);
   }
-  _getGroupingEntityIdByIndex(idx) {
+  _getGroupingEntityId(idx) {
     const obj = this.entityObjs[idx];
-    if (!obj || !obj.music_assistant_entity) return obj?.entity_id;
-
-    // Check if it's a template
-    if (typeof obj.music_assistant_entity === 'string' &&
-      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-      // Do not return template strings in non-async paths; fall back to main entity
-      return obj.entity_id;
+    if (!obj) return null;
+    if (obj.music_assistant_entity) {
+      if (typeof obj.music_assistant_entity === 'string' &&
+        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+        const cached = this._maResolveCache?.[idx]?.id;
+        return cached || obj.entity_id;
+      }
+      return obj.music_assistant_entity;
     }
-
-    return obj.music_assistant_entity;
+    return obj.entity_id;
   }
+
   _getGroupingEntityIdByEntityId(entityId) {
-    const obj = this.entityObjs.find(o => o.entity_id === entityId);
-    if (!obj) return entityId;
-    const mae = obj.music_assistant_entity;
-    if (typeof mae === 'string' && (mae.includes('{{') || mae.includes('{%'))) {
-      return obj.entity_id; // avoid template strings in sync paths
-    }
-    return mae || obj.entity_id;
+    const idx = this.entityIds.indexOf(entityId);
+    if (idx < 0) return entityId;
+    return this._getGroupingEntityId(idx);
   }
   _findEntityObjByAnyId(anyId) {
     return this.entityObjs.find(o => o.entity_id === anyId || o.music_assistant_entity === anyId) || null;
@@ -3760,18 +3780,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const groupingId = this._getGroupingEntityIdByEntityId(id);
     const st = this.hass?.states?.[groupingId];
     if (!st) return id;
+
     const membersRaw = Array.isArray(st.attributes.group_members)
       ? st.attributes.group_members
       : [];
-    // Translate raw group member ids (likely MA ids) back to configured entity ids
-    const membersConfigured = this.entityIds.filter(otherId => {
-      if (otherId === id) return false;
-      const otherGroupingId = this._getGroupingEntityIdByEntityId(otherId);
-      return membersRaw.includes(otherGroupingId);
+
+    // If no group members or just itself, it's not grouped
+    if (membersRaw.length <= 1) return id;
+
+    // First member is the master
+    const masterGroupingId = membersRaw[0];
+
+    // Find configured entity corresponding to this master grouping ID
+    const masterEntityId = this.entityIds.find(eId => {
+      const gId = this._getGroupingEntityIdByEntityId(eId);
+      return gId === masterGroupingId;
     });
-    if (!membersConfigured.length) return id;
-    const allConfigured = [id, ...membersConfigured].sort();
-    return allConfigured[0];
+
+    // If master is not in our config, return the raw grouping ID so we know it's external/different
+    return masterEntityId || masterGroupingId;
   }
 
   get entityIds() {
@@ -3807,45 +3834,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return group[0];
     }
 
-    // Check for explicit leader/coordinator style attributes first
-    const leaderAttrs = [
-      "group_leader",
-      "group_leader_entity_id",
-      "sync_leader",
-      "group_leader_id",
-      "coordinator",
-      "group_coordinator"
-    ];
-    for (const attr of leaderAttrs) {
-      const match = candidates.find(candidate => {
-        const leader = candidate.state?.attributes?.[attr];
-        if (!leader) return false;
-        return candidates.some(other => other.groupingId === leader);
-      });
-      if (match) {
-        return match.id;
+    // User requested simplification: First item in group_members is the master.
+    // Try to find a valid group definition from any of the candidates
+    for (const candidate of candidates) {
+      const members = candidate.state?.attributes?.group_members;
+      if (Array.isArray(members) && members.length > 0) {
+        const masterGroupingId = members[0];
+        // Find the entity in our candidates that matches this master grouping ID
+        const master = candidates.find(c => c.groupingId === masterGroupingId);
+        if (master) {
+          return master.id;
+        }
       }
-    }
-
-    // Next, prefer the entity whose group_members list starts with itself
-    const firstMemberMatch = candidates.find(({ groupingId, state }) => {
-      const members = Array.isArray(state.attributes?.group_members) ? state.attributes.group_members : [];
-      return members.length && members[0] === groupingId;
-    });
-    if (firstMemberMatch) {
-      return firstMemberMatch.id;
-    }
-
-    // Fallback: choose an entity whose members list contains every other member
-    const coordinator = candidates.find(({ groupingId, state }) => {
-      const members = Array.isArray(state.attributes?.group_members) ? state.attributes.group_members : [];
-      return group.every(otherId => {
-        const otherGroupingId = this._getGroupingEntityIdByEntityId(otherId);
-        return otherGroupingId === groupingId || members.includes(otherGroupingId);
-      });
-    });
-    if (coordinator) {
-      return coordinator.id;
     }
 
     // Last resort, fall back to first entry (keeps legacy behaviour)
@@ -3887,21 +3887,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return idx >= 0 ? this.entityObjs[idx] : null;
   }
 
-  async _resolveGroupingEntityId(obj, fallbackEntityId) {
-    if (!obj) return fallbackEntityId || null;
-    const fallback = fallbackEntityId || obj.entity_id;
-    if (obj.music_assistant_entity) {
-      if (typeof obj.music_assistant_entity === 'string' &&
-        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-        try {
-          return await this._resolveTemplateAtActionTime(obj.music_assistant_entity, fallback);
-        } catch (error) {
-          return fallback;
-        }
-      }
-      return obj.music_assistant_entity;
+  _resolveGroupingEntityId(obj, fallbackEntityId) {
+    if (!obj?.music_assistant_entity) return fallbackEntityId;
+    if (typeof obj.music_assistant_entity === 'string' &&
+      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+      const idx = this.entityIds.indexOf(fallbackEntityId);
+      const cached = this._maResolveCache?.[idx]?.id;
+      return cached || fallbackEntityId;
     }
-    return fallback;
+    return obj.music_assistant_entity;
   }
 
   get currentEntityId() {
@@ -3963,6 +3957,383 @@ class YetAnotherMediaPlayerCard extends LitElement {
     );
   }
 
+  _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
+    return html`
+      <div class="entity-options-header">
+        <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
+          Close
+        </button>
+        <div class="entity-options-divider"></div>
+      </div>
+      <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} entity-options-scroll" style="display:flex; flex-direction:column;">
+        <button class="entity-options-item" @click=${() => {
+        const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
+        if (resolvedEntities.length === 1) {
+          this._openMoreInfoForEntity(resolvedEntities[0]);
+          this._showEntityOptions = false;
+        } else {
+          this._showResolvedEntities = true;
+        }
+        this.requestUpdate();
+      }}>More Info</button>
+        <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>Search</button>
+
+        ${Array.isArray(sourceList) && sourceList.length > 0 ? html`
+          <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
+        ` : nothing}
+        
+        ${this._canShowTransferQueueOption() ? html`
+          <button class="entity-options-item" @click=${() => this._openTransferQueue()}>Transfer Queue</button>
+        ` : nothing}
+        
+        ${this._renderGroupingMenuOption()}
+        
+        ${menuOnlyActions.length ? html`
+          ${menuOnlyActions.map(({ action, idx }) => {
+        const label = this._getActionLabel(action);
+        return html`
+              <button
+                class="entity-options-item menu-action-item"
+                @click=${() => this._onMenuActionClick(idx)}
+              >
+                ${action.icon ? html`
+                  <ha-icon
+                    class="menu-action-icon"
+                    .icon=${action.icon}
+                  ></ha-icon>
+                ` : nothing}
+                ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
+              </button>
+            `;
+      })}
+        ` : nothing}
+      </div>
+    `;
+  }
+
+  _renderGroupingMenuOption() {
+    const totalEntities = this.entityIds.length;
+    if (totalEntities <= 1) return nothing;
+
+    const groupableCount = this.entityIds.reduce((acc, id, idx) => {
+      const actualGroupId = this._getGroupingEntityId(idx);
+      const st = this.hass.states[actualGroupId];
+      return acc + (this._isGroupCapable(st) ? 1 : 0);
+    }, 0);
+
+    const currGroupId = this._getGroupingEntityId(this._selectedIndex);
+    const currGroupState = this.hass.states[currGroupId];
+
+    // Check if the current entity is a follower (unavailable for acting as a new group master)
+    const currentId = this.currentEntityId;
+    const groupKey = this._getGroupKey(currentId);
+    const isFollower = groupKey !== currentId;
+
+    if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
+      return html`
+        <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
+      `;
+    }
+    return nothing;
+  }
+
+  _renderGroupingSheet() {
+    const masterId = this._getGroupingMasterId();
+    const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
+    const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
+    const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+    const groupedAny = Array.isArray(masterState?.attributes?.group_members) && masterState.attributes.group_members.length > 1;
+
+    const groupPlayerIds = [];
+    const currentEntityIdx = this.entityIds.indexOf(this.currentEntityId);
+    const myGroupKey = this._getGroupKey(this.currentEntityId);
+
+    this.entityIds.forEach((id, idx) => {
+      const entityToCheck = this._getGroupingEntityId(idx);
+      const st = this.hass.states[entityToCheck];
+
+      if (st && this._isGroupCapable(st)) {
+        const playerGroupKey = this._getGroupKey(id);
+        let isBusy = false;
+        let busyLabel = "";
+
+        // Busy if joined to a DIFFERENT group
+        if (playerGroupKey !== id && playerGroupKey !== myGroupKey) {
+          isBusy = true;
+          busyLabel = "Unavailable";
+        }
+        // Or if it IS a master of a different group
+        else if (playerGroupKey === id && playerGroupKey !== myGroupKey) {
+          if (st.attributes?.group_members?.length > 1) {
+            isBusy = true;
+            busyLabel = "Unavailable";
+          }
+        }
+
+        groupPlayerIds.push({
+          id: id,
+          groupId: entityToCheck,
+          isBusy,
+          busyLabel
+        });
+      }
+    });
+
+    const activeId = this.currentEntityId;
+    const activeIdx = this.entityIds.indexOf(activeId);
+    const activeGroupId = activeIdx >= 0 ? this._getGroupingEntityId(activeIdx) : null;
+    const activeState = activeGroupId ? this.hass.states[activeGroupId] : null;
+    const activeIsGroupCapable = activeState ? this._isGroupCapable(activeState) : false;
+
+    // Check if active entity is itself a follower (isBusy)
+    const activeGroupKey = this._getGroupKey(activeId);
+    const activeIsBusy = activeGroupKey !== activeId;
+
+    if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
+      return html`
+        <div class="entity-options-header">
+          <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
+            Back
+          </button>
+          <div class="entity-options-divider"></div>
+        </div>
+        <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
+        <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
+          ${activeIsBusy ? "Player is unavailable" : "No group-capable players available."}
+        </div>
+      `;
+    }
+
+    const sortedGroupIds = [...groupPlayerIds].sort((a, b) => {
+      if (groupedAny) {
+        if (a.id === masterId) return -1;
+        if (b.id === masterId) return 1;
+      } else {
+        if (a.id === activeId) return -1;
+        if (b.id === activeId) return 1;
+      }
+      if (a.isBusy === b.isBusy) return 0;
+      return a.isBusy ? 1 : -1;
+    });
+
+    return html`
+      <div class="grouping-header group-list-header">
+        <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
+          Back
+        </button>
+      </div>
+      <div class="entity-options-title" style="margin-bottom:8px; margin-top:8px;">Group Players</div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+        ${groupedAny ? html`
+          <button class="entity-options-item"
+            @click=${() => this._syncGroupVolume()}
+            style="flex:0 0 auto; min-width:140px; text-align:center;">
+            Sync Volume
+          </button>
+        ` : nothing}
+        <button class="entity-options-item"
+          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
+          style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
+          ${groupedAny ? "Ungroup All" : "Group All"}
+        </button>
+      </div>
+      <div class="group-list-scroll">
+        ${sortedGroupIds.length === 0 ? html`
+          <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
+            No other group-capable players available.
+          </div>
+        ` : sortedGroupIds.map(item => {
+      const id = item.id;
+      const actualGroupId = item.groupId;
+      const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
+      const grouped = filteredMembers.includes(actualGroupId);
+      const name = this.getChipName(id);
+      const isBusy = item.isBusy;
+      const busyLabel = item.busyLabel;
+
+      const entityIdx = this.entityIds.indexOf(id);
+      const volumeEntity = this._getVolumeEntityForGrouping(entityIdx);
+      const displayEntity = volumeEntity || actualGroupId;
+      const displayVolumeState = this.hass.states[displayEntity];
+
+      const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
+      const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
+      const isPrimaryRow = id === masterId;
+      const showToggleButton = !isPrimaryRow;
+      const isCurrent = id === activeId;
+
+      let stateLabel = groupedAny
+        ? (isPrimaryRow ? "Master" : (grouped ? "Joined" : "Available"))
+        : (isCurrent ? "Current" : "Available");
+
+      if (isBusy) {
+        stateLabel = busyLabel || "Unavailable";
+      }
+
+      return html`
+            <div class="entity-options-item group-player-row" style="
+              display:flex;
+              align-items:center;
+              gap:6px;
+              padding:4px 8px;
+              margin-bottom:1px;
+              ${isBusy ? "opacity: 0.5;" : ""}
+            ">
+              <div style="flex:1; min-width:120px;">
+                <div style="font-weight:600; text-align:left;">${name}</div>
+                <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
+              </div>
+              <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
+                ${isRemoteVol
+          ? html`
+                    <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
+                      <button @click=${() => this._onGroupVolumeStep(displayEntity, -1)} title="Vol Down" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                        <ha-icon icon="mdi:minus"></ha-icon>
+                      </button>
+                      <button @click=${() => this._onGroupVolumeStep(displayEntity, 1)} title="Vol Up" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                        <ha-icon icon="mdi:plus"></ha-icon>
+                      </button>
+                    </div>
+                  `
+          : html`
+                    <input
+                      class="vol-slider"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      .value=${volVal}
+                      @change=${e => this._onGroupVolumeChange(id, displayEntity, e)}
+                      title="Volume"
+                      style="width:100%;max-width:260px;"
+                    />
+                  `
+        }
+                <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
+              </div>
+              ${showToggleButton
+          ? html`
+                    <button class="group-toggle-btn"
+                            @click=${() => !isBusy && this._toggleGroup(id)}
+                            title=${isBusy ? "Player is unavailable" : (grouped ? "Unjoin" : "Join")}
+                            style="margin-left:4px; ${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""}">
+                      <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
+                    </button>
+                  `
+          : html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
+        }
+            </div>
+          `;
+    })}
+      </div>
+    `;
+  }
+
+  _renderTransferQueueSheet() {
+    const targets = this._getTransferQueueTargets();
+    return html`
+      <div class="entity-options-header">
+        <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }}>
+          Back
+        </button>
+        <div class="entity-options-divider"></div>
+        <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
+      </div>
+      <div class="entity-options-scroll">
+        ${!targets.length ? html`
+          <div style="padding: 12px; opacity: 0.75;">No other Music Assistant players available.</div>
+        ` : html`
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${targets.map(target => html`
+              <button
+                class="entity-options-item"
+                ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
+                @click=${() => this._transferQueueTo(target)}
+                style="display:flex;align-items:center;justify-content:flex-start;gap:12px;${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
+                <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
+                <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                  <div>${target.name}</div>
+                  <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
+                </div>
+                ${target.state ? html`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : nothing}
+              </button>
+            `)}
+          </div>
+        `}
+        ${this._transferQueueStatus ? html`
+          <div style="
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            background: ${this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)'};
+            color: ${this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a'};
+          ">
+            ${this._transferQueueStatus.message}
+          </div>
+        ` : nothing}
+      </div>
+    `;
+  }
+
+  _renderResolvedEntitiesSheet() {
+    return html`
+      <div class="entity-options-header">
+        <button class="entity-options-item close-item" @click=${() => {
+        this._showResolvedEntities = false;
+        this.requestUpdate();
+      }}>
+          Back
+        </button>
+        <div class="entity-options-divider"></div>
+        <div class="entity-options-resolved-entities" style="margin-top:12px;">
+          <div class="entity-options-title">Select Entity for More Info</div>
+          <div class="entity-options-resolved-entities-list">
+            ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
+        const state = this.hass?.states?.[entityId];
+        const name = state?.attributes?.friendly_name || entityId;
+        const icon = state?.attributes?.icon || "mdi:help-circle";
+
+        const idx = this._selectedIndex;
+        const obj = this.entityObjs[idx];
+        let role = "Main Entity";
+
+        let isActive = false;
+        if (obj) {
+          const maEntity = this._getActualResolvedMaEntityForState(idx);
+          const volEntity = this._getVolumeEntity(idx);
+          const activeEntity = this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+          isActive = activeEntity === entityId;
+
+          if (entityId === maEntity && maEntity !== obj.entity_id) {
+            role = "Music Assistant Entity";
+          } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
+            role = "Volume Entity";
+          }
+        }
+
+        return html`
+                <button class="entity-options-item" @click=${() => {
+            this._openMoreInfoForEntity(entityId);
+            this._showEntityOptions = false;
+            this._showResolvedEntities = false;
+            this.requestUpdate();
+          }}>
+                  <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
+                  <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                    <div>${isActive ? `${name} (Active)` : name}</div>
+                    <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
+                  </div>
+                </button>
+              `;
+      })}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   updated(changedProps) {
     if (this._idleImageTemplate && changedProps.has("hass")) {
       this._idleImageTemplateNeedsResolve = true;
@@ -4013,37 +4384,45 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       // Robust state tracking and timestamp updates
-      this.entityIds.forEach((id, idx) => {
+      const now = Date.now();
+      for (let idx = 0; idx < this.entityIds.length; idx++) {
+        const id = this.entityIds[idx];
         const obj = this.entityObjs[idx];
+        if (!obj) continue;
+
         const mainId = obj.entity_id;
         const maId = this._getActualResolvedMaEntityForState(idx);
 
-        const idsToTrack = [mainId];
-        if (maId && maId !== mainId) idsToTrack.push(maId);
+        // Track main player state
+        const mainState = this.hass.states[mainId]?.state;
+        const prevMainState = this._playerStateCache[mainId];
+        if (mainState === "playing") {
+          this._playTimestamps[mainId] = now;
+          this._lastActiveEntityIdByChip[idx] = mainId;
+        } else if (prevMainState === "playing" && mainState !== "playing") {
+          this._playTimestamps[mainId] = now;
+        }
+        this._playerStateCache[mainId] = mainState;
 
-        idsToTrack.forEach(eid => {
-          if (!eid) return;
-          const currState = this.hass.states[eid]?.state;
-          const prevState = this._playerStateCache[eid];
-
-          const isPlaying = this._isEntityPlaying(this.hass.states[eid]);
-
-          if (isPlaying) {
-            this._playTimestamps[eid] = Date.now();
-            this._lastActiveEntityIdByChip[idx] = eid;
-          } else if (prevState === "playing" && currState !== "playing") {
-            // Just stopped playing - record fresh stop timestamp for debounce correctness
-            this._playTimestamps[eid] = Date.now();
+        // Track Music Assistant player state if different
+        if (maId && maId !== mainId) {
+          const maState = this.hass.states[maId]?.state;
+          const prevMaState = this._playerStateCache[maId];
+          if (maState === "playing") {
+            this._playTimestamps[maId] = now;
+            this._lastActiveEntityIdByChip[idx] = maId;
+          } else if (prevMaState === "playing" && maState !== "playing") {
+            this._playTimestamps[maId] = now;
           }
-          this._playerStateCache[eid] = currState;
-        });
+          this._playerStateCache[maId] = maState;
+        }
 
         // Also maintain chip-level timestamp for sorting
         const activeEntityId = this._getEntityForPurpose(idx, 'sorting');
-        if (activeEntityId && this._isEntityPlaying(this.hass.states[activeEntityId])) {
-          this._playTimestamps[id] = Date.now();
+        if (activeEntityId && this.hass.states[activeEntityId]?.state === "playing") {
+          this._playTimestamps[id] = now;
         }
-      });
+      }
 
       // If manual‑select is active (no pin) and a *new* entity begins playing,
       // clear manual mode so auto‑switching resumes.
@@ -4656,7 +5035,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
    */
   async _onVolumeChange(e) {
     const idx = this._selectedIndex;
-    const groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
+    const groupingEntityTemplate = this._getGroupingEntityId(idx);
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
     const state = this.hass.states[groupingEntity];
     const newVol = Number(e.target.value);
@@ -4741,7 +5120,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    const groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
+    const groupingEntityTemplate = this._getGroupingEntityId(idx);
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
     const state = this.hass.states[groupingEntity];
 
@@ -4850,7 +5229,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     let groupingEntityTemplate, groupingEntity, state;
     try {
-      groupingEntityTemplate = this._getGroupingEntityIdByIndex(idx);
+      groupingEntityTemplate = this._getGroupingEntityId(idx);
       groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
       state = this.hass.states[groupingEntity];
     } catch (error) {
@@ -5790,212 +6169,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </div>
               </div>
             ` : nothing}
-              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? html`
-                <div class="entity-options-header">
-                  <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
-                    Close
-                  </button>
-                  <div class="entity-options-divider"></div>
-                </div>
-                <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} entity-options-scroll" style="display:flex; flex-direction:column;">
-                  <button class="entity-options-item" @click=${() => {
-            const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
-            if (resolvedEntities.length === 1) {
-              this._openMoreInfoForEntity(resolvedEntities[0]);
-              this._showEntityOptions = false;
-            } else {
-              this._showResolvedEntities = true;
-            }
-            this.requestUpdate();
-          }}>More Info</button>
-                  <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>Search</button>
-
-                ${Array.isArray(sourceList) && sourceList.length > 0 ? html`
-                      <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
-                    ` : nothing
-          }
-                  ${this._canShowTransferQueueOption() ? html`
-                    <button class="entity-options-item" @click=${() => this._openTransferQueue()}>Transfer Queue</button>
-                  ` : nothing
-          }
-                  ${(() => {
-            const totalEntities = this.entityIds.length;
-            const groupableCount = this.entityIds.reduce((acc, id) => {
-              const obj = this.entityObjs.find(e => e.entity_id === id);
-              if (!obj) return acc;
-
-              // Use cached resolved entity for feature checking
-              const idx = this.entityIds.indexOf(id);
-              const cached = this._maResolveCache?.[idx]?.id;
-              let actualGroupId;
-
-              if (obj.music_assistant_entity) {
-                if (typeof obj.music_assistant_entity === 'string' &&
-                  (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-                  // For templates, use cached resolved entity
-                  actualGroupId = cached || obj.entity_id;
-                } else {
-                  actualGroupId = obj.music_assistant_entity;
-                }
-              } else {
-                actualGroupId = obj.entity_id;
-              }
-
-              const st = this.hass.states[actualGroupId];
-              return acc + (this._isGroupCapable(st) ? 1 : 0);
-            }, 0);
-
-            // Check current entity's grouping support
-            const currObj = this.entityObjs[this._selectedIndex];
-            let currGroupId;
-            if (currObj?.music_assistant_entity) {
-              if (typeof currObj.music_assistant_entity === 'string' &&
-                (currObj.music_assistant_entity.includes('{{') || currObj.music_assistant_entity.includes('{%'))) {
-                // For templates, use cached resolved entity
-                const cached = this._maResolveCache?.[this._selectedIndex]?.id;
-                currGroupId = cached || currObj.entity_id;
-              } else {
-                currGroupId = currObj.music_assistant_entity;
-              }
-            } else {
-              currGroupId = currObj?.entity_id;
-            }
-
-            const currGroupState = this.hass.states[currGroupId];
-            if (
-              totalEntities > 1 &&
-              groupableCount > 1 &&
-              this._isGroupCapable(currGroupState)
-            ) {
-              return html`
-                          <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
-                        `;
-            }
-            return nothing;
-          })()
-          }
-                  ${menuOnlyActions.length ? html`
-                    ${menuOnlyActions.map(({ action, idx }) => {
-            const label = this._getActionLabel(action);
-            return html`
-                        <button
-                          class="entity-options-item menu-action-item"
-                          @click=${() => this._onMenuActionClick(idx)}
-                        >
-                          ${action.icon ? html`
-                            <ha-icon
-                              class="menu-action-icon"
-                              .icon=${action.icon}
-                            ></ha-icon>
-                          ` : nothing}
-                          ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
-                        </button>
-                      `;
-          })}
-                  ` : nothing}
-                </div>
-              ` : this._showTransferQueue ? html`
-                <div class="entity-options-header">
-                  <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }}>
-                    Back
-                  </button>
-                  <div class="entity-options-divider"></div>
-                  <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
-                </div>
-              <div class="entity-options-scroll">
-                ${(() => {
-            const targets = this._getTransferQueueTargets();
-            if (!targets.length) {
-              return html`<div style="padding: 12px; opacity: 0.75;">No other Music Assistant players available.</div>`;
-            }
-            return html`
-                      <div style="display:flex;flex-direction:column;gap:8px;">
-                        ${targets.map(target => html`
-                          <button
-                            class="entity-options-item"
-                            ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                            @click=${() => this._transferQueueTo(target)}
-                            style="display:flex;align-items:center;justify-content:flex-start;gap:12px;${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
-                            <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
-                            <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                              <div>${target.name}</div>
-                              <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
-                            </div>
-                            ${target.state ? html`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : nothing}
-                          </button>
-                        `)}
-                      </div>
-                    `;
-          })()
-          }
-                ${this._transferQueueStatus ? html`
-                    <div style="
-                      margin-top: 14px;
-                      padding: 10px 12px;
-                      border-radius: 8px;
-                      font-weight: 600;
-                      text-align: center;
-                      background: ${this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)'};
-                      color: ${this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a'};
-                    ">
-                      ${this._transferQueueStatus.message}
-                    </div>
-                  ` : nothing}
-              </div>
-            ` : this._showResolvedEntities ? html`
-                <div class="entity-options-header">
-                  <button class="entity-options-item close-item" @click=${() => {
-            this._showResolvedEntities = false;
-            this.requestUpdate();
-          }}>
-                    Back
-                  </button>
-                <div class="entity-options-divider"></div>
-                <div class="entity-options-resolved-entities" style="margin-top:12px;">
-                  <div class="entity-options-title">Select Entity for More Info</div>
-                  <div class="entity-options-resolved-entities-list">
-                    ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
-            const state = this.hass?.states?.[entityId];
-            const name = state?.attributes?.friendly_name || entityId;
-            const icon = state?.attributes?.icon || "mdi:help-circle";
-
-            // Determine the role of this entity
-            const idx = this._selectedIndex;
-            const obj = this.entityObjs[idx];
-            let role = "Main Entity";
-
-            let isActive = false;
-            if (obj) {
-              const maEntity = this._getActualResolvedMaEntityForState(idx);
-              const volEntity = this._getVolumeEntity(idx);
-              const activeEntity = this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
-              isActive = activeEntity === entityId;
-
-              if (entityId === maEntity && maEntity !== obj.entity_id) {
-                role = "Music Assistant Entity";
-              } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
-                role = "Volume Entity";
-              }
-            }
-
-            return html`
-                        <button class="entity-options-item" @click=${() => {
-                this._openMoreInfoForEntity(entityId);
-                this._showEntityOptions = false;
-                this._showResolvedEntities = false;
-                this.requestUpdate();
-              }}>
-                          <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
-                          <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                            <div>${isActive ? `${name} (Active)` : name}</div>
-                            <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
-                          </div>
-                        </button>
-                      `;
-          })}
-                  </div>
-                </div>
-            ` : this._showSearchInSheet ? html`
+              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) :
+          this._showGrouping ? this._renderGroupingSheet() :
+            this._showTransferQueue ? this._renderTransferQueueSheet() :
+              this._showResolvedEntities ? this._renderResolvedEntitiesSheet() :
+                this._showSearchInSheet ? html`
               <div class="entity-options-search" style = "margin-top:12px;" >
                 ${this._searchHierarchy.length > 0 ? html`
                     <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._goBackInSearch(); } }}>
@@ -6003,13 +6181,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     </button>
                     <div class="entity-options-divider"></div>
                   ` : nothing
-          }
+                  }
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
                   ` : html`<div class="entity-options-search-skeleton"></div>`
-          }
+                  }
                   <div class="entity-options-search-row">
                       <input
                         type="text"
@@ -6019,12 +6197,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         .value=${this._searchQuery}
                         @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
                         @keydown=${e => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              this._handleSearchSubmit();
-            }
-            else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
-          }}
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      this._handleSearchSubmit();
+                    }
+                    else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
+                  }}
                         placeholder="Search music..."
                         style="flex:1; min-width:0; font-size:1.1em;"
                       />
@@ -6044,16 +6222,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                   <!--FILTER CHIPS-->
               ${(() => {
-            const classes = this._getVisibleSearchFilterClasses();
-            const filter = this._searchMediaClassFilter || "all";
+                    const classes = this._getVisibleSearchFilterClasses();
+                    const filter = this._searchMediaClassFilter || "all";
 
-            // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
-            if (this._searchHierarchy.length > 0) return nothing;
+                    // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
+                    if (this._searchHierarchy.length > 0) return nothing;
 
-            // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
-            if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
+                    // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
+                    if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
 
-            return html`
+                    return html`
                       <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
                         <button
                           class="chip"
@@ -6083,8 +6261,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         `)}
                       </div>
                     `;
-          })()
-          }
+                  })()
+                  }
                   ${this._searchLoading ? html`<div class="entity-options-search-loading">Loading...</div>` : nothing}
                   ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   
@@ -6107,8 +6285,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
-              this._toggleFavoritesFilter();
-            } : () => { }}
+                      this._toggleFavoritesFilter();
+                    } : () => { }}
                           title="Favorites"
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
@@ -6134,8 +6312,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
-              this._toggleRecentlyPlayedFilter();
-            } : () => { }}
+                      this._toggleRecentlyPlayedFilter();
+                    } : () => { }}
                           title="Recently Played"
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
@@ -6162,8 +6340,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                               opacity: ${this._searchAttempted ? '1' : '0.5'};
                             "
                             @click=${this._searchAttempted ? () => {
-                this._toggleUpcomingFilter();
-              } : () => { }}
+                        this._toggleUpcomingFilter();
+                      } : () => { }}
                             title="Next Up"
                           >
                             <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
@@ -6190,8 +6368,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 opacity: ${this._searchAttempted ? '1' : '0.5'};
                               "
                               @click=${this._searchAttempted ? () => {
-                  this._toggleRecommendationsFilter();
-                } : () => { }}
+                          this._toggleRecommendationsFilter();
+                        } : () => { }}
                               title="Recommendations"
                             >
                               <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:lightbulb-on' : 'mdi:lightbulb-on-outline'}></ha-icon>
@@ -6239,22 +6417,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       ` : nothing}
                     </div>
                   ` : nothing
-          }
+                  }
 
             <div class="entity-options-search-results">
               ${(() => {
-            const filter = this._searchMediaClassFilter || "all";
-            const currentResults = this._getDisplaySearchResults();
-            // Build padded array so row‑count stays constant
-            const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
-            const paddedResults = [
-              ...currentResults,
-              ...Array.from({ length: Math.max(0, totalRows - currentResults.length) }, () => null)
-            ];
-            // Always render paddedResults, even before first search
-            return (this._searchAttempted && currentResults.length === 0 && !this._searchLoading)
-              ? html`<div class="entity-options-search-empty" style="color: white;">No results.</div>`
-              : paddedResults.map(item => item ? html`
+                    const filter = this._searchMediaClassFilter || "all";
+                    const currentResults = this._getDisplaySearchResults();
+                    // Build padded array so row‑count stays constant
+                    const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
+                    const paddedResults = [
+                      ...currentResults,
+                      ...Array.from({ length: Math.max(0, totalRows - currentResults.length) }, () => null)
+                    ];
+                    // Always render paddedResults, even before first search
+                    return (this._searchAttempted && currentResults.length === 0 && !this._searchLoading)
+                      ? html`<div class="entity-options-search-empty" style="color: white;">No results.</div>`
+                      : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
                               ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
@@ -6280,19 +6458,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 </span>
                                 <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
                                   ${(() => {
-                  // Prefer artist when available for tracks/albums and special filters
-                  const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
-                  const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
-                  const isUpcoming = !!this._upcomingFilterActive;
-                  const isRecommendations = !!this._recommendationsFilterActive;
-                  if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
-                    return item.artist;
-                  }
-                  // Otherwise show media class as before
-                  return item.media_class
-                    ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
-                    : "";
-                })()}
+                          // Prefer artist when available for tracks/albums and special filters
+                          const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
+                          const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
+                          const isUpcoming = !!this._upcomingFilterActive;
+                          const isRecommendations = !!this._recommendationsFilterActive;
+                          if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
+                            return item.artist;
+                          }
+                          // Otherwise show media class as before
+                          return item.media_class
+                            ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
+                            : "";
+                        })()}
                                 </span>
                               </div>
                                 <div class="entity-options-search-buttons">
@@ -6356,266 +6534,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             <!-- placeholder row keeps height -->
                             <div class="entity-options-search-result placeholder"></div>
                           `);
-          })()}
+                  })()}
             </div>
                   </div>
                 </div>
-              ` : this._showGrouping ? html`
-              <div class="grouping-header group-list-header" >
-                <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
-                  Back
-                  </button>
-                </div>
-              ${(() => {
-            const masterId = this._getGroupingMasterId();
-            const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
-            let masterGroupId = null;
-            if (masterIdx >= 0) {
-              const masterObj = this.entityObjs[masterIdx];
-              if (masterObj?.music_assistant_entity) {
-                if (typeof masterObj.music_assistant_entity === 'string' &&
-                  (masterObj.music_assistant_entity.includes('{{') || masterObj.music_assistant_entity.includes('{%'))) {
-                  const cached = this._maResolveCache?.[masterIdx]?.id;
-                  masterGroupId = cached || masterObj.entity_id;
-                } else {
-                  masterGroupId = masterObj.music_assistant_entity;
-                }
-              } else {
-                masterGroupId = masterObj?.entity_id;
-              }
-            }
-            if (!masterGroupId) {
-              masterGroupId = masterId;
-            }
-            const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
-            const groupedAny = Array.isArray(masterState?.attributes?.group_members) && masterState.attributes.group_members.length > 0;
-            const groupPlayerIds = [];
-            const currentMaster = groupedAny ? masterGroupId : this._getGroupingEntityIdByEntityId(this.currentEntityId);
-
-            for (const id of this.entityIds) {
-              const obj = this.entityObjs.find(e => e.entity_id === id);
-              if (!obj) continue;
-
-              let entityToCheck = null;
-              let entityName = null;
-
-              if (obj.music_assistant_entity) {
-                let maEntityId;
-                if (typeof obj.music_assistant_entity === 'string' &&
-                  (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-                  const idx = this.entityIds.indexOf(id);
-                  const cached = this._maResolveCache?.[idx]?.id;
-                  maEntityId = cached || obj.entity_id;
-                } else {
-                  maEntityId = obj.music_assistant_entity;
-                }
-
-                const maState = this.hass.states[maEntityId];
-                if (maState && this._isGroupCapable(maState)) {
-                  entityToCheck = maEntityId;
-                  entityName = id;
-                }
-              }
-
-              if (!entityToCheck) {
-                const mainState = this.hass.states[id];
-                if (mainState && this._isGroupCapable(mainState)) {
-                  entityToCheck = id;
-                  entityName = id;
-                }
-              }
-
-              if (entityToCheck && entityName) {
-                // Calculate busy status
-                const activeActualKey = this._getGroupKey(id);
-                let isBusy = false;
-                let busyLabel = "";
-
-                if (activeActualKey && activeActualKey !== id && activeActualKey !== currentMaster) {
-                  isBusy = true;
-                  const masterName = this.getChipName(activeActualKey);
-                  busyLabel = `Joined ${masterName}`;
-                } else if (activeActualKey === id && activeActualKey !== currentMaster) {
-                  const checkObj = this.entityObjs.find(e => e.entity_id === id);
-                  const checkEntityId = checkObj ? this._getGroupingEntityIdByEntityId(checkObj.entity_id) : id;
-                  const checkState = this.hass.states[checkEntityId];
-                  if (checkState?.attributes?.group_members?.length > 1) {
-                    isBusy = true;
-                    busyLabel = `Master (${checkState.attributes.group_members.length} players)`;
-                  }
-                }
-
-                groupPlayerIds.push({
-                  id: entityName,
-                  groupId: entityToCheck,
-                  isBusy,
-                  busyLabel
-                });
-              }
-            }
-
-            const activeId = this.currentEntityId;
-            const activeObj = activeId ? this.entityObjs.find(e => e.entity_id === activeId) : null;
-            const activeGroupId = activeObj ? this._getGroupingEntityIdByEntityId(activeObj.entity_id) : null;
-            const activeState = activeGroupId ? this.hass.states[activeGroupId] : (activeId ? this.hass.states[activeId] : null);
-            const activeIsGroupCapable = activeState ? this._isGroupCapable(activeState) : false;
-
-            if (!groupedAny && !activeIsGroupCapable) {
-              return html`
-                        <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
-                        <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-                          No group-capable players.
-                        </div>
-                      `;
-            }
-
-            let sortedGroupIds;
-            if (groupedAny) {
-              const masterFirst = masterId ? groupPlayerIds.find(item => item.id === masterId) : null;
-              const others = masterFirst
-                ? groupPlayerIds.filter(item => item.id !== masterId)
-                : groupPlayerIds;
-              // Sort others: Available first, then Busy
-              others.sort((a, b) => {
-                if (a.isBusy && !b.isBusy) return 1;
-                if (!a.isBusy && b.isBusy) return -1;
-                return 0;
-              });
-              sortedGroupIds = masterFirst ? [masterFirst, ...others] : others;
-            } else {
-              const currentFirst = activeId ? groupPlayerIds.find(item => item.id === activeId) : null;
-              const others = currentFirst
-                ? groupPlayerIds.filter(item => item.id !== activeId)
-                : groupPlayerIds;
-              // Sort others: Available first, then Busy
-              others.sort((a, b) => {
-                if (a.isBusy && !b.isBusy) return 1;
-                if (!a.isBusy && b.isBusy) return -1;
-                return 0;
-              });
-              sortedGroupIds = currentFirst ? [currentFirst, ...others] : others;
-            }
-            return html`
-                        <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                          ${groupedAny ? html`
-                            <button class="entity-options-item"
-                              @click=${() => this._syncGroupVolume()}
-                              style="flex:0 0 auto; min-width:140px; text-align:center;">
-                              Sync Volume
-                            </button>
-                          ` : nothing}
-                          <button class="entity-options-item"
-                            @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-                            style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
-                            ${groupedAny ? "Ungroup All" : "Group All"}
-                          </button>
-                        </div>
-                      <div class="group-list-scroll">
-                        ${sortedGroupIds.length === 0 ? html`
-                          <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-                            No group-capable players.
-                          </div>
-                        ` : sortedGroupIds.map(item => {
-              const id = item.id;
-              const actualGroupId = item.groupId;
-              const obj = this.entityObjs.find(e => e.entity_id === id);
-              if (!obj) return nothing;
-              const name = this.getChipName(id);
-              // Use pre-calculated busy status
-              const { isBusy, busyLabel } = item;
-
-              let grouped = false;
-              if (groupedAny && masterState) {
-                if (actualGroupId === masterGroupId) {
-                  grouped = true;
-                } else {
-                  const members = Array.isArray(masterState.attributes?.group_members)
-                    ? masterState.attributes.group_members
-                    : [];
-                  grouped = members.includes(actualGroupId);
-                }
-              }
-              // Use unified entity resolution for grouping menu
-              const entityIdx = this.entityIds.indexOf(id);
-              const volumeEntity = this._getEntityForPurpose(entityIdx, 'grouping_control');
-              // For group players menu, use the same entity for both control and display
-              const displayEntity = volumeEntity;
-              const displayVolumeState = this.hass.states[displayEntity];
-
-              const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
-              const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
-              const isPrimaryRow = groupedAny ? actualGroupId === masterGroupId : id === masterId;
-              const showToggleButton = groupedAny ? !isPrimaryRow : id !== masterId;
-              const isCurrent = id === activeId;
-
-              let stateLabel = groupedAny
-                ? (isPrimaryRow ? "Master" : (grouped ? "Joined" : "Available"))
-                : (isCurrent ? "Current" : "Available");
-
-              if (isBusy) {
-                stateLabel = busyLabel || "Unavailable";
-              } return html`
-                            <div class="entity-options-item group-player-row" style="
-                              display:flex;
-                              align-items:center;
-                              gap:6px;
-                              padding:4px 8px;
-                              margin-bottom:1px;
-                              ${isBusy ? "opacity: 0.5;" : ""}
-                            ">
-                              <div style="flex:1; min-width:120px;">
-                                <div style="font-weight:600; text-align:left;">${name}</div>
-                                <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
-                              </div>
-                              <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
-                                ${isRemoteVol
-                  ? html`
-                                        <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
-                                          <button @click=${() => this._onGroupVolumeStep(volumeEntity, -1)} title="Vol Down" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                                            <ha-icon icon="mdi:minus"></ha-icon>
-                                          </button>
-                                          <button @click=${() => this._onGroupVolumeStep(volumeEntity, 1)} title="Vol Up" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                                            <ha-icon icon="mdi:plus"></ha-icon>
-                                          </button>
-                                        </div>
-                                      `
-                  : html`
-                                        <input
-                                          class="vol-slider"
-                                          type="range"
-                                          min="0"
-                                          max="1"
-                                          step="0.01"
-                                          .value=${volVal}
-                                          @change=${e => this._onGroupVolumeChange(id, volumeEntity, e)}
-                                          title="Volume"
-                                          style="width:100%;max-width:260px;"
-                                        />
-                                      `
-                }
-                                <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
-                              </div>
-                              ${showToggleButton
-                  ? html`
-                                    <button class="group-toggle-btn"
-                                            @click=${() => !isBusy && this._toggleGroup(id)}
-                                            title=${isBusy ? "Player is unavailable" : (grouped ? "Unjoin" : "Join")}
-                                            style="margin-left:4px; ${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""}">
-                                      <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
-                                    </button>
-                                  `
-                  : html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
-                }
-                            </div>
-                          `;
-            })}
-                      </div>
-                    `;
-            // --- End new group player rows logic ---
-          })()
-          }
-            ` : html`
+              ` : this._showGrouping ? this._renderGroupingSheet() : html`
                 <div class="entity-options-header">
                   <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
                     Back
@@ -6633,16 +6556,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </div>
                 <div class="floating-source-index">
                   ${sourceLetters.map((letter, i) => {
-            const isAvailable = availableSourceFirstLetters.has(letter);
-            const hovered = this._hoveredSourceLetterIndex;
-            let scale = "";
-            if (isAvailable && hovered !== null && hovered !== undefined) {
-              const dist = Math.abs(hovered - i);
-              if (dist === 0) scale = "max";
-              else if (dist === 1) scale = "large";
-              else if (dist === 2) scale = "med";
-            }
-            return html`
+                    const isAvailable = availableSourceFirstLetters.has(letter);
+                    const hovered = this._hoveredSourceLetterIndex;
+                    let scale = "";
+                    if (isAvailable && hovered !== null && hovered !== undefined) {
+                      const dist = Math.abs(hovered - i);
+                      if (dist === 0) scale = "max";
+                      else if (dist === 1) scale = "large";
+                      else if (dist === 2) scale = "med";
+                    }
+                    return html`
                       <button
                         class="source-index-letter"
                         ?disabled=${!isAvailable}
@@ -6654,9 +6577,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         ${letter}
                       </button>
                     `;
-          })}
+                  })}
                 </div>
-            `}
+`}
               </div>
             </div>
             <!-- Persistent Media Controls Section - Outside Scrollable Area -->
@@ -6757,8 +6680,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         })
         : nothing
       }
-        </ha-card>
-      `;
+    </ha-card>
+  `;
   }
 
   _updateIdleState() {
@@ -7368,16 +7291,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
   _closeGrouping() {
     this._showGrouping = false;
-    // After closing, try to keep the master chip selected if still valid
-    const groups = this.groupedSortedEntityIds;
-    let masterId = this._lastGroupingMasterId;
-    // Find the group that contains the last grouping master, if any
-    const group = groups.find(g => masterId && g.includes(masterId));
-    if (group && group.length > 1) {
-      const master = this._getActualGroupMaster(group);
-      const idx = this.entityIds.indexOf(master);
-      if (idx >= 0) this._selectedIndex = idx;
-    }
     // No requestUpdate here; overlay close will handle it.
   }
   async _toggleGroup(targetId) {
@@ -7501,49 +7414,53 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Synchronize all group member volumes to match the master
-  async _syncGroupVolume() {
+  _syncGroupVolume() {
     const masterId = this._getGroupingMasterId();
-    const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
-    const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
-    if (!masterObj) return;
+    if (!masterId) return;
 
-    const masterGroupId = await this._resolveGroupingEntityId(masterObj, masterId);
-    if (!masterGroupId) return;
-    const masterState = this.hass.states[masterGroupId];
-    if (!this._isGroupCapable(masterState)) return;
-    // For sync volume, use the same entity that's being used for grouping (the MA entity) to get the master volume
-    const masterVolumeEntity = masterGroupId;
-    const masterVolumeState = masterVolumeEntity ? this.hass.states[masterVolumeEntity] : null;
-    if (!masterVolumeState) return;
-    const masterVol = Number(masterVolumeState.attributes.volume_level || 0);
+    const masterIdx = this.entityIds.indexOf(masterId);
+    if (masterIdx === -1) return;
+
+    const masterGroupId = this._getGroupingEntityId(masterIdx);
+    const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+
+    if (!masterState || !this._isGroupCapable(masterState)) return;
+
+    // Get master volume logic matching the renderer
+    const masterVolEntity = this._getVolumeEntityForGrouping(masterIdx) || masterGroupId;
+    const masterVolState = this.hass.states[masterVolEntity];
+    const masterVol = Number(masterVolState?.attributes?.volume_level);
+
+    if (isNaN(masterVol)) return;
+
     const members = Array.isArray(masterState.attributes.group_members)
       ? masterState.attributes.group_members
       : [];
 
-    for (const groupedId of members) {
-      // Find the configured entity that has this grouping entity
-      let foundObj = null;
-      for (const obj of this.entityObjs) {
-        const resolvedGroupingId = await this._resolveGroupingEntityId(obj, obj.entity_id);
-        if (!resolvedGroupingId) continue;
+    const groupingIdToIdx = new Map();
+    this.entityObjs.forEach((obj, i) => {
+      groupingIdToIdx.set(this._getGroupingEntityId(i), i);
+    });
 
-        if (resolvedGroupingId === groupedId) {
-          foundObj = obj;
-          break;
-        }
+    for (const memberGroupId of members) {
+      if (memberGroupId === masterGroupId) continue;
+
+      const foundIdx = groupingIdToIdx.get(memberGroupId);
+
+      if (foundIdx !== undefined) {
+        const targetVolEntity = this._getVolumeEntityForGrouping(foundIdx) || memberGroupId;
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: targetVolEntity,
+          volume_level: masterVol
+        });
+      } else {
+        // Fallback: if we can't find a configured entity, just try setting volume on the group member ID acting as an entity
+        this.hass.callService("media_player", "volume_set", {
+          entity_id: memberGroupId,
+          volume_level: masterVol
+        });
       }
-
-      if (!foundObj) continue;
-
-      // For sync volume, use the same entity that's being used for grouping (the MA entity)
-      const volumeEntity = groupedId;
-
-      await this.hass.callService("media_player", "volume_set", {
-        entity_id: volumeEntity,
-        volume_level: masterVol
-      });
     }
-    this._lastGroupingMasterId = masterId || this.currentEntityId;
   }
 
   // Get all resolved entities for the current chip (main, MA, volume)
