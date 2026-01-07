@@ -17,6 +17,7 @@ export function renderVolumeRow({
   reserveLeadingControlSpace = false,
   showRightPlaceholder = false,
   rightSlotTemplate = nothing,
+  hideVolume = false,
 }) {
   const hasLeadingControl = leadingControlTemplate !== nothing && leadingControlTemplate !== undefined && leadingControlTemplate !== null;
   // Determine volume icon based on volume level and mute state
@@ -30,63 +31,75 @@ export function renderVolumeRow({
   };
 
   return html`
-    <div class="volume-row">
-      <div class="volume-controls">
+    <div class="volume-row ${showSlider && !isRemoteVolumeEntity ? 'has-slider' : ''}">
+      <div class="volume-left">
         ${hasLeadingControl
       ? leadingControlTemplate
       : (reserveLeadingControlSpace ? html`<div class="volume-leading-placeholder"></div>` : nothing)
     }
-        <button 
-          class="volume-icon-btn" 
-          @click=${onMuteToggle} 
-          title=${(supportsMute ? isMuted : (vol === 0)) ? "Unmute" : "Mute"}
-        >
-          <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
-        </button>
+        ${(!hideVolume && !isRemoteVolumeEntity) ? html`
+          <button 
+            class="volume-icon-btn" 
+            @click=${onMuteToggle} 
+            title=${(supportsMute ? isMuted : (vol === 0)) ? "Unmute" : "Mute"}
+          >
+            <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
+          </button>
+        ` : nothing}
+      </div>
 
-        ${isRemoteVolumeEntity
-      ? html`
-              <div class="vol-stepper">
-                <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
-                <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
-              </div>
-            `
-      : showSlider
+      <div class="volume-center">
+        ${!hideVolume ? html`
+          ${isRemoteVolumeEntity
         ? html`
-              <div class="volume-slider-container">
-                <input
-                  class="vol-slider"
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  .value=${vol}
-                  @mousedown=${onVolumeDragStart}
-                  @touchstart=${onVolumeDragStart}
-                  @change=${onVolumeChange}
-                  @mouseup=${onVolumeDragEnd}
-                  @touchend=${onVolumeDragEnd}
-                  title="Volume"
-                />
-              </div>
-            `
-        : html`
               <div class="vol-stepper-container">
                 <div class="vol-stepper">
                   <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
-                  <span>${Math.round(vol * 100)}%</span>
+                  <span class="vol-label">vol</span>
                   <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
                 </div>
               </div>
             `
-    }
+        : showSlider
+          ? html`
+                <div class="volume-slider-container">
+                  <input
+                    class="vol-slider"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    .value=${vol}
+                    @mousedown=${onVolumeDragStart}
+                    @touchstart=${onVolumeDragStart}
+                    @change=${onVolumeChange}
+                    @mouseup=${onVolumeDragEnd}
+                    @touchend=${onVolumeDragEnd}
+                    title="Volume"
+                  />
+                </div>
+              `
+          : html`
+              <div class="vol-stepper-container">
+                <div class="vol-stepper">
+                  <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
+                  <span class="vol-value">${Math.round(vol * 100)}%</span>
+                  <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
+                </div>
+              </div>
+            `
+      }
+        ` : nothing}
       </div>
-      ${showRightPlaceholder ? html`
-        <div class="volume-placeholder">
-          ${rightSlotTemplate || nothing}
-        </div>
-      ` : nothing}
-      ${moreInfoMenu}
+
+      <div class="volume-right">
+        ${showRightPlaceholder ? html`
+          <div class="volume-placeholder">
+            ${rightSlotTemplate || nothing}
+          </div>
+        ` : nothing}
+        ${moreInfoMenu}
+      </div>
     </div>
   `;
 }

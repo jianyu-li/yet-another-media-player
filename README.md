@@ -92,7 +92,9 @@ Below you will find a list of all configuration options.
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
+| `artwork_hostname`         | string       | No           | —           | Hostname URL (e.g., `http://192.168.1.50:8123`) prepended to relative artwork URLs; required when Casting to external devices |
 | `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `fill`, `scale-down`, or `none`                   |
+| `artwork_position`         | choice       | No           | `top center`| Control artwork alignment: `top center`, `center center`, or `bottom center`                     |
 | `extend_artwork`           | boolean      | No           | `false`     | When `true`, extends the artwork background up behind the chip and action rows for a full-bleed look |
 | `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` and `object_fit` can be used to style the replacement (defaults to global `artwork_object_fit`). `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
 | `idle_image`               | image/camera/url/template | No           | —           | Background image when player is idle (supports local files, cameras, URLs, or templates that return either)                   |
@@ -444,11 +446,18 @@ idle_screen: search-recently-played
 
 # Artwork
 
-## Artwork Fit
-> Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.
+## Artwork Fit & Position
+> Controls how artwork scales and aligns across the card.
 
 - **Artwork Fit**: Control how artwork scales: `cover`, `contain`, `fill`, `scale-down`, or `none`.
+- **Artwork Position**: Alignment of the artwork within the space (e.g., `top center`).
 - **Extend Artwork**: When `true`, extends the artwork background up behind the chip and action rows for a full-bleed look.
+
+## Artwork Hostname (For Casting)
+> Fixes artwork visibility when casting the dashboard to external displays (Nest Hub, etc.).
+
+If you see broken images when casting, it's likely because the artwork URL is relative (e.g., `/api/image...`). External devices don't know the IP address of your Home Assistant instance.
+Set `artwork_hostname` to your full HA URL (e.g., `http://192.168.1.50:8123`) so the card can create a valid absolute URL for these devices.
 
 ## Idle Artwork
 > Show a static image or entity snapshot whenever nothing is playing.

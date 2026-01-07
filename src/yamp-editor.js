@@ -729,9 +729,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     return html`
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">Artwork Fit</div>
-            <div class="section-description">Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.</div>
+            <div class="section-title">General Settings</div>
+            <div class="section-description">Global controls for how artwork is displayed and retrieved.</div>
           </div>
+
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector
@@ -756,9 +757,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       }}
               ></ha-selector>
             </div>
-          </div>
-          </div>
-          <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector
                 .hass=${this.hass}
@@ -782,6 +780,28 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
           </div>
           <div class="form-row form-row-multi-column">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="extend-artwork-toggle"
+                .checked=${this._config.extend_artwork === true}
+                @change=${(e) => this._updateConfig("extend_artwork", e.target.checked)}
+              ></ha-switch>
+              <div style="display: flex; flex-direction: column;">
+                <label for="extend-artwork-toggle" style="font-weight: 500;">Extend artwork</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">Let the artwork background continue underneath the chip and action rows.</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <ha-textfield
+              class="full-width"
+              label="Artwork Hostname"
+              .value=${this._config.artwork_hostname ?? ""}
+              @input=${(e) => this._updateConfig("artwork_hostname", e.target.value)}
+              helper="e.g. http://192.168.1.50:8123"
+              .helperPersistent=${true}
+            ></ha-textfield>
+          </div>
         </div>
 
         <div class="config-section">
@@ -1371,6 +1391,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           mode: "dropdown", options: [
             { value: "slider", label: "Slider" },
             { value: "stepper", label: "Stepper" },
+            { value: "hidden", label: "Hidden" },
           ]
         }
       }}
