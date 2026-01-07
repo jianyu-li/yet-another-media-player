@@ -313,7 +313,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const map = {};
     for (const id of this.entityIds) {
-      const key = this._getGroupKey(id);
+      let key = this._getGroupKey(id);
+      // If the group master is not in our configured entities, do not group them visually.
+      // treating them as separate chips avoids showing a false "master" (e.g. Kitchen leading Loft when Office is real master)
+      if (!this.entityIds.includes(key)) {
+        key = id;
+      }
+
       if (!map[key]) map[key] = { ids: [], ts: 0 };
       map[key].ids.push(id);
       map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
@@ -3763,18 +3769,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const groupingId = this._getGroupingEntityIdByEntityId(id);
     const st = this.hass?.states?.[groupingId];
     if (!st) return id;
+
     const membersRaw = Array.isArray(st.attributes.group_members)
       ? st.attributes.group_members
       : [];
-    // Translate raw group member ids (likely MA ids) back to configured entity ids
-    const membersConfigured = this.entityIds.filter(otherId => {
-      if (otherId === id) return false;
-      const otherGroupingId = this._getGroupingEntityIdByEntityId(otherId);
-      return membersRaw.includes(otherGroupingId);
+
+    // If no group members or just itself, it's not grouped
+    if (membersRaw.length <= 1) return id;
+
+    // First member is the master
+    const masterGroupingId = membersRaw[0];
+
+    // Find configured entity corresponding to this master grouping ID
+    const masterEntityId = this.entityIds.find(eId => {
+      const gId = this._getGroupingEntityIdByEntityId(eId);
+      return gId === masterGroupingId;
     });
-    if (!membersConfigured.length) return id;
-    const allConfigured = [id, ...membersConfigured].sort();
-    return allConfigured[0];
+
+    // If master is not in our config, return the raw grouping ID so we know it's external/different
+    return masterEntityId || masterGroupingId;
   }
 
   get entityIds() {
@@ -4000,7 +4013,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const currGroupId = this._getGroupingEntityId(this._selectedIndex);
     const currGroupState = this.hass.states[currGroupId];
 
-    if (groupableCount > 1 && this._isGroupCapable(currGroupState)) {
+    // Check if the current entity is a follower (unavailable for acting as a new group master)
+    const currentId = this.currentEntityId;
+    const groupKey = this._getGroupKey(currentId);
+    const isFollower = groupKey !== currentId;
+
+    if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
       return html`
         <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
       `;
@@ -4032,14 +4050,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Busy if joined to a DIFFERENT group
         if (playerGroupKey !== id && playerGroupKey !== myGroupKey) {
           isBusy = true;
-          const otherMasterName = this.getChipName(playerGroupKey);
-          busyLabel = `Joined ${otherMasterName}`;
+          busyLabel = "Unavailable";
         }
         // Or if it IS a master of a different group
         else if (playerGroupKey === id && playerGroupKey !== myGroupKey) {
           if (st.attributes?.group_members?.length > 1) {
             isBusy = true;
-            busyLabel = `Master (${st.attributes.group_members.length} players)`;
+            busyLabel = "Unavailable";
           }
         }
 
@@ -4058,7 +4075,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const activeState = activeGroupId ? this.hass.states[activeGroupId] : null;
     const activeIsGroupCapable = activeState ? this._isGroupCapable(activeState) : false;
 
-    if (!groupedAny && !activeIsGroupCapable) {
+    // Check if active entity is itself a follower (isBusy)
+    const activeGroupKey = this._getGroupKey(activeId);
+    const activeIsBusy = activeGroupKey !== activeId;
+
+    if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
       return html`
         <div class="entity-options-header">
           <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
@@ -4068,7 +4089,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         </div>
         <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
         <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-          No group-capable players available.
+          ${activeIsBusy ? "Player is unavailable" : "No group-capable players available."}
         </div>
       `;
     }

@@ -9219,7 +9219,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
     const map = {};
     for (const id of this.entityIds) {
-      const key = this._getGroupKey(id);
+      let key = this._getGroupKey(id);
+      // If the group master is not in our configured entities, do not group them visually.
+      // treating them as separate chips avoids showing a false "master" (e.g. Kitchen leading Loft when Office is real master)
+      if (!this.entityIds.includes(key)) {
+        key = id;
+      }
       if (!map[key]) map[key] = {
         ids: [],
         ts: 0
@@ -12507,15 +12512,21 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const st = (_this$hass14 = this.hass) === null || _this$hass14 === void 0 || (_this$hass14 = _this$hass14.states) === null || _this$hass14 === void 0 ? void 0 : _this$hass14[groupingId];
     if (!st) return id;
     const membersRaw = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
-    // Translate raw group member ids (likely MA ids) back to configured entity ids
-    const membersConfigured = this.entityIds.filter(otherId => {
-      if (otherId === id) return false;
-      const otherGroupingId = this._getGroupingEntityIdByEntityId(otherId);
-      return membersRaw.includes(otherGroupingId);
+
+    // If no group members or just itself, it's not grouped
+    if (membersRaw.length <= 1) return id;
+
+    // First member is the master
+    const masterGroupingId = membersRaw[0];
+
+    // Find configured entity corresponding to this master grouping ID
+    const masterEntityId = this.entityIds.find(eId => {
+      const gId = this._getGroupingEntityIdByEntityId(eId);
+      return gId === masterGroupingId;
     });
-    if (!membersConfigured.length) return id;
-    const allConfigured = [id, ...membersConfigured].sort();
-    return allConfigured[0];
+
+    // If master is not in our config, return the raw grouping ID so we know it's external/different
+    return masterEntityId || masterGroupingId;
   }
   get entityIds() {
     return this.entityObjs.map(e => e.entity_id);
@@ -12682,7 +12693,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }, 0);
     const currGroupId = this._getGroupingEntityId(this._selectedIndex);
     const currGroupState = this.hass.states[currGroupId];
-    if (groupableCount > 1 && this._isGroupCapable(currGroupState)) {
+
+    // Check if the current entity is a follower (unavailable for acting as a new group master)
+    const currentId = this.currentEntityId;
+    const groupKey = this._getGroupKey(currentId);
+    const isFollower = groupKey !== currentId;
+    if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
       return x(_templateObject8 || (_templateObject8 = _taggedTemplateLiteral(["\n        <button class=\"entity-options-item\" @click=", ">Group Players</button>\n      "])), () => this._openGrouping());
     }
     return E;
@@ -12709,15 +12725,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
         // Busy if joined to a DIFFERENT group
         if (playerGroupKey !== id && playerGroupKey !== myGroupKey) {
           isBusy = true;
-          const otherMasterName = this.getChipName(playerGroupKey);
-          busyLabel = "Joined ".concat(otherMasterName);
+          busyLabel = "Unavailable";
         }
         // Or if it IS a master of a different group
         else if (playerGroupKey === id && playerGroupKey !== myGroupKey) {
           var _st$attributes;
           if (((_st$attributes = st.attributes) === null || _st$attributes === void 0 || (_st$attributes = _st$attributes.group_members) === null || _st$attributes === void 0 ? void 0 : _st$attributes.length) > 1) {
             isBusy = true;
-            busyLabel = "Master (".concat(st.attributes.group_members.length, " players)");
+            busyLabel = "Unavailable";
           }
         }
         groupPlayerIds.push({
@@ -12733,14 +12748,18 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const activeGroupId = activeIdx >= 0 ? this._getGroupingEntityId(activeIdx) : null;
     const activeState = activeGroupId ? this.hass.states[activeGroupId] : null;
     const activeIsGroupCapable = activeState ? this._isGroupCapable(activeState) : false;
-    if (!groupedAny && !activeIsGroupCapable) {
-      return x(_templateObject9 || (_templateObject9 = _taggedTemplateLiteral(["\n        <div class=\"entity-options-header\">\n          <button class=\"entity-options-item close-item\" @click=", ">\n            Back\n          </button>\n          <div class=\"entity-options-divider\"></div>\n        </div>\n        <div class=\"entity-options-title\" style=\"margin-bottom:8px;\">Group Players</div>\n        <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n          No group-capable players available.\n        </div>\n      "])), () => {
+
+    // Check if active entity is itself a follower (isBusy)
+    const activeGroupKey = this._getGroupKey(activeId);
+    const activeIsBusy = activeGroupKey !== activeId;
+    if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
+      return x(_templateObject9 || (_templateObject9 = _taggedTemplateLiteral(["\n        <div class=\"entity-options-header\">\n          <button class=\"entity-options-item close-item\" @click=", ">\n            Back\n          </button>\n          <div class=\"entity-options-divider\"></div>\n        </div>\n        <div class=\"entity-options-title\" style=\"margin-bottom:8px;\">Group Players</div>\n        <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n          ", "\n        </div>\n      "])), () => {
         if (this._quickMenuInvoke) {
           this._dismissWithAnimation();
         } else {
           this._closeGrouping();
         }
-      });
+      }, activeIsBusy ? "Player is unavailable" : "No group-capable players available.");
     }
     let sortedGroupIds;
     if (groupedAny) {
