@@ -732,6 +732,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             <div class="section-title">General Settings</div>
             <div class="section-description">Global controls for how artwork is displayed and retrieved.</div>
           </div>
+
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector
@@ -776,6 +777,19 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         this._updateConfig("artwork_position", value === "top center" ? undefined : value);
       }}
               ></ha-selector>
+            </div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="extend-artwork-toggle"
+                .checked=${this._config.extend_artwork === true}
+                @change=${(e) => this._updateConfig("extend_artwork", e.target.checked)}
+              ></ha-switch>
+              <div style="display: flex; flex-direction: column;">
+                <label for="extend-artwork-toggle" style="font-weight: 500;">Extend artwork</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">Let the artwork background continue underneath the chip and action rows.</div>
+              </div>
             </div>
           </div>
           <div class="form-row">
