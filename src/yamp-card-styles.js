@@ -117,8 +117,6 @@ export const yampCardStyles = css`
   .yamp-card-inner {
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_ELEMENT};
-    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
-    /* DEBUG LINE REMOVED */
     height: 100%;
     display: flex;
     flex-direction: column;
