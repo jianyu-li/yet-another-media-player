@@ -3876,7 +3876,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return idx >= 0 ? this.entityObjs[idx] : null;
   }
 
-  async _resolveGroupingEntityId(obj, fallbackEntityId) {
+  _resolveGroupingEntityId(obj, fallbackEntityId) {
     if (!obj?.music_assistant_entity) return fallbackEntityId;
     if (typeof obj.music_assistant_entity === 'string' &&
       (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
