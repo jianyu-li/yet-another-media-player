@@ -83,7 +83,7 @@ export function renderVolumeRow({
               <div class="vol-stepper-container">
                 <div class="vol-stepper">
                   <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
-                  <span>${Math.round(vol * 100)}%</span>
+                  <span class="vol-value">${Math.round(vol * 100)}%</span>
                   <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
                 </div>
               </div>

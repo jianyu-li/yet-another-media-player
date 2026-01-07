@@ -117,6 +117,8 @@ export const yampCardStyles = css`
   .yamp-card-inner {
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+    /* DEBUG LINE REMOVED */
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -749,8 +751,35 @@ export const yampCardStyles = css`
 
   .controls-row.modern {
     justify-content: center;
-    gap: 12px;
-    padding: 6px 16px 10px 16px;
+    gap: 14px;
+    padding: 10px 16px 2px 16px;
+    /* Grid layout for robust centering */
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .controls-row.modern .controls-left {
+    grid-column: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .controls-row.modern .controls-center {
+    grid-column: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 10px;
+  }
+
+  .controls-row.modern .controls-right {
+    grid-column: 3;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 14px;
   }
 
   .modern-button {
@@ -888,32 +917,37 @@ export const yampCardStyles = css`
 
   /* Volume controls */
   .volume-row {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     padding: 0 16px 14px 16px;
   }
 
+  /* Remove flex:1 since we are using grid columns */
   .volume-left, 
   .volume-right {
-    flex: 1;
     display: flex;
     align-items: center;
     min-width: 0;
   }
 
   .volume-left {
+    grid-column: 1;
+    justify-self: start;
     justify-content: flex-start;
     gap: 8px;
   }
 
   .volume-right {
+    grid-column: 3;
+    justify-self: end;
     justify-content: flex-end;
     gap: 8px;
   }
 
   .volume-center {
-    flex: 0 1 auto;
+    grid-column: 2;
+    justify-self: center;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -925,8 +959,13 @@ export const yampCardStyles = css`
     flex: 0 0 auto;
   }
 
+  .volume-row.has-slider {
+    grid-template-columns: minmax(0, 1fr) 4fr minmax(0, 1fr);
+  }
+
   .volume-row.has-slider .volume-center {
-    flex: 1;
+    width: 100%;
+    justify-self: stretch;
   }
 
   .volume-controls {
@@ -1023,7 +1062,7 @@ export const yampCardStyles = css`
     gap: 8px;
     flex: 1;
     position: relative;
-    padding: 0 30px;
+    padding: 0 12px;
   }
 
   .volume-slider-icon {
@@ -1140,6 +1179,13 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .vol-value {
+    min-width: 48px;
+    display: inline-block;
+    text-align: center;
+    padding-left: 6px;
   }
 
   .vol-label {
@@ -1582,9 +1628,12 @@ export const yampCardStyles = css`
   }
 
   .entity-options-container {
-    width: 98%;
-
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0;
     margin: 2% auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     display: flex;
     flex-direction: column;
     max-height: calc(96% - 70px);
@@ -1601,11 +1650,18 @@ export const yampCardStyles = css`
   :host([data-hide-persistent-controls="true"]) .entity-options-container,
   :host([data-pin-search-headers="true"]) .entity-options-container {
     max-height: 96%;
+    scrollbar-width: none;
+  }
+
+  .entity-options-container::-webkit-scrollbar {
+    display: none;
   }
 
   /* Persistent Media Controls */
+  /* Persistent Media Controls */
   .persistent-media-controls {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 10px;
     padding: 14px 22px 18px 22px;
@@ -1618,6 +1674,7 @@ export const yampCardStyles = css`
     bottom: 0;
     left: 0;
     width: 100%;
+    box-sizing: border-box;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
@@ -1632,6 +1689,8 @@ export const yampCardStyles = css`
   }
 
   .persistent-controls-artwork {
+    grid-column: 1;
+    justify-self: start;
     flex-shrink: 0;
   }
 
@@ -1660,23 +1719,19 @@ export const yampCardStyles = css`
   }
 
   .persistent-controls-buttons {
+    grid-column: 2;
+    justify-self: center;
     display: flex;
     align-items: center;
     gap: 8px;
-    flex: 1;
-    justify-content: center;
-    position: absolute;
-    left: calc(50% - 15px);
-    top: 50%;
-    transform: translate(-50%, -50%);
   }
 
   .persistent-volume-stepper {
-    margin-left: auto;
+    grid-column: 3;
+    justify-self: end;
     display: flex;
     align-items: center;
-    gap: 0px;  transform: translateX(-25px);
-
+    gap: 0px;
   }
 
   .persistent-volume-stepper .stepper-btn {
@@ -1704,9 +1759,10 @@ export const yampCardStyles = css`
   .persistent-volume-stepper .stepper-value {
     font-size: 0.95em;
     opacity: 0.85;
-    min-width: 36px;
+    min-width: 48px;
     text-align: center;
     color: #fff;
+    padding-left: 6px;
   }
 
   .persistent-control-btn {

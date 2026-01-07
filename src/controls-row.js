@@ -20,7 +20,7 @@ export function renderControlsRow({
   // NOTE: If any new controls are added or removed here, the dropdown options 
   // in src/yamp-editor.js must also be updated to match, and the README.md
   // documentation in the "Available Control Names" section should be updated.
-  
+
 
 
   const SUPPORT_PAUSE = 1;
@@ -97,39 +97,46 @@ export function renderControlsRow({
   if (normalizedLayout === "modern") {
     return html`
       <div class=${rowClass} style=${rowStyle}>
-        ${showShuffleButton ? html`
-          <button class="modern-button small${shuffleActive ? " active" : ""}" @click=${() => onControlClick("shuffle")} title="Shuffle">
-            <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
-          </button>
-        ` : nothing}
-        ${showPrevious ? html`
-          <button class="modern-button medium" @click=${() => onControlClick("prev")} title="Previous">
-            <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
-          </button>
-        ` : nothing}
-        ${showPlayPause ? html`
-          <button
-            class="modern-button primary${isPlayingState ? " active" : ""}"
-            @click=${() => onControlClick(primaryUsesStop ? "stop" : "play_pause")}
-            title=${primaryUsesStop ? "Stop" : "Play/Pause"}
-          >
-            <ha-icon .icon=${primaryUsesStop ? "mdi:stop" : (isPlayingState ? "mdi:pause" : "mdi:play")}></ha-icon>
-          </button>
-        ` : nothing}
-        ${showNext ? html`
-          <button class="modern-button medium" @click=${() => onControlClick("next")} title="Next">
-            <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
-          </button>
-        ` : nothing}
-        ${showRepeatButton ? html`
-          <button class="modern-button small${repeatActive ? " active" : ""}" @click=${() => onControlClick("repeat")} title="Repeat">
-            <ha-icon .icon=${
-              stateObj.attributes.repeat === "one"
-                ? "mdi:repeat-once"
-                : "mdi:repeat"
-            }></ha-icon>
-          </button>
-        ` : nothing}
+        <div class="controls-left">
+          ${showShuffleButton ? html`
+            <button class="modern-button small${shuffleActive ? " active" : ""}" @click=${() => onControlClick("shuffle")} title="Shuffle">
+              <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
+            </button>
+          ` : nothing}
+          ${showPrevious ? html`
+            <button class="modern-button medium" @click=${() => onControlClick("prev")} title="Previous">
+              <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+            </button>
+          ` : nothing}
+        </div>
+
+        <div class="controls-center">
+          ${showPlayPause ? html`
+            <button
+              class="modern-button primary${isPlayingState ? " active" : ""}"
+              @click=${() => onControlClick(primaryUsesStop ? "stop" : "play_pause")}
+              title=${primaryUsesStop ? "Stop" : "Play/Pause"}
+            >
+              <ha-icon .icon=${primaryUsesStop ? "mdi:stop" : (isPlayingState ? "mdi:pause" : "mdi:play")}></ha-icon>
+            </button>
+          ` : nothing}
+        </div>
+
+        <div class="controls-right">
+          ${showNext ? html`
+            <button class="modern-button medium" @click=${() => onControlClick("next")} title="Next">
+              <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+            </button>
+          ` : nothing}
+          ${showRepeatButton ? html`
+            <button class="modern-button small${repeatActive ? " active" : ""}" @click=${() => onControlClick("repeat")} title="Repeat">
+              <ha-icon .icon=${stateObj.attributes.repeat === "one"
+          ? "mdi:repeat-once"
+          : "mdi:repeat"
+        }></ha-icon>
+            </button>
+          ` : nothing}
+        </div>
       </div>
     `;
   }
@@ -163,11 +170,10 @@ export function renderControlsRow({
       ` : nothing}
       ${showRepeatButton ? html`
         <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
-          <ha-icon .icon=${
-            stateObj.attributes.repeat === "one"
-              ? "mdi:repeat-once"
-              : "mdi:repeat"
-          }></ha-icon>
+          <ha-icon .icon=${stateObj.attributes.repeat === "one"
+        ? "mdi:repeat-once"
+        : "mdi:repeat"
+      }></ha-icon>
         </button>
       ` : nothing}
       ${showFavoriteButton ? html`
