@@ -729,8 +729,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     return html`
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">Artwork Fit</div>
-            <div class="section-description">Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.</div>
+            <div class="section-title">General Settings</div>
+            <div class="section-description">Global controls for how artwork is displayed and retrieved.</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
@@ -756,9 +756,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       }}
               ></ha-selector>
             </div>
-          </div>
-          </div>
-          <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector
                 .hass=${this.hass}
@@ -781,7 +778,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-selector>
             </div>
           </div>
-          <div class="form-row form-row-multi-column">
+          <div class="form-row">
+            <ha-textfield
+              class="full-width"
+              label="Artwork Hostname"
+              .value=${this._config.artwork_hostname ?? ""}
+              @input=${(e) => this._updateConfig("artwork_hostname", e.target.value)}
+              helper="e.g. http://192.168.1.50:8123"
+              .helperPersistent=${true}
+            ></ha-textfield>
+          </div>
         </div>
 
         <div class="config-section">

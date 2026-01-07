@@ -8321,7 +8321,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }, this._activeTab === name, name)), editingEntity ? this._renderEntityEditor((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions2 = this._config.actions) === null || _this$_config$actions2 === void 0 ? void 0 : _this$_config$actions2[this._actionEditorIndex]) : this._renderActiveTab());
   }
   _renderArtworkTab() {
-    var _this$_artworkOverrid9, _this$_config$artwork, _this$_config$artwork2, _this$_useIdleImageUr, _this$_config$idle_im, _this$_config$idle_im2;
+    var _this$_artworkOverrid9, _this$_config$artwork, _this$_config$artwork2, _this$_config$artwork3, _this$_useIdleImageUr, _this$_config$idle_im, _this$_config$idle_im2;
     const overrides = [...((_this$_artworkOverrid9 = this._artworkOverrides) !== null && _this$_artworkOverrid9 !== void 0 ? _this$_artworkOverrid9 : [])];
     const matchOptions = [{
       value: "media_title",
@@ -8351,7 +8351,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       value: "missing_art",
       label: "Missing Artwork"
     }];
-    return x(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Artwork Fit</div>\n            <div class=\"section-description\">Controls how artwork scales across the card. Choose a different fit if images appear cropped or stretched.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"Artwork Fit\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n          </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"Artwork Position\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle Artwork</div>\n            <div class=\"section-description\">Show a static image or entity snapshot whenever nothing is playing.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"display: flex; align-items: center; gap: 8px; flex: 1;\">\n              <ha-switch\n                id=\"idle-image-url-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"idle-image-url-toggle\">Use URL or Path</label>\n            </div>\n            <div style=\"flex: 2;\">\n              ", "\n            </div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Artwork Overrides</div>\n            <div class=\"section-description\">Overrides are evaluated from top to bottom. Drag to reorder.</div>\n          </div>\n          <yamp-sortable @item-moved=", ">\n            <div class=\"sortable-container\">\n              ", "\n            </div>\n          </yamp-sortable>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Artwork Override\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n        </div>\n\n      "])), this.hass, {
+    return x(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">General Settings</div>\n            <div class=\"section-description\">Global controls for how artwork is displayed and retrieved.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"Artwork Fit\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"Artwork Position\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n          </div>\n          <div class=\"form-row\">\n            <ha-textfield\n              class=\"full-width\"\n              label=\"Artwork Hostname\"\n              .value=", "\n              @input=", "\n              helper=\"e.g. http://192.168.1.50:8123\"\n              .helperPersistent=", "\n            ></ha-textfield>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Idle Artwork</div>\n            <div class=\"section-description\">Show a static image or entity snapshot whenever nothing is playing.</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"display: flex; align-items: center; gap: 8px; flex: 1;\">\n              <ha-switch\n                id=\"idle-image-url-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"idle-image-url-toggle\">Use URL or Path</label>\n            </div>\n            <div style=\"flex: 2;\">\n              ", "\n            </div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">Artwork Overrides</div>\n            <div class=\"section-description\">Overrides are evaluated from top to bottom. Drag to reorder.</div>\n          </div>\n          <yamp-sortable @item-moved=", ">\n            <div class=\"sortable-container\">\n              ", "\n            </div>\n          </yamp-sortable>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Artwork Override\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n        </div>\n\n      "])), this.hass, {
       select: {
         mode: "dropdown",
         options: [{
@@ -8391,7 +8391,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }, (_this$_config$artwork2 = this._config.artwork_position) !== null && _this$_config$artwork2 !== void 0 ? _this$_config$artwork2 : "top center", e => {
       const value = e.detail.value;
       this._updateConfig("artwork_position", value === "top center" ? undefined : value);
-    }, (_this$_useIdleImageUr = this._useIdleImageUrl) !== null && _this$_useIdleImageUr !== void 0 ? _this$_useIdleImageUr : this._looksLikeUrlOrPath(this._config.idle_image), e => {
+    }, (_this$_config$artwork3 = this._config.artwork_hostname) !== null && _this$_config$artwork3 !== void 0 ? _this$_config$artwork3 : "", e => this._updateConfig("artwork_hostname", e.target.value), true, (_this$_useIdleImageUr = this._useIdleImageUrl) !== null && _this$_useIdleImageUr !== void 0 ? _this$_useIdleImageUr : this._looksLikeUrlOrPath(this._config.idle_image), e => {
       this._useIdleImageUrl = e.target.checked;
       if (e.target.checked) {
         this._updateConfig("idle_image", "");
@@ -13212,7 +13212,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         for (const id of this.entityIds) {
           var _this$hass19;
           const st = (_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[id];
-          if (st && st.state === "playing") {
+          if (this._isEntityPlaying(st)) {
             this._manualSelectPlayingSet.add(id);
           }
         }
@@ -13883,7 +13883,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   render() {
-    var _this$config$actions2, _this$_optimisticPlay, _this$hass26, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass27, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$currentPlayback, _this$config17;
+    var _this$config$actions2, _this$_optimisticPlay, _this$hass26, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass27, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$config17;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -14244,7 +14244,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = (_this$hass28 = this.hass) === null || _this$hass28 === void 0 || (_this$hass28 = _this$hass28.states) === null || _this$hass28 === void 0 ? void 0 : _this$hass28[playbackEntityId];
-        const anyPlaying = (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === "playing";
+        const anyPlaying = this._isEntityPlaying(playbackState);
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
@@ -14386,6 +14386,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       reserveLeadingControlSpace: this._controlLayout === "modern",
       showRightPlaceholder: this._controlLayout === "modern",
       rightSlotTemplate,
+      hideVolume: this.config.volume_mode === "hidden",
       moreInfoMenu: x(_templateObject39 || (_templateObject39 = _taggedTemplateLiteral(["\n                        <div class=\"more-info-menu\">\n                          <button class=\"more-info-btn\" @click=", ">\n                            <span class=\"more-info-icon\">&#9776;</span>\n                          </button>\n                        </div>\n                      "])), async () => await this._openEntityOptions())
     })) : E, hideControlsNow && !this._showEntityOptions ? x(_templateObject40 || (_templateObject40 = _taggedTemplateLiteral(["\n              <div class=\"more-info-menu\" style=\"position: absolute; right: 18px; bottom: 18px; z-index: ", ";\">\n                <button class=\"more-info-btn\" @click=", ">\n                  <span class=\"more-info-icon\">&#9776;</span>\n                </button>\n              </div>\n            "])), Z_LAYERS.FLOATING_ELEMENT, async () => await this._openEntityOptions()) : E, showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x(_templateObject41 || (_templateObject41 = _taggedTemplateLiteral(["\n              <div class=\"in-menu-active-label\">", "</div>\n            "])), activeChipName) : E, this._showEntityOptions ? x(_templateObject42 || (_templateObject42 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-overlay entity-options-overlay-opening\" @click=", ">\n        <div class=\"entity-options-container entity-options-container-opening\">\n          <div class=\"entity-options-sheet", " entity-options-sheet-opening\" \n               @click=", "\n               data-pin-search-headers=\"", "\">\n            ", "\n              ", "\n              </div>\n            </div>\n            <!-- Persistent Media Controls Section - Outside Scrollable Area -->\n            ", "\n          </div>\n        "])), e => this._closeEntityOptions(e), showChipsInMenu ? ' chips-mode' : '', e => e.stopPropagation(), effectivePinHeaders, showChipsInMenu ? x(_templateObject43 || (_templateObject43 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-chips-wrapper\" @click=", ">\n                <div class=\"chip-row entity-options-chips-strip\">\n                  ", "\n                </div>\n              </div>\n            "])), e => e.stopPropagation(), renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
@@ -14403,7 +14404,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         if (idx < 0) return isSelected ? !this._isIdle : false;
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = (_this$hass32 = this.hass) === null || _this$hass32 === void 0 || (_this$hass32 = _this$hass32.states) === null || _this$hass32 === void 0 ? void 0 : _this$hass32[playbackEntityId];
-        const anyPlaying = (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === 'playing';
+        const anyPlaying = this._isEntityPlaying(playbackState);
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
@@ -14429,7 +14430,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         if (!(entityObj !== null && entityObj !== void 0 && entityObj.music_assistant_entity)) return false;
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = (_this$hass35 = this.hass) === null || _this$hass35 === void 0 || (_this$hass35 = _this$hass35.states) === null || _this$hass35 === void 0 ? void 0 : _this$hass35[playbackEntityId];
-        return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && (playbackState === null || playbackState === void 0 ? void 0 : playbackState.state) === 'playing';
+        return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && this._isEntityPlaying(playbackState);
       },
       isIdle: this._isIdle,
       hass: this.hass,
@@ -14573,7 +14574,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       const mainState = this.currentStateObj;
       const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
       return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x(_templateObject75 || (_templateObject75 = _taggedTemplateLiteral(["\n                      <img src=\"", "\" alt=\"Album Art\" class=\"persistent-artwork\" onerror=\"this.style.display='none'\">\n                    "])), artwork.url) : x(_templateObject76 || (_templateObject76 = _taggedTemplateLiteral(["\n                      <div class=\"persistent-artwork-placeholder\">\n                        <ha-icon icon=\"mdi:music\"></ha-icon>\n                      </div>\n                    "])));
-    })(), () => this._onControlClick("prev"), () => this._onControlClick("play_pause"), ((_this$currentPlayback = this.currentPlaybackStateObj) === null || _this$currentPlayback === void 0 ? void 0 : _this$currentPlayback.state) === "playing" ? "mdi:pause" : "mdi:play", () => this._onControlClick("next"), ((_volumeState$attribut, _volumeState$attribut2) => {
+    })(), () => this._onControlClick("prev"), () => this._onControlClick("play_pause"), this._isEntityPlaying(this.currentPlaybackStateObj) ? "mdi:pause" : "mdi:play", () => this._onControlClick("next"), ((_volumeState$attribut, _volumeState$attribut2) => {
       const idx = this._selectedIndex;
       const volumeEntity = this._getVolumeEntity(idx);
       if (!volumeEntity) return E;
@@ -14581,6 +14582,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       const volumeState = this.currentVolumeStateObj;
       const volumeLevel = Number((_volumeState$attribut = volumeState === null || volumeState === void 0 || (_volumeState$attribut2 = volumeState.attributes) === null || _volumeState$attribut2 === void 0 ? void 0 : _volumeState$attribut2.volume_level) !== null && _volumeState$attribut !== void 0 ? _volumeState$attribut : 0);
       const percentLabel = !isRemote ? "".concat(Math.round((volumeLevel || 0) * 100), "%") : null;
+      if (this.config.volume_mode === "hidden") return E;
       return x(_templateObject77 || (_templateObject77 = _taggedTemplateLiteral(["\n                    <div class=\"persistent-volume-stepper\">\n                      <button class=\"stepper-btn\" @click=", " title=\"Volume Down\">\u2013</button>\n                      ", "\n                      <button class=\"stepper-btn\" @click=", " title=\"Volume Up\">+</button>\n                    </div>\n                  "])), () => this._onVolumeStep(-1), percentLabel ? x(_templateObject78 || (_templateObject78 = _taggedTemplateLiteral(["<span class=\"stepper-value\">", "</span>"])), percentLabel) : E, () => this._onVolumeStep(1));
     })()) : E) : E, this._searchActiveOptionsItem ? renderSearchOptionsOverlay({
       item: this._searchActiveOptionsItem,
