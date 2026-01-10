@@ -2008,16 +2008,18 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         ` : nothing}
         ${actionMode === 'service' ? html`
           <div class="form-row">
-            <ha-combo-box
-              label="Service"
+            <ha-selector
               .hass=${this.hass}
+              .selector=${{
+          select: {
+            mode: "dropdown",
+            options: this._getServiceItems()
+          }
+        }}
               .value=${action.service ?? ""}
-              .items=${this._serviceItems ?? []}
-              item-value-path="value"
-              item-label-path="label"
-              required
+              label="Service"
               @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
-            ></ha-combo-box>
+            ></ha-selector>
           </div>
 
           ${typeof action.service === "string" && action.service.startsWith("script.") ? html`
