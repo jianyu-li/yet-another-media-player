@@ -1928,6 +1928,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           this._updateActionProperty("navigation_path", undefined);
           this._updateActionProperty("navigation_new_tab", undefined);
           this._updateActionProperty("action", undefined);
+          // Initialize service to empty string so Service Data editor renders immediately
+          if (!this._config.actions?.[this._actionEditorIndex]?.service) {
+            this._updateActionProperty("service", "");
+          }
         } else if (mode === "menu") {
           this._updateActionProperty("service", undefined);
           this._updateActionProperty("service_data", undefined);
@@ -2030,7 +2034,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
           ` : nothing}
 
-          ${action.service ? html`
+          ${typeof action.service === "string" ? html`
             <div class="help-text">
               <ha-icon
                 icon="mdi:information-outline"
@@ -2152,6 +2156,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     this._actionEditorIndex = index;
     const action = this._config.actions?.[index];
     this._actionMode = this._deriveActionMode(action);
+    // If mode is service and no service is set yet, initialize to empty string
+    // so the Service Data editor renders immediately
+    if (this._actionMode === "service" && typeof action?.service !== "string") {
+      this._updateActionProperty("service", "");
+    }
   }
 
   _onBackFromEntityEditor() {

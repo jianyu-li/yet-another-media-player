@@ -8725,10 +8725,15 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       const mode = e.detail.value;
       this._actionMode = mode;
       if (mode === "service") {
+        var _this$_config$actions5;
         this._updateActionProperty("menu_item", undefined);
         this._updateActionProperty("navigation_path", undefined);
         this._updateActionProperty("navigation_new_tab", undefined);
         this._updateActionProperty("action", undefined);
+        // Initialize service to empty string so Service Data editor renders immediately
+        if (!((_this$_config$actions5 = this._config.actions) !== null && _this$_config$actions5 !== void 0 && (_this$_config$actions5 = _this$_config$actions5[this._actionEditorIndex]) !== null && _this$_config$actions5 !== void 0 && _this$_config$actions5.service)) {
+          this._updateActionProperty("service", "");
+        }
       } else if (mode === "menu") {
         this._updateActionProperty("service", undefined);
         this._updateActionProperty("service_data", undefined);
@@ -8778,7 +8783,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }, (_action$menu_item = action === null || action === void 0 ? void 0 : action.menu_item) !== null && _action$menu_item !== void 0 ? _action$menu_item : "", e => this._updateActionProperty("menu_item", e.detail.value || undefined)) : E, actionMode === "navigate" ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-textfield\n              class=\"full-width\"\n              label=\"Navigation Path\"\n              placeholder=\"/lovelace/music or #popup\"\n              .value=", "\n              @input=", "\n            ></ha-textfield>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"navigation-new-tab-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"navigation-new-tab-toggle\">Open External URLs in New Tab</label>\n            </div>\n          </div>\n          <div class=\"form-row\">\n            <div class=\"config-subtitle\">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>\n          </div>\n        "])), (_action$navigation_pa = action === null || action === void 0 ? void 0 : action.navigation_path) !== null && _action$navigation_pa !== void 0 ? _action$navigation_pa : "", e => {
       this._updateActionProperty("navigation_path", e.target.value);
       this._updateActionProperty("action", "navigate");
-    }, (_action$navigation_ne = action === null || action === void 0 ? void 0 : action.navigation_new_tab) !== null && _action$navigation_ne !== void 0 ? _action$navigation_ne : false, e => this._updateActionProperty("navigation_new_tab", e.target.checked)) : E, actionMode === 'service' ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-combo-box\n              label=\"Service\"\n              .hass=", "\n              .value=", "\n              .items=", "\n              item-value-path=\"value\"\n              item-label-path=\"label\"\n              required\n              @value-changed=", "\n            ></ha-combo-box>\n          </div>\n\n          ", "\n\n          ", "\n        "])), this.hass, (_action$service = action.service) !== null && _action$service !== void 0 ? _action$service : "", (_this$_serviceItems = this._serviceItems) !== null && _this$_serviceItems !== void 0 ? _this$_serviceItems : [], e => this._updateActionProperty("service", e.detail.value), typeof action.service === "string" && action.service.startsWith("script.") ? x(_templateObject40$1 || (_templateObject40$1 = _taggedTemplateLiteral(["\n            <div class=\"form-row form-row-multi-column\">\n              <div>\n                <ha-switch\n                  id=\"script-variable-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>Script Variable (yamp_entity)</span>\n              </div>\n            </div>\n          "])), (_action$script_variab = action === null || action === void 0 ? void 0 : action.script_variable) !== null && _action$script_variab !== void 0 ? _action$script_variab : false, e => this._updateActionProperty("script_variable", e.target.checked)) : E, action.service ? x(_templateObject41$1 || (_templateObject41$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n\n              Use <code>entity_id: current</code> to target the card's currently selected\n              media player entity. The <ha-icon icon=\"mdi:play-circle-outline\"></ha-icon> button\n              below does not work if you use this feature.\n\n            </div>\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n            Changes to the service data below are not committed to the config until \n            <ha-icon icon=\"mdi:content-save\"></ha-icon> is clicked!\n            </div>\n            <div class=\"form-row\">\n              <div class=\"service-data-editor-header\">\n                <div class=\"service-data-editor-title\">Service Data</div>\n                <div class=\"service-data-editor-actions\">\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:content-save\"\n                    title=\"Save Service Data\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:backup-restore\"\n                    title=\"Revert to Saved Service Data\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n\n                    class=\"icon-button ", "\"\n\n                    icon=\"mdi:play-circle-outline\"\n                    title=\"Test Action\"\n                    @click=", "\n                  ></ha-icon>              \n                </div>\n            </div>\n            <div class=", ">\n              <ha-code-editor\n                id=\"service-data-editor\"\n                label=\"Service Data\"\n                autocomplete-entities\n                autocomplete-icons\n                .hass=", "\n                mode=\"yaml\"\n                .value=", "\n                @value-changed=", "\n              ></ha-code-editor>\n              ", "\n            </div>\n          "])), !this._yamlModified ? "icon-button-disabled" : "", this._saveYamlEditor, !this._yamlModified ? "icon-button-disabled" : "", this._revertYamlEditor, this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : "", this._testServiceCall, this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", this.hass, action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : "", e => {
+    }, (_action$navigation_ne = action === null || action === void 0 ? void 0 : action.navigation_new_tab) !== null && _action$navigation_ne !== void 0 ? _action$navigation_ne : false, e => this._updateActionProperty("navigation_new_tab", e.target.checked)) : E, actionMode === 'service' ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-combo-box\n              label=\"Service\"\n              .hass=", "\n              .value=", "\n              .items=", "\n              item-value-path=\"value\"\n              item-label-path=\"label\"\n              required\n              @value-changed=", "\n            ></ha-combo-box>\n          </div>\n\n          ", "\n\n          ", "\n        "])), this.hass, (_action$service = action.service) !== null && _action$service !== void 0 ? _action$service : "", (_this$_serviceItems = this._serviceItems) !== null && _this$_serviceItems !== void 0 ? _this$_serviceItems : [], e => this._updateActionProperty("service", e.detail.value), typeof action.service === "string" && action.service.startsWith("script.") ? x(_templateObject40$1 || (_templateObject40$1 = _taggedTemplateLiteral(["\n            <div class=\"form-row form-row-multi-column\">\n              <div>\n                <ha-switch\n                  id=\"script-variable-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>Script Variable (yamp_entity)</span>\n              </div>\n            </div>\n          "])), (_action$script_variab = action === null || action === void 0 ? void 0 : action.script_variable) !== null && _action$script_variab !== void 0 ? _action$script_variab : false, e => this._updateActionProperty("script_variable", e.target.checked)) : E, typeof action.service === "string" ? x(_templateObject41$1 || (_templateObject41$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n\n              Use <code>entity_id: current</code> to target the card's currently selected\n              media player entity. The <ha-icon icon=\"mdi:play-circle-outline\"></ha-icon> button\n              below does not work if you use this feature.\n\n            </div>\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n            Changes to the service data below are not committed to the config until \n            <ha-icon icon=\"mdi:content-save\"></ha-icon> is clicked!\n            </div>\n            <div class=\"form-row\">\n              <div class=\"service-data-editor-header\">\n                <div class=\"service-data-editor-title\">Service Data</div>\n                <div class=\"service-data-editor-actions\">\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:content-save\"\n                    title=\"Save Service Data\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:backup-restore\"\n                    title=\"Revert to Saved Service Data\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n\n                    class=\"icon-button ", "\"\n\n                    icon=\"mdi:play-circle-outline\"\n                    title=\"Test Action\"\n                    @click=", "\n                  ></ha-icon>              \n                </div>\n            </div>\n            <div class=", ">\n              <ha-code-editor\n                id=\"service-data-editor\"\n                label=\"Service Data\"\n                autocomplete-entities\n                autocomplete-icons\n                .hass=", "\n                mode=\"yaml\"\n                .value=", "\n                @value-changed=", "\n              ></ha-code-editor>\n              ", "\n            </div>\n          "])), !this._yamlModified ? "icon-button-disabled" : "", this._saveYamlEditor, !this._yamlModified ? "icon-button-disabled" : "", this._revertYamlEditor, this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : "", this._testServiceCall, this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", this.hass, action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : "", e => {
       /* the yaml will be parsed in real time to detect errors, but we will defer 
         updating the config until the save button above the editor is clicked.
       */
@@ -8814,8 +8819,8 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     this._updateConfig("entities", cleaned);
   }
   _onActionChanged(index, newValue) {
-    var _this$_config$actions5;
-    const original = (_this$_config$actions5 = this._config.actions) !== null && _this$_config$actions5 !== void 0 ? _this$_config$actions5 : [];
+    var _this$_config$actions6;
+    const original = (_this$_config$actions6 = this._config.actions) !== null && _this$_config$actions6 !== void 0 ? _this$_config$actions6 : [];
     const updated = [...original];
     updated[index] = _objectSpread2$1(_objectSpread2$1({}, updated[index]), {}, {
       name: newValue
@@ -8832,10 +8837,15 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     this._useVolTemplate = this._looksLikeTemplate(vol) ? true : false;
   }
   _onEditAction(index) {
-    var _this$_config$actions6;
+    var _this$_config$actions7;
     this._actionEditorIndex = index;
-    const action = (_this$_config$actions6 = this._config.actions) === null || _this$_config$actions6 === void 0 ? void 0 : _this$_config$actions6[index];
+    const action = (_this$_config$actions7 = this._config.actions) === null || _this$_config$actions7 === void 0 ? void 0 : _this$_config$actions7[index];
     this._actionMode = this._deriveActionMode(action);
+    // If mode is service and no service is set yet, initialize to empty string
+    // so the Service Data editor renders immediately
+    if (this._actionMode === "service" && typeof (action === null || action === void 0 ? void 0 : action.service) !== "string") {
+      this._updateActionProperty("service", "");
+    }
   }
   _onBackFromEntityEditor() {
     this._entityEditorIndex = null;
@@ -8875,15 +8885,15 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     this._updateConfig("actions", actions);
   }
   _removeAction(index) {
-    var _this$_config$actions7;
-    const actions = [...((_this$_config$actions7 = this._config.actions) !== null && _this$_config$actions7 !== void 0 ? _this$_config$actions7 : [])];
+    var _this$_config$actions8;
+    const actions = [...((_this$_config$actions8 = this._config.actions) !== null && _this$_config$actions8 !== void 0 ? _this$_config$actions8 : [])];
     if (index < 0 || index >= actions.length) return;
     actions.splice(index, 1);
     this._updateConfig("actions", actions);
   }
   _toggleActionInMenu(index) {
-    var _this$_config$actions8;
-    const actions = [...((_this$_config$actions8 = this._config.actions) !== null && _this$_config$actions8 !== void 0 ? _this$_config$actions8 : [])];
+    var _this$_config$actions9;
+    const actions = [...((_this$_config$actions9 = this._config.actions) !== null && _this$_config$actions9 !== void 0 ? _this$_config$actions9 : [])];
     if (!actions[index]) return;
     const current = !!actions[index].in_menu;
     actions[index] = _objectSpread2$1(_objectSpread2$1({}, actions[index]), {}, {
@@ -8907,9 +8917,9 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }
   }
   _revertYamlEditor() {
-    var _this$_config$actions9;
+    var _this$_config$actions0;
     const editor = this.shadowRoot.querySelector("#service-data-editor");
-    const currentAction = (_this$_config$actions9 = this._config.actions) === null || _this$_config$actions9 === void 0 ? void 0 : _this$_config$actions9[this._actionEditorIndex];
+    const currentAction = (_this$_config$actions0 = this._config.actions) === null || _this$_config$actions0 === void 0 ? void 0 : _this$_config$actions0[this._actionEditorIndex];
     if (!editor || !currentAction) return;
     const yamlText = currentAction.service_data ? jsYaml.dump(currentAction.service_data) : "";
     editor.value = yamlText;
@@ -8924,7 +8934,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     return result;
   }
   async _testServiceCall() {
-    var _this$_yamlDraft, _this$_config$actions0;
+    var _this$_yamlDraft, _this$_config$actions1;
     if (this._yamlError || !((_this$_yamlDraft = this._yamlDraft) !== null && _this$_yamlDraft !== void 0 && _this$_yamlDraft.trim())) {
       return;
     }
@@ -8939,7 +8949,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       this._yamlError = e.message;
       return;
     }
-    const action = (_this$_config$actions0 = this._config.actions) === null || _this$_config$actions0 === void 0 ? void 0 : _this$_config$actions0[this._actionEditorIndex];
+    const action = (_this$_config$actions1 = this._config.actions) === null || _this$_config$actions1 === void 0 ? void 0 : _this$_config$actions1[this._actionEditorIndex];
     const service = action === null || action === void 0 ? void 0 : action.service;
     if (!service || !this.hass) {
       return;
