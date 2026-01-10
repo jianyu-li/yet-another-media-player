@@ -25,6 +25,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       _actionMode: { type: String },
       _useTemplate: { type: Boolean },
       _useVolTemplate: { type: Boolean },
+      _serviceItems: { type: Array }
     };
   }
 
@@ -45,6 +46,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   firstUpdated() {
     this._serviceItems = this._getServiceItems();
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has("hass")) {
+      const oldHass = changedProperties.get("hass");
+      if (this.hass?.services !== oldHass?.services) {
+        this._serviceItems = this._getServiceItems();
+      }
+    }
   }
 
   _supportsFeature(stateObj, featureBit) {
@@ -1928,6 +1938,10 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           this._updateActionProperty("navigation_path", undefined);
           this._updateActionProperty("navigation_new_tab", undefined);
           this._updateActionProperty("action", undefined);
+          // Initialize service to empty string so Service Data editor renders immediately
+          if (!this._config.actions?.[this._actionEditorIndex]?.service) {
+            this._updateActionProperty("service", "");
+          }
         } else if (mode === "menu") {
           this._updateActionProperty("service", undefined);
           this._updateActionProperty("service_data", undefined);
@@ -2004,16 +2018,20 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         ` : nothing}
         ${actionMode === 'service' ? html`
           <div class="form-row">
-            <ha-combo-box
-              label="Service"
+            <ha-selector
               .hass=${this.hass}
+              .selector=${{
+          select: {
+            mode: "dropdown",
+            filterable: true,
+            options: this._serviceItems || []
+          }
+        }}
               .value=${action.service ?? ""}
-              .items=${this._serviceItems ?? []}
-              item-value-path="value"
-              item-label-path="label"
-              required
+              label="Service"
+              .required=${true}
               @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
-            ></ha-combo-box>
+            ></ha-selector>
           </div>
 
           ${typeof action.service === "string" && action.service.startsWith("script.") ? html`
@@ -2030,7 +2048,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
           ` : nothing}
 
-          ${action.service ? html`
+          ${typeof action.service === "string" ? html`
             <div class="help-text">
               <ha-icon
                 icon="mdi:information-outline"
@@ -2152,6 +2170,11 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     this._actionEditorIndex = index;
     const action = this._config.actions?.[index];
     this._actionMode = this._deriveActionMode(action);
+    // If mode is service and no service is set yet, initialize to empty string
+    // so the Service Data editor renders immediately
+    if (this._actionMode === "service" && typeof action?.service !== "string") {
+      this._updateActionProperty("service", "");
+    }
   }
 
   _onBackFromEntityEditor() {
