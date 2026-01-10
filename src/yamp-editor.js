@@ -25,6 +25,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
       _actionMode: { type: String },
       _useTemplate: { type: Boolean },
       _useVolTemplate: { type: Boolean },
+      _serviceItems: { type: Array }
     };
   }
 
@@ -45,6 +46,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   firstUpdated() {
     this._serviceItems = this._getServiceItems();
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has("hass")) {
+      const oldHass = changedProperties.get("hass");
+      if (this.hass?.services !== oldHass?.services) {
+        this._serviceItems = this._getServiceItems();
+      }
+    }
   }
 
   _supportsFeature(stateObj, featureBit) {
@@ -2013,11 +2023,13 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               .selector=${{
           select: {
             mode: "dropdown",
-            options: this._getServiceItems()
+            filterable: true,
+            options: this._serviceItems || []
           }
         }}
               .value=${action.service ?? ""}
               label="Service"
+              .required=${true}
               @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
             ></ha-selector>
           </div>
