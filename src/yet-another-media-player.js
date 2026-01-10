@@ -5067,21 +5067,70 @@ class YetAnotherMediaPlayerCard extends LitElement {
         break;
       }
       case "favorite": {
-        // Press the associated favorite button entity
+        // Press the associated favorite button entity OR unfavorite if already favorited
         const favoriteButtonEntity = this._getFavoriteButtonEntity();
-        if (favoriteButtonEntity) {
+        const maState = this.hass?.states?.[targetEntity];
+        const mediaContentId = maState?.attributes?.media_content_id;
+
+        // Check if track is already favorited
+        const isCurrentlyFavorited = this._isCurrentTrackFavorited();
+
+        // Check if mass_queue is available for unfavorite functionality
+        const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
+
+        if (isCurrentlyFavorited && hasMassQueue) {
+          // Unfavorite using mass_queue
+          const maEntityId = this._getMusicAssistantState()?.entity_id;
+          if (maEntityId) {
+            try {
+              const message = {
+                type: "call_service",
+                domain: "mass_queue",
+                service: "unfavorite_current_item",
+                service_data: {
+                  entity: maEntityId
+                },
+              };
+              await this.hass.connection.sendMessagePromise(message);
+
+              // Update cache to reflect unfavorited state
+              if (mediaContentId) {
+                if (!this._favoriteStatusCache) {
+                  this._favoriteStatusCache = {};
+                }
+                this._favoriteStatusCache[mediaContentId] = {
+                  isFavorited: false
+                };
+              }
+
+              // Clear favorites cache
+              if (this._searchResultsByType) {
+                Object.keys(this._searchResultsByType).forEach(key => {
+                  if (key.includes('_favorites') || key === 'favorites') {
+                    delete this._searchResultsByType[key];
+                  }
+                });
+              }
+
+              this._checkingFavorites = null;
+              this.requestUpdate();
+            } catch (error) {
+              console.error("yamp: Failed to unfavorite current item:", error);
+            }
+          }
+        } else if (favoriteButtonEntity) {
+          // Favorite using button.press (original behavior)
           this.hass.callService("button", "press", { entity_id: favoriteButtonEntity });
 
           // Immediately mark as favorited when button is pressed
-          const maState = this.hass?.states?.[targetEntity];
-          if (maState?.attributes?.media_content_id) {
+          if (mediaContentId) {
             // Initialize cache if needed
             if (!this._favoriteStatusCache) {
               this._favoriteStatusCache = {};
             }
 
             // Immediately set as favorited
-            this._favoriteStatusCache[maState.attributes.media_content_id] = {
+            this._favoriteStatusCache[mediaContentId] = {
               isFavorited: true
             };
 
