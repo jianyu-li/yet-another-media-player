@@ -28,7 +28,7 @@ const MUSIC_ASSISTANT_CONFIG_TTL_MS = 30000;
 let cachedMusicAssistantEntryId = null;
 let cachedMusicAssistantEntryTs = 0;
 
-async function getMusicAssistantConfigEntryId(hass) {
+export async function getMusicAssistantConfigEntryId(hass) {
   const now = Date.now();
   if (cachedMusicAssistantEntryId && now - cachedMusicAssistantEntryTs < MUSIC_ASSISTANT_CONFIG_TTL_MS) {
     return cachedMusicAssistantEntryId;
@@ -43,6 +43,28 @@ async function getMusicAssistantConfigEntryId(hass) {
     console.error("yamp: Failed to resolve Music Assistant config entry", error);
     cachedMusicAssistantEntryId = null;
     cachedMusicAssistantEntryTs = now;
+    return null;
+  }
+}
+
+let cachedMassQueueEntryId = null;
+let cachedMassQueueEntryTs = 0;
+
+export async function getMassQueueConfigEntryId(hass) {
+  const now = Date.now();
+  if (cachedMassQueueEntryId && now - cachedMassQueueEntryTs < MUSIC_ASSISTANT_CONFIG_TTL_MS) {
+    return cachedMassQueueEntryId;
+  }
+  try {
+    const entries = await hass.callApi("GET", "config/config_entries/entry");
+    const mqEntry = entries.find(entry => entry.domain === "mass_queue" && entry.state === "loaded");
+    cachedMassQueueEntryId = mqEntry?.entry_id || null;
+    cachedMassQueueEntryTs = now;
+    return cachedMassQueueEntryId;
+  } catch (error) {
+    console.error("yamp: Failed to resolve mass_queue config entry", error);
+    cachedMassQueueEntryId = null;
+    cachedMassQueueEntryTs = now;
     return null;
   }
 }

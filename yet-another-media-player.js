@@ -1549,6 +1549,26 @@ async function getMusicAssistantConfigEntryId(hass) {
     return null;
   }
 }
+let cachedMassQueueEntryId = null;
+let cachedMassQueueEntryTs = 0;
+async function getMassQueueConfigEntryId(hass) {
+  const now = Date.now();
+  if (cachedMassQueueEntryId && now - cachedMassQueueEntryTs < MUSIC_ASSISTANT_CONFIG_TTL_MS) {
+    return cachedMassQueueEntryId;
+  }
+  try {
+    const entries = await hass.callApi("GET", "config/config_entries/entry");
+    const mqEntry = entries.find(entry => entry.domain === "mass_queue" && entry.state === "loaded");
+    cachedMassQueueEntryId = (mqEntry === null || mqEntry === void 0 ? void 0 : mqEntry.entry_id) || null;
+    cachedMassQueueEntryTs = now;
+    return cachedMassQueueEntryId;
+  } catch (error) {
+    console.error("yamp: Failed to resolve mass_queue config entry", error);
+    cachedMassQueueEntryId = null;
+    cachedMassQueueEntryTs = now;
+    return null;
+  }
+}
 function transformMusicAssistantItem(item) {
   if (!item) return null;
   return _objectSpread2$1(_objectSpread2$1(_objectSpread2$1({
@@ -11613,7 +11633,88 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._searchLoading = true;
     this.requestUpdate();
 
-    // If we're using Music Assistant and have a URI, use browse_media for 100% consistency
+    // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
+    try {
+      const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
+      if (hasMassQueue) {
+        const configEntryId = await getMassQueueConfigEntryId(this.hass);
+        let tracks = [];
+
+        // Strategy A: User provided syntax (config_entry_id)
+        if (configEntryId && albumUri) {
+          try {
+            var _responseData$respons;
+            console.log("yamp: Attempting mass_queue.get_album_tracks with config_entry_id", {
+              configEntryId,
+              uri: albumUri
+            });
+            const message = {
+              type: "call_service",
+              domain: "mass_queue",
+              service: "get_album_tracks",
+              service_data: {
+                config_entry_id: configEntryId,
+                uri: albumUri
+              },
+              return_response: true
+            };
+            const responseData = await this.hass.connection.sendMessagePromise(message);
+            if (responseData !== null && responseData !== void 0 && (_responseData$respons = responseData.response) !== null && _responseData$respons !== void 0 && _responseData$respons.tracks) {
+              tracks = responseData.response.tracks;
+            }
+          } catch (firstError) {
+            console.warn("yamp: mass_queue.get_album_tracks failed with config_entry_id, trying fallback with entity_id", firstError);
+
+            // Strategy B: Fallback using entity (like get_queue_items)
+            const maState = this._getMusicAssistantState();
+            const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
+            if (maEntityId) {
+              var _responseDataFallback;
+              const messageFallback = {
+                type: "call_service",
+                domain: "mass_queue",
+                service: "get_album_tracks",
+                service_data: {
+                  entity: maEntityId,
+                  uri: albumUri
+                },
+                return_response: true
+              };
+              const responseDataFallback = await this.hass.connection.sendMessagePromise(messageFallback);
+              if (responseDataFallback !== null && responseDataFallback !== void 0 && (_responseDataFallback = responseDataFallback.response) !== null && _responseDataFallback !== void 0 && _responseDataFallback.tracks) {
+                tracks = responseDataFallback.response.tracks;
+              }
+            } else {
+              throw firstError;
+            }
+          }
+        }
+        if (tracks.length > 0) {
+          this._searchResults = tracks.map(track => ({
+            media_content_id: track.media_content_id,
+            media_content_type: 'track',
+            media_class: 'track',
+            title: track.media_title,
+            artist: track.media_artist,
+            album: track.media_album_name,
+            thumbnail: track.media_image,
+            duration: track.duration,
+            is_browsable: false,
+            favorite: track.favorite
+          }));
+          this._searchQuery = albumName;
+          this._searchTotalRows = Math.max(15, tracks.length);
+          this._searchLoading = false;
+          this.requestUpdate();
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("yamp: Error fetching album tracks via mass_queue:", e);
+      // Fallback to other methods
+    }
+
+    // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
     if (albumUri && this._isMusicAssistantEntity()) {
       try {
         var _browseRes$response;
