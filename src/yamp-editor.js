@@ -178,6 +178,48 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     );
   }
 
+  // Helper functions for ha-generic-picker (entity selection)
+  _getEntityItems(domains = [], excludeEntities = []) {
+    return () => {
+      if (!this.hass?.states) return [];
+      return Object.keys(this.hass.states)
+        .filter((entityId) => {
+          const domain = entityId.split(".")[0];
+          if (domains.length && !domains.includes(domain)) return false;
+          if (excludeEntities.includes(entityId)) return false;
+          return true;
+        })
+        .map((entityId) => {
+          const stateObj = this.hass.states[entityId];
+          return {
+            id: entityId,
+            primary: stateObj?.attributes?.friendly_name || entityId,
+            secondary: entityId,
+          };
+        });
+    };
+  }
+
+  _entityValueRenderer(entityId) {
+    if (!entityId) return "";
+    const stateObj = this.hass?.states?.[entityId];
+    return stateObj?.attributes?.friendly_name || entityId;
+  }
+
+  _entityRowRenderer(item) {
+    return html`
+      <ha-list-item twoline graphic="icon">
+        <ha-state-icon
+          slot="graphic"
+          .hass=${this.hass}
+          .stateObj=${this.hass?.states?.[item.id]}
+        ></ha-state-icon>
+        <span>${item.primary}</span>
+        <span slot="secondary">${item.secondary}</span>
+      </ha-list-item>
+    `;
+  }
+
   _getAdaptiveTextTargetsValue() {
     if (Array.isArray(this._config?.adaptive_text_targets)) {
       return this._config.adaptive_text_targets.filter((value) =>
@@ -846,14 +888,16 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                   .helperPersistent=${true}
                 ></ha-textfield>
               ` : html`
-                <ha-entity-picker
+                <ha-generic-picker
                   class="full-width"
                   .hass=${this.hass}
                   .value=${this._config.idle_image ?? ""}
-                  .includeDomains=${["camera", "image"]}
-                  clearable
+                  .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                  .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                  .getItems=${this._getEntityItems(["camera", "image"])}
                   @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
-                ></ha-entity-picker>
+                  allow-custom-value
+                ></ha-generic-picker>
               `}
             </div>
           </div>
@@ -888,14 +932,17 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                               `
             : rule.match_type === "entity_id"
               ? html`
-                                  <ha-entity-picker
+                                  <ha-generic-picker
                                     class="full-width"
                                     .hass=${this.hass}
-                                    .includeDomains=${["media_player"]}
                                     .value=${rule.match_value ?? ""}
+                                    .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                                    .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                                    .getItems=${this._getEntityItems(["media_player"])}
                                     @value-changed=${(e) =>
                   this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                  ></ha-entity-picker>
+                                    allow-custom-value
+                                  ></ha-generic-picker>
                                 `
               : html`
                                   <ha-textfield
@@ -1014,23 +1061,30 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                     <div class="grow-children">
                       ${idx === entities.length - 1 && !ent.entity_id
         ? html`
-                            <ha-entity-picker
+                            <ha-generic-picker
+                              class="full-width"
+                              style="display: block; width: 100%;"
                               .hass=${this.hass}
-                              .value=${ent.entity_id}
-                              .includeDomains=${["media_player"]}
-                              .excludeEntities=${this._config.entities?.map(e => e.entity_id) ?? []}
-                              clearable
+                              .value=${ent.entity_id || ""}
+                              .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                              .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                              .getItems=${this._getEntityItems(["media_player"], this._config.entities?.map(e => e.entity_id) ?? [])}
                               @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                            ></ha-entity-picker>
+                              allow-custom-value
+                            ></ha-generic-picker>
                           `
         : html`
-                            <ha-selector
+                            <ha-generic-picker
+                              class="full-width"
+                              style="display: block; width: 100%;"
                               .hass=${this.hass}
-                              .selector=${{ entity: { domain: "media_player" } }}
-                              .value=${ent.entity_id}
-                              clearable
+                              .value=${ent.entity_id || ""}
+                              .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                              .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                              .getItems=${this._getEntityItems(["media_player"])}
                               @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                            ></ha-selector>
+                              allow-custom-value
+                            ></ha-generic-picker>
                           `}
                     </div>
                     <div class="entity-row-actions">
@@ -1708,15 +1762,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
     `
         : html`
       <div class="form-row">
-        <ha-entity-picker
+        <ha-generic-picker
           .hass=${this.hass}
           .value=${this._isEntityId(entity?.music_assistant_entity) ? entity.music_assistant_entity : ""}
-          .includeDomains=${["media_player"]}
-          label="Music Assistant Entity (optional)"
-          helper="Pick a Music Assistant player for search."
-          clearable
+          .valueRenderer=${(v) => this._entityValueRenderer(v)}
+          .rowRenderer=${(item) => this._entityRowRenderer(item)}
+          .getItems=${this._getEntityItems(["media_player"])}
           @value-changed=${(e) => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
-        ></ha-entity-picker>
+          allow-custom-value
+        ></ha-generic-picker>
       </div>
       ${(() => {
             const mainId = entity?.entity_id;
@@ -1830,12 +1884,12 @@ class YetAnotherMediaPlayerEditor extends LitElement {
               `
           : html`
                 <div class="form-row">
-                  <ha-entity-picker
+                  <ha-generic-picker
                     .hass=${this.hass}
                     .value=${this._isEntityId(entity?.volume_entity) ? entity.volume_entity : (entity?.entity_id ?? "")}
-                    .includeDomains=${["media_player", "remote"]}
-                    label="Volume Entity"
-                    clearable
+                    .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                    .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                    .getItems=${this._getEntityItems(["media_player", "remote"])}
                     @value-changed=${(e) => {
               const value = e.detail.value;
               this._updateEntityProperty("volume_entity", value);
@@ -1845,7 +1899,8 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                 this._updateEntityProperty("sync_power", false);
               }
             }}
-                  ></ha-entity-picker>
+                    allow-custom-value
+                  ></ha-generic-picker>
                 </div>
               `}
         ` : nothing}
