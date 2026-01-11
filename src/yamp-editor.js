@@ -1061,35 +1061,23 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon icon="mdi:drag"></ha-icon>
                     </div>
                     <div class="grow-children">
-                      ${idx === entities.length - 1 && !ent.entity_id
-        ? html`
-                            <ha-generic-picker
-                              class="full-width"
-                              style="display: block; width: 100%;"
-                              .hass=${this.hass}
-                              .value=${ent.entity_id || ""}
-                              .label=${"Media Player"}
-                              .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                              .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                              .getItems=${this._getEntityItems(["media_player"], this._config.entities?.map(e => e.entity_id) ?? [])}
-                              @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                              allow-custom-value
-                            ></ha-generic-picker>
-                          `
-        : html`
-                            <ha-generic-picker
-                              class="full-width"
-                              style="display: block; width: 100%;"
-                              .hass=${this.hass}
-                              .value=${ent.entity_id || ""}
-                              .label=${"Media Player"}
-                              .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                              .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                              .getItems=${this._getEntityItems(["media_player"])}
-                              @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
-                              allow-custom-value
-                            ></ha-generic-picker>
-                          `}
+                      <ha-generic-picker
+                        class="full-width"
+                        style="display: block; width: 100%;"
+                        .hass=${this.hass}
+                        .value=${ent.entity_id || ""}
+                        .label=${"Media Player"}
+                        .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                        .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                        .getItems=${this._getEntityItems(
+      ["media_player"],
+      (idx === entities.length - 1 && !ent.entity_id)
+        ? (this._config.entities?.map(e => e.entity_id) ?? [])
+        : []
+    )}
+                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                        allow-custom-value
+                      ></ha-generic-picker>
                     </div>
                     <div class="entity-row-actions">
                       <ha-icon
