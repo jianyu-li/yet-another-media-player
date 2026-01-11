@@ -1691,36 +1691,6 @@ class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
-        ${(this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity))
-        ? html`
-      <div class="form-row">
-        <div class=${this._yamlError && (entity?.music_assistant_entity ?? "").trim() !== ""
-            ? "code-editor-wrapper error"
-            : "code-editor-wrapper"}>
-          <ha-code-editor
-            id="ma-template-editor"
-            label="Music Assistant Entity Template (Jinja)"
-            .hass=${this.hass}
-            mode="jinja2"
-            autocomplete-entities
-            .value=${entity?.music_assistant_entity ?? ""}
-            @value-changed=${(e) => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
-          ></ha-code-editor>
-          <div class="help-text">
-            <ha-icon icon="mdi:information-outline"></ha-icon>
-            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
-            <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
-  media_player.picore_house
-{% else %}
-  media_player.ma_wiim_mini
-{% endif %}</pre>
-           </pre>
-          </div>
-        </div>
-      </div>
-    `
-        : nothing}
-
  
 
         <div class="form-row form-row-multi-column">
