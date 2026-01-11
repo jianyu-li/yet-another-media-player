@@ -892,6 +892,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                   class="full-width"
                   .hass=${this.hass}
                   .value=${this._config.idle_image ?? ""}
+                  .label=${"Idle Image Entity"}
                   .valueRenderer=${(v) => this._entityValueRenderer(v)}
                   .rowRenderer=${(item) => this._entityRowRenderer(item)}
                   .getItems=${this._getEntityItems(["camera", "image"])}
@@ -936,6 +937,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                                     class="full-width"
                                     .hass=${this.hass}
                                     .value=${rule.match_value ?? ""}
+                                    .label=${"Match Entity"}
                                     .valueRenderer=${(v) => this._entityValueRenderer(v)}
                                     .rowRenderer=${(item) => this._entityRowRenderer(item)}
                                     .getItems=${this._getEntityItems(["media_player"])}
@@ -1066,6 +1068,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                               style="display: block; width: 100%;"
                               .hass=${this.hass}
                               .value=${ent.entity_id || ""}
+                              .label=${"Media Player"}
                               .valueRenderer=${(v) => this._entityValueRenderer(v)}
                               .rowRenderer=${(item) => this._entityRowRenderer(item)}
                               .getItems=${this._getEntityItems(["media_player"], this._config.entities?.map(e => e.entity_id) ?? [])}
@@ -1079,6 +1082,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                               style="display: block; width: 100%;"
                               .hass=${this.hass}
                               .value=${ent.entity_id || ""}
+                              .label=${"Media Player"}
                               .valueRenderer=${(v) => this._entityValueRenderer(v)}
                               .rowRenderer=${(item) => this._entityRowRenderer(item)}
                               .getItems=${this._getEntityItems(["media_player"])}
@@ -1765,6 +1769,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
         <ha-generic-picker
           .hass=${this.hass}
           .value=${this._isEntityId(entity?.music_assistant_entity) ? entity.music_assistant_entity : ""}
+          .label=${"Music Assistant Entity"}
           .valueRenderer=${(v) => this._entityValueRenderer(v)}
           .rowRenderer=${(item) => this._entityRowRenderer(item)}
           .getItems=${this._getEntityItems(["media_player"])}
@@ -1887,6 +1892,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
                   <ha-generic-picker
                     .hass=${this.hass}
                     .value=${this._isEntityId(entity?.volume_entity) ? entity.volume_entity : (entity?.entity_id ?? "")}
+                    .label=${"Volume Entity"}
                     .valueRenderer=${(v) => this._entityValueRenderer(v)}
                     .rowRenderer=${(item) => this._entityRowRenderer(item)}
                     .getItems=${this._getEntityItems(["media_player", "remote"])}
