@@ -1549,6 +1549,26 @@ async function getMusicAssistantConfigEntryId(hass) {
     return null;
   }
 }
+let cachedMassQueueEntryId = null;
+let cachedMassQueueEntryTs = 0;
+async function getMassQueueConfigEntryId(hass) {
+  const now = Date.now();
+  if (cachedMassQueueEntryId && now - cachedMassQueueEntryTs < MUSIC_ASSISTANT_CONFIG_TTL_MS) {
+    return cachedMassQueueEntryId;
+  }
+  try {
+    const entries = await hass.callApi("GET", "config/config_entries/entry");
+    const mqEntry = entries.find(entry => entry.domain === "mass_queue" && entry.state === "loaded");
+    cachedMassQueueEntryId = (mqEntry === null || mqEntry === void 0 ? void 0 : mqEntry.entry_id) || null;
+    cachedMassQueueEntryTs = now;
+    return cachedMassQueueEntryId;
+  } catch (error) {
+    console.error("yamp: Failed to resolve mass_queue config entry", error);
+    cachedMassQueueEntryId = null;
+    cachedMassQueueEntryTs = now;
+    return null;
+  }
+}
 function transformMusicAssistantItem(item) {
   if (!item) return null;
   return _objectSpread2$1(_objectSpread2$1(_objectSpread2$1({
@@ -11671,7 +11691,88 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._searchLoading = true;
     this.requestUpdate();
 
-    // If we're using Music Assistant and have a URI, use browse_media for 100% consistency
+    // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
+    try {
+      const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
+      if (hasMassQueue) {
+        const configEntryId = await getMassQueueConfigEntryId(this.hass);
+        let tracks = [];
+
+        // Strategy A: User provided syntax (config_entry_id)
+        if (configEntryId && albumUri) {
+          try {
+            var _responseData$respons;
+            console.log("yamp: Attempting mass_queue.get_album_tracks with config_entry_id", {
+              configEntryId,
+              uri: albumUri
+            });
+            const message = {
+              type: "call_service",
+              domain: "mass_queue",
+              service: "get_album_tracks",
+              service_data: {
+                config_entry_id: configEntryId,
+                uri: albumUri
+              },
+              return_response: true
+            };
+            const responseData = await this.hass.connection.sendMessagePromise(message);
+            if (responseData !== null && responseData !== void 0 && (_responseData$respons = responseData.response) !== null && _responseData$respons !== void 0 && _responseData$respons.tracks) {
+              tracks = responseData.response.tracks;
+            }
+          } catch (firstError) {
+            console.warn("yamp: mass_queue.get_album_tracks failed with config_entry_id, trying fallback with entity_id", firstError);
+
+            // Strategy B: Fallback using entity (like get_queue_items)
+            const maState = this._getMusicAssistantState();
+            const maEntityId = maState === null || maState === void 0 ? void 0 : maState.entity_id;
+            if (maEntityId) {
+              var _responseDataFallback;
+              const messageFallback = {
+                type: "call_service",
+                domain: "mass_queue",
+                service: "get_album_tracks",
+                service_data: {
+                  entity: maEntityId,
+                  uri: albumUri
+                },
+                return_response: true
+              };
+              const responseDataFallback = await this.hass.connection.sendMessagePromise(messageFallback);
+              if (responseDataFallback !== null && responseDataFallback !== void 0 && (_responseDataFallback = responseDataFallback.response) !== null && _responseDataFallback !== void 0 && _responseDataFallback.tracks) {
+                tracks = responseDataFallback.response.tracks;
+              }
+            } else {
+              throw firstError;
+            }
+          }
+        }
+        if (tracks.length > 0) {
+          this._searchResults = tracks.map(track => ({
+            media_content_id: track.media_content_id,
+            media_content_type: 'track',
+            media_class: 'track',
+            title: track.media_title,
+            artist: track.media_artist,
+            album: track.media_album_name,
+            thumbnail: track.media_image,
+            duration: track.duration,
+            is_browsable: false,
+            favorite: track.favorite
+          }));
+          this._searchQuery = albumName;
+          this._searchTotalRows = Math.max(15, tracks.length);
+          this._searchLoading = false;
+          this.requestUpdate();
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("yamp: Error fetching album tracks via mass_queue:", e);
+      // Fallback to other methods
+    }
+
+    // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
     if (albumUri && this._isMusicAssistantEntity()) {
       try {
         var _browseRes$response;
@@ -13551,24 +13652,72 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
       case "favorite":
         {
-          // Press the associated favorite button entity
+          var _this$hass22, _maState$attributes9;
+          // Press the associated favorite button entity OR unfavorite if already favorited
           const favoriteButtonEntity = this._getFavoriteButtonEntity();
-          if (favoriteButtonEntity) {
-            var _this$hass22, _maState$attributes9;
+          const maState = (_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[targetEntity];
+          const mediaContentId = maState === null || maState === void 0 || (_maState$attributes9 = maState.attributes) === null || _maState$attributes9 === void 0 ? void 0 : _maState$attributes9.media_content_id;
+
+          // Check if track is already favorited
+          const isCurrentlyFavorited = this._isCurrentTrackFavorited();
+
+          // Check if mass_queue is available for unfavorite functionality
+          const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
+          if (isCurrentlyFavorited && hasMassQueue) {
+            var _this$_getMusicAssist;
+            // Unfavorite using mass_queue
+            const maEntityId = (_this$_getMusicAssist = this._getMusicAssistantState()) === null || _this$_getMusicAssist === void 0 ? void 0 : _this$_getMusicAssist.entity_id;
+            if (maEntityId) {
+              try {
+                const message = {
+                  type: "call_service",
+                  domain: "mass_queue",
+                  service: "unfavorite_current_item",
+                  service_data: {
+                    entity: maEntityId
+                  }
+                };
+                await this.hass.connection.sendMessagePromise(message);
+
+                // Update cache to reflect unfavorited state
+                if (mediaContentId) {
+                  if (!this._favoriteStatusCache) {
+                    this._favoriteStatusCache = {};
+                  }
+                  this._favoriteStatusCache[mediaContentId] = {
+                    isFavorited: false
+                  };
+                }
+
+                // Clear favorites cache
+                if (this._searchResultsByType) {
+                  Object.keys(this._searchResultsByType).forEach(key => {
+                    if (key.includes('_favorites') || key === 'favorites') {
+                      delete this._searchResultsByType[key];
+                    }
+                  });
+                }
+                this._checkingFavorites = null;
+                this.requestUpdate();
+              } catch (error) {
+                console.error("yamp: Failed to unfavorite current item:", error);
+              }
+            }
+          } else if (favoriteButtonEntity) {
+            // Favorite using button.press (original behavior)
             this.hass.callService("button", "press", {
               entity_id: favoriteButtonEntity
             });
 
             // Immediately mark as favorited when button is pressed
-            const maState = (_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[targetEntity];
-            if (maState !== null && maState !== void 0 && (_maState$attributes9 = maState.attributes) !== null && _maState$attributes9 !== void 0 && _maState$attributes9.media_content_id) {
+            if (mediaContentId) {
               // Initialize cache if needed
               if (!this._favoriteStatusCache) {
                 this._favoriteStatusCache = {};
               }
 
               // Immediately set as favorited
-              this._favoriteStatusCache[maState.attributes.media_content_id] = {
+              this._favoriteStatusCache[mediaContentId] = {
                 isFavorited: true
               };
 
