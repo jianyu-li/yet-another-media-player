@@ -11702,10 +11702,6 @@ class YetAnotherMediaPlayerCard extends i$2 {
         if (configEntryId && albumUri) {
           try {
             var _responseData$respons;
-            console.log("yamp: Attempting mass_queue.get_album_tracks with config_entry_id", {
-              configEntryId,
-              uri: albumUri
-            });
             const message = {
               type: "call_service",
               domain: "mass_queue",
