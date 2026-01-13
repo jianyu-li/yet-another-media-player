@@ -221,7 +221,8 @@ export default {
             "playlist": "Lista de reproducción",
             "radio": "Radio",
             "music": "Música",
-            "station": "Emisora"
+            "station": "Emisora",
+            "podcast": "Podcast"
         }
     }
 };

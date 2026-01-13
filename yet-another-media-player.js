@@ -1357,7 +1357,8 @@ var en = {
       "playlist": "Playlist",
       "radio": "Radio",
       "music": "Music",
-      "station": "Station"
+      "station": "Station",
+      "podcast": "Podcast"
     }
   }
 };
@@ -1585,7 +1586,8 @@ var es = {
       "playlist": "Lista de reproducción",
       "radio": "Radio",
       "music": "Música",
-      "station": "Emisora"
+      "station": "Emisora",
+      "podcast": "Podcast"
     }
   }
 };

@@ -220,7 +220,8 @@ export default {
             "playlist": "Playlist",
             "radio": "Radio",
             "music": "Music",
-            "station": "Station"
+            "station": "Station",
+            "podcast": "Podcast"
         }
     }
 };
