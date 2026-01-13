@@ -786,15 +786,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return html`
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">General Settings</div>
-            <div class="section-description">Global controls for how artwork is displayed and retrieved.</div>
+            <div class="section-title">${localize('editor.sections.artwork.general.title')}</div>
+            <div class="section-description">${localize('editor.sections.artwork.general.description')}</div>
           </div>
 
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector
                 .hass=${this.hass}
-                label="Artwork Fit"
+                label="${localize('editor.fields.artwork_fit')}"
                 .selector=${{
         select: {
           mode: "dropdown",
@@ -817,7 +817,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <div class="grow-children">
               <ha-selector
                 .hass=${this.hass}
-                label="Artwork Position"
+                label="${localize('editor.fields.artwork_position')}"
                 .selector=${{
         select: {
           mode: "dropdown",
@@ -852,7 +852,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row">
             <ha-textfield
               class="full-width"
-              label="Artwork Hostname"
+              label="${localize('editor.fields.artwork_hostname')}"
               .value=${this._config.artwork_hostname ?? ""}
               @input=${(e) => this._updateConfig("artwork_hostname", e.target.value)}
               helper="e.g. http://192.168.1.50:8123"
@@ -863,8 +863,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">Idle Artwork</div>
-            <div class="section-description">Show a static image or entity snapshot whenever nothing is playing.</div>
+            <div class="section-title">${localize('editor.sections.artwork.idle.title')}</div>
+            <div class="section-description">${localize('editor.sections.artwork.idle.description')}</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
@@ -897,7 +897,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   class="full-width"
                   .hass=${this.hass}
                   .value=${this._config.idle_image ?? ""}
-                  .label=${"Idle Image Entity"}
+                  .label=${localize('editor.fields.idle_image_entity')}
                   .valueRenderer=${(v) => this._entityValueRenderer(v)}
                   .rowRenderer=${(item) => this._entityRowRenderer(item)}
                   .getItems=${this._getEntityItems(["camera", "image"])}
@@ -911,8 +911,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">Artwork Overrides</div>
-            <div class="section-description">Overrides are evaluated from top to bottom. Drag to reorder.</div>
+            <div class="section-title">${localize('editor.sections.artwork.overrides.title')}</div>
+            <div class="section-description">${localize('editor.sections.artwork.overrides.description')}</div>
           </div>
           <yamp-sortable @item-moved=${(e) => this._onArtworkMoved(e)}>
             <div class="sortable-container">
@@ -925,7 +925,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <div class="artwork-fields">
                         <ha-selector
                           .hass=${this.hass}
-                          label="Match Field"
+                          label="${localize('editor.fields.match_field')}"
                           .selector=${{ select: { mode: "dropdown", options: matchOptions } }}
                           .value=${rule.match_type ?? "media_title"}
                           @value-changed=${(e) => this._onArtworkMatchTypeChange(idx, e.detail.value)}
@@ -942,7 +942,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     class="full-width"
                                     .hass=${this.hass}
                                     .value=${rule.match_value ?? ""}
-                                    .label=${"Match Entity"}
+                                    .label=${localize('editor.fields.match_entity')}
                                     .valueRenderer=${(v) => this._entityValueRenderer(v)}
                                     .rowRenderer=${(item) => this._entityRowRenderer(item)}
                                     .getItems=${this._getEntityItems(["media_player"])}
@@ -954,7 +954,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               : html`
                                   <ha-textfield
                                     class="full-width"
-                                    label="Match Value"
+                                    label="${localize('editor.fields.match_value')}"
                                     .value=${rule.match_value ?? ""}
                                     @input=${(e) => this._onArtworkMatchValueChange(idx, e.target.value)}
                                   ></ha-textfield>
@@ -970,7 +970,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           <div class="grow-children" style="flex:1;">
                             <ha-textfield
                               class="full-width"
-                              label="Size (%)"
+                              label="${localize('editor.fields.size_percent')}"
                               type="number"
                               min="1"
                               max="100"
@@ -981,7 +981,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           <div class="grow-children" style="flex:1.5;">
                             <ha-selector
                               .hass=${this.hass}
-                              label="Object Fit"
+                              label="${localize('editor.fields.object_fit')}"
                               .selector=${{
             select: {
               mode: "dropdown",
@@ -1054,8 +1054,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return html`
         <div class="entity-group">
           <div class="entity-group-header section-header">
-            <div class="entity-group-title section-title">Entities*</div>
-            <div class="section-description">Add the media players you want to control. Drag entities to reorder the chip row.</div>
+            <div class="entity-group-title section-title">${localize('editor.sections.entities.title')}</div>
+            <div class="section-description">${localize('editor.sections.entities.description')}</div>
           </div>
           <div class="form-row">
             <yamp-sortable @item-moved=${(e) => this._onEntityMoved(e)}>
@@ -1071,7 +1071,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         style="display: block; width: 100%;"
                         .hass=${this.hass}
                         .value=${ent.entity_id || ""}
-                        .label=${"Media Player"}
+                        .label=${localize('common.media_player')}
                         .valueRenderer=${(v) => this._entityValueRenderer(v)}
                         .rowRenderer=${(item) => this._entityRowRenderer(item)}
                         .getItems=${this._getEntityItems(
@@ -1088,7 +1088,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon
                         class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
                         icon="mdi:pencil"
-                        title="Edit Entity Settings"
+                        title="${localize('common.edit_entity')}"
                         @click=${() => this._onEditEntity(idx)}
                       ></ha-icon>
                     </div>
@@ -1106,8 +1106,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return html`
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">Idle & Chips</div>
-            <div class="section-description">Choose when the card goes idle and how entity chips behave.</div>
+            <div class="section-title">${localize('editor.sections.behavior.idle_chips.title')}</div>
+            <div class="section-description">${localize('editor.sections.behavior.idle_chips.description')}</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
@@ -1117,10 +1117,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         number: { min: 0, step: 1000, unit_of_measurement: "ms", mode: "box" }
       }}
                 .value=${this._config.idle_timeout_ms ?? 60000}
-                label="Idle Timeout (ms)"
+                label="${localize('editor.fields.idle_timeout')}"
                 @value-changed=${(e) => this._updateConfig("idle_timeout_ms", e.detail.value)}
               ></ha-selector>
-              <div class="config-subtitle">Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.</div>
+              <div class="config-subtitle">${localize('editor.subtitles.idle_timeout')}</div>
             </div>
             <ha-icon
               class="icon-button"
@@ -1142,10 +1142,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
       }}
               .value=${this._config.show_chip_row ?? "auto"}
-              label="Show Chip Row"
+              label="${localize('editor.fields.show_chip_row')}"
               @value-changed=${(e) => this._updateConfig("show_chip_row", e.detail.value)}
             ></ha-selector>
-            <div class="config-subtitle">"Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.show_chip_row')}</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
@@ -1154,16 +1154,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.dim_chips_on_idle ?? true}
                 @change=${(e) => this._updateConfig("dim_chips_on_idle", e.target.checked)}
               ></ha-switch>
-              <span>Dim Chips on Idle</span>
+              <span>${localize('editor.labels.dim_chips')}</span>
             </div>
-            <div class="config-subtitle">When the card enters idle mode with an image, dim the entity and action chips for a cleaner look.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.dim_chips')}</div>
           </div>
         </div>
 
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">Interactions & Search</div>
-            <div class="section-description">Fine-tune how entities are pinned and how many results show at once.</div>
+            <div class="section-title">${localize('editor.sections.behavior.interactions_search.title')}</div>
+            <div class="section-description">${localize('editor.sections.behavior.interactions_search.description')}</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
@@ -1172,9 +1172,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.hold_to_pin ?? false}
                 @change=${(e) => this._updateConfig("hold_to_pin", e.target.checked)}
               ></ha-switch>
-              <span>Hold to Pin</span>
+              <span>${localize('editor.labels.hold_to_pin')}</span>
             </div>
-            <div class="config-subtitle">Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.hold_to_pin')}</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
@@ -1182,9 +1182,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.disable_autofocus ?? false}
                 @change=${(e) => this._updateConfig("disable_autofocus", e.target.checked)}
               ></ha-switch>
-              <span>Disable Search Autofocus</span>
+              <span>${localize('editor.labels.disable_autofocus')}</span>
             </div>
-            <div class="config-subtitle">Keep the search box from stealing focus so on-screen keyboards stay hidden.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.disable_autofocus')}</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
@@ -1192,9 +1192,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.keep_filters_on_search ?? false}
                 @change=${(e) => this._updateConfig("keep_filters_on_search", e.target.checked)}
               ></ha-switch>
-              <span>Keep Filters on Search</span>
+              <span>${localize('editor.labels.keep_filters')}</span>
             </div>
-            <div class="config-subtitle">Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.search_within_filter')}</div>
           </div>
 
           <div class="form-row form-row-multi-column">
@@ -1204,9 +1204,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.dismiss_search_on_play ?? true}
                 @change=${(e) => this._updateConfig("dismiss_search_on_play", e.target.checked)}
               ></ha-switch>
-              <span>Dismiss search on play</span>
+              <span>${localize('editor.labels.dismiss_on_play')}</span>
             </div>
-            <div class="config-subtitle">Automatically close the search screen when a track is played.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.close_search_on_play')}</div>
           </div>
 
           <div class="form-row form-row-multi-column">
@@ -1218,9 +1218,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("pin_search_headers", e.target.checked)}
                 .disabled=${(this._config.entities?.length === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true)}
               ></ha-switch>
-              <span>Pin search headers</span>
+              <span>${localize('editor.labels.pin_headers')}</span>
             </div>
-            <div class="config-subtitle">Keep search input and filters fixed at the top while scrolling results.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.pin_search_headers')}</div>
           </div>
 
           <div class="form-row form-row-multi-column">
@@ -1230,16 +1230,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.disable_mass_queue ?? false}
                 @change=${(e) => this._updateConfig("disable_mass_queue", e.target.checked)}
               ></ha-switch>
-              <span>Disable Mass Queue</span>
+              <span>${localize('editor.labels.disable_mass')}</span>
             </div>
-            <div class="config-subtitle">Disable the optional Mass Queue integration even if it is installed.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.disable_mass')}</div>
           </div>
             <div class="form-row form-row-multi-column">
               <div class="grow-children number-input-with-note">
                 <ha-selector-number
                   .selector=${{ number: { min: 0, max: 1000, step: 1, mode: "box" } }}
                   .value=${this._config.search_results_limit ?? 20}
-                  label="Search Results Limit"
+                  label="${localize('editor.fields.search_limit')}"
                   helper="Maximum number of search results to display (1-1000, default: 20)"
                   @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
                 ></ha-selector-number>
@@ -1272,7 +1272,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
       }}
               .value=${this._config.search_results_sort ?? "default"}
-              label="Result Sorting"
+              label="${localize('editor.fields.result_sorting')}"
               helper="Choose how search results are ordered. Default keeps the source order."
               @value-changed=${(e) => this._updateConfig("search_results_sort", e.detail.value)}
             ></ha-selector>
@@ -1290,7 +1290,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .hass=${this.hass}
                 .selector=${{ number: { min: 0.01, max: 1, step: 0.01, unit_of_measurement: "", mode: "box" } }}
                 .value=${this._config.volume_step ?? 0.05}
-                label="Volume Step (0.05 = 5%)"
+                label="${localize('editor.fields.vol_step')}"
                 @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
               ></ha-selector>
             </div>
@@ -1307,8 +1307,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return html`
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">Theme & Layout</div>
-            <div class="section-description">Match dashboard styling and control the overall footprint.</div>
+            <div class="section-title">${localize('editor.sections.look_and_feel.theme_layout.title')}</div>
+            <div class="section-description">${localize('editor.sections.look_and_feel.theme_layout.description')}</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
@@ -1317,7 +1317,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.match_theme ?? false}
                 @change=${(e) => this._updateConfig("match_theme", e.target.checked)}
               ></ha-switch>
-              <span>Match Theme</span>
+              <span>${localize('editor.labels.match_theme')}</span>
             </div>
             <div>
               <ha-switch
@@ -1325,7 +1325,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.alternate_progress_bar ?? false}
                 @change=${(e) => this._updateConfig("alternate_progress_bar", e.target.checked)}
               ></ha-switch>
-              <span>Alternate Progress Bar</span>
+              <span>${localize('editor.labels.alt_progress')}</span>
             </div>
           </div>
           <div class="form-row form-row-multi-column">
@@ -1336,7 +1336,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("display_timestamps", e.target.checked)}
                 .disabled=${this._config.alternate_progress_bar || this._config.always_collapsed}
               ></ha-switch>
-              <span>Display Timestamps</span>
+              <span>${localize('editor.labels.display_timestamps')}</span>
             </div>
           </div>
           <div class="form-row form-row-multi-column">
@@ -1345,7 +1345,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 class="full-width"
                 type="number"
                 min="0"
-                label="Card Height (px)"
+                label="${localize('editor.fields.card_height')}"
                 .value=${this._config.card_height ?? ""}
                 helper="Leave blank for automatic height"
                 .helperPersistent=${true}
@@ -1371,8 +1371,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">Controls & Typography</div>
-            <div class="section-description">Tune button sizing, entity labels, and adaptive text.</div>
+            <div class="section-title">${localize('editor.sections.look_and_feel.controls_typography.title')}</div>
+            <div class="section-description">${localize('editor.sections.look_and_feel.controls_typography.description')}</div>
           </div>
           <div class="form-row">
             <ha-selector
@@ -1387,7 +1387,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         },
       }}
               .value=${this._config.control_layout ?? "classic"}
-              label="Control Layout"
+              label="${localize('editor.fields.control_layout')}"
               helper="Choose between the legacy evenly sized controls or the modern Home Assistant layout."
               @value-changed=${(e) => this._updateConfig("control_layout", e.detail.value)}
             ></ha-selector>
@@ -1401,9 +1401,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("swap_pause_for_stop", e.target.checked)}
                 .disabled=${(this._config.control_layout ?? "classic") !== "modern"}
               ></ha-switch>
-              <span>Swap Pause with Stop</span>
+              <span>${localize('editor.labels.swap_pause_stop')}</span>
             </div>
-            <div class="config-subtitle">Replace the pause button with stop while using the modern layout.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.swap_pause_stop')}</div>
           </div>
           <div class="form-row">
             <div>
@@ -1412,9 +1412,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.adaptive_controls ?? false}
                 @change=${(e) => this._updateConfig("adaptive_controls", e.target.checked)}
               ></ha-switch>
-              <span>Adaptive Control Size</span>
+              <span>${localize('editor.labels.adaptive_controls')}</span>
             </div>
-            <div class="config-subtitle">Let the playback buttons grow or shrink to fit the available space.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.adaptive_controls')}</div>
           </div>
           <div class="form-row">
             <div>
@@ -1423,14 +1423,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.hide_active_entity_label ?? false}
                 @change=${(e) => this._updateConfig("hide_active_entity_label", e.target.checked)}
               ></ha-switch>
-              <span>Hide Active Entity Label</span>
+              <span>${localize('editor.labels.hide_active_entity')}</span>
             </div>
-            <div class="config-subtitle">When chips live in the menu, hide the entity label at the bottom of the card.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.hide_menu_player')}</div>
           </div>
         <div class="form-row">
           <div class="full-width">
             <span class="form-label">Adaptive Text Size Elements</span>
-            <div class="config-subtitle">Choose which text groups should scale with available space (leave empty to disable adaptive text).</div>
+            <div class="config-subtitle">${localize('editor.subtitles.adaptive_text')}</div>
             <ha-selector
               .hass=${this.hass}
               .selector=${{
@@ -1457,7 +1457,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
       }}
               .value=${this._config.volume_mode ?? "slider"}
-              label="Volume Mode"
+              label="${localize('editor.fields.volume_mode')}"
               @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
             ></ha-selector>
           </div>
@@ -1466,8 +1466,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">Collapsed & Idle States</div>
-            <div class="section-description">Control when the card collapses and which views show while idle.</div>
+            <div class="section-title">${localize('editor.sections.look_and_feel.collapsed_idle.title')}</div>
+            <div class="section-description">${localize('editor.sections.look_and_feel.collapsed_idle.description')}</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
@@ -1476,7 +1476,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.collapse_on_idle ?? false}
                 @change=${(e) => this._updateConfig("collapse_on_idle", e.target.checked)}
               ></ha-switch>
-              <span>Collapse on Idle</span>
+              <span>${localize('editor.labels.collapse_on_idle')}</span>
             </div>
             <div style="${!this._config.always_collapsed ? "" : "opacity: 0.5;"}"
               title="${!this._config.always_collapsed ? "" : "Not available when Always Collapsed is enabled"}">
@@ -1486,7 +1486,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
                 .disabled=${!!this._config.always_collapsed || (this._config.always_collapsed === true && this._config.pin_search_headers === true && this._config.expand_on_search === true)}
               ></ha-switch>
-              <span>Hide Menu Player</span>
+              <span>${localize('editor.labels.hide_menu_player_toggle')}</span>
             </div>
           </div>
           <div class="form-row form-row-multi-column">
@@ -1496,7 +1496,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 .checked=${this._config.always_collapsed ?? false}
                 @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
               ></ha-switch>
-              <span>Always Collapsed</span>
+              <span>${localize('editor.labels.always_collapsed')}</span>
             </div>
             <div style="${this._config.always_collapsed ? "" : "opacity: 0.5;"}"
               title="${this._config.always_collapsed ? "" : "Only available when Always Collapsed is enabled"}">
@@ -1506,11 +1506,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
                 .disabled=${!this._config.always_collapsed}
               ></ha-switch>
-              <span>Expand on Search</span>
+              <span>${localize('editor.labels.expand_on_search')}</span>
             </div>
           </div>
           <div class="form-row">
-            <div class="config-subtitle">Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.collapse_expand')}</div>
           </div>
           <div class="form-row">
             <ha-selector
@@ -1527,10 +1527,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
       }}
               .value=${this._config.idle_screen ?? "default"}
-              label="Idle Screen"
+              label="${localize('editor.fields.idle_screen')}"
               @value-changed=${(e) => this._updateConfig("idle_screen", e.detail.value)}
             ></ha-selector>
-            <div class="config-subtitle">Choose which screen to display automatically when the card becomes idle.</div>
+            <div class="config-subtitle">${localize('editor.subtitles.idle_screen')}</div>
           </div>
         </div>
 
@@ -1542,8 +1542,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return html`
         <div class="action-group config-section">
           <div class="action-group-header section-header">
-            <div class="action-group-title section-title">Actions</div>
-            <div class="section-description">Build the action chips that appear in the card or its menu. Drag to reorder, click the pencil to configure each action.</div>
+            <div class="action-group-title section-title">${localize('editor.sections.actions.title')}</div>
+            <div class="section-description">${localize('editor.sections.actions.description')}</div>
           </div>
           <div class="form-row">
             <yamp-sortable @item-moved=${(e) => this._onActionMoved(e)}>
@@ -1582,7 +1582,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon
                         class="icon-button icon-button-compact"
                         icon="mdi:pencil"
-                        title="Edit Action Settings"
+                        title="${localize('common.edit_action')}"
                         @click=${() => this._onEditAction(idx)}
                       ></ha-icon>
                       <ha-icon
@@ -1634,7 +1634,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             icon="mdi:chevron-left"
             @click=${this._onBackFromEntityEditor}>
           </ha-icon>
-          <div class="entity-editor-title">Edit Entity</div>
+          <div class="entity-editor-title">${localize('editor.titles.edit_entity')}</div>
         </div>
 
         <div class="form-row">
@@ -1650,7 +1650,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <ha-textfield
             class="full-width"
-            label="Name"
+            label="${localize('editor.fields.name')}"
             .value=${entity?.name ?? ""}
             @input=${(e) => this._updateEntityProperty("name", e.target.value)}
           ></ha-textfield>
@@ -1678,7 +1678,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             .value=${Array.isArray(entity?.hidden_controls) ? entity.hidden_controls : []}
             .required=${false}
             .invalid=${false}
-            label="Hidden Controls"
+            label="${localize('editor.fields.hidden_controls')}"
             helper="Select which controls to hide for this entity (all are shown by default)"
             @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
           ></ha-selector>
@@ -1707,7 +1707,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             : "code-editor-wrapper"}>
           <ha-code-editor
             id="ma-template-editor"
-            label="Music Assistant Entity Template (Jinja)"
+            label="${localize('editor.fields.ma_template')}"
             .hass=${this.hass}
             mode="jinja2"
             autocomplete-entities
@@ -1732,7 +1732,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <ha-generic-picker
           .hass=${this.hass}
           .value=${this._isEntityId(entity?.music_assistant_entity) ? entity.music_assistant_entity : ""}
-          .label=${"Music Assistant Entity"}
+          .label=${localize('editor.fields.ma_entity')}
           .valueRenderer=${(v) => this._entityValueRenderer(v)}
           .rowRenderer=${(item) => this._entityRowRenderer(item)}
           .getItems=${this._getEntityItems(["media_player"])}
@@ -1774,7 +1774,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               .value=${Array.isArray(entity?.hidden_filter_chips) ? entity.hidden_filter_chips : []}
               .required=${false}
               .invalid=${false}
-              label="Hidden Search Filter Chips"
+              label="${localize('editor.fields.hidden_chips')}"
               helper="Hide specific search filter chips for this entity"
               @value-changed=${(e) => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
             ></ha-selector>
@@ -1830,7 +1830,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               : "code-editor-wrapper"}>
                     <ha-code-editor
                       id="vol-template-editor"
-                      label="Volume Entity Template (Jinja)"
+                      label="${localize('editor.fields.vol_template')}"
                       .hass=${this.hass}
                       mode="jinja2"
                       autocomplete-entities
@@ -1855,7 +1855,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   <ha-generic-picker
                     .hass=${this.hass}
                     .value=${this._isEntityId(entity?.volume_entity) ? entity.volume_entity : (entity?.entity_id ?? "")}
-                    .label=${"Volume Entity"}
+                    .label=${localize('editor.fields.vol_entity')}
                     .valueRenderer=${(v) => this._entityValueRenderer(v)}
                     .rowRenderer=${(item) => this._entityRowRenderer(item)}
                     .getItems=${this._getEntityItems(["media_player", "remote"])}
@@ -1916,13 +1916,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             icon="mdi:chevron-left"
             @click=${this._onBackFromActionEditor}>
           </ha-icon>
-          <div class="action-editor-title">Edit Action</div>
+          <div class="action-editor-title">${localize('editor.titles.edit_action')}</div>
         </div>
 
         <div class="form-row">
           <ha-textfield
             class="full-width"
-            label="Name"
+            label="${localize('editor.fields.name')}"
             placeholder="(Icon Only)"
             .value=${action?.name ?? ""}
             @input=${(e) => this._updateActionProperty("name", e.target.value)}
@@ -1931,7 +1931,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="form-row">
           <ha-icon-picker
-            label="Icon"
+            label="${localize('editor.fields.icon')}"
             .hass=${this.hass}
             .value=${action?.icon ?? ""}
             @value-changed=${(e) =>
@@ -1942,7 +1942,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
-            label="Action Type"
+            label="${localize('editor.fields.action_type')}"
             .selector=${{
         select: {
           mode: "dropdown",
@@ -1991,7 +1991,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row">
             <ha-selector
               .hass=${this.hass}
-              label="Menu Item"
+              label="${localize('editor.fields.menu_item')}"
               .selector=${{
           select: {
             mode: "dropdown",
@@ -2017,7 +2017,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row">
             <ha-textfield
               class="full-width"
-              label="Navigation Path"
+              label="${localize('editor.fields.nav_path')}"
               placeholder="/lovelace/music or #popup"
               .value=${action?.navigation_path ?? ""}
               @input=${(e) => {
@@ -2052,7 +2052,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           }
         }}
               .value=${action.service ?? ""}
-              label="Service"
+              label="${localize('editor.fields.service')}"
               .required=${true}
               @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
             ></ha-selector>
@@ -2067,7 +2067,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   @change=${(e) =>
             this._updateActionProperty("script_variable", e.target.checked)}
                 ></ha-switch>
-                <span>Script Variable (yamp_entity)</span>
+                <span>${localize('editor.labels.script_var')}</span>
               </div>
             </div>
           ` : nothing}
@@ -2092,7 +2092,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
             <div class="form-row">
               <div class="service-data-editor-header">
-                <div class="service-data-editor-title">Service Data</div>
+                <div class="service-data-editor-title">${localize('editor.titles.service_data')}</div>
                 <div class="service-data-editor-actions">
                   <ha-icon
                     class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
@@ -2122,7 +2122,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             : "code-editor-wrapper"}>
               <ha-code-editor
                 id="service-data-editor"
-                label="Service Data"
+                label="${localize('editor.fields.service_data')}"
                 autocomplete-entities
                 autocomplete-icons
                 .hass=${this.hass}
