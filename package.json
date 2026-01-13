@@ -10,7 +10,7 @@
     "sortablejs": "^1.15.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.5",
+    "@babel/core": "^7.28.6",
     "@babel/plugin-transform-optional-chaining": "^7.27.1",
     "@babel/preset-env": "^7.28.5",
     "@rollup/plugin-babel": "^6.1.0",
