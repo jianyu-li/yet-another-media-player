@@ -1,6 +1,8 @@
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { LitElement, html, css, nothing } from "lit";
 import { isMusicAssistantEntity } from "./yamp-utils.js";
+import { localize } from "./localize/localize.js";
+
 
 const playOptions = [
   { mode: 'replace', icon: 'mdi:playlist-remove', label: 'Replace' },
@@ -130,13 +132,13 @@ export function renderSearchSheet({
           type="text"
           .value=${query || ""}
           @input=${onQueryInput}
-          placeholder="Search music..."
+          placeholder="${localize('editor.placeholders.search')}"
           ?autofocus=${!disableAutofocus}
         />
-        <button @click=${onSearch} ?disabled=${loading || !query}>Search</button>
+        <button @click=${onSearch} ?disabled=${loading || !query}>${localize('common.search')}</button>
         <button @click=${onClose} title="Close Search">✕</button>
       </div>
-      ${loading ? html`<div class="search-sheet-loading">Loading...</div>` : nothing}
+      ${loading ? html`<div class="search-sheet-loading">${localize('common.loading')}</div>` : nothing}
       ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
       <div class="search-sheet-results">
         ${(results || []).length === 0 && !loading

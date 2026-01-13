@@ -16,6 +16,8 @@ import {
   getSearchResultClickTitle,
   isMusicAssistantEntity
 } from "./yamp-utils.js";
+import { localize } from "./localize/localize.js";
+
 
 import {
   SUPPORT_PAUSE,
@@ -5556,9 +5558,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
     const rowActions = decoratedActions.filter(({ action }) => !action?.in_menu);
     const menuOnlyActions = decoratedActions.filter(({ action }) => action?.in_menu);
-    const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj) return html`<div class="details">Entity not found.</div>`;
+    const activeChipName = this.getChipName(this.currentEntityId);
+    if (!stateObj) return html`<div class="details">${localize('common.not_found')}</div>`;
 
     const currentHiddenControls = this._getHiddenControlsForCurrentEntity();
     const showFavoriteButton = !!this._getFavoriteButtonEntity() && !currentHiddenControls.favorite;
@@ -5572,7 +5574,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <button
             class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
             @click=${() => this._onControlClick("power")}
-            title="Power"
+            title="${localize('common.power')}"
           >
             <ha-icon .icon=${"mdi:power"}></ha-icon>
           </button>
@@ -5582,7 +5584,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <button
             class="volume-icon-btn favorite-volume-btn"
             @click=${() => this._openQuickSearchOverlay()}
-            title="Search"
+            title="${localize('common.search')}"
           >
             <ha-icon .icon=${"mdi:magnify"}></ha-icon>
           </button>
@@ -5592,7 +5594,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         <button
           class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
           @click=${() => this._onControlClick("favorite")}
-          title="Favorite"
+          title="${localize('common.favorite')}"
         >
           <ha-icon
             style=${favoriteActive ? "color: var(--custom-accent);" : nothing}
@@ -7627,13 +7629,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }));
   }
 
-  _openMoreInfo() {
-    this.dispatchEvent(new CustomEvent("hass-more-info", {
-      detail: { entityId: this.currentEntityId },
-      bubbles: true,
-      composed: true,
-    }));
-  }
 }
 
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);

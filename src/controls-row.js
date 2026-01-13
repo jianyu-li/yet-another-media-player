@@ -1,5 +1,7 @@
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { html, nothing } from "lit";
+import { localize } from "./localize/localize.js";
+
 
 export function renderControlsRow({
   stateObj,
@@ -99,12 +101,12 @@ export function renderControlsRow({
       <div class=${rowClass} style=${rowStyle}>
         <div class="controls-left">
           ${showShuffleButton ? html`
-            <button class="modern-button small${shuffleActive ? " active" : ""}" @click=${() => onControlClick("shuffle")} title="Shuffle">
+            <button class="modern-button small${shuffleActive ? " active" : ""}" @click=${() => onControlClick("shuffle")} title="${localize('card.media_controls.shuffle')}">
               <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
             </button>
           ` : nothing}
           ${showPrevious ? html`
-            <button class="modern-button medium" @click=${() => onControlClick("prev")} title="Previous">
+            <button class="modern-button medium" @click=${() => onControlClick("prev")} title="${localize('card.media_controls.previous')}">
               <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
             </button>
           ` : nothing}
@@ -115,7 +117,7 @@ export function renderControlsRow({
             <button
               class="modern-button primary${isPlayingState ? " active" : ""}"
               @click=${() => onControlClick(primaryUsesStop ? "stop" : "play_pause")}
-              title=${primaryUsesStop ? "Stop" : "Play/Pause"}
+              title="${primaryUsesStop ? localize('card.media_controls.stop') : localize('card.media_controls.play_pause') || "Play/Pause"}"
             >
               <ha-icon .icon=${primaryUsesStop ? "mdi:stop" : (isPlayingState ? "mdi:pause" : "mdi:play")}></ha-icon>
             </button>
@@ -124,12 +126,12 @@ export function renderControlsRow({
 
         <div class="controls-right">
           ${showNext ? html`
-            <button class="modern-button medium" @click=${() => onControlClick("next")} title="Next">
+            <button class="modern-button medium" @click=${() => onControlClick("next")} title="${localize('card.media_controls.next')}">
               <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
             </button>
           ` : nothing}
           ${showRepeatButton ? html`
-            <button class="modern-button small${repeatActive ? " active" : ""}" @click=${() => onControlClick("repeat")} title="Repeat">
+            <button class="modern-button small${repeatActive ? " active" : ""}" @click=${() => onControlClick("repeat")} title="${localize('card.media_controls.repeat')}">
               <ha-icon .icon=${stateObj.attributes.repeat === "one"
           ? "mdi:repeat-once"
           : "mdi:repeat"

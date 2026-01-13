@@ -2,19 +2,21 @@
 // import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
 import { LitElement, html, css, nothing } from "lit";
 import yaml from 'js-yaml';
+import { localize } from "./localize/localize.js";
+
 
 import { SUPPORT_GROUPING } from "./constants.js";
 import { isMusicAssistantEntity } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
-  { value: "details", label: "Now Playing Details" },
-  { value: "menu", label: "Menu & Search Sheets" },
-  { value: "action_chips", label: "Action Chips" },
+  { value: "details", label: localize('card.sections.details') },
+  { value: "menu", label: localize('card.sections.menu') },
+  { value: "action_chips", label: localize('card.sections.action_chips') },
 ]);
 const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map((opt) => opt.value);
 
-class YetAnotherMediaPlayerEditor extends LitElement {
+export class YetAnotherMediaPlayerEditor extends LitElement {
   static get properties() {
     return {
       hass: {},
@@ -31,7 +33,7 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   constructor() {
     super();
-    this._activeTab = "Entities";
+    this._activeTab = "entities";
     this._entityEditorIndex = null;
     this._actionEditorIndex = null;
 
@@ -739,20 +741,23 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
     return html`
         <div class="tabs">
-          ${["Entities", "Behavior", "Look and Feel", "Artwork", "Actions"].map((name) => html`
-            <button
-              class="tab" ${this._activeTab === name ? 'selected' : ''}
-              @click=${() => {
-        this._activeTab = name;
-        // Exit any sub-editor when switching tabs
-        this._entityEditorIndex = null;
-        this._actionEditorIndex = null;
-        this._useTemplate = null;
-        this._useVolTemplate = null;
-      }}
-              ?selected=${this._activeTab === name}
-            >${name}</button>
-          `)}
+          ${["entities", "behavior", "look_and_feel", "artwork", "actions"].map((key) => {
+      const name = localize(`editor.tabs.${key}`);
+      return html`
+              <button
+                class="tab" ${this._activeTab === key ? 'selected' : ''}
+                @click=${() => {
+          this._activeTab = key;
+          // Exit any sub-editor when switching tabs
+          this._entityEditorIndex = null;
+          this._actionEditorIndex = null;
+          this._useTemplate = null;
+          this._useVolTemplate = null;
+        }}
+                ?selected=${this._activeTab === key}
+              >${name}</button>
+            `;
+    })}
         </div>
         <div class="tab-content">
           ${editingEntity
@@ -1025,15 +1030,15 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 
   _renderActiveTab() {
     switch (this._activeTab) {
-      case "Entities":
+      case "entities":
         return this._renderEntitiesTab();
-      case "Behavior":
+      case "behavior":
         return this._renderBehaviorTab();
-      case "Look and Feel":
+      case "look_and_feel":
         return this._renderVisualTab();
-      case "Artwork":
+      case "artwork":
         return this._renderArtworkTab();
-      case "Actions":
+      case "actions":
         return this._renderActionsTab();
       default:
         return this._renderEntitiesTab();
@@ -2353,5 +2358,4 @@ class YetAnotherMediaPlayerEditor extends LitElement {
 }
 
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
-export { YetAnotherMediaPlayerEditor };
 

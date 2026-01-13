@@ -1135,6 +1135,80 @@ function renderActionChipRow(_ref) {
   return x(_templateObject$8 || (_templateObject$8 = _taggedTemplateLiteral(["\n    <div class=\"action-chip-row\">\n      ", "\n    </div>\n  "])), actions.map((a, idx) => x(_templateObject2$7 || (_templateObject2$7 = _taggedTemplateLiteral(["\n          <button class=\"action-chip\" @click=", ">\n            ", "\n            ", "\n          </button>\n        "])), () => onActionChipClick(idx), a.icon ? x(_templateObject3$6 || (_templateObject3$6 = _taggedTemplateLiteral(["<ha-icon .icon=", " style=\"font-size: 22px; margin-right: ", ";\"></ha-icon>"])), a.icon, a.name ? '8px' : '0') : E, a.name || "")));
 }
 
+var en = {
+  "common": {
+    "not_found": "Entity not found.",
+    "search": "Search",
+    "power": "Power",
+    "favorite": "Favorite",
+    "loading": "Loading...",
+    "no_results": "No results.",
+    "close": "Close",
+    "vol_up": "Volume Up",
+    "vol_down": "Volume Down"
+  },
+  "editor": {
+    "tabs": {
+      "entities": "Entities",
+      "behavior": "Behavior",
+      "look_and_feel": "Look and Feel",
+      "artwork": "Artwork",
+      "actions": "Actions"
+    },
+    "placeholders": {
+      "search": "Search music..."
+    }
+  },
+  "card": {
+    "sections": {
+      "details": "Now Playing Details",
+      "menu": "Menu & Search Sheets",
+      "action_chips": "Action Chips"
+    },
+    "media_controls": {
+      "shuffle": "Shuffle",
+      "previous": "Previous",
+      "play_pause": "Play/Pause",
+      "stop": "Stop",
+      "next": "Next",
+      "repeat": "Repeat"
+    }
+  }
+};
+
+const languages = {
+  en: en
+};
+function localize(string) {
+  let search = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+  let replace = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+  const rawLang = (localStorage.getItem('selectedLanguage') || 'en').replace(/['"]+/g, '').replace('-', '_');
+  const lang = languages[rawLang] ? rawLang : rawLang.split('_')[0];
+  let translated;
+  const parts = string.split('.');
+  const traverse = (obj, path) => {
+    try {
+      return path.reduce((o, i) => o && o[i] !== undefined ? o[i] : undefined, obj);
+    } catch (e) {
+      return undefined;
+    }
+  };
+  translated = traverse(languages[lang], parts);
+  if (translated === undefined && lang !== 'en') {
+    translated = traverse(languages['en'], parts);
+  }
+  if (translated === undefined) {
+    translated = string;
+  }
+  if (typeof translated !== 'string') {
+    translated = string;
+  }
+  if (search !== '' && replace !== '') {
+    translated = translated.replace(search, replace);
+  }
+  return translated;
+}
+
 var _templateObject$7, _templateObject2$6, _templateObject3$5, _templateObject4$4, _templateObject5$4, _templateObject6$4, _templateObject7$4, _templateObject8$4, _templateObject9$3, _templateObject0$3, _templateObject1$3, _templateObject10$3, _templateObject11$2, _templateObject12$2, _templateObject13$2;
 function renderControlsRow(_ref) {
   let {
@@ -1241,7 +1315,7 @@ function renderControlsRow(_ref) {
     rowStyle += ["--yamp-control-gap:".concat(sizing.gap, "px"), "--yamp-control-min-width:".concat(sizing.minWidth, "px"), "--yamp-control-max-width:".concat(sizing.maxWidth, "px"), "--yamp-control-min-height:".concat(sizing.minHeight, "px"), "--yamp-control-padding:".concat(sizing.padding, "px"), "--yamp-control-icon-size:".concat(sizing.icon, "px")].join(";");
   }
   if (normalizedLayout === "modern") {
-    return x(_templateObject$7 || (_templateObject$7 = _taggedTemplateLiteral(["\n      <div class=", " style=", ">\n        <div class=\"controls-left\">\n          ", "\n          ", "\n        </div>\n\n        <div class=\"controls-center\">\n          ", "\n        </div>\n\n        <div class=\"controls-right\">\n          ", "\n          ", "\n        </div>\n      </div>\n    "])), rowClass, rowStyle, showShuffleButton ? x(_templateObject2$6 || (_templateObject2$6 = _taggedTemplateLiteral(["\n            <button class=\"modern-button small", "\" @click=", " title=\"Shuffle\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), shuffleActive ? " active" : "", () => onControlClick("shuffle"), "mdi:shuffle") : E, showPrevious ? x(_templateObject3$5 || (_templateObject3$5 = _taggedTemplateLiteral(["\n            <button class=\"modern-button medium\" @click=", " title=\"Previous\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), () => onControlClick("prev"), "mdi:skip-previous") : E, showPlayPause ? x(_templateObject4$4 || (_templateObject4$4 = _taggedTemplateLiteral(["\n            <button\n              class=\"modern-button primary", "\"\n              @click=", "\n              title=", "\n            >\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), isPlayingState ? " active" : "", () => onControlClick(primaryUsesStop ? "stop" : "play_pause"), primaryUsesStop ? "Stop" : "Play/Pause", primaryUsesStop ? "mdi:stop" : isPlayingState ? "mdi:pause" : "mdi:play") : E, showNext ? x(_templateObject5$4 || (_templateObject5$4 = _taggedTemplateLiteral(["\n            <button class=\"modern-button medium\" @click=", " title=\"Next\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), () => onControlClick("next"), "mdi:skip-next") : E, showRepeatButton ? x(_templateObject6$4 || (_templateObject6$4 = _taggedTemplateLiteral(["\n            <button class=\"modern-button small", "\" @click=", " title=\"Repeat\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), repeatActive ? " active" : "", () => onControlClick("repeat"), stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat") : E);
+    return x(_templateObject$7 || (_templateObject$7 = _taggedTemplateLiteral(["\n      <div class=", " style=", ">\n        <div class=\"controls-left\">\n          ", "\n          ", "\n        </div>\n\n        <div class=\"controls-center\">\n          ", "\n        </div>\n\n        <div class=\"controls-right\">\n          ", "\n          ", "\n        </div>\n      </div>\n    "])), rowClass, rowStyle, showShuffleButton ? x(_templateObject2$6 || (_templateObject2$6 = _taggedTemplateLiteral(["\n            <button class=\"modern-button small", "\" @click=", " title=\"", "\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), shuffleActive ? " active" : "", () => onControlClick("shuffle"), localize('card.media_controls.shuffle'), "mdi:shuffle") : E, showPrevious ? x(_templateObject3$5 || (_templateObject3$5 = _taggedTemplateLiteral(["\n            <button class=\"modern-button medium\" @click=", " title=\"", "\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), () => onControlClick("prev"), localize('card.media_controls.previous'), "mdi:skip-previous") : E, showPlayPause ? x(_templateObject4$4 || (_templateObject4$4 = _taggedTemplateLiteral(["\n            <button\n              class=\"modern-button primary", "\"\n              @click=", "\n              title=\"", "\"\n            >\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), isPlayingState ? " active" : "", () => onControlClick(primaryUsesStop ? "stop" : "play_pause"), primaryUsesStop ? localize('card.media_controls.stop') : localize('card.media_controls.play_pause') || "Play/Pause", primaryUsesStop ? "mdi:stop" : isPlayingState ? "mdi:pause" : "mdi:play") : E, showNext ? x(_templateObject5$4 || (_templateObject5$4 = _taggedTemplateLiteral(["\n            <button class=\"modern-button medium\" @click=", " title=\"", "\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), () => onControlClick("next"), localize('card.media_controls.next'), "mdi:skip-next") : E, showRepeatButton ? x(_templateObject6$4 || (_templateObject6$4 = _taggedTemplateLiteral(["\n            <button class=\"modern-button small", "\" @click=", " title=\"", "\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), repeatActive ? " active" : "", () => onControlClick("repeat"), localize('card.media_controls.repeat'), stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat") : E);
   }
   return x(_templateObject7$4 || (_templateObject7$4 = _taggedTemplateLiteral(["\n    <div class=", " style=", ">\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n    </div>\n  "])), rowClass, rowStyle, showPrevious ? x(_templateObject8$4 || (_templateObject8$4 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Previous\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("prev"), "mdi:skip-previous") : E, showPlayPause ? x(_templateObject9$3 || (_templateObject9$3 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Play/Pause\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("play_pause"), stateObj.state === "playing" ? "mdi:pause" : "mdi:play") : E, showStopButton ? x(_templateObject0$3 || (_templateObject0$3 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Stop\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("stop"), "mdi:stop") : E, showNext ? x(_templateObject1$3 || (_templateObject1$3 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Next\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("next"), "mdi:skip-next") : E, showShuffleButton ? x(_templateObject10$3 || (_templateObject10$3 = _taggedTemplateLiteral(["\n        <button class=\"button", "\" @click=", " title=\"Shuffle\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), shuffleActive ? ' active' : '', () => onControlClick("shuffle"), "mdi:shuffle") : E, showRepeatButton ? x(_templateObject11$2 || (_templateObject11$2 = _taggedTemplateLiteral(["\n        <button class=\"button", "\" @click=", " title=\"Repeat\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), repeatActive ? ' active' : '', () => onControlClick("repeat"), stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat") : E, showFavoriteButton ? x(_templateObject12$2 || (_templateObject12$2 = _taggedTemplateLiteral(["\n        <button class=\"button", "\" @click=", " title=\"Favorite\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), favoriteActive ? ' active' : '', () => onControlClick("favorite"), favoriteActive ? "mdi:heart" : "mdi:heart-outline") : E, showPowerButton ? x(_templateObject13$2 || (_templateObject13$2 = _taggedTemplateLiteral(["\n        <button\n          class=\"button", "\"\n          @click=", "\n          title=\"Power\"\n        >\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), stateObj.state !== "off" ? " active" : "", () => onControlClick("power"), "mdi:power") : E);
 }
@@ -1629,7 +1703,7 @@ function renderSearchSheet(_ref) {
     onResultClick
   } = _ref;
   if (!open) return E;
-  return x(_templateObject$3 || (_templateObject$3 = _taggedTemplateLiteral(["\n    <div class=\"search-sheet\" data-match-theme=\"", "\">\n      <div class=\"search-sheet-header\">\n        <input\n          type=\"text\"\n          .value=", "\n          @input=", "\n          placeholder=\"Search music...\"\n          ?autofocus=", "\n        />\n        <button @click=", " ?disabled=", ">Search</button>\n        <button @click=", " title=\"Close Search\">\u2715</button>\n      </div>\n      ", "\n      ", "\n      <div class=\"search-sheet-results\">\n        ", "\n      </div>\n    </div>\n  "])), matchTheme, query || "", onQueryInput, !disableAutofocus, onSearch, loading || !query, onClose, loading ? x(_templateObject2$3 || (_templateObject2$3 = _taggedTemplateLiteral(["<div class=\"search-sheet-loading\">Loading...</div>"]))) : E, error ? x(_templateObject3$2 || (_templateObject3$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-error\">", "</div>"])), error) : E, (results || []).length === 0 && !loading ? x(_templateObject4$2 || (_templateObject4$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-empty\">No results.</div>"]))) : (results || []).map(item => x(_templateObject5$2 || (_templateObject5$2 = _taggedTemplateLiteral(["\n                <div class=\"search-sheet-result\" style=\"position:relative;overflow:hidden;\">\n                  ", "\n                  <div style=\"flex:1;min-width:0;\">\n                    <span \n                      class=\"search-sheet-title ", "\" \n                      @click=", "\n                    >\n                      ", "\n                    </span>\n                    ", "\n                  </div>\n                  <div class=\"search-sheet-buttons\">\n                    <button class=\"search-sheet-play\" @click=", " title=\"Play Now\">\n                      <ha-icon icon=\"mdi:play\"></ha-icon>\n                    </button>\n                    ", "\n                  </div>\n                  \n                  <!-- SLIDE-OUT MENU -->\n                  <div class=\"search-row-slide-out ", "\">\n                    <button class=\"slide-out-button\" @click=", " title=\"Replace existing queue and play now\">\n                      <ha-icon icon=\"mdi:playlist-remove\"></ha-icon> Replace\n                    </button>\n                    <button class=\"slide-out-button\" @click=", " title=\"Play next\">\n                      <ha-icon icon=\"mdi:playlist-play\"></ha-icon> Next\n                    </button>\n                    <button class=\"slide-out-button\" @click=", " title=\"Replace queue\">\n                      <ha-icon icon=\"mdi:playlist-music\"></ha-icon> Replace Next\n                    </button>\n                    <button class=\"slide-out-button\" @click=", " title=\"Add to the end of the queue\">\n                      <ha-icon icon=\"mdi:playlist-plus\"></ha-icon> Add\n                    </button>\n                    <div class=\"slide-out-close\" @click=", ">\n                      <ha-icon icon=\"mdi:close\"></ha-icon>\n                    </div>\n\n                    ", "\n                  </div>\n                </div>\n              "])), item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject6$2 || (_templateObject6$2 = _taggedTemplateLiteral(["\n                    <img\n                      class=\"search-sheet-thumb\"\n                      src=", "\n                      alt=", "\n                      onerror=\"this.style.display='none'\"\n                    />\n                  "])), item.thumbnail, item.title) : x(_templateObject7$2 || (_templateObject7$2 = _taggedTemplateLiteral(["\n                    <div class=\"search-sheet-thumb-placeholder\">\n                      <ha-icon icon=\"mdi:music\"></ha-icon>\n                    </div>\n                  "]))), item.is_browsable ? 'browsable' : '', () => item.is_browsable && onResultClick && onResultClick(item), item.title, item.artist ? x(_templateObject8$2 || (_templateObject8$2 = _taggedTemplateLiteral(["\n                      <span \n                        class=\"search-sheet-subtitle ", "\" \n                        @click=", "\n                      >\n                        ", "\n                      </span>\n                    "])), item.is_browsable ? 'browsable' : '', () => item.is_browsable && onResultClick && onResultClick(item), item.artist) : E, () => onPlay(item), !(upcomingFilterActive && item.queue_item_id) ? x(_templateObject9$2 || (_templateObject9$2 = _taggedTemplateLiteral(["\n                      <button class=\"search-sheet-queue\" @click=", " title=\"More Options\">\n                        <ha-icon icon=\"mdi:dots-vertical\"></ha-icon>\n                      </button>\n                    "])), e => {
+  return x(_templateObject$3 || (_templateObject$3 = _taggedTemplateLiteral(["\n    <div class=\"search-sheet\" data-match-theme=\"", "\">\n      <div class=\"search-sheet-header\">\n        <input\n          type=\"text\"\n          .value=", "\n          @input=", "\n          placeholder=\"", "\"\n          ?autofocus=", "\n        />\n        <button @click=", " ?disabled=", ">", "</button>\n        <button @click=", " title=\"Close Search\">\u2715</button>\n      </div>\n      ", "\n      ", "\n      <div class=\"search-sheet-results\">\n        ", "\n      </div>\n    </div>\n  "])), matchTheme, query || "", onQueryInput, localize('editor.placeholders.search'), !disableAutofocus, onSearch, loading || !query, localize('common.search'), onClose, loading ? x(_templateObject2$3 || (_templateObject2$3 = _taggedTemplateLiteral(["<div class=\"search-sheet-loading\">", "</div>"])), localize('common.loading')) : E, error ? x(_templateObject3$2 || (_templateObject3$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-error\">", "</div>"])), error) : E, (results || []).length === 0 && !loading ? x(_templateObject4$2 || (_templateObject4$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-empty\">No results.</div>"]))) : (results || []).map(item => x(_templateObject5$2 || (_templateObject5$2 = _taggedTemplateLiteral(["\n                <div class=\"search-sheet-result\" style=\"position:relative;overflow:hidden;\">\n                  ", "\n                  <div style=\"flex:1;min-width:0;\">\n                    <span \n                      class=\"search-sheet-title ", "\" \n                      @click=", "\n                    >\n                      ", "\n                    </span>\n                    ", "\n                  </div>\n                  <div class=\"search-sheet-buttons\">\n                    <button class=\"search-sheet-play\" @click=", " title=\"Play Now\">\n                      <ha-icon icon=\"mdi:play\"></ha-icon>\n                    </button>\n                    ", "\n                  </div>\n                  \n                  <!-- SLIDE-OUT MENU -->\n                  <div class=\"search-row-slide-out ", "\">\n                    <button class=\"slide-out-button\" @click=", " title=\"Replace existing queue and play now\">\n                      <ha-icon icon=\"mdi:playlist-remove\"></ha-icon> Replace\n                    </button>\n                    <button class=\"slide-out-button\" @click=", " title=\"Play next\">\n                      <ha-icon icon=\"mdi:playlist-play\"></ha-icon> Next\n                    </button>\n                    <button class=\"slide-out-button\" @click=", " title=\"Replace queue\">\n                      <ha-icon icon=\"mdi:playlist-music\"></ha-icon> Replace Next\n                    </button>\n                    <button class=\"slide-out-button\" @click=", " title=\"Add to the end of the queue\">\n                      <ha-icon icon=\"mdi:playlist-plus\"></ha-icon> Add\n                    </button>\n                    <div class=\"slide-out-close\" @click=", ">\n                      <ha-icon icon=\"mdi:close\"></ha-icon>\n                    </div>\n\n                    ", "\n                  </div>\n                </div>\n              "])), item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject6$2 || (_templateObject6$2 = _taggedTemplateLiteral(["\n                    <img\n                      class=\"search-sheet-thumb\"\n                      src=", "\n                      alt=", "\n                      onerror=\"this.style.display='none'\"\n                    />\n                  "])), item.thumbnail, item.title) : x(_templateObject7$2 || (_templateObject7$2 = _taggedTemplateLiteral(["\n                    <div class=\"search-sheet-thumb-placeholder\">\n                      <ha-icon icon=\"mdi:music\"></ha-icon>\n                    </div>\n                  "]))), item.is_browsable ? 'browsable' : '', () => item.is_browsable && onResultClick && onResultClick(item), item.title, item.artist ? x(_templateObject8$2 || (_templateObject8$2 = _taggedTemplateLiteral(["\n                      <span \n                        class=\"search-sheet-subtitle ", "\" \n                        @click=", "\n                      >\n                        ", "\n                      </span>\n                    "])), item.is_browsable ? 'browsable' : '', () => item.is_browsable && onResultClick && onResultClick(item), item.artist) : E, () => onPlay(item), !(upcomingFilterActive && item.queue_item_id) ? x(_templateObject9$2 || (_templateObject9$2 = _taggedTemplateLiteral(["\n                      <button class=\"search-sheet-queue\" @click=", " title=\"More Options\">\n                        <ha-icon icon=\"mdi:dots-vertical\"></ha-icon>\n                      </button>\n                    "])), e => {
     e.preventDefault();
     e.stopPropagation();
     onOptionsToggle(item);
@@ -8002,13 +8076,13 @@ customElements.define("yamp-sortable", YampSortable);
 var _templateObject$1, _templateObject2$1, _templateObject3$1, _templateObject4$1, _templateObject5$1, _templateObject6$1, _templateObject7$1, _templateObject8$1, _templateObject9$1, _templateObject0$1, _templateObject1$1, _templateObject10$1, _templateObject11$1, _templateObject12$1, _templateObject13$1, _templateObject14$1, _templateObject15$1, _templateObject16$1, _templateObject17$1, _templateObject18$1, _templateObject19$1, _templateObject20$1, _templateObject21$1, _templateObject22$1, _templateObject23$1, _templateObject24$1, _templateObject25$1, _templateObject26$1, _templateObject27$1, _templateObject28$1, _templateObject29$1, _templateObject30$1, _templateObject31$1, _templateObject32$1, _templateObject33$1, _templateObject34$1, _templateObject35$1, _templateObject36$1, _templateObject37$1, _templateObject38$1, _templateObject39$1, _templateObject40$1;
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([{
   value: "details",
-  label: "Now Playing Details"
+  label: localize('card.sections.details')
 }, {
   value: "menu",
-  label: "Menu & Search Sheets"
+  label: localize('card.sections.menu')
 }, {
   value: "action_chips",
-  label: "Action Chips"
+  label: localize('card.sections.action_chips')
 }]);
 const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map(opt => opt.value);
 class YetAnotherMediaPlayerEditor extends i$2 {
@@ -8041,7 +8115,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
   }
   constructor() {
     super();
-    this._activeTab = "Entities";
+    this._activeTab = "entities";
     this._entityEditorIndex = null;
     this._actionEditorIndex = null;
     this._yamlDraft = "";
@@ -8377,14 +8451,17 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     // When editing an entity/action, keep tabs visible but show editor content
     const editingEntity = this._entityEditorIndex !== null;
     const editingAction = this._actionEditorIndex !== null;
-    return x(_templateObject4$1 || (_templateObject4$1 = _taggedTemplateLiteral(["\n        <div class=\"tabs\">\n          ", "\n        </div>\n        <div class=\"tab-content\">\n          ", "\n        </div>\n      "])), ["Entities", "Behavior", "Look and Feel", "Artwork", "Actions"].map(name => x(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["\n            <button\n              class=\"tab\" ", "\n              @click=", "\n              ?selected=", "\n            >", "</button>\n          "])), this._activeTab === name ? 'selected' : '', () => {
-      this._activeTab = name;
-      // Exit any sub-editor when switching tabs
-      this._entityEditorIndex = null;
-      this._actionEditorIndex = null;
-      this._useTemplate = null;
-      this._useVolTemplate = null;
-    }, this._activeTab === name, name)), editingEntity ? this._renderEntityEditor((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions2 = this._config.actions) === null || _this$_config$actions2 === void 0 ? void 0 : _this$_config$actions2[this._actionEditorIndex]) : this._renderActiveTab());
+    return x(_templateObject4$1 || (_templateObject4$1 = _taggedTemplateLiteral(["\n        <div class=\"tabs\">\n          ", "\n        </div>\n        <div class=\"tab-content\">\n          ", "\n        </div>\n      "])), ["entities", "behavior", "look_and_feel", "artwork", "actions"].map(key => {
+      const name = localize("editor.tabs.".concat(key));
+      return x(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["\n              <button\n                class=\"tab\" ", "\n                @click=", "\n                ?selected=", "\n              >", "</button>\n            "])), this._activeTab === key ? 'selected' : '', () => {
+        this._activeTab = key;
+        // Exit any sub-editor when switching tabs
+        this._entityEditorIndex = null;
+        this._actionEditorIndex = null;
+        this._useTemplate = null;
+        this._useVolTemplate = null;
+      }, this._activeTab === key, name);
+    }), editingEntity ? this._renderEntityEditor((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions2 = this._config.actions) === null || _this$_config$actions2 === void 0 ? void 0 : _this$_config$actions2[this._actionEditorIndex]) : this._renderActiveTab());
   }
   _renderArtworkTab() {
     var _this$_artworkOverrid9, _this$_config$artwork, _this$_config$artwork2, _this$_config$artwork3, _this$_useIdleImageUr, _this$_config$idle_im, _this$_config$idle_im2;
@@ -8499,15 +8576,15 @@ class YetAnotherMediaPlayerEditor extends i$2 {
   }
   _renderActiveTab() {
     switch (this._activeTab) {
-      case "Entities":
+      case "entities":
         return this._renderEntitiesTab();
-      case "Behavior":
+      case "behavior":
         return this._renderBehaviorTab();
-      case "Look and Feel":
+      case "look_and_feel":
         return this._renderVisualTab();
-      case "Artwork":
+      case "artwork":
         return this._renderArtworkTab();
-      case "Actions":
+      case "actions":
         return this._renderActionsTab();
       default:
         return this._renderEntitiesTab();
@@ -14130,9 +14207,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       } = _ref7;
       return action === null || action === void 0 ? void 0 : action.in_menu;
     });
-    const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj) return x(_templateObject24 || (_templateObject24 = _taggedTemplateLiteral(["<div class=\"details\">Entity not found.</div>"])));
+    const activeChipName = this.getChipName(this.currentEntityId);
+    if (!stateObj) return x(_templateObject24 || (_templateObject24 = _taggedTemplateLiteral(["<div class=\"details\">", "</div>"])), localize('common.not_found'));
     const currentHiddenControls = this._getHiddenControlsForCurrentEntity();
     const showFavoriteButton = !!this._getFavoriteButtonEntity() && !currentHiddenControls.favorite;
     const favoriteActive = this._isCurrentTrackFavorited();
@@ -14141,11 +14218,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
     let leadingVolumeControl = E;
     if (showModernPowerButton) {
-      leadingVolumeControl = x(_templateObject25 || (_templateObject25 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn", "\"\n            @click=", "\n            title=\"Power\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), (stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== "off" ? " active" : "", () => this._onControlClick("power"), "mdi:power");
+      leadingVolumeControl = x(_templateObject25 || (_templateObject25 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn", "\"\n            @click=", "\n            title=\"", "\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), (stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== "off" ? " active" : "", () => this._onControlClick("power"), localize('common.power'), "mdi:power");
     } else if (this._controlLayout === "modern") {
-      leadingVolumeControl = x(_templateObject26 || (_templateObject26 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn\"\n            @click=", "\n            title=\"Search\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), () => this._openQuickSearchOverlay(), "mdi:magnify");
+      leadingVolumeControl = x(_templateObject26 || (_templateObject26 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn\"\n            @click=", "\n            title=\"", "\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), () => this._openQuickSearchOverlay(), localize('common.search'), "mdi:magnify");
     }
-    const rightSlotTemplate = showModernFavoriteButton ? x(_templateObject27 || (_templateObject27 = _taggedTemplateLiteral(["\n        <button\n          class=\"volume-icon-btn favorite-volume-btn", "\"\n          @click=", "\n          title=\"Favorite\"\n        >\n          <ha-icon\n            style=", "\n            .icon=", "\n          ></ha-icon>\n        </button>\n      "])), favoriteActive ? " active" : "", () => this._onControlClick("favorite"), favoriteActive ? "color: var(--custom-accent);" : E, favoriteActive ? "mdi:heart" : "mdi:heart-outline") : E;
+    const rightSlotTemplate = showModernFavoriteButton ? x(_templateObject27 || (_templateObject27 = _taggedTemplateLiteral(["\n        <button\n          class=\"volume-icon-btn favorite-volume-btn", "\"\n          @click=", "\n          title=\"", "\"\n        >\n          <ha-icon\n            style=", "\n            .icon=", "\n          ></ha-icon>\n        </button>\n      "])), favoriteActive ? " active" : "", () => this._onControlClick("favorite"), localize('common.favorite'), favoriteActive ? "color: var(--custom-accent);" : E, favoriteActive ? "mdi:heart" : "mdi:heart-outline") : E;
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -15592,15 +15669,6 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this.dispatchEvent(new CustomEvent("hass-more-info", {
       detail: {
         entityId
-      },
-      bubbles: true,
-      composed: true
-    }));
-  }
-  _openMoreInfo() {
-    this.dispatchEvent(new CustomEvent("hass-more-info", {
-      detail: {
-        entityId: this.currentEntityId
       },
       bubbles: true,
       composed: true

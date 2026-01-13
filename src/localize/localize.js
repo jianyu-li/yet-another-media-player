@@ -1,0 +1,38 @@
+import en from './languages/en.js';
+
+const languages = {
+    en: en,
+};
+
+export function localize(string, search = '', replace = '') {
+    const rawLang = (localStorage.getItem('selectedLanguage') || 'en').replace(/['"]+/g, '').replace('-', '_');
+    const lang = languages[rawLang] ? rawLang : rawLang.split('_')[0];
+
+    let translated;
+    const parts = string.split('.');
+
+    const traverse = (obj, path) => {
+        try {
+            return path.reduce((o, i) => (o && o[i] !== undefined ? o[i] : undefined), obj);
+        } catch (e) {
+            return undefined;
+        }
+    };
+
+    translated = traverse(languages[lang], parts);
+    if (translated === undefined && lang !== 'en') {
+        translated = traverse(languages['en'], parts);
+    }
+    if (translated === undefined) {
+        translated = string;
+    }
+
+    if (typeof translated !== 'string') {
+        translated = string;
+    }
+
+    if (search !== '' && replace !== '') {
+        translated = translated.replace(search, replace);
+    }
+    return translated;
+}
