@@ -11,7 +11,16 @@ export default {
         "vol_down": "Volume Down",
         "media_player": "Media Player",
         "edit_entity": "Edit Entity Settings",
-        "edit_action": "Edit Action Settings"
+        "edit_action": "Edit Action Settings",
+        "mute": "Mute",
+        "unmute": "Unmute",
+        "seek": "Seek",
+        "volume": "Volume",
+        "play_now": "Play Now",
+        "more_options": "More Options",
+        "unavailable": "Unavailable",
+        "back": "Back",
+        "cancel": "Cancel"
     },
     "editor": {
         "tabs": {
@@ -161,6 +170,57 @@ export default {
             "stop": "Stop",
             "next": "Next",
             "repeat": "Repeat"
+        },
+        "menu": {
+            "more_info": "More Info",
+            "search": "Search",
+            "source": "Source",
+            "transfer_queue": "Transfer Queue",
+            "group_players": "Group Players",
+            "select_entity": "Select Entity for More Info",
+            "transfer_to": "Transfer Queue To",
+            "no_players": "No other Music Assistant players available."
+        },
+        "grouping": {
+            "title": "Group Players",
+            "sync_volume": "Sync Volume",
+            "group_all": "Group All",
+            "ungroup_all": "Ungroup All",
+            "unavailable": "Player is unavailable",
+            "no_players": "No other group-capable players available.",
+            "master": "Master",
+            "joined": "Joined",
+            "available": "Available",
+            "current": "Current"
+        }
+    },
+    "search": {
+        "favorites": "Favorites",
+        "recently_played": "Recently Played",
+        "next_up": "Next Up",
+        "recommendations": "Recommendations",
+        "radio_mode": "Radio Mode",
+        "close": "Close Search",
+        "no_results": "No results.",
+        "play_next": "Play next",
+        "replace_play": "Replace existing queue and play now",
+        "replace": "Replace queue",
+        "add_queue": "Add to the end of the queue",
+        "move_up": "Move Up",
+        "move_down": "Move Down",
+        "move_next": "Move to Next",
+        "remove": "Remove from Queue",
+        "results": "results",
+        "result": "result",
+        "filters": {
+            "all": "All",
+            "artist": "Artist",
+            "album": "Album",
+            "track": "Track",
+            "playlist": "Playlist",
+            "radio": "Radio",
+            "music": "Music",
+            "station": "Station"
         }
     }
 };

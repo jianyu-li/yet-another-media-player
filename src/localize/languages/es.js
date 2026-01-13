@@ -15,7 +15,12 @@ export default {
         "mute": "Silenciar",
         "unmute": "Desactivar silencio",
         "seek": "Buscar posición",
-        "volume": "Volumen"
+        "volume": "Volumen",
+        "play_now": "Reproducir ahora",
+        "more_options": "Más opciones",
+        "unavailable": "No disponible",
+        "back": "Atrás",
+        "cancel": "Cancelar"
     },
     "editor": {
         "tabs": {
@@ -166,6 +171,57 @@ export default {
             "stop": "Detener",
             "next": "Siguiente",
             "repeat": "Repetir"
+        },
+        "menu": {
+            "more_info": "Más información",
+            "search": "Buscar",
+            "source": "Fuente",
+            "transfer_queue": "Transferir cola",
+            "group_players": "Agrupar reproductores",
+            "select_entity": "Seleccionar entidad para más información",
+            "transfer_to": "Transferir cola a",
+            "no_players": "No hay otros reproductores de Music Assistant disponibles."
+        },
+        "grouping": {
+            "title": "Agrupar reproductores",
+            "sync_volume": "Sincronizar volumen",
+            "group_all": "Agrupar todos",
+            "ungroup_all": "Desagrupar todos",
+            "unavailable": "Reproductor no disponible",
+            "no_players": "No hay otros reproductores compatibles con grupos disponibles.",
+            "master": "Maestro",
+            "joined": "Unido",
+            "available": "Disponible",
+            "current": "Actual"
+        }
+    },
+    "search": {
+        "favorites": "Favoritos",
+        "recently_played": "Reproducidos recientemente",
+        "next_up": "Siguiente",
+        "recommendations": "Recomendaciones",
+        "radio_mode": "Modo radio",
+        "close": "Cerrar búsqueda",
+        "no_results": "Sin resultados.",
+        "play_next": "Reproducir a continuación",
+        "replace_play": "Reemplazar cola existente y reproducir ahora",
+        "replace": "Reemplazar cola",
+        "add_queue": "Añadir al final de la cola",
+        "move_up": "Mover arriba",
+        "move_down": "Mover abajo",
+        "move_next": "Mover a siguiente",
+        "remove": "Eliminar de la cola",
+        "results": "resultados",
+        "result": "resultado",
+        "filters": {
+            "all": "Todo",
+            "artist": "Artista",
+            "album": "Álbum",
+            "track": "Pista",
+            "playlist": "Lista de reproducción",
+            "radio": "Radio",
+            "music": "Música",
+            "station": "Emisora"
         }
     }
 };

@@ -1,5 +1,6 @@
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { html, nothing } from "lit";
+import { localize } from "./localize/localize.js";
 
 function formatTime(seconds) {
   if (seconds === undefined || seconds === null || isNaN(seconds)) return "0:00";
@@ -37,7 +38,7 @@ export function renderProgressBar({
         class="progress-bar"
         style="height:${height}px; background:rgba(255,255,255,0.22); ${style}"
         @click=${seekEnabled ? onSeek : null}
-        title=${seekEnabled ? "Seek" : ""}
+        title=${seekEnabled ? localize('common.seek') : ""}
       >
         <div
           class="progress-inner"

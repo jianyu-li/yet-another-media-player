@@ -1,5 +1,6 @@
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { html, nothing } from "lit";
+import { localize } from "./localize/localize.js";
 
 export function renderVolumeRow({
   isRemoteVolumeEntity,
@@ -41,7 +42,7 @@ export function renderVolumeRow({
           <button 
             class="volume-icon-btn" 
             @click=${onMuteToggle} 
-            title=${(supportsMute ? isMuted : (vol === 0)) ? "Unmute" : "Mute"}
+            title=${(supportsMute ? isMuted : (vol === 0)) ? localize('common.unmute') : localize('common.mute')}
           >
             <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
           </button>
@@ -54,9 +55,9 @@ export function renderVolumeRow({
         ? html`
               <div class="vol-stepper-container">
                 <div class="vol-stepper">
-                  <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
+                  <button class="button" @click=${() => onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
                   <span class="vol-label">vol</span>
-                  <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
+                  <button class="button" @click=${() => onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
                 </div>
               </div>
             `
@@ -75,16 +76,16 @@ export function renderVolumeRow({
                     @change=${onVolumeChange}
                     @mouseup=${onVolumeDragEnd}
                     @touchend=${onVolumeDragEnd}
-                    title="Volume"
+                    title="${localize('common.volume')}"
                   />
                 </div>
               `
           : html`
               <div class="vol-stepper-container">
                 <div class="vol-stepper">
-                  <button class="button" @click=${() => onVolumeStep(-1)} title="Vol Down">–</button>
+                  <button class="button" @click=${() => onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
                   <span class="vol-value">${Math.round(vol * 100)}%</span>
-                  <button class="button" @click=${() => onVolumeStep(1)} title="Vol Up">+</button>
+                  <button class="button" @click=${() => onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
                 </div>
               </div>
             `
