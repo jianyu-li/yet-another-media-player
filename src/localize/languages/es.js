@@ -20,7 +20,9 @@ export default {
         "more_options": "Más opciones",
         "unavailable": "No disponible",
         "back": "Atrás",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "reset_default": "Restablecer",
+        "loading": "Cargando..."
     },
     "editor": {
         "tabs": {
@@ -96,12 +98,32 @@ export default {
             "hide_menu_player": "Cuando las fichas están en el menú, oculte la etiqueta de la entidad activa en la parte inferior de la tarjeta.",
             "adaptive_text": "Elija qué grupos de texto deben escalar con el espacio disponible (deje vacío para desactivar el texto adaptativo).",
             "collapse_expand": "Siempre contraído crea el modo de minireproductor. Expandir en búsqueda expande temporalmente al buscar.",
-            "idle_screen": "Elija qué pantalla mostrar automáticamente cuando la tarjeta entre en reposo."
+            "idle_screen": "Elija qué pantalla mostrar automáticamente cuando la tarjeta entre en reposo.",
+            "hide_controls": "Seleccione qué controles ocultar para esta entidad (todos se muestran de forma predeterminada)",
+            "hide_search_chips": "Ocultar fichas de filtro de búsqueda específicas para esta entidad",
+            "follow_active_entity": "Cuando está habilitado, la entidad de volumen seguirá automáticamente a la entidad de reproducción activa. Nota: Esto anula la entidad de volumen seleccionada.",
+            "search_limit_full": "Número máximo de resultados de búsqueda para mostrar (1-1000, predeterminado: 20)",
+            "result_sorting_full": "Elija cómo se ordenan los resultados de búsqueda. El valor predeterminado mantiene el orden de origen.",
+            "card_height_full": "Dejar en blanco para altura automática",
+            "control_layout_full": "Elija entre los controles de tamaño uniforme heredados o el diseño moderno de Home Assistant.",
+            "artwork_extend": "Permita que el fondo de la ilustración continúe debajo de las filas de fichas y acciones.",
+            "artwork_extend_label": "Extender ilustración",
+            "no_artwork_overrides": "No hay anulaciones de ilustración configuradas. Utilice el botón más de abajo para añadir una.",
+            "entity_current_hint": "Use entity_id: current para apuntar a la entidad de reproductor multimedia actualmente seleccionada en la tarjeta. El botón de abajo no funcionará si utiliza esta función.",
+            "service_data_note": "¡Los cambios en los datos del servicio a continuación no se confirman en la configuración hasta que se pulse el icono de guardar!",
+            "jinja_template_hint": "Introduzca una plantilla Jinja que se resuelva en un único entity_id. Ejemplo de cambio de MA basado en un selector de fuente:",
+            "jinja_template_vol_hint": "Introduzca una plantilla Jinja que se resuelva en un entity_id (p. ej., media_player.office_homepod o remote.soundbar). Ejemplo de cambio de la entidad de volumen basado en un booleano:",
+            "not_available_alt_collapsed": "No disponible con la barra de progreso alternativa o el modo siempre contraído",
+            "not_available_collapsed": "No disponible cuando siempre contraído está activado",
+            "only_available_collapsed": "Solo disponible cuando siempre contraído está activado",
+            "only_available_modern": "Solo disponible con el diseño moderno",
+            "image_url_helper": "Introduzca una URL directa a una imagen o una ruta de archivo local"
         },
         "titles": {
             "edit_entity": "Editar entidad",
             "edit_action": "Editar acción",
-            "service_data": "Datos del servicio"
+            "service_data": "Datos del servicio",
+            "add_artwork_override": "Añadir anulación de ilustración"
         },
         "labels": {
             "dim_chips": "Atenuar fichas en reposo",
@@ -121,7 +143,12 @@ export default {
             "hide_menu_player_toggle": "Ocultar reproductor de menú",
             "always_collapsed": "Siempre contraído",
             "expand_on_search": "Expandir en búsqueda",
-            "script_var": "Variable de script (yamp_entity)"
+            "script_var": "Variable de script (yamp_entity)",
+            "use_ma_template": "Usar plantilla para la entidad de Music Assistant",
+            "use_vol_template": "Usar plantilla para la entidad de volumen",
+            "follow_active_entity": "La entidad de volumen sigue a la entidad activa",
+            "use_url_path": "Usar URL o ruta",
+            "adaptive_text_elements": "Elementos de tamaño de texto adaptativo"
         },
         "fields": {
             "artwork_fit": "Ajuste de ilustración",
@@ -138,6 +165,14 @@ export default {
             "vol_step": "Paso de volumen (0.05 = 5%)",
             "card_height": "Altura de la tarjeta (px)",
             "control_layout": "Diseño de controles",
+            "save_service_data": "Guardar datos del servicio",
+            "image_url": "URL de la imagen",
+            "fallback_image_url": "URL de imagen de reserva",
+            "move_to_main": "Mover acción a las fichas principales",
+            "move_to_menu": "Mover acción al menú",
+            "delete_action": "Eliminar acción",
+            "revert_service_data": "Revertir a los datos de servicio guardados",
+            "test_action": "Probar acción",
             "volume_mode": "Modo de volumen",
             "idle_screen": "Pantalla en reposo",
             "name": "Nombre",
@@ -211,6 +246,13 @@ export default {
         "move_down": "Mover abajo",
         "move_next": "Mover a siguiente",
         "remove": "Eliminar de la cola",
+        "added": "¡Añadido a la cola!",
+        "labels": {
+            "replace": "Reemplazar",
+            "next": "Siguiente",
+            "replace_next": "Sustituir",
+            "add": "Añadir"
+        },
         "results": "resultados",
         "result": "resultado",
         "filters": {
@@ -223,6 +265,7 @@ export default {
             "music": "Música",
             "station": "Emisora",
             "podcast": "Podcast"
-        }
+        },
+        "search_artist": "Buscar este artista"
     }
 };

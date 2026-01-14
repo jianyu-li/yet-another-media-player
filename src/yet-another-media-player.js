@@ -6129,7 +6129,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       @click=${() => {
           if (stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
         }}
-                      title=${stateObj.attributes.media_artist ? "Search for this artist" : ""}
+                      title=${stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
                     >${artist}</div>
                   ` : nothing}
                 </div>
@@ -6638,16 +6638,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 <!-- SLIDE-OUT MENU -->
                                 <div class="search-row-slide-out ${this._activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
                                   <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace')} title="${localize('search.replace_play')}">
-                                    <ha-icon icon="mdi:playlist-remove"></ha-icon> Replace
+                                    <ha-icon icon="mdi:playlist-remove"></ha-icon> ${localize('search.labels.replace')}
                                   </button>
                                   <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'next')} title="${localize('search.play_next')}">
-                                    <ha-icon icon="mdi:playlist-play"></ha-icon> Next
+                                    <ha-icon icon="mdi:playlist-play"></ha-icon> ${localize('search.labels.next')}
                                   </button>
                                   <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace_next')} title="${localize('search.replace')}">
-                                    <ha-icon icon="mdi:playlist-music"></ha-icon> Replace Next
+                                    <ha-icon icon="mdi:playlist-music"></ha-icon> ${localize('search.labels.replace_next')}
                                   </button>
                                   <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'add')} title="${localize('search.add_queue')}">
-                                    <ha-icon icon="mdi:playlist-plus"></ha-icon> Add
+                                    <ha-icon icon="mdi:playlist-plus"></ha-icon> ${localize('search.labels.add')}
                                   </button>
                                   <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); this._activeSearchRowMenuId = null; this.requestUpdate(); }}>
                                     <ha-icon icon="mdi:close"></ha-icon>
@@ -6655,7 +6655,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
                                   ${this._successSearchRowMenuId === item.media_content_id ? html`
                                     <div class="search-row-success-overlay">
-                                      ✅ Added to queue!
+                                      ✅ ${localize('search.added')}
                                     </div>
                                   ` : nothing}
                                 </div>
@@ -6671,7 +6671,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ` : this._showGrouping ? this._renderGroupingSheet() : html`
                 <div class="entity-options-header">
                   <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
-                    Back
+                    ${localize('common.back')}
                   </button>
                   <div class="entity-options-divider"></div>
                 </div>

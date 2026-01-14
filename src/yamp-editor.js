@@ -844,8 +844,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("extend_artwork", e.target.checked)}
               ></ha-switch>
               <div style="display: flex; flex-direction: column;">
-                <label for="extend-artwork-toggle" style="font-weight: 500;">Extend artwork</label>
-                <div style="font-size: 0.85em; opacity: 0.7;">Let the artwork background continue underneath the chip and action rows.</div>
+                <label for="extend-artwork-toggle" style="font-weight: 500;">${localize('editor.subtitles.artwork_extend_label')}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.artwork_extend')}</div>
               </div>
             </div>
           </div>
@@ -880,7 +880,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
       }}
               ></ha-switch>
-              <label for="idle-image-url-toggle">Use URL or Path</label>
+              <label for="idle-image-url-toggle">${localize('editor.labels.use_url_path')}</label>
             </div>
             <div style="flex: 2;">
               ${this._useIdleImageUrl ? html`
@@ -889,7 +889,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   placeholder="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
                   .value=${this._config.idle_image ?? ""}
                   @input=${(e) => this._updateConfig("idle_image", e.target.value)}
-                  helper="Enter a direct URL to an image or a local file path"
+                  helper="${localize('editor.subtitles.image_url_helper')}"
                   .helperPersistent=${true}
                 ></ha-textfield>
               ` : html`
@@ -962,7 +962,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           }
                         <ha-textfield
                           class="full-width"
-                          label=${rule.match_type === "missing_art" ? "Fallback Image URL" : "Image URL"}
+                          label=${rule.match_type === "missing_art" ? localize('editor.fields.fallback_image_url') : localize('editor.fields.image_url')}
                           .value=${rule.image_url ?? ""}
                           @input=${(e) => this._onArtworkImageUrlChange(idx, e.target.value)}
                         ></ha-textfield>
@@ -1011,14 +1011,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       </div>
                     </div>
                   `)
-        : html`<div class="config-subtitle" style="padding:12px 0;text-align:center;">No artwork overrides configured. Use the plus button below to add one.</div>`}
+        : html`<div class="config-subtitle" style="padding:12px 0;text-align:center;">${localize('editor.subtitles.no_artwork_overrides')}</div>`}
             </div>
           </yamp-sortable>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
               icon="mdi:plus"
-              title="Add Artwork Override"
+              title="${localize('editor.titles.add_artwork_override')}"
               @click=${this._addArtworkOverride}
             ></ha-icon>
           </div>
@@ -1125,7 +1125,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-icon
               class="icon-button"
               icon="mdi:restore"
-              title="Reset to default"
+              title="${localize('common.reset_default')}"
               @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
             ></ha-icon>
           </div>
@@ -1240,7 +1240,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   .selector=${{ number: { min: 0, max: 1000, step: 1, mode: "box" } }}
                   .value=${this._config.search_results_limit ?? 20}
                   label="${localize('editor.fields.search_limit')}"
-                  helper="Maximum number of search results to display (1-1000, default: 20)"
+                  helper="${localize('editor.subtitles.search_limit_full')}"
                   @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
                 ></ha-selector-number>
                 ${searchLimitWarningActive ? html`
@@ -1253,7 +1253,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               class="icon-button"
               id="search-limit-reset"
               icon="mdi:restore"
-              title="Reset to default"
+              title="${localize('common.reset_default')}"
               @click=${() => this._updateConfig("search_results_limit", 20)}
             ></ha-icon>
           </div>
@@ -1273,7 +1273,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       }}
               .value=${this._config.search_results_sort ?? "default"}
               label="${localize('editor.fields.result_sorting')}"
-              helper="Choose how search results are ordered. Default keeps the source order."
+              helper="${localize('editor.subtitles.result_sorting_full')}"
               @value-changed=${(e) => this._updateConfig("search_results_sort", e.detail.value)}
             ></ha-selector>
           </div>
@@ -1297,7 +1297,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-icon
               class="icon-button"
               icon="mdi:restore"
-              title="Reset to default"
+              title="${localize('common.reset_default')}"
               @click=${() => this._updateConfig("volume_step", 0.05)}
             ></ha-icon>
           </div>
@@ -1329,7 +1329,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
           </div>
           <div class="form-row form-row-multi-column">
-            <div title=${(this._config.alternate_progress_bar || this._config.always_collapsed) ? "Not available with Alternate Progress Bar or Always Collapsed mode" : ""}>
+            <div title=${(this._config.alternate_progress_bar || this._config.always_collapsed) ? localize('editor.subtitles.not_available_alt_collapsed') : ""}>
               <ha-switch
                 id="display-timestamps-toggle"
                 .checked=${this._config.display_timestamps ?? false}
@@ -1347,7 +1347,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 min="0"
                 label="${localize('editor.fields.card_height')}"
                 .value=${this._config.card_height ?? ""}
-                helper="Leave blank for automatic height"
+                helper="${localize('editor.subtitles.card_height_full')}"
                 .helperPersistent=${true}
                 @input=${(e) => {
         const raw = e.target.value;
@@ -1363,7 +1363,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-icon
               class="icon-button"
               icon="mdi:restore"
-              title="Reset to default"
+              title="${localize('common.reset_default')}"
               @click=${() => this._updateConfig("card_height", undefined)}
             ></ha-icon>
           </div>
@@ -1388,13 +1388,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       }}
               .value=${this._config.control_layout ?? "classic"}
               label="${localize('editor.fields.control_layout')}"
-              helper="Choose between the legacy evenly sized controls or the modern Home Assistant layout."
+              helper="${localize('editor.subtitles.control_layout_full')}"
               @value-changed=${(e) => this._updateConfig("control_layout", e.detail.value)}
             ></ha-selector>
           </div>
           <div class="form-row"
             style="${(this._config.control_layout ?? "classic") === "modern" ? "" : "opacity: 0.5;"}"
-            title="${(this._config.control_layout ?? "classic") === "modern" ? "" : "Only available with Modern layout"}">
+            title="${(this._config.control_layout ?? "classic") === "modern" ? "" : localize('editor.subtitles.only_available_modern')}"}>
             <div>
               <ha-switch
                 .checked=${this._config.swap_pause_for_stop ?? false}
@@ -1429,7 +1429,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
         <div class="form-row">
           <div class="full-width">
-            <span class="form-label">Adaptive Text Size Elements</span>
+            <span class="form-label">${localize('editor.labels.adaptive_text_elements')}</span>
             <div class="config-subtitle">${localize('editor.subtitles.adaptive_text')}</div>
             <ha-selector
               .hass=${this.hass}
@@ -1479,7 +1479,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               <span>${localize('editor.labels.collapse_on_idle')}</span>
             </div>
             <div style="${!this._config.always_collapsed ? "" : "opacity: 0.5;"}"
-              title="${!this._config.always_collapsed ? "" : "Not available when Always Collapsed is enabled"}">
+              title="${!this._config.always_collapsed ? "" : localize('editor.subtitles.not_available_collapsed')}">
               <ha-switch
                 id="hide-menu-player-toggle"
                 .checked=${this._config.hide_menu_player ?? false}
@@ -1499,7 +1499,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               <span>${localize('editor.labels.always_collapsed')}</span>
             </div>
             <div style="${this._config.always_collapsed ? "" : "opacity: 0.5;"}"
-              title="${this._config.always_collapsed ? "" : "Only available when Always Collapsed is enabled"}">
+              title="${this._config.always_collapsed ? "" : localize('editor.subtitles.only_available_collapsed')}">
               <ha-switch
                 id="expand-on-search-toggle"
                 .checked=${this._config.expand_on_search ?? false}
@@ -1588,15 +1588,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon
                         class="icon-button icon-button-compact icon-button-toggle ${act?.in_menu ? "active" : ""}"
                         icon="${act?.in_menu ? "mdi:menu" : "mdi:view-grid-outline"}"
-                        title="${act?.in_menu ? "Move action to main chips" : "Move action into menu"}"
+                        title="${act?.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
                         role="button"
-                        aria-label="${act?.in_menu ? "Move action to main chips" : "Move action into menu"}"
+                        aria-label="${act?.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
                         @click=${() => this._toggleActionInMenu(idx)}
                       ></ha-icon>
                       <ha-icon
                         class="icon-button icon-button-compact"
                         icon="mdi:trash-can"
-                        title="Delete Action"
+                        title="${localize('editor.fields.delete_action')}"
                         @click=${() => this._removeAction(idx)}
                       ></ha-icon>
                     </div>
@@ -1679,7 +1679,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             .required=${false}
             .invalid=${false}
             label="${localize('editor.fields.hidden_controls')}"
-            helper="Select which controls to hide for this entity (all are shown by default)"
+            helper="${localize('editor.subtitles.hide_controls')}"
             @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
           ></ha-selector>
         </div>
@@ -1695,7 +1695,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         this._useTemplate = e.target.checked;
       }}
             ></ha-switch>
-            <label for="ma-template-toggle">Use template for Music Assistant Entity</label>
+            <label for="ma-template-toggle">${localize('editor.labels.use_ma_template')}</label>
           </div>
         </div>
 
@@ -1716,7 +1716,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-code-editor>
           <div class="help-text">
             <ha-icon icon="mdi:information-outline"></ha-icon>
-            Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:
+            ${localize('editor.subtitles.jinja_template_hint')}
             <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
   media_player.picore_house
 {% else %}
@@ -1775,7 +1775,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               .required=${false}
               .invalid=${false}
               label="${localize('editor.fields.hidden_chips')}"
-              helper="Hide specific search filter chips for this entity"
+              helper="${localize('editor.subtitles.hide_search_chips')}"
               @value-changed=${(e) => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
             ></ha-selector>
           </div>
@@ -1805,7 +1805,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               @change=${(e) =>
         this._updateEntityProperty("follow_active_volume", e.target.checked)}
             ></ha-switch>
-            <label for="follow-active-toggle">Volume Entity Follows Active Entity</label>
+            <label for="follow-active-toggle">${localize('editor.labels.follow_active_entity')}</label>
           </div>
           ${!(entity?.follow_active_volume ?? false) ? html`
             <div>
@@ -1816,7 +1816,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           this._useVolTemplate = e.target.checked;
         }}
               ></ha-switch>
-              <label for="vol-template-toggle">Use template for Volume Entity</label>
+              <label for="vol-template-toggle">${localize('editor.labels.use_vol_template')}</label>
             </div>
           ` : nothing}
         </div>
@@ -1839,8 +1839,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     ></ha-code-editor>
                     <div class="help-text">
                       <ha-icon icon="mdi:information-outline"></ha-icon>
-                      Enter a Jinja template that resolves to an entity_id (e.g. <code>media_player.office_homepod</code> or <code>remote.soundbar</code>).
-                      Example switching volume entity based on a boolean:
+                      ${localize('editor.subtitles.jinja_template_vol_hint')}
                       <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
   remote.soundbar
 {% else %}
@@ -1892,14 +1891,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         : nothing}
 
         ${entity?.follow_active_volume ? html`
-          <div class="form-row">
             <div class="help-text">
               <ha-icon icon="mdi:information-outline"></ha-icon>
-              When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.
+              ${localize('editor.subtitles.follow_active_entity')}
               <br><br>
-             
             </div>
-          </div>
         ` : nothing}
         </div>
       `;
@@ -2078,17 +2074,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 icon="mdi:information-outline"
               ></ha-icon>
 
-              Use <code>entity_id: current</code> to target the card's currently selected
-              media player entity. The <ha-icon icon="mdi:play-circle-outline"></ha-icon> button
-              below does not work if you use this feature.
+              ${localize('editor.subtitles.entity_current_hint').split('entity_id: current')[0]}<code>entity_id: current</code>${localize('editor.subtitles.entity_current_hint').split('entity_id: current')[1].split(' button')[0]} <ha-icon icon="mdi:play-circle-outline"></ha-icon> ${localize('editor.subtitles.entity_current_hint').split(' button')[1]}
 
             </div>
             <div class="help-text">
               <ha-icon
                 icon="mdi:information-outline"
               ></ha-icon>
-            Changes to the service data below are not committed to the config until 
-            <ha-icon icon="mdi:content-save"></ha-icon> is clicked!
+            ${localize('editor.subtitles.service_data_note').split('save icon')[0]}
+            <ha-icon icon="mdi:content-save"></ha-icon> ${localize('editor.subtitles.service_data_note').split('save icon')[1]}
             </div>
             <div class="form-row">
               <div class="service-data-editor-header">
@@ -2097,13 +2091,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   <ha-icon
                     class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
                     icon="mdi:content-save"
-                    title="Save Service Data"
+                    title="${localize('editor.fields.save_service_data')}"
                     @click=${this._saveYamlEditor}
                   ></ha-icon>
                   <ha-icon
                     class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
                     icon="mdi:backup-restore"
-                    title="Revert to Saved Service Data"
+                    title="${localize('editor.fields.revert_service_data')}"
                     @click=${this._revertYamlEditor}
                   ></ha-icon>
                   <ha-icon
@@ -2112,7 +2106,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ? "icon-button-disabled" : ""}"
 
                     icon="mdi:play-circle-outline"
-                    title="Test Action"
+                    title="${localize('editor.fields.test_action')}"
                     @click=${this._testServiceCall}
                   ></ha-icon>              
                 </div>

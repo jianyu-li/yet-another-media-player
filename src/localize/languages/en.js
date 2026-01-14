@@ -20,7 +20,9 @@ export default {
         "more_options": "More Options",
         "unavailable": "Unavailable",
         "back": "Back",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "reset_default": "Reset to default",
+        "loading": "Loading..."
     },
     "editor": {
         "tabs": {
@@ -96,12 +98,32 @@ export default {
             "hide_menu_player": "When chips live in the menu, hide the entity label at the bottom of the card.",
             "adaptive_text": "Choose which text groups should scale with available space (leave empty to disable adaptive text).",
             "collapse_expand": "Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.",
-            "idle_screen": "Choose which screen to display automatically when the card becomes idle."
+            "idle_screen": "Choose which screen to display automatically when the card becomes idle.",
+            "hide_controls": "Select which controls to hide for this entity (all are shown by default)",
+            "hide_search_chips": "Hide specific search filter chips for this entity",
+            "follow_active_entity": "When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.",
+            "search_limit_full": "Maximum number of search results to display (1-1000, default: 20)",
+            "result_sorting_full": "Choose how search results are ordered. Default keeps the source order.",
+            "card_height_full": "Leave blank for automatic height",
+            "control_layout_full": "Choose between the legacy evenly sized controls or the modern Home Assistant layout.",
+            "artwork_extend": "Let the artwork background continue underneath the chip and action rows.",
+            "artwork_extend_label": "Extend artwork",
+            "no_artwork_overrides": "No artwork overrides configured. Use the plus button below to add one.",
+            "entity_current_hint": "Use entity_id: current to target the card's currently selected media player entity. The button below does not work if you use this feature.",
+            "service_data_note": "Changes to the service data below are not committed to the config until the save icon is clicked!",
+            "jinja_template_hint": "Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:",
+            "jinja_template_vol_hint": "Enter a Jinja template that resolves to an entity_id (e.g. media_player.office_homepod or remote.soundbar). Example switching volume entity based on a boolean:",
+            "not_available_alt_collapsed": "Not available with Alternate Progress Bar or Always Collapsed mode",
+            "not_available_collapsed": "Not available when Always Collapsed is enabled",
+            "only_available_collapsed": "Only available when Always Collapsed is enabled",
+            "only_available_modern": "Only available with Modern layout",
+            "image_url_helper": "Enter a direct URL to an image or a local file path"
         },
         "titles": {
             "edit_entity": "Edit Entity",
             "edit_action": "Edit Action",
-            "service_data": "Service Data"
+            "service_data": "Service Data",
+            "add_artwork_override": "Add Artwork Override"
         },
         "labels": {
             "dim_chips": "Dim Chips on Idle",
@@ -121,7 +143,12 @@ export default {
             "hide_menu_player_toggle": "Hide Menu Player",
             "always_collapsed": "Always Collapsed",
             "expand_on_search": "Expand on Search",
-            "script_var": "Script Variable (yamp_entity)"
+            "script_var": "Script Variable (yamp_entity)",
+            "use_ma_template": "Use template for Music Assistant Entity",
+            "use_vol_template": "Use template for Volume Entity",
+            "follow_active_entity": "Volume Entity Follows Active Entity",
+            "use_url_path": "Use URL or Path",
+            "adaptive_text_elements": "Adaptive Text Size Elements"
         },
         "fields": {
             "artwork_fit": "Artwork Fit",
@@ -138,6 +165,14 @@ export default {
             "vol_step": "Volume Step (0.05 = 5%)",
             "card_height": "Card Height (px)",
             "control_layout": "Control Layout",
+            "save_service_data": "Save Service Data",
+            "image_url": "Image URL",
+            "fallback_image_url": "Fallback Image URL",
+            "move_to_main": "Move action to main chips",
+            "move_to_menu": "Move action into menu",
+            "delete_action": "Delete Action",
+            "revert_service_data": "Revert to Saved Service Data",
+            "test_action": "Test Action",
             "volume_mode": "Volume Mode",
             "idle_screen": "Idle Screen",
             "name": "Name",
@@ -210,6 +245,13 @@ export default {
         "move_down": "Move Down",
         "move_next": "Move to Next",
         "remove": "Remove from Queue",
+        "added": "Added to queue!",
+        "labels": {
+            "replace": "Replace",
+            "next": "Next",
+            "replace_next": "Replace Next",
+            "add": "Add"
+        },
         "results": "results",
         "result": "result",
         "filters": {
@@ -222,6 +264,7 @@ export default {
             "music": "Music",
             "station": "Station",
             "podcast": "Podcast"
-        }
+        },
+        "search_artist": "Search for this artist"
     }
 };
