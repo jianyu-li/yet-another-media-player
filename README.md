@@ -744,6 +744,26 @@ Contributions are welcome! Please follow these steps so reviews go smoothly:
 4. **Build before you push** – Run `npm run build` to generate the distributable. Test in Home Assistant by copying the bundle into your config and adding the resource modules (you can't have the HACS version and a local version installed at the same time).
 5. **Commit + PR** – Use concise, imperative commit messages. Rebase on `main` if needed, push your branch to your fork, then open a pull request against `main` that explains the change, shows any relevant screenshots, and notes how you tested.
 
+### Adding Translations
+
+YAMP is now localized! 
+
+To contribute a translation:
+
+1. **Copy English Template** – Duplicate `src/localize/languages/en.js` and rename it to your target language code (e.g., `fr.js` for French).
+2. **Translate Strings** – Translate all the values in the new file. Keep the keys identical to the English version.
+3. **Register Language** – Open `src/localize/localize.js` and:
+    - Import your new file: `import fr from './languages/fr.js';`
+    - Add it to the `languages` object:
+      ```javascript
+      const languages = {
+        en: en,
+        fr: fr,
+      };
+      ```
+4. **Test** – Run npm run build, copy the bundled file to your home assistant instance, and switch your Home Assistant language to your new language and verify the card displays correctly.
+5. **Submit** – Open a Pull Request with your new language file and the update to `localize.js`.
+
 
 ---
 
