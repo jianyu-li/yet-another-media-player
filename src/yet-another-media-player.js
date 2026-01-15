@@ -138,8 +138,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _isGroupCapable(stateObj) {
     if (!stateObj) return false;
+    if (stateObj.attributes?.mass_player_type === 'group') return false;
     if (this._supportsFeature(stateObj, SUPPORT_GROUPING)) return true;
     return Array.isArray(stateObj.attributes?.group_members);
+  }
+
+  // Returns true if entity is group-capable AND currently has members
+  _isCurrentlyGrouped(stateObj) {
+    if (!this._isGroupCapable(stateObj)) return false;
+    return Array.isArray(stateObj?.attributes?.group_members) && stateObj.attributes.group_members.length > 0;
   }
 
   // Find button entities associated with a Music Assistant entity
@@ -3862,6 +3869,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const st = this.hass?.states?.[groupingId];
     if (!st) return id;
 
+    // If this entity isn't group capable (or is a preset group), treat it as its own group
+    if (!this._isGroupCapable(st)) {
+      return id;
+    }
+
     const membersRaw = Array.isArray(st.attributes.group_members)
       ? st.attributes.group_members
       : [];
@@ -3871,6 +3883,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // First member is the master
     const masterGroupingId = membersRaw[0];
+
+    // Check if the master is group capable (if it's a preset group, it won't be)
+    const masterState = this.hass?.states?.[masterGroupingId];
+    if (!this._isGroupCapable(masterState)) {
+      return id;
+    }
 
     // Find configured entity corresponding to this master grouping ID
     const masterEntityId = this.entityIds.find(eId => {
@@ -5183,7 +5201,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // Group volume logic: ONLY runs if group_volume is true/undefined
-    if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
+    // AND it's a group-capable entity (preset groups are excluded via _isGroupCapable)
+    if (this._isCurrentlyGrouped(state)) {
       // Get the main entity and all grouped members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -5254,7 +5273,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
     const state = this.hass.states[groupingEntity];
 
-    if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
+    if (this._isCurrentlyGrouped(state)) {
       // Grouped: apply group gain step
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -5366,7 +5385,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       console.error('yamp: Error in grouping detection:', error);
     }
 
-    if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
+    if (this._isCurrentlyGrouped(state)) {
       // Grouped: apply mute to all group members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];

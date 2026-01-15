@@ -9439,10 +9439,18 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
   _isGroupCapable(stateObj) {
-    var _stateObj$attributes;
+    var _stateObj$attributes, _stateObj$attributes2;
     if (!stateObj) return false;
+    if (((_stateObj$attributes = stateObj.attributes) === null || _stateObj$attributes === void 0 ? void 0 : _stateObj$attributes.mass_player_type) === 'group') return false;
     if (this._supportsFeature(stateObj, SUPPORT_GROUPING)) return true;
-    return Array.isArray((_stateObj$attributes = stateObj.attributes) === null || _stateObj$attributes === void 0 ? void 0 : _stateObj$attributes.group_members);
+    return Array.isArray((_stateObj$attributes2 = stateObj.attributes) === null || _stateObj$attributes2 === void 0 ? void 0 : _stateObj$attributes2.group_members);
+  }
+
+  // Returns true if entity is group-capable AND currently has members
+  _isCurrentlyGrouped(stateObj) {
+    var _stateObj$attributes3;
+    if (!this._isGroupCapable(stateObj)) return false;
+    return Array.isArray(stateObj === null || stateObj === void 0 || (_stateObj$attributes3 = stateObj.attributes) === null || _stateObj$attributes3 === void 0 ? void 0 : _stateObj$attributes3.group_members) && stateObj.attributes.group_members.length > 0;
   }
 
   // Find button entities associated with a Music Assistant entity
@@ -10682,12 +10690,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return snapshot;
     }
     entityIds.forEach(id => {
-      var _this$hass5, _stateObj$state2, _stateObj$attributes$, _stateObj$attributes2, _stateObj$attributes$2, _stateObj$attributes3;
+      var _this$hass5, _stateObj$state2, _stateObj$attributes$, _stateObj$attributes4, _stateObj$attributes$2, _stateObj$attributes5;
       const stateObj = id ? (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[id] : null;
       snapshot[id] = {
         state: (_stateObj$state2 = stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== null && _stateObj$state2 !== void 0 ? _stateObj$state2 : null,
-        mediaId: (_stateObj$attributes$ = stateObj === null || stateObj === void 0 || (_stateObj$attributes2 = stateObj.attributes) === null || _stateObj$attributes2 === void 0 ? void 0 : _stateObj$attributes2.media_content_id) !== null && _stateObj$attributes$ !== void 0 ? _stateObj$attributes$ : null,
-        mediaTitle: (_stateObj$attributes$2 = stateObj === null || stateObj === void 0 || (_stateObj$attributes3 = stateObj.attributes) === null || _stateObj$attributes3 === void 0 ? void 0 : _stateObj$attributes3.media_title) !== null && _stateObj$attributes$2 !== void 0 ? _stateObj$attributes$2 : null
+        mediaId: (_stateObj$attributes$ = stateObj === null || stateObj === void 0 || (_stateObj$attributes4 = stateObj.attributes) === null || _stateObj$attributes4 === void 0 ? void 0 : _stateObj$attributes4.media_content_id) !== null && _stateObj$attributes$ !== void 0 ? _stateObj$attributes$ : null,
+        mediaTitle: (_stateObj$attributes$2 = stateObj === null || stateObj === void 0 || (_stateObj$attributes5 = stateObj.attributes) === null || _stateObj$attributes5 === void 0 ? void 0 : _stateObj$attributes5.media_title) !== null && _stateObj$attributes$2 !== void 0 ? _stateObj$attributes$2 : null
       };
     });
     return snapshot;
@@ -10701,7 +10709,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     while (Date.now() - start < timeout) {
       await this._delay(150);
       for (const id of entityIds) {
-        var _this$hass6, _stateObj$attributes$3, _stateObj$attributes4, _stateObj$attributes$4, _stateObj$attributes5;
+        var _this$hass6, _stateObj$attributes$3, _stateObj$attributes6, _stateObj$attributes$4, _stateObj$attributes7;
         if (!id) continue;
         const stateObj = (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[id];
         if (!stateObj) continue;
@@ -10709,8 +10717,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
           return true;
         }
         const previous = snapshot[id] || {};
-        const currentMediaId = (_stateObj$attributes$3 = (_stateObj$attributes4 = stateObj.attributes) === null || _stateObj$attributes4 === void 0 ? void 0 : _stateObj$attributes4.media_content_id) !== null && _stateObj$attributes$3 !== void 0 ? _stateObj$attributes$3 : null;
-        const currentTitle = (_stateObj$attributes$4 = (_stateObj$attributes5 = stateObj.attributes) === null || _stateObj$attributes5 === void 0 ? void 0 : _stateObj$attributes5.media_title) !== null && _stateObj$attributes$4 !== void 0 ? _stateObj$attributes$4 : null;
+        const currentMediaId = (_stateObj$attributes$3 = (_stateObj$attributes6 = stateObj.attributes) === null || _stateObj$attributes6 === void 0 ? void 0 : _stateObj$attributes6.media_content_id) !== null && _stateObj$attributes$3 !== void 0 ? _stateObj$attributes$3 : null;
+        const currentTitle = (_stateObj$attributes$4 = (_stateObj$attributes7 = stateObj.attributes) === null || _stateObj$attributes7 === void 0 ? void 0 : _stateObj$attributes7.media_title) !== null && _stateObj$attributes$4 !== void 0 ? _stateObj$attributes$4 : null;
         if (currentMediaId && currentMediaId !== previous.mediaId) {
           return true;
         }
@@ -12304,15 +12312,15 @@ class YetAnotherMediaPlayerCard extends i$2 {
     });
   }
   _getArtworkOverrideCacheKey(override) {
-    var _stateObj$attributes6, _stateObj$attributes7, _this$_artworkOverrid;
+    var _stateObj$attributes8, _stateObj$attributes9, _this$_artworkOverrid;
     let type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "image";
     let stateObj = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     this._ensureArtworkOverrideIndexMap();
 
     // Include media title and artist in the key if available to ensure
     // templates are re-evaluated when the track changes.
-    const mediaTitle = (stateObj === null || stateObj === void 0 || (_stateObj$attributes6 = stateObj.attributes) === null || _stateObj$attributes6 === void 0 ? void 0 : _stateObj$attributes6.media_title) || "";
-    const mediaArtist = (stateObj === null || stateObj === void 0 || (_stateObj$attributes7 = stateObj.attributes) === null || _stateObj$attributes7 === void 0 ? void 0 : _stateObj$attributes7.media_artist) || "";
+    const mediaTitle = (stateObj === null || stateObj === void 0 || (_stateObj$attributes8 = stateObj.attributes) === null || _stateObj$attributes8 === void 0 ? void 0 : _stateObj$attributes8.media_title) || "";
+    const mediaArtist = (stateObj === null || stateObj === void 0 || (_stateObj$attributes9 = stateObj.attributes) === null || _stateObj$attributes9 === void 0 ? void 0 : _stateObj$attributes9.media_artist) || "";
     const stateKey = "".concat(mediaTitle, ":").concat(mediaArtist);
     const idx = override && ((_this$_artworkOverrid = this._artworkOverrideIndexMap) === null || _this$_artworkOverrid === void 0 ? void 0 : _this$_artworkOverrid.get(override));
     const prefix = typeof idx === "number" ? idx : "generic";
@@ -12981,11 +12989,16 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Return grouping key
   _getGroupKey(id) {
-    var _this$hass14;
+    var _this$hass14, _this$hass15;
     // Use the grouping entity (e.g., Music Assistant) for membership
     const groupingId = this._getGroupingEntityIdByEntityId(id);
     const st = (_this$hass14 = this.hass) === null || _this$hass14 === void 0 || (_this$hass14 = _this$hass14.states) === null || _this$hass14 === void 0 ? void 0 : _this$hass14[groupingId];
     if (!st) return id;
+
+    // If this entity isn't group capable (or is a preset group), treat it as its own group
+    if (!this._isGroupCapable(st)) {
+      return id;
+    }
     const membersRaw = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
 
     // If no group members or just itself, it's not grouped
@@ -12993,6 +13006,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // First member is the master
     const masterGroupingId = membersRaw[0];
+
+    // Check if the master is group capable (if it's a preset group, it won't be)
+    const masterState = (_this$hass15 = this.hass) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15.states) === null || _this$hass15 === void 0 ? void 0 : _this$hass15[masterGroupingId];
+    if (!this._isGroupCapable(masterState)) {
+      return id;
+    }
 
     // Find configured entity corresponding to this master grouping ID
     const masterEntityId = this.entityIds.find(eId => {
@@ -13115,10 +13134,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return this.hass.states[resolvedMaId];
   }
   get currentActivePlaybackEntityId() {
-    var _this$hass15, _this$hass16;
+    var _this$hass16, _this$hass17;
     // Cache the result to prevent continuous re-calling during renders
     // Only recalculate if the cache is invalid or if key state has changed
-    const cacheKey = "".concat(this._selectedIndex, "-").concat((_this$hass15 = this.hass) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15.states) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15[this.currentEntityId]) === null || _this$hass15 === void 0 ? void 0 : _this$hass15.state, "-").concat((_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16[this._getSearchEntityId(this._selectedIndex)]) === null || _this$hass16 === void 0 ? void 0 : _this$hass16.state);
+    const cacheKey = "".concat(this._selectedIndex, "-").concat((_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16[this.currentEntityId]) === null || _this$hass16 === void 0 ? void 0 : _this$hass16.state, "-").concat((_this$hass17 = this.hass) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17.states) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17[this._getSearchEntityId(this._selectedIndex)]) === null || _this$hass17 === void 0 ? void 0 : _this$hass17.state);
     if (this._cachedActivePlaybackEntityId === undefined || this._cachedActivePlaybackEntityKey !== cacheKey) {
       this._cachedActivePlaybackEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
       this._cachedActivePlaybackEntityKey = cacheKey;
@@ -13126,9 +13145,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return this._cachedActivePlaybackEntityId;
   }
   get currentActivePlaybackStateObj() {
-    var _this$hass17;
+    var _this$hass18;
     const id = this.currentActivePlaybackEntityId;
-    return id ? (_this$hass17 = this.hass) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17.states) === null || _this$hass17 === void 0 ? void 0 : _this$hass17[id] : null;
+    return id ? (_this$hass18 = this.hass) === null || _this$hass18 === void 0 || (_this$hass18 = _this$hass18.states) === null || _this$hass18 === void 0 ? void 0 : _this$hass18[id] : null;
   }
   get currentVolumeStateObj() {
     const entityId = this._getVolumeEntity(this._selectedIndex);
@@ -13292,8 +13311,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
       this._showResolvedEntities = false;
       this.requestUpdate();
     }, localize('common.back'), localize('card.menu.select_entity'), this._getResolvedEntitiesForCurrentChip().map(entityId => {
-      var _this$hass18, _state$attributes3, _state$attributes4;
-      const state = (_this$hass18 = this.hass) === null || _this$hass18 === void 0 || (_this$hass18 = _this$hass18.states) === null || _this$hass18 === void 0 ? void 0 : _this$hass18[entityId];
+      var _this$hass19, _state$attributes3, _state$attributes4;
+      const state = (_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[entityId];
       const name = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.friendly_name) || entityId;
       const icon = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.icon) || "mdi:help-circle";
       const idx = this._selectedIndex;
@@ -13671,8 +13690,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
         // Take a snapshot of who is currently playing.
         this._manualSelectPlayingSet = new Set();
         for (const id of this.entityIds) {
-          var _this$hass19;
-          const st = (_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[id];
+          var _this$hass20;
+          const st = (_this$hass20 = this.hass) === null || _this$hass20 === void 0 || (_this$hass20 = _this$hass20.states) === null || _this$hass20 === void 0 ? void 0 : _this$hass20[id];
           if (this._isEntityPlaying(st)) {
             this._manualSelectPlayingSet.add(id);
           }
@@ -13821,11 +13840,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return iconOnly ? "" : "Action";
   }
   async _onControlClick(action) {
-    var _this$hass20;
+    var _this$hass21;
     // Use the unified entity resolution system for control actions
     const targetEntity = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     if (!targetEntity) return;
-    const stateObj = ((_this$hass20 = this.hass) === null || _this$hass20 === void 0 || (_this$hass20 = _this$hass20.states) === null || _this$hass20 === void 0 ? void 0 : _this$hass20[targetEntity]) || this.currentStateObj;
+    const stateObj = ((_this$hass21 = this.hass) === null || _this$hass21 === void 0 || (_this$hass21 = _this$hass21.states) === null || _this$hass21 === void 0 ? void 0 : _this$hass21[targetEntity]) || this.currentStateObj;
     switch (action) {
       case "play_pause":
         if (this._isEntityPlaying(stateObj)) {
@@ -13931,10 +13950,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
       case "power":
         {
-          var _this$hass21;
+          var _this$hass22;
           // Toggle main entity power (physical power behavior)
           const mainId = this.currentEntityId;
-          const mainState = ((_this$hass21 = this.hass) === null || _this$hass21 === void 0 || (_this$hass21 = _this$hass21.states) === null || _this$hass21 === void 0 ? void 0 : _this$hass21[mainId]) || stateObj;
+          const mainState = ((_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[mainId]) || stateObj;
           const svc = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "off" ? "turn_on" : "turn_off";
           this.hass.callService("media_player", svc, {
             entity_id: mainId
@@ -13954,10 +13973,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
       case "favorite":
         {
-          var _this$hass22, _maState$attributes9;
+          var _this$hass23, _maState$attributes9;
           // Press the associated favorite button entity OR unfavorite if already favorited
           const favoriteButtonEntity = this._getFavoriteButtonEntity();
-          const maState = (_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[targetEntity];
+          const maState = (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[targetEntity];
           const mediaContentId = maState === null || maState === void 0 || (_maState$attributes9 = maState.attributes) === null || _maState$attributes9 === void 0 ? void 0 : _maState$attributes9.media_content_id;
 
           // Check if track is already favorited
@@ -14051,7 +14070,6 @@ class YetAnotherMediaPlayerCard extends i$2 {
    * With group_volume: true/undefined, applies group logic.
    */
   async _onVolumeChange(e) {
-    var _state$attributes5;
     const idx = this._selectedIndex;
     const groupingEntityTemplate = this._getGroupingEntityId(idx);
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
@@ -14070,7 +14088,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
 
     // Group volume logic: ONLY runs if group_volume is true/undefined
-    if (Array.isArray(state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.group_members) && state.attributes.group_members.length) {
+    // AND it's a group-capable entity (preset groups are excluded via _isGroupCapable)
+    if (this._isCurrentlyGrouped(state)) {
       var _this$currentVolumeSt;
       // Get the main entity and all grouped members
       const mainEntity = this.entityObjs[idx].entity_id;
@@ -14120,7 +14139,6 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   async _onVolumeStep(direction) {
-    var _state$attributes6;
     const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
     if (!entity) return;
@@ -14137,7 +14155,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const groupingEntityTemplate = this._getGroupingEntityId(idx);
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
     const state = this.hass.states[groupingEntity];
-    if (Array.isArray(state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.group_members) && state.attributes.group_members.length) {
+    if (this._isCurrentlyGrouped(state)) {
       // Grouped: apply group gain step
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -14188,7 +14206,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   async _onMuteToggle() {
-    var _stateObj$attributes$5, _stateObj$attributes$6, _state;
+    var _stateObj$attributes$5, _stateObj$attributes$6;
     const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
     if (!entity) return;
@@ -14246,7 +14264,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     } catch (error) {
       console.error('yamp: Error in grouping detection:', error);
     }
-    if (Array.isArray((_state = state) === null || _state === void 0 || (_state = _state.attributes) === null || _state === void 0 ? void 0 : _state.group_members) && state.attributes.group_members.length) {
+    if (this._isCurrentlyGrouped(state)) {
       // Grouped: apply mute to all group members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -14331,13 +14349,13 @@ class YetAnotherMediaPlayerCard extends i$2 {
   }
   async _onProgressBarClick(e) {
     try {
-      var _this$hass23, _this$hass24, _this$hass25;
+      var _this$hass24, _this$hass25, _this$hass26;
       e.stopPropagation();
       // For seeking, we want to target the entity that is actually playing
       const mainId = this.currentEntityId;
       const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-      const mainState = mainId ? (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[mainId] : null;
-      const maState = maId ? (_this$hass24 = this.hass) === null || _this$hass24 === void 0 || (_this$hass24 = _this$hass24.states) === null || _this$hass24 === void 0 ? void 0 : _this$hass24[maId] : null;
+      const mainState = mainId ? (_this$hass24 = this.hass) === null || _this$hass24 === void 0 || (_this$hass24 = _this$hass24.states) === null || _this$hass24 === void 0 ? void 0 : _this$hass24[mainId] : null;
+      const maState = maId ? (_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[maId] : null;
       let targetEntity;
       if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
         targetEntity = this._controlFocusEntityId;
@@ -14357,7 +14375,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
           targetEntity = await this._resolveTemplateAtActionTime(entityTemplate, this.currentEntityId);
         }
       }
-      const stateObj = ((_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[targetEntity]) || this.currentStateObj;
+      const stateObj = ((_this$hass26 = this.hass) === null || _this$hass26 === void 0 || (_this$hass26 = _this$hass26.states) === null || _this$hass26 === void 0 ? void 0 : _this$hass26[targetEntity]) || this.currentStateObj;
       if (!targetEntity || !stateObj || !stateObj.attributes) {
         console.warn("YAMP: Cannot seek - invalid target or state", targetEntity, stateObj);
         return;
@@ -14392,7 +14410,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   render() {
-    var _this$config$actions2, _this$_optimisticPlay, _this$hass26, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass27, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$config17;
+    var _this$config$actions2, _this$_optimisticPlay, _this$hass27, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass28, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$config17;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -14492,7 +14510,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._getResolvedPlaybackEntityIdSync(this._selectedIndex);
     // Also get the actual resolved MA entity for state detection (can be unconfigured)
     const actualResolvedMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const actualMaState = actualResolvedMaId ? (_this$hass26 = this.hass) === null || _this$hass26 === void 0 || (_this$hass26 = _this$hass26.states) === null || _this$hass26 === void 0 ? void 0 : _this$hass26[actualResolvedMaId] : null;
+    const actualMaState = actualResolvedMaId ? (_this$hass27 = this.hass) === null || _this$hass27 === void 0 || (_this$hass27 = _this$hass27.states) === null || _this$hass27 === void 0 ? void 0 : _this$hass27[actualResolvedMaId] : null;
 
     // Update state tracking for optimistic playback and set/clear MA linger window
     const prevMain = this._lastMainState;
@@ -14541,7 +14559,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // Use the unified entity resolution system for playback state
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
-    const playbackStateObj = (_this$hass27 = this.hass) === null || _this$hass27 === void 0 || (_this$hass27 = _this$hass27.states) === null || _this$hass27 === void 0 ? void 0 : _this$hass27[playbackEntityId];
+    const playbackStateObj = (_this$hass28 = this.hass) === null || _this$hass28 === void 0 || (_this$hass28 = _this$hass28.states) === null || _this$hass28 === void 0 ? void 0 : _this$hass28[playbackEntityId];
 
     // Use the unified entity resolution system for playback state
     const finalPlaybackStateObj = playbackStateObj;
@@ -14744,7 +14762,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       mediaArtworkOverrides: ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.media_artwork_overrides) || [],
       fallbackArtwork: ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
-        var _this$hass28;
+        var _this$hass29;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -14752,12 +14770,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
         // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass28 = this.hass) === null || _this$hass28 === void 0 || (_this$hass28 = _this$hass28.states) === null || _this$hass28 === void 0 ? void 0 : _this$hass28[playbackEntityId];
+        const playbackState = (_this$hass29 = this.hass) === null || _this$hass29 === void 0 || (_this$hass29 = _this$hass29.states) === null || _this$hass29 === void 0 ? void 0 : _this$hass29[playbackEntityId];
         const anyPlaying = this._isEntityPlaying(playbackState);
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass29, _this$hass30;
+        var _this$hass30, _this$hass31;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -14765,8 +14783,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
         // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass29 = this.hass) === null || _this$hass29 === void 0 || (_this$hass29 = _this$hass29.states) === null || _this$hass29 === void 0 ? void 0 : _this$hass29[playbackEntityId];
-        const mainState = (_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[mainId];
+        const playbackState = (_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[playbackEntityId];
+        const mainState = (_this$hass31 = this.hass) === null || _this$hass31 === void 0 || (_this$hass31 = _this$hass31.states) === null || _this$hass31 === void 0 ? void 0 : _this$hass31[mainId];
 
         // Prefer playback entity artwork, fallback to main entity
         const playbackArtwork = this._getArtworkUrl(playbackState);
@@ -14774,7 +14792,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         return playbackArtwork || mainArtwork;
       },
       getIsMaActive: id => {
-        var _this$hass31;
+        var _this$hass32;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -14786,7 +14804,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
         // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass31 = this.hass) === null || _this$hass31 === void 0 || (_this$hass31 = _this$hass31.states) === null || _this$hass31 === void 0 ? void 0 : _this$hass31[playbackEntityId];
+        const playbackState = (_this$hass32 = this.hass) === null || _this$hass32 === void 0 || (_this$hass32 = _this$hass32.states) === null || _this$hass32 === void 0 ? void 0 : _this$hass32[playbackEntityId];
 
         // Check if the playback entity is the MA entity and is playing
         return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && this._isEntityPlaying(playbackState);
@@ -14906,31 +14924,31 @@ class YetAnotherMediaPlayerCard extends i$2 {
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
       getIsChipPlaying: (id, isSelected) => {
-        var _this$hass32;
+        var _this$hass33;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
         if (idx < 0) return isSelected ? !this._isIdle : false;
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass32 = this.hass) === null || _this$hass32 === void 0 || (_this$hass32 = _this$hass32.states) === null || _this$hass32 === void 0 ? void 0 : _this$hass32[playbackEntityId];
+        const playbackState = (_this$hass33 = this.hass) === null || _this$hass33 === void 0 || (_this$hass33 = _this$hass33.states) === null || _this$hass33 === void 0 ? void 0 : _this$hass33[playbackEntityId];
         const anyPlaying = this._isEntityPlaying(playbackState);
         return isSelected ? !this._isIdle : anyPlaying;
       },
       getChipArt: id => {
-        var _this$hass33, _this$hass34;
+        var _this$hass34, _this$hass35;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
         if (idx < 0) return null;
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass33 = this.hass) === null || _this$hass33 === void 0 || (_this$hass33 = _this$hass33.states) === null || _this$hass33 === void 0 ? void 0 : _this$hass33[playbackEntityId];
-        const mainState = (_this$hass34 = this.hass) === null || _this$hass34 === void 0 || (_this$hass34 = _this$hass34.states) === null || _this$hass34 === void 0 ? void 0 : _this$hass34[mainId];
+        const playbackState = (_this$hass34 = this.hass) === null || _this$hass34 === void 0 || (_this$hass34 = _this$hass34.states) === null || _this$hass34 === void 0 ? void 0 : _this$hass34[playbackEntityId];
+        const mainState = (_this$hass35 = this.hass) === null || _this$hass35 === void 0 || (_this$hass35 = _this$hass35.states) === null || _this$hass35 === void 0 ? void 0 : _this$hass35[mainId];
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
         return playbackArtwork || mainArtwork;
       },
       getIsMaActive: id => {
-        var _this$hass35;
+        var _this$hass36;
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
@@ -14938,7 +14956,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         const entityObj = this.entityObjs[idx];
         if (!(entityObj !== null && entityObj !== void 0 && entityObj.music_assistant_entity)) return false;
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass35 = this.hass) === null || _this$hass35 === void 0 || (_this$hass35 = _this$hass35.states) === null || _this$hass35 === void 0 ? void 0 : _this$hass35[playbackEntityId];
+        const playbackState = (_this$hass36 = this.hass) === null || _this$hass36 === void 0 || (_this$hass36 = _this$hass36.states) === null || _this$hass36 === void 0 ? void 0 : _this$hass36[playbackEntityId];
         return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && this._isEntityPlaying(playbackState);
       },
       isIdle: this._isIdle,
