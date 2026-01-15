@@ -143,6 +143,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return Array.isArray(stateObj.attributes?.group_members);
   }
 
+  // Returns true if entity is group-capable AND currently has members
+  _isCurrentlyGrouped(stateObj) {
+    if (!this._isGroupCapable(stateObj)) return false;
+    return Array.isArray(stateObj?.attributes?.group_members) && stateObj.attributes.group_members.length > 0;
+  }
+
   // Find button entities associated with a Music Assistant entity
   _findAssociatedButtonEntities(maEntityId) {
     return findAssociatedButtonEntities(this.hass, maEntityId);
@@ -5196,7 +5202,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Group volume logic: ONLY runs if group_volume is true/undefined
     // AND it's a group-capable entity (preset groups are excluded via _isGroupCapable)
-    if (this._isGroupCapable(state) && Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
+    if (this._isCurrentlyGrouped(state)) {
       // Get the main entity and all grouped members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -5267,7 +5273,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
     const state = this.hass.states[groupingEntity];
 
-    if (this._isGroupCapable(state) && Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
+    if (this._isCurrentlyGrouped(state)) {
       // Grouped: apply group gain step
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -5379,7 +5385,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       console.error('yamp: Error in grouping detection:', error);
     }
 
-    if (this._isGroupCapable(state) && Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
+    if (this._isCurrentlyGrouped(state)) {
       // Grouped: apply mute to all group members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
