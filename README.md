@@ -757,8 +757,8 @@ To contribute a translation:
     - Add it to the `languages` object:
       ```javascript
       const languages = {
-        en: en,
-        fr: fr,
+        en,
+        fr,
       };
       ```
 4. **Test** – Run npm run build, copy the bundled file to your home assistant instance, and switch your Home Assistant language to your new language and verify the card displays correctly.

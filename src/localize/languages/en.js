@@ -21,8 +21,7 @@ export default {
         "unavailable": "Unavailable",
         "back": "Back",
         "cancel": "Cancel",
-        "reset_default": "Reset to default",
-        "loading": "Loading..."
+        "reset_default": "Reset to default"
     },
     "editor": {
         "tabs": {

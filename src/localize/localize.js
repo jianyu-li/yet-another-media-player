@@ -1,7 +1,7 @@
 import en from './languages/en.js';
 
 const languages = {
-    en: en,
+    en,
 };
 
 export function localize(string, search = '', replace = '') {

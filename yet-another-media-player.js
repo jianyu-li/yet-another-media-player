@@ -1158,8 +1158,7 @@ var en = {
     "unavailable": "Unavailable",
     "back": "Back",
     "cancel": "Cancel",
-    "reset_default": "Reset to default",
-    "loading": "Loading..."
+    "reset_default": "Reset to default"
   },
   "editor": {
     "tabs": {
@@ -1407,7 +1406,7 @@ var en = {
 };
 
 const languages = {
-  en: en
+  en
 };
 function localize(string) {
   let search = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
