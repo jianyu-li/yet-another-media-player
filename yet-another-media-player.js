@@ -9439,10 +9439,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return (stateObj.attributes.supported_features & featureBit) !== 0;
   }
   _isGroupCapable(stateObj) {
-    var _stateObj$attributes;
+    var _stateObj$attributes, _stateObj$attributes2;
     if (!stateObj) return false;
+    if (((_stateObj$attributes = stateObj.attributes) === null || _stateObj$attributes === void 0 ? void 0 : _stateObj$attributes.mass_player_type) === 'group') return false;
     if (this._supportsFeature(stateObj, SUPPORT_GROUPING)) return true;
-    return Array.isArray((_stateObj$attributes = stateObj.attributes) === null || _stateObj$attributes === void 0 ? void 0 : _stateObj$attributes.group_members);
+    return Array.isArray((_stateObj$attributes2 = stateObj.attributes) === null || _stateObj$attributes2 === void 0 ? void 0 : _stateObj$attributes2.group_members);
   }
 
   // Find button entities associated with a Music Assistant entity
@@ -10682,12 +10683,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return snapshot;
     }
     entityIds.forEach(id => {
-      var _this$hass5, _stateObj$state2, _stateObj$attributes$, _stateObj$attributes2, _stateObj$attributes$2, _stateObj$attributes3;
+      var _this$hass5, _stateObj$state2, _stateObj$attributes$, _stateObj$attributes3, _stateObj$attributes$2, _stateObj$attributes4;
       const stateObj = id ? (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[id] : null;
       snapshot[id] = {
         state: (_stateObj$state2 = stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== null && _stateObj$state2 !== void 0 ? _stateObj$state2 : null,
-        mediaId: (_stateObj$attributes$ = stateObj === null || stateObj === void 0 || (_stateObj$attributes2 = stateObj.attributes) === null || _stateObj$attributes2 === void 0 ? void 0 : _stateObj$attributes2.media_content_id) !== null && _stateObj$attributes$ !== void 0 ? _stateObj$attributes$ : null,
-        mediaTitle: (_stateObj$attributes$2 = stateObj === null || stateObj === void 0 || (_stateObj$attributes3 = stateObj.attributes) === null || _stateObj$attributes3 === void 0 ? void 0 : _stateObj$attributes3.media_title) !== null && _stateObj$attributes$2 !== void 0 ? _stateObj$attributes$2 : null
+        mediaId: (_stateObj$attributes$ = stateObj === null || stateObj === void 0 || (_stateObj$attributes3 = stateObj.attributes) === null || _stateObj$attributes3 === void 0 ? void 0 : _stateObj$attributes3.media_content_id) !== null && _stateObj$attributes$ !== void 0 ? _stateObj$attributes$ : null,
+        mediaTitle: (_stateObj$attributes$2 = stateObj === null || stateObj === void 0 || (_stateObj$attributes4 = stateObj.attributes) === null || _stateObj$attributes4 === void 0 ? void 0 : _stateObj$attributes4.media_title) !== null && _stateObj$attributes$2 !== void 0 ? _stateObj$attributes$2 : null
       };
     });
     return snapshot;
@@ -10701,7 +10702,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     while (Date.now() - start < timeout) {
       await this._delay(150);
       for (const id of entityIds) {
-        var _this$hass6, _stateObj$attributes$3, _stateObj$attributes4, _stateObj$attributes$4, _stateObj$attributes5;
+        var _this$hass6, _stateObj$attributes$3, _stateObj$attributes5, _stateObj$attributes$4, _stateObj$attributes6;
         if (!id) continue;
         const stateObj = (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[id];
         if (!stateObj) continue;
@@ -10709,8 +10710,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
           return true;
         }
         const previous = snapshot[id] || {};
-        const currentMediaId = (_stateObj$attributes$3 = (_stateObj$attributes4 = stateObj.attributes) === null || _stateObj$attributes4 === void 0 ? void 0 : _stateObj$attributes4.media_content_id) !== null && _stateObj$attributes$3 !== void 0 ? _stateObj$attributes$3 : null;
-        const currentTitle = (_stateObj$attributes$4 = (_stateObj$attributes5 = stateObj.attributes) === null || _stateObj$attributes5 === void 0 ? void 0 : _stateObj$attributes5.media_title) !== null && _stateObj$attributes$4 !== void 0 ? _stateObj$attributes$4 : null;
+        const currentMediaId = (_stateObj$attributes$3 = (_stateObj$attributes5 = stateObj.attributes) === null || _stateObj$attributes5 === void 0 ? void 0 : _stateObj$attributes5.media_content_id) !== null && _stateObj$attributes$3 !== void 0 ? _stateObj$attributes$3 : null;
+        const currentTitle = (_stateObj$attributes$4 = (_stateObj$attributes6 = stateObj.attributes) === null || _stateObj$attributes6 === void 0 ? void 0 : _stateObj$attributes6.media_title) !== null && _stateObj$attributes$4 !== void 0 ? _stateObj$attributes$4 : null;
         if (currentMediaId && currentMediaId !== previous.mediaId) {
           return true;
         }
@@ -12304,15 +12305,15 @@ class YetAnotherMediaPlayerCard extends i$2 {
     });
   }
   _getArtworkOverrideCacheKey(override) {
-    var _stateObj$attributes6, _stateObj$attributes7, _this$_artworkOverrid;
+    var _stateObj$attributes7, _stateObj$attributes8, _this$_artworkOverrid;
     let type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "image";
     let stateObj = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     this._ensureArtworkOverrideIndexMap();
 
     // Include media title and artist in the key if available to ensure
     // templates are re-evaluated when the track changes.
-    const mediaTitle = (stateObj === null || stateObj === void 0 || (_stateObj$attributes6 = stateObj.attributes) === null || _stateObj$attributes6 === void 0 ? void 0 : _stateObj$attributes6.media_title) || "";
-    const mediaArtist = (stateObj === null || stateObj === void 0 || (_stateObj$attributes7 = stateObj.attributes) === null || _stateObj$attributes7 === void 0 ? void 0 : _stateObj$attributes7.media_artist) || "";
+    const mediaTitle = (stateObj === null || stateObj === void 0 || (_stateObj$attributes7 = stateObj.attributes) === null || _stateObj$attributes7 === void 0 ? void 0 : _stateObj$attributes7.media_title) || "";
+    const mediaArtist = (stateObj === null || stateObj === void 0 || (_stateObj$attributes8 = stateObj.attributes) === null || _stateObj$attributes8 === void 0 ? void 0 : _stateObj$attributes8.media_artist) || "";
     const stateKey = "".concat(mediaTitle, ":").concat(mediaArtist);
     const idx = override && ((_this$_artworkOverrid = this._artworkOverrideIndexMap) === null || _this$_artworkOverrid === void 0 ? void 0 : _this$_artworkOverrid.get(override));
     const prefix = typeof idx === "number" ? idx : "generic";
@@ -12981,14 +12982,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Return grouping key
   _getGroupKey(id) {
-    var _this$hass14, _st$attributes, _this$hass15, _masterState$attribut;
+    var _this$hass14, _this$hass15;
     // Use the grouping entity (e.g., Music Assistant) for membership
     const groupingId = this._getGroupingEntityIdByEntityId(id);
     const st = (_this$hass14 = this.hass) === null || _this$hass14 === void 0 || (_this$hass14 = _this$hass14.states) === null || _this$hass14 === void 0 ? void 0 : _this$hass14[groupingId];
     if (!st) return id;
 
-    // Music Assistant preset groups should be treated as separate entities
-    if (((_st$attributes = st.attributes) === null || _st$attributes === void 0 ? void 0 : _st$attributes.mass_player_type) === 'group') {
+    // If this entity isn't group capable (or is a preset group), treat it as its own group
+    if (!this._isGroupCapable(st)) {
       return id;
     }
     const membersRaw = Array.isArray(st.attributes.group_members) ? st.attributes.group_members : [];
@@ -12999,9 +13000,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // First member is the master
     const masterGroupingId = membersRaw[0];
 
-    // Check if the master is a Music Assistant preset group
+    // Check if the master is group capable (if it's a preset group, it won't be)
     const masterState = (_this$hass15 = this.hass) === null || _this$hass15 === void 0 || (_this$hass15 = _this$hass15.states) === null || _this$hass15 === void 0 ? void 0 : _this$hass15[masterGroupingId];
-    if ((masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.mass_player_type) === 'group') {
+    if (!this._isGroupCapable(masterState)) {
       return id;
     }
 
@@ -13190,12 +13191,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return E;
   }
   _renderGroupingSheet() {
-    var _masterState$attribut2;
+    var _masterState$attribut;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
     const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
-    const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut2 = masterState.attributes) === null || _masterState$attribut2 === void 0 ? void 0 : _masterState$attribut2.group_members) && masterState.attributes.group_members.length > 1;
+    const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) && masterState.attributes.group_members.length > 1;
     const groupPlayerIds = [];
     this.entityIds.indexOf(this.currentEntityId);
     const myGroupKey = this._getGroupKey(this.currentEntityId);
@@ -13214,8 +13215,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
         // Or if it IS a master of a different group
         else if (playerGroupKey === id && playerGroupKey !== myGroupKey) {
-          var _st$attributes2;
-          if (((_st$attributes2 = st.attributes) === null || _st$attributes2 === void 0 || (_st$attributes2 = _st$attributes2.group_members) === null || _st$attributes2 === void 0 ? void 0 : _st$attributes2.length) > 1) {
+          var _st$attributes;
+          if (((_st$attributes = st.attributes) === null || _st$attributes === void 0 || (_st$attributes = _st$attributes.group_members) === null || _st$attributes === void 0 ? void 0 : _st$attributes.length) > 1) {
             isBusy = true;
             busyLabel = localize('common.unavailable');
           }
@@ -13264,10 +13265,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
         this._closeGrouping();
       }
     }, localize('common.back'), localize('card.grouping.title'), groupedAny ? x(_templateObject1 || (_templateObject1 = _taggedTemplateLiteral(["\n          <button class=\"entity-options-item\"\n            @click=", "\n            style=\"flex:0 0 auto; min-width:140px; text-align:center;\">\n            ", "\n          </button>\n        "])), () => this._syncGroupVolume(), localize('card.grouping.sync_volume')) : E, () => groupedAny ? this._ungroupAll() : this._groupAll(), groupedAny ? localize('card.grouping.ungroup_all') : localize('card.grouping.group_all'), sortedGroupIds.length === 0 ? x(_templateObject10 || (_templateObject10 = _taggedTemplateLiteral(["\n          <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n            ", "\n          </div>\n        "])), localize('card.grouping.no_players')) : sortedGroupIds.map(item => {
-      var _masterState$attribut3, _displayVolumeState$a;
+      var _masterState$attribut2, _displayVolumeState$a;
       const id = item.id;
       const actualGroupId = item.groupId;
-      const filteredMembers = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut3 = masterState.attributes) === null || _masterState$attribut3 === void 0 ? void 0 : _masterState$attribut3.group_members) ? masterState.attributes.group_members : [];
+      const filteredMembers = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut2 = masterState.attributes) === null || _masterState$attribut2 === void 0 ? void 0 : _masterState$attribut2.group_members) ? masterState.attributes.group_members : [];
       const grouped = filteredMembers.includes(actualGroupId);
       const name = this.getChipName(id);
       const isBusy = item.isBusy;
@@ -14081,8 +14082,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
 
     // Group volume logic: ONLY runs if group_volume is true/undefined
-    // AND it's not a Music Assistant preset group (MA handles those natively)
-    if (Array.isArray(state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.group_members) && state.attributes.group_members.length && state.attributes.mass_player_type !== 'group') {
+    // AND it's a group-capable entity (preset groups are excluded via _isGroupCapable)
+    if (this._isGroupCapable(state) && Array.isArray(state === null || state === void 0 || (_state$attributes5 = state.attributes) === null || _state$attributes5 === void 0 ? void 0 : _state$attributes5.group_members) && state.attributes.group_members.length) {
       var _this$currentVolumeSt;
       // Get the main entity and all grouped members
       const mainEntity = this.entityObjs[idx].entity_id;
@@ -14149,7 +14150,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const groupingEntityTemplate = this._getGroupingEntityId(idx);
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
     const state = this.hass.states[groupingEntity];
-    if (Array.isArray(state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.group_members) && state.attributes.group_members.length && state.attributes.mass_player_type !== 'group') {
+    if (this._isGroupCapable(state) && Array.isArray(state === null || state === void 0 || (_state$attributes6 = state.attributes) === null || _state$attributes6 === void 0 ? void 0 : _state$attributes6.group_members) && state.attributes.group_members.length) {
       // Grouped: apply group gain step
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -14258,7 +14259,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     } catch (error) {
       console.error('yamp: Error in grouping detection:', error);
     }
-    if (Array.isArray((_state = state) === null || _state === void 0 || (_state = _state.attributes) === null || _state === void 0 ? void 0 : _state.group_members) && state.attributes.group_members.length && state.attributes.mass_player_type !== 'group') {
+    if (this._isGroupCapable(state) && Array.isArray((_state = state) === null || _state === void 0 || (_state = _state.attributes) === null || _state === void 0 ? void 0 : _state.group_members) && state.attributes.group_members.length) {
       // Grouped: apply mute to all group members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -15737,7 +15738,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // No requestUpdate here; overlay close will handle it.
   }
   async _toggleGroup(targetId) {
-    var _masterState$attribut4;
+    var _masterState$attribut3;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
@@ -15749,7 +15750,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const targetGroupId = await this._resolveGroupingEntityId(targetObj, targetId);
     if (!targetGroupId) return;
     const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
-    const grouped = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut4 = masterState.attributes) === null || _masterState$attribut4 === void 0 ? void 0 : _masterState$attribut4.group_members) && masterState.attributes.group_members.includes(targetGroupId);
+    const grouped = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut3 = masterState.attributes) === null || _masterState$attribut3 === void 0 ? void 0 : _masterState$attribut3.group_members) && masterState.attributes.group_members.includes(targetGroupId);
     if (grouped) {
       await this.hass.callService("media_player", "unjoin", {
         entity_id: targetGroupId
@@ -15776,7 +15777,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Group all supported entities to current master
   async _groupAll() {
-    var _masterState$attribut5;
+    var _masterState$attribut4;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
@@ -15787,7 +15788,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (!this._isGroupCapable(masterState)) return;
 
     // Get all other entities that support grouping and are not already grouped with master
-    const alreadyGrouped = Array.isArray((_masterState$attribut5 = masterState.attributes) === null || _masterState$attribut5 === void 0 ? void 0 : _masterState$attribut5.group_members) ? masterState.attributes.group_members : [];
+    const alreadyGrouped = Array.isArray((_masterState$attribut4 = masterState.attributes) === null || _masterState$attribut4 === void 0 ? void 0 : _masterState$attribut4.group_members) ? masterState.attributes.group_members : [];
 
     // Build list of resolved MA entities to join
     const toJoin = [];
@@ -15815,7 +15816,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Ungroup all members from current master
   async _ungroupAll() {
-    var _masterState$attribut6;
+    var _masterState$attribut5;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
@@ -15824,7 +15825,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
     if (!this._isGroupCapable(masterState)) return;
-    const members = Array.isArray((_masterState$attribut6 = masterState.attributes) === null || _masterState$attribut6 === void 0 ? void 0 : _masterState$attribut6.group_members) ? masterState.attributes.group_members : [];
+    const members = Array.isArray((_masterState$attribut5 = masterState.attributes) === null || _masterState$attribut5 === void 0 ? void 0 : _masterState$attribut5.group_members) ? masterState.attributes.group_members : [];
     // Only unjoin those that support grouping
     const toUnjoin = members.filter(id => {
       const st = this.hass.states[id];

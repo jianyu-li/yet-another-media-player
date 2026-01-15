@@ -138,6 +138,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _isGroupCapable(stateObj) {
     if (!stateObj) return false;
+    if (stateObj.attributes?.mass_player_type === 'group') return false;
     if (this._supportsFeature(stateObj, SUPPORT_GROUPING)) return true;
     return Array.isArray(stateObj.attributes?.group_members);
   }
@@ -3862,8 +3863,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const st = this.hass?.states?.[groupingId];
     if (!st) return id;
 
-    // Music Assistant preset groups should be treated as separate entities
-    if (st.attributes?.mass_player_type === 'group') {
+    // If this entity isn't group capable (or is a preset group), treat it as its own group
+    if (!this._isGroupCapable(st)) {
       return id;
     }
 
@@ -3877,9 +3878,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // First member is the master
     const masterGroupingId = membersRaw[0];
 
-    // Check if the master is a Music Assistant preset group
+    // Check if the master is group capable (if it's a preset group, it won't be)
     const masterState = this.hass?.states?.[masterGroupingId];
-    if (masterState?.attributes?.mass_player_type === 'group') {
+    if (!this._isGroupCapable(masterState)) {
       return id;
     }
 
@@ -5194,8 +5195,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // Group volume logic: ONLY runs if group_volume is true/undefined
-    // AND it's not a Music Assistant preset group (MA handles those natively)
-    if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length && state.attributes.mass_player_type !== 'group') {
+    // AND it's a group-capable entity (preset groups are excluded via _isGroupCapable)
+    if (this._isGroupCapable(state) && Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
       // Get the main entity and all grouped members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -5266,7 +5267,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
     const state = this.hass.states[groupingEntity];
 
-    if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length && state.attributes.mass_player_type !== 'group') {
+    if (this._isGroupCapable(state) && Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
       // Grouped: apply group gain step
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
@@ -5378,7 +5379,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       console.error('yamp: Error in grouping detection:', error);
     }
 
-    if (Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length && state.attributes.mass_player_type !== 'group') {
+    if (this._isGroupCapable(state) && Array.isArray(state?.attributes?.group_members) && state.attributes.group_members.length) {
       // Grouped: apply mute to all group members
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [mainEntity, ...state.attributes.group_members];
