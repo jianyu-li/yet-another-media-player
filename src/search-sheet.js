@@ -1,12 +1,14 @@
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { LitElement, html, css, nothing } from "lit";
 import { isMusicAssistantEntity } from "./yamp-utils.js";
+import { localize } from "./localize/localize.js";
+
 
 const playOptions = [
-  { mode: 'replace', icon: 'mdi:playlist-remove', label: 'Replace' },
-  { mode: 'next', icon: 'mdi:playlist-play', label: 'Play Next' },
-  { mode: 'replace_next', icon: 'mdi:playlist-music', label: 'Replace Next' },
-  { mode: 'add', icon: 'mdi:playlist-plus', label: 'Add to Queue' },
+  { mode: 'replace', icon: 'mdi:playlist-remove', label: localize('search.replace') },
+  { mode: 'next', icon: 'mdi:playlist-play', label: localize('search.play_next') },
+  { mode: 'replace_next', icon: 'mdi:playlist-music', label: localize('search.replace_play') },
+  { mode: 'add', icon: 'mdi:playlist-plus', label: localize('search.add_queue') },
 ];
 
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
@@ -130,17 +132,17 @@ export function renderSearchSheet({
           type="text"
           .value=${query || ""}
           @input=${onQueryInput}
-          placeholder="Search music..."
+          placeholder="${localize('editor.placeholders.search')}"
           ?autofocus=${!disableAutofocus}
         />
-        <button @click=${onSearch} ?disabled=${loading || !query}>Search</button>
-        <button @click=${onClose} title="Close Search">✕</button>
+        <button @click=${onSearch} ?disabled=${loading || !query}>${localize('common.search')}</button>
+        <button @click=${onClose} title="${localize('search.close')}">✕</button>
       </div>
-      ${loading ? html`<div class="search-sheet-loading">Loading...</div>` : nothing}
+      ${loading ? html`<div class="search-sheet-loading">${localize('common.loading')}</div>` : nothing}
       ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
       <div class="search-sheet-results">
         ${(results || []).length === 0 && !loading
-      ? html`<div class="search-sheet-empty">No results.</div>`
+      ? html`<div class="search-sheet-empty">${localize('common.no_results')}</div>`
       : (results || []).map(
         (item) => html`
                 <div class="search-sheet-result" style="position:relative;overflow:hidden;">
@@ -173,11 +175,11 @@ export function renderSearchSheet({
                     ` : nothing}
                   </div>
                   <div class="search-sheet-buttons">
-                    <button class="search-sheet-play" @click=${() => onPlay(item)} title="Play Now">
+                    <button class="search-sheet-play" @click=${() => onPlay(item)} title="${localize('common.play_now')}">
                       <ha-icon icon="mdi:play"></ha-icon>
                     </button>
                     ${!(upcomingFilterActive && item.queue_item_id) ? html`
-                      <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="More Options">
+                      <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="${localize('common.more_options')}">
                         <ha-icon icon="mdi:dots-vertical"></ha-icon>
                       </button>
                     ` : nothing}

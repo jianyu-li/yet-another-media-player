@@ -16,6 +16,8 @@ import {
   getSearchResultClickTitle,
   isMusicAssistantEntity
 } from "./yamp-utils.js";
+import { localize } from "./localize/localize.js";
+
 
 import {
   SUPPORT_PAUSE,
@@ -1100,8 +1102,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getSearchResultsCountLabel() {
     const count = this._getSearchResultsCount();
-    const noun = count === 1 ? "result" : "results";
-    return `${count} ${noun}`;
+    const key = count === 1 ? 'search.result' : 'search.results';
+    return `${count} ${localize(key)}`;
   }
 
 
@@ -4040,7 +4042,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
-          Close
+          ${localize('common.close')}
         </button>
         <div class="entity-options-divider"></div>
       </div>
@@ -4054,15 +4056,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._showResolvedEntities = true;
         }
         this.requestUpdate();
-      }}>More Info</button>
-        <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>Search</button>
+      }}>${localize('card.menu.more_info')}</button>
+        <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>${localize('common.search')}</button>
 
         ${Array.isArray(sourceList) && sourceList.length > 0 ? html`
-          <button class="entity-options-item" @click=${() => this._openSourceList()}>Source</button>
+          <button class="entity-options-item" @click=${() => this._openSourceList()}>${localize('card.menu.source')}</button>
         ` : nothing}
         
         ${this._canShowTransferQueueOption() ? html`
-          <button class="entity-options-item" @click=${() => this._openTransferQueue()}>Transfer Queue</button>
+          <button class="entity-options-item" @click=${() => this._openTransferQueue()}>${localize('card.menu.transfer_queue')}</button>
         ` : nothing}
         
         ${this._renderGroupingMenuOption()}
@@ -4110,7 +4112,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
       return html`
-        <button class="entity-options-item" @click=${() => this._openGrouping()}>Group Players</button>
+        <button class="entity-options-item" @click=${() => this._openGrouping()}>${localize('card.menu.group_players')}</button>
       `;
     }
     return nothing;
@@ -4139,13 +4141,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Busy if joined to a DIFFERENT group
         if (playerGroupKey !== id && playerGroupKey !== myGroupKey) {
           isBusy = true;
-          busyLabel = "Unavailable";
+          busyLabel = localize('common.unavailable');
         }
         // Or if it IS a master of a different group
         else if (playerGroupKey === id && playerGroupKey !== myGroupKey) {
           if (st.attributes?.group_members?.length > 1) {
             isBusy = true;
-            busyLabel = "Unavailable";
+            busyLabel = localize('common.unavailable');
           }
         }
 
@@ -4172,13 +4174,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return html`
         <div class="entity-options-header">
           <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
-            Back
+            ${localize('common.back')}
           </button>
           <div class="entity-options-divider"></div>
         </div>
-        <div class="entity-options-title" style="margin-bottom:8px;">Group Players</div>
+        <div class="entity-options-title" style="margin-bottom:8px;">${localize('card.grouping.title')}</div>
         <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-          ${activeIsBusy ? "Player is unavailable" : "No group-capable players available."}
+          ${activeIsBusy ? localize('card.grouping.unavailable') : localize('card.grouping.no_players')}
         </div>
       `;
     }
@@ -4198,28 +4200,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return html`
       <div class="grouping-header group-list-header">
         <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
-          Back
+          ${localize('common.back')}
         </button>
       </div>
-      <div class="entity-options-title" style="margin-bottom:8px; margin-top:8px;">Group Players</div>
+      <div class="entity-options-title" style="margin-bottom:8px; margin-top:8px;">${localize('card.grouping.title')}</div>
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
         ${groupedAny ? html`
           <button class="entity-options-item"
             @click=${() => this._syncGroupVolume()}
             style="flex:0 0 auto; min-width:140px; text-align:center;">
-            Sync Volume
+            ${localize('card.grouping.sync_volume')}
           </button>
         ` : nothing}
         <button class="entity-options-item"
           @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
           style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
-          ${groupedAny ? "Ungroup All" : "Group All"}
+          ${groupedAny ? localize('card.grouping.ungroup_all') : localize('card.grouping.group_all')}
         </button>
       </div>
       <div class="group-list-scroll">
         ${sortedGroupIds.length === 0 ? html`
           <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-            No other group-capable players available.
+            ${localize('card.grouping.no_players')}
           </div>
         ` : sortedGroupIds.map(item => {
       const id = item.id;
@@ -4242,8 +4244,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const isCurrent = id === activeId;
 
       let stateLabel = groupedAny
-        ? (isPrimaryRow ? "Master" : (grouped ? "Joined" : "Available"))
-        : (isCurrent ? "Current" : "Available");
+        ? (isPrimaryRow ? localize('card.grouping.master') : (grouped ? localize('card.grouping.joined') : localize('card.grouping.available')))
+        : (isCurrent ? localize('card.grouping.current') : localize('card.grouping.available'));
 
       if (isBusy) {
         stateLabel = busyLabel || "Unavailable";
@@ -4313,14 +4315,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }}>
-          Back
+          ${localize('common.back')}
         </button>
         <div class="entity-options-divider"></div>
-        <div class="entity-options-title" style="margin-bottom:12px;">Transfer Queue To</div>
+        <div class="entity-options-title" style="margin-bottom:12px;">${localize('card.menu.transfer_to')}</div>
       </div>
       <div class="entity-options-scroll">
         ${!targets.length ? html`
-          <div style="padding: 12px; opacity: 0.75;">No other Music Assistant players available.</div>
+          <div style="padding: 12px; opacity: 0.75;">${localize('card.menu.no_players')}</div>
         ` : html`
           <div style="display:flex;flex-direction:column;gap:8px;">
             ${targets.map(target => html`
@@ -4363,11 +4365,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._showResolvedEntities = false;
         this.requestUpdate();
       }}>
-          Back
+          ${localize('common.back')}
         </button>
         <div class="entity-options-divider"></div>
         <div class="entity-options-resolved-entities" style="margin-top:12px;">
-          <div class="entity-options-title">Select Entity for More Info</div>
+          <div class="entity-options-title">${localize('card.menu.select_entity')}</div>
           <div class="entity-options-resolved-entities-list">
             ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
         const state = this.hass?.states?.[entityId];
@@ -5556,9 +5558,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
     const rowActions = decoratedActions.filter(({ action }) => !action?.in_menu);
     const menuOnlyActions = decoratedActions.filter(({ action }) => action?.in_menu);
-    const activeChipName = showChipsInMenu ? this.getChipName(this.currentEntityId) : null;
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj) return html`<div class="details">Entity not found.</div>`;
+    const activeChipName = this.getChipName(this.currentEntityId);
+    if (!stateObj) return html`<div class="details">${localize('common.not_found')}</div>`;
 
     const currentHiddenControls = this._getHiddenControlsForCurrentEntity();
     const showFavoriteButton = !!this._getFavoriteButtonEntity() && !currentHiddenControls.favorite;
@@ -5572,7 +5574,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <button
             class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
             @click=${() => this._onControlClick("power")}
-            title="Power"
+            title="${localize('common.power')}"
           >
             <ha-icon .icon=${"mdi:power"}></ha-icon>
           </button>
@@ -5582,7 +5584,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           <button
             class="volume-icon-btn favorite-volume-btn"
             @click=${() => this._openQuickSearchOverlay()}
-            title="Search"
+            title="${localize('common.search')}"
           >
             <ha-icon .icon=${"mdi:magnify"}></ha-icon>
           </button>
@@ -5592,7 +5594,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         <button
           class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
           @click=${() => this._onControlClick("favorite")}
-          title="Favorite"
+          title="${localize('common.favorite')}"
         >
           <ha-icon
             style=${favoriteActive ? "color: var(--custom-accent);" : nothing}
@@ -6127,7 +6129,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       @click=${() => {
           if (stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
         }}
-                      title=${stateObj.attributes.media_artist ? "Search for this artist" : ""}
+                      title=${stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
                     >${artist}</div>
                   ` : nothing}
                 </div>
@@ -6331,7 +6333,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     }
                     else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
                   }}
-                        placeholder="Search music..."
+                        placeholder="${localize('editor.placeholders.search')}"
                         style="flex:1; min-width:0; font-size:1.1em;"
                       />
                     <button
@@ -6339,13 +6341,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       style="min-width:80px;"
                       @click=${() => this._handleSearchSubmit()}
                       ?disabled=${this._searchLoading}>
-                      Search
+                      ${localize('common.search')}
                     </button>
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
                       @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
-              Cancel
+              ${localize('common.cancel')}
                     </button>
                   </div>
                   <!--FILTER CHIPS-->
@@ -6371,7 +6373,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           "
                           ?selected=${filter === 'all'}
                           @click=${() => this._doSearch()}
-                        >All</button>
+                        >${localize('search.filters.all')}</button>
                         ${classes.map(c => html`
                           <button
                             class="chip"
@@ -6384,14 +6386,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             ?selected=${filter === c}
                             @click=${() => this._doSearch(c)}
                           >
-                            ${c.charAt(0).toUpperCase() + c.slice(1)}
+                            ${localize(`search.filters.${c}`)}
                           </button>
                         `)}
                       </div>
                     `;
                   })()
                   }
-                  ${this._searchLoading ? html`<div class="entity-options-search-loading">Loading...</div>` : nothing}
+                  ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
                   ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   
                   ${this._usingMusicAssistant && !this._searchLoading ? html`
@@ -6415,12 +6417,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           @click=${this._searchAttempted ? () => {
                       this._toggleFavoritesFilter();
                     } : () => { }}
-                          title="Favorites"
+                          title="${localize('search.favorites')}"
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
                           ${this._initialFavoritesLoaded || this._favoritesFilterActive ? html`
                             <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
-                              Favorites
+                              ${localize('search.favorites')}
                             </span>
                           ` : nothing}
                       </button>
@@ -6442,12 +6444,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           @click=${this._searchAttempted ? () => {
                       this._toggleRecentlyPlayedFilter();
                     } : () => { }}
-                          title="Recently Played"
+                          title="${localize('search.recently_played')}"
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
                           ${this._recentlyPlayedFilterActive ? html`
                             <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
-                              Recently Played
+                              ${localize('search.recently_played')}
                             </span>
                           ` : nothing}
                       </button>
@@ -6470,12 +6472,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             @click=${this._searchAttempted ? () => {
                         this._toggleUpcomingFilter();
                       } : () => { }}
-                            title="Next Up"
+                            title="${localize('search.next_up')}"
                           >
                             <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
                             ${this._upcomingFilterActive ? html`
                               <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
-                                Next Up
+                                ${localize('search.next_up')}
                               </span>
                             ` : nothing}
                         </button>
@@ -6498,12 +6500,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                               @click=${this._searchAttempted ? () => {
                           this._toggleRecommendationsFilter();
                         } : () => { }}
-                              title="Recommendations"
+                              title="${localize('search.recommendations')}"
                             >
-                              <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:lightbulb-on' : 'mdi:lightbulb-on-outline'}></ha-icon>
+                              <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'}></ha-icon>
                               ${this._recommendationsFilterActive ? html`
-                                <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
-                                  Recommendations
+                                <span style="margin-left:6px;font-size:0.81em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                  ${localize('search.recommendations')}
                                 </span>
                               ` : nothing}
                           </button>
@@ -6602,27 +6604,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 </span>
                               </div>
                                 <div class="entity-options-search-buttons">
-                              <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="Play Now">
+                              <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="${localize('common.play_now')}">
                                     <ha-icon icon="mdi:play"></ha-icon>
                                   </button>
                                   ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
-                                    <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="More Options">
+                                    <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="${localize('common.more_options')}">
                                       <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                     </button>
                                   ` : html`
                                     <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->
                                     ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? html`
                                       <div class="queue-controls">
-                                        <button class="queue-btn queue-btn-up" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }} title="Move Up">
+                                        <button class="queue-btn queue-btn-up" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }} title="${localize('search.move_up')}">
                                           <ha-icon icon="mdi:arrow-up"></ha-icon>
                                         </button>
-                                        <button class="queue-btn queue-btn-down" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }} title="Move Down">
+                                        <button class="queue-btn queue-btn-down" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }} title="${localize('search.move_down')}">
                                           <ha-icon icon="mdi:arrow-down"></ha-icon>
                                         </button>
-                                        <button class="queue-btn queue-btn-next" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }} title="Move to Next">
+                                        <button class="queue-btn queue-btn-next" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }} title="${localize('search.move_next')}">
                                           <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
                                         </button>
-                                        <button class="queue-btn queue-btn-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }} title="Remove from Queue">
+                                        <button class="queue-btn queue-btn-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }} title="${localize('search.remove')}">
                                           <ha-icon icon="mdi:close"></ha-icon>
                                         </button>
                                       </div>
@@ -6635,17 +6637,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 </div>
                                 <!-- SLIDE-OUT MENU -->
                                 <div class="search-row-slide-out ${this._activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
-                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace')} title="Replace existing queue and play now">
-                                    <ha-icon icon="mdi:playlist-remove"></ha-icon> Replace
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace')} title="${localize('search.replace_play')}">
+                                    <ha-icon icon="mdi:playlist-remove"></ha-icon> ${localize('search.labels.replace')}
                                   </button>
-                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'next')} title="Play next">
-                                    <ha-icon icon="mdi:playlist-play"></ha-icon> Next
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'next')} title="${localize('search.play_next')}">
+                                    <ha-icon icon="mdi:playlist-play"></ha-icon> ${localize('search.labels.next')}
                                   </button>
-                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace_next')} title="Replace queue">
-                                    <ha-icon icon="mdi:playlist-music"></ha-icon> Replace Next
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace_next')} title="${localize('search.replace')}">
+                                    <ha-icon icon="mdi:playlist-music"></ha-icon> ${localize('search.labels.replace_next')}
                                   </button>
-                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'add')} title="Add to the end of the queue">
-                                    <ha-icon icon="mdi:playlist-plus"></ha-icon> Add
+                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'add')} title="${localize('search.add_queue')}">
+                                    <ha-icon icon="mdi:playlist-plus"></ha-icon> ${localize('search.labels.add')}
                                   </button>
                                   <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); this._activeSearchRowMenuId = null; this.requestUpdate(); }}>
                                     <ha-icon icon="mdi:close"></ha-icon>
@@ -6653,7 +6655,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
                                   ${this._successSearchRowMenuId === item.media_content_id ? html`
                                     <div class="search-row-success-overlay">
-                                      ✅ Added to queue!
+                                      ✅ ${localize('search.added')}
                                     </div>
                                   ` : nothing}
                                 </div>
@@ -6669,7 +6671,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ` : this._showGrouping ? this._renderGroupingSheet() : html`
                 <div class="entity-options-header">
                   <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
-                    Back
+                    ${localize('common.back')}
                   </button>
                   <div class="entity-options-divider"></div>
                 </div>
@@ -6729,13 +6731,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
           })()}
                 </div>
                 <div class="persistent-controls-buttons">
-                  <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="Previous">
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="${localize('card.media_controls.previous')}">
                     <ha-icon icon="mdi:skip-previous"></ha-icon>
                   </button>
-                  <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="Play/Pause">
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="${localize('card.media_controls.play_pause')}">
                     <ha-icon icon=${this._isEntityPlaying(this.currentPlaybackStateObj) ? "mdi:pause" : "mdi:play"}></ha-icon>
                   </button>
-                  <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="Next">
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="${localize('card.media_controls.next')}">
                     <ha-icon icon="mdi:skip-next"></ha-icon>
                   </button>
                 </div>
@@ -6753,9 +6755,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
             return html`
                     <div class="persistent-volume-stepper">
-                      <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="Volume Down">–</button>
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
                       ${percentLabel ? html`<span class="stepper-value">${percentLabel}</span>` : nothing}
-                      <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="Volume Up">+</button>
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
                     </div>
                   `;
           })()}
@@ -7627,13 +7629,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }));
   }
 
-  _openMoreInfo() {
-    this.dispatchEvent(new CustomEvent("hass-more-info", {
-      detail: { entityId: this.currentEntityId },
-      bubbles: true,
-      composed: true,
-    }));
-  }
 }
 
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
