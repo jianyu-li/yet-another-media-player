@@ -116,7 +116,8 @@ export default {
             "not_available_collapsed": "Nicht verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
             "only_available_collapsed": "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
             "only_available_modern": "Nur verfügbar im modernen Layout.",
-            "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben."
+            "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
+            "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird."
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",
@@ -188,7 +189,18 @@ export default {
             "idle_image_entity": "Leerlauf-Bild-Entität",
             "match_entity": "Match-Entität",
             "ma_entity": "Music Assistant Entität",
-            "vol_entity": "Lautstärke-Entität"
+            "vol_entity": "Lautstärke-Entität",
+            "selected_entity_helper": "Ausgewählter Entitäts-Helper"
+        },
+        "action_types": {
+            "menu": "Kartenmenüpunkt öffnen",
+            "service": "Dienst aufrufen",
+            "navigate": "Navigieren",
+            "sync_selected_entity": "Ausgewählte Entität synchronisieren"
+        },
+        "action_helpers": {
+            "sync_selected_entity": "Entität synchronisieren →",
+            "select_helper": "(Helper auswählen)"
         }
     },
     "card": {

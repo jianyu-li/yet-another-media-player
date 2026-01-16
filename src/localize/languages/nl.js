@@ -116,7 +116,8 @@ export default {
             "not_available_collapsed": "Niet beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
             "only_available_collapsed": "Alleen beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
             "only_available_modern": "Alleen beschikbaar met de Moderne lay-out",
-            "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in"
+            "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
+            "selected_entity_helper": "Input-teksthelper die wordt bijgewerkt met de momenteel geselecteerde mediaplayer-entiteit ID."
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",
@@ -188,7 +189,18 @@ export default {
             "idle_image_entity": "Entiteit voor inactieve afbeelding",
             "match_entity": "Match Entiteit",
             "ma_entity": "Music Assistant Entiteit",
-            "vol_entity": "Volume Entiteit"
+            "vol_entity": "Volume Entiteit",
+            "selected_entity_helper": "Geselecteerde entiteitshelper"
+        },
+        "action_types": {
+            "menu": "Open een kaartmenu-item",
+            "service": "Roep een service aan",
+            "navigate": "Navigeren",
+            "sync_selected_entity": "Synchroniseer geselecteerde entiteit"
+        },
+        "action_helpers": {
+            "sync_selected_entity": "Synchroniseer entiteit →",
+            "select_helper": "(selecteer helper)"
         }
     },
     "card": {

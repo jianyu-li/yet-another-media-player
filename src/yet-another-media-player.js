@@ -367,6 +367,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   constructor() {
     super();
     this._selectedIndex = 0;
+    this._lastSyncedEntityId = null;
     this._lastPlaying = null;
     this._manualSelect = false;
     this._lastActiveEntityId = null;
@@ -4600,6 +4601,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Warm the resolved MA/Volume caches for the selected chip
       this._ensureResolvedMaForIndex(this._selectedIndex);
       this._ensureResolvedVolForIndex(this._selectedIndex);
+
+      // Sync selected entity to helper if configured
+      this._updateSelectedEntityHelper();
     }
 
     // Restart progress timer
@@ -5575,8 +5579,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
     const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
     const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
-    const rowActions = decoratedActions.filter(({ action }) => !action?.in_menu);
-    const menuOnlyActions = decoratedActions.filter(({ action }) => action?.in_menu);
+    // Filter out sync_selected_entity actions entirely - they don't render as chips
+    const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity");
+    const rowActions = visibleActions.filter(({ action }) => !action?.in_menu);
+    const menuOnlyActions = visibleActions.filter(({ action }) => action?.in_menu);
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     const activeChipName = this.getChipName(this.currentEntityId);
     if (!stateObj) return html`<div class="details">${localize('common.not_found')}</div>`;
@@ -7646,6 +7652,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
       bubbles: true,
       composed: true,
     }));
+  }
+
+  // Sync selected entity to configured helpers via actions
+  _updateSelectedEntityHelper() {
+    if (!this.hass || !this.config?.actions) return;
+
+    const currentId = this.currentEntityId;
+    if (!currentId || currentId === this._lastSyncedEntityId) return;
+
+    // Find all sync_selected_entity actions
+    const syncActions = this.config.actions.filter(
+      a => a.action === "sync_selected_entity" && a.sync_entity_helper
+    );
+
+    if (syncActions.length === 0) return;
+
+    this._lastSyncedEntityId = currentId;
+
+    for (const action of syncActions) {
+      const helperId = action.sync_entity_helper;
+      // Check if the current state of the helper is already correct to avoid redundant calls
+      const currentState = this.hass.states[helperId]?.state;
+      if (currentState !== currentId) {
+        this.hass.callService("input_text", "set_value", {
+          entity_id: helperId,
+          value: currentId
+        });
+      }
+    }
   }
 
 }

@@ -367,6 +367,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _deriveActionMode(action) {
     if (!action) return "service";
+    if (action.action === "sync_selected_entity" || action.sync_entity_helper) return "sync_selected_entity";
     if (typeof action.menu_item === "string" && action.menu_item.trim() !== "") return "menu";
     const navPath = typeof action.navigation_path === "string" ? action.navigation_path.trim() : "";
     if (action.action === "navigate" || navPath) return "navigate";
@@ -1562,6 +1563,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         .value=${act?.name ?? ""}
                         .helper=${(() => {
         const inMenu = act?.in_menu ? " \u2022 In Menu" : "";
+        if (act?.action === "sync_selected_entity") {
+          return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}`;
+        }
         if (act?.menu_item) {
           return `Open Menu Item: ${act.menu_item}${inMenu}`;
         }
@@ -1585,6 +1589,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         title="${localize('common.edit_action')}"
                         @click=${() => this._onEditAction(idx)}
                       ></ha-icon>
+                      ${act?.action !== "sync_selected_entity" ? html`
                       <ha-icon
                         class="icon-button icon-button-compact icon-button-toggle ${act?.in_menu ? "active" : ""}"
                         icon="${act?.in_menu ? "mdi:menu" : "mdi:view-grid-outline"}"
@@ -1593,6 +1598,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         aria-label="${act?.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
                         @click=${() => this._toggleActionInMenu(idx)}
                       ></ha-icon>
+                      ` : nothing}
                       <ha-icon
                         class="icon-button icon-button-compact"
                         icon="mdi:trash-can"
@@ -1943,9 +1949,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         select: {
           mode: "dropdown",
           options: [
-            { value: "menu", label: "Open a Card Menu Item" },
-            { value: "service", label: "Call a Service" },
-            { value: "navigate", label: "Navigate" }
+            { value: "menu", label: localize('editor.action_types.menu') },
+            { value: "service", label: localize('editor.action_types.service') },
+            { value: "navigate", label: localize('editor.action_types.navigate') },
+            { value: "sync_selected_entity", label: localize('editor.action_types.sync_selected_entity') }
           ]
         }
       }}
@@ -1978,6 +1985,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           if (!action?.navigation_path) {
             this._updateActionProperty("navigation_path", "");
           }
+        } else if (mode === "sync_selected_entity") {
+          this._updateActionProperty("menu_item", undefined);
+          this._updateActionProperty("service", undefined);
+          this._updateActionProperty("service_data", undefined);
+          this._updateActionProperty("script_variable", undefined);
+          this._updateActionProperty("navigation_path", undefined);
+          this._updateActionProperty("navigation_new_tab", undefined);
+          this._updateActionProperty("action", "sync_selected_entity");
         }
       }}
           ></ha-selector>
@@ -2034,6 +2049,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="form-row">
             <div class="config-subtitle">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>
+          </div>
+        ` : nothing}
+        ${actionMode === "sync_selected_entity" ? html`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{ entity: { domain: "input_text" } }}
+              .value=${action?.sync_entity_helper ?? ""}
+              label="${localize('editor.fields.selected_entity_helper')}"
+              @value-changed=${(e) => this._updateActionProperty("sync_entity_helper", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">${localize('editor.subtitles.selected_entity_helper')}</div>
           </div>
         ` : nothing}
         ${actionMode === 'service' ? html`

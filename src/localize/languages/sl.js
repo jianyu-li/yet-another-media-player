@@ -188,7 +188,18 @@ export default {
             "idle_image_entity": "Entiteta slike v mirovanju",
             "match_entity": "Ujemajoča entiteta",
             "ma_entity": "Music Assistant entiteta",
-            "vol_entity": "Entiteta glasnosti"
+            "vol_entity": "Entiteta glasnosti",
+            "selected_entity_helper": "Pomočnik izbrane entitete"
+        },
+        "action_types": {
+            "menu": "Odpri element menija kartice",
+            "service": "Pokliči storitev",
+            "navigate": "Navigiraj",
+            "sync_selected_entity": "Sinhroniziraj izbrano entiteto"
+        },
+        "action_helpers": {
+            "sync_selected_entity": "Sinhroniziraj entiteto →",
+            "select_helper": "(izberi pomočnika)"
         }
     },
     "card": {

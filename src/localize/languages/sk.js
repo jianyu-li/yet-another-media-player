@@ -188,7 +188,18 @@ export default {
             "idle_image_entity": "Entita obrázka pri nečinnosti",
             "match_entity": "Entita pre zhodu",
             "ma_entity": "Entita Music Assistant",
-            "vol_entity": "Entita hlasitosti"
+            "vol_entity": "Entita hlasitosti",
+            "selected_entity_helper": "Pomocník vybratej entity"
+        },
+        "action_types": {
+            "menu": "Otvoriť položku menu karty",
+            "service": "Zavolať službu",
+            "navigate": "Navigovať",
+            "sync_selected_entity": "Synchronizovať vybranú entitu"
+        },
+        "action_helpers": {
+            "sync_selected_entity": "Synchronizovať entitu →",
+            "select_helper": "(vybrať pomocníka)"
         }
     },
     "card": {

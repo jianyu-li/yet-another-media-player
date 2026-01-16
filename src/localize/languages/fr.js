@@ -188,7 +188,18 @@ export default {
             "idle_image_entity": "Entité image veille",
             "match_entity": "Entité de correspondance",
             "ma_entity": "Entité MA",
-            "vol_entity": "Entité Volume"
+            "vol_entity": "Entité Volume",
+            "selected_entity_helper": "Aide à l'entité sélectionnée"
+        },
+        "action_types": {
+            "menu": "Ouvrir un élément de menu",
+            "service": "Appeler un service",
+            "navigate": "Naviguer",
+            "sync_selected_entity": "Synchroniser l'entité sélectionnée"
+        },
+        "action_helpers": {
+            "sync_selected_entity": "Synchroniser l'entité →",
+            "select_helper": "(sélectionner l'aide)"
         }
     },
     "card": {
