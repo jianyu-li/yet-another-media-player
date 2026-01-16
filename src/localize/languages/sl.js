@@ -92,7 +92,7 @@ export default {
             "close_search_on_play": "Samodejno zapri iskanje ob predvajanju.",
             "pin_search_headers": "Pripni iskalno polje in filtre na vrh.",
             "disable_mass": "Onemogoči integracijo Mass Queue.",
-            "swap_pause_stop": "Zamenjaj gumb pavze z gumbom zaustavitve.",
+            "swap_pause_stop": "Zamenjaj gumb pavze z gumbom zaustavitve med uporabo moderne postavitve.",
             "adaptive_controls": "Prilagodi velikost gumbov glede na prostor.",
             "hide_menu_player": "Skrij oznako entitete v meniju.",
             "adaptive_text": "Izberi skupine besedila za prilagajanje velikosti.",
