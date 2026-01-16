@@ -1245,8 +1245,8 @@ var en = {
       "artwork_extend": "Let the artwork background continue underneath the chip and action rows.",
       "artwork_extend_label": "Extend artwork",
       "no_artwork_overrides": "No artwork overrides configured. Use the plus button below to add one.",
-      "entity_current_hint": "Use entity_id: current to target the card's currently selected media player entity. The button below does not work if you use this feature.",
-      "service_data_note": "Changes to the service data below are not committed to the config until the save icon is clicked!",
+      "entity_current_hint": "Use 'entity_id: current' to target the card's currently selected media player entity. Note: The 'Test Action' button will be disabled when using this feature.",
+      "service_data_note": "Changes to the service data below are not committed to the config until the 'Save Service Data' button is clicked!",
       "jinja_template_hint": "Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:",
       "jinja_template_vol_hint": "Enter a Jinja template that resolves to an entity_id (e.g. media_player.office_homepod or remote.soundbar). Example switching volume entity based on a boolean:",
       "not_available_alt_collapsed": "Not available with Alternate Progress Bar or Always Collapsed mode",
@@ -1405,8 +1405,1634 @@ var en = {
   }
 };
 
+var de = {
+  "common": {
+    "not_found": "Entität nicht gefunden.",
+    "search": "Suchen",
+    "power": "Ein/Aus",
+    "favorite": "Favorit",
+    "loading": "Laden...",
+    "no_results": "Keine Ergebnisse.",
+    "close": "Schließen",
+    "vol_up": "Lauter",
+    "vol_down": "Leiser",
+    "media_player": "Mediaplayer",
+    "edit_entity": "Entitätseinstellungen bearbeiten",
+    "edit_action": "Aktionseinstellungen bearbeiten",
+    "mute": "Stumm",
+    "unmute": "Stummschaltung aufheben",
+    "seek": "Suchen",
+    "volume": "Lautstärke",
+    "play_now": "Jetzt abspielen",
+    "more_options": "Weitere Optionen",
+    "unavailable": "Nicht verfügbar",
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "reset_default": "Auf Standard zurücksetzen"
+  },
+  "editor": {
+    "tabs": {
+      "entities": "Entitäten",
+      "behavior": "Verhalten",
+      "look_and_feel": "Design",
+      "artwork": "Artwork",
+      "actions": "Aktionen"
+    },
+    "placeholders": {
+      "search": "Musik suchen..."
+    },
+    "sections": {
+      "artwork": {
+        "general": {
+          "title": "Allgemeine Einstellungen",
+          "description": "Globale Steuerung der Artwork-Anzeige und -Abrufung."
+        },
+        "idle": {
+          "title": "Artwork im Leerlauf",
+          "description": "Zeigt ein statisches Bild oder einen Entitäts-Schnappschuss an, wenn nichts abgespielt wird."
+        },
+        "overrides": {
+          "title": "Artwork-Überschreibungen",
+          "description": "Überschreibungen werden von oben nach unten ausgewertet. Zum Neusortieren ziehen."
+        }
+      },
+      "entities": {
+        "title": "Entitäten*",
+        "description": "Fügen Sie die zu steuernden Mediaplayer hinzu. Entitäten ziehen, um sie neu anzuordnen."
+      },
+      "behavior": {
+        "idle_chips": {
+          "title": "Leerlauf & Chips",
+          "description": "Wählen Sie, wann die Karte in den Leerlauf wechselt und wie sich Entitäts-Chips verhalten."
+        },
+        "interactions_search": {
+          "title": "Interaktionen & Suche",
+          "description": "Feineinstellung des Anpinnens von Entitäten und der Anzahl der Suchergebnisse."
+        }
+      },
+      "look_and_feel": {
+        "theme_layout": {
+          "title": "Theme & Layout",
+          "description": "Anpassung an das Dashboard-Styling und Kontrolle des Platzbedarfs."
+        },
+        "controls_typography": {
+          "title": "Steuerung & Typografie",
+          "description": "Anpassung von Schaltflächengröße, Entitäts-Labels und adaptivem Text."
+        },
+        "collapsed_idle": {
+          "title": "Eingeklappte & Leerlaufzustände",
+          "description": "Steuerung der Karteneinklappung und der Ansichten im Leerlauf."
+        }
+      },
+      "actions": {
+        "title": "Aktionen",
+        "description": "Erstellen Sie Aktions-Chips für die Karte oder das Menü. Ziehen zum Sortieren, Stift zum Konfigurieren anklicken."
+      }
+    },
+    "subtitles": {
+      "idle_timeout": "Zeit in Millisekunden vor dem Wechsel in den Leerlaufmodus. 0 zum Deaktivieren.",
+      "show_chip_row": "\"Auto\" blendet die Chip-Leiste bei nur einer Entität aus. \"Im Menü\" verschiebt sie ins Menü.",
+      "dim_chips": "Entitäts- und Aktions-Chips im Leerlauf mit Bild abdunkeln für einen sauberen Look.",
+      "hold_to_pin": "Langes Drücken statt kurzem Drücken zum Anpinnen, um automatisches Umschalten zu verhindern.",
+      "disable_autofocus": "Suchfeld-Autofokus deaktivieren, damit Bildschirmtastaturen ausgeblendet bleiben.",
+      "search_within_filter": "Innerhalb des aktiven Filters suchen (Favoriten, etc.), anstatt ihn zu löschen.",
+      "close_search_on_play": "Suchbildschirm beim Abspielen automatisch schließen.",
+      "pin_search_headers": "Sucheingabe und Filter beim Scrollen oben fixieren.",
+      "disable_mass": "Optionale Mass Queue Integration deaktivieren, auch wenn sie installiert ist.",
+      "swap_pause_stop": "Pause-Taste durch Stop-Taste im modernen Layout ersetzen.",
+      "adaptive_controls": "Wiedergabetasten an verfügbaren Platz anpassen.",
+      "hide_menu_player": "Entitäts-Label unten ausblenden, wenn Chips im Menü sind.",
+      "adaptive_text": "Textgruppen wählen, die mit dem Platz skalieren (leer lassen zum Deaktivieren).",
+      "collapse_expand": "Immer eingeklappt aktiviert den Mini-Player-Modus. Bei Suche ausklappen aktiviert ihn temporär.",
+      "idle_screen": "Wählen Sie, welcher Bildschirm im Leerlauf automatisch angezeigt wird.",
+      "hide_controls": "Wählen Sie Steuerelemente aus, die für diese Entität ausgeblendet werden sollen.",
+      "hide_search_chips": "Bestimmte Suchfilter-Chips für diese Entität ausblenden.",
+      "follow_active_entity": "Lautstärke-Entität folgt automatisch der aktiven Wiedergabe-Entität.",
+      "search_limit_full": "Maximale Anzahl an Suchergebnissen (1-1000, Standard: 20).",
+      "result_sorting_full": "Sortierung der Suchergebnisse wählen. Standard behält die Quellreihenfolge bei.",
+      "card_height_full": "Leer lassen für automatische Höhe.",
+      "control_layout_full": "Wählen Sie zwischen manuellem oder modernem Home Assistant Layout.",
+      "artwork_extend": "Artwork-Hintergrund unter die Chip- und Aktionsleisten erweitern.",
+      "artwork_extend_label": "Artwork erweitern",
+      "no_artwork_overrides": "Keine Artwork-Überschreibungen konfiguriert.",
+      "entity_current_hint": "'entity_id: current' verwenden, um den aktuell ausgewählten Mediaplayer anzusteuern.",
+      "service_data_note": "Änderungen an den Servicedaten werden erst beim Klicken auf 'Servicedaten speichern' übernommen!",
+      "jinja_template_hint": "Jinja-Template eingeben, das eine entity_id ergibt.",
+      "jinja_template_vol_hint": "Jinja-Template eingeben, das eine Lautstärke-entity_id ergibt.",
+      "not_available_alt_collapsed": "Nicht verfügbar mit alternativem Fortschrittsbalken oder im Modus 'Immer eingeklappt'.",
+      "not_available_collapsed": "Nicht verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
+      "only_available_collapsed": "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
+      "only_available_modern": "Nur verfügbar im modernen Layout.",
+      "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben."
+    },
+    "titles": {
+      "edit_entity": "Entität bearbeiten",
+      "edit_action": "Aktion bearbeiten",
+      "service_data": "Servicedaten",
+      "add_artwork_override": "Artwork-Überschreibung hinzufügen"
+    },
+    "labels": {
+      "dim_chips": "Chips im Leerlauf abdunkeln",
+      "hold_to_pin": "Gedrückt halten zum Anpinnen",
+      "disable_autofocus": "Such-Autofocus deaktivieren",
+      "keep_filters": "Filter bei Suche beibehalten",
+      "dismiss_on_play": "Suche beim Abspielen beenden",
+      "pin_headers": "Such-Header fixieren",
+      "disable_mass": "Mass Queue deaktivieren",
+      "match_theme": "Theme anpassen",
+      "alt_progress": "Alternativer Fortschrittsbalken",
+      "display_timestamps": "Zeitstempel anzeigen",
+      "swap_pause_stop": "Pause durch Stop ersetzen",
+      "adaptive_controls": "Adaptive Tastengröße",
+      "hide_active_entity": "Aktives Entitäts-Label ausblenden",
+      "collapse_on_idle": "Bei Leerlauf einklappen",
+      "hide_menu_player_toggle": "Menü-Player ausblenden",
+      "always_collapsed": "Immer eingeklappt",
+      "expand_on_search": "Bei Suche ausklappen",
+      "script_var": "Skript-Variable (yamp_entity)",
+      "use_ma_template": "Template für Music Assistant Entität verwenden",
+      "use_vol_template": "Template für Lautstärke-Entität verwenden",
+      "follow_active_entity": "Lautstärke folgt aktiver Entität",
+      "use_url_path": "URL oder Pfad verwenden",
+      "adaptive_text_elements": "Elemente für adaptive Textgröße"
+    },
+    "fields": {
+      "artwork_fit": "Artwork-Anpassung",
+      "artwork_position": "Artwork-Position",
+      "artwork_hostname": "Artwork-Hostname",
+      "match_field": "Match-Feld",
+      "match_value": "Match-Wert",
+      "size_percent": "Größe (%)",
+      "object_fit": "Object-Fit",
+      "idle_timeout": "Leerlauf-Timeout (ms)",
+      "show_chip_row": "Chip-Leiste anzeigen",
+      "search_limit": "Suchlimit",
+      "result_sorting": "Ergebnissortierung",
+      "vol_step": "Lautstärke-Schritt (0.05 = 5%)",
+      "card_height": "Kartenhöhe (px)",
+      "control_layout": "Steuerungs-Layout",
+      "save_service_data": "Servicedaten speichern",
+      "image_url": "Bild-URL",
+      "fallback_image_url": "Fallback Bild-URL",
+      "move_to_main": "Aktion in Haupt-Chips verschieben",
+      "move_to_menu": "Aktion ins Menü verschieben",
+      "delete_action": "Aktion löschen",
+      "revert_service_data": "Auf gespeicherte Servicedaten zurücksetzen",
+      "test_action": "Aktion testen",
+      "volume_mode": "Lautstärke-Modus",
+      "idle_screen": "Leerlauf-Bildschirm",
+      "name": "Name",
+      "hidden_controls": "Ausgeblendete Steuerungen",
+      "ma_template": "Music Assistant Entitäts-Template (Jinja)",
+      "hidden_chips": "Ausgeblendete Suchfilter-Chips",
+      "vol_template": "Lautstärke-Entitäts-Template (Jinja)",
+      "icon": "Icon",
+      "action_type": "Aktionstyp",
+      "menu_item": "Menüpunkt",
+      "nav_path": "Navigationspfad",
+      "service": "Dienst",
+      "service_data": "Servicedaten",
+      "idle_image_entity": "Leerlauf-Bild-Entität",
+      "match_entity": "Match-Entität",
+      "ma_entity": "Music Assistant Entität",
+      "vol_entity": "Lautstärke-Entität"
+    }
+  },
+  "card": {
+    "sections": {
+      "details": "Details zur Wiedergabe",
+      "menu": "Menü & Suchblätter",
+      "action_chips": "Aktions-Chips"
+    },
+    "media_controls": {
+      "shuffle": "Zufall",
+      "previous": "Zurück",
+      "play_pause": "Play/Pause",
+      "stop": "Stop",
+      "next": "Weiter",
+      "repeat": "Wiederholen"
+    },
+    "menu": {
+      "more_info": "Mehr Info",
+      "search": "Suche",
+      "source": "Quelle",
+      "transfer_queue": "Warteschlange übertragen",
+      "group_players": "Player gruppieren",
+      "select_entity": "Entität für mehr Info wählen",
+      "transfer_to": "Warteschlange übertragen zu",
+      "no_players": "Keine anderen Music Assistant Player verfügbar."
+    },
+    "grouping": {
+      "title": "Player gruppieren",
+      "sync_volume": "Lautstärke synchronisieren",
+      "group_all": "Alle gruppieren",
+      "ungroup_all": "Alle trennen",
+      "unavailable": "Player ist nicht verfügbar",
+      "no_players": "Keine anderen gruppierungsfähigen Player verfügbar.",
+      "master": "Master",
+      "joined": "Verbunden",
+      "available": "Verfügbar",
+      "current": "Aktuell"
+    }
+  },
+  "search": {
+    "favorites": "Favoriten",
+    "recently_played": "Zuletzt gehört",
+    "next_up": "Als Nächstes",
+    "recommendations": "Empfehlungen",
+    "radio_mode": "Radiomodus",
+    "close": "Suche schließen",
+    "no_results": "Keine Ergebnisse.",
+    "play_next": "Als Nächstes spielen",
+    "replace_play": "Warteschlange ersetzen und jetzt spielen",
+    "replace": "Warteschlange ersetzen",
+    "add_queue": "Am Ende der Warteschlange hinzufügen",
+    "move_up": "Nach oben",
+    "move_down": "Nach unten",
+    "move_next": "Als Nächstes verschieben",
+    "remove": "Aus Warteschlange entfernen",
+    "added": "Zur Warteschlange hinzugefügt!",
+    "labels": {
+      "replace": "Ersetzen",
+      "next": "Weiter",
+      "replace_next": "Weiter ersetzen",
+      "add": "Hinzufügen"
+    },
+    "results": "Ergebnisse",
+    "result": "Ergebnis",
+    "filters": {
+      "all": "Alle",
+      "artist": "Künstler",
+      "album": "Album",
+      "track": "Titel",
+      "playlist": "Playlist",
+      "radio": "Radio",
+      "music": "Musik",
+      "station": "Station",
+      "podcast": "Podcast"
+    },
+    "search_artist": "Nach diesem Künstler suchen"
+  }
+};
+
+var fr = {
+  "common": {
+    "not_found": "Entité non trouvée.",
+    "search": "Rechercher",
+    "power": "Alimentation",
+    "favorite": "Favori",
+    "loading": "Chargement...",
+    "no_results": "Aucun résultat.",
+    "close": "Fermer",
+    "vol_up": "Monter le volume",
+    "vol_down": "Baisser le volume",
+    "media_player": "Lecteur Multimédia",
+    "edit_entity": "Modifier les paramètres de l'entité",
+    "edit_action": "Modifier les paramètres de l'action",
+    "mute": "Muet",
+    "unmute": "Rétablir le son",
+    "seek": "Rechercher",
+    "volume": "Volume",
+    "play_now": "Lire maintenant",
+    "more_options": "Plus d'options",
+    "unavailable": "Indisponible",
+    "back": "Retour",
+    "cancel": "Annuler",
+    "reset_default": "Réinitialiser"
+  },
+  "editor": {
+    "tabs": {
+      "entities": "Entités",
+      "behavior": "Comportement",
+      "look_and_feel": "Apparence",
+      "artwork": "Illustrations",
+      "actions": "Actions"
+    },
+    "placeholders": {
+      "search": "Rechercher de la musique..."
+    },
+    "sections": {
+      "artwork": {
+        "general": {
+          "title": "Paramètres Généraux",
+          "description": "Contrôles globaux pour l'affichage des illustrations."
+        },
+        "idle": {
+          "title": "Illustration au Repos",
+          "description": "Afficher une image statique lorsque rien n'est en lecture."
+        },
+        "overrides": {
+          "title": "Remplacements d'Illustrations",
+          "description": "Les remplacements sont évalués de haut en bas. Glissez pour réordonner."
+        }
+      },
+      "entities": {
+        "title": "Entités*",
+        "description": "Ajoutez les lecteurs multimédias que vous souhaitez contrôler. Glissez pour réordonner."
+      },
+      "behavior": {
+        "idle_chips": {
+          "title": "Veille & Jetons",
+          "description": "Choisissez quand la carte passe en mode veille et comment les jetons se comportent."
+        },
+        "interactions_search": {
+          "title": "Interactions & Recherche",
+          "description": "Affinez la façon dont les entités sont épinglées et le nombre de résultats."
+        }
+      },
+      "look_and_feel": {
+        "theme_layout": {
+          "title": "Thème & Mise en page",
+          "description": "Adaptez au style de votre tableau de bord et contrôlez l'empreinte globale."
+        },
+        "controls_typography": {
+          "title": "Commandes & Typographie",
+          "description": "Ajustez la taille des boutons, les étiquettes et le texte adaptatif."
+        },
+        "collapsed_idle": {
+          "title": "États Réduits & Veille",
+          "description": "Contrôlez quand la carte se réduit et quelles vues s'affichent en veille."
+        }
+      },
+      "actions": {
+        "title": "Actions",
+        "description": "Créez les jetons d'action. Glissez pour réordonner, cliquez sur le crayon pour configurer."
+      }
+    },
+    "subtitles": {
+      "idle_timeout": "Temps en millisecondes avant la mise en veille. 0 pour désactiver.",
+      "show_chip_row": "\"Auto\" masque la barre de jetons si une seule entité est configurée. \"Dans le Menu\" déplace les jetons.",
+      "dim_chips": "Assombrir les jetons en mode veille pour un look plus épuré.",
+      "hold_to_pin": "Appui long pour épingler au lieu d'un appui court.",
+      "disable_autofocus": "Empêcher la recherche de prendre le focus automatiquement.",
+      "search_within_filter": "Rechercher dans le filtre actif actuel (Favoris, etc.).",
+      "close_search_on_play": "Fermer automatiquement la recherche à la lecture.",
+      "pin_search_headers": "Garder la recherche et les filtres fixes en haut.",
+      "disable_mass": "Désactiver l'intégration Mass Queue.",
+      "swap_pause_stop": "Remplacer le bouton pause par stop en mode moderne.",
+      "adaptive_controls": "Laisser les boutons s'adapter à l'espace disponible.",
+      "hide_menu_player": "Masquer l'étiquette de l'entité en bas quand les jetons sont dans le menu.",
+      "adaptive_text": "Choisir quels textes doivent s'adapter à l'espace.",
+      "collapse_expand": "Toujours réduit crée un mini lecteur. Agrandir à la Recherche agrandit temporairement.",
+      "idle_screen": "Choisir l'écran à afficher automatiquement en veille.",
+      "hide_controls": "Sélectionner les commandes à masquer pour cette entité.",
+      "hide_search_chips": "Masquer des jetons de filtrage spécifiques.",
+      "follow_active_entity": "L'entité de volume suivra automatiquement l'entité active.",
+      "search_limit_full": "Nombre maximum de résultats (1-1000, défaut: 20).",
+      "result_sorting_full": "Choisir l'ordre des résultats. Par défaut conserve l'ordre source.",
+      "card_height_full": "Laisser vide pour une hauteur automatique.",
+      "control_layout_full": "Choisir entre l'ancienne mise en page ou la moderne.",
+      "artwork_extend": "Étendre l'illustration sous les lignes de jetons.",
+      "artwork_extend_label": "Étendre l'illustration",
+      "no_artwork_overrides": "Aucun remplacement d'illustration configuré.",
+      "entity_current_hint": "Utilisez 'entity_id: current' pour cibler le lecteur actuel.",
+      "service_data_note": "Les changements ne sont enregistrés qu'en cliquant sur 'Enregistrer'.",
+      "jinja_template_hint": "Entrez un modèle Jinja qui renvoie un entity_id.",
+      "jinja_template_vol_hint": "Modèle pour l'entité de volume.",
+      "not_available_alt_collapsed": "Non disponible en mode 'Toujours réduit'.",
+      "not_available_collapsed": "Non disponible si 'Toujours réduit' est activé.",
+      "only_available_collapsed": "Uniquement disponible si 'Toujours réduit' est activé.",
+      "only_available_modern": "Uniquement disponible avec la mise en page Moderne.",
+      "image_url_helper": "Entrez l'URL d'une image ou un chemin local."
+    },
+    "titles": {
+      "edit_entity": "Modifier l'entité",
+      "edit_action": "Modifier l'action",
+      "service_data": "Données du service",
+      "add_artwork_override": "Ajouter un remplacement"
+    },
+    "labels": {
+      "dim_chips": "Assombrir les jetons en veille",
+      "hold_to_pin": "Maintenir pour épingler",
+      "disable_autofocus": "Désactiver l'autofocus",
+      "keep_filters": "Garder les filtres",
+      "dismiss_on_play": "Fermer en lecture",
+      "pin_headers": "Épingler les en-têtes",
+      "disable_mass": "Désactiver Mass Queue",
+      "match_theme": "Suivre le thème",
+      "alt_progress": "Barre de progression alternative",
+      "display_timestamps": "Afficher les horodatages",
+      "swap_pause_stop": "Remplacer Pause par Stop",
+      "adaptive_controls": "Taille adaptative",
+      "hide_active_entity": "Masquer l'étiquette active",
+      "collapse_on_idle": "Réduire en veille",
+      "hide_menu_player_toggle": "Masquer le lecteur menu",
+      "always_collapsed": "Toujours réduit",
+      "expand_on_search": "Agrandir en recherche",
+      "script_var": "Variable script (yamp_entity)",
+      "use_ma_template": "Utiliser modèle MA",
+      "use_vol_template": "Utiliser modèle Volume",
+      "follow_active_entity": "Le volume suit l'entité active",
+      "use_url_path": "Utiliser URL ou chemin",
+      "adaptive_text_elements": "Éléments de texte adaptatif"
+    },
+    "fields": {
+      "artwork_fit": "Ajustement",
+      "artwork_position": "Position",
+      "artwork_hostname": "Hôte",
+      "match_field": "Champ de correspondance",
+      "match_value": "Valeur de correspondance",
+      "size_percent": "Taille (%)",
+      "object_fit": "Object Fit",
+      "idle_timeout": "Veille (ms)",
+      "show_chip_row": "Afficher les jetons",
+      "search_limit": "Limite de résultats",
+      "result_sorting": "Tri des résultats",
+      "vol_step": "Pas du volume",
+      "card_height": "Hauteur (px)",
+      "control_layout": "Mise en page",
+      "save_service_data": "Enregistrer",
+      "image_url": "URL image",
+      "fallback_image_url": "URL de secours",
+      "move_to_main": "Mettre dans les jetons principaux",
+      "move_to_menu": "Mettre dans le menu",
+      "delete_action": "Supprimer l'action",
+      "revert_service_data": "Annuler les changements",
+      "test_action": "Tester l'action",
+      "volume_mode": "Mode volume",
+      "idle_screen": "Écran de veille",
+      "name": "Nom",
+      "hidden_controls": "Commandes masquées",
+      "ma_template": "Modèle MA (Jinja)",
+      "hidden_chips": "Jetons masqués",
+      "vol_template": "Modèle Volume (Jinja)",
+      "icon": "Icône",
+      "action_type": "Type d'action",
+      "menu_item": "Élément du menu",
+      "nav_path": "Chemin navigation",
+      "service": "Service",
+      "service_data": "Données",
+      "idle_image_entity": "Entité image veille",
+      "match_entity": "Entité de correspondance",
+      "ma_entity": "Entité MA",
+      "vol_entity": "Entité Volume"
+    }
+  },
+  "card": {
+    "sections": {
+      "details": "Détails lecture",
+      "menu": "Menu & Recherche",
+      "action_chips": "Jetons d'action"
+    },
+    "media_controls": {
+      "shuffle": "Aléatoire",
+      "previous": "Précédent",
+      "play_pause": "Lecture/Pause",
+      "stop": "Arrêt",
+      "next": "Suivant",
+      "repeat": "Répéter"
+    },
+    "menu": {
+      "more_info": "Plus d'infos",
+      "search": "Rechercher",
+      "source": "Source",
+      "transfer_queue": "Transférer la file",
+      "group_players": "Grouper les lecteurs",
+      "select_entity": "Choisir pour plus d'infos",
+      "transfer_to": "Transférer vers",
+      "no_players": "Aucun lecteur MA disponible."
+    },
+    "grouping": {
+      "title": "Grouper les lecteurs",
+      "sync_volume": "Synchroniser volume",
+      "group_all": "Grouper tout",
+      "ungroup_all": "Dégrouper tout",
+      "unavailable": "Lecteur indisponible",
+      "no_players": "Aucun lecteur groupable.",
+      "master": "Maître",
+      "joined": "Lié",
+      "available": "Disponible",
+      "current": "Actuel"
+    }
+  },
+  "search": {
+    "favorites": "Favoris",
+    "recently_played": "Récemment lus",
+    "next_up": "À suivre",
+    "recommendations": "Recommandations",
+    "radio_mode": "Mode Radio",
+    "close": "Fermer la recherche",
+    "no_results": "Aucun résultat.",
+    "play_next": "Lire après",
+    "replace_play": "Remplacer et lire",
+    "replace": "Remplacer file",
+    "add_queue": "Ajouter à la fin",
+    "move_up": "Monter",
+    "move_down": "Descendre",
+    "move_next": "Passer au suivant",
+    "remove": "Retirer de la file",
+    "added": "Ajouté à la file !",
+    "labels": {
+      "replace": "Remplacer",
+      "next": "Suivant",
+      "replace_next": "Rempl. Suivant",
+      "add": "Ajouter"
+    },
+    "results": "résultats",
+    "result": "résultat",
+    "filters": {
+      "all": "Tout",
+      "artist": "Artiste",
+      "album": "Album",
+      "track": "Titre",
+      "playlist": "Playlist",
+      "radio": "Radio",
+      "music": "Musique",
+      "station": "Station",
+      "podcast": "Podcast"
+    },
+    "search_artist": "Chercher cet artiste"
+  }
+};
+
+var es = {
+  "common": {
+    "not_found": "Entidad no encontrada.",
+    "search": "Buscar",
+    "power": "Encender/Apagar",
+    "favorite": "Favorito",
+    "loading": "Cargando...",
+    "no_results": "Sin resultados.",
+    "close": "Cerrar",
+    "vol_up": "Subir volumen",
+    "vol_down": "Bajar volumen",
+    "media_player": "Reproductor multimedia",
+    "edit_entity": "Editar ajustes de entidad",
+    "edit_action": "Editar ajustes de acción",
+    "mute": "Silenciar",
+    "unmute": "Activar sonido",
+    "seek": "Buscar",
+    "volume": "Volumen",
+    "play_now": "Reproducir ahora",
+    "more_options": "Más opciones",
+    "unavailable": "No disponible",
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "reset_default": "Restablecer valores"
+  },
+  "editor": {
+    "tabs": {
+      "entities": "Entidades",
+      "behavior": "Comportamiento",
+      "look_and_feel": "Apariencia",
+      "artwork": "Portada",
+      "actions": "Acciones"
+    },
+    "placeholders": {
+      "search": "Buscar música..."
+    },
+    "sections": {
+      "artwork": {
+        "general": {
+          "title": "Ajustes generales",
+          "description": "Controles globales para la portada."
+        },
+        "idle": {
+          "title": "Portada en reposo",
+          "description": "Mostrar imagen estática cuando nada se reproduce."
+        },
+        "overrides": {
+          "title": "Reemplazos de portada",
+          "description": "Los reemplazos se evalúan de arriba a abajo. Arrastre para reordenar."
+        }
+      },
+      "entities": {
+        "title": "Entidades*",
+        "description": "Añada los reproductores multimedia. Arrastre para reordenar."
+      },
+      "behavior": {
+        "idle_chips": {
+          "title": "Reposo y chips",
+          "description": "Elija cuándo pasa a reposo y el comportamiento de los chips."
+        },
+        "interactions_search": {
+          "title": "Interacciones y búsqueda",
+          "description": "Ajuste el fijado de entidades y límite de resultados."
+        }
+      },
+      "look_and_feel": {
+        "theme_layout": {
+          "title": "Tema y diseño",
+          "description": "Combine con el estilo de su dashboard."
+        },
+        "controls_typography": {
+          "title": "Controles y tipografía",
+          "description": "Ajuste tamaño de botones y etiquetas."
+        },
+        "collapsed_idle": {
+          "title": "Estados de reposo y contraído",
+          "description": "Controle el contraído de la tarjeta."
+        }
+      },
+      "actions": {
+        "title": "Acciones",
+        "description": "Cree chips de acción. Arrastre para reordenar, pulse el lápiz para configurar."
+      }
+    },
+    "subtitles": {
+      "idle_timeout": "Tiempo antes de reposo (ms). 0 para desactivar.",
+      "show_chip_row": "\"Auto\" oculta la fila si solo hay una entidad. \"En menú\" mueve los chips.",
+      "dim_chips": "Atenuar los chips en reposo para un aspecto más limpio.",
+      "hold_to_pin": "Mantener pulsado para fijar en vez de pulsación corta.",
+      "disable_autofocus": "Evitar que la búsqueda tome el foco automáticamente.",
+      "search_within_filter": "Buscar dentro del filtro activo (Favoritos, etc.).",
+      "close_search_on_play": "Cerrar búsqueda al reproducir.",
+      "pin_search_headers": "Fijar encabezados de búsqueda al hacer scroll.",
+      "disable_mass": "Desactivar integración con Mass Queue.",
+      "swap_pause_stop": "Cambiar pausa por stop en diseño moderno.",
+      "adaptive_controls": "Permitir que los botones se adapten al espacio.",
+      "hide_menu_player": "Ocultar nombre de entidad cuando está en el menú.",
+      "adaptive_text": "Elegir qué textos se adaptan al espacio.",
+      "collapse_expand": "Siempre contraído activa el modo mini. Expandir al buscar expande temporalmente.",
+      "idle_screen": "Elegir pantalla a mostrar en reposo.",
+      "hide_controls": "Seleccionar controles a ocultar.",
+      "hide_search_chips": "Ocultar chips de filtro de búsqueda.",
+      "follow_active_entity": "La entidad de volumen seguirá a la activa.",
+      "search_limit_full": "Máximo de resultados (1-1000, defecto: 20).",
+      "result_sorting_full": "Elegir orden de resultados.",
+      "card_height_full": "Dejar vacío para altura automática.",
+      "control_layout_full": "Elegir entre diseño antiguo o moderno.",
+      "artwork_extend": "Extender portada bajo los chips.",
+      "artwork_extend_label": "Extender portada",
+      "no_artwork_overrides": "Sin reemplazos de portada configurados.",
+      "entity_current_hint": "Use 'entity_id: current' para el reproductor actual.",
+      "service_data_note": "Los cambios se guardan al pulsar 'Guardar'.",
+      "jinja_template_hint": "Plantilla Jinja para entity_id.",
+      "jinja_template_vol_hint": "Plantilla para entidad de volumen.",
+      "not_available_alt_collapsed": "No disponible en modo contraído.",
+      "not_available_collapsed": "No disponible si está contraído.",
+      "only_available_collapsed": "Solo disponible si está contraído.",
+      "only_available_modern": "Solo disponible con diseño Moderno.",
+      "image_url_helper": "URL directa de imagen o ruta local."
+    },
+    "titles": {
+      "edit_entity": "Editar entidad",
+      "edit_action": "Editar acción",
+      "service_data": "Datos del servicio",
+      "add_artwork_override": "Añadir reemplazo"
+    },
+    "labels": {
+      "dim_chips": "Atenuar chips en reposo",
+      "hold_to_pin": "Mantener para fijar",
+      "disable_autofocus": "Desactivar autofoco",
+      "keep_filters": "Mantener filtros",
+      "dismiss_on_play": "Cerrar al reproducir",
+      "pin_headers": "Fijar encabezados",
+      "disable_mass": "Desactivar Mass Queue",
+      "match_theme": "Seguir tema",
+      "alt_progress": "Barra de progreso alternativa",
+      "display_timestamps": "Mostrar sellos de tiempo",
+      "swap_pause_stop": "Cambiar Pausa por Stop",
+      "adaptive_controls": "Tamaño adaptativo",
+      "hide_active_entity": "Ocultar nombre de entidad activa",
+      "collapse_on_idle": "Contraer en reposo",
+      "hide_menu_player_toggle": "Ocultar reproductor del menú",
+      "always_collapsed": "Siempre contraído",
+      "expand_on_search": "Expandir al buscar",
+      "script_var": "Variable script (yamp_entity)",
+      "use_ma_template": "Usar plantilla MA",
+      "use_vol_template": "Usar plantilla Volumen",
+      "follow_active_entity": "Volumen sigue a entidad activa",
+      "use_url_path": "Usar URL o ruta",
+      "adaptive_text_elements": "Elementos de texto adaptativo"
+    },
+    "fields": {
+      "artwork_fit": "Ajuste",
+      "artwork_position": "Posición",
+      "artwork_hostname": "Host",
+      "match_field": "Campo",
+      "match_value": "Valor",
+      "size_percent": "Tamaño (%)",
+      "object_fit": "Object Fit",
+      "idle_timeout": "Reposo (ms)",
+      "show_chip_row": "Mostrar chips",
+      "search_limit": "Límite de búsqueda",
+      "result_sorting": "Orden",
+      "vol_step": "Paso de volumen",
+      "card_height": "Altura (px)",
+      "control_layout": "Diseño",
+      "save_service_data": "Guardar",
+      "image_url": "URL imagen",
+      "fallback_image_url": "URL de respaldo",
+      "move_to_main": "Mover a chips principales",
+      "move_to_menu": "Mover al menú",
+      "delete_action": "Borrar acción",
+      "revert_service_data": "Deshacer cambios",
+      "test_action": "Probar acción",
+      "volume_mode": "Modo volumen",
+      "idle_screen": "Pantalla reposo",
+      "name": "Nombre",
+      "hidden_controls": "Controles ocultos",
+      "ma_template": "Plantilla MA (Jinja)",
+      "hidden_chips": "Chips ocultos",
+      "vol_template": "Plantilla Volumen (Jinja)",
+      "icon": "Icono",
+      "action_type": "Tipo de acción",
+      "menu_item": "Elemento de menú",
+      "nav_path": "Ruta",
+      "service": "Servicio",
+      "service_data": "Datos",
+      "idle_image_entity": "Entidad imagen reposo",
+      "match_entity": "Entidad",
+      "ma_entity": "Entidad MA",
+      "vol_entity": "Entidad Volumen"
+    }
+  },
+  "card": {
+    "sections": {
+      "details": "Detalles de reproducción",
+      "menu": "Menú y Búsqueda",
+      "action_chips": "Chips de acción"
+    },
+    "media_controls": {
+      "shuffle": "Aleatorio",
+      "previous": "Anterior",
+      "play_pause": "Play/Pausa",
+      "stop": "Stop",
+      "next": "Siguiente",
+      "repeat": "Repetir"
+    },
+    "menu": {
+      "more_info": "Más info",
+      "search": "Buscar",
+      "source": "Fuente",
+      "transfer_queue": "Transferir cola",
+      "group_players": "Agrupar",
+      "select_entity": "Seleccionar",
+      "transfer_to": "Transferir a",
+      "no_players": "Sin reproductores MA."
+    },
+    "grouping": {
+      "title": "Agrupar",
+      "sync_volume": "Sincronizar volumen",
+      "group_all": "Agrupar todos",
+      "ungroup_all": "Desagrupar todos",
+      "unavailable": "No disponible",
+      "no_players": "No agrupable.",
+      "master": "Maestro",
+      "joined": "Unido",
+      "available": "Disponible",
+      "current": "Actual"
+    }
+  },
+  "search": {
+    "favorites": "Favoritos",
+    "recently_played": "Reciente",
+    "next_up": "A continuación",
+    "recommendations": "Recomendaciones",
+    "radio_mode": "Modo Radio",
+    "close": "Cerrar",
+    "no_results": "Sin resultados.",
+    "play_next": "Reprod. siguiente",
+    "replace_play": "Reemplazar y reproducir",
+    "replace": "Reemplazar cola",
+    "add_queue": "Añadir al final",
+    "move_up": "Subir",
+    "move_down": "Bajar",
+    "move_next": "Pasar a siguiente",
+    "remove": "Quitar de cola",
+    "added": "¡Añadido!",
+    "labels": {
+      "replace": "Remplazar",
+      "next": "Siguiente",
+      "replace_next": "Rempl. Sig.",
+      "add": "Añadir"
+    },
+    "results": "resultados",
+    "result": "resultado",
+    "filters": {
+      "all": "Todo",
+      "artist": "Artista",
+      "album": "Álbum",
+      "track": "Canción",
+      "playlist": "Lista",
+      "radio": "Radio",
+      "music": "Música",
+      "station": "Emisora",
+      "podcast": "Pódcast"
+    },
+    "search_artist": "Buscar este artista"
+  }
+};
+
+var it = {
+  "common": {
+    "not_found": "Entità non trovata.",
+    "search": "Cerca",
+    "power": "Accensione",
+    "favorite": "Preferito",
+    "loading": "Caricamento...",
+    "no_results": "Nessun risultato.",
+    "close": "Chiudi",
+    "vol_up": "Volume su",
+    "vol_down": "Volume giù",
+    "media_player": "Lettore multimediale",
+    "edit_entity": "Modifica impostazioni entità",
+    "edit_action": "Modifica impostazioni azione",
+    "mute": "Muto",
+    "unmute": "Riattiva audio",
+    "seek": "Cerca",
+    "volume": "Volume",
+    "play_now": "Riproduci ora",
+    "more_options": "Altre opzioni",
+    "unavailable": "Non disponibile",
+    "back": "Indietro",
+    "cancel": "Annulla",
+    "reset_default": "Ripristina predefiniti"
+  },
+  "editor": {
+    "tabs": {
+      "entities": "Entità",
+      "behavior": "Comportamento",
+      "look_and_feel": "Aspetto",
+      "artwork": "Copertina",
+      "actions": "Azioni"
+    },
+    "placeholders": {
+      "search": "Cerca musica..."
+    },
+    "sections": {
+      "artwork": {
+        "general": {
+          "title": "Impostazioni generali",
+          "description": "Controlli globali per la copertina."
+        },
+        "idle": {
+          "title": "Copertina in riposo",
+          "description": "Mostra un'immagine statica quando non c'è riproduzione."
+        },
+        "overrides": {
+          "title": "Override copertina",
+          "description": "Gli override sono valutati dall'alto in basso."
+        }
+      },
+      "entities": {
+        "title": "Entità*",
+        "description": "Aggiungi i lettori da controllare."
+      },
+      "behavior": {
+        "idle_chips": {
+          "title": "Riposo e chip",
+          "description": "Scegli quando andare in riposo."
+        },
+        "interactions_search": {
+          "title": "Interazioni e ricerca",
+          "description": "Ajusta il fissaggio delle entità."
+        }
+      },
+      "look_and_feel": {
+        "theme_layout": {
+          "title": "Tema e layout",
+          "description": "Adatta allo stile del dashboard."
+        },
+        "controls_typography": {
+          "title": "Controlli e tipografia",
+          "description": "Ajusta bottoni e etichette."
+        },
+        "collapsed_idle": {
+          "title": "Stati contratto e riposo",
+          "description": "Controlla il contratto della scheda."
+        }
+      },
+      "actions": {
+        "title": "Azioni",
+        "description": "Crea chip azione."
+      }
+    },
+    "subtitles": {
+      "idle_timeout": "Tempo prima del riposo (ms). 0 per disabilitare.",
+      "show_chip_row": "\"Auto\" nasconde la riga se c'è una sola entità.",
+      "dim_chips": "Appanna i chip in riposo per un aspetto più pulito.",
+      "hold_to_pin": "Tieni premuto per fissare invece di un tocco breve.",
+      "disable_autofocus": "Evita che la ricerca prenda il focus automaticamente.",
+      "search_within_filter": "Cerca nel filtro attivo (Preferiti, ecc.).",
+      "close_search_on_play": "Chiudi ricerca alla riproduzione.",
+      "pin_search_headers": "Fissa le intestazioni di ricerca durante lo scorrimento.",
+      "disable_mass": "Disabilita integrazione Mass Queue.",
+      "swap_pause_stop": "Sostituisci pausa con stop nel design moderno.",
+      "adaptive_controls": "Permetti ai pulsanti di adattarsi allo spazio.",
+      "hide_menu_player": "Nascondi nome entità quando è nel menu.",
+      "adaptive_text": "Scegli quali testi si adattano allo spazio.",
+      "collapse_expand": "Sempre contratto attiva il modo mini. Espandi alla ricerca espande temporaneamente.",
+      "idle_screen": "Scegli schermata da mostrare in riposo.",
+      "hide_controls": "Seleziona controlli da nascondere.",
+      "hide_search_chips": "Nascondi chip di filtro ricerca.",
+      "follow_active_entity": "L'entità volume seguirà quella attiva.",
+      "search_limit_full": "Massimo risultati (1-1000, default: 20).",
+      "result_sorting_full": "Scegli ordine risultati.",
+      "card_height_full": "Lascia vuoto per altezza automatica.",
+      "control_layout_full": "Scegli tra design vecchio o moderno.",
+      "artwork_extend": "Estendi copertina sotto i chip.",
+      "artwork_extend_label": "Estendi copertina",
+      "no_artwork_overrides": "Nessun override copertina configurato.",
+      "entity_current_hint": "Usa 'entity_id: current' per il lettore attuale.",
+      "service_data_note": "Le modifiche si salvano premendo 'Salva'.",
+      "jinja_template_hint": "Modello Jinja per entity_id.",
+      "jinja_template_vol_hint": "Modello per entità volume.",
+      "not_available_alt_collapsed": "Non disponibile in modo contratto.",
+      "not_available_collapsed": "Non disponibile se contratto.",
+      "only_available_collapsed": "Solo disponibile se contratto.",
+      "only_available_modern": "Solo disponibile con layout Moderno.",
+      "image_url_helper": "URL diretto immagine o percorso locale."
+    },
+    "titles": {
+      "edit_entity": "Modifica entità",
+      "edit_action": "Modifica azione",
+      "service_data": "Dati servizio",
+      "add_artwork_override": "Aggiungi override"
+    },
+    "labels": {
+      "dim_chips": "Appanna chip in riposo",
+      "hold_to_pin": "Tieni premuto per fissare",
+      "disable_autofocus": "Disabilita autofocus",
+      "keep_filters": "Mantieni filtri",
+      "dismiss_on_play": "Chiudi alla riproduzione",
+      "pin_headers": "Fissa intestazioni",
+      "disable_mass": "Disabilita Mass Queue",
+      "match_theme": "Segui tema",
+      "alt_progress": "Barra progresso alternativa",
+      "display_timestamps": "Mostra timestamp",
+      "swap_pause_stop": "Sostituisci Pausa con Stop",
+      "adaptive_controls": "Dimensione adattativa",
+      "hide_active_entity": "Nascondi nome entità attiva",
+      "collapse_on_idle": "Contrai in riposo",
+      "hide_menu_player_toggle": "Nascondi lettore menu",
+      "always_collapsed": "Sempre contratto",
+      "expand_on_search": "Espandi alla ricerca",
+      "script_var": "Variabile script (yamp_entity)",
+      "use_ma_template": "Usa modello MA",
+      "use_vol_template": "Usa modello Volume",
+      "follow_active_entity": "Volume segue entità attiva",
+      "use_url_path": "Usa URL o percorso",
+      "adaptive_text_elements": "Elementi testo adattativo"
+    },
+    "fields": {
+      "artwork_fit": "Adattamento",
+      "artwork_position": "Posizione",
+      "artwork_hostname": "Host",
+      "match_field": "Campo",
+      "match_value": "Valore",
+      "size_percent": "Dimensione (%)",
+      "object_fit": "Object Fit",
+      "idle_timeout": "Riposo (ms)",
+      "show_chip_row": "Mostra chip",
+      "search_limit": "Limite ricerca",
+      "result_sorting": "Ordine",
+      "vol_step": "Passo volume",
+      "card_height": "Altezza (px)",
+      "control_layout": "Design",
+      "save_service_data": "Salva",
+      "image_url": "URL immagine",
+      "fallback_image_url": "URL fallback",
+      "move_to_main": "Sposta in chip principali",
+      "move_to_menu": "Sposta nel menu",
+      "delete_action": "Elimina azione",
+      "revert_service_data": "Annulla modifiche",
+      "test_action": "Prova azione",
+      "volume_mode": "Modo volume",
+      "idle_screen": "Schermo riposo",
+      "name": "Nome",
+      "hidden_controls": "Controlli nascosti",
+      "ma_template": "Modello MA (Jinja)",
+      "hidden_chips": "Chip nascosti",
+      "vol_template": "Modello Volume (Jinja)",
+      "icon": "Icona",
+      "action_type": "Tipo azione",
+      "menu_item": "Elemento menu",
+      "nav_path": "Percorso",
+      "service": "Servizio",
+      "service_data": "Dati",
+      "idle_image_entity": "Entità immagine riposo",
+      "match_entity": "Entità",
+      "ma_entity": "Entità MA",
+      "vol_entity": "Entità Volume"
+    }
+  },
+  "card": {
+    "sections": {
+      "details": "Dettagli riproduzione",
+      "menu": "Menu e Ricerca",
+      "action_chips": "Chip azione"
+    },
+    "media_controls": {
+      "shuffle": "Casuale",
+      "previous": "Precedente",
+      "play_pause": "Play/Pausa",
+      "stop": "Stop",
+      "next": "Successivo",
+      "repeat": "Ripeti"
+    },
+    "menu": {
+      "more_info": "Più info",
+      "search": "Cerca",
+      "source": "Sorgente",
+      "transfer_queue": "Trasferisci coda",
+      "group_players": "Raggruppa",
+      "select_entity": "Seleziona",
+      "transfer_to": "Trasferisci a",
+      "no_players": "Senza lettori MA."
+    },
+    "grouping": {
+      "title": "Raggruppa",
+      "sync_volume": "Sincronizza volume",
+      "group_all": "Raggruppa tutti",
+      "ungroup_all": "Separa tutti",
+      "unavailable": "Non disponibile",
+      "no_players": "Non raggruppabile.",
+      "master": "Master",
+      "joined": "Unito",
+      "available": "Disponibile",
+      "current": "Attuale"
+    }
+  },
+  "search": {
+    "favorites": "Preferiti",
+    "recently_played": "Recenti",
+    "next_up": "A seguire",
+    "recommendations": "Raccomandazioni",
+    "radio_mode": "Modo Radio",
+    "close": "Chiudi",
+    "no_results": "Nessun risultato.",
+    "play_next": "Riprod. successivo",
+    "replace_play": "Sostituisci e riproduci",
+    "replace": "Sostituisci coda",
+    "add_queue": "Aggiungi alla fine",
+    "move_up": "Sposta su",
+    "move_down": "Sposta giù",
+    "move_next": "Passa al successivo",
+    "remove": "Rimuovi da coda",
+    "added": "Aggiunto!",
+    "labels": {
+      "replace": "Sostituisci",
+      "next": "Successivo",
+      "replace_next": "Sost. succ.",
+      "add": "Aggiungi"
+    },
+    "results": "risultati",
+    "result": "risultato",
+    "filters": {
+      "all": "Tutto",
+      "artist": "Artista",
+      "album": "Album",
+      "track": "Brano",
+      "playlist": "Playlist",
+      "radio": "Radio",
+      "music": "Musica",
+      "station": "Stazione",
+      "podcast": "Podcast"
+    },
+    "search_artist": "Cerca questo artista"
+  }
+};
+
+var pt = {
+  "common": {
+    "not_found": "Entidade não encontrada.",
+    "search": "Procurar",
+    "power": "Ligar/Desligar",
+    "favorite": "Favorito",
+    "loading": "A carregar...",
+    "no_results": "Sem resultados.",
+    "close": "Fechar",
+    "vol_up": "Aumentar volume",
+    "vol_down": "Diminuir volume",
+    "media_player": "Leitor multimédia",
+    "edit_entity": "Editar definições da entidade",
+    "edit_action": "Editar definições da ação",
+    "mute": "Silenciar",
+    "unmute": "Ativar som",
+    "seek": "Procurar",
+    "volume": "Volume",
+    "play_now": "Reproduzir agora",
+    "more_options": "Mais opções",
+    "unavailable": "Indisponível",
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "reset_default": "Repor predefinições"
+  },
+  "editor": {
+    "tabs": {
+      "entities": "Entidades",
+      "behavior": "Comportamento",
+      "look_and_feel": "Aspeto",
+      "artwork": "Capa",
+      "actions": "Ações"
+    },
+    "placeholders": {
+      "search": "Procurar música..."
+    },
+    "sections": {
+      "artwork": {
+        "general": {
+          "title": "Definições gerais",
+          "description": "Controlos globais para a capa."
+        },
+        "idle": {
+          "title": "Capa em repouso",
+          "description": "Mostrar imagem estática quando nada toca."
+        },
+        "overrides": {
+          "title": "Substituições de capa",
+          "description": "As substituições são avaliadas de cima para baixo."
+        }
+      },
+      "entities": {
+        "title": "Entidades*",
+        "description": "Adicione os leitores a controlar."
+      },
+      "behavior": {
+        "idle_chips": {
+          "title": "Repouso e chips",
+          "description": "Escolha quando ir para repouso."
+        },
+        "interactions_search": {
+          "title": "Interações e procura",
+          "description": "Ajuste a fixação de entidades."
+        }
+      },
+      "look_and_feel": {
+        "theme_layout": {
+          "title": "Tema e design",
+          "description": "Combine com o estilo do dashboard."
+        },
+        "controls_typography": {
+          "title": "Controlos e tipografia",
+          "description": "Ajuste botões e etiquetas."
+        },
+        "collapsed_idle": {
+          "title": "Estados contraído e repouso",
+          "description": "Controle o contraído do cartão."
+        }
+      },
+      "actions": {
+        "title": "Ações",
+        "description": "Crie chips de ação."
+      }
+    },
+    "subtitles": {
+      "idle_timeout": "Tempo antes de repouso (ms). 0 para desativar.",
+      "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade. \"No menu\" move os chips.",
+      "dim_chips": "Escurecer chips em repouso para um aspeto mais limpo.",
+      "hold_to_pin": "Manter premido para fixar em vez de toque curto.",
+      "disable_autofocus": "Evitar que a procura tome o foco automaticamente.",
+      "search_within_filter": "Procurar no filtro ativo (Favoritos, etc.).",
+      "close_search_on_play": "Fechar procura ao reproduzir.",
+      "pin_search_headers": "Fixar cabeçalhos de procura ao fazer scroll.",
+      "disable_mass": "Desativar integração Mass Queue.",
+      "swap_pause_stop": "Substituir pausa por stop no design moderno.",
+      "adaptive_controls": "Permitir que os botões se adaptem ao espaço.",
+      "hide_menu_player": "Ocultar nome da entidade quando no menu.",
+      "adaptive_text": "Escolher que textos se adaptam ao espaço.",
+      "collapse_expand": "Sempre contraído ativa modo mini. Expandir ao procurar expande temporariamente.",
+      "idle_screen": "Escolher ecrã a mostrar em repouso.",
+      "hide_controls": "Selecionar controlos a ocultar.",
+      "hide_search_chips": "Ocultar chips de filtro de procura.",
+      "follow_active_entity": "A entidade de volume seguirá a ativa.",
+      "search_limit_full": "Máximo de resultados (1-1000, default: 20).",
+      "result_sorting_full": "Escolher ordem dos resultados.",
+      "card_height_full": "Deixar vazio para altura automática.",
+      "control_layout_full": "Escolher entre design antigo ou moderno.",
+      "artwork_extend": "Estender capa sob os chips.",
+      "artwork_extend_label": "Estender capa",
+      "no_artwork_overrides": "Sem substituições de capa configuradas.",
+      "entity_current_hint": "Use 'entity_id: current' para o leitor atual.",
+      "service_data_note": "As alterações são guardadas ao premir 'Guardar'.",
+      "jinja_template_hint": "Modelo Jinja para entity_id.",
+      "jinja_template_vol_hint": "Modelo para entidade volume.",
+      "not_available_alt_collapsed": "Não disponível em modo contraído.",
+      "not_available_collapsed": "Não disponível se contraído.",
+      "only_available_collapsed": "Apenas disponível se contraído.",
+      "only_available_modern": "Apenas disponível com layout Moderno.",
+      "image_url_helper": "URL direto da imagem ou caminho local."
+    },
+    "titles": {
+      "edit_entity": "Editar entidade",
+      "edit_action": "Editar ação",
+      "service_data": "Dados do serviço",
+      "add_artwork_override": "Adicionar substituição"
+    },
+    "labels": {
+      "dim_chips": "Escurecer chips em repouso",
+      "hold_to_pin": "Manter para fixar",
+      "disable_autofocus": "Desativar autofoco",
+      "keep_filters": "Manter filtros",
+      "dismiss_on_play": "Fechar ao reproduzir",
+      "pin_headers": "Fixar cabeçalhos",
+      "disable_mass": "Desativar Mass Queue",
+      "match_theme": "Seguir tema",
+      "alt_progress": "Barra de progresso alternativa",
+      "display_timestamps": "Mostrar carimbos de tempo",
+      "swap_pause_stop": "Substituir Pausa por Stop",
+      "adaptive_controls": "Tamanho adaptativo",
+      "hide_active_entity": "Ocultar nome da entidade ativa",
+      "collapse_on_idle": "Contrair em repouso",
+      "hide_menu_player_toggle": "Ocultar leitor do menu",
+      "always_collapsed": "Sempre contraído",
+      "expand_on_search": "Expandir ao procurar",
+      "script_var": "Variável script (yamp_entity)",
+      "use_ma_template": "Usar modelo MA",
+      "use_vol_template": "Usar modelo Volume",
+      "follow_active_entity": "Volume segue a entidade ativa",
+      "use_url_path": "Usar URL ou caminho",
+      "adaptive_text_elements": "Elementos de texto adaptativo"
+    },
+    "fields": {
+      "artwork_fit": "Ajuste",
+      "artwork_position": "Posição",
+      "artwork_hostname": "Host",
+      "match_field": "Campo",
+      "match_value": "Valor",
+      "size_percent": "Tamanho (%)",
+      "object_fit": "Object Fit",
+      "idle_timeout": "Repouso (ms)",
+      "show_chip_row": "Mostrar chips",
+      "search_limit": "Limite de procura",
+      "result_sorting": "Ordem",
+      "vol_step": "Passo de volume",
+      "card_height": "Altura (px)",
+      "control_layout": "Design",
+      "save_service_data": "Guardar",
+      "image_url": "URL imagem",
+      "fallback_image_url": "URL de reserva",
+      "move_to_main": "Mover para chips principais",
+      "move_to_menu": "Mover para o menu",
+      "delete_action": "Eliminar ação",
+      "revert_service_data": "Anular alterações",
+      "test_action": "Testar ação",
+      "volume_mode": "Modo volume",
+      "idle_screen": "Ecrã de repouso",
+      "name": "Nome",
+      "hidden_controls": "Controlos ocultos",
+      "ma_template": "Modelo MA (Jinja)",
+      "hidden_chips": "Chips ocultos",
+      "vol_template": "Modelo Volume (Jinja)",
+      "icon": "Ícone",
+      "action_type": "Tipo de ação",
+      "menu_item": "Item de menu",
+      "nav_path": "Caminho",
+      "service": "Serviço",
+      "service_data": "Dados",
+      "idle_image_entity": "Entidade imagem repouso",
+      "match_entity": "Entidade",
+      "ma_entity": "Entidade MA",
+      "vol_entity": "Entidade Volume"
+    }
+  },
+  "card": {
+    "sections": {
+      "details": "Detalhes de reprodução",
+      "menu": "Menu e Procura",
+      "action_chips": "Chips de ação"
+    },
+    "media_controls": {
+      "shuffle": "Aleatório",
+      "previous": "Anterior",
+      "play_pause": "Play/Pausa",
+      "stop": "Stop",
+      "next": "Seguinte",
+      "repeat": "Repetir"
+    },
+    "menu": {
+      "more_info": "Mais info",
+      "search": "Procurar",
+      "source": "Fonte",
+      "transfer_queue": "Transferir fila",
+      "group_players": "Agrupar",
+      "select_entity": "Selecionar",
+      "transfer_to": "Transferir para",
+      "no_players": "Sem leitores MA."
+    },
+    "grouping": {
+      "title": "Agrupar",
+      "sync_volume": "Sincronizar volume",
+      "group_all": "Agrupar todos",
+      "ungroup_all": "Separar todos",
+      "unavailable": "Indisponível",
+      "no_players": "Não agrupável.",
+      "master": "Mestre",
+      "joined": "Unido",
+      "available": "Disponível",
+      "current": "Atual"
+    }
+  },
+  "search": {
+    "favorites": "Favoritos",
+    "recently_played": "Recentes",
+    "next_up": "A seguir",
+    "recommendations": "Recomendações",
+    "radio_mode": "Modo Rádio",
+    "close": "Fechar",
+    "no_results": "Sem resultados.",
+    "play_next": "Reproduzir seguinte",
+    "replace_play": "Substituir e reproduzir",
+    "replace": "Substituir fila",
+    "add_queue": "Adicionar ao fim",
+    "move_up": "Subir",
+    "move_down": "Descer",
+    "move_next": "Passar para seguinte",
+    "remove": "Remover da fila",
+    "added": "Adicionado!",
+    "labels": {
+      "replace": "Substituir",
+      "next": "Seguinte",
+      "replace_next": "Subst. seg.",
+      "add": "Adicionar"
+    },
+    "results": "resultados",
+    "result": "resultado",
+    "filters": {
+      "all": "Tudo",
+      "artist": "Artista",
+      "album": "Álbum",
+      "track": "Faixa",
+      "playlist": "Lista",
+      "radio": "Rádio",
+      "music": "Música",
+      "station": "Estação",
+      "podcast": "Podcast"
+    },
+    "search_artist": "Procurar este artista"
+  }
+};
+
+var nl = {
+  "common": {
+    "not_found": "Entiteit niet gevonden.",
+    "search": "Zoeken",
+    "power": "Aan/Uit",
+    "favorite": "Favoriet",
+    "loading": "Laden...",
+    "no_results": "Geen resultaten.",
+    "close": "Sluiten",
+    "vol_up": "Volume Omhoog",
+    "vol_down": "Volume Omlaag",
+    "media_player": "Mediaspeler",
+    "edit_entity": "Entiteitsinstellingen Bewerken",
+    "edit_action": "Actie-instellingen Bewerken",
+    "mute": "Dempen",
+    "unmute": "Dempen opheffen",
+    "seek": "Zoeken",
+    "volume": "Volume",
+    "play_now": "Nu Spelen",
+    "more_options": "Meer Opties",
+    "unavailable": "Niet beschikbaar",
+    "back": "Terug",
+    "cancel": "Annuleren",
+    "reset_default": "Herstellen naar standaard"
+  },
+  "editor": {
+    "tabs": {
+      "entities": "Entiteiten",
+      "behavior": "Gedrag",
+      "look_and_feel": "Uiterlijk",
+      "artwork": "Artwork",
+      "actions": "Acties"
+    },
+    "placeholders": {
+      "search": "Zoek muziek..."
+    },
+    "sections": {
+      "artwork": {
+        "general": {
+          "title": "Algemene Instellingen",
+          "description": "Globale instellingen voor hoe artwork wordt weergegeven en opgehaald."
+        },
+        "idle": {
+          "title": "Artwork bij Inactiviteit",
+          "description": "Toon een statische afbeelding of entiteits-snapshot wanneer er niets wordt afgespeeld."
+        },
+        "overrides": {
+          "title": "Artwork Overschrijvingen",
+          "description": "Overschrijvingen worden van boven naar beneden geëvalueerd. Sleep om te sorteren."
+        }
+      },
+      "entities": {
+        "title": "Entiteiten*",
+        "description": "Voeg de mediaspelers toe die je wilt bedienen. Sleep entiteiten om de volgorde te wijzigen."
+      },
+      "behavior": {
+        "idle_chips": {
+          "title": "Inactiviteit & Chips",
+          "description": "Kies wanneer de kaart inactief wordt en hoe entiteitschips zich gedragen."
+        },
+        "interactions_search": {
+          "title": "Interacties & Zoeken",
+          "description": "Verfijn hoe entiteiten worden vastgezet en hoeveel resultaten er tegelijk worden getoond."
+        }
+      },
+      "look_and_feel": {
+        "theme_layout": {
+          "title": "Thema & Layout",
+          "description": "Stem af op de styling van het dashboard en beheer de totale voetafdruk."
+        },
+        "controls_typography": {
+          "title": "Bediening & Typografie",
+          "description": "Pas knopgrootte, entiteitslabels en adaptieve tekst aan."
+        },
+        "collapsed_idle": {
+          "title": "Ingeklapte & Inactieve Staten",
+          "description": "Beheer wanneer de kaart inklapt en welke weergaven getoond worden bij inactiviteit."
+        }
+      },
+      "actions": {
+        "title": "Acties",
+        "description": "Bouw de actiechips die in de kaart of het menu verschijnen. Sleep om te sorteren, klik op het potlood om te configureren."
+      }
+    },
+    "subtitles": {
+      "idle_timeout": "Tijd in milliseconden voordat de kaart naar de inactieve modus gaat. Stel in op 0 om inactiviteitsgedrag uit te schakelen.",
+      "show_chip_row": "\"Auto\" verbergt de chiprij wanneer er slechts één entiteit is geconfigureerd. \"In Menu\" verplaatst de chips naar het menu-overlay.",
+      "dim_chips": "Wanneer de kaart inactief wordt met een afbeelding, dim dan de entiteits- en actiechips voor een strakker uiterlijk.",
+      "hold_to_pin": "Houd entiteitschips lang ingedrukt in plaats van kort om ze vast te zetten, om automatisch schakelen tijdens afspelen te voorkomen.",
+      "disable_autofocus": "Voorkom dat het zoekveld de focus steelt, zodat onscreen toetsenborden verborgen blijven.",
+      "search_within_filter": "Schakel dit in om te zoeken binnen het huidige actieve filter (Favorieten, Recent Afgespeeld, etc) in plaats van dit te wissen.",
+      "close_search_on_play": "Sluit het zoekscherm automatisch wanneer een nummer wordt afgespeeld.",
+      "pin_search_headers": "Houd de zoekinvoer en filters bovenaan vast tijdens het scrollen door resultaten.",
+      "disable_mass": "Schakel de optionele Mass Queue integratie uit, zelfs als deze is geïnstalleerd.",
+      "swap_pause_stop": "Vervang de pauzeknop door stop bij gebruik van de moderne lay-out.",
+      "adaptive_controls": "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
+      "hide_menu_player": "Wanneer chips in het menu staan, verberg dan het entiteitslabel onderaan de kaart.",
+      "adaptive_text": "Kies welke tekstgroepen moeten schalen met de beschikbare ruimte (laat leeg om adaptieve tekst uit te schakelen).",
+      "collapse_expand": "Altijd Ingeklapt creëert de mini-spelermodus. Uitklappen bij Zoeken klapt tijdelijk uit tijdens het zoeken.",
+      "idle_screen": "Kies welk scherm automatisch wordt weergegeven wanneer de kaart inactief wordt.",
+      "hide_controls": "Selecteer welke knoppen je wilt verbergen voor deze entiteit (standaard worden ze allemaal getoond)",
+      "hide_search_chips": "Verberg specifieke zoekfilterchips voor deze entiteit",
+      "follow_active_entity": "Indien ingeschakeld, zal de volume-entiteit automatisch de actieve afspeel-entiteit volgen. Let op: dit overschrijft de geselecteerde volume-entiteit.",
+      "search_limit_full": "Maximaal aantal zoekresultaten om weer te geven (1-1000, standaard: 20)",
+      "result_sorting_full": "Kies hoe zoekresultaten worden gesorteerd. Standaard behoudt de bronvolgorde.",
+      "card_height_full": "Laat leeg voor automatische hoogte",
+      "control_layout_full": "Kies tussen de oude gelijkmatig verdeelde knoppen of de moderne Home Assistant lay-out.",
+      "artwork_extend": "Laat de artwork-achtergrond doorlopen onder de chip- en actierijen.",
+      "artwork_extend_label": "Artwork uitbreiden",
+      "no_artwork_overrides": "Geen artwork overschrijvingen geconfigureerd. Gebruik de plusknop hieronder om er een toe te voegen.",
+      "entity_current_hint": "Gebruik 'entity_id: current' om de momenteel geselecteerde mediaspeler op de kaart te targeten. Let op: de 'Test Actie' knop wordt uitgeschakeld bij gebruik van deze functie.",
+      "service_data_note": "Wijzigingen in de servicegegevens hieronder worden pas in de configuratie opgeslagen nadat op de knop 'Servicegegevens Opslaan' is geklikt!",
+      "jinja_template_hint": "Voer een Jinja-sjabloon in dat resulteert in een enkele entity_id. Voorbeeld voor het wisselen van MA op basis van een bronselectie:",
+      "jinja_template_vol_hint": "Voer een Jinja-sjabloon in dat resulteert in een entity_id (bijv. media_player.kantoor). Voorbeeld voor het wisselen van volume-entiteit op basis van een boolean:",
+      "not_available_alt_collapsed": "Niet beschikbaar met Alternatieve Voortgangsbalk of Altijd Ingeklapte modus",
+      "not_available_collapsed": "Niet beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
+      "only_available_collapsed": "Alleen beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
+      "only_available_modern": "Alleen beschikbaar met de Moderne lay-out",
+      "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in"
+    },
+    "titles": {
+      "edit_entity": "Entiteit Bewerken",
+      "edit_action": "Actie Bewerken",
+      "service_data": "Servicegegevens",
+      "add_artwork_override": "Artwork Overschrijving Toevoegen"
+    },
+    "labels": {
+      "dim_chips": "Chips dimmen bij inactiviteit",
+      "hold_to_pin": "Ingedrukt houden om vast te zetten",
+      "disable_autofocus": "Zoek-autofocus uitschakelen",
+      "keep_filters": "Filters behouden bij zoeken",
+      "dismiss_on_play": "Zoeken sluiten bij afspelen",
+      "pin_headers": "Zoekkoppen vastzetten",
+      "disable_mass": "Mass Queue uitschakelen",
+      "match_theme": "Thema matchen",
+      "alt_progress": "Alternatieve Voortgangsbalk",
+      "display_timestamps": "Tijdstempels Weergeven",
+      "swap_pause_stop": "Pauze vervangen door Stop",
+      "adaptive_controls": "Adaptieve Knoppen Grootte",
+      "hide_active_entity": "Label van Actieve Entiteit verbergen",
+      "collapse_on_idle": "Inklappen bij inactiviteit",
+      "hide_menu_player_toggle": "Menu-speler Verbergen",
+      "always_collapsed": "Altijd Ingeklapt",
+      "expand_on_search": "Uitklappen bij Zoeken",
+      "script_var": "Script Variabele (yamp_entity)",
+      "use_ma_template": "Sjabloon gebruiken voor Music Assistant Entiteit",
+      "use_vol_template": "Sjabloon gebruiken voor Volume Entiteit",
+      "follow_active_entity": "Volume Entiteit volgt Actieve Entiteit",
+      "use_url_path": "URL of Pad gebruiken",
+      "adaptive_text_elements": "Elementen voor Adaptieve Tekstgrootte"
+    },
+    "fields": {
+      "artwork_fit": "Artwork Passend Maken",
+      "artwork_position": "Artwork Positie",
+      "artwork_hostname": "Artwork Hostnaam",
+      "match_field": "Match Veld",
+      "match_value": "Match Waarde",
+      "size_percent": "Grootte (%)",
+      "object_fit": "Object Fit",
+      "idle_timeout": "Time-out voor Inactiviteit (ms)",
+      "show_chip_row": "Chiprij Tonen",
+      "search_limit": "Limiet Zoekresultaten",
+      "result_sorting": "Sortering Resultaten",
+      "vol_step": "Volume Stap (0.05 = 5%)",
+      "card_height": "Kaarthoogte (px)",
+      "control_layout": "Knoppen Lay-out",
+      "save_service_data": "Servicegegevens Opslaan",
+      "image_url": "Afbeelding URL",
+      "fallback_image_url": "Fallback Afbeelding URL",
+      "move_to_main": "Verplaats actie naar hoofdchips",
+      "move_to_menu": "Verplaats actie naar menu",
+      "delete_action": "Actie Verwijderen",
+      "revert_service_data": "Terugzetten naar Opgeslagen Gegevens",
+      "test_action": "Actie Testen",
+      "volume_mode": "Volume Modus",
+      "idle_screen": "Inactief Scherm",
+      "name": "Naam",
+      "hidden_controls": "Verborgen Knoppen",
+      "ma_template": "Music Assistant Entiteit Sjabloon (Jinja)",
+      "hidden_chips": "Verborgen Zoekfilterchips",
+      "vol_template": "Volume Entiteit Sjabloon (Jinja)",
+      "icon": "Icoon",
+      "action_type": "Actietype",
+      "menu_item": "Menu-item",
+      "nav_path": "Navigatiepad",
+      "service": "Service",
+      "service_data": "Servicegegevens",
+      "idle_image_entity": "Entiteit voor inactieve afbeelding",
+      "match_entity": "Match Entiteit",
+      "ma_entity": "Music Assistant Entiteit",
+      "vol_entity": "Volume Entiteit"
+    }
+  },
+  "card": {
+    "sections": {
+      "details": "Details van 'Nu Spelen'",
+      "menu": "Menu & Zoekschermen",
+      "action_chips": "Actie Chips"
+    },
+    "media_controls": {
+      "shuffle": "Shuffle",
+      "previous": "Vorige",
+      "play_pause": "Afspelen/Pauzeren",
+      "stop": "Stop",
+      "next": "Volgende",
+      "repeat": "Herhalen"
+    },
+    "menu": {
+      "more_info": "Meer Info",
+      "search": "Zoeken",
+      "source": "Bron",
+      "transfer_queue": "Wachtrij Overdragen",
+      "group_players": "Spelers Groeperen",
+      "select_entity": "Selecteer Entiteit voor Meer Info",
+      "transfer_to": "Wachtrij Overdragen Naar",
+      "no_players": "Geen andere Music Assistant spelers beschikbaar."
+    },
+    "grouping": {
+      "title": "Spelers Groeperen",
+      "sync_volume": "Volume Synchroniseren",
+      "group_all": "Alles Groeperen",
+      "ungroup_all": "Alles Loskoppelen",
+      "unavailable": "Speler is niet beschikbaar",
+      "no_players": "Geen andere spelers beschikbaar die kunnen groeperen.",
+      "master": "Master",
+      "joined": "Gekoppeld",
+      "available": "Beschikbaar",
+      "current": "Huidig"
+    }
+  },
+  "search": {
+    "favorites": "Favorieten",
+    "recently_played": "Recent Afgespeeld",
+    "next_up": "Volgende",
+    "recommendations": "Aanbevelingen",
+    "radio_mode": "Radiomodus",
+    "close": "Zoeken Sluiten",
+    "no_results": "Geen resultaten.",
+    "play_next": "Volgende afspelen",
+    "replace_play": "Huidige wachtrij vervangen en nu afspelen",
+    "replace": "Wachtrij vervangen",
+    "add_queue": "Toevoegen aan einde van de wachtrij",
+    "move_up": "Omhoog verplaatsen",
+    "move_down": "Omlaag verplaatsen",
+    "move_next": "Als volgende afspelen",
+    "remove": "Verwijderen uit wachtrij",
+    "added": "Toegevoegd aan wachtrij!",
+    "labels": {
+      "replace": "Vervangen",
+      "next": "Volgende",
+      "replace_next": "Vervang Volgende",
+      "add": "Toevoegen"
+    },
+    "results": "resultaten",
+    "result": "resultaat",
+    "filters": {
+      "all": "Alles",
+      "artist": "Artiest",
+      "album": "Album",
+      "track": "Nummer",
+      "playlist": "Afspeellijst",
+      "radio": "Radio",
+      "music": "Muziek",
+      "station": "Zender",
+      "podcast": "Podcast"
+    },
+    "search_artist": "Zoek naar deze artiest"
+  }
+};
+
 const languages = {
-  en
+  en,
+  de,
+  fr,
+  es,
+  it,
+  pt,
+  nl
 };
 function localize(string) {
   let search = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
@@ -9157,7 +10783,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
         filterable: true,
         options: this._serviceItems || []
       }
-    }, (_action$service = action.service) !== null && _action$service !== void 0 ? _action$service : "", localize('editor.fields.service'), true, e => this._updateActionProperty("service", e.detail.value), typeof action.service === "string" && action.service.startsWith("script.") ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n            <div class=\"form-row form-row-multi-column\">\n              <div>\n                <ha-switch\n                  id=\"script-variable-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>", "</span>\n              </div>\n            </div>\n          "])), (_action$script_variab = action === null || action === void 0 ? void 0 : action.script_variable) !== null && _action$script_variab !== void 0 ? _action$script_variab : false, e => this._updateActionProperty("script_variable", e.target.checked), localize('editor.labels.script_var')) : E, typeof action.service === "string" ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n\n              ", "<code>entity_id: current</code>", " <ha-icon icon=\"mdi:play-circle-outline\"></ha-icon> ", "\n\n            </div>\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n            ", "\n            <ha-icon icon=\"mdi:content-save\"></ha-icon> ", "\n            </div>\n            <div class=\"form-row\">\n              <div class=\"service-data-editor-header\">\n                <div class=\"service-data-editor-title\">", "</div>\n                <div class=\"service-data-editor-actions\">\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:content-save\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:backup-restore\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n\n                    class=\"icon-button ", "\"\n\n                    icon=\"mdi:play-circle-outline\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>              \n                </div>\n            </div>\n            <div class=", ">\n              <ha-code-editor\n                id=\"service-data-editor\"\n                label=\"", "\"\n                autocomplete-entities\n                autocomplete-icons\n                .hass=", "\n                mode=\"yaml\"\n                .value=", "\n                @value-changed=", "\n              ></ha-code-editor>\n              ", "\n            </div>\n          "])), localize('editor.subtitles.entity_current_hint').split('entity_id: current')[0], localize('editor.subtitles.entity_current_hint').split('entity_id: current')[1].split(' button')[0], localize('editor.subtitles.entity_current_hint').split(' button')[1], localize('editor.subtitles.service_data_note').split('save icon')[0], localize('editor.subtitles.service_data_note').split('save icon')[1], localize('editor.titles.service_data'), !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.save_service_data'), this._saveYamlEditor, !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.revert_service_data'), this._revertYamlEditor, this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : "", localize('editor.fields.test_action'), this._testServiceCall, this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.service_data'), this.hass, action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : "", e => {
+    }, (_action$service = action.service) !== null && _action$service !== void 0 ? _action$service : "", localize('editor.fields.service'), true, e => this._updateActionProperty("service", e.detail.value), typeof action.service === "string" && action.service.startsWith("script.") ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n            <div class=\"form-row form-row-multi-column\">\n              <div>\n                <ha-switch\n                  id=\"script-variable-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>", "</span>\n              </div>\n            </div>\n          "])), (_action$script_variab = action === null || action === void 0 ? void 0 : action.script_variable) !== null && _action$script_variab !== void 0 ? _action$script_variab : false, e => this._updateActionProperty("script_variable", e.target.checked), localize('editor.labels.script_var')) : E, typeof action.service === "string" ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n\n              ", "\n\n            </div>\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n            ", "\n            </div>\n            <div class=\"form-row\">\n              <div class=\"service-data-editor-header\">\n                <div class=\"service-data-editor-title\">", "</div>\n                <div class=\"service-data-editor-actions\">\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:content-save\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:backup-restore\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n\n                    class=\"icon-button ", "\"\n\n                    icon=\"mdi:play-circle-outline\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>              \n                </div>\n            </div>\n            <div class=", ">\n              <ha-code-editor\n                id=\"service-data-editor\"\n                label=\"", "\"\n                autocomplete-entities\n                autocomplete-icons\n                .hass=", "\n                mode=\"yaml\"\n                .value=", "\n                @value-changed=", "\n              ></ha-code-editor>\n              ", "\n            </div>\n          "])), localize('editor.subtitles.entity_current_hint'), localize('editor.subtitles.service_data_note'), localize('editor.titles.service_data'), !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.save_service_data'), this._saveYamlEditor, !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.revert_service_data'), this._revertYamlEditor, this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : "", localize('editor.fields.test_action'), this._testServiceCall, this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.service_data'), this.hass, action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : "", e => {
       /* the yaml will be parsed in real time to detect errors, but we will defer 
         updating the config until the save button above the editor is clicked.
       */
