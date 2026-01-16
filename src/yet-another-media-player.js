@@ -14,7 +14,8 @@ import {
   findAssociatedButtonEntities,
   getMusicAssistantState,
   getSearchResultClickTitle,
-  isMusicAssistantEntity
+  isMusicAssistantEntity,
+  getValidArtworkAttr
 } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
@@ -3240,7 +3241,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           })
         );
 
-      const hasExistingArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
+      // Use helper to properly check for valid artwork attributes
+      const hasExistingArtwork = getValidArtworkAttr(attrs, 'entity_picture_local') ||
+        getValidArtworkAttr(attrs, 'entity_picture') ||
+        getValidArtworkAttr(attrs, 'album_art');
       let override = findSpecificMatch();
       let overrideSource = null;
       let overrideType = "image";
@@ -3272,9 +3276,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // If no override found, use standard artwork
+    // Use helper to properly check for valid artwork attributes and fallback correctly
     if (!artworkUrl) {
-      // Always check entity_picture_local first, then entity_picture
-      artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
+      artworkUrl = getValidArtworkAttr(attrs, 'entity_picture_local') ||
+        getValidArtworkAttr(attrs, 'entity_picture') ||
+        getValidArtworkAttr(attrs, 'album_art') ||
+        null;
     }
 
     // If still no artwork, check for configured fallback artwork
