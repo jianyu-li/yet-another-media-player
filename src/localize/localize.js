@@ -9,11 +9,11 @@ import nl from './languages/nl.js';
 const languages = {
     en,
     de,
-    fr,
     es,
+    fr,
     it,
-    pt,
     nl,
+    pt,
 };
 
 export function localize(string, search = '', replace = '') {
