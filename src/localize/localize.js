@@ -6,6 +6,7 @@ import fr from './languages/fr.js';
 import it from './languages/it.js';
 import nl from './languages/nl.js';
 import pt from './languages/pt.js';
+import sk from './languages/sk.js';
 import sl from './languages/sl.js';
 
 const languages = {
@@ -16,6 +17,7 @@ const languages = {
     it,
     nl,
     pt,
+    sk,
     sl,
 };
 
