@@ -1,7 +1,19 @@
 import en from './languages/en.js';
+import de from './languages/de.js';
+import es from './languages/es.js';
+import fr from './languages/fr.js';
+import it from './languages/it.js';
+import nl from './languages/nl.js';
+import pt from './languages/pt.js';
 
 const languages = {
     en,
+    de,
+    es,
+    fr,
+    it,
+    nl,
+    pt,
 };
 
 export function localize(string, search = '', replace = '') {
