@@ -2074,15 +2074,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 icon="mdi:information-outline"
               ></ha-icon>
 
-              ${localize('editor.subtitles.entity_current_hint').split('entity_id: current')[0]}<code>entity_id: current</code>${localize('editor.subtitles.entity_current_hint').split('entity_id: current')[1].split(' button')[0]} <ha-icon icon="mdi:play-circle-outline"></ha-icon> ${localize('editor.subtitles.entity_current_hint').split(' button')[1]}
+              ${localize('editor.subtitles.entity_current_hint')}
 
             </div>
             <div class="help-text">
               <ha-icon
                 icon="mdi:information-outline"
               ></ha-icon>
-            ${localize('editor.subtitles.service_data_note').split('save icon')[0]}
-            <ha-icon icon="mdi:content-save"></ha-icon> ${localize('editor.subtitles.service_data_note').split('save icon')[1]}
+            ${localize('editor.subtitles.service_data_note')}
             </div>
             <div class="form-row">
               <div class="service-data-editor-header">
