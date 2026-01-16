@@ -1,5 +1,7 @@
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { html, nothing } from "lit";
+import { getValidArtworkAttr } from "./yamp-utils.js";
+
 
 // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
 function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = null) {
@@ -48,7 +50,10 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
     let override = findSpecificMatch();
 
     if (!override) {
-      const hasArtwork = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
+      // Use helper to properly check for valid artwork attributes
+      const hasArtwork = getValidArtworkAttr(attrs, 'entity_picture_local') ||
+        getValidArtworkAttr(attrs, 'entity_picture') ||
+        getValidArtworkAttr(attrs, 'album_art');
       if (!hasArtwork) {
         override = overrides.find((item) => item?.missing_art_url);
         if (override?.missing_art_url) {
@@ -64,9 +69,12 @@ function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = n
   }
 
   // If no override found, use standard artwork
+  // Use helper to properly check for valid artwork attributes and fallback correctly
   if (!artworkUrl) {
-    // Always check entity_picture_local first, then entity_picture
-    artworkUrl = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art || null;
+    artworkUrl = getValidArtworkAttr(attrs, 'entity_picture_local') ||
+      getValidArtworkAttr(attrs, 'entity_picture') ||
+      getValidArtworkAttr(attrs, 'album_art') ||
+      null;
   }
 
   // If still no artwork, check for configured fallback artwork

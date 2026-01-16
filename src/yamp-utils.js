@@ -1,6 +1,21 @@
 // Utility functions for Yet Another Media Player (YAMP)
 
 /**
+ * Get a valid artwork attribute value (non-empty string with content)
+ * @param {Object} attrs - Entity attributes object
+ * @param {string} key - Attribute key to check
+ * @returns {string|null} The attribute value if valid, null otherwise
+ */
+export function getValidArtworkAttr(attrs, key) {
+  const val = attrs?.[key];
+  // Must be a non-empty string with actual content
+  if (typeof val === 'string' && val.trim() !== '') {
+    return val;
+  }
+  return null;
+}
+
+/**
  * Resolve a Jinja template string at runtime
  * @param {Object} hass - Home Assistant object
  * @param {string} templateString - The template string to resolve
