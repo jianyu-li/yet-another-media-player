@@ -143,7 +143,7 @@ export default {
             "always_collapsed": "Vedno skrčeno",
             "expand_on_search": "Razširi ob iskanju",
             "script_var": "Skriptna spremenljivka",
-            "use_ma_template": "Uporabi predlogo za Music Assistant",
+            "use_ma_template": "Uporabi predlogo za entiteto Music Assistant",
             "use_vol_template": "Uporabi predlogo za glasnost",
             "follow_active_entity": "Glasnost sledi aktivni entiteti",
             "use_url_path": "Uporabi URL ali pot",
