@@ -1,3 +1,4 @@
+
 import en from './languages/en.js';
 import de from './languages/de.js';
 import es from './languages/es.js';
@@ -5,6 +6,7 @@ import fr from './languages/fr.js';
 import it from './languages/it.js';
 import nl from './languages/nl.js';
 import pt from './languages/pt.js';
+import sl from './languages/sl.js';
 
 const languages = {
     en,
@@ -14,6 +16,7 @@ const languages = {
     it,
     nl,
     pt,
+    sl,
 };
 
 export function localize(string, search = '', replace = '') {
