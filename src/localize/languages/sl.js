@@ -100,7 +100,7 @@ export default {
             "idle_screen": "Izberi zaslon, prikazan v mirovanju.",
             "hide_controls": "Izberi kontrolnike za skrivanje.",
             "hide_search_chips": "Skrij določene iskalne filtre.",
-            "follow_active_entity": "Entiteta glasnosti sledi aktivni entiteti.",
+            "follow_active_entity": "Entiteta glasnosti sledi aktivni entiteti. Opomba: To prepiše izbrano entiteto za glasnost.",
             "search_limit_full": "Največje število rezultatov (1–1000, privzeto: 20).",
             "result_sorting_full": "Izberi razvrščanje rezultatov.",
             "card_height_full": "Pustite prazno za samodejno višino.",
