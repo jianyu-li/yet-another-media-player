@@ -101,7 +101,7 @@ export default {
             "hide_controls": "Izberi kontrolnike za skrivanje.",
             "hide_search_chips": "Skrij določene iskalne filtre.",
             "follow_active_entity": "Entiteta glasnosti sledi aktivni entiteti.",
-            "search_limit_full": "Največje število rezultatov (1–1000).",
+            "search_limit_full": "Največje število rezultatov (1–1000, privzeto: 20).",
             "result_sorting_full": "Izberi razvrščanje rezultatov.",
             "card_height_full": "Pustite prazno za samodejno višino.",
             "control_layout_full": "Izberi med staro in moderno postavitvijo.",
