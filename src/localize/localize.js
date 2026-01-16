@@ -1,4 +1,5 @@
 import en from './languages/en.js';
+import sl from './languages/sl.js';
 
 const languages = {
     en,
