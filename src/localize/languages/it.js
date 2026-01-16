@@ -39,7 +39,47 @@ export default {
                 "general": {
                     "title": "Impostazioni generali",
                     "description": "Controlli globali per la copertina."
+                },
+                "idle": {
+                    "title": "Copertina in riposo",
+                    "description": "Mostra un'immagine statica quando non c'è riproduzione."
+                },
+                "overrides": {
+                    "title": "Override copertina",
+                    "description": "Gli override sono valutati dall'alto in basso."
                 }
+            },
+            "entities": {
+                "title": "Entità*",
+                "description": "Aggiungi i lettori da controllare."
+            },
+            "behavior": {
+                "idle_chips": {
+                    "title": "Riposo e chip",
+                    "description": "Scegli quando andare in riposo."
+                },
+                "interactions_search": {
+                    "title": "Interazioni e ricerca",
+                    "description": "Ajusta il fissaggio delle entità."
+                }
+            },
+            "look_and_feel": {
+                "theme_layout": {
+                    "title": "Tema e layout",
+                    "description": "Adatta allo stile del dashboard."
+                },
+                "controls_typography": {
+                    "title": "Controlli e tipografia",
+                    "description": "Ajusta bottoni e etichette."
+                },
+                "collapsed_idle": {
+                    "title": "Stati contratto e riposo",
+                    "description": "Controlla il contratto della scheda."
+                }
+            },
+            "actions": {
+                "title": "Azioni",
+                "description": "Crea chip azione."
             }
         },
         "subtitles": {
@@ -56,7 +96,7 @@ export default {
             "adaptive_controls": "Permetti ai pulsanti di adattarsi allo spazio.",
             "hide_menu_player": "Nascondi nome entità quando è nel menu.",
             "adaptive_text": "Scegli quali testi si adattano allo spazio.",
-            "collapse_expand": "Sempre contratto attiva il modo mini.",
+            "collapse_expand": "Sempre contratto attiva il modo mini. Espandi alla ricerca espande temporaneamente.",
             "idle_screen": "Scegli schermata da mostrare in riposo.",
             "hide_controls": "Seleziona controlli da nascondere.",
             "hide_search_chips": "Nascondi chip di filtro ricerca.",
@@ -70,7 +110,12 @@ export default {
             "no_artwork_overrides": "Nessun override copertina configurato.",
             "entity_current_hint": "Usa 'entity_id: current' per il lettore attuale.",
             "service_data_note": "Le modifiche si salvano premendo 'Salva'.",
-            "jinja_template_hint": "Inserisci un modello Jinja che restituisca un entity_id.",
+            "jinja_template_hint": "Modello Jinja per entity_id.",
+            "jinja_template_vol_hint": "Modello per entità volume.",
+            "not_available_alt_collapsed": "Non disponibile in modo contratto.",
+            "not_available_collapsed": "Non disponibile se contratto.",
+            "only_available_collapsed": "Solo disponibile se contratto.",
+            "only_available_modern": "Solo disponibile con layout Moderno.",
             "image_url_helper": "URL diretto immagine o percorso locale."
         },
         "titles": {

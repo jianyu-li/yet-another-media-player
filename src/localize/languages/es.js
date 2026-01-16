@@ -39,16 +39,52 @@ export default {
                 "general": {
                     "title": "Ajustes generales",
                     "description": "Controles globales para la portada."
+                },
+                "idle": {
+                    "title": "Portada en reposo",
+                    "description": "Mostrar imagen estática cuando nada se reproduce."
+                },
+                "overrides": {
+                    "title": "Reemplazos de portada",
+                    "description": "Los reemplazos se evalúan de arriba a abajo. Arrastre para reordenar."
                 }
             },
             "entities": {
                 "title": "Entidades*",
-                "description": "Añada los reproductores multimedia que desee controlar."
+                "description": "Añada los reproductores multimedia. Arrastre para reordenar."
+            },
+            "behavior": {
+                "idle_chips": {
+                    "title": "Reposo y chips",
+                    "description": "Elija cuándo pasa a reposo y el comportamiento de los chips."
+                },
+                "interactions_search": {
+                    "title": "Interacciones y búsqueda",
+                    "description": "Ajuste el fijado de entidades y límite de resultados."
+                }
+            },
+            "look_and_feel": {
+                "theme_layout": {
+                    "title": "Tema y diseño",
+                    "description": "Combine con el estilo de su dashboard."
+                },
+                "controls_typography": {
+                    "title": "Controles y tipografía",
+                    "description": "Ajuste tamaño de botones y etiquetas."
+                },
+                "collapsed_idle": {
+                    "title": "Estados de reposo y contraído",
+                    "description": "Controle el contraído de la tarjeta."
+                }
+            },
+            "actions": {
+                "title": "Acciones",
+                "description": "Cree chips de acción. Arrastre para reordenar, pulse el lápiz para configurar."
             }
         },
         "subtitles": {
-            "idle_timeout": "Tiempo antes de pasar a reposo (ms). 0 para desactivar.",
-            "show_chip_row": "\"Auto\" oculta la fila si solo hay una entidad.",
+            "idle_timeout": "Tiempo antes de reposo (ms). 0 para desactivar.",
+            "show_chip_row": "\"Auto\" oculta la fila si solo hay una entidad. \"En menú\" mueve los chips.",
             "dim_chips": "Atenuar los chips en reposo para un aspecto más limpio.",
             "hold_to_pin": "Mantener pulsado para fijar en vez de pulsación corta.",
             "disable_autofocus": "Evitar que la búsqueda tome el foco automáticamente.",
@@ -60,7 +96,7 @@ export default {
             "adaptive_controls": "Permitir que los botones se adapten al espacio.",
             "hide_menu_player": "Ocultar nombre de entidad cuando está en el menú.",
             "adaptive_text": "Elegir qué textos se adaptan al espacio.",
-            "collapse_expand": "Siempre contraído activa el modo mini.",
+            "collapse_expand": "Siempre contraído activa el modo mini. Expandir al buscar expande temporalmente.",
             "idle_screen": "Elegir pantalla a mostrar en reposo.",
             "hide_controls": "Seleccionar controles a ocultar.",
             "hide_search_chips": "Ocultar chips de filtro de búsqueda.",
@@ -74,7 +110,12 @@ export default {
             "no_artwork_overrides": "Sin reemplazos de portada configurados.",
             "entity_current_hint": "Use 'entity_id: current' para el reproductor actual.",
             "service_data_note": "Los cambios se guardan al pulsar 'Guardar'.",
-            "jinja_template_hint": "Inserte una plantilla Jinja que devuelva un entity_id.",
+            "jinja_template_hint": "Plantilla Jinja para entity_id.",
+            "jinja_template_vol_hint": "Plantilla para entidad de volumen.",
+            "not_available_alt_collapsed": "No disponible en modo contraído.",
+            "not_available_collapsed": "No disponible si está contraído.",
+            "only_available_collapsed": "Solo disponible si está contraído.",
+            "only_available_modern": "Solo disponible con diseño Moderno.",
             "image_url_helper": "URL directa de imagen o ruta local."
         },
         "titles": {

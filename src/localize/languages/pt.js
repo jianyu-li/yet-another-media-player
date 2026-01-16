@@ -39,12 +39,52 @@ export default {
                 "general": {
                     "title": "Definições gerais",
                     "description": "Controlos globais para a capa."
+                },
+                "idle": {
+                    "title": "Capa em repouso",
+                    "description": "Mostrar imagem estática quando nada toca."
+                },
+                "overrides": {
+                    "title": "Substituições de capa",
+                    "description": "As substituições são avaliadas de cima para baixo."
                 }
+            },
+            "entities": {
+                "title": "Entidades*",
+                "description": "Adicione os leitores a controlar."
+            },
+            "behavior": {
+                "idle_chips": {
+                    "title": "Repouso e chips",
+                    "description": "Escolha quando ir para repouso."
+                },
+                "interactions_search": {
+                    "title": "Interações e procura",
+                    "description": "Ajuste a fixação de entidades."
+                }
+            },
+            "look_and_feel": {
+                "theme_layout": {
+                    "title": "Tema e design",
+                    "description": "Combine com o estilo do dashboard."
+                },
+                "controls_typography": {
+                    "title": "Controlos e tipografia",
+                    "description": "Ajuste botões e etiquetas."
+                },
+                "collapsed_idle": {
+                    "title": "Estados contraído e repouso",
+                    "description": "Controle o contraído do cartão."
+                }
+            },
+            "actions": {
+                "title": "Ações",
+                "description": "Crie chips de ação."
             }
         },
         "subtitles": {
             "idle_timeout": "Tempo antes de repouso (ms). 0 para desativar.",
-            "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade.",
+            "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade. \"No menu\" move os chips.",
             "dim_chips": "Escurecer chips em repouso para um aspeto mais limpo.",
             "hold_to_pin": "Manter premido para fixar em vez de toque curto.",
             "disable_autofocus": "Evitar que a procura tome o foco automaticamente.",
@@ -53,10 +93,10 @@ export default {
             "pin_search_headers": "Fixar cabeçalhos de procura ao fazer scroll.",
             "disable_mass": "Desativar integração Mass Queue.",
             "swap_pause_stop": "Substituir pausa por stop no design moderno.",
-            "adaptive_controls": "Permitir que os botões se adaptem ao spazio.",
+            "adaptive_controls": "Permitir que os botões se adaptem ao espaço.",
             "hide_menu_player": "Ocultar nome da entidade quando no menu.",
             "adaptive_text": "Escolher que textos se adaptam ao espaço.",
-            "collapse_expand": "Sempre contraído ativa modo mini.",
+            "collapse_expand": "Sempre contraído ativa modo mini. Expandir ao procurar expande temporariamente.",
             "idle_screen": "Escolher ecrã a mostrar em repouso.",
             "hide_controls": "Selecionar controlos a ocultar.",
             "hide_search_chips": "Ocultar chips de filtro de procura.",
@@ -70,7 +110,12 @@ export default {
             "no_artwork_overrides": "Sem substituições de capa configuradas.",
             "entity_current_hint": "Use 'entity_id: current' para o leitor atual.",
             "service_data_note": "As alterações são guardadas ao premir 'Guardar'.",
-            "jinja_template_hint": "Introduza um modelo Jinja que devolva um entity_id.",
+            "jinja_template_hint": "Modelo Jinja para entity_id.",
+            "jinja_template_vol_hint": "Modelo para entidade volume.",
+            "not_available_alt_collapsed": "Não disponível em modo contraído.",
+            "not_available_collapsed": "Não disponível se contraído.",
+            "only_available_collapsed": "Apenas disponível se contraído.",
+            "only_available_modern": "Apenas disponível com layout Moderno.",
             "image_url_helper": "URL direto da imagem ou caminho local."
         },
         "titles": {
