@@ -200,8 +200,8 @@ export default {
         "media_controls": {
             "shuffle": "Aleatorio",
             "previous": "Anterior",
-            "play_pause": "Play/Pausa",
-            "stop": "Stop",
+            "play_pause": "Reproducir/Pausa",
+            "stop": "Detener",
             "next": "Siguiente",
             "repeat": "Repetir"
         },
