@@ -116,7 +116,8 @@ export default {
             "not_available_collapsed": "Ni na voljo v vedno skrčenem načinu.",
             "only_available_collapsed": "Na voljo le v vedno skrčenem načinu.",
             "only_available_modern": "Na voljo le v moderni postavitvi.",
-            "image_url_helper": "Vnesite neposreden URL slike ali lokalno pot."
+            "image_url_helper": "Vnesite neposreden URL slike ali lokalno pot.",
+            "selected_entity_helper": "Tekstovni pomočnik, ki bo posodobljen z ID-jem trenutno izbrane entitete predvajalnika."
         },
         "titles": {
             "edit_entity": "Uredi entiteto",

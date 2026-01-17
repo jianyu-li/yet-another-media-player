@@ -116,7 +116,8 @@ export default {
             "not_available_collapsed": "Nedostupné, keď je zapnuté Vždy zbalené.",
             "only_available_collapsed": "Dostupné len pri zapnutom režime Vždy zbalené.",
             "only_available_modern": "Dostupné len s moderným rozložením.",
-            "image_url_helper": "Zadajte priamu URL adresu obrázka alebo cestu k lokálnemu súboru."
+            "image_url_helper": "Zadajte priamu URL adresu obrázka alebo cestu k lokálnemu súboru.",
+            "selected_entity_helper": "Textový pomocník, ktorý bude aktualizovaný ID aktuálne vybranej entity prehrávača médií."
         },
         "titles": {
             "edit_entity": "Upraviť entitu",

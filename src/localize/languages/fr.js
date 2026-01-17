@@ -116,7 +116,8 @@ export default {
             "not_available_collapsed": "Non disponible si 'Toujours réduit' est activé.",
             "only_available_collapsed": "Uniquement disponible si 'Toujours réduit' est activé.",
             "only_available_modern": "Uniquement disponible avec la mise en page Moderne.",
-            "image_url_helper": "Entrez l'URL d'une image ou un chemin local."
+            "image_url_helper": "Entrez l'URL d'une image ou un chemin local.",
+            "selected_entity_helper": "Aide texte qui sera mis à jour avec l'ID de l'entité du lecteur multimédia sélectionné."
         },
         "titles": {
             "edit_entity": "Modifier l'entité",
