@@ -116,7 +116,8 @@ export default {
             "not_available_collapsed": "Non disponible si 'Toujours réduit' est activé.",
             "only_available_collapsed": "Uniquement disponible si 'Toujours réduit' est activé.",
             "only_available_modern": "Uniquement disponible avec la mise en page Moderne.",
-            "image_url_helper": "Entrez l'URL d'une image ou un chemin local."
+            "image_url_helper": "Entrez l'URL d'une image ou un chemin local.",
+            "selected_entity_helper": "Aide texte qui sera mis à jour avec l'ID de l'entité du lecteur multimédia sélectionné."
         },
         "titles": {
             "edit_entity": "Modifier l'entité",
@@ -188,7 +189,18 @@ export default {
             "idle_image_entity": "Entité image veille",
             "match_entity": "Entité de correspondance",
             "ma_entity": "Entité MA",
-            "vol_entity": "Entité Volume"
+            "vol_entity": "Entité Volume",
+            "selected_entity_helper": "Aide à l'entité sélectionnée"
+        },
+        "action_types": {
+            "menu": "Ouvrir un élément de menu",
+            "service": "Appeler un service",
+            "navigate": "Naviguer",
+            "sync_selected_entity": "Synchroniser l'entité sélectionnée"
+        },
+        "action_helpers": {
+            "sync_selected_entity": "Synchroniser l'entité →",
+            "select_helper": "(sélectionner l'aide)"
         }
     },
     "card": {

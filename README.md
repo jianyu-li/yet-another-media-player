@@ -106,12 +106,13 @@ Below you will find a list of all configuration options.
 | `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
-| `action`                   | string       | No           | —           | Set to `navigate` to create a navigation shortcut                                               |
+| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts or `sync_selected_entity` to sync the active entity to a helper |
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
-| `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`                    |
-| `in_menu`                  | boolean      | No           | `false`     | When `true`, moves actions alongside the built-in menu options instead of forward facing chips           |
+| `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue` |
+| `in_menu`                  | boolean      | No           | `false`     | When `true`, moves actions alongside the built-in menu options instead of forward facing chips  |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
+| `sync_entity_helper`       | string       | No           | —           | `input_text` entity to sync the currently selected entity to (used with `action: sync_selected_entity`) |
 
 
 # Entities
@@ -551,6 +552,55 @@ actions:
     action: navigate
     navigation_path: "https://example.com/docs"
     navigation_new_tab: true
+```
+
+### Sync Selected Entity Action
+
+Use the **Sync Selected Entity** action to automatically keep an `input_text` helper in sync with the currently selected media player. This is useful for automations that need to know which entity is active in the card.
+
+#### Example Configuration
+
+First, create an `input_text` helper in Home Assistant (e.g., `input_text.yamp_selected_entity`).
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - media_player.living_room_apple_tv
+  - media_player.kitchen_homepod
+actions:
+  - action: sync_selected_entity
+    sync_entity_helper: input_text.yamp_selected_entity
+```
+
+#### Example Automation
+
+```yaml
+alias: Adjust Lights Based on Selected Player
+trigger:
+  - platform: state
+    entity_id: input_text.yamp_selected_entity
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: input_text.yamp_selected_entity
+            state: media_player.living_room_apple_tv
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: light.living_room
+            data:
+              brightness_pct: 50
+      - conditions:
+          - condition: state
+            entity_id: input_text.yamp_selected_entity
+            state: media_player.kitchen_homepod
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: light.kitchen
+            data:
+              brightness_pct: 75
 ```
 
 ### Passing Current Entity to a Script

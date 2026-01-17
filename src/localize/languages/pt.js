@@ -116,7 +116,8 @@ export default {
             "not_available_collapsed": "Não disponível se contraído.",
             "only_available_collapsed": "Apenas disponível se contraído.",
             "only_available_modern": "Apenas disponível com layout Moderno.",
-            "image_url_helper": "URL direto da imagem ou caminho local."
+            "image_url_helper": "URL direto da imagem ou caminho local.",
+            "selected_entity_helper": "Auxiliar de texto de entrada que será atualizado com o ID da entidade do reprodutor de mídia selecionado no momento."
         },
         "titles": {
             "edit_entity": "Editar entidade",
@@ -188,7 +189,18 @@ export default {
             "idle_image_entity": "Entidade imagem repouso",
             "match_entity": "Entidade",
             "ma_entity": "Entidade MA",
-            "vol_entity": "Entidade Volume"
+            "vol_entity": "Entidade Volume",
+            "selected_entity_helper": "Ajudante de entidade selecionada"
+        },
+        "action_types": {
+            "menu": "Abrir um item do menu",
+            "service": "Chamar um serviço",
+            "navigate": "Navegar",
+            "sync_selected_entity": "Sincronizar entidade selecionada"
+        },
+        "action_helpers": {
+            "sync_selected_entity": "Sincronizar entidade →",
+            "select_helper": "(selecionar ajudante)"
         }
     },
     "card": {
