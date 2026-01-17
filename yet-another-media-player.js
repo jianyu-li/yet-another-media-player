@@ -2258,7 +2258,8 @@ var fr = {
       "not_available_collapsed": "Non disponible si 'Toujours réduit' est activé.",
       "only_available_collapsed": "Uniquement disponible si 'Toujours réduit' est activé.",
       "only_available_modern": "Uniquement disponible avec la mise en page Moderne.",
-      "image_url_helper": "Entrez l'URL d'une image ou un chemin local."
+      "image_url_helper": "Entrez l'URL d'une image ou un chemin local.",
+      "selected_entity_helper": "Aide texte qui sera mis à jour avec l'ID de l'entité du lecteur multimédia sélectionné."
     },
     "titles": {
       "edit_entity": "Modifier l'entité",
@@ -3385,7 +3386,8 @@ var sk = {
       "not_available_collapsed": "Nedostupné, keď je zapnuté Vždy zbalené.",
       "only_available_collapsed": "Dostupné len pri zapnutom režime Vždy zbalené.",
       "only_available_modern": "Dostupné len s moderným rozložením.",
-      "image_url_helper": "Zadajte priamu URL adresu obrázka alebo cestu k lokálnemu súboru."
+      "image_url_helper": "Zadajte priamu URL adresu obrázka alebo cestu k lokálnemu súboru.",
+      "selected_entity_helper": "Textový pomocník, ktorý bude aktualizovaný ID aktuálne vybranej entity prehrávača médií."
     },
     "titles": {
       "edit_entity": "Upraviť entitu",
@@ -3666,7 +3668,8 @@ var sl = {
       "not_available_collapsed": "Ni na voljo v vedno skrčenem načinu.",
       "only_available_collapsed": "Na voljo le v vedno skrčenem načinu.",
       "only_available_modern": "Na voljo le v moderni postavitvi.",
-      "image_url_helper": "Vnesite neposreden URL slike ali lokalno pot."
+      "image_url_helper": "Vnesite neposreden URL slike ali lokalno pot.",
+      "selected_entity_helper": "Tekstovni pomočnik, ki bo posodobljen z ID-jem trenutno izbrane entitete predvajalnika."
     },
     "titles": {
       "edit_entity": "Uredi entiteto",
