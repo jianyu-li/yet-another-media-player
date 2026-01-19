@@ -540,6 +540,56 @@ export const yampCardStyles = css`
     padding-right: 6px;
   }
 
+  /* Playing indicator animation - equalizer bars */
+  @keyframes chipPlayingBar1 {
+    0%, 100% { height: 3px; }
+    50% { height: 10px; }
+  }
+  @keyframes chipPlayingBar2 {
+    0%, 100% { height: 5px; }
+    50% { height: 12px; }
+  }
+  @keyframes chipPlayingBar3 {
+    0%, 100% { height: 4px; }
+    50% { height: 8px; }
+  }
+
+  .chip-playing-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    margin-left: 6px;
+    height: 14px;
+  }
+
+  .chip-playing-indicator .bar {
+    width: 3px;
+    background: currentColor;
+    border-radius: 1px;
+  }
+
+  .chip-playing-indicator .bar:nth-child(1) {
+    animation: chipPlayingBar1 0.8s ease-in-out 0s infinite;
+  }
+
+  .chip-playing-indicator .bar:nth-child(2) {
+    animation: chipPlayingBar2 0.6s ease-in-out 0.15s infinite;
+  }
+
+  .chip-playing-indicator .bar:nth-child(3) {
+    animation: chipPlayingBar3 0.7s ease-in-out 0.3s infinite;
+  }
+
+  .chip[playing]:not([selected]) .chip-playing-indicator {
+    color: var(--custom-accent);
+  }
+
+  .chip[playing][selected] .chip-playing-indicator,
+  .chip[playing]:hover .chip-playing-indicator {
+    color: #fff;
+  }
+
   /* Chip pin */
   .chip-pin {
     position: absolute;

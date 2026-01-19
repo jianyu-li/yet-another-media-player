@@ -144,6 +144,15 @@ export function renderChip({
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${name}
       </span>
+      ${playing
+      ? html`
+            <span class="chip-playing-indicator">
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </span>
+          `
+      : nothing}
       ${pinned
       ? html`
             <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="Unpin">
