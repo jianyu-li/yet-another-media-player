@@ -117,7 +117,8 @@ export default {
             "only_available_collapsed": "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
             "only_available_modern": "Nur verfügbar im modernen Layout.",
             "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
-            "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird."
+            "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird.",
+            "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert)."
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",
@@ -190,7 +191,8 @@ export default {
             "match_entity": "Match-Entität",
             "ma_entity": "Music Assistant Entität",
             "vol_entity": "Lautstärke-Entität",
-            "selected_entity_helper": "Ausgewählter Entitäts-Helper"
+            "selected_entity_helper": "Ausgewählter Entitäts-Helper",
+            "sync_entity_type": "Synchronisierungs-Entitätstyp"
         },
         "action_types": {
             "menu": "Kartenmenüpunkt öffnen",
@@ -201,6 +203,11 @@ export default {
         "action_helpers": {
             "sync_selected_entity": "Entität synchronisieren →",
             "select_helper": "(Helper auswählen)"
+        },
+        "sync_entity_options": {
+            "yamp_entity": "yamp_entity (Music Assistant Entität, falls konfiguriert)",
+            "yamp_main_entity": "yamp_main_entity (Haupt-Mediaplayer-Entität)",
+            "yamp_playback_entity": "yamp_playback_entity (Aktuelle aktive Wiedergabe-Entität)"
         }
     },
     "card": {

@@ -116,8 +116,9 @@ export default {
             "not_available_collapsed": "No disponible si está contraído.",
             "only_available_collapsed": "Solo disponible si está contraído.",
             "only_available_modern": "Solo disponible con diseño Moderno.",
-            "image_url_helper": "URL directa de imagen o ruta local.",
-            "selected_entity_helper": "Ayudante de texto de entrada que se actualizará con el ID de la entidad del reproductor multimedia seleccionado actualmente."
+            "image_url_helper": "Ingrese una URL directa a una imagen o una ruta de archivo local",
+            "selected_entity_helper": "Helper de texto de entrada que se actualizará con el ID de la entidad del reproductor de medios seleccionado actualmente.",
+            "sync_entity_type": "Elija qué ID de entidad sincronizar con el helper (por defecto la entidad de Music Assistant si está configurada)."
         },
         "titles": {
             "edit_entity": "Editar entidad",
@@ -188,9 +189,10 @@ export default {
             "service_data": "Datos",
             "idle_image_entity": "Entidad imagen reposo",
             "match_entity": "Entidad",
-            "ma_entity": "Entidad MA",
-            "vol_entity": "Entidad Volumen",
-            "selected_entity_helper": "Ayudante de entidad seleccionada"
+            "ma_entity": "Entidad de Music Assistant",
+            "vol_entity": "Entidad de volumen",
+            "selected_entity_helper": "Helper de entidad seleccionada",
+            "sync_entity_type": "Tipo de entidad a sincronizar"
         },
         "action_types": {
             "menu": "Abrir un elemento del menú",
@@ -199,8 +201,13 @@ export default {
             "sync_selected_entity": "Sincronizar entidad seleccionada"
         },
         "action_helpers": {
-            "sync_selected_entity": "Sincronizar entidad →",
-            "select_helper": "(seleccionar ayudante)"
+            "sync_selected_entity": "Sincronizar entidad seleccionada →",
+            "select_helper": "(seleccionar helper)"
+        },
+        "sync_entity_options": {
+            "yamp_entity": "yamp_entity (Entidad de Music Assistant si está configurada)",
+            "yamp_main_entity": "yamp_main_entity (Entidad principal del reproductor)",
+            "yamp_playback_entity": "yamp_playback_entity (Entidad de reproducción activa actual)"
         }
     },
     "card": {

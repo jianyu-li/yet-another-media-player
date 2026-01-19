@@ -1993,6 +1993,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           this._updateActionProperty("navigation_path", undefined);
           this._updateActionProperty("navigation_new_tab", undefined);
           this._updateActionProperty("action", "sync_selected_entity");
+          if (!action?.sync_entity_type) {
+            this._updateActionProperty("sync_entity_type", "yamp_entity");
+          }
         }
       }}
           ></ha-selector>
@@ -2061,6 +2064,25 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               @value-changed=${(e) => this._updateActionProperty("sync_entity_helper", e.detail.value)}
             ></ha-selector>
             <div class="config-subtitle">${localize('editor.subtitles.selected_entity_helper')}</div>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              label="${localize('editor.fields.sync_entity_type')}"
+              .selector=${{
+          select: {
+            mode: "dropdown",
+            options: [
+              { value: "yamp_entity", label: localize('editor.sync_entity_options.yamp_entity') },
+              { value: "yamp_main_entity", label: localize('editor.sync_entity_options.yamp_main_entity') },
+              { value: "yamp_playback_entity", label: localize('editor.sync_entity_options.yamp_playback_entity') }
+            ]
+          }
+        }}
+              .value=${action?.sync_entity_type ?? "yamp_entity"}
+              @value-changed=${(e) => this._updateActionProperty("sync_entity_type", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">${localize('editor.subtitles.sync_entity_type')}</div>
           </div>
         ` : nothing}
         ${actionMode === 'service' ? html`

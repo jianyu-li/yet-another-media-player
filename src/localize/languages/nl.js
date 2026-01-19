@@ -117,7 +117,8 @@ export default {
             "only_available_collapsed": "Alleen beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
             "only_available_modern": "Alleen beschikbaar met de Moderne lay-out",
             "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
-            "selected_entity_helper": "Input-teksthelper die wordt bijgewerkt met de momenteel geselecteerde mediaplayer-entiteit ID."
+            "selected_entity_helper": "Invoerteksthelper die wordt bijgewerkt met de momenteel geselecteerde media player-entiteits-ID.",
+            "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd)."
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",
@@ -188,9 +189,10 @@ export default {
             "service_data": "Servicegegevens",
             "idle_image_entity": "Entiteit voor inactieve afbeelding",
             "match_entity": "Match Entiteit",
-            "ma_entity": "Music Assistant Entiteit",
-            "vol_entity": "Volume Entiteit",
-            "selected_entity_helper": "Geselecteerde entiteitshelper"
+            "ma_entity": "Music Assistant-entiteit",
+            "vol_entity": "Volume-entiteit",
+            "selected_entity_helper": "Geselecteerde entiteitshelper",
+            "sync_entity_type": "Synchronisatie entiteitstype"
         },
         "action_types": {
             "menu": "Open een kaartmenu-item",
@@ -199,8 +201,13 @@ export default {
             "sync_selected_entity": "Synchroniseer geselecteerde entiteit"
         },
         "action_helpers": {
-            "sync_selected_entity": "Synchroniseer entiteit →",
+            "sync_selected_entity": "Geselecteerde entiteit synchroniseren →",
             "select_helper": "(selecteer helper)"
+        },
+        "sync_entity_options": {
+            "yamp_entity": "yamp_entity (Music Assistant-entiteit indien geconfigureerd)",
+            "yamp_main_entity": "yamp_main_entity (Hoofd media player-entiteit)",
+            "yamp_playback_entity": "yamp_playback_entity (Huidige actieve afspeelentiteit)"
         }
     },
     "card": {
