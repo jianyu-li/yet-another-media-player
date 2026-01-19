@@ -84,7 +84,7 @@ export default {
         },
         "subtitles": {
             "idle_timeout": "Čas v milisekundah, preden kartica preide v mirovanje. Nastavite na 0 za izklop.",
-            "show_chip_row": "\"Samodejno\" skrije čipe, če je nastavljena ena entiteta. \"V meniju\" jih premakne v meni.",
+            "show_chip_row": "\"Samodejno\" skrije čipe, če je nastavljena ena entiteta. \"V meniju\" jih premakne v meni. \"V meniju med nedejavnostjo\" prikaže čipe v vrstici, ko je aktivna, a jih premakne v meni med nedejavnostjo.",
             "dim_chips": "Ko kartica preide v mirovanje s sliko, se čipi zatemnijo.",
             "hold_to_pin": "Dolgi pritisk za pripenjanje entitet namesto kratkega.",
             "disable_autofocus": "Prepreči samodejni fokus iskalnega polja.",

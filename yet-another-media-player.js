@@ -1380,7 +1380,7 @@ var en = {
     },
     "subtitles": {
       "idle_timeout": "Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.",
-      "show_chip_row": "\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay.",
+      "show_chip_row": "\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay. \"In Menu on Idle\" shows chips inline when active but moves them to the menu when idle.",
       "dim_chips": "When the card enters idle mode with an image, dim the entity and action chips for a cleaner look.",
       "hold_to_pin": "Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.",
       "disable_autofocus": "Keep the search box from stealing focus so on-screen keyboards stay hidden.",
@@ -1669,7 +1669,7 @@ var de = {
     },
     "subtitles": {
       "idle_timeout": "Zeit in Millisekunden vor dem Wechsel in den Leerlaufmodus. 0 zum Deaktivieren.",
-      "show_chip_row": "\"Auto\" blendet die Chip-Leiste bei nur einer Entität aus. \"Im Menü\" verschiebt sie ins Menü.",
+      "show_chip_row": "\"Auto\" blendet die Chip-Leiste bei nur einer Entität aus. \"Im Menü\" verschiebt sie ins Menü. \"Im Menü bei Inaktivität\" zeigt Chips inline wenn aktiv, verschiebt sie aber ins Menü bei Inaktivität.",
       "dim_chips": "Entitäts- und Aktions-Chips im Leerlauf mit Bild abdunkeln für einen sauberen Look.",
       "hold_to_pin": "Langes Drücken statt kurzem Drücken zum Anpinnen, um automatisches Umschalten zu verhindern.",
       "disable_autofocus": "Suchfeld-Autofokus deaktivieren, damit Bildschirmtastaturen ausgeblendet bleiben.",
@@ -1958,7 +1958,7 @@ var es = {
     },
     "subtitles": {
       "idle_timeout": "Tiempo antes de reposo (ms). 0 para desactivar.",
-      "show_chip_row": "\"Auto\" oculta la fila si solo hay una entidad. \"En menú\" mueve los chips.",
+      "show_chip_row": "\"Auto\" oculta la fila si solo hay una entidad. \"En menú\" mueve los chips. \"En menú en reposo\" muestra los chips en línea cuando está activo pero los mueve al menú cuando está en reposo.",
       "dim_chips": "Atenuar los chips en reposo para un aspecto más limpio.",
       "hold_to_pin": "Mantener pulsado para fijar en vez de pulsación corta.",
       "disable_autofocus": "Evitar que la búsqueda tome el foco automáticamente.",
@@ -2247,7 +2247,7 @@ var fr = {
     },
     "subtitles": {
       "idle_timeout": "Temps en millisecondes avant la mise en veille. 0 pour désactiver.",
-      "show_chip_row": "\"Auto\" masque la barre de jetons si une seule entité est configurée. \"Dans le Menu\" déplace les jetons.",
+      "show_chip_row": "\"Auto\" masque la barre de jetons si une seule entité est configurée. \"Dans le Menu\" déplace les jetons. \"Dans le menu au repos\" affiche les jetons en ligne lorsque actif mais les déplace dans le menu au repos.",
       "dim_chips": "Assombrir les jetons en mode veille pour un look plus épuré.",
       "hold_to_pin": "Appui long pour épingler au lieu d'un appui court.",
       "disable_autofocus": "Empêcher la recherche de prendre le focus automatiquement.",
@@ -2536,7 +2536,7 @@ var it = {
     },
     "subtitles": {
       "idle_timeout": "Tempo prima del riposo (ms). 0 per disabilitare.",
-      "show_chip_row": "\"Auto\" nasconde la riga se c'è una sola entità.",
+      "show_chip_row": "\"Auto\" nasconde la riga se c'è una sola entità. \"Nel menu\" sposta i chip nel menu. \"Nel menu in inattività\" mostra i chip in linea quando attivo ma li sposta nel menu quando inattivo.",
       "dim_chips": "Appanna i chip in riposo per un aspetto più pulito.",
       "hold_to_pin": "Tieni premuto per fissare invece di un tocco breve.",
       "disable_autofocus": "Evita che la ricerca prenda il focus automaticamente.",
@@ -2825,7 +2825,7 @@ var nl = {
     },
     "subtitles": {
       "idle_timeout": "Tijd in milliseconden voordat de kaart naar de inactieve modus gaat. Stel in op 0 om inactiviteitsgedrag uit te schakelen.",
-      "show_chip_row": "\"Auto\" verbergt de chiprij wanneer er slechts één entiteit is geconfigureerd. \"In Menu\" verplaatst de chips naar het menu-overlay.",
+      "show_chip_row": "\"Auto\" verbergt de chiprij wanneer er slechts één entiteit is geconfigureerd. \"In Menu\" verplaatst de chips naar het menu-overlay. \"In menu bij inactiviteit\" toont chips inline wanneer actief maar verplaatst ze naar het menu wanneer inactief.",
       "dim_chips": "Wanneer de kaart inactief wordt met een afbeelding, dim dan de entiteits- en actiechips voor een strakker uiterlijk.",
       "hold_to_pin": "Houd entiteitschips lang ingedrukt in plaats van kort om ze vast te zetten, om automatisch schakelen tijdens afspelen te voorkomen.",
       "disable_autofocus": "Voorkom dat het zoekveld de focus steelt, zodat onscreen toetsenborden verborgen blijven.",
@@ -3114,7 +3114,7 @@ var pt = {
     },
     "subtitles": {
       "idle_timeout": "Tempo antes de repouso (ms). 0 para desativar.",
-      "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade. \"No menu\" move os chips.",
+      "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade. \"No menu\" move os chips. \"No menu em repouso\" mostra os chips em linha quando ativo mas move-os para o menu quando em repouso.",
       "dim_chips": "Escurecer chips em repouso para um aspeto mais limpo.",
       "hold_to_pin": "Manter premido para fixar em vez de toque curto.",
       "disable_autofocus": "Evitar que a procura tome o foco automaticamente.",
@@ -3403,7 +3403,7 @@ var sk = {
     },
     "subtitles": {
       "idle_timeout": "Čas v milisekundách, kým karta prejde do režimu nečinnosti. Nastavte na 0 pre vypnutie.",
-      "show_chip_row": "\"Auto\" skryje riadok čipov, ak je nakonfigurovaná len jedna entita. \"V menu\" presunie čipy do ponuky menu.",
+      "show_chip_row": "\"Auto\" skryje riadok čipov, ak je nakonfigurovaná len jedna entita. \"V menu\" presunie čipy do ponuky menu. \"V menu pri nečinnosti\" zobrazí čipy v riadku keď je aktívne, ale presunie ich do menu pri nečinnosti.",
       "dim_chips": "Keď karta prejde do režimu nečinnosti s obrázkom, stlmte čipy entít a akcií pre čistejší vzhľad.",
       "hold_to_pin": "Dlhým stlačením čipov entít ich pripnete, čím zabránite automatickému prepínaniu počas prehrávania.",
       "disable_autofocus": "Zabráni vyhľadávaciemu poľu prebrať zameranie, aby zostali klávesnice na obrazovke skryté.",
@@ -3692,7 +3692,7 @@ var sl = {
     },
     "subtitles": {
       "idle_timeout": "Čas v milisekundah, preden kartica preide v mirovanje. Nastavite na 0 za izklop.",
-      "show_chip_row": "\"Samodejno\" skrije čipe, če je nastavljena ena entiteta. \"V meniju\" jih premakne v meni.",
+      "show_chip_row": "\"Samodejno\" skrije čipe, če je nastavljena ena entiteta. \"V meniju\" jih premakne v meni. \"V meniju med nedejavnostjo\" prikaže čipe v vrstici, ko je aktivna, a jih premakne v meni med nedejavnostjo.",
       "dim_chips": "Ko kartica preide v mirovanje s sliko, se čipi zatemnijo.",
       "hold_to_pin": "Dolgi pritisk za pripenjanje entitet namesto kratkega.",
       "disable_autofocus": "Prepreči samodejni fokus iskalnega polja.",
@@ -11211,6 +11211,9 @@ class YetAnotherMediaPlayerEditor extends i$2 {
         }, {
           value: "in_menu",
           label: "In Menu"
+        }, {
+          value: "in_menu_on_idle",
+          label: "In Menu on Idle"
         }]
       }
     }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", localize('editor.fields.show_chip_row'), e => this._updateConfig("show_chip_row", e.detail.value), localize('editor.subtitles.show_chip_row'), (_this$_config$dim_chi = this._config.dim_chips_on_idle) !== null && _this$_config$dim_chi !== void 0 ? _this$_config$dim_chi : true, e => this._updateConfig("dim_chips_on_idle", e.target.checked), localize('editor.labels.dim_chips'), localize('editor.subtitles.dim_chips'), localize('editor.sections.behavior.interactions_search.title'), localize('editor.sections.behavior.interactions_search.description'), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), localize('editor.labels.hold_to_pin'), localize('editor.subtitles.hold_to_pin'), (_this$_config$disable = this._config.disable_autofocus) !== null && _this$_config$disable !== void 0 ? _this$_config$disable : false, e => this._updateConfig("disable_autofocus", e.target.checked), localize('editor.labels.disable_autofocus'), localize('editor.subtitles.disable_autofocus'), (_this$_config$keep_fi = this._config.keep_filters_on_search) !== null && _this$_config$keep_fi !== void 0 ? _this$_config$keep_fi : false, e => this._updateConfig("keep_filters_on_search", e.target.checked), localize('editor.labels.keep_filters'), localize('editor.subtitles.search_within_filter'), (_this$_config$dismiss = this._config.dismiss_search_on_play) !== null && _this$_config$dismiss !== void 0 ? _this$_config$dismiss : true, e => this._updateConfig("dismiss_search_on_play", e.target.checked), localize('editor.labels.dismiss_on_play'), localize('editor.subtitles.close_search_on_play'), ((_this$_config$entitie6 = this._config.entities) === null || _this$_config$entitie6 === void 0 ? void 0 : _this$_config$entitie6.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true ? "opacity: 0.5;" : "", ((_this$_config$entitie7 = this._config.entities) === null || _this$_config$entitie7 === void 0 ? void 0 : _this$_config$entitie7.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true ? "Not available with one entity in Always Collapsed mode unless Expand on Search is enabled" : "", (_this$_config$pin_sea = this._config.pin_search_headers) !== null && _this$_config$pin_sea !== void 0 ? _this$_config$pin_sea : false, e => this._updateConfig("pin_search_headers", e.target.checked), ((_this$_config$entitie8 = this._config.entities) === null || _this$_config$entitie8 === void 0 ? void 0 : _this$_config$entitie8.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true, localize('editor.labels.pin_headers'), localize('editor.subtitles.pin_search_headers'), (_this$_config$disable2 = this._config.disable_mass_queue) !== null && _this$_config$disable2 !== void 0 ? _this$_config$disable2 : false, e => this._updateConfig("disable_mass_queue", e.target.checked), localize('editor.labels.disable_mass'), localize('editor.subtitles.disable_mass'), {
@@ -16833,8 +16836,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
     const showChipRow = this.config.show_chip_row || "auto";
     const hasMultipleEntities = this.entityObjs.length > 1;
-    const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
-    const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
+    // Show chips in menu if explicitly set to in_menu, or if in_menu_on_idle and currently idle
+    const showChipsInMenu = (showChipRow === "in_menu" || showChipRow === "in_menu_on_idle" && this._isIdle) && hasMultipleEntities;
+    // Always render chip row for in_menu_on_idle to preserve height, but hide visually when idle
+    const showChipsInline = showChipRow !== "in_menu" && (hasMultipleEntities || showChipRow === "always");
+    // Hide chips visually (but keep space) when in_menu_on_idle mode is active and card is idle
+    const chipsHiddenInline = showChipRow === "in_menu_on_idle" && this._isIdle && hasMultipleEntities;
+    // Always reserve space in menu for chips when in_menu_on_idle, even when playing (to prevent menu jump)
+    const reserveChipSpaceInMenu = showChipRow === "in_menu_on_idle" && hasMultipleEntities;
     const decoratedActions = ((_this$config$actions2 = this.config.actions) !== null && _this$config$actions2 !== void 0 ? _this$config$actions2 : []).map((action, idx) => ({
       action,
       idx
@@ -16900,7 +16909,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const dimIdleFrame = !!idleImageUrl;
     const hideControlsNow = this._isIdle;
     const shouldDimIdle = dimIdleFrame && this._isIdle;
-    const artworkFullBleed = this.config.extend_artwork === true;
+    // Extend artwork when configured, or when chips are hidden inline (in_menu_on_idle + idle)
+    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
@@ -17150,11 +17160,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
       this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
       this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
     }
-    return x(_templateObject28 || (_templateObject28 = _taggedTemplateLiteral(["\n        <ha-card class=\"yamp-card\" style=", ">\n          <div\n            data-match-theme=\"", "\"\n            class=", "\n          >\n            ", "\n            ", "\n            ", "\n            <div class=\"card-lower-content-container\" style=\"", "\">\n              <div class=\"card-lower-content-bg\"\n                style=\"", "\"\n              ></div>\n              ", "\n              <div class=\"card-lower-content", "", "\" style=\"", "\">\n                ", "\n                ", "\n                <div class=\"details\" style=\"", "\">\n                  <div class=\"title\">\n                    ", "\n                  </div>\n                  ", "\n                </div>\n                ", "\n                ", "\n                ", "\n                ", "\n            ", "\n            ", "\n          </div>\n        </div>\n\n      ", "\n          ", "\n          ", "\n          </div>\n    </ha-card>\n  "])), hasCustomCardHeight && (!collapsed || this._alwaysCollapsed) ? "height:".concat(customCardHeight, "px;") : E, String(this.config.match_theme === true), e({
+    return x(_templateObject28 || (_templateObject28 = _taggedTemplateLiteral(["\n        <ha-card class=\"yamp-card\" style=", ">\n          <div\n            data-match-theme=\"", "\"\n            class=", "\n          >\n            ", "\n            ", "\n            ", "\n            <div class=\"card-lower-content-container\" style=\"", "\">\n              <div class=\"card-lower-content-bg\"\n                style=\"", "\"\n              ></div>\n              ", "\n              <div class=\"card-lower-content", "", "\" style=\"", "\">\n                ", "\n                ", "\n                <div class=\"details\" style=\"", "\">\n                  <div class=\"title\">\n                    ", "\n                  </div>\n                  <div\n                      class=\"artist ", "\"\n                      @click=", "\n                      title=", "\n                    >", "</div>\n                </div>\n                ", "\n                ", "\n                ", "\n                <div style=\"", "\">\n                    ", "\n\n                    ", "\n                  </div>\n            ", "\n            ", "\n          </div>\n        </div>\n\n      ", "\n          ", "\n          ", "\n          </div>\n    </ha-card>\n  "])), hasCustomCardHeight && (!collapsed || this._alwaysCollapsed) ? "height:".concat(customCardHeight, "px;") : E, String(this.config.match_theme === true), e({
       "yamp-card-inner": true,
       "dim-idle": shouldDimIdle,
       "no-chip-dim": this.config.dim_chips_on_idle === false
-    }), artworkFullBleed && hasBackgroundImage ? x(_templateObject29 || (_templateObject29 = _taggedTemplateLiteral(["\n              <div class=\"full-bleed-artwork-bg\" style=\"", "\"></div>\n              ", "\n            "])), sharedBackgroundStyle, !dimIdleFrame ? x(_templateObject30 || (_templateObject30 = _taggedTemplateLiteral(["<div class=\"full-bleed-artwork-fade\"></div>"]))) : E) : E, showChipsInline ? x(_templateObject31 || (_templateObject31 = _taggedTemplateLiteral(["\n                <div class=\"chip-row\">\n                  ", "\n                </div>\n            "])), renderChipRow({
+    }), artworkFullBleed && hasBackgroundImage ? x(_templateObject29 || (_templateObject29 = _taggedTemplateLiteral(["\n              <div class=\"full-bleed-artwork-bg\" style=\"", "\"></div>\n              ", "\n            "])), sharedBackgroundStyle, !dimIdleFrame ? x(_templateObject30 || (_templateObject30 = _taggedTemplateLiteral(["<div class=\"full-bleed-artwork-fade\"></div>"]))) : E) : E, showChipsInline ? x(_templateObject31 || (_templateObject31 = _taggedTemplateLiteral(["\n                <div class=\"chip-row\" style=\"", "\">\n                  ", "\n                </div>\n            "])), chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : "", renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
       selectedEntityId: this.currentEntityId,
@@ -17266,9 +17276,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       detailStyleParts.push("min-height:".concat(detailsMinHeight, "px"));
       if (!shouldShowDetails) detailStyleParts.push('opacity:0');
       return detailStyleParts.join(';');
-    })(), shouldShowDetails ? title : "", shouldShowDetails && artist ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                    <div\n                      class=\"artist ", "\"\n                      @click=", "\n                      title=", "\n                    >", "</div>\n                  "])), stateObj.attributes.media_artist ? 'clickable-artist' : '', () => {
-      if (stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-    }, stateObj.attributes.media_artist ? localize('search.search_artist') : "", artist) : E, !collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
+    })(), shouldShowDetails && title ? title : x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["&nbsp;"]))), shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : '', () => {
+      if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
+    }, shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : "", shouldShowDetails && artist ? artist : x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["&nbsp;"]))), !collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
       seekEnabled: true,
       onSeek: e => this._onProgressBarClick(e),
@@ -17284,12 +17294,17 @@ class YetAnotherMediaPlayerCard extends i$2 {
       collapsed: false,
       accent: this._customAccent,
       style: "visibility:hidden"
-    }) : E, (collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
+    }) : E, collapsed || this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
       accent: this._customAccent,
       style: this._showEntityOptions ? "visibility:hidden" : ""
-    }) : E, !hideControlsNow && controlSpacerSize > 0 ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                  <div class=\"collapsed-flex-spacer\" style=\"flex: 1 0 ", "px;\"></div>\n                "])), Math.round(controlSpacerSize)) : E, !hideControlsNow ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["\n                  <div style=\"", "\">\n                    ", "\n\n                    ", "\n                  </div>\n                "])), this._showEntityOptions ? 'visibility:hidden' : '', renderControlsRow({
+    }) : renderProgressBar({
+      progress: 0,
+      collapsed: true,
+      accent: this._customAccent,
+      style: "visibility:hidden"
+    }) : E, !hideControlsNow && controlSpacerSize > 0 ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["\n                  <div class=\"collapsed-flex-spacer\" style=\"flex: 1 0 ", "px;\"></div>\n                "])), Math.round(controlSpacerSize)) : E, hideControlsNow || this._showEntityOptions ? 'visibility:hidden; pointer-events:none;' : '', renderControlsRow({
       stateObj: playbackStateObj,
       showStop: this._shouldShowStopButton(playbackStateObj),
       shuffleActive,
@@ -17319,7 +17334,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       rightSlotTemplate,
       hideVolume: this.config.volume_mode === "hidden",
       moreInfoMenu: x(_templateObject39 || (_templateObject39 = _taggedTemplateLiteral(["\n                        <div class=\"more-info-menu\">\n                          <button class=\"more-info-btn\" @click=", ">\n                            <span class=\"more-info-icon\">&#9776;</span>\n                          </button>\n                        </div>\n                      "])), async () => await this._openEntityOptions())
-    })) : E, hideControlsNow && !this._showEntityOptions ? x(_templateObject40 || (_templateObject40 = _taggedTemplateLiteral(["\n              <div class=\"more-info-menu\" style=\"position: absolute; right: 18px; bottom: 18px; z-index: ", ";\">\n                <button class=\"more-info-btn\" @click=", ">\n                  <span class=\"more-info-icon\">&#9776;</span>\n                </button>\n              </div>\n            "])), Z_LAYERS.FLOATING_ELEMENT, async () => await this._openEntityOptions()) : E, showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x(_templateObject41 || (_templateObject41 = _taggedTemplateLiteral(["\n              <div class=\"in-menu-active-label\">", "</div>\n            "])), activeChipName) : E, this._showEntityOptions ? x(_templateObject42 || (_templateObject42 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-overlay entity-options-overlay-opening\" @click=", ">\n        <div class=\"entity-options-container entity-options-container-opening\">\n          <div class=\"entity-options-sheet", " entity-options-sheet-opening\" \n               @click=", "\n               data-pin-search-headers=\"", "\">\n            ", "\n              ", "\n              </div>\n            </div>\n            <!-- Persistent Media Controls Section - Outside Scrollable Area -->\n            ", "\n          </div>\n        "])), e => this._closeEntityOptions(e), showChipsInMenu ? ' chips-mode' : '', e => e.stopPropagation(), effectivePinHeaders, showChipsInMenu ? x(_templateObject43 || (_templateObject43 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-chips-wrapper\" @click=", ">\n                <div class=\"chip-row entity-options-chips-strip\">\n                  ", "\n                </div>\n              </div>\n            "])), e => e.stopPropagation(), renderChipRow({
+    }), hideControlsNow && !this._showEntityOptions ? x(_templateObject40 || (_templateObject40 = _taggedTemplateLiteral(["\n              <div class=\"more-info-menu\" style=\"position: absolute; right: 18px; bottom: 18px; z-index: ", ";\">\n                <button class=\"more-info-btn\" @click=", ">\n                  <span class=\"more-info-icon\">&#9776;</span>\n                </button>\n              </div>\n            "])), Z_LAYERS.FLOATING_ELEMENT, async () => await this._openEntityOptions()) : E, showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x(_templateObject41 || (_templateObject41 = _taggedTemplateLiteral(["\n              <div class=\"in-menu-active-label\">", "</div>\n            "])), activeChipName) : E, this._showEntityOptions ? x(_templateObject42 || (_templateObject42 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-overlay entity-options-overlay-opening\" @click=", ">\n        <div class=\"entity-options-container entity-options-container-opening\">\n          <div class=\"entity-options-sheet", " entity-options-sheet-opening\" \n               @click=", "\n               data-pin-search-headers=\"", "\">\n            ", "\n              ", "\n              </div>\n            </div>\n            <!-- Persistent Media Controls Section - Outside Scrollable Area -->\n            ", "\n          </div>\n        "])), e => this._closeEntityOptions(e), showChipsInMenu || reserveChipSpaceInMenu ? ' chips-mode' : '', e => e.stopPropagation(), effectivePinHeaders, showChipsInMenu || reserveChipSpaceInMenu ? x(_templateObject43 || (_templateObject43 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-chips-wrapper\" style=\"", "\" @click=", ">\n                <div class=\"chip-row entity-options-chips-strip\">\n                  ", "\n                </div>\n              </div>\n            "])), reserveChipSpaceInMenu && !showChipsInMenu ? 'visibility:hidden;pointer-events:none;' : '', e => e.stopPropagation(), renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
       selectedEntityId: this.currentEntityId,
@@ -17668,6 +17683,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
           }, {
             value: "in_menu",
             label: "In Menu"
+          }, {
+            value: "in_menu_on_idle",
+            label: "In Menu on Idle"
           }]
         }
       },

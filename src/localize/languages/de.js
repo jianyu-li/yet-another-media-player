@@ -84,7 +84,7 @@ export default {
         },
         "subtitles": {
             "idle_timeout": "Zeit in Millisekunden vor dem Wechsel in den Leerlaufmodus. 0 zum Deaktivieren.",
-            "show_chip_row": "\"Auto\" blendet die Chip-Leiste bei nur einer Entität aus. \"Im Menü\" verschiebt sie ins Menü.",
+            "show_chip_row": "\"Auto\" blendet die Chip-Leiste bei nur einer Entität aus. \"Im Menü\" verschiebt sie ins Menü. \"Im Menü bei Inaktivität\" zeigt Chips inline wenn aktiv, verschiebt sie aber ins Menü bei Inaktivität.",
             "dim_chips": "Entitäts- und Aktions-Chips im Leerlauf mit Bild abdunkeln für einen sauberen Look.",
             "hold_to_pin": "Langes Drücken statt kurzem Drücken zum Anpinnen, um automatisches Umschalten zu verhindern.",
             "disable_autofocus": "Suchfeld-Autofokus deaktivieren, damit Bildschirmtastaturen ausgeblendet bleiben.",

@@ -84,7 +84,7 @@ export default {
         },
         "subtitles": {
             "idle_timeout": "Tempo prima del riposo (ms). 0 per disabilitare.",
-            "show_chip_row": "\"Auto\" nasconde la riga se c'è una sola entità.",
+            "show_chip_row": "\"Auto\" nasconde la riga se c'è una sola entità. \"Nel menu\" sposta i chip nel menu. \"Nel menu in inattività\" mostra i chip in linea quando attivo ma li sposta nel menu quando inattivo.",
             "dim_chips": "Appanna i chip in riposo per un aspetto più pulito.",
             "hold_to_pin": "Tieni premuto per fissare invece di un tocco breve.",
             "disable_autofocus": "Evita che la ricerca prenda il focus automaticamente.",

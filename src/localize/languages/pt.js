@@ -84,7 +84,7 @@ export default {
         },
         "subtitles": {
             "idle_timeout": "Tempo antes de repouso (ms). 0 para desativar.",
-            "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade. \"No menu\" move os chips.",
+            "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade. \"No menu\" move os chips. \"No menu em repouso\" mostra os chips em linha quando ativo mas move-os para o menu quando em repouso.",
             "dim_chips": "Escurecer chips em repouso para um aspeto mais limpo.",
             "hold_to_pin": "Manter premido para fixar em vez de toque curto.",
             "disable_autofocus": "Evitar que a procura tome o foco automaticamente.",

@@ -1138,7 +1138,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           mode: "dropdown", options: [
             { value: "auto", label: "Auto" },
             { value: "always", label: "Always" },
-            { value: "in_menu", label: "In Menu" }
+            { value: "in_menu", label: "In Menu" },
+            { value: "in_menu_on_idle", label: "In Menu on Idle" }
           ]
         }
       }}

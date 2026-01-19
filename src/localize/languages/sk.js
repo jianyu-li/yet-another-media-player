@@ -84,7 +84,7 @@ export default {
         },
         "subtitles": {
             "idle_timeout": "Čas v milisekundách, kým karta prejde do režimu nečinnosti. Nastavte na 0 pre vypnutie.",
-            "show_chip_row": "\"Auto\" skryje riadok čipov, ak je nakonfigurovaná len jedna entita. \"V menu\" presunie čipy do ponuky menu.",
+            "show_chip_row": "\"Auto\" skryje riadok čipov, ak je nakonfigurovaná len jedna entita. \"V menu\" presunie čipy do ponuky menu. \"V menu pri nečinnosti\" zobrazí čipy v riadku keď je aktívne, ale presunie ich do menu pri nečinnosti.",
             "dim_chips": "Keď karta prejde do režimu nečinnosti s obrázkom, stlmte čipy entít a akcií pre čistejší vzhľad.",
             "hold_to_pin": "Dlhým stlačením čipov entít ich pripnete, čím zabránite automatickému prepínaniu počas prehrávania.",
             "disable_autofocus": "Zabráni vyhľadávaciemu poľu prebrať zameranie, aby zostali klávesnice na obrazovke skryté.",

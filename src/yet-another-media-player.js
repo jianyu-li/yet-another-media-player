@@ -5583,8 +5583,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const showChipRow = this.config.show_chip_row || "auto";
     const hasMultipleEntities = this.entityObjs.length > 1;
-    const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
-    const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
+    // Show chips in menu if explicitly set to in_menu, or if in_menu_on_idle and currently idle
+    const showChipsInMenu = (showChipRow === "in_menu" || (showChipRow === "in_menu_on_idle" && this._isIdle)) && hasMultipleEntities;
+    // Always render chip row for in_menu_on_idle to preserve height, but hide visually when idle
+    const showChipsInline = showChipRow !== "in_menu" && (hasMultipleEntities || showChipRow === "always");
+    // Hide chips visually (but keep space) when in_menu_on_idle mode is active and card is idle
+    const chipsHiddenInline = showChipRow === "in_menu_on_idle" && this._isIdle && hasMultipleEntities;
+    // Always reserve space in menu for chips when in_menu_on_idle, even when playing (to prevent menu jump)
+    const reserveChipSpaceInMenu = showChipRow === "in_menu_on_idle" && hasMultipleEntities;
     const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
     // Filter out sync_selected_entity actions entirely - they don't render as chips
     const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity");
@@ -5666,7 +5672,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const dimIdleFrame = !!idleImageUrl;
     const hideControlsNow = this._isIdle;
     const shouldDimIdle = dimIdleFrame && this._isIdle;
-    const artworkFullBleed = this.config.extend_artwork === true;
+    // Extend artwork when configured, or when chips are hidden inline (in_menu_on_idle + idle)
+    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
@@ -5997,7 +6004,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ${!dimIdleFrame ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${showChipsInline ? html`
-                <div class="chip-row">
+                <div class="chip-row" style="${chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : ""}">
                   ${renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
@@ -6153,17 +6160,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
         return detailStyleParts.join(';');
       })()}">
                   <div class="title">
-                    ${shouldShowDetails ? title : ""}
+                    ${shouldShowDetails && title ? title : html`&nbsp;`}
                   </div>
-                  ${shouldShowDetails && artist ? html`
-                    <div
-                      class="artist ${stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
+                  <div
+                      class="artist ${shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
                       @click=${() => {
-          if (stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-        }}
-                      title=${stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
-                    >${artist}</div>
-                  ` : nothing}
+        if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
+      }}
+                      title=${shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
+                    >${shouldShowDetails && artist ? artist : html`&nbsp;`}</div>
                 </div>
                 ${(!collapsed && !this._alternateProgressBar)
         ? (isPlaying && duration
@@ -6188,20 +6193,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
         )
         : nothing
       }
-                ${(collapsed || this._alternateProgressBar) && isPlaying && duration
-        ? renderProgressBar({
-          progress,
-          collapsed: true,
-          accent: this._customAccent,
-          style: this._showEntityOptions ? "visibility:hidden" : ""
-        })
+                ${(collapsed || this._alternateProgressBar)
+        ? (isPlaying && duration
+          ? renderProgressBar({
+            progress,
+            collapsed: true,
+            accent: this._customAccent,
+            style: this._showEntityOptions ? "visibility:hidden" : ""
+          })
+          : renderProgressBar({
+            progress: 0,
+            collapsed: true,
+            accent: this._customAccent,
+            style: "visibility:hidden"
+          })
+        )
         : nothing
       }
                 ${(!hideControlsNow && controlSpacerSize > 0) ? html`
                   <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
                 ` : nothing}
-                ${!hideControlsNow ? html`
-                  <div style="${this._showEntityOptions ? 'visibility:hidden' : ''}">
+                <div style="${hideControlsNow || this._showEntityOptions ? 'visibility:hidden; pointer-events:none;' : ''}">
                     ${renderControlsRow({
         stateObj: playbackStateObj,
         showStop: this._shouldShowStopButton(playbackStateObj),
@@ -6242,7 +6254,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       `,
       })}
                   </div>
-                ` : nothing}
             ${(hideControlsNow && !this._showEntityOptions) ? html`
               <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: ${Z_LAYERS.FLOATING_ELEMENT};">
                 <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
@@ -6259,11 +6270,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
         <div class="entity-options-container entity-options-container-opening">
-          <div class="entity-options-sheet${showChipsInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" 
+          <div class="entity-options-sheet${(showChipsInMenu || reserveChipSpaceInMenu) ? ' chips-mode' : ''} entity-options-sheet-opening" 
                @click=${e => e.stopPropagation()}
                data-pin-search-headers="${effectivePinHeaders}">
-            ${showChipsInMenu ? html`
-                <div class="entity-options-chips-wrapper" @click=${(e) => e.stopPropagation()}>
+            ${(showChipsInMenu || reserveChipSpaceInMenu) ? html`
+                <div class="entity-options-chips-wrapper" style="${reserveChipSpaceInMenu && !showChipsInMenu ? 'visibility:hidden;pointer-events:none;' : ''}" @click=${(e) => e.stopPropagation()}>
                 <div class="chip-row entity-options-chips-strip">
                   ${renderChipRow({
         groupedSortedEntityIds: this.groupedSortedEntityIds,
@@ -6964,7 +6975,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             options: [
               { value: "auto", label: "Auto" },
               { value: "always", label: "Always" },
-              { value: "in_menu", label: "In Menu" }
+              { value: "in_menu", label: "In Menu" },
+              { value: "in_menu_on_idle", label: "In Menu on Idle" }
             ]
           }
         },
