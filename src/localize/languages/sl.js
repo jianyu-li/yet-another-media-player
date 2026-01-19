@@ -116,8 +116,9 @@ export default {
             "not_available_collapsed": "Ni na voljo v vedno skrčenem načinu.",
             "only_available_collapsed": "Na voljo le v vedno skrčenem načinu.",
             "only_available_modern": "Na voljo le v moderni postavitvi.",
-            "image_url_helper": "Vnesite neposreden URL slike ali lokalno pot.",
-            "selected_entity_helper": "Tekstovni pomočnik, ki bo posodobljen z ID-jem trenutno izbrane entitete predvajalnika."
+            "image_url_helper": "Vnesite neposredni URL do slike ali lokalno pot do datoteke",
+            "selected_entity_helper": "Pomočnik za vnos besedila, ki bo posodobljen z ID-jem trenutno izbranega predvajalnika medijev.",
+            "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena)."
         },
         "titles": {
             "edit_entity": "Uredi entiteto",
@@ -188,9 +189,10 @@ export default {
             "service_data": "Podatki storitve",
             "idle_image_entity": "Entiteta slike v mirovanju",
             "match_entity": "Ujemajoča entiteta",
-            "ma_entity": "Music Assistant entiteta",
+            "ma_entity": "Entiteta Music Assistant",
             "vol_entity": "Entiteta glasnosti",
-            "selected_entity_helper": "Pomočnik izbrane entitete"
+            "selected_entity_helper": "Pomočnik izbrane entitete",
+            "sync_entity_type": "Vrsta entitete za sinhronizacijo"
         },
         "action_types": {
             "menu": "Odpri element menija kartice",
@@ -199,8 +201,13 @@ export default {
             "sync_selected_entity": "Sinhroniziraj izbrano entiteto"
         },
         "action_helpers": {
-            "sync_selected_entity": "Sinhroniziraj entiteto →",
-            "select_helper": "(izberi pomočnika)"
+            "sync_selected_entity": "Sinhroniziraj izbrano entiteto →",
+            "select_helper": "(izberite pomočnika)"
+        },
+        "sync_entity_options": {
+            "yamp_entity": "yamp_entity (entiteta Music Assistant, če je nastavljena)",
+            "yamp_main_entity": "yamp_main_entity (glavna entiteta predvajalnika medijev)",
+            "yamp_playback_entity": "yamp_playback_entity (trenutno aktivna entiteta predvajanja)"
         }
     },
     "card": {

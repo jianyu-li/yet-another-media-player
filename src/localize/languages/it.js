@@ -116,8 +116,9 @@ export default {
             "not_available_collapsed": "Non disponibile se contratto.",
             "only_available_collapsed": "Solo disponibile se contratto.",
             "only_available_modern": "Solo disponibile con layout Moderno.",
-            "image_url_helper": "URL diretto immagine o percorso locale.",
-            "selected_entity_helper": "Aiutante di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato."
+            "image_url_helper": "Inserisci un URL diretto a un'immagine o un percorso file locale",
+            "selected_entity_helper": "Helper di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato.",
+            "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata)."
         },
         "titles": {
             "edit_entity": "Modifica entità",
@@ -188,9 +189,10 @@ export default {
             "service_data": "Dati",
             "idle_image_entity": "Entità immagine riposo",
             "match_entity": "Entità",
-            "ma_entity": "Entità MA",
-            "vol_entity": "Entità Volume",
-            "selected_entity_helper": "Aiutante entità selezionata"
+            "ma_entity": "Entità Music Assistant",
+            "vol_entity": "Entità di volume",
+            "selected_entity_helper": "Helper entità selezionata",
+            "sync_entity_type": "Tipo di entità da sincronizzare"
         },
         "action_types": {
             "menu": "Apri un elemento del menu",
@@ -199,8 +201,13 @@ export default {
             "sync_selected_entity": "Sincronizza entità selezionata"
         },
         "action_helpers": {
-            "sync_selected_entity": "Sincronizza entità →",
-            "select_helper": "(seleziona aiutante)"
+            "sync_selected_entity": "Sincronizza entità selezionata →",
+            "select_helper": "(seleziona helper)"
+        },
+        "sync_entity_options": {
+            "yamp_entity": "yamp_entity (Entità Music Assistant se configurata)",
+            "yamp_main_entity": "yamp_main_entity (Entità principale del lettore)",
+            "yamp_playback_entity": "yamp_playback_entity (Entità di riproduzione attiva attuale)"
         }
     },
     "card": {

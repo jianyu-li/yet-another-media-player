@@ -1413,7 +1413,8 @@ var en = {
       "only_available_collapsed": "Only available when Always Collapsed is enabled",
       "only_available_modern": "Only available with Modern layout",
       "image_url_helper": "Enter a direct URL to an image or a local file path",
-      "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID."
+      "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID.",
+      "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured)."
     },
     "titles": {
       "edit_entity": "Edit Entity",
@@ -1486,7 +1487,8 @@ var en = {
       "match_entity": "Match Entity",
       "ma_entity": "Music Assistant Entity",
       "vol_entity": "Volume Entity",
-      "selected_entity_helper": "Selected Entity Helper"
+      "selected_entity_helper": "Selected Entity Helper",
+      "sync_entity_type": "Sync Entity Type"
     },
     "action_types": {
       "menu": "Open a Card Menu Item",
@@ -1497,6 +1499,11 @@ var en = {
     "action_helpers": {
       "sync_selected_entity": "Sync Selected Entity →",
       "select_helper": "(select helper)"
+    },
+    "sync_entity_options": {
+      "yamp_entity": "yamp_entity (Music Assistant Entity if configured)",
+      "yamp_main_entity": "yamp_main_entity (Main Media Player Entity)",
+      "yamp_playback_entity": "yamp_playback_entity (Current Active Playback Entity)"
     }
   },
   "card": {
@@ -1695,7 +1702,8 @@ var de = {
       "only_available_collapsed": "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
       "only_available_modern": "Nur verfügbar im modernen Layout.",
       "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
-      "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird."
+      "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird.",
+      "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert)."
     },
     "titles": {
       "edit_entity": "Entität bearbeiten",
@@ -1768,7 +1776,8 @@ var de = {
       "match_entity": "Match-Entität",
       "ma_entity": "Music Assistant Entität",
       "vol_entity": "Lautstärke-Entität",
-      "selected_entity_helper": "Ausgewählter Entitäts-Helper"
+      "selected_entity_helper": "Ausgewählter Entitäts-Helper",
+      "sync_entity_type": "Synchronisierungs-Entitätstyp"
     },
     "action_types": {
       "menu": "Kartenmenüpunkt öffnen",
@@ -1779,6 +1788,11 @@ var de = {
     "action_helpers": {
       "sync_selected_entity": "Entität synchronisieren →",
       "select_helper": "(Helper auswählen)"
+    },
+    "sync_entity_options": {
+      "yamp_entity": "yamp_entity (Music Assistant Entität, falls konfiguriert)",
+      "yamp_main_entity": "yamp_main_entity (Haupt-Mediaplayer-Entität)",
+      "yamp_playback_entity": "yamp_playback_entity (Aktuelle aktive Wiedergabe-Entität)"
     }
   },
   "card": {
@@ -1976,8 +1990,9 @@ var es = {
       "not_available_collapsed": "No disponible si está contraído.",
       "only_available_collapsed": "Solo disponible si está contraído.",
       "only_available_modern": "Solo disponible con diseño Moderno.",
-      "image_url_helper": "URL directa de imagen o ruta local.",
-      "selected_entity_helper": "Ayudante de texto de entrada que se actualizará con el ID de la entidad del reproductor multimedia seleccionado actualmente."
+      "image_url_helper": "Ingrese una URL directa a una imagen o una ruta de archivo local",
+      "selected_entity_helper": "Helper de texto de entrada que se actualizará con el ID de la entidad del reproductor de medios seleccionado actualmente.",
+      "sync_entity_type": "Elija qué ID de entidad sincronizar con el helper (por defecto la entidad de Music Assistant si está configurada)."
     },
     "titles": {
       "edit_entity": "Editar entidad",
@@ -2048,9 +2063,10 @@ var es = {
       "service_data": "Datos",
       "idle_image_entity": "Entidad imagen reposo",
       "match_entity": "Entidad",
-      "ma_entity": "Entidad MA",
-      "vol_entity": "Entidad Volumen",
-      "selected_entity_helper": "Ayudante de entidad seleccionada"
+      "ma_entity": "Entidad de Music Assistant",
+      "vol_entity": "Entidad de volumen",
+      "selected_entity_helper": "Helper de entidad seleccionada",
+      "sync_entity_type": "Tipo de entidad a sincronizar"
     },
     "action_types": {
       "menu": "Abrir un elemento del menú",
@@ -2059,8 +2075,13 @@ var es = {
       "sync_selected_entity": "Sincronizar entidad seleccionada"
     },
     "action_helpers": {
-      "sync_selected_entity": "Sincronizar entidad →",
-      "select_helper": "(seleccionar ayudante)"
+      "sync_selected_entity": "Sincronizar entidad seleccionada →",
+      "select_helper": "(seleccionar helper)"
+    },
+    "sync_entity_options": {
+      "yamp_entity": "yamp_entity (Entidad de Music Assistant si está configurada)",
+      "yamp_main_entity": "yamp_main_entity (Entidad principal del reproductor)",
+      "yamp_playback_entity": "yamp_playback_entity (Entidad de reproducción activa actual)"
     }
   },
   "card": {
@@ -2258,8 +2279,9 @@ var fr = {
       "not_available_collapsed": "Non disponible si 'Toujours réduit' est activé.",
       "only_available_collapsed": "Uniquement disponible si 'Toujours réduit' est activé.",
       "only_available_modern": "Uniquement disponible avec la mise en page Moderne.",
-      "image_url_helper": "Entrez l'URL d'une image ou un chemin local.",
-      "selected_entity_helper": "Aide texte qui sera mis à jour avec l'ID de l'entité du lecteur multimédia sélectionné."
+      "image_url_helper": "Entrez une URL directe vers une image ou un chemin de fichier local",
+      "selected_entity_helper": "Helper de texte d'entrée qui sera mis à jour avec l'ID de l'entité du lecteur multimédia actuellement sélectionné.",
+      "sync_entity_type": "Choisissez quel ID d'entité synchroniser avec le helper (par défaut l'entité Music Assistant si configurée)."
     },
     "titles": {
       "edit_entity": "Modifier l'entité",
@@ -2330,9 +2352,10 @@ var fr = {
       "service_data": "Données",
       "idle_image_entity": "Entité image veille",
       "match_entity": "Entité de correspondance",
-      "ma_entity": "Entité MA",
-      "vol_entity": "Entité Volume",
-      "selected_entity_helper": "Aide à l'entité sélectionnée"
+      "ma_entity": "Entité Music Assistant",
+      "vol_entity": "Entité de volume",
+      "selected_entity_helper": "Helper d'entité sélectionnée",
+      "sync_entity_type": "Type d'entité à synchroniser"
     },
     "action_types": {
       "menu": "Ouvrir un élément de menu",
@@ -2341,8 +2364,13 @@ var fr = {
       "sync_selected_entity": "Synchroniser l'entité sélectionnée"
     },
     "action_helpers": {
-      "sync_selected_entity": "Synchroniser l'entité →",
-      "select_helper": "(sélectionner l'aide)"
+      "sync_selected_entity": "Synchroniser l'entité sélectionnée →",
+      "select_helper": "(sélectionner helper)"
+    },
+    "sync_entity_options": {
+      "yamp_entity": "yamp_entity (Entité Music Assistant si configurée)",
+      "yamp_main_entity": "yamp_main_entity (Entité principale du lecteur)",
+      "yamp_playback_entity": "yamp_playback_entity (Entité de lecture active actuelle)"
     }
   },
   "card": {
@@ -2540,8 +2568,9 @@ var it = {
       "not_available_collapsed": "Non disponibile se contratto.",
       "only_available_collapsed": "Solo disponibile se contratto.",
       "only_available_modern": "Solo disponibile con layout Moderno.",
-      "image_url_helper": "URL diretto immagine o percorso locale.",
-      "selected_entity_helper": "Aiutante di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato."
+      "image_url_helper": "Inserisci un URL diretto a un'immagine o un percorso file locale",
+      "selected_entity_helper": "Helper di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato.",
+      "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata)."
     },
     "titles": {
       "edit_entity": "Modifica entità",
@@ -2612,9 +2641,10 @@ var it = {
       "service_data": "Dati",
       "idle_image_entity": "Entità immagine riposo",
       "match_entity": "Entità",
-      "ma_entity": "Entità MA",
-      "vol_entity": "Entità Volume",
-      "selected_entity_helper": "Aiutante entità selezionata"
+      "ma_entity": "Entità Music Assistant",
+      "vol_entity": "Entità di volume",
+      "selected_entity_helper": "Helper entità selezionata",
+      "sync_entity_type": "Tipo di entità da sincronizzare"
     },
     "action_types": {
       "menu": "Apri un elemento del menu",
@@ -2623,8 +2653,13 @@ var it = {
       "sync_selected_entity": "Sincronizza entità selezionata"
     },
     "action_helpers": {
-      "sync_selected_entity": "Sincronizza entità →",
-      "select_helper": "(seleziona aiutante)"
+      "sync_selected_entity": "Sincronizza entità selezionata →",
+      "select_helper": "(seleziona helper)"
+    },
+    "sync_entity_options": {
+      "yamp_entity": "yamp_entity (Entità Music Assistant se configurata)",
+      "yamp_main_entity": "yamp_main_entity (Entità principale del lettore)",
+      "yamp_playback_entity": "yamp_playback_entity (Entità di riproduzione attiva attuale)"
     }
   },
   "card": {
@@ -2823,7 +2858,8 @@ var nl = {
       "only_available_collapsed": "Alleen beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
       "only_available_modern": "Alleen beschikbaar met de Moderne lay-out",
       "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
-      "selected_entity_helper": "Input-teksthelper die wordt bijgewerkt met de momenteel geselecteerde mediaplayer-entiteit ID."
+      "selected_entity_helper": "Invoerteksthelper die wordt bijgewerkt met de momenteel geselecteerde media player-entiteits-ID.",
+      "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd)."
     },
     "titles": {
       "edit_entity": "Entiteit Bewerken",
@@ -2894,9 +2930,10 @@ var nl = {
       "service_data": "Servicegegevens",
       "idle_image_entity": "Entiteit voor inactieve afbeelding",
       "match_entity": "Match Entiteit",
-      "ma_entity": "Music Assistant Entiteit",
-      "vol_entity": "Volume Entiteit",
-      "selected_entity_helper": "Geselecteerde entiteitshelper"
+      "ma_entity": "Music Assistant-entiteit",
+      "vol_entity": "Volume-entiteit",
+      "selected_entity_helper": "Geselecteerde entiteitshelper",
+      "sync_entity_type": "Synchronisatie entiteitstype"
     },
     "action_types": {
       "menu": "Open een kaartmenu-item",
@@ -2905,8 +2942,13 @@ var nl = {
       "sync_selected_entity": "Synchroniseer geselecteerde entiteit"
     },
     "action_helpers": {
-      "sync_selected_entity": "Synchroniseer entiteit →",
+      "sync_selected_entity": "Geselecteerde entiteit synchroniseren →",
       "select_helper": "(selecteer helper)"
+    },
+    "sync_entity_options": {
+      "yamp_entity": "yamp_entity (Music Assistant-entiteit indien geconfigureerd)",
+      "yamp_main_entity": "yamp_main_entity (Hoofd media player-entiteit)",
+      "yamp_playback_entity": "yamp_playback_entity (Huidige actieve afspeelentiteit)"
     }
   },
   "card": {
@@ -3104,8 +3146,9 @@ var pt = {
       "not_available_collapsed": "Não disponível se contraído.",
       "only_available_collapsed": "Apenas disponível se contraído.",
       "only_available_modern": "Apenas disponível com layout Moderno.",
-      "image_url_helper": "URL direto da imagem ou caminho local.",
-      "selected_entity_helper": "Auxiliar de texto de entrada que será atualizado com o ID da entidade do reprodutor de mídia selecionado no momento."
+      "image_url_helper": "Insira um URL direto para uma imagem ou um caminho de arquivo local",
+      "selected_entity_helper": "Helper de texto de entrada que será atualizado com o ID da entidade do reprodutor de mídia selecionado no momento.",
+      "sync_entity_type": "Escolha qual ID de entidade sincronizar com o helper (padrão entidade Music Assistant se configurada)."
     },
     "titles": {
       "edit_entity": "Editar entidade",
@@ -3176,9 +3219,10 @@ var pt = {
       "service_data": "Dados",
       "idle_image_entity": "Entidade imagem repouso",
       "match_entity": "Entidade",
-      "ma_entity": "Entidade MA",
-      "vol_entity": "Entidade Volume",
-      "selected_entity_helper": "Ajudante de entidade selecionada"
+      "ma_entity": "Entidade Music Assistant",
+      "vol_entity": "Entidade de volume",
+      "selected_entity_helper": "Helper de entidade selecionada",
+      "sync_entity_type": "Tipo de entidade a sincronizar"
     },
     "action_types": {
       "menu": "Abrir um item do menu",
@@ -3187,8 +3231,13 @@ var pt = {
       "sync_selected_entity": "Sincronizar entidade selecionada"
     },
     "action_helpers": {
-      "sync_selected_entity": "Sincronizar entidade →",
-      "select_helper": "(selecionar ajudante)"
+      "sync_selected_entity": "Sincronizar entidade selecionada →",
+      "select_helper": "(selecionar helper)"
+    },
+    "sync_entity_options": {
+      "yamp_entity": "yamp_entity (Entidade Music Assistant se configurada)",
+      "yamp_main_entity": "yamp_main_entity (Entidade principal do reprodutor)",
+      "yamp_playback_entity": "yamp_playback_entity (Entidade de reprodução ativa atual)"
     }
   },
   "card": {
@@ -3386,8 +3435,9 @@ var sk = {
       "not_available_collapsed": "Nedostupné, keď je zapnuté Vždy zbalené.",
       "only_available_collapsed": "Dostupné len pri zapnutom režime Vždy zbalené.",
       "only_available_modern": "Dostupné len s moderným rozložením.",
-      "image_url_helper": "Zadajte priamu URL adresu obrázka alebo cestu k lokálnemu súboru.",
-      "selected_entity_helper": "Textový pomocník, ktorý bude aktualizovaný ID aktuálne vybranej entity prehrávača médií."
+      "image_url_helper": "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
+      "selected_entity_helper": "Pomocník pre vstupný text, ktorý bude aktualizovaný o ID aktuálne vybranej entity prehrávača médií.",
+      "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná)."
     },
     "titles": {
       "edit_entity": "Upraviť entitu",
@@ -3460,7 +3510,8 @@ var sk = {
       "match_entity": "Entita pre zhodu",
       "ma_entity": "Entita Music Assistant",
       "vol_entity": "Entita hlasitosti",
-      "selected_entity_helper": "Pomocník vybratej entity"
+      "selected_entity_helper": "Pomocník vybratej entity",
+      "sync_entity_type": "Typ entity na synchronizáciu"
     },
     "action_types": {
       "menu": "Otvoriť položku menu karty",
@@ -3469,8 +3520,13 @@ var sk = {
       "sync_selected_entity": "Synchronizovať vybranú entitu"
     },
     "action_helpers": {
-      "sync_selected_entity": "Synchronizovať entitu →",
+      "sync_selected_entity": "Synchronizovať vybranú entitu →",
       "select_helper": "(vybrať pomocníka)"
+    },
+    "sync_entity_options": {
+      "yamp_entity": "yamp_entity (Entita Music Assistant, ak je nakonfigurovaná)",
+      "yamp_main_entity": "yamp_main_entity (Hlavná entita prehrávača médií)",
+      "yamp_playback_entity": "yamp_playback_entity (Aktuálna aktívna entita prehrávania)"
     }
   },
   "card": {
@@ -3668,8 +3724,9 @@ var sl = {
       "not_available_collapsed": "Ni na voljo v vedno skrčenem načinu.",
       "only_available_collapsed": "Na voljo le v vedno skrčenem načinu.",
       "only_available_modern": "Na voljo le v moderni postavitvi.",
-      "image_url_helper": "Vnesite neposreden URL slike ali lokalno pot.",
-      "selected_entity_helper": "Tekstovni pomočnik, ki bo posodobljen z ID-jem trenutno izbrane entitete predvajalnika."
+      "image_url_helper": "Vnesite neposredni URL do slike ali lokalno pot do datoteke",
+      "selected_entity_helper": "Pomočnik za vnos besedila, ki bo posodobljen z ID-jem trenutno izbranega predvajalnika medijev.",
+      "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena)."
     },
     "titles": {
       "edit_entity": "Uredi entiteto",
@@ -3740,9 +3797,10 @@ var sl = {
       "service_data": "Podatki storitve",
       "idle_image_entity": "Entiteta slike v mirovanju",
       "match_entity": "Ujemajoča entiteta",
-      "ma_entity": "Music Assistant entiteta",
+      "ma_entity": "Entiteta Music Assistant",
       "vol_entity": "Entiteta glasnosti",
-      "selected_entity_helper": "Pomočnik izbrane entitete"
+      "selected_entity_helper": "Pomočnik izbrane entitete",
+      "sync_entity_type": "Vrsta entitete za sinhronizacijo"
     },
     "action_types": {
       "menu": "Odpri element menija kartice",
@@ -3751,8 +3809,13 @@ var sl = {
       "sync_selected_entity": "Sinhroniziraj izbrano entiteto"
     },
     "action_helpers": {
-      "sync_selected_entity": "Sinhroniziraj entiteto →",
-      "select_helper": "(izberi pomočnika)"
+      "sync_selected_entity": "Sinhroniziraj izbrano entiteto →",
+      "select_helper": "(izberite pomočnika)"
+    },
+    "sync_entity_options": {
+      "yamp_entity": "yamp_entity (entiteta Music Assistant, če je nastavljena)",
+      "yamp_main_entity": "yamp_main_entity (glavna entiteta predvajalnika medijev)",
+      "yamp_playback_entity": "yamp_playback_entity (trenutno aktivna entiteta predvajanja)"
     }
   },
   "card": {
@@ -11369,7 +11432,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     })) : E, entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((_entity$follow_active4 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active4 !== void 0 ? _entity$follow_active4 : false) ? x(_templateObject33$1 || (_templateObject33$1 = _taggedTemplateLiteral(["\n              <div class=\"form-row form-row-multi-column\">\n                <div>\n                  <ha-switch\n                    id=\"sync-power-toggle\"\n                    .checked=", "\n                    @change=", "\n                  ></ha-switch>\n                  <label for=\"sync-power-toggle\">Sync Power</label>\n                </div>\n              </div>\n            "])), (_entity$sync_power = entity === null || entity === void 0 ? void 0 : entity.sync_power) !== null && _entity$sync_power !== void 0 ? _entity$sync_power : false, e => this._updateEntityProperty("sync_power", e.target.checked)) : E, entity !== null && entity !== void 0 && entity.follow_active_volume ? x(_templateObject34$1 || (_templateObject34$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n              ", "\n              <br><br>\n            </div>\n        "])), localize('editor.subtitles.follow_active_entity')) : E);
   }
   _renderActionEditor(action) {
-    var _this$_actionMode, _action$name, _action$icon, _this$_actionMode2, _action$menu_item, _action$navigation_pa, _action$navigation_ne, _action$sync_entity_h, _action$service, _action$script_variab;
+    var _this$_actionMode, _action$name, _action$icon, _this$_actionMode2, _action$menu_item, _action$navigation_pa, _action$navigation_ne, _action$sync_entity_h, _action$sync_entity_t, _action$service, _action$script_variab;
     const actionMode = (_this$_actionMode = this._actionMode) !== null && _this$_actionMode !== void 0 ? _this$_actionMode : this._deriveActionMode(action);
     return x(_templateObject35$1 || (_templateObject35$1 = _taggedTemplateLiteral(["\n        <div class=\"action-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"action-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            placeholder=\"(Icon Only)\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-icon-picker\n            label=\"", "\"\n            .hass=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-icon-picker>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            label=\"", "\"\n            .selector=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n        \n        ", " \n        ", "\n        ", "\n        ", "\n      </div>"])), this._onBackFromActionEditor, localize('editor.titles.edit_action'), localize('editor.fields.name'), (_action$name = action === null || action === void 0 ? void 0 : action.name) !== null && _action$name !== void 0 ? _action$name : "", e => this._updateActionProperty("name", e.target.value), localize('editor.fields.icon'), this.hass, (_action$icon = action === null || action === void 0 ? void 0 : action.icon) !== null && _action$icon !== void 0 ? _action$icon : "", e => this._updateActionProperty("icon", e.detail.value), this.hass, localize('editor.fields.action_type'), {
       select: {
@@ -11425,6 +11488,9 @@ class YetAnotherMediaPlayerEditor extends i$2 {
         this._updateActionProperty("navigation_path", undefined);
         this._updateActionProperty("navigation_new_tab", undefined);
         this._updateActionProperty("action", "sync_selected_entity");
+        if (!(action !== null && action !== void 0 && action.sync_entity_type)) {
+          this._updateActionProperty("sync_entity_type", "yamp_entity");
+        }
       }
     }, actionMode === "menu" ? x(_templateObject36$1 || (_templateObject36$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, localize('editor.fields.menu_item'), {
       select: {
@@ -11458,11 +11524,25 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }, (_action$menu_item = action === null || action === void 0 ? void 0 : action.menu_item) !== null && _action$menu_item !== void 0 ? _action$menu_item : "", e => this._updateActionProperty("menu_item", e.detail.value || undefined)) : E, actionMode === "navigate" ? x(_templateObject37$1 || (_templateObject37$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-textfield\n              class=\"full-width\"\n              label=\"", "\"\n              placeholder=\"/lovelace/music or #popup\"\n              .value=", "\n              @input=", "\n            ></ha-textfield>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"navigation-new-tab-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"navigation-new-tab-toggle\">Open External URLs in New Tab</label>\n            </div>\n          </div>\n          <div class=\"form-row\">\n            <div class=\"config-subtitle\">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>\n          </div>\n        "])), localize('editor.fields.nav_path'), (_action$navigation_pa = action === null || action === void 0 ? void 0 : action.navigation_path) !== null && _action$navigation_pa !== void 0 ? _action$navigation_pa : "", e => {
       this._updateActionProperty("navigation_path", e.target.value);
       this._updateActionProperty("action", "navigate");
-    }, (_action$navigation_ne = action === null || action === void 0 ? void 0 : action.navigation_new_tab) !== null && _action$navigation_ne !== void 0 ? _action$navigation_ne : false, e => this._updateActionProperty("navigation_new_tab", e.target.checked)) : E, actionMode === "sync_selected_entity" ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n        "])), this.hass, {
+    }, (_action$navigation_ne = action === null || action === void 0 ? void 0 : action.navigation_new_tab) !== null && _action$navigation_ne !== void 0 ? _action$navigation_ne : false, e => this._updateActionProperty("navigation_new_tab", e.target.checked)) : E, actionMode === "sync_selected_entity" ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n        "])), this.hass, {
       entity: {
         domain: "input_text"
       }
-    }, (_action$sync_entity_h = action === null || action === void 0 ? void 0 : action.sync_entity_helper) !== null && _action$sync_entity_h !== void 0 ? _action$sync_entity_h : "", localize('editor.fields.selected_entity_helper'), e => this._updateActionProperty("sync_entity_helper", e.detail.value), localize('editor.subtitles.selected_entity_helper')) : E, actionMode === 'service' ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              .required=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n\n          ", "\n\n          ", "\n        "])), this.hass, {
+    }, (_action$sync_entity_h = action === null || action === void 0 ? void 0 : action.sync_entity_helper) !== null && _action$sync_entity_h !== void 0 ? _action$sync_entity_h : "", localize('editor.fields.selected_entity_helper'), e => this._updateActionProperty("sync_entity_helper", e.detail.value), localize('editor.subtitles.selected_entity_helper'), this.hass, localize('editor.fields.sync_entity_type'), {
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "yamp_entity",
+          label: localize('editor.sync_entity_options.yamp_entity')
+        }, {
+          value: "yamp_main_entity",
+          label: localize('editor.sync_entity_options.yamp_main_entity')
+        }, {
+          value: "yamp_playback_entity",
+          label: localize('editor.sync_entity_options.yamp_playback_entity')
+        }]
+      }
+    }, (_action$sync_entity_t = action === null || action === void 0 ? void 0 : action.sync_entity_type) !== null && _action$sync_entity_t !== void 0 ? _action$sync_entity_t : "yamp_entity", e => this._updateActionProperty("sync_entity_type", e.detail.value), localize('editor.subtitles.sync_entity_type')) : E, actionMode === 'service' ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              .required=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n\n          ", "\n\n          ", "\n        "])), this.hass, {
       select: {
         mode: "dropdown",
         filterable: true,
@@ -18250,24 +18330,45 @@ class YetAnotherMediaPlayerCard extends i$2 {
   _updateSelectedEntityHelper() {
     var _this$config18;
     if (!this.hass || !((_this$config18 = this.config) !== null && _this$config18 !== void 0 && _this$config18.actions)) return;
-    const currentId = this.currentEntityId;
-    if (!currentId || currentId === this._lastSyncedEntityId) return;
+    const idx = this._selectedIndex;
+    if (idx === undefined || idx === null || !this.entityObjs[idx]) return;
+
+    // Use a map to track last synced values per helper and sync type
+    if (!this._lastSyncedActionValues) {
+      this._lastSyncedActionValues = new Map();
+    }
 
     // Find all sync_selected_entity actions
     const syncActions = this.config.actions.filter(a => a.action === "sync_selected_entity" && a.sync_entity_helper);
     if (syncActions.length === 0) return;
-    this._lastSyncedEntityId = currentId;
     for (const action of syncActions) {
       var _this$hass$states$hel;
       const helperId = action.sync_entity_helper;
+      const syncType = action.sync_entity_type || "yamp_entity";
+      let targetId;
+      if (syncType === "yamp_main_entity") {
+        targetId = this.entityIds[idx];
+      } else if (syncType === "yamp_playback_entity") {
+        targetId = this._getActivePlaybackEntityId(idx);
+      } else {
+        // yamp_entity (default): MA entity if configured, otherwise main entity
+        targetId = this._getActualResolvedMaEntityForState(idx) || this.entityIds[idx];
+      }
+      if (!targetId) continue;
+
+      // Check if we already synced this value for this helper/action combination
+      const cacheKey = "".concat(helperId, "-").concat(syncType);
+      if (this._lastSyncedActionValues.get(cacheKey) === targetId) continue;
+
       // Check if the current state of the helper is already correct to avoid redundant calls
       const currentState = (_this$hass$states$hel = this.hass.states[helperId]) === null || _this$hass$states$hel === void 0 ? void 0 : _this$hass$states$hel.state;
-      if (currentState !== currentId) {
+      if (currentState !== targetId) {
         this.hass.callService("input_text", "set_value", {
           entity_id: helperId,
-          value: currentId
+          value: targetId
         });
       }
+      this._lastSyncedActionValues.set(cacheKey, targetId);
     }
   }
 }

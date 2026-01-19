@@ -7665,8 +7665,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _updateSelectedEntityHelper() {
     if (!this.hass || !this.config?.actions) return;
 
-    const currentId = this.currentEntityId;
-    if (!currentId || currentId === this._lastSyncedEntityId) return;
+    const idx = this._selectedIndex;
+    if (idx === undefined || idx === null || !this.entityObjs[idx]) return;
+
+    // Use a map to track last synced values per helper and sync type
+    if (!this._lastSyncedActionValues) {
+      this._lastSyncedActionValues = new Map();
+    }
 
     // Find all sync_selected_entity actions
     const syncActions = this.config.actions.filter(
@@ -7675,18 +7680,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     if (syncActions.length === 0) return;
 
-    this._lastSyncedEntityId = currentId;
-
     for (const action of syncActions) {
       const helperId = action.sync_entity_helper;
+      const syncType = action.sync_entity_type || "yamp_entity";
+
+      let targetId;
+      if (syncType === "yamp_main_entity") {
+        targetId = this.entityIds[idx];
+      } else if (syncType === "yamp_playback_entity") {
+        targetId = this._getActivePlaybackEntityId(idx);
+      } else {
+        // yamp_entity (default): MA entity if configured, otherwise main entity
+        targetId = this._getActualResolvedMaEntityForState(idx) || this.entityIds[idx];
+      }
+
+      if (!targetId) continue;
+
+      // Check if we already synced this value for this helper/action combination
+      const cacheKey = `${helperId}-${syncType}`;
+      if (this._lastSyncedActionValues.get(cacheKey) === targetId) continue;
+
       // Check if the current state of the helper is already correct to avoid redundant calls
       const currentState = this.hass.states[helperId]?.state;
-      if (currentState !== currentId) {
+      if (currentState !== targetId) {
         this.hass.callService("input_text", "set_value", {
           entity_id: helperId,
-          value: currentId
+          value: targetId
         });
       }
+      this._lastSyncedActionValues.set(cacheKey, targetId);
     }
   }
 

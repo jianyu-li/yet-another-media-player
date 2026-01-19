@@ -116,8 +116,9 @@ export default {
             "not_available_collapsed": "Nedostupné, keď je zapnuté Vždy zbalené.",
             "only_available_collapsed": "Dostupné len pri zapnutom režime Vždy zbalené.",
             "only_available_modern": "Dostupné len s moderným rozložením.",
-            "image_url_helper": "Zadajte priamu URL adresu obrázka alebo cestu k lokálnemu súboru.",
-            "selected_entity_helper": "Textový pomocník, ktorý bude aktualizovaný ID aktuálne vybranej entity prehrávača médií."
+            "image_url_helper": "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
+            "selected_entity_helper": "Pomocník pre vstupný text, ktorý bude aktualizovaný o ID aktuálne vybranej entity prehrávača médií.",
+            "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná)."
         },
         "titles": {
             "edit_entity": "Upraviť entitu",
@@ -190,7 +191,8 @@ export default {
             "match_entity": "Entita pre zhodu",
             "ma_entity": "Entita Music Assistant",
             "vol_entity": "Entita hlasitosti",
-            "selected_entity_helper": "Pomocník vybratej entity"
+            "selected_entity_helper": "Pomocník vybratej entity",
+            "sync_entity_type": "Typ entity na synchronizáciu"
         },
         "action_types": {
             "menu": "Otvoriť položku menu karty",
@@ -199,8 +201,13 @@ export default {
             "sync_selected_entity": "Synchronizovať vybranú entitu"
         },
         "action_helpers": {
-            "sync_selected_entity": "Synchronizovať entitu →",
+            "sync_selected_entity": "Synchronizovať vybranú entitu →",
             "select_helper": "(vybrať pomocníka)"
+        },
+        "sync_entity_options": {
+            "yamp_entity": "yamp_entity (Entita Music Assistant, ak je nakonfigurovaná)",
+            "yamp_main_entity": "yamp_main_entity (Hlavná entita prehrávača médií)",
+            "yamp_playback_entity": "yamp_playback_entity (Aktuálna aktívna entita prehrávania)"
         }
     },
     "card": {

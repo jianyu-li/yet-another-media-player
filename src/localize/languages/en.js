@@ -117,7 +117,8 @@ export default {
             "only_available_collapsed": "Only available when Always Collapsed is enabled",
             "only_available_modern": "Only available with Modern layout",
             "image_url_helper": "Enter a direct URL to an image or a local file path",
-            "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID."
+            "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID.",
+            "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured)."
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -190,7 +191,8 @@ export default {
             "match_entity": "Match Entity",
             "ma_entity": "Music Assistant Entity",
             "vol_entity": "Volume Entity",
-            "selected_entity_helper": "Selected Entity Helper"
+            "selected_entity_helper": "Selected Entity Helper",
+            "sync_entity_type": "Sync Entity Type"
         },
         "action_types": {
             "menu": "Open a Card Menu Item",
@@ -201,6 +203,11 @@ export default {
         "action_helpers": {
             "sync_selected_entity": "Sync Selected Entity →",
             "select_helper": "(select helper)"
+        },
+        "sync_entity_options": {
+            "yamp_entity": "yamp_entity (Music Assistant Entity if configured)",
+            "yamp_main_entity": "yamp_main_entity (Main Media Player Entity)",
+            "yamp_playback_entity": "yamp_playback_entity (Current Active Playback Entity)"
         }
     },
     "card": {
