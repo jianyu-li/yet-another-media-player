@@ -567,23 +567,18 @@ export const yampCardStyles = css`
     width: 3px;
     background: currentColor;
     border-radius: 1px;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
   }
 
   .chip-playing-indicator .bar:nth-child(1) {
-    animation: chipPlayingBar1 0.8s infinite;
-    animation-delay: 0s;
+    animation: chipPlayingBar1 0.8s ease-in-out 0s infinite;
   }
 
   .chip-playing-indicator .bar:nth-child(2) {
-    animation: chipPlayingBar2 0.6s infinite;
-    animation-delay: 0.15s;
+    animation: chipPlayingBar2 0.6s ease-in-out 0.15s infinite;
   }
 
   .chip-playing-indicator .bar:nth-child(3) {
-    animation: chipPlayingBar3 0.7s infinite;
-    animation-delay: 0.3s;
+    animation: chipPlayingBar3 0.7s ease-in-out 0.3s infinite;
   }
 
   .chip[playing]:not([selected]) .chip-playing-indicator {
