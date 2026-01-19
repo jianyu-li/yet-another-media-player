@@ -4131,7 +4131,7 @@ function renderProgressBar(_ref) {
   if (collapsed) {
     return x(_templateObject$5 || (_templateObject$5 = _taggedTemplateLiteral(["\n      <div\n        class=\"collapsed-progress-bar\"\n        style=\"width: ", "%; background: ", "; height: 4px; ", "\"\n      ></div>\n    "])), progress * 100, barColor, style);
   }
-  return x(_templateObject2$4 || (_templateObject2$4 = _taggedTemplateLiteral(["\n    <div class=\"progress-bar-container\">\n      <div\n        class=\"progress-bar\"\n        style=\"height:", "px; background:rgba(255,255,255,0.22); ", "\"\n        @click=", "\n        title=", "\n      >\n        <div\n          class=\"progress-inner\"\n          style=\"width: ", "%; background: ", "; height:", "px;\"\n        ></div>\n      </div>\n      ", "\n    </div>\n  "])), height, style, seekEnabled ? onSeek : null, seekEnabled ? localize('common.seek') : "", progress * 100, barColor, height, displayTimestamps ? x(_templateObject3$3 || (_templateObject3$3 = _taggedTemplateLiteral(["\n        <div class=\"timestamps-container\">\n           <span>", "</span>\n           <span>-", "</span>\n        </div>\n      "])), formatTime(currentTime), formatTime(Math.max(0, duration - currentTime))) : E);
+  return x(_templateObject2$4 || (_templateObject2$4 = _taggedTemplateLiteral(["\n    <div class=\"progress-bar-container\" style=\"", "\">\n      <div\n        class=\"progress-bar\"\n        style=\"height:", "px; background:rgba(255,255,255,0.22);\"\n        @click=", "\n        title=", "\n      >\n        <div\n          class=\"progress-inner\"\n          style=\"width: ", "%; background: ", "; height:", "px;\"\n        ></div>\n      </div>\n      ", "\n    </div>\n  "])), style, height, seekEnabled ? onSeek : null, seekEnabled ? localize('common.seek') : "", progress * 100, barColor, height, displayTimestamps ? x(_templateObject3$3 || (_templateObject3$3 = _taggedTemplateLiteral(["\n        <div class=\"timestamps-container\">\n           <span>", "</span>\n           <span>-", "</span>\n        </div>\n      "])), formatTime(currentTime), formatTime(Math.max(0, duration - currentTime))) : E);
 }
 
 var _templateObject$4;
@@ -17293,7 +17293,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
       seekEnabled: false,
       collapsed: false,
       accent: this._customAccent,
-      style: "visibility:hidden"
+      style: "visibility:hidden",
+      displayTimestamps: this._displayTimestamps,
+      currentTime: 0,
+      duration: 0
     }) : E, collapsed || this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,

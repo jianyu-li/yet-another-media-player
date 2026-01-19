@@ -6188,7 +6188,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
             seekEnabled: false,
             collapsed: false,
             accent: this._customAccent,
-            style: "visibility:hidden"
+            style: "visibility:hidden",
+            displayTimestamps: this._displayTimestamps,
+            currentTime: 0,
+            duration: 0
           })
         )
         : nothing
