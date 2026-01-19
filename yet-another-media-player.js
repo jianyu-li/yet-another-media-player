@@ -17090,13 +17090,13 @@ class YetAnotherMediaPlayerCard extends i$2 {
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
-        if (idx < 0) return isSelected ? !this._isIdle : false;
+        if (idx < 0) return false;
 
         // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = (_this$hass29 = this.hass) === null || _this$hass29 === void 0 || (_this$hass29 = _this$hass29.states) === null || _this$hass29 === void 0 ? void 0 : _this$hass29[playbackEntityId];
-        const anyPlaying = this._isEntityPlaying(playbackState);
-        return isSelected ? !this._isIdle : anyPlaying;
+        // Return actual playing state - animation should only show when truly playing
+        return this._isEntityPlaying(playbackState);
       },
       getChipArt: id => {
         var _this$hass30, _this$hass31;
@@ -17252,11 +17252,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
         const obj = this._findEntityObjByAnyId(id);
         const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
         const idx = this.entityIds.indexOf(mainId);
-        if (idx < 0) return isSelected ? !this._isIdle : false;
+        if (idx < 0) return false;
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = (_this$hass33 = this.hass) === null || _this$hass33 === void 0 || (_this$hass33 = _this$hass33.states) === null || _this$hass33 === void 0 ? void 0 : _this$hass33[playbackEntityId];
-        const anyPlaying = this._isEntityPlaying(playbackState);
-        return isSelected ? !this._isIdle : anyPlaying;
+        // Return actual playing state - animation should only show when truly playing
+        return this._isEntityPlaying(playbackState);
       },
       getChipArt: id => {
         var _this$hass34, _this$hass35;

@@ -6013,13 +6013,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const obj = this._findEntityObjByAnyId(id);
         const mainId = obj?.entity_id || id;
         const idx = this.entityIds.indexOf(mainId);
-        if (idx < 0) return isSelected ? !this._isIdle : false;
+        if (idx < 0) return false;
 
         // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = this.hass?.states?.[playbackEntityId];
-        const anyPlaying = this._isEntityPlaying(playbackState);
-        return isSelected ? !this._isIdle : anyPlaying;
+        // Return actual playing state - animation should only show when truly playing
+        return this._isEntityPlaying(playbackState);
       },
       getChipArt: (id) => {
         const obj = this._findEntityObjByAnyId(id);
@@ -6277,11 +6277,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const obj = this._findEntityObjByAnyId(id);
           const mainId = obj?.entity_id || id;
           const idx = this.entityIds.indexOf(mainId);
-          if (idx < 0) return isSelected ? !this._isIdle : false;
+          if (idx < 0) return false;
           const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
           const playbackState = this.hass?.states?.[playbackEntityId];
-          const anyPlaying = this._isEntityPlaying(playbackState);
-          return isSelected ? !this._isIdle : anyPlaying;
+          // Return actual playing state - animation should only show when truly playing
+          return this._isEntityPlaying(playbackState);
         },
         getChipArt: (id) => {
           const obj = this._findEntityObjByAnyId(id);
