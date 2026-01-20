@@ -4118,6 +4118,108 @@ class YetAnotherMediaPlayerCard extends LitElement {
     `;
   }
 
+  _renderInlineChipRow(showChipsInline, chipsHiddenInline) {
+    if (!showChipsInline) return nothing;
+    return html`
+      <div class="chip-row" style="${chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : ""}">
+        ${renderChipRow({
+      groupedSortedEntityIds: this.groupedSortedEntityIds,
+      entityIds: this.entityIds,
+      selectedEntityId: this.currentEntityId,
+      pinnedIndex: this._pinnedIndex,
+      holdToPin: this._holdToPin,
+      getChipName: (id) => this.getChipName(id),
+      getActualGroupMaster: (group) => this._getActualGroupMaster(group),
+      artworkHostname: this.config?.artwork_hostname || '',
+      mediaArtworkOverrides: this.config?.media_artwork_overrides || [],
+      fallbackArtwork: this.config?.fallback_artwork || null,
+      getIsChipPlaying: (id, isSelected) => {
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = obj?.entity_id || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return false;
+
+        // Use the unified entity resolution system
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = this.hass?.states?.[playbackEntityId];
+        // Return actual playing state - animation should only show when truly playing
+        return this._isEntityPlaying(playbackState);
+      },
+      getChipArt: (id) => {
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = obj?.entity_id || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return null;
+
+        // Use the unified entity resolution system
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = this.hass?.states?.[playbackEntityId];
+        const mainState = this.hass?.states?.[mainId];
+
+        // Prefer playback entity artwork, fallback to main entity
+        const playbackArtwork = this._getArtworkUrl(playbackState);
+        const mainArtwork = this._getArtworkUrl(mainState);
+        return playbackArtwork || mainArtwork;
+      },
+      getIsMaActive: (id) => {
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = obj?.entity_id || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return false;
+
+        // Check if there's a configured MA entity
+        const entityObj = this.entityObjs[idx];
+        if (!entityObj?.music_assistant_entity) return false;
+
+        // Use the unified entity resolution system
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = this.hass?.states?.[playbackEntityId];
+
+        // Check if the playback entity is the MA entity and is playing
+        return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) &&
+          this._isEntityPlaying(playbackState);
+      },
+      isIdle: this._isIdle,
+      hass: this.hass,
+      onChipClick: (idx) => {
+        this._onChipClick(idx);
+      },
+      onIconClick: (idx, e) => {
+        const entityId = this.entityIds[idx];
+        const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+        if (group && group.length > 1) {
+          this._selectedIndex = idx;
+
+          this._showEntityOptions = true;
+          this._showGrouping = true;
+          this.requestUpdate();
+        }
+      },
+      onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
+      onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
+      onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
+      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
+    })}
+      </div>
+    `;
+  }
+
+  _renderInlineActionRow(rowActions) {
+    if (!rowActions || !rowActions.length) return nothing;
+    return html`
+      <div style="${this._showEntityOptions ? 'visibility: hidden; pointer-events: none;' : ''}">
+        ${renderActionChipRow({
+      actions: rowActions.map(({ action }) => action),
+      onActionChipClick: (idx) => {
+        const target = rowActions[idx];
+        if (!target) return;
+        this._onActionChipClick(target.idx);
+      }
+    })}
+      </div>
+    `;
+  }
+
   _renderGroupingMenuOption() {
     const totalEntities = this.entityIds.length;
     if (totalEntities <= 1) return nothing;
@@ -6003,107 +6105,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
               ${!dimIdleFrame ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
-            ${(() => {
-        const chipRowTemplate = showChipsInline ? html`
-                <div class="chip-row" style="${chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : ""}">
-                  ${renderChipRow({
-          groupedSortedEntityIds: this.groupedSortedEntityIds,
-          entityIds: this.entityIds,
-          selectedEntityId: this.currentEntityId,
-          pinnedIndex: this._pinnedIndex,
-          holdToPin: this._holdToPin,
-          getChipName: (id) => this.getChipName(id),
-          getActualGroupMaster: (group) => this._getActualGroupMaster(group),
-          artworkHostname: this.config?.artwork_hostname || '',
-          mediaArtworkOverrides: this.config?.media_artwork_overrides || [],
-          fallbackArtwork: this.config?.fallback_artwork || null,
-          getIsChipPlaying: (id, isSelected) => {
-            const obj = this._findEntityObjByAnyId(id);
-            const mainId = obj?.entity_id || id;
-            const idx = this.entityIds.indexOf(mainId);
-            if (idx < 0) return false;
-
-            // Use the unified entity resolution system
-            const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-            const playbackState = this.hass?.states?.[playbackEntityId];
-            // Return actual playing state - animation should only show when truly playing
-            return this._isEntityPlaying(playbackState);
-          },
-          getChipArt: (id) => {
-            const obj = this._findEntityObjByAnyId(id);
-            const mainId = obj?.entity_id || id;
-            const idx = this.entityIds.indexOf(mainId);
-            if (idx < 0) return null;
-
-            // Use the unified entity resolution system
-            const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-            const playbackState = this.hass?.states?.[playbackEntityId];
-            const mainState = this.hass?.states?.[mainId];
-
-            // Prefer playback entity artwork, fallback to main entity
-            const playbackArtwork = this._getArtworkUrl(playbackState);
-            const mainArtwork = this._getArtworkUrl(mainState);
-            return playbackArtwork || mainArtwork;
-          },
-          getIsMaActive: (id) => {
-            const obj = this._findEntityObjByAnyId(id);
-            const mainId = obj?.entity_id || id;
-            const idx = this.entityIds.indexOf(mainId);
-            if (idx < 0) return false;
-
-            // Check if there's a configured MA entity
-            const entityObj = this.entityObjs[idx];
-            if (!entityObj?.music_assistant_entity) return false;
-
-            // Use the unified entity resolution system
-            const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-            const playbackState = this.hass?.states?.[playbackEntityId];
-
-            // Check if the playback entity is the MA entity and is playing
-            return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) &&
-              this._isEntityPlaying(playbackState);
-          },
-          isIdle: this._isIdle,
-          hass: this.hass,
-          onChipClick: (idx) => {
-            this._onChipClick(idx);
-          },
-          onIconClick: (idx, e) => {
-            const entityId = this.entityIds[idx];
-            const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
-            if (group && group.length > 1) {
-              this._selectedIndex = idx;
-
-              this._showEntityOptions = true;
-              this._showGrouping = true;
-              this.requestUpdate();
-            }
-          },
-          onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
-          onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
-          onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
-          onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
-        })}
-                </div>
-              ` : nothing;
-
-        const actionRowTemplate = html`
-                <div style="${this._showEntityOptions ? 'visibility: hidden; pointer-events: none;' : ''}">
-                  ${renderActionChipRow({
-          actions: rowActions.map(({ action }) => action),
-          onActionChipClick: (idx) => {
-            const target = rowActions[idx];
-            if (!target) return;
-            this._onActionChipClick(target.idx);
-          }
-        })}
-                </div>
-              `;
-
-        return chipsHiddenInline
-          ? html`${actionRowTemplate}${chipRowTemplate}`
-          : html`${chipRowTemplate}${actionRowTemplate}`;
-      })()}
+            ${chipsHiddenInline
+        ? html`${this._renderInlineActionRow(rowActions)}${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}`
+        : html`${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}${this._renderInlineActionRow(rowActions)}`}
             <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
                 style="${(() => {
