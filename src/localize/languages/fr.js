@@ -84,7 +84,7 @@ export default {
         },
         "subtitles": {
             "idle_timeout": "Temps en millisecondes avant la mise en veille. 0 pour désactiver.",
-            "show_chip_row": "\"Auto\" masque la barre de jetons si une seule entité est configurée. \"Dans le Menu\" déplace les jetons.",
+            "show_chip_row": "\"Auto\" masque la barre de jetons si une seule entité est configurée. \"Dans le Menu\" déplace les jetons. \"Dans le menu au repos\" affiche les jetons en ligne lorsque actif mais les déplace dans le menu au repos.",
             "dim_chips": "Assombrir les jetons en mode veille pour un look plus épuré.",
             "hold_to_pin": "Appui long pour épingler au lieu d'un appui court.",
             "disable_autofocus": "Empêcher la recherche de prendre le focus automatiquement.",

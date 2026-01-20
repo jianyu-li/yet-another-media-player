@@ -1380,7 +1380,7 @@ var en = {
     },
     "subtitles": {
       "idle_timeout": "Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.",
-      "show_chip_row": "\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay.",
+      "show_chip_row": "\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay. \"In Menu on Idle\" shows chips inline when active but moves them to the menu when idle.",
       "dim_chips": "When the card enters idle mode with an image, dim the entity and action chips for a cleaner look.",
       "hold_to_pin": "Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.",
       "disable_autofocus": "Keep the search box from stealing focus so on-screen keyboards stay hidden.",
@@ -1669,7 +1669,7 @@ var de = {
     },
     "subtitles": {
       "idle_timeout": "Zeit in Millisekunden vor dem Wechsel in den Leerlaufmodus. 0 zum Deaktivieren.",
-      "show_chip_row": "\"Auto\" blendet die Chip-Leiste bei nur einer Entität aus. \"Im Menü\" verschiebt sie ins Menü.",
+      "show_chip_row": "\"Auto\" blendet die Chip-Leiste bei nur einer Entität aus. \"Im Menü\" verschiebt sie ins Menü. \"Im Menü bei Inaktivität\" zeigt Chips inline wenn aktiv, verschiebt sie aber ins Menü bei Inaktivität.",
       "dim_chips": "Entitäts- und Aktions-Chips im Leerlauf mit Bild abdunkeln für einen sauberen Look.",
       "hold_to_pin": "Langes Drücken statt kurzem Drücken zum Anpinnen, um automatisches Umschalten zu verhindern.",
       "disable_autofocus": "Suchfeld-Autofokus deaktivieren, damit Bildschirmtastaturen ausgeblendet bleiben.",
@@ -1958,7 +1958,7 @@ var es = {
     },
     "subtitles": {
       "idle_timeout": "Tiempo antes de reposo (ms). 0 para desactivar.",
-      "show_chip_row": "\"Auto\" oculta la fila si solo hay una entidad. \"En menú\" mueve los chips.",
+      "show_chip_row": "\"Auto\" oculta la fila si solo hay una entidad. \"En menú\" mueve los chips. \"En menú en reposo\" muestra los chips en línea cuando está activo pero los mueve al menú cuando está en reposo.",
       "dim_chips": "Atenuar los chips en reposo para un aspecto más limpio.",
       "hold_to_pin": "Mantener pulsado para fijar en vez de pulsación corta.",
       "disable_autofocus": "Evitar que la búsqueda tome el foco automáticamente.",
@@ -2247,7 +2247,7 @@ var fr = {
     },
     "subtitles": {
       "idle_timeout": "Temps en millisecondes avant la mise en veille. 0 pour désactiver.",
-      "show_chip_row": "\"Auto\" masque la barre de jetons si une seule entité est configurée. \"Dans le Menu\" déplace les jetons.",
+      "show_chip_row": "\"Auto\" masque la barre de jetons si une seule entité est configurée. \"Dans le Menu\" déplace les jetons. \"Dans le menu au repos\" affiche les jetons en ligne lorsque actif mais les déplace dans le menu au repos.",
       "dim_chips": "Assombrir les jetons en mode veille pour un look plus épuré.",
       "hold_to_pin": "Appui long pour épingler au lieu d'un appui court.",
       "disable_autofocus": "Empêcher la recherche de prendre le focus automatiquement.",
@@ -2536,7 +2536,7 @@ var it = {
     },
     "subtitles": {
       "idle_timeout": "Tempo prima del riposo (ms). 0 per disabilitare.",
-      "show_chip_row": "\"Auto\" nasconde la riga se c'è una sola entità.",
+      "show_chip_row": "\"Auto\" nasconde la riga se c'è una sola entità. \"Nel menu\" sposta i chip nel menu. \"Nel menu in inattività\" mostra i chip in linea quando attivo ma li sposta nel menu quando inattivo.",
       "dim_chips": "Appanna i chip in riposo per un aspetto più pulito.",
       "hold_to_pin": "Tieni premuto per fissare invece di un tocco breve.",
       "disable_autofocus": "Evita che la ricerca prenda il focus automaticamente.",
@@ -2825,7 +2825,7 @@ var nl = {
     },
     "subtitles": {
       "idle_timeout": "Tijd in milliseconden voordat de kaart naar de inactieve modus gaat. Stel in op 0 om inactiviteitsgedrag uit te schakelen.",
-      "show_chip_row": "\"Auto\" verbergt de chiprij wanneer er slechts één entiteit is geconfigureerd. \"In Menu\" verplaatst de chips naar het menu-overlay.",
+      "show_chip_row": "\"Auto\" verbergt de chiprij wanneer er slechts één entiteit is geconfigureerd. \"In Menu\" verplaatst de chips naar het menu-overlay. \"In menu bij inactiviteit\" toont chips inline wanneer actief maar verplaatst ze naar het menu wanneer inactief.",
       "dim_chips": "Wanneer de kaart inactief wordt met een afbeelding, dim dan de entiteits- en actiechips voor een strakker uiterlijk.",
       "hold_to_pin": "Houd entiteitschips lang ingedrukt in plaats van kort om ze vast te zetten, om automatisch schakelen tijdens afspelen te voorkomen.",
       "disable_autofocus": "Voorkom dat het zoekveld de focus steelt, zodat onscreen toetsenborden verborgen blijven.",
@@ -3114,7 +3114,7 @@ var pt = {
     },
     "subtitles": {
       "idle_timeout": "Tempo antes de repouso (ms). 0 para desativar.",
-      "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade. \"No menu\" move os chips.",
+      "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade. \"No menu\" move os chips. \"No menu em repouso\" mostra os chips em linha quando ativo mas move-os para o menu quando em repouso.",
       "dim_chips": "Escurecer chips em repouso para um aspeto mais limpo.",
       "hold_to_pin": "Manter premido para fixar em vez de toque curto.",
       "disable_autofocus": "Evitar que a procura tome o foco automaticamente.",
@@ -3403,7 +3403,7 @@ var sk = {
     },
     "subtitles": {
       "idle_timeout": "Čas v milisekundách, kým karta prejde do režimu nečinnosti. Nastavte na 0 pre vypnutie.",
-      "show_chip_row": "\"Auto\" skryje riadok čipov, ak je nakonfigurovaná len jedna entita. \"V menu\" presunie čipy do ponuky menu.",
+      "show_chip_row": "\"Auto\" skryje riadok čipov, ak je nakonfigurovaná len jedna entita. \"V menu\" presunie čipy do ponuky menu. \"V menu pri nečinnosti\" zobrazí čipy v riadku keď je aktívne, ale presunie ich do menu pri nečinnosti.",
       "dim_chips": "Keď karta prejde do režimu nečinnosti s obrázkom, stlmte čipy entít a akcií pre čistejší vzhľad.",
       "hold_to_pin": "Dlhým stlačením čipov entít ich pripnete, čím zabránite automatickému prepínaniu počas prehrávania.",
       "disable_autofocus": "Zabráni vyhľadávaciemu poľu prebrať zameranie, aby zostali klávesnice na obrazovke skryté.",
@@ -3692,7 +3692,7 @@ var sl = {
     },
     "subtitles": {
       "idle_timeout": "Čas v milisekundah, preden kartica preide v mirovanje. Nastavite na 0 za izklop.",
-      "show_chip_row": "\"Samodejno\" skrije čipe, če je nastavljena ena entiteta. \"V meniju\" jih premakne v meni.",
+      "show_chip_row": "\"Samodejno\" skrije čipe, če je nastavljena ena entiteta. \"V meniju\" jih premakne v meni. \"V meniju med nedejavnostjo\" prikaže čipe v vrstici, ko je aktivna, a jih premakne v meni med nedejavnostjo.",
       "dim_chips": "Ko kartica preide v mirovanje s sliko, se čipi zatemnijo.",
       "hold_to_pin": "Dolgi pritisk za pripenjanje entitet namesto kratkega.",
       "disable_autofocus": "Prepreči samodejni fokus iskalnega polja.",
@@ -4131,7 +4131,7 @@ function renderProgressBar(_ref) {
   if (collapsed) {
     return x(_templateObject$5 || (_templateObject$5 = _taggedTemplateLiteral(["\n      <div\n        class=\"collapsed-progress-bar\"\n        style=\"width: ", "%; background: ", "; height: 4px; ", "\"\n      ></div>\n    "])), progress * 100, barColor, style);
   }
-  return x(_templateObject2$4 || (_templateObject2$4 = _taggedTemplateLiteral(["\n    <div class=\"progress-bar-container\">\n      <div\n        class=\"progress-bar\"\n        style=\"height:", "px; background:rgba(255,255,255,0.22); ", "\"\n        @click=", "\n        title=", "\n      >\n        <div\n          class=\"progress-inner\"\n          style=\"width: ", "%; background: ", "; height:", "px;\"\n        ></div>\n      </div>\n      ", "\n    </div>\n  "])), height, style, seekEnabled ? onSeek : null, seekEnabled ? localize('common.seek') : "", progress * 100, barColor, height, displayTimestamps ? x(_templateObject3$3 || (_templateObject3$3 = _taggedTemplateLiteral(["\n        <div class=\"timestamps-container\">\n           <span>", "</span>\n           <span>-", "</span>\n        </div>\n      "])), formatTime(currentTime), formatTime(Math.max(0, duration - currentTime))) : E);
+  return x(_templateObject2$4 || (_templateObject2$4 = _taggedTemplateLiteral(["\n    <div class=\"progress-bar-container\" style=\"", "\">\n      <div\n        class=\"progress-bar\"\n        style=\"height:", "px; background:rgba(255,255,255,0.22);\"\n        @click=", "\n        title=", "\n      >\n        <div\n          class=\"progress-inner\"\n          style=\"width: ", "%; background: ", "; height:", "px;\"\n        ></div>\n      </div>\n      ", "\n    </div>\n  "])), style, height, seekEnabled ? onSeek : null, seekEnabled ? localize('common.seek') : "", progress * 100, barColor, height, displayTimestamps ? x(_templateObject3$3 || (_templateObject3$3 = _taggedTemplateLiteral(["\n        <div class=\"timestamps-container\">\n           <span>", "</span>\n           <span>-", "</span>\n        </div>\n      "])), formatTime(currentTime), formatTime(Math.max(0, duration - currentTime))) : E);
 }
 
 var _templateObject$4;
@@ -11211,6 +11211,9 @@ class YetAnotherMediaPlayerEditor extends i$2 {
         }, {
           value: "in_menu",
           label: "In Menu"
+        }, {
+          value: "in_menu_on_idle",
+          label: "In Menu on Idle"
         }]
       }
     }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", localize('editor.fields.show_chip_row'), e => this._updateConfig("show_chip_row", e.detail.value), localize('editor.subtitles.show_chip_row'), (_this$_config$dim_chi = this._config.dim_chips_on_idle) !== null && _this$_config$dim_chi !== void 0 ? _this$_config$dim_chi : true, e => this._updateConfig("dim_chips_on_idle", e.target.checked), localize('editor.labels.dim_chips'), localize('editor.subtitles.dim_chips'), localize('editor.sections.behavior.interactions_search.title'), localize('editor.sections.behavior.interactions_search.description'), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), localize('editor.labels.hold_to_pin'), localize('editor.subtitles.hold_to_pin'), (_this$_config$disable = this._config.disable_autofocus) !== null && _this$_config$disable !== void 0 ? _this$_config$disable : false, e => this._updateConfig("disable_autofocus", e.target.checked), localize('editor.labels.disable_autofocus'), localize('editor.subtitles.disable_autofocus'), (_this$_config$keep_fi = this._config.keep_filters_on_search) !== null && _this$_config$keep_fi !== void 0 ? _this$_config$keep_fi : false, e => this._updateConfig("keep_filters_on_search", e.target.checked), localize('editor.labels.keep_filters'), localize('editor.subtitles.search_within_filter'), (_this$_config$dismiss = this._config.dismiss_search_on_play) !== null && _this$_config$dismiss !== void 0 ? _this$_config$dismiss : true, e => this._updateConfig("dismiss_search_on_play", e.target.checked), localize('editor.labels.dismiss_on_play'), localize('editor.subtitles.close_search_on_play'), ((_this$_config$entitie6 = this._config.entities) === null || _this$_config$entitie6 === void 0 ? void 0 : _this$_config$entitie6.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true ? "opacity: 0.5;" : "", ((_this$_config$entitie7 = this._config.entities) === null || _this$_config$entitie7 === void 0 ? void 0 : _this$_config$entitie7.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true ? "Not available with one entity in Always Collapsed mode unless Expand on Search is enabled" : "", (_this$_config$pin_sea = this._config.pin_search_headers) !== null && _this$_config$pin_sea !== void 0 ? _this$_config$pin_sea : false, e => this._updateConfig("pin_search_headers", e.target.checked), ((_this$_config$entitie8 = this._config.entities) === null || _this$_config$entitie8 === void 0 ? void 0 : _this$_config$entitie8.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true, localize('editor.labels.pin_headers'), localize('editor.subtitles.pin_search_headers'), (_this$_config$disable2 = this._config.disable_mass_queue) !== null && _this$_config$disable2 !== void 0 ? _this$_config$disable2 : false, e => this._updateConfig("disable_mass_queue", e.target.checked), localize('editor.labels.disable_mass'), localize('editor.subtitles.disable_mass'), {
@@ -11747,7 +11750,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
 }
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 
-var _templateObject, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7, _templateObject8, _templateObject9, _templateObject0, _templateObject1, _templateObject10, _templateObject11, _templateObject12, _templateObject13, _templateObject14, _templateObject15, _templateObject16, _templateObject17, _templateObject18, _templateObject19, _templateObject20, _templateObject21, _templateObject22, _templateObject23, _templateObject24, _templateObject25, _templateObject26, _templateObject27, _templateObject28, _templateObject29, _templateObject30, _templateObject31, _templateObject32, _templateObject33, _templateObject34, _templateObject35, _templateObject36, _templateObject37, _templateObject38, _templateObject39, _templateObject40, _templateObject41, _templateObject42, _templateObject43, _templateObject44, _templateObject45, _templateObject46, _templateObject47, _templateObject48, _templateObject49, _templateObject50, _templateObject51, _templateObject52, _templateObject53, _templateObject54, _templateObject55, _templateObject56, _templateObject57, _templateObject58, _templateObject59, _templateObject60, _templateObject61, _templateObject62, _templateObject63, _templateObject64, _templateObject65, _templateObject66, _templateObject67, _templateObject68, _templateObject69, _templateObject70, _templateObject71, _templateObject72, _templateObject73, _templateObject74, _templateObject75, _templateObject76, _templateObject77, _templateObject78;
+var _templateObject, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7, _templateObject8, _templateObject9, _templateObject0, _templateObject1, _templateObject10, _templateObject11, _templateObject12, _templateObject13, _templateObject14, _templateObject15, _templateObject16, _templateObject17, _templateObject18, _templateObject19, _templateObject20, _templateObject21, _templateObject22, _templateObject23, _templateObject24, _templateObject25, _templateObject26, _templateObject27, _templateObject28, _templateObject29, _templateObject30, _templateObject31, _templateObject32, _templateObject33, _templateObject34, _templateObject35, _templateObject36, _templateObject37, _templateObject38, _templateObject39, _templateObject40, _templateObject41, _templateObject42, _templateObject43, _templateObject44, _templateObject45, _templateObject46, _templateObject47, _templateObject48, _templateObject49, _templateObject50, _templateObject51, _templateObject52, _templateObject53, _templateObject54, _templateObject55, _templateObject56, _templateObject57, _templateObject58, _templateObject59, _templateObject60, _templateObject61, _templateObject62, _templateObject63, _templateObject64, _templateObject65, _templateObject66, _templateObject67, _templateObject68, _templateObject69, _templateObject70, _templateObject71, _templateObject72, _templateObject73, _templateObject74, _templateObject75, _templateObject76, _templateObject77, _templateObject78, _templateObject79, _templateObject80, _templateObject81;
 const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
 const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
@@ -15571,6 +15574,108 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return x(_templateObject5 || (_templateObject5 = _taggedTemplateLiteral(["\n              <button\n                class=\"entity-options-item menu-action-item\"\n                @click=", "\n              >\n                ", "\n                ", "\n              </button>\n            "])), () => this._onMenuActionClick(idx), action.icon ? x(_templateObject6 || (_templateObject6 = _taggedTemplateLiteral(["\n                  <ha-icon\n                    class=\"menu-action-icon\"\n                    .icon=", "\n                  ></ha-icon>\n                "])), action.icon) : E, label ? x(_templateObject7 || (_templateObject7 = _taggedTemplateLiteral(["<span class=\"menu-action-label\">", "</span>"])), label) : E);
     })) : E);
   }
+  _renderInlineChipRow(showChipsInline, chipsHiddenInline) {
+    var _this$config0, _this$config1, _this$config10;
+    if (!showChipsInline) return E;
+    return x(_templateObject8 || (_templateObject8 = _taggedTemplateLiteral(["\n      <div class=\"chip-row\" style=\"", "\">\n        ", "\n      </div>\n    "])), chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : "", renderChipRow({
+      groupedSortedEntityIds: this.groupedSortedEntityIds,
+      entityIds: this.entityIds,
+      selectedEntityId: this.currentEntityId,
+      pinnedIndex: this._pinnedIndex,
+      holdToPin: this._holdToPin,
+      getChipName: id => this.getChipName(id),
+      getActualGroupMaster: group => this._getActualGroupMaster(group),
+      artworkHostname: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.fallback_artwork) || null,
+      getIsChipPlaying: (id, isSelected) => {
+        var _this$hass19;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return false;
+
+        // Use the unified entity resolution system
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[playbackEntityId];
+        // Return actual playing state - animation should only show when truly playing
+        return this._isEntityPlaying(playbackState);
+      },
+      getChipArt: id => {
+        var _this$hass20, _this$hass21;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return null;
+
+        // Use the unified entity resolution system
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass20 = this.hass) === null || _this$hass20 === void 0 || (_this$hass20 = _this$hass20.states) === null || _this$hass20 === void 0 ? void 0 : _this$hass20[playbackEntityId];
+        const mainState = (_this$hass21 = this.hass) === null || _this$hass21 === void 0 || (_this$hass21 = _this$hass21.states) === null || _this$hass21 === void 0 ? void 0 : _this$hass21[mainId];
+
+        // Prefer playback entity artwork, fallback to main entity
+        const playbackArtwork = this._getArtworkUrl(playbackState);
+        const mainArtwork = this._getArtworkUrl(mainState);
+        return playbackArtwork || mainArtwork;
+      },
+      getIsMaActive: id => {
+        var _this$hass22;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return false;
+
+        // Check if there's a configured MA entity
+        const entityObj = this.entityObjs[idx];
+        if (!(entityObj !== null && entityObj !== void 0 && entityObj.music_assistant_entity)) return false;
+
+        // Use the unified entity resolution system
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[playbackEntityId];
+
+        // Check if the playback entity is the MA entity and is playing
+        return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && this._isEntityPlaying(playbackState);
+      },
+      isIdle: this._isIdle,
+      hass: this.hass,
+      onChipClick: idx => {
+        this._onChipClick(idx);
+      },
+      onIconClick: (idx, e) => {
+        const entityId = this.entityIds[idx];
+        const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+        if (group && group.length > 1) {
+          this._selectedIndex = idx;
+          this._showEntityOptions = true;
+          this._showGrouping = true;
+          this.requestUpdate();
+        }
+      },
+      onPinClick: (idx, e) => {
+        e.stopPropagation();
+        this._onPinClick(e);
+      },
+      onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
+      onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
+      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
+    }));
+  }
+  _renderInlineActionRow(rowActions) {
+    if (!rowActions || !rowActions.length) return E;
+    return x(_templateObject9 || (_templateObject9 = _taggedTemplateLiteral(["\n      <div style=\"", "\">\n        ", "\n      </div>\n    "])), this._showEntityOptions ? 'visibility: hidden; pointer-events: none;' : '', renderActionChipRow({
+      actions: rowActions.map(_ref6 => {
+        let {
+          action
+        } = _ref6;
+        return action;
+      }),
+      onActionChipClick: idx => {
+        const target = rowActions[idx];
+        if (!target) return;
+        this._onActionChipClick(target.idx);
+      }
+    }));
+  }
   _renderGroupingMenuOption() {
     const totalEntities = this.entityIds.length;
     if (totalEntities <= 1) return E;
@@ -15587,7 +15692,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const groupKey = this._getGroupKey(currentId);
     const isFollower = groupKey !== currentId;
     if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
-      return x(_templateObject8 || (_templateObject8 = _taggedTemplateLiteral(["\n        <button class=\"entity-options-item\" @click=", ">", "</button>\n      "])), () => this._openGrouping(), localize('card.menu.group_players'));
+      return x(_templateObject0 || (_templateObject0 = _taggedTemplateLiteral(["\n        <button class=\"entity-options-item\" @click=", ">", "</button>\n      "])), () => this._openGrouping(), localize('card.menu.group_players'));
     }
     return E;
   }
@@ -15640,7 +15745,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const activeGroupKey = this._getGroupKey(activeId);
     const activeIsBusy = activeGroupKey !== activeId;
     if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
-      return x(_templateObject9 || (_templateObject9 = _taggedTemplateLiteral(["\n        <div class=\"entity-options-header\">\n          <button class=\"entity-options-item close-item\" @click=", ">\n            ", "\n          </button>\n          <div class=\"entity-options-divider\"></div>\n        </div>\n        <div class=\"entity-options-title\" style=\"margin-bottom:8px;\">", "</div>\n        <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n          ", "\n        </div>\n      "])), () => {
+      return x(_templateObject1 || (_templateObject1 = _taggedTemplateLiteral(["\n        <div class=\"entity-options-header\">\n          <button class=\"entity-options-item close-item\" @click=", ">\n            ", "\n          </button>\n          <div class=\"entity-options-divider\"></div>\n        </div>\n        <div class=\"entity-options-title\" style=\"margin-bottom:8px;\">", "</div>\n        <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n          ", "\n        </div>\n      "])), () => {
         if (this._quickMenuInvoke) {
           this._dismissWithAnimation();
         } else {
@@ -15659,13 +15764,13 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (a.isBusy === b.isBusy) return 0;
       return a.isBusy ? 1 : -1;
     });
-    return x(_templateObject0 || (_templateObject0 = _taggedTemplateLiteral(["\n      <div class=\"grouping-header group-list-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n      </div>\n      <div class=\"entity-options-title\" style=\"margin-bottom:8px; margin-top:8px;\">", "</div>\n      <div style=\"display:flex; align-items:center; gap:8px; margin-bottom:12px;\">\n        ", "\n        <button class=\"entity-options-item\"\n          @click=", "\n          style=\"flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;\">\n          ", "\n        </button>\n      </div>\n      <div class=\"group-list-scroll\">\n        ", "\n      </div>\n    "])), () => {
+    return x(_templateObject10 || (_templateObject10 = _taggedTemplateLiteral(["\n      <div class=\"grouping-header group-list-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n      </div>\n      <div class=\"entity-options-title\" style=\"margin-bottom:8px; margin-top:8px;\">", "</div>\n      <div style=\"display:flex; align-items:center; gap:8px; margin-bottom:12px;\">\n        ", "\n        <button class=\"entity-options-item\"\n          @click=", "\n          style=\"flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;\">\n          ", "\n        </button>\n      </div>\n      <div class=\"group-list-scroll\">\n        ", "\n      </div>\n    "])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeGrouping();
       }
-    }, localize('common.back'), localize('card.grouping.title'), groupedAny ? x(_templateObject1 || (_templateObject1 = _taggedTemplateLiteral(["\n          <button class=\"entity-options-item\"\n            @click=", "\n            style=\"flex:0 0 auto; min-width:140px; text-align:center;\">\n            ", "\n          </button>\n        "])), () => this._syncGroupVolume(), localize('card.grouping.sync_volume')) : E, () => groupedAny ? this._ungroupAll() : this._groupAll(), groupedAny ? localize('card.grouping.ungroup_all') : localize('card.grouping.group_all'), sortedGroupIds.length === 0 ? x(_templateObject10 || (_templateObject10 = _taggedTemplateLiteral(["\n          <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n            ", "\n          </div>\n        "])), localize('card.grouping.no_players')) : sortedGroupIds.map(item => {
+    }, localize('common.back'), localize('card.grouping.title'), groupedAny ? x(_templateObject11 || (_templateObject11 = _taggedTemplateLiteral(["\n          <button class=\"entity-options-item\"\n            @click=", "\n            style=\"flex:0 0 auto; min-width:140px; text-align:center;\">\n            ", "\n          </button>\n        "])), () => this._syncGroupVolume(), localize('card.grouping.sync_volume')) : E, () => groupedAny ? this._ungroupAll() : this._groupAll(), groupedAny ? localize('card.grouping.ungroup_all') : localize('card.grouping.group_all'), sortedGroupIds.length === 0 ? x(_templateObject12 || (_templateObject12 = _taggedTemplateLiteral(["\n          <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n            ", "\n          </div>\n        "])), localize('card.grouping.no_players')) : sortedGroupIds.map(item => {
       var _masterState$attribut2, _displayVolumeState$a;
       const id = item.id;
       const actualGroupId = item.groupId;
@@ -15687,26 +15792,26 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (isBusy) {
         stateLabel = busyLabel || "Unavailable";
       }
-      return x(_templateObject11 || (_templateObject11 = _taggedTemplateLiteral(["\n            <div class=\"entity-options-item group-player-row\" style=\"\n              display:flex;\n              align-items:center;\n              gap:6px;\n              padding:4px 8px;\n              margin-bottom:1px;\n              ", "\n            \">\n              <div style=\"flex:1; min-width:120px;\">\n                <div style=\"font-weight:600; text-align:left;\">", "</div>\n                <div style=\"font-size:0.8em; opacity:0.7; text-align:left;\">", "</div>\n              </div>\n              <div style=\"flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;\">\n                ", "\n                <span style=\"min-width:36px;display:inline-block;text-align:right;\">", "</span>\n              </div>\n              ", "\n            </div>\n          "])), isBusy ? "opacity: 0.5;" : "", name, stateLabel, isRemoteVol ? x(_templateObject12 || (_templateObject12 = _taggedTemplateLiteral(["\n                    <div class=\"vol-stepper\" style=\"display:flex;align-items:center;gap:4px;\">\n                      <button @click=", " title=\"Vol Down\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                        <ha-icon icon=\"mdi:minus\"></ha-icon>\n                      </button>\n                      <button @click=", " title=\"Vol Up\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                        <ha-icon icon=\"mdi:plus\"></ha-icon>\n                      </button>\n                    </div>\n                  "])), () => this._onGroupVolumeStep(displayEntity, -1), () => this._onGroupVolumeStep(displayEntity, 1)) : x(_templateObject13 || (_templateObject13 = _taggedTemplateLiteral(["\n                    <input\n                      class=\"vol-slider\"\n                      type=\"range\"\n                      min=\"0\"\n                      max=\"1\"\n                      step=\"0.01\"\n                      .value=", "\n                      @change=", "\n                      title=\"Volume\"\n                      style=\"width:100%;max-width:260px;\"\n                    />\n                  "])), volVal, e => this._onGroupVolumeChange(id, displayEntity, e)), typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--", showToggleButton ? x(_templateObject14 || (_templateObject14 = _taggedTemplateLiteral(["\n                    <button class=\"group-toggle-btn\"\n                            @click=", "\n                            title=", "\n                            style=\"margin-left:4px; ", "\">\n                      <ha-icon icon=", "></ha-icon>\n                    </button>\n                  "])), () => !isBusy && this._toggleGroup(id), isBusy ? "Player is unavailable" : grouped ? "Unjoin" : "Join", isBusy ? "cursor: not-allowed; opacity: 0.5;" : "", grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline") : x(_templateObject15 || (_templateObject15 = _taggedTemplateLiteral(["<span style=\"margin-left:4px;margin-right:10px;width:32px;display:inline-block;\"></span>"]))));
+      return x(_templateObject13 || (_templateObject13 = _taggedTemplateLiteral(["\n            <div class=\"entity-options-item group-player-row\" style=\"\n              display:flex;\n              align-items:center;\n              gap:6px;\n              padding:4px 8px;\n              margin-bottom:1px;\n              ", "\n            \">\n              <div style=\"flex:1; min-width:120px;\">\n                <div style=\"font-weight:600; text-align:left;\">", "</div>\n                <div style=\"font-size:0.8em; opacity:0.7; text-align:left;\">", "</div>\n              </div>\n              <div style=\"flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;\">\n                ", "\n                <span style=\"min-width:36px;display:inline-block;text-align:right;\">", "</span>\n              </div>\n              ", "\n            </div>\n          "])), isBusy ? "opacity: 0.5;" : "", name, stateLabel, isRemoteVol ? x(_templateObject14 || (_templateObject14 = _taggedTemplateLiteral(["\n                    <div class=\"vol-stepper\" style=\"display:flex;align-items:center;gap:4px;\">\n                      <button @click=", " title=\"Vol Down\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                        <ha-icon icon=\"mdi:minus\"></ha-icon>\n                      </button>\n                      <button @click=", " title=\"Vol Up\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                        <ha-icon icon=\"mdi:plus\"></ha-icon>\n                      </button>\n                    </div>\n                  "])), () => this._onGroupVolumeStep(displayEntity, -1), () => this._onGroupVolumeStep(displayEntity, 1)) : x(_templateObject15 || (_templateObject15 = _taggedTemplateLiteral(["\n                    <input\n                      class=\"vol-slider\"\n                      type=\"range\"\n                      min=\"0\"\n                      max=\"1\"\n                      step=\"0.01\"\n                      .value=", "\n                      @change=", "\n                      title=\"Volume\"\n                      style=\"width:100%;max-width:260px;\"\n                    />\n                  "])), volVal, e => this._onGroupVolumeChange(id, displayEntity, e)), typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--", showToggleButton ? x(_templateObject16 || (_templateObject16 = _taggedTemplateLiteral(["\n                    <button class=\"group-toggle-btn\"\n                            @click=", "\n                            title=", "\n                            style=\"margin-left:4px; ", "\">\n                      <ha-icon icon=", "></ha-icon>\n                    </button>\n                  "])), () => !isBusy && this._toggleGroup(id), isBusy ? "Player is unavailable" : grouped ? "Unjoin" : "Join", isBusy ? "cursor: not-allowed; opacity: 0.5;" : "", grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline") : x(_templateObject17 || (_templateObject17 = _taggedTemplateLiteral(["<span style=\"margin-left:4px;margin-right:10px;width:32px;display:inline-block;\"></span>"]))));
     }));
   }
   _renderTransferQueueSheet() {
     const targets = this._getTransferQueueTargets();
-    return x(_templateObject16 || (_templateObject16 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n        <div class=\"entity-options-divider\"></div>\n        <div class=\"entity-options-title\" style=\"margin-bottom:12px;\">", "</div>\n      </div>\n      <div class=\"entity-options-scroll\">\n        ", "\n        ", "\n      </div>\n    "])), () => {
+    return x(_templateObject18 || (_templateObject18 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n        <div class=\"entity-options-divider\"></div>\n        <div class=\"entity-options-title\" style=\"margin-bottom:12px;\">", "</div>\n      </div>\n      <div class=\"entity-options-scroll\">\n        ", "\n        ", "\n      </div>\n    "])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeTransferQueue();
       }
-    }, localize('common.back'), localize('card.menu.transfer_to'), !targets.length ? x(_templateObject17 || (_templateObject17 = _taggedTemplateLiteral(["\n          <div style=\"padding: 12px; opacity: 0.75;\">", "</div>\n        "])), localize('card.menu.no_players')) : x(_templateObject18 || (_templateObject18 = _taggedTemplateLiteral(["\n          <div style=\"display:flex;flex-direction:column;gap:8px;\">\n            ", "\n          </div>\n        "])), targets.map(target => x(_templateObject19 || (_templateObject19 = _taggedTemplateLiteral(["\n              <button\n                class=\"entity-options-item\"\n                ?disabled=", "\n                @click=", "\n                style=\"display:flex;align-items:center;justify-content:flex-start;gap:12px;", "\">\n                <ha-icon .icon=", " style=\"margin-right:4px;\"></ha-icon>\n                <div style=\"display:flex;flex-direction:column;align-items:flex-start;\">\n                  <div>", "</div>\n                  <div style=\"font-size:0.82em;opacity:0.7;\">", "</div>\n                </div>\n                ", "\n              </button>\n            "])), this._transferQueuePendingTarget === target.maEntityId, () => this._transferQueueTo(target), this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : '', target.icon, target.name, target.subtitle, target.state ? x(_templateObject20 || (_templateObject20 = _taggedTemplateLiteral(["<div style=\"margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;\">", "</div>"])), target.state) : E))), this._transferQueueStatus ? x(_templateObject21 || (_templateObject21 = _taggedTemplateLiteral(["\n          <div style=\"\n            margin-top: 14px;\n            padding: 10px 12px;\n            border-radius: 8px;\n            font-weight: 600;\n            text-align: center;\n            background: ", ";\n            color: ", ";\n          \">\n            ", "\n          </div>\n        "])), this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)', this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a', this._transferQueueStatus.message) : E);
+    }, localize('common.back'), localize('card.menu.transfer_to'), !targets.length ? x(_templateObject19 || (_templateObject19 = _taggedTemplateLiteral(["\n          <div style=\"padding: 12px; opacity: 0.75;\">", "</div>\n        "])), localize('card.menu.no_players')) : x(_templateObject20 || (_templateObject20 = _taggedTemplateLiteral(["\n          <div style=\"display:flex;flex-direction:column;gap:8px;\">\n            ", "\n          </div>\n        "])), targets.map(target => x(_templateObject21 || (_templateObject21 = _taggedTemplateLiteral(["\n              <button\n                class=\"entity-options-item\"\n                ?disabled=", "\n                @click=", "\n                style=\"display:flex;align-items:center;justify-content:flex-start;gap:12px;", "\">\n                <ha-icon .icon=", " style=\"margin-right:4px;\"></ha-icon>\n                <div style=\"display:flex;flex-direction:column;align-items:flex-start;\">\n                  <div>", "</div>\n                  <div style=\"font-size:0.82em;opacity:0.7;\">", "</div>\n                </div>\n                ", "\n              </button>\n            "])), this._transferQueuePendingTarget === target.maEntityId, () => this._transferQueueTo(target), this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : '', target.icon, target.name, target.subtitle, target.state ? x(_templateObject22 || (_templateObject22 = _taggedTemplateLiteral(["<div style=\"margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;\">", "</div>"])), target.state) : E))), this._transferQueueStatus ? x(_templateObject23 || (_templateObject23 = _taggedTemplateLiteral(["\n          <div style=\"\n            margin-top: 14px;\n            padding: 10px 12px;\n            border-radius: 8px;\n            font-weight: 600;\n            text-align: center;\n            background: ", ";\n            color: ", ";\n          \">\n            ", "\n          </div>\n        "])), this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)', this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a', this._transferQueueStatus.message) : E);
   }
   _renderResolvedEntitiesSheet() {
-    return x(_templateObject22 || (_templateObject22 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n        <div class=\"entity-options-divider\"></div>\n        <div class=\"entity-options-resolved-entities\" style=\"margin-top:12px;\">\n          <div class=\"entity-options-title\">", "</div>\n          <div class=\"entity-options-resolved-entities-list\">\n            ", "\n          </div>\n        </div>\n      </div>\n    "])), () => {
+    return x(_templateObject24 || (_templateObject24 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n        <div class=\"entity-options-divider\"></div>\n        <div class=\"entity-options-resolved-entities\" style=\"margin-top:12px;\">\n          <div class=\"entity-options-title\">", "</div>\n          <div class=\"entity-options-resolved-entities-list\">\n            ", "\n          </div>\n        </div>\n      </div>\n    "])), () => {
       this._showResolvedEntities = false;
       this.requestUpdate();
     }, localize('common.back'), localize('card.menu.select_entity'), this._getResolvedEntitiesForCurrentChip().map(entityId => {
-      var _this$hass19, _state$attributes3, _state$attributes4;
-      const state = (_this$hass19 = this.hass) === null || _this$hass19 === void 0 || (_this$hass19 = _this$hass19.states) === null || _this$hass19 === void 0 ? void 0 : _this$hass19[entityId];
+      var _this$hass23, _state$attributes3, _state$attributes4;
+      const state = (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[entityId];
       const name = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.friendly_name) || entityId;
       const icon = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.icon) || "mdi:help-circle";
       const idx = this._selectedIndex;
@@ -15724,7 +15829,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
           role = "Volume Entity";
         }
       }
-      return x(_templateObject23 || (_templateObject23 = _taggedTemplateLiteral(["\n                <button class=\"entity-options-item\" @click=", ">\n                  <ha-icon .icon=", " style=\"margin-right: 8px;\"></ha-icon>\n                  <div style=\"display: flex; flex-direction: column; align-items: flex-start;\">\n                    <div>", "</div>\n                    <div style=\"font-size: 0.85em; opacity: 0.7;\">", "</div>\n                  </div>\n                </button>\n              "])), () => {
+      return x(_templateObject25 || (_templateObject25 = _taggedTemplateLiteral(["\n                <button class=\"entity-options-item\" @click=", ">\n                  <ha-icon .icon=", " style=\"margin-right: 8px;\"></ha-icon>\n                  <div style=\"display: flex; flex-direction: column; align-items: flex-start;\">\n                    <div>", "</div>\n                    <div style=\"font-size: 0.85em; opacity: 0.7;\">", "</div>\n                  </div>\n                </button>\n              "])), () => {
         this._openMoreInfoForEntity(entityId);
         this._showEntityOptions = false;
         this._showResolvedEntities = false;
@@ -15934,8 +16039,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          var _this$config0;
-          const customHeight = Number((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.card_height);
+          var _this$config11;
+          const customHeight = Number((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.card_height);
           const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
           if (!hasCustomCardHeight) {
             this._collapsedBaselineHeight = measured;
@@ -16087,8 +16192,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
         // Take a snapshot of who is currently playing.
         this._manualSelectPlayingSet = new Set();
         for (const id of this.entityIds) {
-          var _this$hass20;
-          const st = (_this$hass20 = this.hass) === null || _this$hass20 === void 0 || (_this$hass20 = _this$hass20.states) === null || _this$hass20 === void 0 ? void 0 : _this$hass20[id];
+          var _this$hass24;
+          const st = (_this$hass24 = this.hass) === null || _this$hass24 === void 0 || (_this$hass24 = _this$hass24.states) === null || _this$hass24 === void 0 ? void 0 : _this$hass24[id];
           if (this._isEntityPlaying(st)) {
             this._manualSelectPlayingSet.add(id);
           }
@@ -16237,11 +16342,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return iconOnly ? "" : "Action";
   }
   async _onControlClick(action) {
-    var _this$hass21;
+    var _this$hass25;
     // Use the unified entity resolution system for control actions
     const targetEntity = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     if (!targetEntity) return;
-    const stateObj = ((_this$hass21 = this.hass) === null || _this$hass21 === void 0 || (_this$hass21 = _this$hass21.states) === null || _this$hass21 === void 0 ? void 0 : _this$hass21[targetEntity]) || this.currentStateObj;
+    const stateObj = ((_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[targetEntity]) || this.currentStateObj;
     switch (action) {
       case "play_pause":
         if (this._isEntityPlaying(stateObj)) {
@@ -16347,10 +16452,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
       case "power":
         {
-          var _this$hass22;
+          var _this$hass26;
           // Toggle main entity power (physical power behavior)
           const mainId = this.currentEntityId;
-          const mainState = ((_this$hass22 = this.hass) === null || _this$hass22 === void 0 || (_this$hass22 = _this$hass22.states) === null || _this$hass22 === void 0 ? void 0 : _this$hass22[mainId]) || stateObj;
+          const mainState = ((_this$hass26 = this.hass) === null || _this$hass26 === void 0 || (_this$hass26 = _this$hass26.states) === null || _this$hass26 === void 0 ? void 0 : _this$hass26[mainId]) || stateObj;
           const svc = (mainState === null || mainState === void 0 ? void 0 : mainState.state) === "off" ? "turn_on" : "turn_off";
           this.hass.callService("media_player", svc, {
             entity_id: mainId
@@ -16370,10 +16475,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
       case "favorite":
         {
-          var _this$hass23, _maState$attributes9;
+          var _this$hass27, _maState$attributes9;
           // Press the associated favorite button entity OR unfavorite if already favorited
           const favoriteButtonEntity = this._getFavoriteButtonEntity();
-          const maState = (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[targetEntity];
+          const maState = (_this$hass27 = this.hass) === null || _this$hass27 === void 0 || (_this$hass27 = _this$hass27.states) === null || _this$hass27 === void 0 ? void 0 : _this$hass27[targetEntity];
           const mediaContentId = maState === null || maState === void 0 || (_maState$attributes9 = maState.attributes) === null || _maState$attributes9 === void 0 ? void 0 : _maState$attributes9.media_content_id;
 
           // Check if track is already favorited
@@ -16746,13 +16851,13 @@ class YetAnotherMediaPlayerCard extends i$2 {
   }
   async _onProgressBarClick(e) {
     try {
-      var _this$hass24, _this$hass25, _this$hass26;
+      var _this$hass28, _this$hass29, _this$hass30;
       e.stopPropagation();
       // For seeking, we want to target the entity that is actually playing
       const mainId = this.currentEntityId;
       const maId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-      const mainState = mainId ? (_this$hass24 = this.hass) === null || _this$hass24 === void 0 || (_this$hass24 = _this$hass24.states) === null || _this$hass24 === void 0 ? void 0 : _this$hass24[mainId] : null;
-      const maState = maId ? (_this$hass25 = this.hass) === null || _this$hass25 === void 0 || (_this$hass25 = _this$hass25.states) === null || _this$hass25 === void 0 ? void 0 : _this$hass25[maId] : null;
+      const mainState = mainId ? (_this$hass28 = this.hass) === null || _this$hass28 === void 0 || (_this$hass28 = _this$hass28.states) === null || _this$hass28 === void 0 ? void 0 : _this$hass28[mainId] : null;
+      const maState = maId ? (_this$hass29 = this.hass) === null || _this$hass29 === void 0 || (_this$hass29 = _this$hass29.states) === null || _this$hass29 === void 0 ? void 0 : _this$hass29[maId] : null;
       let targetEntity;
       if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
         targetEntity = this._controlFocusEntityId;
@@ -16772,7 +16877,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
           targetEntity = await this._resolveTemplateAtActionTime(entityTemplate, this.currentEntityId);
         }
       }
-      const stateObj = ((_this$hass26 = this.hass) === null || _this$hass26 === void 0 || (_this$hass26 = _this$hass26.states) === null || _this$hass26 === void 0 ? void 0 : _this$hass26[targetEntity]) || this.currentStateObj;
+      const stateObj = ((_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[targetEntity]) || this.currentStateObj;
       if (!targetEntity || !stateObj || !stateObj.attributes) {
         console.warn("YAMP: Cannot seek - invalid target or state", targetEntity, stateObj);
         return;
@@ -16807,7 +16912,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   render() {
-    var _this$config$actions2, _this$_optimisticPlay, _this$hass27, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass28, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$config11, _this$config12, _this$config13, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$config17;
+    var _this$config$actions2, _this$_optimisticPlay, _this$hass31, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass32, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$config17;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -16833,34 +16938,40 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
     const showChipRow = this.config.show_chip_row || "auto";
     const hasMultipleEntities = this.entityObjs.length > 1;
-    const showChipsInMenu = showChipRow === "in_menu" && hasMultipleEntities;
-    const showChipsInline = !showChipsInMenu && (hasMultipleEntities || showChipRow === "always");
+    // Show chips in menu if explicitly set to in_menu, or if in_menu_on_idle and currently idle
+    const showChipsInMenu = (showChipRow === "in_menu" || showChipRow === "in_menu_on_idle" && this._isIdle) && hasMultipleEntities;
+    // Always render chip row for in_menu_on_idle to preserve height, but hide visually when idle
+    const showChipsInline = showChipRow !== "in_menu" && (hasMultipleEntities || showChipRow === "always");
+    // Hide chips visually (but keep space) when in_menu_on_idle mode is active and card is idle
+    const chipsHiddenInline = showChipRow === "in_menu_on_idle" && this._isIdle && hasMultipleEntities;
+    // Always reserve space in menu for chips when in_menu_on_idle, even when playing (to prevent menu jump)
+    const reserveChipSpaceInMenu = showChipRow === "in_menu_on_idle" && hasMultipleEntities;
     const decoratedActions = ((_this$config$actions2 = this.config.actions) !== null && _this$config$actions2 !== void 0 ? _this$config$actions2 : []).map((action, idx) => ({
       action,
       idx
     }));
     // Filter out sync_selected_entity actions entirely - they don't render as chips
-    const visibleActions = decoratedActions.filter(_ref6 => {
-      let {
-        action
-      } = _ref6;
-      return (action === null || action === void 0 ? void 0 : action.action) !== "sync_selected_entity";
-    });
-    const rowActions = visibleActions.filter(_ref7 => {
+    const visibleActions = decoratedActions.filter(_ref7 => {
       let {
         action
       } = _ref7;
-      return !(action !== null && action !== void 0 && action.in_menu);
+      return (action === null || action === void 0 ? void 0 : action.action) !== "sync_selected_entity";
     });
-    const menuOnlyActions = visibleActions.filter(_ref8 => {
+    const rowActions = visibleActions.filter(_ref8 => {
       let {
         action
       } = _ref8;
+      return !(action !== null && action !== void 0 && action.in_menu);
+    });
+    const menuOnlyActions = visibleActions.filter(_ref9 => {
+      let {
+        action
+      } = _ref9;
       return action === null || action === void 0 ? void 0 : action.in_menu;
     });
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     const activeChipName = this.getChipName(this.currentEntityId);
-    if (!stateObj) return x(_templateObject24 || (_templateObject24 = _taggedTemplateLiteral(["<div class=\"details\">", "</div>"])), localize('common.not_found'));
+    if (!stateObj) return x(_templateObject26 || (_templateObject26 = _taggedTemplateLiteral(["<div class=\"details\">", "</div>"])), localize('common.not_found'));
     const currentHiddenControls = this._getHiddenControlsForCurrentEntity();
     const showFavoriteButton = !!this._getFavoriteButtonEntity() && !currentHiddenControls.favorite;
     const favoriteActive = this._isCurrentTrackFavorited();
@@ -16869,11 +16980,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
     let leadingVolumeControl = E;
     if (showModernPowerButton) {
-      leadingVolumeControl = x(_templateObject25 || (_templateObject25 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn", "\"\n            @click=", "\n            title=\"", "\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), (stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== "off" ? " active" : "", () => this._onControlClick("power"), localize('common.power'), "mdi:power");
+      leadingVolumeControl = x(_templateObject27 || (_templateObject27 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn", "\"\n            @click=", "\n            title=\"", "\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), (stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== "off" ? " active" : "", () => this._onControlClick("power"), localize('common.power'), "mdi:power");
     } else if (this._controlLayout === "modern") {
-      leadingVolumeControl = x(_templateObject26 || (_templateObject26 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn\"\n            @click=", "\n            title=\"", "\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), () => this._openQuickSearchOverlay(), localize('common.search'), "mdi:magnify");
+      leadingVolumeControl = x(_templateObject28 || (_templateObject28 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn\"\n            @click=", "\n            title=\"", "\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), () => this._openQuickSearchOverlay(), localize('common.search'), "mdi:magnify");
     }
-    const rightSlotTemplate = showModernFavoriteButton ? x(_templateObject27 || (_templateObject27 = _taggedTemplateLiteral(["\n        <button\n          class=\"volume-icon-btn favorite-volume-btn", "\"\n          @click=", "\n          title=\"", "\"\n        >\n          <ha-icon\n            style=", "\n            .icon=", "\n          ></ha-icon>\n        </button>\n      "])), favoriteActive ? " active" : "", () => this._onControlClick("favorite"), localize('common.favorite'), favoriteActive ? "color: var(--custom-accent);" : E, favoriteActive ? "mdi:heart" : "mdi:heart-outline") : E;
+    const rightSlotTemplate = showModernFavoriteButton ? x(_templateObject29 || (_templateObject29 = _taggedTemplateLiteral(["\n        <button\n          class=\"volume-icon-btn favorite-volume-btn", "\"\n          @click=", "\n          title=\"", "\"\n        >\n          <ha-icon\n            style=", "\n            .icon=", "\n          ></ha-icon>\n        </button>\n      "])), favoriteActive ? " active" : "", () => this._onControlClick("favorite"), localize('common.favorite'), favoriteActive ? "color: var(--custom-accent);" : E, favoriteActive ? "mdi:heart" : "mdi:heart-outline") : E;
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -16900,7 +17011,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const dimIdleFrame = !!idleImageUrl;
     const hideControlsNow = this._isIdle;
     const shouldDimIdle = dimIdleFrame && this._isIdle;
-    const artworkFullBleed = this.config.extend_artwork === true;
+    // Extend artwork when configured, or when chips are hidden inline (in_menu_on_idle + idle)
+    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
@@ -16914,7 +17026,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._getResolvedPlaybackEntityIdSync(this._selectedIndex);
     // Also get the actual resolved MA entity for state detection (can be unconfigured)
     const actualResolvedMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const actualMaState = actualResolvedMaId ? (_this$hass27 = this.hass) === null || _this$hass27 === void 0 || (_this$hass27 = _this$hass27.states) === null || _this$hass27 === void 0 ? void 0 : _this$hass27[actualResolvedMaId] : null;
+    const actualMaState = actualResolvedMaId ? (_this$hass31 = this.hass) === null || _this$hass31 === void 0 || (_this$hass31 = _this$hass31.states) === null || _this$hass31 === void 0 ? void 0 : _this$hass31[actualResolvedMaId] : null;
 
     // Update state tracking for optimistic playback and set/clear MA linger window
     const prevMain = this._lastMainState;
@@ -16925,8 +17037,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
     if (prevMa === "playing" && this._lastMaState !== "playing") {
-      var _this$config1;
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.idle_timeout_ms) || 60000), 500);
+      var _this$config12;
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: actualResolvedMaId,
         until: Date.now() + ttl
@@ -16937,10 +17049,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
     const shouldSetLinger = prevMa === "playing" && this._lastMaState === "paused" && ((_this$_lastPlayingEnt4 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt4 === void 0 ? void 0 : _this$_lastPlayingEnt4[idx]) === actualResolvedMaId || prevMain === "playing" && this._lastMainState === "paused" && ((_this$_lastPlayingEnt5 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt5 === void 0 ? void 0 : _this$_lastPlayingEnt5[idx]) === (mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.entity_id);
     if (shouldSetLinger) {
-      var _this$config10;
+      var _this$config13;
       // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
       const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.idle_timeout_ms) || 60000), 500);
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: lingerEntityId,
         // Use cached MA entity or last controlled entity
@@ -16963,7 +17075,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // Use the unified entity resolution system for playback state
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
-    const playbackStateObj = (_this$hass28 = this.hass) === null || _this$hass28 === void 0 || (_this$hass28 = _this$hass28.states) === null || _this$hass28 === void 0 ? void 0 : _this$hass28[playbackEntityId];
+    const playbackStateObj = (_this$hass32 = this.hass) === null || _this$hass32 === void 0 || (_this$hass32 = _this$hass32.states) === null || _this$hass32 === void 0 ? void 0 : _this$hass32[playbackEntityId];
 
     // Use the unified entity resolution system for playback state
     const finalPlaybackStateObj = playbackStateObj;
@@ -17150,104 +17262,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
       this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
       this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
     }
-    return x(_templateObject28 || (_templateObject28 = _taggedTemplateLiteral(["\n        <ha-card class=\"yamp-card\" style=", ">\n          <div\n            data-match-theme=\"", "\"\n            class=", "\n          >\n            ", "\n            ", "\n            ", "\n            <div class=\"card-lower-content-container\" style=\"", "\">\n              <div class=\"card-lower-content-bg\"\n                style=\"", "\"\n              ></div>\n              ", "\n              <div class=\"card-lower-content", "", "\" style=\"", "\">\n                ", "\n                ", "\n                <div class=\"details\" style=\"", "\">\n                  <div class=\"title\">\n                    ", "\n                  </div>\n                  ", "\n                </div>\n                ", "\n                ", "\n                ", "\n                ", "\n            ", "\n            ", "\n          </div>\n        </div>\n\n      ", "\n          ", "\n          ", "\n          </div>\n    </ha-card>\n  "])), hasCustomCardHeight && (!collapsed || this._alwaysCollapsed) ? "height:".concat(customCardHeight, "px;") : E, String(this.config.match_theme === true), e({
+    return x(_templateObject30 || (_templateObject30 = _taggedTemplateLiteral(["\n        <ha-card class=\"yamp-card\" style=", ">\n          <div\n            data-match-theme=\"", "\"\n            class=", "\n          >\n            ", "\n            ", "\n            <div class=\"card-lower-content-container\" style=\"", "\">\n              <div class=\"card-lower-content-bg\"\n                style=\"", "\"\n              ></div>\n              ", "\n              <div class=\"card-lower-content", "", "\" style=\"", "\">\n                ", "\n                ", "\n                <div class=\"details\" style=\"", "\">\n                  <div class=\"title\">\n                    ", "\n                  </div>\n                  <div\n                      class=\"artist ", "\"\n                      @click=", "\n                      title=", "\n                    >", "</div>\n                </div>\n                ", "\n                ", "\n                ", "\n                <div style=\"", "\">\n                    ", "\n\n                    ", "\n                  </div>\n            ", "\n            ", "\n          </div>\n        </div>\n\n      ", "\n          ", "\n          ", "\n          </div>\n    </ha-card>\n  "])), hasCustomCardHeight && (!collapsed || this._alwaysCollapsed) ? "height:".concat(customCardHeight, "px;") : E, String(this.config.match_theme === true), e({
       "yamp-card-inner": true,
       "dim-idle": shouldDimIdle,
       "no-chip-dim": this.config.dim_chips_on_idle === false
-    }), artworkFullBleed && hasBackgroundImage ? x(_templateObject29 || (_templateObject29 = _taggedTemplateLiteral(["\n              <div class=\"full-bleed-artwork-bg\" style=\"", "\"></div>\n              ", "\n            "])), sharedBackgroundStyle, !dimIdleFrame ? x(_templateObject30 || (_templateObject30 = _taggedTemplateLiteral(["<div class=\"full-bleed-artwork-fade\"></div>"]))) : E) : E, showChipsInline ? x(_templateObject31 || (_templateObject31 = _taggedTemplateLiteral(["\n                <div class=\"chip-row\">\n                  ", "\n                </div>\n            "])), renderChipRow({
-      groupedSortedEntityIds: this.groupedSortedEntityIds,
-      entityIds: this.entityIds,
-      selectedEntityId: this.currentEntityId,
-      pinnedIndex: this._pinnedIndex,
-      holdToPin: this._holdToPin,
-      getChipName: id => this.getChipName(id),
-      getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.fallback_artwork) || null,
-      getIsChipPlaying: (id, isSelected) => {
-        var _this$hass29;
-        const obj = this._findEntityObjByAnyId(id);
-        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
-        const idx = this.entityIds.indexOf(mainId);
-        if (idx < 0) return false;
-
-        // Use the unified entity resolution system
-        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass29 = this.hass) === null || _this$hass29 === void 0 || (_this$hass29 = _this$hass29.states) === null || _this$hass29 === void 0 ? void 0 : _this$hass29[playbackEntityId];
-        // Return actual playing state - animation should only show when truly playing
-        return this._isEntityPlaying(playbackState);
-      },
-      getChipArt: id => {
-        var _this$hass30, _this$hass31;
-        const obj = this._findEntityObjByAnyId(id);
-        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
-        const idx = this.entityIds.indexOf(mainId);
-        if (idx < 0) return null;
-
-        // Use the unified entity resolution system
-        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass30 = this.hass) === null || _this$hass30 === void 0 || (_this$hass30 = _this$hass30.states) === null || _this$hass30 === void 0 ? void 0 : _this$hass30[playbackEntityId];
-        const mainState = (_this$hass31 = this.hass) === null || _this$hass31 === void 0 || (_this$hass31 = _this$hass31.states) === null || _this$hass31 === void 0 ? void 0 : _this$hass31[mainId];
-
-        // Prefer playback entity artwork, fallback to main entity
-        const playbackArtwork = this._getArtworkUrl(playbackState);
-        const mainArtwork = this._getArtworkUrl(mainState);
-        return playbackArtwork || mainArtwork;
-      },
-      getIsMaActive: id => {
-        var _this$hass32;
-        const obj = this._findEntityObjByAnyId(id);
-        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
-        const idx = this.entityIds.indexOf(mainId);
-        if (idx < 0) return false;
-
-        // Check if there's a configured MA entity
-        const entityObj = this.entityObjs[idx];
-        if (!(entityObj !== null && entityObj !== void 0 && entityObj.music_assistant_entity)) return false;
-
-        // Use the unified entity resolution system
-        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-        const playbackState = (_this$hass32 = this.hass) === null || _this$hass32 === void 0 || (_this$hass32 = _this$hass32.states) === null || _this$hass32 === void 0 ? void 0 : _this$hass32[playbackEntityId];
-
-        // Check if the playback entity is the MA entity and is playing
-        return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && this._isEntityPlaying(playbackState);
-      },
-      isIdle: this._isIdle,
-      hass: this.hass,
-      onChipClick: idx => {
-        this._onChipClick(idx);
-      },
-      onIconClick: (idx, e) => {
-        const entityId = this.entityIds[idx];
-        const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
-        if (group && group.length > 1) {
-          this._selectedIndex = idx;
-          this._showEntityOptions = true;
-          this._showGrouping = true;
-          this.requestUpdate();
-        }
-      },
-      onPinClick: (idx, e) => {
-        e.stopPropagation();
-        this._onPinClick(e);
-      },
-      onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
-      onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
-      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
-    })) : E, renderActionChipRow({
-      actions: rowActions.map(_ref9 => {
-        let {
-          action
-        } = _ref9;
-        return action;
-      }),
-      onActionChipClick: idx => {
-        const target = rowActions[idx];
-        if (!target) return;
-        this._onActionChipClick(target.idx);
-      }
-    }), idleMinHeight ? "min-height:".concat(idleMinHeight, "px;") : '', (() => {
+    }), artworkFullBleed && hasBackgroundImage ? x(_templateObject31 || (_templateObject31 = _taggedTemplateLiteral(["\n              <div class=\"full-bleed-artwork-bg\" style=\"", "\"></div>\n              ", "\n            "])), sharedBackgroundStyle, !dimIdleFrame ? x(_templateObject32 || (_templateObject32 = _taggedTemplateLiteral(["<div class=\"full-bleed-artwork-fade\"></div>"]))) : E) : E, chipsHiddenInline ? x(_templateObject33 || (_templateObject33 = _taggedTemplateLiteral(["", "", ""])), this._renderInlineActionRow(rowActions), this._renderInlineChipRow(showChipsInline, chipsHiddenInline)) : x(_templateObject34 || (_templateObject34 = _taggedTemplateLiteral(["", "", ""])), this._renderInlineChipRow(showChipsInline, chipsHiddenInline), this._renderInlineActionRow(rowActions)), idleMinHeight ? "min-height:".concat(idleMinHeight, "px;") : '', (() => {
       const styles = [];
       if (!(artworkFullBleed && hasBackgroundImage)) {
         styles.push(sharedBackgroundStyle);
@@ -17257,18 +17276,18 @@ class YetAnotherMediaPlayerCard extends i$2 {
       styles.push("min-height: ".concat(collapsed ? hideControlsNow ? "".concat(this._collapsedBaselineHeight || 220, "px") : '0px' : hideControlsNow ? '350px' : '350px'));
       styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
       return styles.join('; ');
-    })(), !dimIdleFrame ? x(_templateObject32 || (_templateObject32 = _taggedTemplateLiteral(["<div class=\"card-lower-fade\"></div>"]))) : E, collapsed ? ' collapsed transitioning' : ' transitioning', collapsed && artworkUrl ? ' has-artwork' : '', (() => {
+    })(), !dimIdleFrame ? x(_templateObject35 || (_templateObject35 = _taggedTemplateLiteral(["<div class=\"card-lower-fade\"></div>"]))) : E, collapsed ? ' collapsed transitioning' : ' transitioning', collapsed && artworkUrl ? ' has-artwork' : '', (() => {
       if (!hideControlsNow) return '';
       return collapsed ? "min-height: ".concat(this._collapsedBaselineHeight || 220, "px;") : 'min-height: 350px;';
-    })(), collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x(_templateObject33 || (_templateObject33 = _taggedTemplateLiteral(["\n                  <div\n                    class=\"collapsed-artwork-container\"\n                    style=\"", "\"\n                  >\n                    <img\n                      class=\"collapsed-artwork\"\n                      src=\"", "\" \n                      style=\"", "\" \n                      onload=\"this.style.display='block'\"\n                      onerror=\"this.style.display='none'\" />\n                  </div>\n                "])), ["background: linear-gradient(120deg, ".concat(this._collapsedArtDominantColor, "bb 60%, transparent 100%)"), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize + 8), "px") : ''].filter(Boolean).join('; '), artworkUrl, [this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize), "px; height:").concat(Math.round(collapsedArtworkSize), "px;") : ''].filter(Boolean).join(' ')) : E, showCollapsedPlaceholder || !collapsed ? x(_templateObject34 || (_templateObject34 = _taggedTemplateLiteral(["\n                  <div class=\"card-artwork-spacer", "\">\n                    ", "\n                  </div>\n                "])), showCollapsedPlaceholder ? ' show-placeholder' : '', !artworkUrl && !idleImageUrl ? x(_templateObject35 || (_templateObject35 = _taggedTemplateLiteral(["\n                      <div class=\"media-artwork-placeholder\">\n                        <svg\n                          viewBox=\"0 0 184 184\"\n                          style=\"", "\"\n                          xmlns=\"http://www.w3.org/2000/svg\">\n                          <rect x=\"36\" y=\"86\" width=\"22\" height=\"62\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"68\" y=\"58\" width=\"22\" height=\"90\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"100\" y=\"34\" width=\"22\" height=\"114\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"132\" y=\"74\" width=\"22\" height=\"74\" rx=\"8\" fill=\"currentColor\"></rect>\n                        </svg>\n                      </div>\n                    "])), this.config.match_theme === true ? 'color:#fff;' : "color:".concat(this._customAccent, ";")) : E) : E, (() => {
+    })(), collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                  <div\n                    class=\"collapsed-artwork-container\"\n                    style=\"", "\"\n                  >\n                    <img\n                      class=\"collapsed-artwork\"\n                      src=\"", "\" \n                      style=\"", "\" \n                      onload=\"this.style.display='block'\"\n                      onerror=\"this.style.display='none'\" />\n                  </div>\n                "])), ["background: linear-gradient(120deg, ".concat(this._collapsedArtDominantColor, "bb 60%, transparent 100%)"), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize + 8), "px") : ''].filter(Boolean).join('; '), artworkUrl, [this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize), "px; height:").concat(Math.round(collapsedArtworkSize), "px;") : ''].filter(Boolean).join(' ')) : E, showCollapsedPlaceholder || !collapsed ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                  <div class=\"card-artwork-spacer", "\">\n                    ", "\n                  </div>\n                "])), showCollapsedPlaceholder ? ' show-placeholder' : '', !artworkUrl && !idleImageUrl ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["\n                      <div class=\"media-artwork-placeholder\">\n                        <svg\n                          viewBox=\"0 0 184 184\"\n                          style=\"", "\"\n                          xmlns=\"http://www.w3.org/2000/svg\">\n                          <rect x=\"36\" y=\"86\" width=\"22\" height=\"62\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"68\" y=\"58\" width=\"22\" height=\"90\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"100\" y=\"34\" width=\"22\" height=\"114\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"132\" y=\"74\" width=\"22\" height=\"74\" rx=\"8\" fill=\"currentColor\"></rect>\n                        </svg>\n                      </div>\n                    "])), this.config.match_theme === true ? 'color:#fff;' : "color:".concat(this._customAccent, ";")) : E) : E, (() => {
       const detailStyleParts = [];
       if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
       detailStyleParts.push("min-height:".concat(detailsMinHeight, "px"));
       if (!shouldShowDetails) detailStyleParts.push('opacity:0');
       return detailStyleParts.join(';');
-    })(), shouldShowDetails ? title : "", shouldShowDetails && artist ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                    <div\n                      class=\"artist ", "\"\n                      @click=", "\n                      title=", "\n                    >", "</div>\n                  "])), stateObj.attributes.media_artist ? 'clickable-artist' : '', () => {
-      if (stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-    }, stateObj.attributes.media_artist ? localize('search.search_artist') : "", artist) : E, !collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
+    })(), shouldShowDetails && title ? title : x(_templateObject39 || (_templateObject39 = _taggedTemplateLiteral(["&nbsp;"]))), shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : '', () => {
+      if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
+    }, shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : "", shouldShowDetails && artist ? artist : x(_templateObject40 || (_templateObject40 = _taggedTemplateLiteral(["&nbsp;"]))), !collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
       seekEnabled: true,
       onSeek: e => this._onProgressBarClick(e),
@@ -17283,13 +17302,21 @@ class YetAnotherMediaPlayerCard extends i$2 {
       seekEnabled: false,
       collapsed: false,
       accent: this._customAccent,
-      style: "visibility:hidden"
-    }) : E, (collapsed || this._alternateProgressBar) && isPlaying && duration ? renderProgressBar({
+      style: "visibility:hidden",
+      displayTimestamps: this._displayTimestamps,
+      currentTime: 0,
+      duration: 0
+    }) : E, collapsed || this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
       accent: this._customAccent,
       style: this._showEntityOptions ? "visibility:hidden" : ""
-    }) : E, !hideControlsNow && controlSpacerSize > 0 ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                  <div class=\"collapsed-flex-spacer\" style=\"flex: 1 0 ", "px;\"></div>\n                "])), Math.round(controlSpacerSize)) : E, !hideControlsNow ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["\n                  <div style=\"", "\">\n                    ", "\n\n                    ", "\n                  </div>\n                "])), this._showEntityOptions ? 'visibility:hidden' : '', renderControlsRow({
+    }) : renderProgressBar({
+      progress: 0,
+      collapsed: true,
+      accent: this._customAccent,
+      style: "visibility:hidden"
+    }) : E, !hideControlsNow && controlSpacerSize > 0 ? x(_templateObject41 || (_templateObject41 = _taggedTemplateLiteral(["\n                  <div class=\"collapsed-flex-spacer\" style=\"flex: 1 0 ", "px;\"></div>\n                "])), Math.round(controlSpacerSize)) : E, hideControlsNow || this._showEntityOptions ? 'visibility:hidden; pointer-events:none;' : '', renderControlsRow({
       stateObj: playbackStateObj,
       showStop: this._shouldShowStopButton(playbackStateObj),
       shuffleActive,
@@ -17318,8 +17345,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
       showRightPlaceholder: this._controlLayout === "modern",
       rightSlotTemplate,
       hideVolume: this.config.volume_mode === "hidden",
-      moreInfoMenu: x(_templateObject39 || (_templateObject39 = _taggedTemplateLiteral(["\n                        <div class=\"more-info-menu\">\n                          <button class=\"more-info-btn\" @click=", ">\n                            <span class=\"more-info-icon\">&#9776;</span>\n                          </button>\n                        </div>\n                      "])), async () => await this._openEntityOptions())
-    })) : E, hideControlsNow && !this._showEntityOptions ? x(_templateObject40 || (_templateObject40 = _taggedTemplateLiteral(["\n              <div class=\"more-info-menu\" style=\"position: absolute; right: 18px; bottom: 18px; z-index: ", ";\">\n                <button class=\"more-info-btn\" @click=", ">\n                  <span class=\"more-info-icon\">&#9776;</span>\n                </button>\n              </div>\n            "])), Z_LAYERS.FLOATING_ELEMENT, async () => await this._openEntityOptions()) : E, showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x(_templateObject41 || (_templateObject41 = _taggedTemplateLiteral(["\n              <div class=\"in-menu-active-label\">", "</div>\n            "])), activeChipName) : E, this._showEntityOptions ? x(_templateObject42 || (_templateObject42 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-overlay entity-options-overlay-opening\" @click=", ">\n        <div class=\"entity-options-container entity-options-container-opening\">\n          <div class=\"entity-options-sheet", " entity-options-sheet-opening\" \n               @click=", "\n               data-pin-search-headers=\"", "\">\n            ", "\n              ", "\n              </div>\n            </div>\n            <!-- Persistent Media Controls Section - Outside Scrollable Area -->\n            ", "\n          </div>\n        "])), e => this._closeEntityOptions(e), showChipsInMenu ? ' chips-mode' : '', e => e.stopPropagation(), effectivePinHeaders, showChipsInMenu ? x(_templateObject43 || (_templateObject43 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-chips-wrapper\" @click=", ">\n                <div class=\"chip-row entity-options-chips-strip\">\n                  ", "\n                </div>\n              </div>\n            "])), e => e.stopPropagation(), renderChipRow({
+      moreInfoMenu: x(_templateObject42 || (_templateObject42 = _taggedTemplateLiteral(["\n                        <div class=\"more-info-menu\">\n                          <button class=\"more-info-btn\" @click=", ">\n                            <span class=\"more-info-icon\">&#9776;</span>\n                          </button>\n                        </div>\n                      "])), async () => await this._openEntityOptions())
+    }), hideControlsNow && !this._showEntityOptions ? x(_templateObject43 || (_templateObject43 = _taggedTemplateLiteral(["\n              <div class=\"more-info-menu\" style=\"position: absolute; right: 18px; bottom: 18px; z-index: ", ";\">\n                <button class=\"more-info-btn\" @click=", ">\n                  <span class=\"more-info-icon\">&#9776;</span>\n                </button>\n              </div>\n            "])), Z_LAYERS.FLOATING_ELEMENT, async () => await this._openEntityOptions()) : E, showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x(_templateObject44 || (_templateObject44 = _taggedTemplateLiteral(["\n              <div class=\"in-menu-active-label\">", "</div>\n            "])), activeChipName) : E, this._showEntityOptions ? x(_templateObject45 || (_templateObject45 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-overlay entity-options-overlay-opening\" @click=", ">\n        <div class=\"entity-options-container entity-options-container-opening\">\n          <div class=\"entity-options-sheet", " entity-options-sheet-opening\" \n               @click=", "\n               data-pin-search-headers=\"", "\">\n            ", "\n              ", "\n              </div>\n            </div>\n            <!-- Persistent Media Controls Section - Outside Scrollable Area -->\n            ", "\n          </div>\n        "])), e => this._closeEntityOptions(e), showChipsInMenu || reserveChipSpaceInMenu ? ' chips-mode' : '', e => e.stopPropagation(), effectivePinHeaders, showChipsInMenu || reserveChipSpaceInMenu ? x(_templateObject46 || (_templateObject46 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-chips-wrapper\" style=\"", "\" @click=", ">\n                <div class=\"chip-row entity-options-chips-strip\">\n                  ", "\n                </div>\n              </div>\n            "])), reserveChipSpaceInMenu && !showChipsInMenu ? 'visibility:hidden;pointer-events:none;' : '', e => e.stopPropagation(), renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
       selectedEntityId: this.currentEntityId,
@@ -17386,13 +17413,13 @@ class YetAnotherMediaPlayerCard extends i$2 {
       onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
       onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
       onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
-    })) : E, !this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) : this._showGrouping ? this._renderGroupingSheet() : this._showTransferQueue ? this._renderTransferQueueSheet() : this._showResolvedEntities ? this._renderResolvedEntitiesSheet() : this._showSearchInSheet ? x(_templateObject44 || (_templateObject44 = _taggedTemplateLiteral(["\n              <div class=\"entity-options-search\" style = \"margin-top:12px;\" >\n                ", "\n                  ", "\n                  <div class=\"entity-options-search-row\">\n                      <input\n                        type=\"text\"\n                        id=\"search-input-box\"\n                        ?autofocus=", "\n                        class=\"entity-options-search-input\"\n                        .value=", "\n                        @input=", "\n                        @keydown=", "\n                        placeholder=\"", "\"\n                        style=\"flex:1; min-width:0; font-size:1.1em;\"\n                      />\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", "\n                      ?disabled=", ">\n                      ", "\n                    </button>\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", ">\n              ", "\n                    </button>\n                  </div>\n                  <!--FILTER CHIPS-->\n              ", "\n                  ", "\n                  ", "\n                  \n                  ", "\n\n            <div class=\"entity-options-search-results\">\n              ", "\n            </div>\n                  </div>\n                </div>\n              "])), this._searchHierarchy.length > 0 ? x(_templateObject45 || (_templateObject45 = _taggedTemplateLiteral(["\n                    <button class=\"entity-options-item close-item\" @click=", ">\n                      Back\n                    </button>\n                    <div class=\"entity-options-divider\"></div>\n                  "])), () => {
+    })) : E, !this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) : this._showGrouping ? this._renderGroupingSheet() : this._showTransferQueue ? this._renderTransferQueueSheet() : this._showResolvedEntities ? this._renderResolvedEntitiesSheet() : this._showSearchInSheet ? x(_templateObject47 || (_templateObject47 = _taggedTemplateLiteral(["\n              <div class=\"entity-options-search\" style = \"margin-top:12px;\" >\n                ", "\n                  ", "\n                  <div class=\"entity-options-search-row\">\n                      <input\n                        type=\"text\"\n                        id=\"search-input-box\"\n                        ?autofocus=", "\n                        class=\"entity-options-search-input\"\n                        .value=", "\n                        @input=", "\n                        @keydown=", "\n                        placeholder=\"", "\"\n                        style=\"flex:1; min-width:0; font-size:1.1em;\"\n                      />\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", "\n                      ?disabled=", ">\n                      ", "\n                    </button>\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", ">\n              ", "\n                    </button>\n                  </div>\n                  <!--FILTER CHIPS-->\n              ", "\n                  ", "\n                  ", "\n                  \n                  ", "\n\n            <div class=\"entity-options-search-results\">\n              ", "\n            </div>\n                  </div>\n                </div>\n              "])), this._searchHierarchy.length > 0 ? x(_templateObject48 || (_templateObject48 = _taggedTemplateLiteral(["\n                    <button class=\"entity-options-item close-item\" @click=", ">\n                      Back\n                    </button>\n                    <div class=\"entity-options-divider\"></div>\n                  "])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._goBackInSearch();
       }
-    }) : E, this._searchBreadcrumb ? x(_templateObject46 || (_templateObject46 = _taggedTemplateLiteral(["\n                    <div class=\"entity-options-search-breadcrumb\">\n                      <div class=\"entity-options-search-breadcrumb-text\">", "</div>\n                    </div>\n                  "])), this._searchBreadcrumb) : x(_templateObject47 || (_templateObject47 = _taggedTemplateLiteral(["<div class=\"entity-options-search-skeleton\"></div>"]))), !this._disableSearchAutofocus, this._searchQuery, e => {
+    }) : E, this._searchBreadcrumb ? x(_templateObject49 || (_templateObject49 = _taggedTemplateLiteral(["\n                    <div class=\"entity-options-search-breadcrumb\">\n                      <div class=\"entity-options-search-breadcrumb-text\">", "</div>\n                    </div>\n                  "])), this._searchBreadcrumb) : x(_templateObject50 || (_templateObject50 = _taggedTemplateLiteral(["<div class=\"entity-options-search-skeleton\"></div>"]))), !this._disableSearchAutofocus, this._searchQuery, e => {
       this._searchQuery = e.target.value;
       this.requestUpdate();
     }, e => {
@@ -17418,16 +17445,16 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
       // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
       if (classes.length < 2 && !this._usingMusicAssistant) return E;
-      return x(_templateObject48 || (_templateObject48 = _taggedTemplateLiteral(["\n                      <div class=\"chip-row search-filter-chips\" id=\"search-filter-chip-row\" style=\"margin-bottom:12px; justify-content: center; align-items: center;\">\n                        <button\n                          class=\"chip\"\n                          style=\"\n                            width: 72px;\n                            background: ", ";\n                            opacity: ", ";\n                            font-weight: ", ";\n                          \"\n                          ?selected=", "\n                          @click=", "\n                        >", "</button>\n                        ", "\n                      </div>\n                    "])), filter === 'all' ? this._customAccent : '#282828', filter === 'all' ? '1' : '0.8', filter === 'all' ? 'bold' : 'normal', filter === 'all', () => this._doSearch(), localize('search.filters.all'), classes.map(c => x(_templateObject49 || (_templateObject49 = _taggedTemplateLiteral(["\n                          <button\n                            class=\"chip\"\n                            style=\"\n                              width: 72px;\n                              background: ", ";\n                              opacity: ", ";\n                              font-weight: ", ";\n                            \"\n                            ?selected=", "\n                            @click=", "\n                          >\n                            ", "\n                          </button>\n                        "])), filter === c ? this._customAccent : '#282828', filter === c ? '1' : '0.8', filter === c ? 'bold' : 'normal', filter === c, () => this._doSearch(c), localize("search.filters.".concat(c)))));
-    })(), this._searchLoading ? x(_templateObject50 || (_templateObject50 = _taggedTemplateLiteral(["<div class=\"entity-options-search-loading\">", "</div>"])), localize('common.loading')) : E, this._searchError ? x(_templateObject51 || (_templateObject51 = _taggedTemplateLiteral(["<div class=\"entity-options-search-error\">", "</div>"])), this._searchError) : E, this._usingMusicAssistant && !this._searchLoading ? x(_templateObject52 || (_templateObject52 = _taggedTemplateLiteral(["\n                    <div class=\"search-sub-filters\" style=\"display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;\">\n                      <div style=\"display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;\">\n                        <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"", "\"\n                        >\n                                                  <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"", "\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      ", "\n                      <button\n                          class=\"radio-mode-button", "\"\n                          @click=", "\n                          title=\"Radio Mode\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                      </button>\n                      ", "\n                      ", "\n                    </div>\n                  "])), this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
+      return x(_templateObject51 || (_templateObject51 = _taggedTemplateLiteral(["\n                      <div class=\"chip-row search-filter-chips\" id=\"search-filter-chip-row\" style=\"margin-bottom:12px; justify-content: center; align-items: center;\">\n                        <button\n                          class=\"chip\"\n                          style=\"\n                            width: 72px;\n                            background: ", ";\n                            opacity: ", ";\n                            font-weight: ", ";\n                          \"\n                          ?selected=", "\n                          @click=", "\n                        >", "</button>\n                        ", "\n                      </div>\n                    "])), filter === 'all' ? this._customAccent : '#282828', filter === 'all' ? '1' : '0.8', filter === 'all' ? 'bold' : 'normal', filter === 'all', () => this._doSearch(), localize('search.filters.all'), classes.map(c => x(_templateObject52 || (_templateObject52 = _taggedTemplateLiteral(["\n                          <button\n                            class=\"chip\"\n                            style=\"\n                              width: 72px;\n                              background: ", ";\n                              opacity: ", ";\n                              font-weight: ", ";\n                            \"\n                            ?selected=", "\n                            @click=", "\n                          >\n                            ", "\n                          </button>\n                        "])), filter === c ? this._customAccent : '#282828', filter === c ? '1' : '0.8', filter === c ? 'bold' : 'normal', filter === c, () => this._doSearch(c), localize("search.filters.".concat(c)))));
+    })(), this._searchLoading ? x(_templateObject53 || (_templateObject53 = _taggedTemplateLiteral(["<div class=\"entity-options-search-loading\">", "</div>"])), localize('common.loading')) : E, this._searchError ? x(_templateObject54 || (_templateObject54 = _taggedTemplateLiteral(["<div class=\"entity-options-search-error\">", "</div>"])), this._searchError) : E, this._usingMusicAssistant && !this._searchLoading ? x(_templateObject55 || (_templateObject55 = _taggedTemplateLiteral(["\n                    <div class=\"search-sub-filters\" style=\"display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;\">\n                      <div style=\"display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;\">\n                        <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"", "\"\n                        >\n                                                  <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"", "\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      ", "\n                      <button\n                          class=\"radio-mode-button", "\"\n                          @click=", "\n                          title=\"Radio Mode\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                      </button>\n                      ", "\n                      ", "\n                    </div>\n                  "])), this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleFavoritesFilter();
-    } : () => {}, localize('search.favorites'), this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline', this._initialFavoritesLoaded || this._favoritesFilterActive ? x(_templateObject53 || (_templateObject53 = _taggedTemplateLiteral(["\n                            <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                              ", "\n                            </span>\n                          "])), localize('search.favorites')) : E, this._recentlyPlayedFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
+    } : () => {}, localize('search.favorites'), this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline', this._initialFavoritesLoaded || this._favoritesFilterActive ? x(_templateObject56 || (_templateObject56 = _taggedTemplateLiteral(["\n                            <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                              ", "\n                            </span>\n                          "])), localize('search.favorites')) : E, this._recentlyPlayedFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleRecentlyPlayedFilter();
-    } : () => {}, localize('search.recently_played'), this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline', this._recentlyPlayedFilterActive ? x(_templateObject54 || (_templateObject54 = _taggedTemplateLiteral(["\n                            <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                              ", "\n                            </span>\n                          "])), localize('search.recently_played')) : E, this._isMusicAssistantEntity() ? x(_templateObject55 || (_templateObject55 = _taggedTemplateLiteral(["\n                        <button\n                            class=\"button", "\"\n                            style=\"\n                              background: none;\n                              border: none;\n                              font-size: 1.2em;\n                              cursor: ", ";\n                              padding: 4px 8px;\n                              border-radius: 50%;\n                              transition: all 0.2s ease;\n                              margin-right: 8px;\n                              display: flex;\n                              align-items: center;\n                              opacity: ", ";\n                            \"\n                            @click=", "\n                            title=\"", "\"\n                          >\n                            <ha-icon .icon=", "></ha-icon>\n                            ", "\n                        </button>\n                        ", "\n                      "])), this._upcomingFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
+    } : () => {}, localize('search.recently_played'), this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline', this._recentlyPlayedFilterActive ? x(_templateObject57 || (_templateObject57 = _taggedTemplateLiteral(["\n                            <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                              ", "\n                            </span>\n                          "])), localize('search.recently_played')) : E, this._isMusicAssistantEntity() ? x(_templateObject58 || (_templateObject58 = _taggedTemplateLiteral(["\n                        <button\n                            class=\"button", "\"\n                            style=\"\n                              background: none;\n                              border: none;\n                              font-size: 1.2em;\n                              cursor: ", ";\n                              padding: 4px 8px;\n                              border-radius: 50%;\n                              transition: all 0.2s ease;\n                              margin-right: 8px;\n                              display: flex;\n                              align-items: center;\n                              opacity: ", ";\n                            \"\n                            @click=", "\n                            title=\"", "\"\n                          >\n                            <ha-icon .icon=", "></ha-icon>\n                            ", "\n                        </button>\n                        ", "\n                      "])), this._upcomingFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleUpcomingFilter();
-    } : () => {}, localize('search.next_up'), this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline', this._upcomingFilterActive ? x(_templateObject56 || (_templateObject56 = _taggedTemplateLiteral(["\n                              <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                ", "\n                              </span>\n                            "])), localize('search.next_up')) : E, this._hasMassQueueIntegration ? x(_templateObject57 || (_templateObject57 = _taggedTemplateLiteral(["\n                          <button\n                              class=\"button", "\"\n                              style=\"\n                                background: none;\n                                border: none;\n                                font-size: 1.2em;\n                                cursor: ", ";\n                                padding: 4px 8px;\n                                border-radius: 50%;\n                                transition: all 0.2s ease;\n                                margin-right: 8px;\n                                display: flex;\n                                align-items: center;\n                                opacity: ", ";\n                              \"\n                              @click=", "\n                              title=\"", "\"\n                            >\n                              <ha-icon .icon=", "></ha-icon>\n                              ", "\n                          </button>\n                        "])), this._recommendationsFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
+    } : () => {}, localize('search.next_up'), this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline', this._upcomingFilterActive ? x(_templateObject59 || (_templateObject59 = _taggedTemplateLiteral(["\n                              <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                ", "\n                              </span>\n                            "])), localize('search.next_up')) : E, this._hasMassQueueIntegration ? x(_templateObject60 || (_templateObject60 = _taggedTemplateLiteral(["\n                          <button\n                              class=\"button", "\"\n                              style=\"\n                                background: none;\n                                border: none;\n                                font-size: 1.2em;\n                                cursor: ", ";\n                                padding: 4px 8px;\n                                border-radius: 50%;\n                                transition: all 0.2s ease;\n                                margin-right: 8px;\n                                display: flex;\n                                align-items: center;\n                                opacity: ", ";\n                              \"\n                              @click=", "\n                              title=\"", "\"\n                            >\n                              <ha-icon .icon=", "></ha-icon>\n                              ", "\n                          </button>\n                        "])), this._recommendationsFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
       this._toggleRecommendationsFilter();
-    } : () => {}, localize('search.recommendations'), this._recommendationsFilterActive ? 'mdi:thumb-up' : 'mdi:thumb-up-outline', this._recommendationsFilterActive ? x(_templateObject58 || (_templateObject58 = _taggedTemplateLiteral(["\n                                <span style=\"margin-left:6px;font-size:0.81em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                  ", "\n                                </span>\n                              "])), localize('search.recommendations')) : E) : E) : E, this._radioModeActive ? ' active' : '', () => this._toggleRadioMode(), this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off', this._shouldShowSearchSortToggle() ? x(_templateObject59 || (_templateObject59 = _taggedTemplateLiteral(["\n                        <button\n                          class=\"button\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=", "\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                        </button>\n                      "])), this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}, this._getSearchSortToggleTitle(), this._getSearchSortToggleIcon()) : E, this._shouldShowSearchResultsCount() ? x(_templateObject60 || (_templateObject60 = _taggedTemplateLiteral(["\n                        <span class=\"search-results-count\">\n                          ", "\n                        </span>\n                      "])), this._getSearchResultsCountLabel()) : E) : E, (() => {
+    } : () => {}, localize('search.recommendations'), this._recommendationsFilterActive ? 'mdi:thumb-up' : 'mdi:thumb-up-outline', this._recommendationsFilterActive ? x(_templateObject61 || (_templateObject61 = _taggedTemplateLiteral(["\n                                <span style=\"margin-left:6px;font-size:0.81em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                  ", "\n                                </span>\n                              "])), localize('search.recommendations')) : E) : E) : E, this._radioModeActive ? ' active' : '', () => this._toggleRadioMode(), this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off', this._shouldShowSearchSortToggle() ? x(_templateObject62 || (_templateObject62 = _taggedTemplateLiteral(["\n                        <button\n                          class=\"button\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=", "\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                        </button>\n                      "])), this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}, this._getSearchSortToggleTitle(), this._getSearchSortToggleIcon()) : E, this._shouldShowSearchResultsCount() ? x(_templateObject63 || (_templateObject63 = _taggedTemplateLiteral(["\n                        <span class=\"search-results-count\">\n                          ", "\n                        </span>\n                      "])), this._getSearchResultsCountLabel()) : E) : E, (() => {
       this._searchMediaClassFilter || "all";
       const currentResults = this._getDisplaySearchResults();
       // Build padded array so row‑count stays constant
@@ -17436,7 +17463,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         length: Math.max(0, totalRows - currentResults.length)
       }, () => null)];
       // Always render paddedResults, even before first search
-      return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x(_templateObject61 || (_templateObject61 = _taggedTemplateLiteral(["<div class=\"entity-options-search-empty\" style=\"color: white;\">No results.</div>"]))) : paddedResults.map(item => item ? x(_templateObject62 || (_templateObject62 = _taggedTemplateLiteral(["\n                            <!-- EXISTING non\u2011placeholder row markup -->\n                            <div class=\"entity-options-search-result ", " ", "\">\n                              ", "\n                              <div style=\"flex:1; display:flex; flex-direction:column; justify-content:center;\">\n                                <span class=\"", "\"\n                                      @touchstart=", "\n                                      @click=", "\n                                      title=", ">\n                                  ", "\n                                </span>\n                                <span style=\"font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;\">\n                                  ", "\n                                </span>\n                              </div>\n                                <div class=\"entity-options-search-buttons\">\n                              <button class=\"entity-options-search-play\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:play\"></ha-icon>\n                                  </button>\n                                  ", "\n                                </div>\n                                <!-- SLIDE-OUT MENU -->\n                                <div class=\"search-row-slide-out ", "\">\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-remove\"></ha-icon> ", "\n                                  </button>\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-play\"></ha-icon> ", "\n                                  </button>\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-music\"></ha-icon> ", "\n                                  </button>\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-plus\"></ha-icon> ", "\n                                  </button>\n                                  <div class=\"slide-out-close\" @click=", ">\n                                    <ha-icon icon=\"mdi:close\"></ha-icon>\n                                  </div>\n\n                                  ", "\n                                </div>\n                            </div>\n                          "])), item._justMoved ? 'just-moved' : '', item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : '', item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject63 || (_templateObject63 = _taggedTemplateLiteral(["\n                                <img\n                                  class=\"entity-options-search-thumb\"\n                                  src=", "\n                                  alt=", "\n                                  style=\"height:38px;width:38px;object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;margin-right:12px;\"\n                                  onerror=\"this.style.display='none'\"\n                                />\n                              "])), item.thumbnail, item.title) : x(_templateObject64 || (_templateObject64 = _taggedTemplateLiteral(["\n                                <div class=\"entity-options-search-thumb-placeholder\" \n                                     style=\"height:38px;width:38px;border-radius:5px;margin-right:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;\">\n                                  <ha-icon icon=\"mdi:music\" style=\"color:rgba(255,255,255,0.6);font-size:16px;\"></ha-icon>\n                                </div>\n                              "]))), this._isClickableSearchResult(item) ? 'clickable-search-result' : '', e => this._handleSearchResultTouch(item, e), () => this._handleSearchResultClick(item), this._getSearchResultClickTitle(item), item.title, (() => {
+      return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x(_templateObject64 || (_templateObject64 = _taggedTemplateLiteral(["<div class=\"entity-options-search-empty\" style=\"color: white;\">No results.</div>"]))) : paddedResults.map(item => item ? x(_templateObject65 || (_templateObject65 = _taggedTemplateLiteral(["\n                            <!-- EXISTING non\u2011placeholder row markup -->\n                            <div class=\"entity-options-search-result ", " ", "\">\n                              ", "\n                              <div style=\"flex:1; display:flex; flex-direction:column; justify-content:center;\">\n                                <span class=\"", "\"\n                                      @touchstart=", "\n                                      @click=", "\n                                      title=", ">\n                                  ", "\n                                </span>\n                                <span style=\"font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;\">\n                                  ", "\n                                </span>\n                              </div>\n                                <div class=\"entity-options-search-buttons\">\n                              <button class=\"entity-options-search-play\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:play\"></ha-icon>\n                                  </button>\n                                  ", "\n                                </div>\n                                <!-- SLIDE-OUT MENU -->\n                                <div class=\"search-row-slide-out ", "\">\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-remove\"></ha-icon> ", "\n                                  </button>\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-play\"></ha-icon> ", "\n                                  </button>\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-music\"></ha-icon> ", "\n                                  </button>\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-plus\"></ha-icon> ", "\n                                  </button>\n                                  <div class=\"slide-out-close\" @click=", ">\n                                    <ha-icon icon=\"mdi:close\"></ha-icon>\n                                  </div>\n\n                                  ", "\n                                </div>\n                            </div>\n                          "])), item._justMoved ? 'just-moved' : '', item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : '', item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject66 || (_templateObject66 = _taggedTemplateLiteral(["\n                                <img\n                                  class=\"entity-options-search-thumb\"\n                                  src=", "\n                                  alt=", "\n                                  style=\"height:38px;width:38px;object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;margin-right:12px;\"\n                                  onerror=\"this.style.display='none'\"\n                                />\n                              "])), item.thumbnail, item.title) : x(_templateObject67 || (_templateObject67 = _taggedTemplateLiteral(["\n                                <div class=\"entity-options-search-thumb-placeholder\" \n                                     style=\"height:38px;width:38px;border-radius:5px;margin-right:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;\">\n                                  <ha-icon icon=\"mdi:music\" style=\"color:rgba(255,255,255,0.6);font-size:16px;\"></ha-icon>\n                                </div>\n                              "]))), this._isClickableSearchResult(item) ? 'clickable-search-result' : '', e => this._handleSearchResultTouch(item, e), () => this._handleSearchResultClick(item), this._getSearchResultClickTitle(item), item.title, (() => {
         // Prefer artist when available for tracks/albums and special filters
         const isTrackOrAlbum = this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album';
         const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
@@ -17447,12 +17474,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
         // Otherwise show media class as before
         return item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : "";
-      })(), () => this._playMediaFromSearch(item), localize('common.play_now'), !(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? x(_templateObject65 || (_templateObject65 = _taggedTemplateLiteral(["\n                                    <button class=\"entity-options-search-queue\" @click=", " title=\"", "\">\n                                      <ha-icon icon=\"mdi:dots-vertical\"></ha-icon>\n                                    </button>\n                                  "])), e => {
+      })(), () => this._playMediaFromSearch(item), localize('common.play_now'), !(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? x(_templateObject68 || (_templateObject68 = _taggedTemplateLiteral(["\n                                    <button class=\"entity-options-search-queue\" @click=", " title=\"", "\">\n                                      <ha-icon icon=\"mdi:dots-vertical\"></ha-icon>\n                                    </button>\n                                  "])), e => {
         e.preventDefault();
         e.stopPropagation();
         this._activeSearchRowMenuId = item.media_content_id;
         this.requestUpdate();
-      }, localize('common.more_options')) : x(_templateObject66 || (_templateObject66 = _taggedTemplateLiteral(["\n                                    <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->\n                                    ", "\n                                  "])), this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? x(_templateObject67 || (_templateObject67 = _taggedTemplateLiteral(["\n                                      <div class=\"queue-controls\">\n                                        <button class=\"queue-btn queue-btn-up\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:arrow-up\"></ha-icon>\n                                        </button>\n                                        <button class=\"queue-btn queue-btn-down\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:arrow-down\"></ha-icon>\n                                        </button>\n                                        <button class=\"queue-btn queue-btn-next\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:format-vertical-align-top\"></ha-icon>\n                                        </button>\n                                        <button class=\"queue-btn queue-btn-remove\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:close\"></ha-icon>\n                                        </button>\n                                      </div>\n                                    "])), e => {
+      }, localize('common.more_options')) : x(_templateObject69 || (_templateObject69 = _taggedTemplateLiteral(["\n                                    <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->\n                                    ", "\n                                  "])), this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? x(_templateObject70 || (_templateObject70 = _taggedTemplateLiteral(["\n                                      <div class=\"queue-controls\">\n                                        <button class=\"queue-btn queue-btn-up\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:arrow-up\"></ha-icon>\n                                        </button>\n                                        <button class=\"queue-btn queue-btn-down\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:arrow-down\"></ha-icon>\n                                        </button>\n                                        <button class=\"queue-btn queue-btn-next\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:format-vertical-align-top\"></ha-icon>\n                                        </button>\n                                        <button class=\"queue-btn queue-btn-remove\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:close\"></ha-icon>\n                                        </button>\n                                      </div>\n                                    "])), e => {
         e.preventDefault();
         e.stopPropagation();
         this._moveQueueItemUp(item.queue_item_id);
@@ -17468,7 +17495,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         e.preventDefault();
         e.stopPropagation();
         this._removeQueueItem(item.queue_item_id);
-      }, localize('search.remove')) : x(_templateObject68 || (_templateObject68 = _taggedTemplateLiteral(["\n                                      <button class=\"entity-options-search-queue\" @click=", " title=\"More Options\">\n                                        <ha-icon icon=\"mdi:dots-vertical\"></ha-icon>\n                                      </button>\n                                    "])), e => {
+      }, localize('search.remove')) : x(_templateObject71 || (_templateObject71 = _taggedTemplateLiteral(["\n                                      <button class=\"entity-options-search-queue\" @click=", " title=\"More Options\">\n                                        <ha-icon icon=\"mdi:dots-vertical\"></ha-icon>\n                                      </button>\n                                    "])), e => {
         e.preventDefault();
         e.stopPropagation();
         this._activeSearchRowMenuId = item.media_content_id;
@@ -17477,14 +17504,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
         e.stopPropagation();
         this._activeSearchRowMenuId = null;
         this.requestUpdate();
-      }, this._successSearchRowMenuId === item.media_content_id ? x(_templateObject69 || (_templateObject69 = _taggedTemplateLiteral(["\n                                    <div class=\"search-row-success-overlay\">\n                                      \u2705 ", "\n                                    </div>\n                                  "])), localize('search.added')) : E) : x(_templateObject70 || (_templateObject70 = _taggedTemplateLiteral(["\n                            <!-- placeholder row keeps height -->\n                            <div class=\"entity-options-search-result placeholder\"></div>\n                          "]))));
-    })()) : this._showGrouping ? this._renderGroupingSheet() : x(_templateObject71 || (_templateObject71 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-header\">\n                  <button class=\"entity-options-item close-item\" @click=", ">\n                    ", "\n                  </button>\n                  <div class=\"entity-options-divider\"></div>\n                </div>\n                <div class=\"entity-options-scroll source-list-centering-wrapper\">\n                  <div class=\"source-list-sheet\">\n                    <div class=\"source-list-scroll\">\n                      ", "\n                    </div>\n                  </div>\n                </div>\n                <div class=\"floating-source-index\">\n                  ", "\n                </div>\n"])), () => {
+      }, this._successSearchRowMenuId === item.media_content_id ? x(_templateObject72 || (_templateObject72 = _taggedTemplateLiteral(["\n                                    <div class=\"search-row-success-overlay\">\n                                      \u2705 ", "\n                                    </div>\n                                  "])), localize('search.added')) : E) : x(_templateObject73 || (_templateObject73 = _taggedTemplateLiteral(["\n                            <!-- placeholder row keeps height -->\n                            <div class=\"entity-options-search-result placeholder\"></div>\n                          "]))));
+    })()) : this._showGrouping ? this._renderGroupingSheet() : x(_templateObject74 || (_templateObject74 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-header\">\n                  <button class=\"entity-options-item close-item\" @click=", ">\n                    ", "\n                  </button>\n                  <div class=\"entity-options-divider\"></div>\n                </div>\n                <div class=\"entity-options-scroll source-list-centering-wrapper\">\n                  <div class=\"source-list-sheet\">\n                    <div class=\"source-list-scroll\">\n                      ", "\n                    </div>\n                  </div>\n                </div>\n                <div class=\"floating-source-index\">\n                  ", "\n                </div>\n"])), () => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeSourceList();
       }
-    }, localize('common.back'), sourceList.map(src => x(_templateObject72 || (_templateObject72 = _taggedTemplateLiteral(["\n                        <div class=\"entity-options-item\" data-source-name=\"", "\" @click=", ">", "</div>\n                      "])), src, () => this._selectSource(src), src)), sourceLetters.map((letter, i) => {
+    }, localize('common.back'), sourceList.map(src => x(_templateObject75 || (_templateObject75 = _taggedTemplateLiteral(["\n                        <div class=\"entity-options-item\" data-source-name=\"", "\" @click=", ">", "</div>\n                      "])), src, () => this._selectSource(src), src)), sourceLetters.map((letter, i) => {
       const isAvailable = availableSourceFirstLetters.has(letter);
       const hovered = this._hoveredSourceLetterIndex;
       let scale = "";
@@ -17492,19 +17519,19 @@ class YetAnotherMediaPlayerCard extends i$2 {
         const dist = Math.abs(hovered - i);
         if (dist === 0) scale = "max";else if (dist === 1) scale = "large";else if (dist === 2) scale = "med";
       }
-      return x(_templateObject73 || (_templateObject73 = _taggedTemplateLiteral(["\n                      <button\n                        class=\"source-index-letter\"\n                        ?disabled=", "\n                        data-scale=", "\n                        @mouseenter=", "\n                        @mouseleave=", "\n                        @click=", "\n                      >\n                        ", "\n                      </button>\n                    "])), !isAvailable, scale, isAvailable ? () => {
+      return x(_templateObject76 || (_templateObject76 = _taggedTemplateLiteral(["\n                      <button\n                        class=\"source-index-letter\"\n                        ?disabled=", "\n                        data-scale=", "\n                        @mouseenter=", "\n                        @mouseleave=", "\n                        @click=", "\n                      >\n                        ", "\n                      </button>\n                    "])), !isAvailable, scale, isAvailable ? () => {
         this._hoveredSourceLetterIndex = i;
         this.requestUpdate();
       } : E, () => {
         this._hoveredSourceLetterIndex = null;
         this.requestUpdate();
       }, isAvailable ? () => this._scrollToSourceLetter(letter) : E, letter);
-    })), shouldShowPersistentControls ? x(_templateObject74 || (_templateObject74 = _taggedTemplateLiteral(["\n              <div class=\"persistent-media-controls\" @click=", ">\n                <div class=\"persistent-controls-artwork\">\n                  ", "\n                </div>\n                <div class=\"persistent-controls-buttons\">\n                  <button class=\"persistent-control-btn\" @click=", " title=\"", "\">\n                    <ha-icon icon=\"mdi:skip-previous\"></ha-icon>\n                  </button>\n                  <button class=\"persistent-control-btn\" @click=", " title=\"", "\">\n                    <ha-icon icon=", "></ha-icon>\n                  </button>\n                  <button class=\"persistent-control-btn\" @click=", " title=\"", "\">\n                    <ha-icon icon=\"mdi:skip-next\"></ha-icon>\n                  </button>\n                </div>\n                ", "\n              </div>\n            "])), e => e.stopPropagation(), (() => {
+    })), shouldShowPersistentControls ? x(_templateObject77 || (_templateObject77 = _taggedTemplateLiteral(["\n              <div class=\"persistent-media-controls\" @click=", ">\n                <div class=\"persistent-controls-artwork\">\n                  ", "\n                </div>\n                <div class=\"persistent-controls-buttons\">\n                  <button class=\"persistent-control-btn\" @click=", " title=\"", "\">\n                    <ha-icon icon=\"mdi:skip-previous\"></ha-icon>\n                  </button>\n                  <button class=\"persistent-control-btn\" @click=", " title=\"", "\">\n                    <ha-icon icon=", "></ha-icon>\n                  </button>\n                  <button class=\"persistent-control-btn\" @click=", " title=\"", "\">\n                    <ha-icon icon=\"mdi:skip-next\"></ha-icon>\n                  </button>\n                </div>\n                ", "\n              </div>\n            "])), e => e.stopPropagation(), (() => {
       // Use the same entity resolution as the main card
       const playbackStateObj = this.currentPlaybackStateObj;
       const mainState = this.currentStateObj;
       const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
-      return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x(_templateObject75 || (_templateObject75 = _taggedTemplateLiteral(["\n                      <img src=\"", "\" alt=\"Album Art\" class=\"persistent-artwork\" onerror=\"this.style.display='none'\">\n                    "])), artwork.url) : x(_templateObject76 || (_templateObject76 = _taggedTemplateLiteral(["\n                      <div class=\"persistent-artwork-placeholder\">\n                        <ha-icon icon=\"mdi:music\"></ha-icon>\n                      </div>\n                    "])));
+      return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x(_templateObject78 || (_templateObject78 = _taggedTemplateLiteral(["\n                      <img src=\"", "\" alt=\"Album Art\" class=\"persistent-artwork\" onerror=\"this.style.display='none'\">\n                    "])), artwork.url) : x(_templateObject79 || (_templateObject79 = _taggedTemplateLiteral(["\n                      <div class=\"persistent-artwork-placeholder\">\n                        <ha-icon icon=\"mdi:music\"></ha-icon>\n                      </div>\n                    "])));
     })(), () => this._onControlClick("prev"), localize('card.media_controls.previous'), () => this._onControlClick("play_pause"), localize('card.media_controls.play_pause'), this._isEntityPlaying(this.currentPlaybackStateObj) ? "mdi:pause" : "mdi:play", () => this._onControlClick("next"), localize('card.media_controls.next'), ((_volumeState$attribut, _volumeState$attribut2) => {
       const idx = this._selectedIndex;
       const volumeEntity = this._getVolumeEntity(idx);
@@ -17514,7 +17541,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       const volumeLevel = Number((_volumeState$attribut = volumeState === null || volumeState === void 0 || (_volumeState$attribut2 = volumeState.attributes) === null || _volumeState$attribut2 === void 0 ? void 0 : _volumeState$attribut2.volume_level) !== null && _volumeState$attribut !== void 0 ? _volumeState$attribut : 0);
       const percentLabel = !isRemote ? "".concat(Math.round((volumeLevel || 0) * 100), "%") : null;
       if (this.config.volume_mode === "hidden") return E;
-      return x(_templateObject77 || (_templateObject77 = _taggedTemplateLiteral(["\n                    <div class=\"persistent-volume-stepper\">\n                      <button class=\"stepper-btn\" @click=", " title=\"", "\">\u2013</button>\n                      ", "\n                      <button class=\"stepper-btn\" @click=", " title=\"", "\">+</button>\n                    </div>\n                  "])), () => this._onVolumeStep(-1), localize('common.vol_down'), percentLabel ? x(_templateObject78 || (_templateObject78 = _taggedTemplateLiteral(["<span class=\"stepper-value\">", "</span>"])), percentLabel) : E, () => this._onVolumeStep(1), localize('common.vol_up'));
+      return x(_templateObject80 || (_templateObject80 = _taggedTemplateLiteral(["\n                    <div class=\"persistent-volume-stepper\">\n                      <button class=\"stepper-btn\" @click=", " title=\"", "\">\u2013</button>\n                      ", "\n                      <button class=\"stepper-btn\" @click=", " title=\"", "\">+</button>\n                    </div>\n                  "])), () => this._onVolumeStep(-1), localize('common.vol_down'), percentLabel ? x(_templateObject81 || (_templateObject81 = _taggedTemplateLiteral(["<span class=\"stepper-value\">", "</span>"])), percentLabel) : E, () => this._onVolumeStep(1), localize('common.vol_up'));
     })()) : E) : E, this._searchActiveOptionsItem ? renderSearchOptionsOverlay({
       item: this._searchActiveOptionsItem,
       onClose: () => {
@@ -17668,6 +17695,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
           }, {
             value: "in_menu",
             label: "In Menu"
+          }, {
+            value: "in_menu_on_idle",
+            label: "In Menu on Idle"
           }]
         }
       },

@@ -33,10 +33,10 @@ export function renderProgressBar({
     `;
   }
   return html`
-    <div class="progress-bar-container">
+    <div class="progress-bar-container" style="${style}">
       <div
         class="progress-bar"
-        style="height:${height}px; background:rgba(255,255,255,0.22); ${style}"
+        style="height:${height}px; background:rgba(255,255,255,0.22);"
         @click=${seekEnabled ? onSeek : null}
         title=${seekEnabled ? localize('common.seek') : ""}
       >

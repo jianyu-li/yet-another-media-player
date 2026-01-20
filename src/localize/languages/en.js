@@ -84,7 +84,7 @@ export default {
         },
         "subtitles": {
             "idle_timeout": "Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.",
-            "show_chip_row": "\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay.",
+            "show_chip_row": "\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay. \"In Menu on Idle\" shows chips inline when active but moves them to the menu when idle.",
             "dim_chips": "When the card enters idle mode with an image, dim the entity and action chips for a cleaner look.",
             "hold_to_pin": "Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.",
             "disable_autofocus": "Keep the search box from stealing focus so on-screen keyboards stay hidden.",

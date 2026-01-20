@@ -82,7 +82,7 @@ Below you will find a list of all configuration options.
 | **Look and Feel**          |              |              |             |                                                                                                 |
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
 | `display_timestamps`       | boolean      | No           | `false`     | Display timestamps on the progress bar                                                          |
-| `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu |
+| `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu, `in_menu_on_idle`: shows chips inline when active but moves them to the menu when idle |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
 | `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card |
@@ -281,7 +281,7 @@ In this example:
 
 - **Idle Timeout**: Time in milliseconds before the card enters idle mode. Set to 0 to disable idle behavior.
 - **Dim Chips on Idle**: When enabled, entity and action chips will dim when the media player is idle.
-- **Show Chip Row**: "Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay.
+- **Show Chip Row**: "Auto" hides the chip row when only one entity is configured. "In Menu" moves the chips into the menu overlay. "In Menu on Idle" shows chips inline when active but moves them to the menu when idle.
 
 ## Interactions & Search
 > Fine-tune how entities are pinned and how many results show at once.
