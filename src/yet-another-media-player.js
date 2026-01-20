@@ -6087,14 +6087,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 </div>
               ` : nothing;
 
-        const actionRowTemplate = renderActionChipRow({
+        const actionRowTemplate = html`
+                <div style="${this._showEntityOptions ? 'visibility: hidden; pointer-events: none;' : ''}">
+                  ${renderActionChipRow({
           actions: rowActions.map(({ action }) => action),
           onActionChipClick: (idx) => {
             const target = rowActions[idx];
             if (!target) return;
             this._onActionChipClick(target.idx);
           }
-        });
+        })}
+                </div>
+              `;
 
         return chipsHiddenInline
           ? html`${actionRowTemplate}${chipRowTemplate}`
