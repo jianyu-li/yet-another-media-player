@@ -12013,8 +12013,17 @@ class YetAnotherMediaPlayerCard extends i$2 {
   }
   get sortedEntityIds() {
     return [...this.entityIds].sort((a, b) => {
-      const tA = this._playTimestamps[a] || 0;
-      const tB = this._playTimestamps[b] || 0;
+      const idxA = this.entityIds.indexOf(a);
+      const idxB = this.entityIds.indexOf(b);
+      const confA = this.config.entities[idxA];
+      const confB = this.config.entities[idxB];
+      const disableA = typeof confA === "string" ? false : !!confA.disable_auto_select;
+      const disableB = typeof confB === "string" ? false : !!confB.disable_auto_select;
+      const tA = disableA ? 0 : this._playTimestamps[a] || 0;
+      const tB = disableB ? 0 : this._playTimestamps[b] || 0;
+      if (tA === tB) {
+        return idxA - idxB;
+      }
       return tB - tA;
     });
   }
@@ -12028,21 +12037,27 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return this._groupedSortedCache;
     }
     const map = {};
-    for (const id of this.entityIds) {
+    for (let i = 0; i < this.entityIds.length; i++) {
+      const id = this.entityIds[i];
       let key = this._getGroupKey(id);
-      // If the group master is not in our configured entities, do not group them visually.
-      // treating them as separate chips avoids showing a false "master" (e.g. Kitchen leading Loft when Office is real master)
       if (!this.entityIds.includes(key)) {
         key = id;
       }
       if (!map[key]) map[key] = {
         ids: [],
-        ts: 0
+        ts: 0,
+        minIdx: i
       };
       map[key].ids.push(id);
-      map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
+      const conf = this.config.entities[i];
+      const disable = typeof conf === "string" ? false : !!conf.disable_auto_select;
+      const effectiveTs = disable ? 0 : this._playTimestamps[id] || 0;
+      map[key].ts = Math.max(map[key].ts, effectiveTs);
     }
-    const result = Object.values(map).sort((a, b) => b.ts - a.ts) // sort groups by recency
+    const result = Object.values(map).sort((a, b) => {
+      if (b.ts === a.ts) return a.minIdx - b.minIdx;
+      return b.ts - a.ts;
+    }) // sort groups by recency
     .map(g => g.ids.sort()); // sort ids alphabetically inside each group
 
     this._groupedSortedCache = result;
