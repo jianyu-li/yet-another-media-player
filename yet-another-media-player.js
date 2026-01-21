@@ -17646,13 +17646,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // Condition to wake up or stay active immediately:
     // Only wake up (from idle or initial load) if an UNRESTRICTED player is active.
-    // If already active, stay active if either the current player is playing (even if restricted)
-    // or any other unrestricted player is playing.
+    // If already active, we only stay active immediately if the CURRENT player is playing.
+    // Otherwise, we allow the idle timer to run (even if others are playing) so that
+    // the manual select state can eventually be cleared, allowing an auto-switch.
     let shouldBeActiveImmediately = false;
     if (this._isIdle || !this._hasSeenPlayback) {
       shouldBeActiveImmediately = isAnyUnrestrictedPlaying;
     } else {
-      shouldBeActiveImmediately = isCurrentPlaying || isAnyUnrestrictedPlaying;
+      shouldBeActiveImmediately = isCurrentPlaying;
     }
     if (shouldBeActiveImmediately) {
       // Became active, clear timer and set not idle
