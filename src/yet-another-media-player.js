@@ -147,7 +147,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Returns true if entity is group-capable AND currently has members
   _isCurrentlyGrouped(stateObj) {
     if (!this._isGroupCapable(stateObj)) return false;
-    return Array.isArray(stateObj?.attributes?.group_members) && stateObj.attributes.group_members.length > 0;
+    return Array.isArray(stateObj?.attributes?.group_members) && stateObj.attributes.group_members.length > 1;
   }
 
   // Find button entities associated with a Music Assistant entity

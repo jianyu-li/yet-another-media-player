@@ -11844,7 +11844,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
   _isCurrentlyGrouped(stateObj) {
     var _stateObj$attributes3;
     if (!this._isGroupCapable(stateObj)) return false;
-    return Array.isArray(stateObj === null || stateObj === void 0 || (_stateObj$attributes3 = stateObj.attributes) === null || _stateObj$attributes3 === void 0 ? void 0 : _stateObj$attributes3.group_members) && stateObj.attributes.group_members.length > 0;
+    return Array.isArray(stateObj === null || stateObj === void 0 || (_stateObj$attributes3 = stateObj.attributes) === null || _stateObj$attributes3 === void 0 ? void 0 : _stateObj$attributes3.group_members) && stateObj.attributes.group_members.length > 1;
   }
 
   // Find button entities associated with a Music Assistant entity
