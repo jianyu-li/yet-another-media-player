@@ -169,6 +169,7 @@ export function renderChip({
 export function renderGroupChip({
   idx,
   selected,
+  playing,
   groupName,
   art,
   icon,
@@ -227,6 +228,15 @@ export function renderGroupChip({
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${groupName}
       </span>
+      ${playing
+      ? html`
+            <span class="chip-playing-indicator">
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </span>
+          `
+      : nothing}
       ${pinned
       ? html`
             <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="Unpin">
@@ -312,6 +322,9 @@ export function renderChipRow({
       const id = getActualGroupMaster(group);
       const idx = entityIds.indexOf(id);
       const state = hass?.states?.[id];
+      const isChipPlaying = (typeof getIsChipPlaying === "function")
+        ? getIsChipPlaying(id, selectedEntityId === id)
+        : (state?.state === "playing");
       const artObj = (typeof getChipArt === "function")
         ? getChipArt(id)
         : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
@@ -323,6 +336,7 @@ export function renderChipRow({
       return renderGroupChip({
         idx,
         selected: selectedEntityId === id,
+        playing: isChipPlaying,
         groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
         art,
         icon,
