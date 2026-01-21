@@ -20,6 +20,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 - Add background image sensor for when not in use
 - Jump straight into search from the idle screen when you prefer browsing over artwork
 - Auto-switches to the active media player
+  - Entities can be excluded from auto-switching by enabling `disable_auto_select`
   - Manually selected players will pin in place for the current session until manually removed
 - Transfer queue between compatible Music Assistant players directly from the card menu
 - Action buttons run any Home Assistant service or script 
@@ -62,6 +63,7 @@ Below you will find a list of all configuration options.
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array        | No           | `[]`        | Array of control names to hide for this specific entity         |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
+| `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
 |                                                                                                 |
 | **Behavior**               |              |              |             |                                                                                                 |
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
@@ -179,6 +181,17 @@ entities:
       - track
       - podcast
 ```
+
+### Disable Auto-Select (Per-Entity)
+
+Use `disable_auto_select: true` to prevent the card from automatically jumping to a specific entity when it starts playing. 
+
+**When enabled for an entity:**
+- The card will **not** auto-switch to this chip when it starts playing.
+- The card will **not** auto-switch to this chip if it becomes the master of a group (unless you manually select it first).
+- The chip will **not** re-order to the front of the chip row when it begins playing.
+- The card will **not** wake from idle mode if this is the only active player.
+
 
 ### Group Players
 Player entities can be grouped together for supported entities. Access the hamburger menu and choose "Group Players" to see a list of supported players that are currently configured on your card. If no players are supported (or only one entity is) then the "Group Players" option will not be visible. 
