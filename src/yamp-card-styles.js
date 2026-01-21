@@ -967,7 +967,7 @@ export const yampCardStyles = css`
   /* Volume controls */
   .volume-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: minmax(min-content, 1fr) auto minmax(min-content, 1fr);
     align-items: center;
     padding: 0 16px 14px 16px;
   }
@@ -977,7 +977,6 @@ export const yampCardStyles = css`
   .volume-right {
     display: flex;
     align-items: center;
-    min-width: 0;
   }
 
   .volume-left {
@@ -1009,7 +1008,7 @@ export const yampCardStyles = css`
   }
 
   .volume-row.has-slider {
-    grid-template-columns: minmax(0, 1fr) 4fr minmax(0, 1fr);
+    grid-template-columns: minmax(min-content, 1fr) 4fr minmax(min-content, 1fr);
   }
 
   .volume-row.has-slider .volume-center {
