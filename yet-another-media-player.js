@@ -1003,7 +1003,7 @@ function getSearchResultClickTitle(item) {
   return title;
 }
 
-var _templateObject$9, _templateObject2$8, _templateObject3$7, _templateObject4$5, _templateObject5$5, _templateObject6$5, _templateObject7$5, _templateObject8$5, _templateObject9$4, _templateObject0$4, _templateObject1$4, _templateObject10$4;
+var _templateObject$9, _templateObject2$8, _templateObject3$7, _templateObject4$5, _templateObject5$5, _templateObject6$5, _templateObject7$5, _templateObject8$5, _templateObject9$4, _templateObject0$4, _templateObject1$4, _templateObject10$4, _templateObject11$3;
 
 // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
 function getArtworkUrl(state) {
@@ -1118,6 +1118,7 @@ function renderGroupChip(_ref3) {
   let {
     idx,
     selected,
+    playing,
     groupName,
     art,
     icon,
@@ -1132,7 +1133,7 @@ function renderGroupChip(_ref3) {
     objectFit
   } = _ref3;
   const artStyle = objectFit ? "object-fit: ".concat(objectFit, ";") : "";
-  return x(_templateObject7$5 || (_templateObject7$5 = _taggedTemplateLiteral(["\n    <button class=\"chip group\"\n            ?selected=", "\n            ?ma-active=", "\n            @click=", "\n            @pointerdown=", "\n            @pointermove=", "\n            @pointerup=", "\n            @pointerleave=", "\n            style=\"display:flex;align-items:center;justify-content:space-between;\">\n      <span class=\"chip-icon\"\n            style=\"cursor:pointer;\"\n            @click=", ">\n        ", "\n      </span>\n      <span class=\"chip-label\" style=\"flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;\">\n        ", "\n      </span>\n      ", "\n    </button>\n  "])), selected, maActive, () => onChipClick(idx), onPointerDown, onPointerMove, onPointerUp, onPointerUp, e => {
+  return x(_templateObject7$5 || (_templateObject7$5 = _taggedTemplateLiteral(["\n    <button class=\"chip group\"\n            ?selected=", "\n            ?ma-active=", "\n            @click=", "\n            @pointerdown=", "\n            @pointermove=", "\n            @pointerup=", "\n            @pointerleave=", "\n            style=\"display:flex;align-items:center;justify-content:space-between;\">\n      <span class=\"chip-icon\"\n            style=\"cursor:pointer;\"\n            @click=", ">\n        ", "\n      </span>\n      <span class=\"chip-label\" style=\"flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;\">\n        ", "\n      </span>\n      ", "\n      ", "\n    </button>\n  "])), selected, maActive, () => onChipClick(idx), onPointerDown, onPointerMove, onPointerUp, onPointerUp, e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
@@ -1147,10 +1148,10 @@ function renderGroupChip(_ref3) {
     if (onIconClick) {
       onIconClick(idx, e);
     }
-  }), groupName, pinned ? x(_templateObject0$4 || (_templateObject0$4 = _taggedTemplateLiteral(["\n            <span class=\"chip-pin-inside\" @click=", " title=\"Unpin\">\n              <ha-icon .icon=", "></ha-icon>\n            </span>\n          "])), e => {
+  }), groupName, playing ? x(_templateObject0$4 || (_templateObject0$4 = _taggedTemplateLiteral(["\n            <span class=\"chip-playing-indicator\">\n              <span class=\"bar\"></span>\n              <span class=\"bar\"></span>\n              <span class=\"bar\"></span>\n            </span>\n          "]))) : E, pinned ? x(_templateObject1$4 || (_templateObject1$4 = _taggedTemplateLiteral(["\n            <span class=\"chip-pin-inside\" @click=", " title=\"Unpin\">\n              <ha-icon .icon=", "></ha-icon>\n            </span>\n          "])), e => {
     e.stopPropagation();
     onPinClick(idx, e);
-  }, "mdi:pin") : x(_templateObject1$4 || (_templateObject1$4 = _taggedTemplateLiteral(["<span class=\"chip-pin-spacer\"></span>"]))));
+  }, "mdi:pin") : x(_templateObject10$4 || (_templateObject10$4 = _taggedTemplateLiteral(["<span class=\"chip-pin-spacer\"></span>"]))));
 }
 
 // Pin/hold logic helpers (timer, etc)
@@ -1223,13 +1224,14 @@ function renderChipRow(_ref5) {
     onPointerUp
   } = _ref5;
   if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return E;
-  return x(_templateObject10$4 || (_templateObject10$4 = _taggedTemplateLiteral(["\n    ", "\n  "])), groupedSortedEntityIds.map(group => {
+  return x(_templateObject11$3 || (_templateObject11$3 = _taggedTemplateLiteral(["\n    ", "\n  "])), groupedSortedEntityIds.map(group => {
     // If it's a group (more than one entity)
     if (group.length > 1) {
       var _hass$states, _state$attributes;
       const id = getActualGroupMaster(group);
       const idx = entityIds.indexOf(id);
       const state = hass === null || hass === void 0 || (_hass$states = hass.states) === null || _hass$states === void 0 ? void 0 : _hass$states[id];
+      const isChipPlaying = typeof getIsChipPlaying === "function" ? getIsChipPlaying(id, selectedEntityId === id) : (state === null || state === void 0 ? void 0 : state.state) === "playing";
       const artObj = typeof getChipArt === "function" ? getChipArt(id) : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
       const art = artObj === null || artObj === void 0 ? void 0 : artObj.url;
       const objectFit = artObj === null || artObj === void 0 ? void 0 : artObj.objectFit;
@@ -1238,6 +1240,7 @@ function renderChipRow(_ref5) {
       return renderGroupChip({
         idx,
         selected: selectedEntityId === id,
+        playing: isChipPlaying,
         groupName: getChipName(id) + (group.length > 1 ? " [".concat(group.length, "]") : ""),
         art,
         icon,
@@ -16593,9 +16596,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // AND it's a group-capable entity (preset groups are excluded via _isGroupCapable)
     if (this._isCurrentlyGrouped(state)) {
       var _this$currentVolumeSt;
-      // Get the main entity and all grouped members
+      // Get the main entity and all grouped members (deduplicated)
       const mainEntity = this.entityObjs[idx].entity_id;
-      const targets = [mainEntity, ...state.attributes.group_members];
+      const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
       const base = typeof this._groupBaseVolume === "number" ? this._groupBaseVolume : Number(((_this$currentVolumeSt = this.currentVolumeStateObj) === null || _this$currentVolumeSt === void 0 ? void 0 : _this$currentVolumeSt.attributes.volume_level) || 0);
       const delta = newVol - base;
       for (const t of targets) {
@@ -16626,6 +16629,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
         v = Math.max(0, Math.min(1, v));
+        // Round to 4 decimal places to prevent floating point precision errors
+        v = Math.round(v * 10000) / 10000;
         this.hass.callService("media_player", "volume_set", {
           entity_id: volTarget,
           volume_level: v
@@ -16658,9 +16663,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
     const state = this.hass.states[groupingEntity];
     if (this._isCurrentlyGrouped(state)) {
-      // Grouped: apply group gain step
+      // Grouped: apply group gain step (deduplicated targets)
       const mainEntity = this.entityObjs[idx].entity_id;
-      const targets = [mainEntity, ...state.attributes.group_members];
+      const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
       // Use configurable step size
       const step = this._volumeStep * direction;
       for (const t of targets) {
@@ -16691,6 +16696,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + step;
         v = Math.max(0, Math.min(1, v));
+        // Round to 4 decimal places to prevent floating point precision errors
+        v = Math.round(v * 10000) / 10000;
         this.hass.callService("media_player", "volume_set", {
           entity_id: volTarget,
           volume_level: v
@@ -16701,6 +16708,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
       let current = Number(stateObj.attributes.volume_level || 0);
       current += this._volumeStep * direction;
       current = Math.max(0, Math.min(1, current));
+      // Round to 4 decimal places to prevent floating point precision errors
+      current = Math.round(current * 10000) / 10000;
       this.hass.callService("media_player", "volume_set", {
         entity_id: entity,
         volume_level: current
@@ -16767,9 +16776,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       console.error('yamp: Error in grouping detection:', error);
     }
     if (this._isCurrentlyGrouped(state)) {
-      // Grouped: apply mute to all group members
+      // Grouped: apply mute to all group members (deduplicated)
       const mainEntity = this.entityObjs[idx].entity_id;
-      const targets = [mainEntity, ...state.attributes.group_members];
+      const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
       for (const t of targets) {
         // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
         const volTarget = t; // Use the grouping entity directly

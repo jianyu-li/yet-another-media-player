@@ -5316,9 +5316,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Group volume logic: ONLY runs if group_volume is true/undefined
     // AND it's a group-capable entity (preset groups are excluded via _isGroupCapable)
     if (this._isCurrentlyGrouped(state)) {
-      // Get the main entity and all grouped members
+      // Get the main entity and all grouped members (deduplicated)
       const mainEntity = this.entityObjs[idx].entity_id;
-      const targets = [mainEntity, ...state.attributes.group_members];
+      const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
       const base = typeof this._groupBaseVolume === "number"
         ? this._groupBaseVolume
         : Number(this.currentVolumeStateObj?.attributes.volume_level || 0);
@@ -5357,6 +5357,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
         v = Math.max(0, Math.min(1, v));
+        // Round to 4 decimal places to prevent floating point precision errors
+        v = Math.round(v * 10000) / 10000;
         this.hass.callService("media_player", "volume_set", { entity_id: volTarget, volume_level: v });
       }
       this._groupBaseVolume = newVol;
@@ -5387,9 +5389,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const state = this.hass.states[groupingEntity];
 
     if (this._isCurrentlyGrouped(state)) {
-      // Grouped: apply group gain step
+      // Grouped: apply group gain step (deduplicated targets)
       const mainEntity = this.entityObjs[idx].entity_id;
-      const targets = [mainEntity, ...state.attributes.group_members];
+      const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
       // Use configurable step size
       const step = this._volumeStep * direction;
       for (const t of targets) {
@@ -5425,6 +5427,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + step;
         v = Math.max(0, Math.min(1, v));
+        // Round to 4 decimal places to prevent floating point precision errors
+        v = Math.round(v * 10000) / 10000;
         this.hass.callService("media_player", "volume_set", { entity_id: volTarget, volume_level: v });
       }
     } else {
@@ -5432,6 +5436,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       let current = Number(stateObj.attributes.volume_level || 0);
       current += this._volumeStep * direction;
       current = Math.max(0, Math.min(1, current));
+      // Round to 4 decimal places to prevent floating point precision errors
+      current = Math.round(current * 10000) / 10000;
       this.hass.callService("media_player", "volume_set", { entity_id: entity, volume_level: current });
     }
   }
@@ -5499,9 +5505,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     if (this._isCurrentlyGrouped(state)) {
-      // Grouped: apply mute to all group members
+      // Grouped: apply mute to all group members (deduplicated)
       const mainEntity = this.entityObjs[idx].entity_id;
-      const targets = [mainEntity, ...state.attributes.group_members];
+      const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
 
 
 
