@@ -2581,7 +2581,8 @@ var it = {
       "only_available_modern": "Solo disponibile con layout Moderno.",
       "image_url_helper": "Inserisci un URL diretto a un'immagine o un percorso file locale",
       "selected_entity_helper": "Helper di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato.",
-      "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata)."
+      "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata).",
+      "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione."
     },
     "titles": {
       "edit_entity": "Modifica entità",
@@ -12012,35 +12013,39 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return minWide || controls <= 5;
   }
   get sortedEntityIds() {
-    return [...this.entityIds].sort((a, b) => {
-      const idxA = this.entityIds.indexOf(a);
-      const idxB = this.entityIds.indexOf(b);
-      const confA = this.config.entities[idxA];
-      const confB = this.config.entities[idxB];
-      const disableA = typeof confA === "string" ? false : !!confA.disable_auto_select;
-      const disableB = typeof confB === "string" ? false : !!confB.disable_auto_select;
-      const tA = disableA ? 0 : this._playTimestamps[a] || 0;
-      const tB = disableB ? 0 : this._playTimestamps[b] || 0;
-      if (tA === tB) {
-        return idxA - idxB;
-      }
-      return tB - tA;
+    const idList = this.entityIds;
+    // Map with metadata for O(n log n) sorting
+    const meta = idList.map((id, idx) => {
+      const conf = this.config.entities[idx];
+      const disable = typeof conf === "string" ? false : !!conf.disable_auto_select;
+      const ts = disable ? 0 : this._playTimestamps[id] || 0;
+      return {
+        id,
+        idx,
+        ts
+      };
     });
+    return meta.sort((a, b) => {
+      if (a.ts === b.ts) return a.idx - b.idx;
+      return b.ts - a.ts;
+    }).map(m => m.id);
   }
 
   // Return array of groups, ordered by most recent play
   get groupedSortedEntityIds() {
-    if (!this.entityIds || !Array.isArray(this.entityIds)) return [];
+    const idList = this.entityIds;
+    if (!idList || !Array.isArray(idList)) return [];
 
     // Check if we can use the cache
     if (this._groupedSortedCache && this.hass === this._lastHassVersion) {
       return this._groupedSortedCache;
     }
+    const idSet = new Set(idList);
     const map = {};
-    for (let i = 0; i < this.entityIds.length; i++) {
-      const id = this.entityIds[i];
+    for (let i = 0; i < idList.length; i++) {
+      const id = idList[i];
       let key = this._getGroupKey(id);
-      if (!this.entityIds.includes(key)) {
+      if (!idSet.has(key)) {
         key = id;
       }
       if (!map[key]) map[key] = {
