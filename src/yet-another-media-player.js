@@ -3590,6 +3590,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         follow_active_volume,
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
+        disable_auto_select: typeof e === "string" ? false : !!e.disable_auto_select,
         ...(typeof group_volume !== "undefined" ? { group_volume } : {})
       };
     });
@@ -4686,9 +4687,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
             this._isEntityPlaying(mostRecentActiveState) &&
             this.entityIds[this._selectedIndex] !== mostRecentId &&
             (!this._idleTimeout || !this._hasSeenPlayback) &&
-            !isCurrentPlaying
+            !isCurrentPlaying &&
+            !this.entityObjs[mostRecentIdx]?.disable_auto_select
           ) {
-            this._selectedIndex = this.entityIds.indexOf(mostRecentId);
+            this._selectedIndex = mostRecentIdx;
           }
         }
       }
@@ -4701,7 +4703,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const actualMaster = this._getActualGroupMaster(selectedGroup);
         if (actualMaster && actualMaster !== selectedId) {
           const masterIdx = this.entityIds.indexOf(actualMaster);
-          if (masterIdx >= 0) {
+          if (masterIdx >= 0 && !this.entityObjs[masterIdx]?.disable_auto_select) {
             this._selectedIndex = masterIdx;
             this._lastGroupingMasterId = actualMaster;
           }

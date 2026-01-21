@@ -118,7 +118,8 @@ export default {
             "only_available_modern": "Na voljo le v moderni postavitvi.",
             "image_url_helper": "Vnesite neposredni URL do slike ali lokalno pot do datoteke",
             "selected_entity_helper": "Pomočnik za vnos besedila, ki bo posodobljen z ID-jem trenutno izbranega predvajalnika medijev.",
-            "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena)."
+            "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena).",
+            "disable_auto_select": "Prepreči samodejno izbiro čipa te entitete ob začetku predvajanja."
         },
         "titles": {
             "edit_entity": "Uredi entiteto",
@@ -149,7 +150,8 @@ export default {
             "use_vol_template": "Uporabi predlogo za glasnost",
             "follow_active_entity": "Glasnost sledi aktivni entiteti",
             "use_url_path": "Uporabi URL ali pot",
-            "adaptive_text_elements": "Elementi prilagodljive velikosti besedila"
+            "adaptive_text_elements": "Elementi prilagodljive velikosti besedila",
+            "disable_auto_select": "Onemogoči samodejno izbiro"
         },
         "fields": {
             "artwork_fit": "Prileganje grafike",

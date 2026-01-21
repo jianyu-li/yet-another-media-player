@@ -118,7 +118,8 @@ export default {
             "only_available_modern": "Alleen beschikbaar met de Moderne lay-out",
             "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
             "selected_entity_helper": "Invoerteksthelper die wordt bijgewerkt met de momenteel geselecteerde media player-entiteits-ID.",
-            "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd)."
+            "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd).",
+            "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen."
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",
@@ -149,7 +150,8 @@ export default {
             "use_vol_template": "Sjabloon gebruiken voor Volume Entiteit",
             "follow_active_entity": "Volume Entiteit volgt Actieve Entiteit",
             "use_url_path": "URL of Pad gebruiken",
-            "adaptive_text_elements": "Elementen voor Adaptieve Tekstgrootte"
+            "adaptive_text_elements": "Elementen voor Adaptieve Tekstgrootte",
+            "disable_auto_select": "Auto-selectie uitschakelen"
         },
         "fields": {
             "artwork_fit": "Artwork Passend Maken",

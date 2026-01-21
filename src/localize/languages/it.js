@@ -149,7 +149,8 @@ export default {
             "use_vol_template": "Usa modello Volume",
             "follow_active_entity": "Volume segue entità attiva",
             "use_url_path": "Usa URL o percorso",
-            "adaptive_text_elements": "Elementi testo adattativo"
+            "adaptive_text_elements": "Elementi testo adattativo",
+            "disable_auto_select": "Disattiva selezione automatica"
         },
         "fields": {
             "artwork_fit": "Adattamento",
