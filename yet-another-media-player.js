@@ -17630,17 +17630,25 @@ class YetAnotherMediaPlayerCard extends i$2 {
   _updateIdleState() {
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
-    const isAnyPlaying = this.entityIds.some((id, idx) => {
+    const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
+      const conf = this.config.entities[idx];
+      const disable = typeof conf === "string" ? false : !!conf.disable_auto_select;
+      if (disable) return false;
       const activeId = this._getEntityForPurpose(idx, 'sorting');
       return this._isEntityPlaying(this.hass.states[activeId]);
     });
     const isCurrentPlaying = this._isCurrentEntityPlaying();
 
     // Condition to wake up or stay active immediately:
-    // 1. The current selection is playing
-    // 2. Something is playing and we are currently idle (wake up)
-    // 3. Something is playing and we haven't seen playback yet (initial load)
-    const shouldBeActiveImmediately = isCurrentPlaying || isAnyPlaying && (this._isIdle || !this._hasSeenPlayback);
+    // Only wake up (from idle or initial load) if an UNRESTRICTED player is active.
+    // If already active, stay active if either the current player is playing (even if restricted)
+    // or any other unrestricted player is playing.
+    let shouldBeActiveImmediately = false;
+    if (this._isIdle || !this._hasSeenPlayback) {
+      shouldBeActiveImmediately = isAnyUnrestrictedPlaying;
+    } else {
+      shouldBeActiveImmediately = isCurrentPlaying || isAnyUnrestrictedPlaying;
+    }
     if (shouldBeActiveImmediately) {
       // Became active, clear timer and set not idle
       if (this._idleTimeout) clearTimeout(this._idleTimeout);
