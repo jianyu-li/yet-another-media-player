@@ -12138,6 +12138,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._searchBreadcrumb = ""; // Display string for current search context
     // Per-chip linger map to keep MA entity selected briefly after pause
     this._playbackLingerByIdx = {};
+    // Track the last resolved entity for each chip to provide "sticky" selection and prevent flickers
+    this._lastResolvedEntityIdByChip = {};
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._showResolvedEntities = false;
@@ -15243,6 +15245,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
   // Internal method to avoid recursion
   _getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState) {
     var _this$_playbackLinger2, _this$_lastPlayingEnt2;
+    const lastResolved = this._lastResolvedEntityIdByChip[idx];
+
+    // Helper to return and track
+    const resolve = id => {
+      this._lastResolvedEntityIdByChip[idx] = id;
+      return id;
+    };
+
     // Check for linger first - if we recently paused MA, stay on MA unless main entity is playing
     const linger = (_this$_playbackLinger2 = this._playbackLingerByIdx) === null || _this$_playbackLinger2 === void 0 ? void 0 : _this$_playbackLinger2[idx];
     const now = Date.now();
@@ -15250,10 +15260,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       var _this$_lastPlayingEnt;
       // If main entity is playing AND was recently controlled, prioritize it over linger
       if (this._isEntityPlaying(mainState) && ((_this$_lastPlayingEnt = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt === void 0 ? void 0 : _this$_lastPlayingEnt[idx]) === mainId) {
-        return mainId;
+        return resolve(mainId);
       }
-      // Return the entity that the linger is actually for
-      return linger.entityId;
+      return resolve(linger.entityId);
     }
     // Clear expired linger
     if (linger && linger.until <= now) {
@@ -15261,20 +15270,43 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
 
     // Prioritize the entity that is actually playing
-    // When both are playing, prefer MA entity for better control
-    if (this._isEntityPlaying(maState)) return maId;
-    if (this._isEntityPlaying(mainState)) return mainId;
+    const maPlaying = this._isEntityPlaying(maState);
+    const mainPlaying = this._isEntityPlaying(mainState);
+
+    // If both are playing, be sticky
+    if (maPlaying && mainPlaying) {
+      if (lastResolved === mainId) return resolve(mainId);
+      if (lastResolved === maId) return resolve(maId);
+      return resolve(maId); // Default to MA
+    }
+    if (maPlaying) return resolve(maId);
+    if (mainPlaying) return resolve(mainId);
 
     // When neither is playing, check if one was recently controlled for this specific chip
     const lastPlayingForChip = (_this$_lastPlayingEnt2 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt2 === void 0 ? void 0 : _this$_lastPlayingEnt2[idx];
-    if (lastPlayingForChip === maId) return maId;
-    if (lastPlayingForChip === mainId) return mainId;
+    if (lastPlayingForChip === maId) return resolve(maId);
+    if (lastPlayingForChip === mainId) return resolve(mainId);
 
     // Default to Music Assistant entity if configured, otherwise main entity
+    // Stickiness Fix: Prefer staying on whichever entity we were already showing if it's still "active"
     if (maId && maId !== mainId) {
-      return maId;
+      const maVisible = maId === lastResolved;
+      const mainVisible = mainId === lastResolved;
+
+      // If we were showing main and it's still "active" (on, paused, or has metadata), stick with it
+      if (mainVisible && mainState && mainState.state !== "off" && mainState.state !== "unavailable") {
+        return resolve(mainId);
+      }
+
+      // If we were showing MA and it's still "active", stick with it
+      if (maVisible && maState && maState.state !== "off" && maState.state !== "unavailable") {
+        return resolve(maId);
+      }
+
+      // Default to MA if both are candidate or no stickiness applies
+      return resolve(maId);
     } else {
-      return mainId;
+      return resolve(mainId);
     }
   }
 
