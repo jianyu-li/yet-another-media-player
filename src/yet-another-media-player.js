@@ -304,13 +304,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
+  _isAutoSelectDisabled(idx) {
+    const conf = this.config.entities[idx];
+    return typeof conf === "string" ? false : !!conf.disable_auto_select;
+  }
+
   get sortedEntityIds() {
     const idList = this.entityIds;
     // Map with metadata for O(n log n) sorting
     const meta = idList.map((id, idx) => {
-      const conf = this.config.entities[idx];
-      const disable = typeof conf === "string" ? false : !!conf.disable_auto_select;
-      const ts = disable ? 0 : (this._playTimestamps[id] || 0);
+      const ts = this._isAutoSelectDisabled(idx) ? 0 : (this._playTimestamps[id] || 0);
       return { id, idx, ts };
     });
 
@@ -344,9 +347,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!map[key]) map[key] = { ids: [], ts: 0, minIdx: i };
       map[key].ids.push(id);
 
-      const conf = this.config.entities[i];
-      const disable = typeof conf === "string" ? false : !!conf.disable_auto_select;
-      const effectiveTs = disable ? 0 : (this._playTimestamps[id] || 0);
+      const effectiveTs = this._isAutoSelectDisabled(i) ? 0 : (this._playTimestamps[id] || 0);
 
       map[key].ts = Math.max(map[key].ts, effectiveTs);
     }
@@ -3575,7 +3576,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Returns array of entity config objects, including group_volume if present in user config.
   get entityObjs() {
-    return this.config.entities.map(e => {
+    return this.config.entities.map((e, index) => {
       const entity_id = typeof e === "string" ? e : e.entity_id;
       const name = typeof e === "string" ? "" : (e.name || "");
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
@@ -3611,7 +3612,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         follow_active_volume,
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
-        disable_auto_select: typeof e === "string" ? false : !!e.disable_auto_select,
+        disable_auto_select: this._isAutoSelectDisabled(index),
         ...(typeof group_volume !== "undefined" ? { group_volume } : {})
       };
     });
@@ -6937,9 +6938,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
-      const conf = this.config.entities[idx];
-      const disable = typeof conf === "string" ? false : !!conf.disable_auto_select;
-      if (disable) return false;
+      if (this._isAutoSelectDisabled(idx)) return false;
 
       const activeId = this._getEntityForPurpose(idx, 'sorting');
       return this._isEntityPlaying(this.hass.states[activeId]);
