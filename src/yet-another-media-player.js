@@ -5149,14 +5149,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._cardTriggers?.hold) {
       this._gestureHoldTimer = setTimeout(() => {
         if (this._gestureActive) {
-          const diffX = Math.abs(e.clientX - this._gestureStartX);
-          const diffY = Math.abs(e.clientY - this._gestureStartY);
-          if (diffX < 15 && diffY < 15) {
-            this._gestureHoldTriggered = true;
-            this._handleAction(this._cardTriggers.hold);
-          }
+          this._gestureHoldTriggered = true;
+          this._handleAction(this._cardTriggers.hold);
         }
       }, 500);
+    }
+  }
+
+  _onTapAreaPointerMove(e) {
+    if (!this._gestureActive) return;
+    const diffX = Math.abs(e.clientX - this._gestureStartX);
+    const diffY = Math.abs(e.clientY - this._gestureStartY);
+    if (diffX > 15 || diffY > 15) {
+      this._gestureActive = false;
+      clearTimeout(this._gestureHoldTimer);
     }
   }
 
@@ -6285,7 +6291,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <div
                     class="collapsed-artwork-container"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
+                    @pointermove=${(e) => this._onTapAreaPointerMove(e)}
                     @pointerup=${(e) => this._onTapAreaPointerUp(e)}
+                    @pointercancel=${() => { this._gestureActive = false; clearTimeout(this._gestureHoldTimer); }}
                     style="${[
           `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
           collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '',
@@ -6306,7 +6314,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 ${(showCollapsedPlaceholder || !collapsed) ? html`
                   <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
+                    @pointermove=${(e) => this._onTapAreaPointerMove(e)}
                     @pointerup=${(e) => this._onTapAreaPointerUp(e)}
+                    @pointercancel=${() => { this._gestureActive = false; clearTimeout(this._gestureHoldTimer); }}
                     style="${(this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap) ? 'cursor:pointer; pointer-events:auto;' : ''}"
                   >
                     ${(!artworkUrl && !idleImageUrl) ? html`

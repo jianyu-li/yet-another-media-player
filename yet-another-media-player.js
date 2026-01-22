@@ -16500,14 +16500,19 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if ((_this$_cardTriggers = this._cardTriggers) !== null && _this$_cardTriggers !== void 0 && _this$_cardTriggers.hold) {
       this._gestureHoldTimer = setTimeout(() => {
         if (this._gestureActive) {
-          const diffX = Math.abs(e.clientX - this._gestureStartX);
-          const diffY = Math.abs(e.clientY - this._gestureStartY);
-          if (diffX < 15 && diffY < 15) {
-            this._gestureHoldTriggered = true;
-            this._handleAction(this._cardTriggers.hold);
-          }
+          this._gestureHoldTriggered = true;
+          this._handleAction(this._cardTriggers.hold);
         }
       }, 500);
+    }
+  }
+  _onTapAreaPointerMove(e) {
+    if (!this._gestureActive) return;
+    const diffX = Math.abs(e.clientX - this._gestureStartX);
+    const diffY = Math.abs(e.clientY - this._gestureStartY);
+    if (diffX > 15 || diffY > 15) {
+      this._gestureActive = false;
+      clearTimeout(this._gestureHoldTimer);
     }
   }
   _onTapAreaPointerUp(e) {
@@ -17553,7 +17558,13 @@ class YetAnotherMediaPlayerCard extends i$2 {
     })(), !dimIdleFrame ? x(_templateObject35 || (_templateObject35 = _taggedTemplateLiteral(["<div class=\"card-lower-fade\"></div>"]))) : E, collapsed ? ' collapsed transitioning' : ' transitioning', collapsed && artworkUrl ? ' has-artwork' : '', (() => {
       if (!hideControlsNow) return '';
       return collapsed ? "min-height: ".concat(this._collapsedBaselineHeight || 220, "px;") : 'min-height: 350px;';
-    })(), collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                  <div\n                    class=\"collapsed-artwork-container\"\n                    @pointerdown=", "\n                    @pointerup=", "\n                    style=\"", "\"\n                  >\n                    <img\n                      class=\"collapsed-artwork\"\n                      src=\"", "\" \n                      style=\"", "\" \n                      onload=\"this.style.display='block'\"\n                      onerror=\"this.style.display='none'\" />\n                  </div>\n                "])), e => this._onTapAreaPointerDown(e), e => this._onTapAreaPointerUp(e), ["background: linear-gradient(120deg, ".concat(this._collapsedArtDominantColor, "bb 60%, transparent 100%)"), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize + 8), "px") : '', this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap ? 'cursor:pointer; pointer-events:auto;' : ''].filter(Boolean).join('; '), artworkUrl, [this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize), "px; height:").concat(Math.round(collapsedArtworkSize), "px;") : ''].filter(Boolean).join(' ')) : E, showCollapsedPlaceholder || !collapsed ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                  <div class=\"card-artwork-spacer", "\"\n                    @pointerdown=", "\n                    @pointerup=", "\n                    style=\"", "\"\n                  >\n                    ", "\n                  </div>\n                "])), showCollapsedPlaceholder ? ' show-placeholder' : '', e => this._onTapAreaPointerDown(e), e => this._onTapAreaPointerUp(e), this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap ? 'cursor:pointer; pointer-events:auto;' : '', !artworkUrl && !idleImageUrl ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["\n                      <div class=\"media-artwork-placeholder\">\n                        <svg\n                          viewBox=\"0 0 184 184\"\n                          style=\"", "\"\n                          xmlns=\"http://www.w3.org/2000/svg\">\n                          <rect x=\"36\" y=\"86\" width=\"22\" height=\"62\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"68\" y=\"58\" width=\"22\" height=\"90\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"100\" y=\"34\" width=\"22\" height=\"114\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"132\" y=\"74\" width=\"22\" height=\"74\" rx=\"8\" fill=\"currentColor\"></rect>\n                        </svg>\n                      </div>\n                    "])), this.config.match_theme === true ? 'color:#fff;' : "color:".concat(this._customAccent, ";")) : E) : E, (() => {
+    })(), collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                  <div\n                    class=\"collapsed-artwork-container\"\n                    @pointerdown=", "\n                    @pointermove=", "\n                    @pointerup=", "\n                    @pointercancel=", "\n                    style=\"", "\"\n                  >\n                    <img\n                      class=\"collapsed-artwork\"\n                      src=\"", "\" \n                      style=\"", "\" \n                      onload=\"this.style.display='block'\"\n                      onerror=\"this.style.display='none'\" />\n                  </div>\n                "])), e => this._onTapAreaPointerDown(e), e => this._onTapAreaPointerMove(e), e => this._onTapAreaPointerUp(e), () => {
+      this._gestureActive = false;
+      clearTimeout(this._gestureHoldTimer);
+    }, ["background: linear-gradient(120deg, ".concat(this._collapsedArtDominantColor, "bb 60%, transparent 100%)"), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize + 8), "px") : '', this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap ? 'cursor:pointer; pointer-events:auto;' : ''].filter(Boolean).join('; '), artworkUrl, [this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize), "px; height:").concat(Math.round(collapsedArtworkSize), "px;") : ''].filter(Boolean).join(' ')) : E, showCollapsedPlaceholder || !collapsed ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                  <div class=\"card-artwork-spacer", "\"\n                    @pointerdown=", "\n                    @pointermove=", "\n                    @pointerup=", "\n                    @pointercancel=", "\n                    style=\"", "\"\n                  >\n                    ", "\n                  </div>\n                "])), showCollapsedPlaceholder ? ' show-placeholder' : '', e => this._onTapAreaPointerDown(e), e => this._onTapAreaPointerMove(e), e => this._onTapAreaPointerUp(e), () => {
+      this._gestureActive = false;
+      clearTimeout(this._gestureHoldTimer);
+    }, this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap ? 'cursor:pointer; pointer-events:auto;' : '', !artworkUrl && !idleImageUrl ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["\n                      <div class=\"media-artwork-placeholder\">\n                        <svg\n                          viewBox=\"0 0 184 184\"\n                          style=\"", "\"\n                          xmlns=\"http://www.w3.org/2000/svg\">\n                          <rect x=\"36\" y=\"86\" width=\"22\" height=\"62\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"68\" y=\"58\" width=\"22\" height=\"90\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"100\" y=\"34\" width=\"22\" height=\"114\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"132\" y=\"74\" width=\"22\" height=\"74\" rx=\"8\" fill=\"currentColor\"></rect>\n                        </svg>\n                      </div>\n                    "])), this.config.match_theme === true ? 'color:#fff;' : "color:".concat(this._customAccent, ";")) : E) : E, (() => {
       const detailStyleParts = [];
       if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
       detailStyleParts.push("min-height:".concat(detailsMinHeight, "px"));
