@@ -1790,7 +1790,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           })()}
     `}
 
- 
+        <div class="form-row">
+          <ha-switch
+            id="disable-auto-select-toggle"
+            .checked=${entity?.disable_auto_select ?? false}
+            @change=${(e) =>
+        this._updateEntityProperty("disable_auto_select", e.target.checked)}
+          ></ha-switch>
+          <label for="disable-auto-select-toggle">${localize('editor.labels.disable_auto_select')}</label>
+          <div class="config-subtitle">${localize('editor.subtitles.disable_auto_select')}</div>
+        </div>
 
         ${showGroupVolume ? html`
           <div class="form-row">

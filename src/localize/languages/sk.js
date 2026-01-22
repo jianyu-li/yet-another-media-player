@@ -118,7 +118,8 @@ export default {
             "only_available_modern": "Dostupné len s moderným rozložením.",
             "image_url_helper": "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
             "selected_entity_helper": "Pomocník pre vstupný text, ktorý bude aktualizovaný o ID aktuálne vybranej entity prehrávača médií.",
-            "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná)."
+            "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná).",
+            "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania."
         },
         "titles": {
             "edit_entity": "Upraviť entitu",
@@ -149,7 +150,8 @@ export default {
             "use_vol_template": "Použiť šablónu pre entitu hlasitosti",
             "follow_active_entity": "Hlasitosť sleduje aktívnu entitu",
             "use_url_path": "Použiť URL alebo cestu",
-            "adaptive_text_elements": "Prvky s adaptívnou veľkosťou textu"
+            "adaptive_text_elements": "Prvky s adaptívnou veľkosťou textu",
+            "disable_auto_select": "Zakázať automatický výber"
         },
         "fields": {
             "artwork_fit": "Prispôsobenie grafiky",

@@ -118,7 +118,8 @@ export default {
             "only_available_modern": "Solo disponibile con layout Moderno.",
             "image_url_helper": "Inserisci un URL diretto a un'immagine o un percorso file locale",
             "selected_entity_helper": "Helper di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato.",
-            "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata)."
+            "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata).",
+            "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione."
         },
         "titles": {
             "edit_entity": "Modifica entità",
@@ -149,7 +150,8 @@ export default {
             "use_vol_template": "Usa modello Volume",
             "follow_active_entity": "Volume segue entità attiva",
             "use_url_path": "Usa URL o percorso",
-            "adaptive_text_elements": "Elementi testo adattativo"
+            "adaptive_text_elements": "Elementi testo adattativo",
+            "disable_auto_select": "Disattiva selezione automatica"
         },
         "fields": {
             "artwork_fit": "Adattamento",

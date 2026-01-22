@@ -304,38 +304,58 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
+  _isAutoSelectDisabled(idx) {
+    const conf = this.config.entities[idx];
+    return typeof conf === "string" ? false : !!conf.disable_auto_select;
+  }
+
   get sortedEntityIds() {
-    return [...this.entityIds].sort((a, b) => {
-      const tA = this._playTimestamps[a] || 0;
-      const tB = this._playTimestamps[b] || 0;
-      return tB - tA;
+    const idList = this.entityIds;
+    // Map with metadata for O(n log n) sorting
+    const meta = idList.map((id, idx) => {
+      const ts = this._isAutoSelectDisabled(idx) ? 0 : (this._playTimestamps[id] || 0);
+      return { id, idx, ts };
     });
+
+    return meta
+      .sort((a, b) => {
+        if (a.ts === b.ts) return a.idx - b.idx;
+        return b.ts - a.ts;
+      })
+      .map(m => m.id);
   }
 
   // Return array of groups, ordered by most recent play
   get groupedSortedEntityIds() {
-    if (!this.entityIds || !Array.isArray(this.entityIds)) return [];
+    const idList = this.entityIds;
+    if (!idList || !Array.isArray(idList)) return [];
 
     // Check if we can use the cache
     if (this._groupedSortedCache && this.hass === this._lastHassVersion) {
       return this._groupedSortedCache;
     }
 
+    const idSet = new Set(idList);
     const map = {};
-    for (const id of this.entityIds) {
+    for (let i = 0; i < idList.length; i++) {
+      const id = idList[i];
       let key = this._getGroupKey(id);
-      // If the group master is not in our configured entities, do not group them visually.
-      // treating them as separate chips avoids showing a false "master" (e.g. Kitchen leading Loft when Office is real master)
-      if (!this.entityIds.includes(key)) {
+      if (!idSet.has(key)) {
         key = id;
       }
 
-      if (!map[key]) map[key] = { ids: [], ts: 0 };
+      if (!map[key]) map[key] = { ids: [], ts: 0, minIdx: i };
       map[key].ids.push(id);
-      map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
+
+      const effectiveTs = this._isAutoSelectDisabled(i) ? 0 : (this._playTimestamps[id] || 0);
+
+      map[key].ts = Math.max(map[key].ts, effectiveTs);
     }
     const result = Object.values(map)
-      .sort((a, b) => b.ts - a.ts)   // sort groups by recency
+      .sort((a, b) => {
+        if (b.ts === a.ts) return a.minIdx - b.minIdx;
+        return b.ts - a.ts;
+      })   // sort groups by recency
       .map(g => g.ids.sort());       // sort ids alphabetically inside each group
 
     this._groupedSortedCache = result;
@@ -428,6 +448,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchBreadcrumb = ""; // Display string for current search context
     // Per-chip linger map to keep MA entity selected briefly after pause
     this._playbackLingerByIdx = {};
+    // Track the last resolved entity for each chip to provide "sticky" selection and prevent flickers
+    this._lastResolvedEntityIdByChip = {};
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._showResolvedEntities = false;
@@ -3554,7 +3576,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Returns array of entity config objects, including group_volume if present in user config.
   get entityObjs() {
-    return this.config.entities.map(e => {
+    return this.config.entities.map((e, index) => {
       const entity_id = typeof e === "string" ? e : e.entity_id;
       const name = typeof e === "string" ? "" : (e.name || "");
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
@@ -3590,6 +3612,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         follow_active_volume,
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
+        disable_auto_select: this._isAutoSelectDisabled(index),
         ...(typeof group_volume !== "undefined" ? { group_volume } : {})
       };
     });
@@ -3676,16 +3699,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Internal method to avoid recursion
   _getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState) {
+    const lastResolved = this._lastResolvedEntityIdByChip[idx];
+
+    // Helper to return and track
+    const resolve = (id) => {
+      this._lastResolvedEntityIdByChip[idx] = id;
+      return id;
+    };
+
     // Check for linger first - if we recently paused MA, stay on MA unless main entity is playing
     const linger = this._playbackLingerByIdx?.[idx];
     const now = Date.now();
     if (linger && linger.until > now) {
       // If main entity is playing AND was recently controlled, prioritize it over linger
       if (this._isEntityPlaying(mainState) && this._lastPlayingEntityIdByChip?.[idx] === mainId) {
-        return mainId;
+        return resolve(mainId);
       }
-      // Return the entity that the linger is actually for
-      return linger.entityId;
+      return resolve(linger.entityId);
     }
     // Clear expired linger
     if (linger && linger.until <= now) {
@@ -3693,22 +3723,43 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // Prioritize the entity that is actually playing
-    // When both are playing, prefer MA entity for better control
-    if (this._isEntityPlaying(maState)) return maId;
-    if (this._isEntityPlaying(mainState)) return mainId;
+    const maPlaying = this._isEntityPlaying(maState);
+    const mainPlaying = this._isEntityPlaying(mainState);
 
-
+    // If both are playing, be sticky
+    if (maPlaying && mainPlaying) {
+      if (lastResolved === mainId) return resolve(mainId);
+      if (lastResolved === maId) return resolve(maId);
+      return resolve(maId); // Default to MA
+    }
+    if (maPlaying) return resolve(maId);
+    if (mainPlaying) return resolve(mainId);
 
     // When neither is playing, check if one was recently controlled for this specific chip
     const lastPlayingForChip = this._lastPlayingEntityIdByChip?.[idx];
-    if (lastPlayingForChip === maId) return maId;
-    if (lastPlayingForChip === mainId) return mainId;
+    if (lastPlayingForChip === maId) return resolve(maId);
+    if (lastPlayingForChip === mainId) return resolve(mainId);
 
     // Default to Music Assistant entity if configured, otherwise main entity
+    // Stickiness Fix: Prefer staying on whichever entity we were already showing if it's still "active"
     if (maId && maId !== mainId) {
-      return maId;
+      const maVisible = maId === lastResolved;
+      const mainVisible = mainId === lastResolved;
+
+      // If we were showing main and it's still "active" (on, paused, or has metadata), stick with it
+      if (mainVisible && mainState && (mainState.state !== "off" && mainState.state !== "unavailable")) {
+        return resolve(mainId);
+      }
+
+      // If we were showing MA and it's still "active", stick with it
+      if (maVisible && maState && (maState.state !== "off" && maState.state !== "unavailable")) {
+        return resolve(maId);
+      }
+
+      // Default to MA if both are candidate or no stickiness applies
+      return resolve(maId);
     } else {
-      return mainId;
+      return resolve(mainId);
     }
   }
 
@@ -4686,9 +4737,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
             this._isEntityPlaying(mostRecentActiveState) &&
             this.entityIds[this._selectedIndex] !== mostRecentId &&
             (!this._idleTimeout || !this._hasSeenPlayback) &&
-            !isCurrentPlaying
+            !isCurrentPlaying &&
+            !this.entityObjs[mostRecentIdx]?.disable_auto_select
           ) {
-            this._selectedIndex = this.entityIds.indexOf(mostRecentId);
+            this._selectedIndex = mostRecentIdx;
           }
         }
       }
@@ -4701,7 +4753,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const actualMaster = this._getActualGroupMaster(selectedGroup);
         if (actualMaster && actualMaster !== selectedId) {
           const masterIdx = this.entityIds.indexOf(actualMaster);
-          if (masterIdx >= 0) {
+          if (masterIdx >= 0 && !this.entityObjs[masterIdx]?.disable_auto_select) {
             this._selectedIndex = masterIdx;
             this._lastGroupingMasterId = actualMaster;
           }
@@ -6885,7 +6937,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _updateIdleState() {
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
-    const isAnyPlaying = this.entityIds.some((id, idx) => {
+    const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
+      if (this._isAutoSelectDisabled(idx)) return false;
+
       const activeId = this._getEntityForPurpose(idx, 'sorting');
       return this._isEntityPlaying(this.hass.states[activeId]);
     });
@@ -6893,10 +6947,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const isCurrentPlaying = this._isCurrentEntityPlaying();
 
     // Condition to wake up or stay active immediately:
-    // 1. The current selection is playing
-    // 2. Something is playing and we are currently idle (wake up)
-    // 3. Something is playing and we haven't seen playback yet (initial load)
-    const shouldBeActiveImmediately = isCurrentPlaying || (isAnyPlaying && (this._isIdle || !this._hasSeenPlayback));
+    // Only wake up (from idle or initial load) if an UNRESTRICTED player is active.
+    // If already active, we only stay active immediately if the CURRENT player is playing.
+    // Otherwise, we allow the idle timer to run (even if others are playing) so that
+    // the manual select state can eventually be cleared, allowing an auto-switch.
+    let shouldBeActiveImmediately = false;
+    if (this._isIdle || !this._hasSeenPlayback) {
+      shouldBeActiveImmediately = isAnyUnrestrictedPlaying;
+    } else {
+      shouldBeActiveImmediately = isCurrentPlaying;
+    }
 
     if (shouldBeActiveImmediately) {
       // Became active, clear timer and set not idle

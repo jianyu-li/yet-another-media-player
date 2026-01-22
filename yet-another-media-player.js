@@ -1417,7 +1417,8 @@ var en = {
       "only_available_modern": "Only available with Modern layout",
       "image_url_helper": "Enter a direct URL to an image or a local file path",
       "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID.",
-      "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured)."
+      "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
+      "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing."
     },
     "titles": {
       "edit_entity": "Edit Entity",
@@ -1448,7 +1449,8 @@ var en = {
       "use_vol_template": "Use template for Volume Entity",
       "follow_active_entity": "Volume Entity Follows Active Entity",
       "use_url_path": "Use URL or Path",
-      "adaptive_text_elements": "Adaptive Text Size Elements"
+      "adaptive_text_elements": "Adaptive Text Size Elements",
+      "disable_auto_select": "Disable Auto-Select"
     },
     "fields": {
       "artwork_fit": "Artwork Fit",
@@ -1706,7 +1708,8 @@ var de = {
       "only_available_modern": "Nur verfügbar im modernen Layout.",
       "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
       "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird.",
-      "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert)."
+      "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert).",
+      "disable_auto_select": "Verhindert, dass der Chip dieser Entität automatisch ausgewählt wird, wenn die Wiedergabe startet."
     },
     "titles": {
       "edit_entity": "Entität bearbeiten",
@@ -1737,7 +1740,8 @@ var de = {
       "use_vol_template": "Template für Lautstärke-Entität verwenden",
       "follow_active_entity": "Lautstärke folgt aktiver Entität",
       "use_url_path": "URL oder Pfad verwenden",
-      "adaptive_text_elements": "Elemente für adaptive Textgröße"
+      "adaptive_text_elements": "Elemente für adaptive Textgröße",
+      "disable_auto_select": "Auto-Auswahl deaktivieren"
     },
     "fields": {
       "artwork_fit": "Artwork-Anpassung",
@@ -1995,7 +1999,8 @@ var es = {
       "only_available_modern": "Solo disponible con diseño Moderno.",
       "image_url_helper": "Ingrese una URL directa a una imagen o una ruta de archivo local",
       "selected_entity_helper": "Helper de texto de entrada que se actualizará con el ID de la entidad del reproductor de medios seleccionado actualmente.",
-      "sync_entity_type": "Elija qué ID de entidad sincronizar con el helper (por defecto la entidad de Music Assistant si está configurada)."
+      "sync_entity_type": "Elija qué ID de entidad sincronizar con el helper (por defecto la entidad de Music Assistant si está configurada).",
+      "disable_auto_select": "Evita que el chip de esta entidad se seleccione automáticamente cuando comienza la reproducción."
     },
     "titles": {
       "edit_entity": "Editar entidad",
@@ -2026,7 +2031,8 @@ var es = {
       "use_vol_template": "Usar plantilla Volumen",
       "follow_active_entity": "Volumen sigue a entidad activa",
       "use_url_path": "Usar URL o ruta",
-      "adaptive_text_elements": "Elementos de texto adaptativo"
+      "adaptive_text_elements": "Elementos de texto adaptativo",
+      "disable_auto_select": "Desactivar selección automática"
     },
     "fields": {
       "artwork_fit": "Ajuste",
@@ -2284,7 +2290,8 @@ var fr = {
       "only_available_modern": "Uniquement disponible avec la mise en page Moderne.",
       "image_url_helper": "Entrez une URL directe vers une image ou un chemin de fichier local",
       "selected_entity_helper": "Helper de texte d'entrée qui sera mis à jour avec l'ID de l'entité du lecteur multimédia actuellement sélectionné.",
-      "sync_entity_type": "Choisissez quel ID d'entité synchroniser avec le helper (par défaut l'entité Music Assistant si configurée)."
+      "sync_entity_type": "Choisissez quel ID d'entité synchroniser avec le helper (par défaut l'entité Music Assistant si configurée).",
+      "disable_auto_select": "Empêche le jeton de cette entité d'être automatiquement sélectionné au début de la lecture."
     },
     "titles": {
       "edit_entity": "Modifier l'entité",
@@ -2315,7 +2322,8 @@ var fr = {
       "use_vol_template": "Utiliser modèle Volume",
       "follow_active_entity": "Le volume suit l'entité active",
       "use_url_path": "Utiliser URL ou chemin",
-      "adaptive_text_elements": "Éléments de texte adaptatif"
+      "adaptive_text_elements": "Éléments de texte adaptatif",
+      "disable_auto_select": "Désactiver la sélection automatique"
     },
     "fields": {
       "artwork_fit": "Ajustement",
@@ -2573,7 +2581,8 @@ var it = {
       "only_available_modern": "Solo disponibile con layout Moderno.",
       "image_url_helper": "Inserisci un URL diretto a un'immagine o un percorso file locale",
       "selected_entity_helper": "Helper di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato.",
-      "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata)."
+      "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata).",
+      "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione."
     },
     "titles": {
       "edit_entity": "Modifica entità",
@@ -2604,7 +2613,8 @@ var it = {
       "use_vol_template": "Usa modello Volume",
       "follow_active_entity": "Volume segue entità attiva",
       "use_url_path": "Usa URL o percorso",
-      "adaptive_text_elements": "Elementi testo adattativo"
+      "adaptive_text_elements": "Elementi testo adattativo",
+      "disable_auto_select": "Disattiva selezione automatica"
     },
     "fields": {
       "artwork_fit": "Adattamento",
@@ -2862,7 +2872,8 @@ var nl = {
       "only_available_modern": "Alleen beschikbaar met de Moderne lay-out",
       "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
       "selected_entity_helper": "Invoerteksthelper die wordt bijgewerkt met de momenteel geselecteerde media player-entiteits-ID.",
-      "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd)."
+      "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd).",
+      "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen."
     },
     "titles": {
       "edit_entity": "Entiteit Bewerken",
@@ -2893,7 +2904,8 @@ var nl = {
       "use_vol_template": "Sjabloon gebruiken voor Volume Entiteit",
       "follow_active_entity": "Volume Entiteit volgt Actieve Entiteit",
       "use_url_path": "URL of Pad gebruiken",
-      "adaptive_text_elements": "Elementen voor Adaptieve Tekstgrootte"
+      "adaptive_text_elements": "Elementen voor Adaptieve Tekstgrootte",
+      "disable_auto_select": "Auto-selectie uitschakelen"
     },
     "fields": {
       "artwork_fit": "Artwork Passend Maken",
@@ -3151,7 +3163,8 @@ var pt = {
       "only_available_modern": "Apenas disponível com layout Moderno.",
       "image_url_helper": "Insira um URL direto para uma imagem ou um caminho de arquivo local",
       "selected_entity_helper": "Helper de texto de entrada que será atualizado com o ID da entidade do reprodutor de mídia selecionado no momento.",
-      "sync_entity_type": "Escolha qual ID de entidade sincronizar com o helper (padrão entidade Music Assistant se configurada)."
+      "sync_entity_type": "Escolha qual ID de entidade sincronizar com o helper (padrão entidade Music Assistant se configurada).",
+      "disable_auto_select": "Impede que o chip desta entidade seja selecionado automaticamente quando a reprodução é iniciada."
     },
     "titles": {
       "edit_entity": "Editar entidade",
@@ -3182,7 +3195,8 @@ var pt = {
       "use_vol_template": "Usar modelo Volume",
       "follow_active_entity": "Volume segue a entidade ativa",
       "use_url_path": "Usar URL ou caminho",
-      "adaptive_text_elements": "Elementos de texto adaptativo"
+      "adaptive_text_elements": "Elementos de texto adaptativo",
+      "disable_auto_select": "Desativar seleção automática"
     },
     "fields": {
       "artwork_fit": "Ajuste",
@@ -3440,7 +3454,8 @@ var sk = {
       "only_available_modern": "Dostupné len s moderným rozložením.",
       "image_url_helper": "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
       "selected_entity_helper": "Pomocník pre vstupný text, ktorý bude aktualizovaný o ID aktuálne vybranej entity prehrávača médií.",
-      "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná)."
+      "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná).",
+      "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania."
     },
     "titles": {
       "edit_entity": "Upraviť entitu",
@@ -3471,7 +3486,8 @@ var sk = {
       "use_vol_template": "Použiť šablónu pre entitu hlasitosti",
       "follow_active_entity": "Hlasitosť sleduje aktívnu entitu",
       "use_url_path": "Použiť URL alebo cestu",
-      "adaptive_text_elements": "Prvky s adaptívnou veľkosťou textu"
+      "adaptive_text_elements": "Prvky s adaptívnou veľkosťou textu",
+      "disable_auto_select": "Zakázať automatický výber"
     },
     "fields": {
       "artwork_fit": "Prispôsobenie grafiky",
@@ -3729,7 +3745,8 @@ var sl = {
       "only_available_modern": "Na voljo le v moderni postavitvi.",
       "image_url_helper": "Vnesite neposredni URL do slike ali lokalno pot do datoteke",
       "selected_entity_helper": "Pomočnik za vnos besedila, ki bo posodobljen z ID-jem trenutno izbranega predvajalnika medijev.",
-      "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena)."
+      "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena).",
+      "disable_auto_select": "Prepreči samodejno izbiro čipa te entitete ob začetku predvajanja."
     },
     "titles": {
       "edit_entity": "Uredi entiteto",
@@ -3760,7 +3777,8 @@ var sl = {
       "use_vol_template": "Uporabi predlogo za glasnost",
       "follow_active_entity": "Glasnost sledi aktivni entiteti",
       "use_url_path": "Uporabi URL ali pot",
-      "adaptive_text_elements": "Elementi prilagodljive velikosti besedila"
+      "adaptive_text_elements": "Elementi prilagodljive velikosti besedila",
+      "disable_auto_select": "Onemogoči samodejno izbiro"
     },
     "fields": {
       "artwork_fit": "Prileganje grafike",
@@ -11347,10 +11365,10 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     });
   }
   _renderEntityEditor(entity) {
-    var _this$hass6, _entity$entity_id, _entity$name, _this$_useTemplate, _this$_useTemplate2, _entity$music_assista, _entity$music_assista2, _entity$group_volume, _entity$follow_active, _entity$follow_active2, _this$_useVolTemplate, _entity$follow_active3, _this$_useVolTemplate2, _entity$volume_entity, _entity$volume_entity2, _entity$entity_id2, _entity$follow_active4, _entity$sync_power;
+    var _this$hass6, _entity$entity_id, _entity$name, _this$_useTemplate, _this$_useTemplate2, _entity$music_assista, _entity$music_assista2, _entity$disable_auto_, _entity$group_volume, _entity$follow_active, _entity$follow_active2, _this$_useVolTemplate, _entity$follow_active3, _this$_useVolTemplate2, _entity$volume_entity, _entity$volume_entity2, _entity$entity_id2, _entity$follow_active4, _entity$sync_power;
     const stateObj = (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[entity === null || entity === void 0 ? void 0 : entity.entity_id];
     const showGroupVolume = this._isGroupCapable(stateObj);
-    return x(_templateObject24$1 || (_templateObject24$1 = _taggedTemplateLiteral(["\n        <div class=\"entity-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"entity-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n          \n            disabled\n          ></ha-selector>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n            .required=", "\n            .invalid=", "\n            label=\"", "\"\n            helper=\"", "\"\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n \n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"ma-template-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"ma-template-toggle\">", "</label>\n          </div>\n        </div>\n\n        ", "\n\n \n\n        ", "\n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"follow-active-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"follow-active-toggle\">", "</label>\n          </div>\n          ", "\n        </div>\n\n        ", "\n\n        ", "\n\n        ", "\n        </div>\n      "])), this._onBackFromEntityEditor, localize('editor.titles.edit_entity'), this.hass, {
+    return x(_templateObject24$1 || (_templateObject24$1 = _taggedTemplateLiteral(["\n        <div class=\"entity-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"entity-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n          \n            disabled\n          ></ha-selector>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n            .required=", "\n            .invalid=", "\n            label=\"", "\"\n            helper=\"", "\"\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n \n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"ma-template-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"ma-template-toggle\">", "</label>\n          </div>\n        </div>\n\n        ", "\n\n        <div class=\"form-row\">\n          <ha-switch\n            id=\"disable-auto-select-toggle\"\n            .checked=", "\n            @change=", "\n          ></ha-switch>\n          <label for=\"disable-auto-select-toggle\">", "</label>\n          <div class=\"config-subtitle\">", "</div>\n        </div>\n\n        ", "\n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"follow-active-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"follow-active-toggle\">", "</label>\n          </div>\n          ", "\n        </div>\n\n        ", "\n\n        ", "\n\n        ", "\n        </div>\n      "])), this._onBackFromEntityEditor, localize('editor.titles.edit_entity'), this.hass, {
       entity: {
         domain: "media_player"
       }
@@ -11426,7 +11444,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           }]
         }
       }, Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ? entity.hidden_filter_chips : [], false, false, localize('editor.fields.hidden_chips'), localize('editor.subtitles.hide_search_chips'), e => this._updateEntityProperty("hidden_filter_chips", e.detail.value));
-    })()), showGroupVolume ? x(_templateObject28$1 || (_templateObject28$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-switch\n              id=\"group-volume-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"group-volume-toggle\">Group Volume</label>\n          </div>\n        "])), (_entity$group_volume = entity === null || entity === void 0 ? void 0 : entity.group_volume) !== null && _entity$group_volume !== void 0 ? _entity$group_volume : true, e => this._updateEntityProperty("group_volume", e.target.checked)) : E, (_entity$follow_active = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active !== void 0 ? _entity$follow_active : false, e => this._updateEntityProperty("follow_active_volume", e.target.checked), localize('editor.labels.follow_active_entity'), !((_entity$follow_active2 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active2 !== void 0 ? _entity$follow_active2 : false) ? x(_templateObject29$1 || (_templateObject29$1 = _taggedTemplateLiteral(["\n            <div>\n              <ha-switch\n                id=\"vol-template-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"vol-template-toggle\">", "</label>\n            </div>\n          "])), (_this$_useVolTemplate = this._useVolTemplate) !== null && _this$_useVolTemplate !== void 0 ? _this$_useVolTemplate : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity), e => {
+    })()), (_entity$disable_auto_ = entity === null || entity === void 0 ? void 0 : entity.disable_auto_select) !== null && _entity$disable_auto_ !== void 0 ? _entity$disable_auto_ : false, e => this._updateEntityProperty("disable_auto_select", e.target.checked), localize('editor.labels.disable_auto_select'), localize('editor.subtitles.disable_auto_select'), showGroupVolume ? x(_templateObject28$1 || (_templateObject28$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-switch\n              id=\"group-volume-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"group-volume-toggle\">Group Volume</label>\n          </div>\n        "])), (_entity$group_volume = entity === null || entity === void 0 ? void 0 : entity.group_volume) !== null && _entity$group_volume !== void 0 ? _entity$group_volume : true, e => this._updateEntityProperty("group_volume", e.target.checked)) : E, (_entity$follow_active = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active !== void 0 ? _entity$follow_active : false, e => this._updateEntityProperty("follow_active_volume", e.target.checked), localize('editor.labels.follow_active_entity'), !((_entity$follow_active2 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active2 !== void 0 ? _entity$follow_active2 : false) ? x(_templateObject29$1 || (_templateObject29$1 = _taggedTemplateLiteral(["\n            <div>\n              <ha-switch\n                id=\"vol-template-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"vol-template-toggle\">", "</label>\n            </div>\n          "])), (_this$_useVolTemplate = this._useVolTemplate) !== null && _this$_useVolTemplate !== void 0 ? _this$_useVolTemplate : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity), e => {
       this._useVolTemplate = e.target.checked;
     }, localize('editor.labels.use_vol_template')) : E, !((_entity$follow_active3 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active3 !== void 0 ? _entity$follow_active3 : false) ? x(_templateObject30$1 || (_templateObject30$1 = _taggedTemplateLiteral(["\n          ", "\n        "])), ((_this$_useVolTemplate2 = this._useVolTemplate) !== null && _this$_useVolTemplate2 !== void 0 ? _this$_useVolTemplate2 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)) ? x(_templateObject31$1 || (_templateObject31$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <div class=", ">\n                    <ha-code-editor\n                      id=\"vol-template-editor\"\n                      label=\"", "\"\n                      .hass=", "\n                      mode=\"jinja2\"\n                      autocomplete-entities\n                      .value=", "\n                      @value-changed=", "\n                    ></ha-code-editor>\n                    <div class=\"help-text\">\n                      <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n                      ", "\n                      <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_boolean.tv_volume','on') %}\n  remote.soundbar\n{% else %}\n  media_player.office_homepod\n{% endif %}</pre>\n                    </div>\n                  </div>\n                </div>\n              "])), this._yamlError && ((_entity$volume_entity = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity !== void 0 ? _entity$volume_entity : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.vol_template'), this.hass, (_entity$volume_entity2 = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity2 !== void 0 ? _entity$volume_entity2 : "", e => this._updateEntityProperty("volume_entity", e.detail.value), localize('editor.subtitles.jinja_template_vol_hint')) : x(_templateObject32$1 || (_templateObject32$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <ha-generic-picker\n                    .hass=", "\n                    .value=", "\n                    .label=", "\n                    .valueRenderer=", "\n                    .rowRenderer=", "\n                    .getItems=", "\n                    @value-changed=", "\n                    allow-custom-value\n                  ></ha-generic-picker>\n                </div>\n              "])), this.hass, this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (_entity$entity_id2 = entity === null || entity === void 0 ? void 0 : entity.entity_id) !== null && _entity$entity_id2 !== void 0 ? _entity$entity_id2 : "", localize('editor.fields.vol_entity'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["media_player", "remote"]), e => {
       const value = e.detail.value;
@@ -11994,38 +12012,57 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
   }
+  _isAutoSelectDisabled(idx) {
+    const conf = this.config.entities[idx];
+    return typeof conf === "string" ? false : !!conf.disable_auto_select;
+  }
   get sortedEntityIds() {
-    return [...this.entityIds].sort((a, b) => {
-      const tA = this._playTimestamps[a] || 0;
-      const tB = this._playTimestamps[b] || 0;
-      return tB - tA;
+    const idList = this.entityIds;
+    // Map with metadata for O(n log n) sorting
+    const meta = idList.map((id, idx) => {
+      const ts = this._isAutoSelectDisabled(idx) ? 0 : this._playTimestamps[id] || 0;
+      return {
+        id,
+        idx,
+        ts
+      };
     });
+    return meta.sort((a, b) => {
+      if (a.ts === b.ts) return a.idx - b.idx;
+      return b.ts - a.ts;
+    }).map(m => m.id);
   }
 
   // Return array of groups, ordered by most recent play
   get groupedSortedEntityIds() {
-    if (!this.entityIds || !Array.isArray(this.entityIds)) return [];
+    const idList = this.entityIds;
+    if (!idList || !Array.isArray(idList)) return [];
 
     // Check if we can use the cache
     if (this._groupedSortedCache && this.hass === this._lastHassVersion) {
       return this._groupedSortedCache;
     }
+    const idSet = new Set(idList);
     const map = {};
-    for (const id of this.entityIds) {
+    for (let i = 0; i < idList.length; i++) {
+      const id = idList[i];
       let key = this._getGroupKey(id);
-      // If the group master is not in our configured entities, do not group them visually.
-      // treating them as separate chips avoids showing a false "master" (e.g. Kitchen leading Loft when Office is real master)
-      if (!this.entityIds.includes(key)) {
+      if (!idSet.has(key)) {
         key = id;
       }
       if (!map[key]) map[key] = {
         ids: [],
-        ts: 0
+        ts: 0,
+        minIdx: i
       };
       map[key].ids.push(id);
-      map[key].ts = Math.max(map[key].ts, this._playTimestamps[id] || 0);
+      const effectiveTs = this._isAutoSelectDisabled(i) ? 0 : this._playTimestamps[id] || 0;
+      map[key].ts = Math.max(map[key].ts, effectiveTs);
     }
-    const result = Object.values(map).sort((a, b) => b.ts - a.ts) // sort groups by recency
+    const result = Object.values(map).sort((a, b) => {
+      if (b.ts === a.ts) return a.minIdx - b.minIdx;
+      return b.ts - a.ts;
+    }) // sort groups by recency
     .map(g => g.ids.sort()); // sort ids alphabetically inside each group
 
     this._groupedSortedCache = result;
@@ -12101,6 +12138,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._searchBreadcrumb = ""; // Display string for current search context
     // Per-chip linger map to keep MA entity selected briefly after pause
     this._playbackLingerByIdx = {};
+    // Track the last resolved entity for each chip to provide "sticky" selection and prevent flickers
+    this._lastResolvedEntityIdByChip = {};
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._showResolvedEntities = false;
@@ -15101,7 +15140,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Returns array of entity config objects, including group_volume if present in user config.
   get entityObjs() {
-    return this.config.entities.map(e => {
+    return this.config.entities.map((e, index) => {
       const entity_id = typeof e === "string" ? e : e.entity_id;
       const name = typeof e === "string" ? "" : e.name || "";
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
@@ -15133,7 +15172,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
         sync_power,
         follow_active_volume,
         hidden_controls,
-        hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips
+        hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
+        disable_auto_select: this._isAutoSelectDisabled(index)
       }, typeof group_volume !== "undefined" ? {
         group_volume
       } : {});
@@ -15205,6 +15245,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
   // Internal method to avoid recursion
   _getActivePlaybackEntityForIndexInternal(idx, mainId, maId, mainState, maState) {
     var _this$_playbackLinger2, _this$_lastPlayingEnt2;
+    const lastResolved = this._lastResolvedEntityIdByChip[idx];
+
+    // Helper to return and track
+    const resolve = id => {
+      this._lastResolvedEntityIdByChip[idx] = id;
+      return id;
+    };
+
     // Check for linger first - if we recently paused MA, stay on MA unless main entity is playing
     const linger = (_this$_playbackLinger2 = this._playbackLingerByIdx) === null || _this$_playbackLinger2 === void 0 ? void 0 : _this$_playbackLinger2[idx];
     const now = Date.now();
@@ -15212,10 +15260,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       var _this$_lastPlayingEnt;
       // If main entity is playing AND was recently controlled, prioritize it over linger
       if (this._isEntityPlaying(mainState) && ((_this$_lastPlayingEnt = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt === void 0 ? void 0 : _this$_lastPlayingEnt[idx]) === mainId) {
-        return mainId;
+        return resolve(mainId);
       }
-      // Return the entity that the linger is actually for
-      return linger.entityId;
+      return resolve(linger.entityId);
     }
     // Clear expired linger
     if (linger && linger.until <= now) {
@@ -15223,20 +15270,43 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
 
     // Prioritize the entity that is actually playing
-    // When both are playing, prefer MA entity for better control
-    if (this._isEntityPlaying(maState)) return maId;
-    if (this._isEntityPlaying(mainState)) return mainId;
+    const maPlaying = this._isEntityPlaying(maState);
+    const mainPlaying = this._isEntityPlaying(mainState);
+
+    // If both are playing, be sticky
+    if (maPlaying && mainPlaying) {
+      if (lastResolved === mainId) return resolve(mainId);
+      if (lastResolved === maId) return resolve(maId);
+      return resolve(maId); // Default to MA
+    }
+    if (maPlaying) return resolve(maId);
+    if (mainPlaying) return resolve(mainId);
 
     // When neither is playing, check if one was recently controlled for this specific chip
     const lastPlayingForChip = (_this$_lastPlayingEnt2 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt2 === void 0 ? void 0 : _this$_lastPlayingEnt2[idx];
-    if (lastPlayingForChip === maId) return maId;
-    if (lastPlayingForChip === mainId) return mainId;
+    if (lastPlayingForChip === maId) return resolve(maId);
+    if (lastPlayingForChip === mainId) return resolve(mainId);
 
     // Default to Music Assistant entity if configured, otherwise main entity
+    // Stickiness Fix: Prefer staying on whichever entity we were already showing if it's still "active"
     if (maId && maId !== mainId) {
-      return maId;
+      const maVisible = maId === lastResolved;
+      const mainVisible = mainId === lastResolved;
+
+      // If we were showing main and it's still "active" (on, paused, or has metadata), stick with it
+      if (mainVisible && mainState && mainState.state !== "off" && mainState.state !== "unavailable") {
+        return resolve(mainId);
+      }
+
+      // If we were showing MA and it's still "active", stick with it
+      if (maVisible && maState && maState.state !== "off" && maState.state !== "unavailable") {
+        return resolve(maId);
+      }
+
+      // Default to MA if both are candidate or no stickiness applies
+      return resolve(maId);
     } else {
-      return mainId;
+      return resolve(mainId);
     }
   }
 
@@ -15957,6 +16027,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         // Switch to most recent if applicable
         const sortedIds = this.sortedEntityIds;
         if (sortedIds.length > 0) {
+          var _this$entityObjs$most;
           let mostRecentId = sortedIds[0];
           // If the most recent entity is part of a group, prefer the actual master
           const candidateGroup = mostRecentId ? (this.groupedSortedEntityIds || []).find(g => g.includes(mostRecentId)) : null;
@@ -15970,8 +16041,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
           const mostRecentActiveEntity = mostRecentIdx >= 0 ? this._getEntityForPurpose(mostRecentIdx, 'sorting') : null;
           const mostRecentActiveState = mostRecentActiveEntity ? this.hass.states[mostRecentActiveEntity] : null;
           const isCurrentPlaying = this._isCurrentEntityPlaying();
-          if (this._isEntityPlaying(mostRecentActiveState) && this.entityIds[this._selectedIndex] !== mostRecentId && (!this._idleTimeout || !this._hasSeenPlayback) && !isCurrentPlaying) {
-            this._selectedIndex = this.entityIds.indexOf(mostRecentId);
+          if (this._isEntityPlaying(mostRecentActiveState) && this.entityIds[this._selectedIndex] !== mostRecentId && (!this._idleTimeout || !this._hasSeenPlayback) && !isCurrentPlaying && !((_this$entityObjs$most = this.entityObjs[mostRecentIdx]) !== null && _this$entityObjs$most !== void 0 && _this$entityObjs$most.disable_auto_select)) {
+            this._selectedIndex = mostRecentIdx;
           }
         }
       }
@@ -15981,8 +16052,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (selectedGroup && selectedGroup.length > 1) {
         const actualMaster = this._getActualGroupMaster(selectedGroup);
         if (actualMaster && actualMaster !== selectedId) {
+          var _this$entityObjs$mast;
           const masterIdx = this.entityIds.indexOf(actualMaster);
-          if (masterIdx >= 0) {
+          if (masterIdx >= 0 && !((_this$entityObjs$mast = this.entityObjs[masterIdx]) !== null && _this$entityObjs$mast !== void 0 && _this$entityObjs$mast.disable_auto_select)) {
             this._selectedIndex = masterIdx;
             this._lastGroupingMasterId = actualMaster;
           }
@@ -17595,17 +17667,24 @@ class YetAnotherMediaPlayerCard extends i$2 {
   _updateIdleState() {
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
-    const isAnyPlaying = this.entityIds.some((id, idx) => {
+    const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
+      if (this._isAutoSelectDisabled(idx)) return false;
       const activeId = this._getEntityForPurpose(idx, 'sorting');
       return this._isEntityPlaying(this.hass.states[activeId]);
     });
     const isCurrentPlaying = this._isCurrentEntityPlaying();
 
     // Condition to wake up or stay active immediately:
-    // 1. The current selection is playing
-    // 2. Something is playing and we are currently idle (wake up)
-    // 3. Something is playing and we haven't seen playback yet (initial load)
-    const shouldBeActiveImmediately = isCurrentPlaying || isAnyPlaying && (this._isIdle || !this._hasSeenPlayback);
+    // Only wake up (from idle or initial load) if an UNRESTRICTED player is active.
+    // If already active, we only stay active immediately if the CURRENT player is playing.
+    // Otherwise, we allow the idle timer to run (even if others are playing) so that
+    // the manual select state can eventually be cleared, allowing an auto-switch.
+    let shouldBeActiveImmediately = false;
+    if (this._isIdle || !this._hasSeenPlayback) {
+      shouldBeActiveImmediately = isAnyUnrestrictedPlaying;
+    } else {
+      shouldBeActiveImmediately = isCurrentPlaying;
+    }
     if (shouldBeActiveImmediately) {
       // Became active, clear timer and set not idle
       if (this._idleTimeout) clearTimeout(this._idleTimeout);

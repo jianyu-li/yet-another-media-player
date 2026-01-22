@@ -118,7 +118,8 @@ export default {
             "only_available_modern": "Nur verfügbar im modernen Layout.",
             "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
             "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird.",
-            "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert)."
+            "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert).",
+            "disable_auto_select": "Verhindert, dass der Chip dieser Entität automatisch ausgewählt wird, wenn die Wiedergabe startet."
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",
@@ -149,7 +150,8 @@ export default {
             "use_vol_template": "Template für Lautstärke-Entität verwenden",
             "follow_active_entity": "Lautstärke folgt aktiver Entität",
             "use_url_path": "URL oder Pfad verwenden",
-            "adaptive_text_elements": "Elemente für adaptive Textgröße"
+            "adaptive_text_elements": "Elemente für adaptive Textgröße",
+            "disable_auto_select": "Auto-Auswahl deaktivieren"
         },
         "fields": {
             "artwork_fit": "Artwork-Anpassung",

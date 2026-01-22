@@ -118,7 +118,8 @@ export default {
             "only_available_modern": "Only available with Modern layout",
             "image_url_helper": "Enter a direct URL to an image or a local file path",
             "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID.",
-            "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured)."
+            "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
+            "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing."
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -149,7 +150,8 @@ export default {
             "use_vol_template": "Use template for Volume Entity",
             "follow_active_entity": "Volume Entity Follows Active Entity",
             "use_url_path": "Use URL or Path",
-            "adaptive_text_elements": "Adaptive Text Size Elements"
+            "adaptive_text_elements": "Adaptive Text Size Elements",
+            "disable_auto_select": "Disable Auto-Select"
         },
         "fields": {
             "artwork_fit": "Artwork Fit",
