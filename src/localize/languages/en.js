@@ -216,7 +216,8 @@ export default {
         "placements": {
             "chip": "Action Chip",
             "menu": "In Menu",
-            "hidden": "Hidden (Artwork Tap)"
+            "hidden": "Hidden (Artwork Tap)",
+            "not_triggerable": "Not Triggerable"
         },
         "triggers": {
             "none": "None",
