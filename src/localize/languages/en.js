@@ -194,7 +194,9 @@ export default {
             "ma_entity": "Music Assistant Entity",
             "vol_entity": "Volume Entity",
             "selected_entity_helper": "Selected Entity Helper",
-            "sync_entity_type": "Sync Entity Type"
+            "sync_entity_type": "Sync Entity Type",
+            "placement": "Placement",
+            "card_trigger": "Card Trigger"
         },
         "action_types": {
             "menu": "Open a Card Menu Item",
@@ -210,6 +212,17 @@ export default {
             "yamp_entity": "yamp_entity (Music Assistant Entity if configured)",
             "yamp_main_entity": "yamp_main_entity (Main Media Player Entity)",
             "yamp_playback_entity": "yamp_playback_entity (Current Active Playback Entity)"
+        },
+        "placements": {
+            "chip": "Action Chip",
+            "menu": "In Menu",
+            "hidden": "Hidden (Artwork Tap)"
+        },
+        "triggers": {
+            "none": "None",
+            "tap": "Tap",
+            "hold": "Hold",
+            "double_tap": "Double Tap"
         }
     },
     "card": {

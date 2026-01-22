@@ -1415,7 +1415,6 @@ var en = {
       "not_available_collapsed": "Not available when Always Collapsed is enabled",
       "only_available_collapsed": "Only available when Always Collapsed is enabled",
       "only_available_modern": "Only available with Modern layout",
-      "image_url_helper": "Enter a direct URL to an image or a local file path",
       "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID.",
       "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
       "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing."
@@ -1493,7 +1492,9 @@ var en = {
       "ma_entity": "Music Assistant Entity",
       "vol_entity": "Volume Entity",
       "selected_entity_helper": "Selected Entity Helper",
-      "sync_entity_type": "Sync Entity Type"
+      "sync_entity_type": "Sync Entity Type",
+      "placement": "Placement",
+      "card_trigger": "Card Trigger"
     },
     "action_types": {
       "menu": "Open a Card Menu Item",
@@ -1509,6 +1510,17 @@ var en = {
       "yamp_entity": "yamp_entity (Music Assistant Entity if configured)",
       "yamp_main_entity": "yamp_main_entity (Main Media Player Entity)",
       "yamp_playback_entity": "yamp_playback_entity (Current Active Playback Entity)"
+    },
+    "placements": {
+      "chip": "Action Chip",
+      "menu": "In Menu",
+      "hidden": "Hidden (Artwork Tap)"
+    },
+    "triggers": {
+      "none": "None",
+      "tap": "Tap",
+      "hold": "Hold",
+      "double_tap": "Double Tap"
     }
   },
   "card": {
@@ -10678,7 +10690,7 @@ class YampSortable extends i$2 {
 }
 customElements.define("yamp-sortable", YampSortable);
 
-var _templateObject$1, _templateObject2$1, _templateObject3$1, _templateObject4$1, _templateObject5$1, _templateObject6$1, _templateObject7$1, _templateObject8$1, _templateObject9$1, _templateObject0$1, _templateObject1$1, _templateObject10$1, _templateObject11$1, _templateObject12$1, _templateObject13$1, _templateObject14$1, _templateObject15$1, _templateObject16$1, _templateObject17$1, _templateObject18$1, _templateObject19$1, _templateObject20$1, _templateObject21$1, _templateObject22$1, _templateObject23$1, _templateObject24$1, _templateObject25$1, _templateObject26$1, _templateObject27$1, _templateObject28$1, _templateObject29$1, _templateObject30$1, _templateObject31$1, _templateObject32$1, _templateObject33$1, _templateObject34$1, _templateObject35$1, _templateObject36$1, _templateObject37$1, _templateObject38$1, _templateObject39$1, _templateObject40$1, _templateObject41$1, _templateObject42$1;
+var _templateObject$1, _templateObject2$1, _templateObject3$1, _templateObject4$1, _templateObject5$1, _templateObject6$1, _templateObject7$1, _templateObject8$1, _templateObject9$1, _templateObject0$1, _templateObject1$1, _templateObject10$1, _templateObject11$1, _templateObject12$1, _templateObject13$1, _templateObject14$1, _templateObject15$1, _templateObject16$1, _templateObject17$1, _templateObject18$1, _templateObject19$1, _templateObject20$1, _templateObject21$1, _templateObject22$1, _templateObject23$1, _templateObject24$1, _templateObject25$1, _templateObject26$1, _templateObject27$1, _templateObject28$1, _templateObject29$1, _templateObject30$1, _templateObject31$1, _templateObject32$1, _templateObject33$1, _templateObject34$1, _templateObject35$1, _templateObject36$1, _templateObject37$1, _templateObject38$1, _templateObject39$1, _templateObject40$1, _templateObject41$1, _templateObject42$1, _templateObject43$1, _templateObject44$1;
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([{
   value: "details",
   label: localize('card.sections.details')
@@ -11033,6 +11045,16 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     const actions = [...((_this$_config$actions = this._config.actions) !== null && _this$_config$actions !== void 0 ? _this$_config$actions : [])];
     const idx = this._actionEditorIndex;
     if (actions[idx]) {
+      // Enforce single trigger per gesture (Tap, Hold, Double Tap)
+      if (key === "card_trigger" && value && value !== "none") {
+        actions.forEach((act, i) => {
+          if (i !== idx && act.card_trigger === value) {
+            actions[i] = _objectSpread2$1(_objectSpread2$1({}, act), {}, {
+              card_trigger: "none"
+            });
+          }
+        });
+      }
       actions[idx] = _objectSpread2$1(_objectSpread2$1({}, actions[idx]), {}, {
         [key]: value
       });
@@ -11340,22 +11362,33 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     return x(_templateObject19$1 || (_templateObject19$1 = _taggedTemplateLiteral(["\n        <div class=\"action-group config-section\">\n          <div class=\"action-group-header section-header\">\n            <div class=\"action-group-title section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <yamp-sortable @item-moved=", ">\n              <div class=\"sortable-container\">\n                ", "\n              </div>\n            </yamp-sortable>\n          </div>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Action\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n      "])), localize('editor.sections.actions.title'), localize('editor.sections.actions.description'), e => this._onActionMoved(e), actions.map((act, idx) => {
       var _act$name;
       return x(_templateObject20$1 || (_templateObject20$1 = _taggedTemplateLiteral(["\n                  <div class=\"action-row-inner sortable-item\">\n                    <div class=\"handle action-handle\">\n                      <ha-icon icon=\"mdi:drag\"></ha-icon>\n                    </div>\n                    ", "\n                    <div class=\"grow-children\">\n                      <ha-textfield\n                        placeholder=\"(Icon Only)\"\n                        .value=", "\n                        .helper=", "\n                        .helperPersistent=", "\n                        @input=", "\n                      ></ha-textfield>\n                    </div>\n                    <div class=\"action-row-actions\">\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:pencil\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      ", "\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:trash-can\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                    </div>\n                  </div>\n                "])), act !== null && act !== void 0 && act.icon ? x(_templateObject21$1 || (_templateObject21$1 = _taggedTemplateLiteral(["\n                      <ha-icon class=\"action-icon\" icon=\"", "\"></ha-icon>\n                    "])), act === null || act === void 0 ? void 0 : act.icon) : x(_templateObject22$1 || (_templateObject22$1 = _taggedTemplateLiteral(["<span class=\"action-icon-placeholder\"></span>"]))), (_act$name = act === null || act === void 0 ? void 0 : act.name) !== null && _act$name !== void 0 ? _act$name : "", (() => {
-        const inMenu = act !== null && act !== void 0 && act.in_menu ? " \u2022 In Menu" : "";
+        const placement = (act === null || act === void 0 ? void 0 : act.placement) || (act !== null && act !== void 0 && act.in_menu ? "menu" : "chip");
+        let placementText = "";
+        if (placement === "menu") placementText = " \u2022 In Menu";else if (placement === "hidden") placementText = " \u2022 Hidden";
+        const trigger = act === null || act === void 0 ? void 0 : act.card_trigger;
+        let triggerText = "";
+        if (trigger && trigger !== "none") {
+          triggerText = " \u2022 Trigger: ".concat(localize("editor.triggers.".concat(trigger)));
+        }
         if ((act === null || act === void 0 ? void 0 : act.action) === "sync_selected_entity") {
-          return "".concat(localize('editor.action_helpers.sync_selected_entity'), " ").concat(act.sync_entity_helper || localize('editor.action_helpers.select_helper'));
+          return "".concat(localize('editor.action_helpers.sync_selected_entity'), " ").concat(act.sync_entity_helper || localize('editor.action_helpers.select_helper')).concat(placementText).concat(triggerText);
         }
         if (act !== null && act !== void 0 && act.menu_item) {
-          return "Open Menu Item: ".concat(act.menu_item).concat(inMenu);
+          return "Open Menu Item: ".concat(act.menu_item).concat(placementText).concat(triggerText);
         }
         if (act !== null && act !== void 0 && act.service) {
-          return "Call Service: ".concat(act.service).concat(inMenu);
+          return "Call Service: ".concat(act.service).concat(placementText).concat(triggerText);
         }
         if (act !== null && act !== void 0 && act.navigation_path || (act === null || act === void 0 ? void 0 : act.action) === "navigate") {
           const newTab = act !== null && act !== void 0 && act.navigation_new_tab ? " (New Tab)" : "";
-          return "Navigate to ".concat(act.navigation_path || "(missing path)").concat(newTab).concat(inMenu);
+          return "Navigate to ".concat(act.navigation_path || "(missing path)").concat(newTab).concat(placementText).concat(triggerText);
         }
-        return act !== null && act !== void 0 && act.in_menu ? "Not Configured".concat(inMenu) : "Not Configured";
-      })(), true, a => this._onActionChanged(idx, a.target.value), localize('common.edit_action'), () => this._onEditAction(idx), (act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity" ? x(_templateObject23$1 || (_templateObject23$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-toggle ", "\"\n                        icon=\"", "\"\n                        title=\"", "\"\n                        role=\"button\"\n                        aria-label=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      "])), act !== null && act !== void 0 && act.in_menu ? "active" : "", act !== null && act !== void 0 && act.in_menu ? "mdi:menu" : "mdi:view-grid-outline", act !== null && act !== void 0 && act.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), act !== null && act !== void 0 && act.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), () => this._toggleActionInMenu(idx)) : E, localize('editor.fields.delete_action'), () => this._removeAction(idx));
+        return placementText || triggerText ? "Not Configured".concat(placementText).concat(triggerText) : "Not Configured";
+      })(), true, a => this._onActionChanged(idx, a.target.value), localize('common.edit_action'), () => this._onEditAction(idx), (act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity" ? x(_templateObject23$1 || (_templateObject23$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-toggle ", "\"\n                        icon=\"", "\"\n                        title=\"", "\"\n                        role=\"button\"\n                        aria-label=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      "])), (act === null || act === void 0 ? void 0 : act.placement) === "hidden" ? "icon-button-disabled" : (act === null || act === void 0 ? void 0 : act.placement) === "menu" || act !== null && act !== void 0 && act.in_menu && !(act !== null && act !== void 0 && act.placement) ? "active" : "", (act === null || act === void 0 ? void 0 : act.placement) === "menu" || act !== null && act !== void 0 && act.in_menu && !(act !== null && act !== void 0 && act.placement) ? "mdi:menu" : (act === null || act === void 0 ? void 0 : act.placement) === "hidden" ? "mdi:eye-off-outline" : "mdi:view-grid-outline", (act === null || act === void 0 ? void 0 : act.placement) === "menu" || act !== null && act !== void 0 && act.in_menu && !(act !== null && act !== void 0 && act.placement) ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), (act === null || act === void 0 ? void 0 : act.placement) === "menu" || act !== null && act !== void 0 && act.in_menu && !(act !== null && act !== void 0 && act.placement) ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), () => {
+        if ((act === null || act === void 0 ? void 0 : act.placement) !== "hidden") {
+          this._toggleActionInMenu(idx);
+        }
+      }) : x(_templateObject24$1 || (_templateObject24$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-disabled\"\n                        icon=\"mdi:eye-off-outline\"\n                        title=\"", "\"\n                      ></ha-icon>\n                      "])), localize('editor.placements.hidden')), localize('editor.fields.delete_action'), () => this._removeAction(idx));
     }), () => {
       var _this$_config$actions4;
       const newActions = [...((_this$_config$actions4 = this._config.actions) !== null && _this$_config$actions4 !== void 0 ? _this$_config$actions4 : []), {}];
@@ -11368,7 +11401,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     var _this$hass6, _entity$entity_id, _entity$name, _this$_useTemplate, _this$_useTemplate2, _entity$music_assista, _entity$music_assista2, _entity$disable_auto_, _entity$group_volume, _entity$follow_active, _entity$follow_active2, _this$_useVolTemplate, _entity$follow_active3, _this$_useVolTemplate2, _entity$volume_entity, _entity$volume_entity2, _entity$entity_id2, _entity$follow_active4, _entity$sync_power;
     const stateObj = (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[entity === null || entity === void 0 ? void 0 : entity.entity_id];
     const showGroupVolume = this._isGroupCapable(stateObj);
-    return x(_templateObject24$1 || (_templateObject24$1 = _taggedTemplateLiteral(["\n        <div class=\"entity-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"entity-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n          \n            disabled\n          ></ha-selector>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n            .required=", "\n            .invalid=", "\n            label=\"", "\"\n            helper=\"", "\"\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n \n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"ma-template-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"ma-template-toggle\">", "</label>\n          </div>\n        </div>\n\n        ", "\n\n        <div class=\"form-row\">\n          <ha-switch\n            id=\"disable-auto-select-toggle\"\n            .checked=", "\n            @change=", "\n          ></ha-switch>\n          <label for=\"disable-auto-select-toggle\">", "</label>\n          <div class=\"config-subtitle\">", "</div>\n        </div>\n\n        ", "\n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"follow-active-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"follow-active-toggle\">", "</label>\n          </div>\n          ", "\n        </div>\n\n        ", "\n\n        ", "\n\n        ", "\n        </div>\n      "])), this._onBackFromEntityEditor, localize('editor.titles.edit_entity'), this.hass, {
+    return x(_templateObject25$1 || (_templateObject25$1 = _taggedTemplateLiteral(["\n        <div class=\"entity-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"entity-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n          \n            disabled\n          ></ha-selector>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n            .required=", "\n            .invalid=", "\n            label=\"", "\"\n            helper=\"", "\"\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n \n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"ma-template-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"ma-template-toggle\">", "</label>\n          </div>\n        </div>\n\n        ", "\n\n        <div class=\"form-row\">\n          <ha-switch\n            id=\"disable-auto-select-toggle\"\n            .checked=", "\n            @change=", "\n          ></ha-switch>\n          <label for=\"disable-auto-select-toggle\">", "</label>\n          <div class=\"config-subtitle\">", "</div>\n        </div>\n\n        ", "\n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"follow-active-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"follow-active-toggle\">", "</label>\n          </div>\n          ", "\n        </div>\n\n        ", "\n\n        ", "\n\n        ", "\n        </div>\n      "])), this._onBackFromEntityEditor, localize('editor.titles.edit_entity'), this.hass, {
       entity: {
         domain: "media_player"
       }
@@ -11404,7 +11437,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       }
     }, Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ? entity.hidden_controls : [], false, false, localize('editor.fields.hidden_controls'), localize('editor.subtitles.hide_controls'), e => this._updateEntityProperty("hidden_controls", e.detail.value), (_this$_useTemplate = this._useTemplate) !== null && _this$_useTemplate !== void 0 ? _this$_useTemplate : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity), e => {
       this._useTemplate = e.target.checked;
-    }, localize('editor.labels.use_ma_template'), ((_this$_useTemplate2 = this._useTemplate) !== null && _this$_useTemplate2 !== void 0 ? _this$_useTemplate2 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)) ? x(_templateObject25$1 || (_templateObject25$1 = _taggedTemplateLiteral(["\n      <div class=\"form-row\">\n        <div class=", ">\n          <ha-code-editor\n            id=\"ma-template-editor\"\n            label=\"", "\"\n            .hass=", "\n            mode=\"jinja2\"\n            autocomplete-entities\n            .value=", "\n            @value-changed=", "\n          ></ha-code-editor>\n          <div class=\"help-text\">\n            <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n            ", "\n            <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}\n  media_player.picore_house\n{% else %}\n  media_player.ma_wiim_mini\n{% endif %}</pre>\n           </pre>\n          </div>\n        </div>\n      </div>\n    "])), this._yamlError && ((_entity$music_assista = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista !== void 0 ? _entity$music_assista : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.ma_template'), this.hass, (_entity$music_assista2 = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista2 !== void 0 ? _entity$music_assista2 : "", e => this._updateEntityProperty("music_assistant_entity", e.detail.value), localize('editor.subtitles.jinja_template_hint')) : x(_templateObject26$1 || (_templateObject26$1 = _taggedTemplateLiteral(["\n      <div class=\"form-row\">\n        <ha-generic-picker\n          .hass=", "\n          .value=", "\n          .label=", "\n          .valueRenderer=", "\n          .rowRenderer=", "\n          .getItems=", "\n          @value-changed=", "\n          allow-custom-value\n        ></ha-generic-picker>\n      </div>\n      ", "\n    "])), this.hass, this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? entity.music_assistant_entity : "", localize('editor.fields.ma_entity'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["media_player"]), e => this._updateEntityProperty("music_assistant_entity", e.detail.value), ((_this$hass7, _this$_looksLikeTempl, _this$hass8) => {
+    }, localize('editor.labels.use_ma_template'), ((_this$_useTemplate2 = this._useTemplate) !== null && _this$_useTemplate2 !== void 0 ? _this$_useTemplate2 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)) ? x(_templateObject26$1 || (_templateObject26$1 = _taggedTemplateLiteral(["\n      <div class=\"form-row\">\n        <div class=", ">\n          <ha-code-editor\n            id=\"ma-template-editor\"\n            label=\"", "\"\n            .hass=", "\n            mode=\"jinja2\"\n            autocomplete-entities\n            .value=", "\n            @value-changed=", "\n          ></ha-code-editor>\n          <div class=\"help-text\">\n            <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n            ", "\n            <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}\n  media_player.picore_house\n{% else %}\n  media_player.ma_wiim_mini\n{% endif %}</pre>\n           </pre>\n          </div>\n        </div>\n      </div>\n    "])), this._yamlError && ((_entity$music_assista = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista !== void 0 ? _entity$music_assista : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.ma_template'), this.hass, (_entity$music_assista2 = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista2 !== void 0 ? _entity$music_assista2 : "", e => this._updateEntityProperty("music_assistant_entity", e.detail.value), localize('editor.subtitles.jinja_template_hint')) : x(_templateObject27$1 || (_templateObject27$1 = _taggedTemplateLiteral(["\n      <div class=\"form-row\">\n        <ha-generic-picker\n          .hass=", "\n          .value=", "\n          .label=", "\n          .valueRenderer=", "\n          .rowRenderer=", "\n          .getItems=", "\n          @value-changed=", "\n          allow-custom-value\n        ></ha-generic-picker>\n      </div>\n      ", "\n    "])), this.hass, this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? entity.music_assistant_entity : "", localize('editor.fields.ma_entity'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["media_player"]), e => this._updateEntityProperty("music_assistant_entity", e.detail.value), ((_this$hass7, _this$_looksLikeTempl, _this$hass8) => {
       const mainId = entity === null || entity === void 0 ? void 0 : entity.entity_id;
       const mainState = mainId ? (_this$hass7 = this.hass) === null || _this$hass7 === void 0 || (_this$hass7 = _this$hass7.states) === null || _this$hass7 === void 0 ? void 0 : _this$hass7[mainId] : undefined;
       const mainIsMA = mainState ? isMusicAssistantEntity(mainState) : false;
@@ -11416,7 +11449,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       // Only show under the dropdown (non-template path)
       const showHiddenFilterChips = mainIsMA || maIsMA;
       if (!showHiddenFilterChips) return E;
-      return x(_templateObject27$1 || (_templateObject27$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              .required=", "\n              .invalid=", "\n              label=\"", "\"\n              helper=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, {
+      return x(_templateObject28$1 || (_templateObject28$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              .required=", "\n              .invalid=", "\n              label=\"", "\"\n              helper=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, {
         select: {
           mode: "dropdown",
           multiple: true,
@@ -11444,21 +11477,21 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           }]
         }
       }, Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ? entity.hidden_filter_chips : [], false, false, localize('editor.fields.hidden_chips'), localize('editor.subtitles.hide_search_chips'), e => this._updateEntityProperty("hidden_filter_chips", e.detail.value));
-    })()), (_entity$disable_auto_ = entity === null || entity === void 0 ? void 0 : entity.disable_auto_select) !== null && _entity$disable_auto_ !== void 0 ? _entity$disable_auto_ : false, e => this._updateEntityProperty("disable_auto_select", e.target.checked), localize('editor.labels.disable_auto_select'), localize('editor.subtitles.disable_auto_select'), showGroupVolume ? x(_templateObject28$1 || (_templateObject28$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-switch\n              id=\"group-volume-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"group-volume-toggle\">Group Volume</label>\n          </div>\n        "])), (_entity$group_volume = entity === null || entity === void 0 ? void 0 : entity.group_volume) !== null && _entity$group_volume !== void 0 ? _entity$group_volume : true, e => this._updateEntityProperty("group_volume", e.target.checked)) : E, (_entity$follow_active = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active !== void 0 ? _entity$follow_active : false, e => this._updateEntityProperty("follow_active_volume", e.target.checked), localize('editor.labels.follow_active_entity'), !((_entity$follow_active2 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active2 !== void 0 ? _entity$follow_active2 : false) ? x(_templateObject29$1 || (_templateObject29$1 = _taggedTemplateLiteral(["\n            <div>\n              <ha-switch\n                id=\"vol-template-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"vol-template-toggle\">", "</label>\n            </div>\n          "])), (_this$_useVolTemplate = this._useVolTemplate) !== null && _this$_useVolTemplate !== void 0 ? _this$_useVolTemplate : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity), e => {
+    })()), (_entity$disable_auto_ = entity === null || entity === void 0 ? void 0 : entity.disable_auto_select) !== null && _entity$disable_auto_ !== void 0 ? _entity$disable_auto_ : false, e => this._updateEntityProperty("disable_auto_select", e.target.checked), localize('editor.labels.disable_auto_select'), localize('editor.subtitles.disable_auto_select'), showGroupVolume ? x(_templateObject29$1 || (_templateObject29$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-switch\n              id=\"group-volume-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"group-volume-toggle\">Group Volume</label>\n          </div>\n        "])), (_entity$group_volume = entity === null || entity === void 0 ? void 0 : entity.group_volume) !== null && _entity$group_volume !== void 0 ? _entity$group_volume : true, e => this._updateEntityProperty("group_volume", e.target.checked)) : E, (_entity$follow_active = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active !== void 0 ? _entity$follow_active : false, e => this._updateEntityProperty("follow_active_volume", e.target.checked), localize('editor.labels.follow_active_entity'), !((_entity$follow_active2 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active2 !== void 0 ? _entity$follow_active2 : false) ? x(_templateObject30$1 || (_templateObject30$1 = _taggedTemplateLiteral(["\n            <div>\n              <ha-switch\n                id=\"vol-template-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"vol-template-toggle\">", "</label>\n            </div>\n          "])), (_this$_useVolTemplate = this._useVolTemplate) !== null && _this$_useVolTemplate !== void 0 ? _this$_useVolTemplate : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity), e => {
       this._useVolTemplate = e.target.checked;
-    }, localize('editor.labels.use_vol_template')) : E, !((_entity$follow_active3 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active3 !== void 0 ? _entity$follow_active3 : false) ? x(_templateObject30$1 || (_templateObject30$1 = _taggedTemplateLiteral(["\n          ", "\n        "])), ((_this$_useVolTemplate2 = this._useVolTemplate) !== null && _this$_useVolTemplate2 !== void 0 ? _this$_useVolTemplate2 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)) ? x(_templateObject31$1 || (_templateObject31$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <div class=", ">\n                    <ha-code-editor\n                      id=\"vol-template-editor\"\n                      label=\"", "\"\n                      .hass=", "\n                      mode=\"jinja2\"\n                      autocomplete-entities\n                      .value=", "\n                      @value-changed=", "\n                    ></ha-code-editor>\n                    <div class=\"help-text\">\n                      <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n                      ", "\n                      <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_boolean.tv_volume','on') %}\n  remote.soundbar\n{% else %}\n  media_player.office_homepod\n{% endif %}</pre>\n                    </div>\n                  </div>\n                </div>\n              "])), this._yamlError && ((_entity$volume_entity = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity !== void 0 ? _entity$volume_entity : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.vol_template'), this.hass, (_entity$volume_entity2 = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity2 !== void 0 ? _entity$volume_entity2 : "", e => this._updateEntityProperty("volume_entity", e.detail.value), localize('editor.subtitles.jinja_template_vol_hint')) : x(_templateObject32$1 || (_templateObject32$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <ha-generic-picker\n                    .hass=", "\n                    .value=", "\n                    .label=", "\n                    .valueRenderer=", "\n                    .rowRenderer=", "\n                    .getItems=", "\n                    @value-changed=", "\n                    allow-custom-value\n                  ></ha-generic-picker>\n                </div>\n              "])), this.hass, this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (_entity$entity_id2 = entity === null || entity === void 0 ? void 0 : entity.entity_id) !== null && _entity$entity_id2 !== void 0 ? _entity$entity_id2 : "", localize('editor.fields.vol_entity'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["media_player", "remote"]), e => {
+    }, localize('editor.labels.use_vol_template')) : E, !((_entity$follow_active3 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active3 !== void 0 ? _entity$follow_active3 : false) ? x(_templateObject31$1 || (_templateObject31$1 = _taggedTemplateLiteral(["\n          ", "\n        "])), ((_this$_useVolTemplate2 = this._useVolTemplate) !== null && _this$_useVolTemplate2 !== void 0 ? _this$_useVolTemplate2 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)) ? x(_templateObject32$1 || (_templateObject32$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <div class=", ">\n                    <ha-code-editor\n                      id=\"vol-template-editor\"\n                      label=\"", "\"\n                      .hass=", "\n                      mode=\"jinja2\"\n                      autocomplete-entities\n                      .value=", "\n                      @value-changed=", "\n                    ></ha-code-editor>\n                    <div class=\"help-text\">\n                      <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n                      ", "\n                      <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_boolean.tv_volume','on') %}\n  remote.soundbar\n{% else %}\n  media_player.office_homepod\n{% endif %}</pre>\n                    </div>\n                  </div>\n                </div>\n              "])), this._yamlError && ((_entity$volume_entity = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity !== void 0 ? _entity$volume_entity : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.vol_template'), this.hass, (_entity$volume_entity2 = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity2 !== void 0 ? _entity$volume_entity2 : "", e => this._updateEntityProperty("volume_entity", e.detail.value), localize('editor.subtitles.jinja_template_vol_hint')) : x(_templateObject33$1 || (_templateObject33$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <ha-generic-picker\n                    .hass=", "\n                    .value=", "\n                    .label=", "\n                    .valueRenderer=", "\n                    .rowRenderer=", "\n                    .getItems=", "\n                    @value-changed=", "\n                    allow-custom-value\n                  ></ha-generic-picker>\n                </div>\n              "])), this.hass, this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (_entity$entity_id2 = entity === null || entity === void 0 ? void 0 : entity.entity_id) !== null && _entity$entity_id2 !== void 0 ? _entity$entity_id2 : "", localize('editor.fields.vol_entity'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["media_player", "remote"]), e => {
       const value = e.detail.value;
       this._updateEntityProperty("volume_entity", value);
       if (!value || value === entity.entity_id) {
         // sync_power is meaningless in these cases
         this._updateEntityProperty("sync_power", false);
       }
-    })) : E, entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((_entity$follow_active4 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active4 !== void 0 ? _entity$follow_active4 : false) ? x(_templateObject33$1 || (_templateObject33$1 = _taggedTemplateLiteral(["\n              <div class=\"form-row form-row-multi-column\">\n                <div>\n                  <ha-switch\n                    id=\"sync-power-toggle\"\n                    .checked=", "\n                    @change=", "\n                  ></ha-switch>\n                  <label for=\"sync-power-toggle\">Sync Power</label>\n                </div>\n              </div>\n            "])), (_entity$sync_power = entity === null || entity === void 0 ? void 0 : entity.sync_power) !== null && _entity$sync_power !== void 0 ? _entity$sync_power : false, e => this._updateEntityProperty("sync_power", e.target.checked)) : E, entity !== null && entity !== void 0 && entity.follow_active_volume ? x(_templateObject34$1 || (_templateObject34$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n              ", "\n              <br><br>\n            </div>\n        "])), localize('editor.subtitles.follow_active_entity')) : E);
+    })) : E, entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((_entity$follow_active4 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active4 !== void 0 ? _entity$follow_active4 : false) ? x(_templateObject34$1 || (_templateObject34$1 = _taggedTemplateLiteral(["\n              <div class=\"form-row form-row-multi-column\">\n                <div>\n                  <ha-switch\n                    id=\"sync-power-toggle\"\n                    .checked=", "\n                    @change=", "\n                  ></ha-switch>\n                  <label for=\"sync-power-toggle\">Sync Power</label>\n                </div>\n              </div>\n            "])), (_entity$sync_power = entity === null || entity === void 0 ? void 0 : entity.sync_power) !== null && _entity$sync_power !== void 0 ? _entity$sync_power : false, e => this._updateEntityProperty("sync_power", e.target.checked)) : E, entity !== null && entity !== void 0 && entity.follow_active_volume ? x(_templateObject35$1 || (_templateObject35$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n              ", "\n              <br><br>\n            </div>\n        "])), localize('editor.subtitles.follow_active_entity')) : E);
   }
   _renderActionEditor(action) {
     var _this$_actionMode, _action$name, _action$icon, _this$_actionMode2, _action$menu_item, _action$navigation_pa, _action$navigation_ne, _action$sync_entity_h, _action$sync_entity_t, _action$service, _action$script_variab;
     const actionMode = (_this$_actionMode = this._actionMode) !== null && _this$_actionMode !== void 0 ? _this$_actionMode : this._deriveActionMode(action);
-    return x(_templateObject35$1 || (_templateObject35$1 = _taggedTemplateLiteral(["\n        <div class=\"action-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"action-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            placeholder=\"(Icon Only)\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-icon-picker\n            label=\"", "\"\n            .hass=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-icon-picker>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            label=\"", "\"\n            .selector=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n        \n        ", " \n        ", "\n        ", "\n        ", "\n      </div>"])), this._onBackFromActionEditor, localize('editor.titles.edit_action'), localize('editor.fields.name'), (_action$name = action === null || action === void 0 ? void 0 : action.name) !== null && _action$name !== void 0 ? _action$name : "", e => this._updateActionProperty("name", e.target.value), localize('editor.fields.icon'), this.hass, (_action$icon = action === null || action === void 0 ? void 0 : action.icon) !== null && _action$icon !== void 0 ? _action$icon : "", e => this._updateActionProperty("icon", e.detail.value), this.hass, localize('editor.fields.action_type'), {
+    return x(_templateObject36$1 || (_templateObject36$1 = _taggedTemplateLiteral(["\n        <div class=\"action-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"action-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            placeholder=\"(Icon Only)\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-icon-picker\n            label=\"", "\"\n            .hass=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-icon-picker>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            label=\"", "\"\n            .selector=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n        ", "\n        \n        ", " \n        ", "\n        ", "\n        ", "\n      </div>"])), this._onBackFromActionEditor, localize('editor.titles.edit_action'), localize('editor.fields.name'), (_action$name = action === null || action === void 0 ? void 0 : action.name) !== null && _action$name !== void 0 ? _action$name : "", e => this._updateActionProperty("name", e.target.value), localize('editor.fields.icon'), this.hass, (_action$icon = action === null || action === void 0 ? void 0 : action.icon) !== null && _action$icon !== void 0 ? _action$icon : "", e => this._updateActionProperty("icon", e.detail.value), this.hass, localize('editor.fields.action_type'), {
       select: {
         mode: "dropdown",
         options: [{
@@ -11516,7 +11549,43 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           this._updateActionProperty("sync_entity_type", "yamp_entity");
         }
       }
-    }, actionMode === "menu" ? x(_templateObject36$1 || (_templateObject36$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, localize('editor.fields.menu_item'), {
+    }, actionMode !== "sync_selected_entity" ? x(_templateObject37$1 || (_templateObject37$1 = _taggedTemplateLiteral(["\n        <div class=\"form-row form-row-multi-column\">\n          <div class=\"grow-children\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n          <div class=\"grow-children\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n        "])), this.hass, localize('editor.fields.placement'), {
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "chip",
+          label: localize('editor.placements.chip')
+        }, {
+          value: "menu",
+          label: localize('editor.placements.menu')
+        }, {
+          value: "hidden",
+          label: localize('editor.placements.hidden')
+        }]
+      }
+    }, (action === null || action === void 0 ? void 0 : action.placement) || (action !== null && action !== void 0 && action.in_menu ? "menu" : "chip"), e => {
+      const val = e.detail.value;
+      this._updateActionProperty("placement", val);
+      // Also sync legacy in_menu for safety, though hidden complicates this
+      if (val === "menu") this._updateActionProperty("in_menu", true);else if (val === "chip") this._updateActionProperty("in_menu", false);
+    }, this.hass, localize('editor.fields.card_trigger'), {
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "none",
+          label: localize('editor.triggers.none')
+        }, {
+          value: "tap",
+          label: localize('editor.triggers.tap')
+        }, {
+          value: "hold",
+          label: localize('editor.triggers.hold')
+        }, {
+          value: "double_tap",
+          label: localize('editor.triggers.double_tap')
+        }]
+      }
+    }, (action === null || action === void 0 ? void 0 : action.card_trigger) || "none", e => this._updateActionProperty("card_trigger", e.detail.value)) : E, actionMode === "menu" ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, localize('editor.fields.menu_item'), {
       select: {
         mode: "dropdown",
         options: [{
@@ -11545,10 +11614,10 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "Transfer Queue"
         }]
       }
-    }, (_action$menu_item = action === null || action === void 0 ? void 0 : action.menu_item) !== null && _action$menu_item !== void 0 ? _action$menu_item : "", e => this._updateActionProperty("menu_item", e.detail.value || undefined)) : E, actionMode === "navigate" ? x(_templateObject37$1 || (_templateObject37$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-textfield\n              class=\"full-width\"\n              label=\"", "\"\n              placeholder=\"/lovelace/music or #popup\"\n              .value=", "\n              @input=", "\n            ></ha-textfield>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"navigation-new-tab-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"navigation-new-tab-toggle\">Open External URLs in New Tab</label>\n            </div>\n          </div>\n          <div class=\"form-row\">\n            <div class=\"config-subtitle\">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>\n          </div>\n        "])), localize('editor.fields.nav_path'), (_action$navigation_pa = action === null || action === void 0 ? void 0 : action.navigation_path) !== null && _action$navigation_pa !== void 0 ? _action$navigation_pa : "", e => {
+    }, (_action$menu_item = action === null || action === void 0 ? void 0 : action.menu_item) !== null && _action$menu_item !== void 0 ? _action$menu_item : "", e => this._updateActionProperty("menu_item", e.detail.value || undefined)) : E, actionMode === "navigate" ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-textfield\n              class=\"full-width\"\n              label=\"", "\"\n              placeholder=\"/lovelace/music or #popup\"\n              .value=", "\n              @input=", "\n            ></ha-textfield>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"navigation-new-tab-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"navigation-new-tab-toggle\">Open External URLs in New Tab</label>\n            </div>\n          </div>\n          <div class=\"form-row\">\n            <div class=\"config-subtitle\">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>\n          </div>\n        "])), localize('editor.fields.nav_path'), (_action$navigation_pa = action === null || action === void 0 ? void 0 : action.navigation_path) !== null && _action$navigation_pa !== void 0 ? _action$navigation_pa : "", e => {
       this._updateActionProperty("navigation_path", e.target.value);
       this._updateActionProperty("action", "navigate");
-    }, (_action$navigation_ne = action === null || action === void 0 ? void 0 : action.navigation_new_tab) !== null && _action$navigation_ne !== void 0 ? _action$navigation_ne : false, e => this._updateActionProperty("navigation_new_tab", e.target.checked)) : E, actionMode === "sync_selected_entity" ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n        "])), this.hass, {
+    }, (_action$navigation_ne = action === null || action === void 0 ? void 0 : action.navigation_new_tab) !== null && _action$navigation_ne !== void 0 ? _action$navigation_ne : false, e => this._updateActionProperty("navigation_new_tab", e.target.checked)) : E, actionMode === "sync_selected_entity" ? x(_templateObject40$1 || (_templateObject40$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n        "])), this.hass, {
       entity: {
         domain: "input_text"
       }
@@ -11566,13 +11635,13 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: localize('editor.sync_entity_options.yamp_playback_entity')
         }]
       }
-    }, (_action$sync_entity_t = action === null || action === void 0 ? void 0 : action.sync_entity_type) !== null && _action$sync_entity_t !== void 0 ? _action$sync_entity_t : "yamp_entity", e => this._updateActionProperty("sync_entity_type", e.detail.value), localize('editor.subtitles.sync_entity_type')) : E, actionMode === 'service' ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              .required=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n\n          ", "\n\n          ", "\n        "])), this.hass, {
+    }, (_action$sync_entity_t = action === null || action === void 0 ? void 0 : action.sync_entity_type) !== null && _action$sync_entity_t !== void 0 ? _action$sync_entity_t : "yamp_entity", e => this._updateActionProperty("sync_entity_type", e.detail.value), localize('editor.subtitles.sync_entity_type')) : E, actionMode === 'service' ? x(_templateObject41$1 || (_templateObject41$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              .required=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n\n          ", "\n\n          ", "\n        "])), this.hass, {
       select: {
         mode: "dropdown",
         filterable: true,
         options: this._serviceItems || []
       }
-    }, (_action$service = action.service) !== null && _action$service !== void 0 ? _action$service : "", localize('editor.fields.service'), true, e => this._updateActionProperty("service", e.detail.value), typeof action.service === "string" && action.service.startsWith("script.") ? x(_templateObject40$1 || (_templateObject40$1 = _taggedTemplateLiteral(["\n            <div class=\"form-row form-row-multi-column\">\n              <div>\n                <ha-switch\n                  id=\"script-variable-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>", "</span>\n              </div>\n            </div>\n          "])), (_action$script_variab = action === null || action === void 0 ? void 0 : action.script_variable) !== null && _action$script_variab !== void 0 ? _action$script_variab : false, e => this._updateActionProperty("script_variable", e.target.checked), localize('editor.labels.script_var')) : E, typeof action.service === "string" ? x(_templateObject41$1 || (_templateObject41$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n\n              ", "\n\n            </div>\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n            ", "\n            </div>\n            <div class=\"form-row\">\n              <div class=\"service-data-editor-header\">\n                <div class=\"service-data-editor-title\">", "</div>\n                <div class=\"service-data-editor-actions\">\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:content-save\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:backup-restore\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n\n                    class=\"icon-button ", "\"\n\n                    icon=\"mdi:play-circle-outline\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>              \n                </div>\n            </div>\n            <div class=", ">\n              <ha-code-editor\n                id=\"service-data-editor\"\n                label=\"", "\"\n                autocomplete-entities\n                autocomplete-icons\n                .hass=", "\n                mode=\"yaml\"\n                .value=", "\n                @value-changed=", "\n              ></ha-code-editor>\n              ", "\n            </div>\n          "])), localize('editor.subtitles.entity_current_hint'), localize('editor.subtitles.service_data_note'), localize('editor.titles.service_data'), !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.save_service_data'), this._saveYamlEditor, !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.revert_service_data'), this._revertYamlEditor, this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : "", localize('editor.fields.test_action'), this._testServiceCall, this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.service_data'), this.hass, action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : "", e => {
+    }, (_action$service = action.service) !== null && _action$service !== void 0 ? _action$service : "", localize('editor.fields.service'), true, e => this._updateActionProperty("service", e.detail.value), typeof action.service === "string" && action.service.startsWith("script.") ? x(_templateObject42$1 || (_templateObject42$1 = _taggedTemplateLiteral(["\n            <div class=\"form-row form-row-multi-column\">\n              <div>\n                <ha-switch\n                  id=\"script-variable-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>", "</span>\n              </div>\n            </div>\n          "])), (_action$script_variab = action === null || action === void 0 ? void 0 : action.script_variable) !== null && _action$script_variab !== void 0 ? _action$script_variab : false, e => this._updateActionProperty("script_variable", e.target.checked), localize('editor.labels.script_var')) : E, typeof action.service === "string" ? x(_templateObject43$1 || (_templateObject43$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n\n              ", "\n\n            </div>\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n            ", "\n            </div>\n            <div class=\"form-row\">\n              <div class=\"service-data-editor-header\">\n                <div class=\"service-data-editor-title\">", "</div>\n                <div class=\"service-data-editor-actions\">\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:content-save\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:backup-restore\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n\n                    class=\"icon-button ", "\"\n\n                    icon=\"mdi:play-circle-outline\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>              \n                </div>\n            </div>\n            <div class=", ">\n              <ha-code-editor\n                id=\"service-data-editor\"\n                label=\"", "\"\n                autocomplete-entities\n                autocomplete-icons\n                .hass=", "\n                mode=\"yaml\"\n                .value=", "\n                @value-changed=", "\n              ></ha-code-editor>\n              ", "\n            </div>\n          "])), localize('editor.subtitles.entity_current_hint'), localize('editor.subtitles.service_data_note'), localize('editor.titles.service_data'), !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.save_service_data'), this._saveYamlEditor, !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.revert_service_data'), this._revertYamlEditor, this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : "", localize('editor.fields.test_action'), this._testServiceCall, this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.service_data'), this.hass, action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : "", e => {
       /* the yaml will be parsed in real time to detect errors, but we will defer 
         updating the config until the save button above the editor is clicked.
       */
@@ -11588,7 +11657,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       } catch (err) {
         this._yamlError = err.message;
       }
-    }, this._yamlError && this._yamlDraft.trim() !== "" ? x(_templateObject42$1 || (_templateObject42$1 = _taggedTemplateLiteral(["<div class=\"yaml-error-message\">", "</div>"])), this._yamlError) : E) : E) : E);
+    }, this._yamlError && this._yamlDraft.trim() !== "" ? x(_templateObject44$1 || (_templateObject44$1 = _taggedTemplateLiteral(["<div class=\"yaml-error-message\">", "</div>"])), this._yamlError) : E) : E) : E);
   }
   _onEntityChanged(index, newValue) {
     var _this$_config$entitie9;
@@ -12075,6 +12144,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // Stores the last grouping master id for group chip selection
     _defineProperty$1(this, "_lastGroupingMasterId", null);
     _defineProperty$1(this, "_groupedSortedCache", null);
+    _defineProperty$1(this, "_cardTriggers", {
+      tap: null,
+      hold: null,
+      double_tap: null
+    });
     _defineProperty$1(this, "_lastHassVersion", null);
     _defineProperty$1(this, "_debouncedVolumeTimer", null);
     this._selectedIndex = 0;
@@ -16298,6 +16372,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
   async _onActionChipClick(idx) {
     const action = this.config.actions[idx];
     if (!action) return;
+    await this._handleAction(action);
+  }
+  async _handleAction(action) {
+    if (!action) return;
     if (action.menu_item) {
       // Enable quick-dismiss mode for menu_item actions
       this._quickMenuInvoke = true;
@@ -16378,6 +16456,62 @@ class YetAnotherMediaPlayerCard extends i$2 {
       }
     }
     this.hass.callService(domain, service, data);
+  }
+  _onTapAreaPointerDown(e) {
+    var _this$_cardTriggers;
+    if (this.isAnyMenuOpen) return;
+
+    // Check if we clicked on something interactive
+    const path = e.composedPath();
+    const isInteractive = path.some(el => el.tagName === 'BUTTON' || el.tagName === 'HA-ICON' || el.tagName === 'INPUT' || el.classList && el.classList.contains('clickable-artist') || el.classList && el.classList.contains('details'));
+    if (isInteractive) return;
+    this._gestureActive = true;
+    this._gestureStartTime = Date.now();
+    this._gestureStartX = e.clientX;
+    this._gestureStartY = e.clientY;
+    this._gestureHoldTriggered = false;
+    if ((_this$_cardTriggers = this._cardTriggers) !== null && _this$_cardTriggers !== void 0 && _this$_cardTriggers.hold) {
+      this._gestureHoldTimer = setTimeout(() => {
+        if (this._gestureActive) {
+          const diffX = Math.abs(e.clientX - this._gestureStartX);
+          const diffY = Math.abs(e.clientY - this._gestureStartY);
+          if (diffX < 15 && diffY < 15) {
+            this._gestureHoldTriggered = true;
+            this._handleAction(this._cardTriggers.hold);
+          }
+        }
+      }, 500);
+    }
+  }
+  _onTapAreaPointerUp(e) {
+    if (!this._gestureActive) return;
+    this._gestureActive = false;
+    clearTimeout(this._gestureHoldTimer);
+    if (this._gestureHoldTriggered) return;
+
+    // Movement threshold check
+    const diffX = Math.abs(e.clientX - this._gestureStartX);
+    const diffY = Math.abs(e.clientY - this._gestureStartY);
+    if (diffX > 15 || diffY > 15) return;
+    const now = Date.now();
+    const timeSinceLastTap = now - (this._lastTapTime || 0);
+    this._lastTapTime = now;
+    if (timeSinceLastTap < 300) {
+      var _this$_cardTriggers2;
+      // Double Tap
+      clearTimeout(this._tapTimer);
+      if ((_this$_cardTriggers2 = this._cardTriggers) !== null && _this$_cardTriggers2 !== void 0 && _this$_cardTriggers2.double_tap) {
+        this._handleAction(this._cardTriggers.double_tap);
+      }
+    } else {
+      // Tap (delayed to see if it's a double tap)
+      this._tapTimer = setTimeout(() => {
+        var _this$_cardTriggers3;
+        if ((_this$_cardTriggers3 = this._cardTriggers) !== null && _this$_cardTriggers3 !== void 0 && _this$_cardTriggers3.tap) {
+          this._handleAction(this._cardTriggers.tap);
+        }
+      }, 250);
+    }
   }
   _onMenuActionClick(idx) {
     var _this$config$actions;
@@ -17038,18 +17172,47 @@ class YetAnotherMediaPlayerCard extends i$2 {
       } = _ref7;
       return (action === null || action === void 0 ? void 0 : action.action) !== "sync_selected_entity";
     });
+
+    // Action placement logic
     const rowActions = visibleActions.filter(_ref8 => {
       let {
         action
       } = _ref8;
-      return !(action !== null && action !== void 0 && action.in_menu);
+      const placement = (action === null || action === void 0 ? void 0 : action.placement) || (action !== null && action !== void 0 && action.in_menu ? "menu" : "chip");
+      return placement === "chip";
     });
     const menuOnlyActions = visibleActions.filter(_ref9 => {
       let {
         action
       } = _ref9;
-      return action === null || action === void 0 ? void 0 : action.in_menu;
+      const placement = (action === null || action === void 0 ? void 0 : action.placement) || (action !== null && action !== void 0 && action.in_menu ? "menu" : "chip");
+      return placement === "menu";
     });
+
+    // Gesture trigger logic
+    const tapAction = visibleActions.find(_ref0 => {
+      let {
+        action
+      } = _ref0;
+      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "tap";
+    });
+    const holdAction = visibleActions.find(_ref1 => {
+      let {
+        action
+      } = _ref1;
+      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "hold";
+    });
+    const doubleTapAction = visibleActions.find(_ref10 => {
+      let {
+        action
+      } = _ref10;
+      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "double_tap";
+    });
+    this._cardTriggers = {
+      tap: tapAction === null || tapAction === void 0 ? void 0 : tapAction.action,
+      hold: holdAction === null || holdAction === void 0 ? void 0 : holdAction.action,
+      double_tap: doubleTapAction === null || doubleTapAction === void 0 ? void 0 : doubleTapAction.action
+    };
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     const activeChipName = this.getChipName(this.currentEntityId);
     if (!stateObj) return x(_templateObject26 || (_templateObject26 = _taggedTemplateLiteral(["<div class=\"details\">", "</div>"])), localize('common.not_found'));
@@ -17360,7 +17523,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     })(), !dimIdleFrame ? x(_templateObject35 || (_templateObject35 = _taggedTemplateLiteral(["<div class=\"card-lower-fade\"></div>"]))) : E, collapsed ? ' collapsed transitioning' : ' transitioning', collapsed && artworkUrl ? ' has-artwork' : '', (() => {
       if (!hideControlsNow) return '';
       return collapsed ? "min-height: ".concat(this._collapsedBaselineHeight || 220, "px;") : 'min-height: 350px;';
-    })(), collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                  <div\n                    class=\"collapsed-artwork-container\"\n                    style=\"", "\"\n                  >\n                    <img\n                      class=\"collapsed-artwork\"\n                      src=\"", "\" \n                      style=\"", "\" \n                      onload=\"this.style.display='block'\"\n                      onerror=\"this.style.display='none'\" />\n                  </div>\n                "])), ["background: linear-gradient(120deg, ".concat(this._collapsedArtDominantColor, "bb 60%, transparent 100%)"), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize + 8), "px") : ''].filter(Boolean).join('; '), artworkUrl, [this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize), "px; height:").concat(Math.round(collapsedArtworkSize), "px;") : ''].filter(Boolean).join(' ')) : E, showCollapsedPlaceholder || !collapsed ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                  <div class=\"card-artwork-spacer", "\">\n                    ", "\n                  </div>\n                "])), showCollapsedPlaceholder ? ' show-placeholder' : '', !artworkUrl && !idleImageUrl ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["\n                      <div class=\"media-artwork-placeholder\">\n                        <svg\n                          viewBox=\"0 0 184 184\"\n                          style=\"", "\"\n                          xmlns=\"http://www.w3.org/2000/svg\">\n                          <rect x=\"36\" y=\"86\" width=\"22\" height=\"62\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"68\" y=\"58\" width=\"22\" height=\"90\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"100\" y=\"34\" width=\"22\" height=\"114\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"132\" y=\"74\" width=\"22\" height=\"74\" rx=\"8\" fill=\"currentColor\"></rect>\n                        </svg>\n                      </div>\n                    "])), this.config.match_theme === true ? 'color:#fff;' : "color:".concat(this._customAccent, ";")) : E) : E, (() => {
+    })(), collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                  <div\n                    class=\"collapsed-artwork-container\"\n                    @pointerdown=", "\n                    @pointerup=", "\n                    style=\"", "\"\n                  >\n                    <img\n                      class=\"collapsed-artwork\"\n                      src=\"", "\" \n                      style=\"", "\" \n                      onload=\"this.style.display='block'\"\n                      onerror=\"this.style.display='none'\" />\n                  </div>\n                "])), e => this._onTapAreaPointerDown(e), e => this._onTapAreaPointerUp(e), ["background: linear-gradient(120deg, ".concat(this._collapsedArtDominantColor, "bb 60%, transparent 100%)"), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize + 8), "px") : '', this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap ? 'cursor:pointer; pointer-events:auto;' : ''].filter(Boolean).join('; '), artworkUrl, [this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize), "px; height:").concat(Math.round(collapsedArtworkSize), "px;") : ''].filter(Boolean).join(' ')) : E, showCollapsedPlaceholder || !collapsed ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                  <div class=\"card-artwork-spacer", "\"\n                    @pointerdown=", "\n                    @pointerup=", "\n                    style=\"", "\"\n                  >\n                    ", "\n                  </div>\n                "])), showCollapsedPlaceholder ? ' show-placeholder' : '', e => this._onTapAreaPointerDown(e), e => this._onTapAreaPointerUp(e), this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap ? 'cursor:pointer; pointer-events:auto;' : '', !artworkUrl && !idleImageUrl ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["\n                      <div class=\"media-artwork-placeholder\">\n                        <svg\n                          viewBox=\"0 0 184 184\"\n                          style=\"", "\"\n                          xmlns=\"http://www.w3.org/2000/svg\">\n                          <rect x=\"36\" y=\"86\" width=\"22\" height=\"62\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"68\" y=\"58\" width=\"22\" height=\"90\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"100\" y=\"34\" width=\"22\" height=\"114\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"132\" y=\"74\" width=\"22\" height=\"74\" rx=\"8\" fill=\"currentColor\"></rect>\n                        </svg>\n                      </div>\n                    "])), this.config.match_theme === true ? 'color:#fff;' : "color:".concat(this._customAccent, ";")) : E) : E, (() => {
       const detailStyleParts = [];
       if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
       detailStyleParts.push("min-height:".concat(detailsMinHeight, "px"));

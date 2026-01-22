@@ -360,6 +360,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const actions = [...(this._config.actions ?? [])];
     const idx = this._actionEditorIndex;
     if (actions[idx]) {
+      // Enforce single trigger per gesture (Tap, Hold, Double Tap)
+      if (key === "card_trigger" && value && value !== "none") {
+        actions.forEach((act, i) => {
+          if (i !== idx && act.card_trigger === value) {
+            actions[i] = { ...act, card_trigger: "none" };
+          }
+        });
+      }
       actions[idx] = { ...actions[idx], [key]: value };
       this._updateConfig("actions", actions);
     }
@@ -1563,21 +1571,31 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         placeholder="(Icon Only)"
                         .value=${act?.name ?? ""}
                         .helper=${(() => {
-        const inMenu = act?.in_menu ? " \u2022 In Menu" : "";
+        const placement = act?.placement || (act?.in_menu ? "menu" : "chip");
+        let placementText = "";
+        if (placement === "menu") placementText = " \u2022 In Menu";
+        else if (placement === "hidden") placementText = " \u2022 Hidden";
+
+        const trigger = act?.card_trigger;
+        let triggerText = "";
+        if (trigger && trigger !== "none") {
+          triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;
+        }
+
         if (act?.action === "sync_selected_entity") {
-          return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}`;
+          return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}${placementText}${triggerText}`;
         }
         if (act?.menu_item) {
-          return `Open Menu Item: ${act.menu_item}${inMenu}`;
+          return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;
         }
         if (act?.service) {
-          return `Call Service: ${act.service}${inMenu}`;
+          return `Call Service: ${act.service}${placementText}${triggerText}`;
         }
         if (act?.navigation_path || act?.action === "navigate") {
           const newTab = act?.navigation_new_tab ? " (New Tab)" : "";
-          return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${inMenu}`;
+          return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${placementText}${triggerText}`;
         }
-        return act?.in_menu ? `Not Configured${inMenu}` : "Not Configured";
+        return (placementText || triggerText) ? `Not Configured${placementText}${triggerText}` : "Not Configured";
       })()}
                         .helperPersistent=${true}
                         @input=${a => this._onActionChanged(idx, a.target.value)}
@@ -1592,14 +1610,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       ></ha-icon>
                       ${act?.action !== "sync_selected_entity" ? html`
                       <ha-icon
-                        class="icon-button icon-button-compact icon-button-toggle ${act?.in_menu ? "active" : ""}"
-                        icon="${act?.in_menu ? "mdi:menu" : "mdi:view-grid-outline"}"
-                        title="${act?.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
+                        class="icon-button icon-button-compact icon-button-toggle ${act?.placement === "hidden" ? "icon-button-disabled" : (act?.placement === "menu" || (act?.in_menu && !act?.placement) ? "active" : "")}"
+                        icon="${(act?.placement === "menu" || (act?.in_menu && !act?.placement)) ? "mdi:menu" : (act?.placement === "hidden" ? "mdi:eye-off-outline" : "mdi:view-grid-outline")}"
+                        title="${act?.placement === "menu" || (act?.in_menu && !act?.placement) ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
                         role="button"
-                        aria-label="${act?.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
-                        @click=${() => this._toggleActionInMenu(idx)}
+                        aria-label="${act?.placement === "menu" || (act?.in_menu && !act?.placement) ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
+                        @click=${() => {
+          if (act?.placement !== "hidden") {
+            this._toggleActionInMenu(idx);
+          }
+        }}
                       ></ha-icon>
-                      ` : nothing}
+                      ` : html`
+                      <ha-icon
+                        class="icon-button icon-button-compact icon-button-disabled"
+                        icon="mdi:eye-off-outline"
+                        title="${localize('editor.placements.hidden')}"
+                      ></ha-icon>
+                      `}
                       <ha-icon
                         class="icon-button icon-button-compact"
                         icon="mdi:trash-can"
@@ -2010,6 +2038,54 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       }}
           ></ha-selector>
         </div>
+
+        ${actionMode !== "sync_selected_entity" ? html`
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              label="${localize('editor.fields.placement')}"
+              .selector=${{
+          select: {
+            mode: "dropdown",
+            options: [
+              { value: "chip", label: localize('editor.placements.chip') },
+              { value: "menu", label: localize('editor.placements.menu') },
+              { value: "hidden", label: localize('editor.placements.hidden') }
+            ]
+          }
+        }}
+              .value=${action?.placement || (action?.in_menu ? "menu" : "chip")}
+              @value-changed=${(e) => {
+          const val = e.detail.value;
+          this._updateActionProperty("placement", val);
+          // Also sync legacy in_menu for safety, though hidden complicates this
+          if (val === "menu") this._updateActionProperty("in_menu", true);
+          else if (val === "chip") this._updateActionProperty("in_menu", false);
+        }}
+            ></ha-selector>
+          </div>
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              label="${localize('editor.fields.card_trigger')}"
+              .selector=${{
+          select: {
+            mode: "dropdown",
+            options: [
+              { value: "none", label: localize('editor.triggers.none') },
+              { value: "tap", label: localize('editor.triggers.tap') },
+              { value: "hold", label: localize('editor.triggers.hold') },
+              { value: "double_tap", label: localize('editor.triggers.double_tap') }
+            ]
+          }
+        }}
+              .value=${action?.card_trigger || "none"}
+              @value-changed=${(e) => this._updateActionProperty("card_trigger", e.detail.value)}
+            ></ha-selector>
+          </div>
+        </div>
+        ` : nothing}
         
         ${actionMode === "menu" ? html`
           <div class="form-row">
