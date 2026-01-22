@@ -5829,14 +5829,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity");
 
     // Action placement logic
-    const rowActions = visibleActions.filter(({ action }) => {
-      const placement = action?.placement || (action?.in_menu ? "menu" : "chip");
-      return placement === "chip";
-    });
-    const menuOnlyActions = visibleActions.filter(({ action }) => {
-      const placement = action?.placement || (action?.in_menu ? "menu" : "chip");
-      return placement === "menu";
-    });
+    const getPlacement = (act) => {
+      if (act?.placement) return act.placement;
+      if (act?.in_menu === "hidden") return "hidden";
+      return act?.in_menu === true ? "menu" : "chip";
+    };
+
+    const rowActions = visibleActions.filter(({ action }) => getPlacement(action) === "chip");
+    const menuOnlyActions = visibleActions.filter(({ action }) => getPlacement(action) === "menu");
 
     // Gesture trigger logic
     const tapAction = visibleActions.find(({ action }) => action?.card_trigger === "tap");

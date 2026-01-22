@@ -1415,6 +1415,7 @@ var en = {
       "not_available_collapsed": "Not available when Always Collapsed is enabled",
       "only_available_collapsed": "Only available when Always Collapsed is enabled",
       "only_available_modern": "Only available with Modern layout",
+      "image_url_helper": "Enter a direct URL to an image or a local file path",
       "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID.",
       "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
       "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing."
@@ -11055,9 +11056,15 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           }
         });
       }
-      actions[idx] = _objectSpread2$1(_objectSpread2$1({}, actions[idx]), {}, {
+      const newAction = _objectSpread2$1(_objectSpread2$1({}, actions[idx]), {}, {
         [key]: value
       });
+
+      // If we're setting in_menu, remove the legacy placement property
+      if (key === "in_menu") {
+        delete newAction.placement;
+      }
+      actions[idx] = newAction;
       this._updateConfig("actions", actions);
     }
   }
@@ -11362,10 +11369,17 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     return x(_templateObject19$1 || (_templateObject19$1 = _taggedTemplateLiteral(["\n        <div class=\"action-group config-section\">\n          <div class=\"action-group-header section-header\">\n            <div class=\"action-group-title section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <yamp-sortable @item-moved=", ">\n              <div class=\"sortable-container\">\n                ", "\n              </div>\n            </yamp-sortable>\n          </div>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Action\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n      "])), localize('editor.sections.actions.title'), localize('editor.sections.actions.description'), e => this._onActionMoved(e), actions.map((act, idx) => {
       var _act$name;
       return x(_templateObject20$1 || (_templateObject20$1 = _taggedTemplateLiteral(["\n                  <div class=\"action-row-inner sortable-item\">\n                    <div class=\"handle action-handle\">\n                      <ha-icon icon=\"mdi:drag\"></ha-icon>\n                    </div>\n                    ", "\n                    <div class=\"grow-children\">\n                      <ha-textfield\n                        placeholder=\"(Icon Only)\"\n                        .value=", "\n                        .helper=", "\n                        .helperPersistent=", "\n                        @input=", "\n                      ></ha-textfield>\n                    </div>\n                    <div class=\"action-row-actions\">\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:pencil\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      ", "\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:trash-can\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                    </div>\n                  </div>\n                "])), act !== null && act !== void 0 && act.icon ? x(_templateObject21$1 || (_templateObject21$1 = _taggedTemplateLiteral(["\n                      <ha-icon class=\"action-icon\" icon=\"", "\"></ha-icon>\n                    "])), act === null || act === void 0 ? void 0 : act.icon) : x(_templateObject22$1 || (_templateObject22$1 = _taggedTemplateLiteral(["<span class=\"action-icon-placeholder\"></span>"]))), (_act$name = act === null || act === void 0 ? void 0 : act.name) !== null && _act$name !== void 0 ? _act$name : "", (() => {
-        const placement = (act === null || act === void 0 ? void 0 : act.placement) || (act !== null && act !== void 0 && act.in_menu ? "menu" : "chip");
-        let placementText = "";
-        if (placement === "menu") placementText = " \u2022 In Menu";else if (placement === "hidden") placementText = " \u2022 Hidden";
+        const inMenuVal = act === null || act === void 0 ? void 0 : act.in_menu;
+        const placement = inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip";
         const trigger = act === null || act === void 0 ? void 0 : act.card_trigger;
+        let placementText = "";
+        if (placement === "menu") placementText = " \u2022 In Menu";else if (placement === "hidden") {
+          if ((!trigger || trigger === "none") && (act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity") {
+            placementText = " \u2022 Hidden (Not Triggerable)";
+          } else {
+            placementText = " \u2022 Hidden";
+          }
+        }
         let triggerText = "";
         if (trigger && trigger !== "none") {
           triggerText = " \u2022 Trigger: ".concat(localize("editor.triggers.".concat(trigger)));
@@ -11384,8 +11398,8 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           return "Navigate to ".concat(act.navigation_path || "(missing path)").concat(newTab).concat(placementText).concat(triggerText);
         }
         return placementText || triggerText ? "Not Configured".concat(placementText).concat(triggerText) : "Not Configured";
-      })(), true, a => this._onActionChanged(idx, a.target.value), localize('common.edit_action'), () => this._onEditAction(idx), (act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity" ? x(_templateObject23$1 || (_templateObject23$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-toggle ", "\"\n                        icon=\"", "\"\n                        title=\"", "\"\n                        role=\"button\"\n                        aria-label=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      "])), (act === null || act === void 0 ? void 0 : act.placement) === "hidden" ? "icon-button-disabled" : (act === null || act === void 0 ? void 0 : act.placement) === "menu" || act !== null && act !== void 0 && act.in_menu && !(act !== null && act !== void 0 && act.placement) ? "active" : "", (act === null || act === void 0 ? void 0 : act.placement) === "menu" || act !== null && act !== void 0 && act.in_menu && !(act !== null && act !== void 0 && act.placement) ? "mdi:menu" : (act === null || act === void 0 ? void 0 : act.placement) === "hidden" ? "mdi:eye-off-outline" : "mdi:view-grid-outline", (act === null || act === void 0 ? void 0 : act.placement) === "menu" || act !== null && act !== void 0 && act.in_menu && !(act !== null && act !== void 0 && act.placement) ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), (act === null || act === void 0 ? void 0 : act.placement) === "menu" || act !== null && act !== void 0 && act.in_menu && !(act !== null && act !== void 0 && act.placement) ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), () => {
-        if ((act === null || act === void 0 ? void 0 : act.placement) !== "hidden") {
+      })(), true, a => this._onActionChanged(idx, a.target.value), localize('common.edit_action'), () => this._onEditAction(idx), (act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity" ? x(_templateObject23$1 || (_templateObject23$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-toggle ", "\"\n                        icon=\"", "\"\n                        title=\"", "\"\n                        role=\"button\"\n                        aria-label=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      "])), (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? "icon-button-disabled" : (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "active" : "", (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "mdi:menu" : (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? "mdi:image-outline" : "mdi:eye-off-outline" : "mdi:view-grid-outline", (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? localize('editor.placements.hidden') : localize('editor.placements.hidden') : (act === null || act === void 0 ? void 0 : act.in_menu) === true ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), (act === null || act === void 0 ? void 0 : act.in_menu) === true ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), () => {
+        if ((act === null || act === void 0 ? void 0 : act.in_menu) !== "hidden") {
           this._toggleActionInMenu(idx);
         }
       }) : x(_templateObject24$1 || (_templateObject24$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-disabled\"\n                        icon=\"mdi:eye-off-outline\"\n                        title=\"", "\"\n                      ></ha-icon>\n                      "])), localize('editor.placements.hidden')), localize('editor.fields.delete_action'), () => this._removeAction(idx));
@@ -11491,7 +11505,43 @@ class YetAnotherMediaPlayerEditor extends i$2 {
   _renderActionEditor(action) {
     var _this$_actionMode, _action$name, _action$icon, _this$_actionMode2, _action$menu_item, _action$navigation_pa, _action$navigation_ne, _action$sync_entity_h, _action$sync_entity_t, _action$service, _action$script_variab;
     const actionMode = (_this$_actionMode = this._actionMode) !== null && _this$_actionMode !== void 0 ? _this$_actionMode : this._deriveActionMode(action);
-    return x(_templateObject36$1 || (_templateObject36$1 = _taggedTemplateLiteral(["\n        <div class=\"action-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"action-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            placeholder=\"(Icon Only)\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-icon-picker\n            label=\"", "\"\n            .hass=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-icon-picker>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            label=\"", "\"\n            .selector=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n        ", "\n        \n        ", " \n        ", "\n        ", "\n        ", "\n      </div>"])), this._onBackFromActionEditor, localize('editor.titles.edit_action'), localize('editor.fields.name'), (_action$name = action === null || action === void 0 ? void 0 : action.name) !== null && _action$name !== void 0 ? _action$name : "", e => this._updateActionProperty("name", e.target.value), localize('editor.fields.icon'), this.hass, (_action$icon = action === null || action === void 0 ? void 0 : action.icon) !== null && _action$icon !== void 0 ? _action$icon : "", e => this._updateActionProperty("icon", e.detail.value), this.hass, localize('editor.fields.action_type'), {
+    return x(_templateObject36$1 || (_templateObject36$1 = _taggedTemplateLiteral(["\n        <div class=\"action-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"action-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            placeholder=\"(Icon Only)\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-icon-picker\n            label=\"", "\"\n            .hass=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-icon-picker>\n        </div>\n \n        ", "\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            label=\"", "\"\n            .selector=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n        \n        ", " \n        ", "\n        ", "\n        ", "\n      </div>"])), this._onBackFromActionEditor, localize('editor.titles.edit_action'), localize('editor.fields.name'), (_action$name = action === null || action === void 0 ? void 0 : action.name) !== null && _action$name !== void 0 ? _action$name : "", e => this._updateActionProperty("name", e.target.value), localize('editor.fields.icon'), this.hass, (_action$icon = action === null || action === void 0 ? void 0 : action.icon) !== null && _action$icon !== void 0 ? _action$icon : "", e => this._updateActionProperty("icon", e.detail.value), actionMode !== "sync_selected_entity" ? x(_templateObject37$1 || (_templateObject37$1 = _taggedTemplateLiteral(["\n        <div class=\"form-row form-row-multi-column\">\n          <div class=\"grow-children\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n          <div class=\"grow-children\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n        "])), this.hass, localize('editor.fields.placement'), {
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "chip",
+          label: localize('editor.placements.chip')
+        }, {
+          value: "menu",
+          label: localize('editor.placements.menu')
+        }, {
+          value: "hidden",
+          label: localize('editor.placements.hidden')
+        }]
+      }
+    }, (action === null || action === void 0 ? void 0 : action.in_menu) === "hidden" ? "hidden" : action !== null && action !== void 0 && action.in_menu ? "menu" : "chip", e => {
+      const val = e.detail.value;
+      let inMenu = false;
+      if (val === "menu") inMenu = true;else if (val === "hidden") inMenu = "hidden";
+      this._updateActionProperty("in_menu", inMenu);
+    }, this.hass, localize('editor.fields.card_trigger'), {
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "none",
+          label: localize('editor.triggers.none')
+        }, {
+          value: "tap",
+          label: localize('editor.triggers.tap')
+        }, {
+          value: "hold",
+          label: localize('editor.triggers.hold')
+        }, {
+          value: "double_tap",
+          label: localize('editor.triggers.double_tap')
+        }]
+      }
+    }, (action === null || action === void 0 ? void 0 : action.card_trigger) || "none", e => this._updateActionProperty("card_trigger", e.detail.value)) : E, this.hass, localize('editor.fields.action_type'), {
       select: {
         mode: "dropdown",
         options: [{
@@ -11549,43 +11599,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           this._updateActionProperty("sync_entity_type", "yamp_entity");
         }
       }
-    }, actionMode !== "sync_selected_entity" ? x(_templateObject37$1 || (_templateObject37$1 = _taggedTemplateLiteral(["\n        <div class=\"form-row form-row-multi-column\">\n          <div class=\"grow-children\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n          <div class=\"grow-children\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n        "])), this.hass, localize('editor.fields.placement'), {
-      select: {
-        mode: "dropdown",
-        options: [{
-          value: "chip",
-          label: localize('editor.placements.chip')
-        }, {
-          value: "menu",
-          label: localize('editor.placements.menu')
-        }, {
-          value: "hidden",
-          label: localize('editor.placements.hidden')
-        }]
-      }
-    }, (action === null || action === void 0 ? void 0 : action.placement) || (action !== null && action !== void 0 && action.in_menu ? "menu" : "chip"), e => {
-      const val = e.detail.value;
-      this._updateActionProperty("placement", val);
-      // Also sync legacy in_menu for safety, though hidden complicates this
-      if (val === "menu") this._updateActionProperty("in_menu", true);else if (val === "chip") this._updateActionProperty("in_menu", false);
-    }, this.hass, localize('editor.fields.card_trigger'), {
-      select: {
-        mode: "dropdown",
-        options: [{
-          value: "none",
-          label: localize('editor.triggers.none')
-        }, {
-          value: "tap",
-          label: localize('editor.triggers.tap')
-        }, {
-          value: "hold",
-          label: localize('editor.triggers.hold')
-        }, {
-          value: "double_tap",
-          label: localize('editor.triggers.double_tap')
-        }]
-      }
-    }, (action === null || action === void 0 ? void 0 : action.card_trigger) || "none", e => this._updateActionProperty("card_trigger", e.detail.value)) : E, actionMode === "menu" ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, localize('editor.fields.menu_item'), {
+    }, actionMode === "menu" ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, localize('editor.fields.menu_item'), {
       select: {
         mode: "dropdown",
         options: [{
@@ -11754,9 +11768,11 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     const actions = [...((_this$_config$actions9 = this._config.actions) !== null && _this$_config$actions9 !== void 0 ? _this$_config$actions9 : [])];
     if (!actions[index]) return;
     const current = !!actions[index].in_menu;
-    actions[index] = _objectSpread2$1(_objectSpread2$1({}, actions[index]), {}, {
+    const newAction = _objectSpread2$1(_objectSpread2$1({}, actions[index]), {}, {
       in_menu: !current
     });
+    delete newAction.placement;
+    actions[index] = newAction;
     this._updateConfig("actions", actions);
   }
   _saveYamlEditor() {
@@ -17174,19 +17190,22 @@ class YetAnotherMediaPlayerCard extends i$2 {
     });
 
     // Action placement logic
+    const getPlacement = act => {
+      if (act !== null && act !== void 0 && act.placement) return act.placement;
+      if ((act === null || act === void 0 ? void 0 : act.in_menu) === "hidden") return "hidden";
+      return (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "menu" : "chip";
+    };
     const rowActions = visibleActions.filter(_ref8 => {
       let {
         action
       } = _ref8;
-      const placement = (action === null || action === void 0 ? void 0 : action.placement) || (action !== null && action !== void 0 && action.in_menu ? "menu" : "chip");
-      return placement === "chip";
+      return getPlacement(action) === "chip";
     });
     const menuOnlyActions = visibleActions.filter(_ref9 => {
       let {
         action
       } = _ref9;
-      const placement = (action === null || action === void 0 ? void 0 : action.placement) || (action !== null && action !== void 0 && action.in_menu ? "menu" : "chip");
-      return placement === "menu";
+      return getPlacement(action) === "menu";
     });
 
     // Gesture trigger logic
