@@ -51,6 +51,11 @@ const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
   "media_content_type", "entity_id", "entity_state"
 ]);
 
+const GESTURE_HOLD_TIMEOUT = 500;
+const GESTURE_MOVE_THRESHOLD = 15;
+const GESTURE_DOUBLE_TAP_MAX_DELAY = 300;
+const GESTURE_TAP_DELAY = 300;
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
@@ -5152,7 +5157,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._gestureHoldTriggered = true;
           this._handleAction(this._cardTriggers.hold);
         }
-      }, 500);
+      }, GESTURE_HOLD_TIMEOUT);
     }
   }
 
@@ -5160,7 +5165,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!this._gestureActive) return;
     const diffX = Math.abs(e.clientX - this._gestureStartX);
     const diffY = Math.abs(e.clientY - this._gestureStartY);
-    if (diffX > 15 || diffY > 15) {
+    if (diffX > GESTURE_MOVE_THRESHOLD || diffY > GESTURE_MOVE_THRESHOLD) {
       this._gestureActive = false;
       clearTimeout(this._gestureHoldTimer);
     }
@@ -5173,16 +5178,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     if (this._gestureHoldTriggered) return;
 
+    // Reject taps that were actually holds (long presses)
+    if (Date.now() - this._gestureStartTime > GESTURE_HOLD_TIMEOUT) return;
+
     // Movement threshold check
     const diffX = Math.abs(e.clientX - this._gestureStartX);
     const diffY = Math.abs(e.clientY - this._gestureStartY);
-    if (diffX > 15 || diffY > 15) return;
+    if (diffX > GESTURE_MOVE_THRESHOLD || diffY > GESTURE_MOVE_THRESHOLD) return;
 
     const now = Date.now();
     const timeSinceLastTap = now - (this._lastTapTime || 0);
     this._lastTapTime = now;
 
-    if (timeSinceLastTap < 300) {
+    if (timeSinceLastTap < GESTURE_DOUBLE_TAP_MAX_DELAY) {
       // Double Tap
       clearTimeout(this._tapTimer);
       if (this._cardTriggers?.double_tap) {
@@ -5194,7 +5202,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (this._cardTriggers?.tap) {
           this._handleAction(this._cardTriggers.tap);
         }
-      }, 250);
+      }, GESTURE_TAP_DELAY);
     }
   }
 

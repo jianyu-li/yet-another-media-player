@@ -1578,41 +1578,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-textfield
                         placeholder="(Icon Only)"
                         .value=${act?.name ?? ""}
-                        .helper=${(() => {
-        const inMenuVal = act?.in_menu;
-        const placement = inMenuVal === "hidden" ? "hidden" : (inMenuVal === true ? "menu" : "chip");
-        const trigger = act?.card_trigger;
-        let placementText = "";
-        if (placement === "menu") placementText = " \u2022 In Menu";
-        else if (placement === "hidden") {
-          if (act?.action !== "sync_selected_entity") {
-            if (!trigger || trigger === "none") {
-              placementText = ` \u2022 ${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})`;
-            } else {
-              placementText = ` \u2022 ${localize('editor.placements.hidden')}`;
-            }
-          }
-        }
-        let triggerText = "";
-        if (trigger && trigger !== "none") {
-          triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;
-        }
-
-        if (act?.action === "sync_selected_entity") {
-          return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}${placementText}${triggerText}`;
-        }
-        if (act?.menu_item) {
-          return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;
-        }
-        if (act?.service) {
-          return `Call Service: ${act.service}${placementText}${triggerText}`;
-        }
-        if (act?.navigation_path || act?.action === "navigate") {
-          const newTab = act?.navigation_new_tab ? " (New Tab)" : "";
-          return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${placementText}${triggerText}`;
-        }
-        return (placementText || triggerText) ? `Not Configured${placementText}${triggerText}` : "Not Configured";
-      })()}
+                        .helper=${this._getActionHelperText(act)}
                         .helperPersistent=${true}
                         @input=${a => this._onActionChanged(idx, a.target.value)}
                       ></ha-textfield>
@@ -2340,6 +2306,42 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     updated[index] = { ...updated[index], name: newValue };
 
     this._updateConfig("actions", updated);
+  }
+
+  _getActionHelperText(act) {
+    const inMenuVal = act?.in_menu;
+    const placement = inMenuVal === "hidden" ? "hidden" : (inMenuVal === true ? "menu" : "chip");
+    const trigger = act?.card_trigger;
+    let placementText = "";
+    if (placement === "menu") placementText = " \u2022 In Menu";
+    else if (placement === "hidden") {
+      if (act?.action !== "sync_selected_entity") {
+        if (!trigger || trigger === "none") {
+          placementText = ` \u2022 ${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})`;
+        } else {
+          placementText = ` \u2022 ${localize('editor.placements.hidden')}`;
+        }
+      }
+    }
+    let triggerText = "";
+    if (trigger && trigger !== "none") {
+      triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;
+    }
+
+    if (act?.action === "sync_selected_entity") {
+      return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}${placementText}${triggerText}`;
+    }
+    if (act?.menu_item) {
+      return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;
+    }
+    if (act?.service) {
+      return `Call Service: ${act.service}${placementText}${triggerText}`;
+    }
+    if (act?.navigation_path || act?.action === "navigate") {
+      const newTab = act?.navigation_new_tab ? " (New Tab)" : "";
+      return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${placementText}${triggerText}`;
+    }
+    return (placementText || triggerText) ? `Not Configured${placementText}${triggerText}` : "Not Configured";
   }
 
   _onEditEntity(index) {

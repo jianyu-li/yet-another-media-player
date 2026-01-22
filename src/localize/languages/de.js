@@ -194,7 +194,9 @@ export default {
             "ma_entity": "Music Assistant Entität",
             "vol_entity": "Lautstärke-Entität",
             "selected_entity_helper": "Ausgewählter Entitäts-Helper",
-            "sync_entity_type": "Synchronisierungs-Entitätstyp"
+            "sync_entity_type": "Synchronisierungs-Entitätstyp",
+            "placement": "Platzierung",
+            "card_trigger": "Karten-Trigger"
         },
         "action_types": {
             "menu": "Kartenmenüpunkt öffnen",
@@ -210,6 +212,18 @@ export default {
             "yamp_entity": "yamp_entity (Music Assistant Entität, falls konfiguriert)",
             "yamp_main_entity": "yamp_main_entity (Haupt-Mediaplayer-Entität)",
             "yamp_playback_entity": "yamp_playback_entity (Aktuelle aktive Wiedergabe-Entität)"
+        },
+        "placements": {
+            "chip": "Aktions-Chip",
+            "menu": "Im Menü",
+            "hidden": "Ausgeblendet (Artwork-Tippen)",
+            "not_triggerable": "Nicht triggerbar"
+        },
+        "triggers": {
+            "none": "Keiner",
+            "tap": "Tippen",
+            "hold": "Halten",
+            "double_tap": "Doppeltippen"
         }
     },
     "card": {

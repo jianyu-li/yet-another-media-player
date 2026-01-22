@@ -194,7 +194,9 @@ export default {
             "ma_entity": "Music Assistant-entiteit",
             "vol_entity": "Volume-entiteit",
             "selected_entity_helper": "Geselecteerde entiteitshelper",
-            "sync_entity_type": "Synchronisatie entiteitstype"
+            "sync_entity_type": "Synchronisatie entiteitstype",
+            "placement": "Plaatsing",
+            "card_trigger": "Kaart trigger"
         },
         "action_types": {
             "menu": "Open een kaartmenu-item",
@@ -210,6 +212,18 @@ export default {
             "yamp_entity": "yamp_entity (Music Assistant-entiteit indien geconfigureerd)",
             "yamp_main_entity": "yamp_main_entity (Hoofd media player-entiteit)",
             "yamp_playback_entity": "yamp_playback_entity (Huidige actieve afspeelentiteit)"
+        },
+        "placements": {
+            "chip": "Actiechip",
+            "menu": "In menu",
+            "hidden": "Verborgen (Artwork-tik)",
+            "not_triggerable": "Niet triggerbaar"
+        },
+        "triggers": {
+            "none": "Geen",
+            "tap": "Tik",
+            "hold": "Vasthouden",
+            "double_tap": "Dubbeltik"
         }
     },
     "card": {

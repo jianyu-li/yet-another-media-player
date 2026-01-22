@@ -194,7 +194,9 @@ export default {
             "ma_entity": "Entiteta Music Assistant",
             "vol_entity": "Entiteta glasnosti",
             "selected_entity_helper": "Pomočnik izbrane entitete",
-            "sync_entity_type": "Vrsta entitete za sinhronizacijo"
+            "sync_entity_type": "Vrsta entitete za sinhronizacijo",
+            "placement": "Namestitev",
+            "card_trigger": "Sprožilec kartice"
         },
         "action_types": {
             "menu": "Odpri element menija kartice",
@@ -209,7 +211,19 @@ export default {
         "sync_entity_options": {
             "yamp_entity": "yamp_entity (entiteta Music Assistant, če je nastavljena)",
             "yamp_main_entity": "yamp_main_entity (glavna entiteta predvajalnika medijev)",
-            "yamp_playback_entity": "yamp_playback_entity (trenutno aktivna entiteta predvajanja)"
+            "yamp_playback_entity": "yamp_playback_entity (trenutno aktivna entitea predvajanja)"
+        },
+        "placements": {
+            "chip": "Čip dejanja",
+            "menu": "V meniju",
+            "hidden": "Skrito (dotik grafike)",
+            "not_triggerable": "Ni mogoče sprožiti"
+        },
+        "triggers": {
+            "none": "Brez",
+            "tap": "Dotik",
+            "hold": "Pridržanje",
+            "double_tap": "Dvojni dotik"
         }
     },
     "card": {

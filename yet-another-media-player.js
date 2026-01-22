@@ -1798,7 +1798,9 @@ var de = {
       "ma_entity": "Music Assistant Entität",
       "vol_entity": "Lautstärke-Entität",
       "selected_entity_helper": "Ausgewählter Entitäts-Helper",
-      "sync_entity_type": "Synchronisierungs-Entitätstyp"
+      "sync_entity_type": "Synchronisierungs-Entitätstyp",
+      "placement": "Platzierung",
+      "card_trigger": "Karten-Trigger"
     },
     "action_types": {
       "menu": "Kartenmenüpunkt öffnen",
@@ -1814,6 +1816,18 @@ var de = {
       "yamp_entity": "yamp_entity (Music Assistant Entität, falls konfiguriert)",
       "yamp_main_entity": "yamp_main_entity (Haupt-Mediaplayer-Entität)",
       "yamp_playback_entity": "yamp_playback_entity (Aktuelle aktive Wiedergabe-Entität)"
+    },
+    "placements": {
+      "chip": "Aktions-Chip",
+      "menu": "Im Menü",
+      "hidden": "Ausgeblendet (Artwork-Tippen)",
+      "not_triggerable": "Nicht triggerbar"
+    },
+    "triggers": {
+      "none": "Keiner",
+      "tap": "Tippen",
+      "hold": "Halten",
+      "double_tap": "Doppeltippen"
     }
   },
   "card": {
@@ -2089,7 +2103,9 @@ var es = {
       "ma_entity": "Entidad de Music Assistant",
       "vol_entity": "Entidad de volumen",
       "selected_entity_helper": "Helper de entidad seleccionada",
-      "sync_entity_type": "Tipo de entidad a sincronizar"
+      "sync_entity_type": "Tipo de entidad a sincronizar",
+      "placement": "Colocación",
+      "card_trigger": "Activador de la tarjeta"
     },
     "action_types": {
       "menu": "Abrir un elemento del menú",
@@ -2105,6 +2121,18 @@ var es = {
       "yamp_entity": "yamp_entity (Entidad de Music Assistant si está configurada)",
       "yamp_main_entity": "yamp_main_entity (Entidad principal del reproductor)",
       "yamp_playback_entity": "yamp_playback_entity (Entidad de reproducción activa actual)"
+    },
+    "placements": {
+      "chip": "Chip de acción",
+      "menu": "En el menú",
+      "hidden": "Oculto (Toque en el arte)",
+      "not_triggerable": "No activable"
+    },
+    "triggers": {
+      "none": "Ninguno",
+      "tap": "Toque",
+      "hold": "Mantener",
+      "double_tap": "Doble toque"
     }
   },
   "card": {
@@ -2380,7 +2408,9 @@ var fr = {
       "ma_entity": "Entité Music Assistant",
       "vol_entity": "Entité de volume",
       "selected_entity_helper": "Helper d'entité sélectionnée",
-      "sync_entity_type": "Type d'entité à synchroniser"
+      "sync_entity_type": "Type d'entité à synchroniser",
+      "placement": "Placement",
+      "card_trigger": "Déclencheur de carte"
     },
     "action_types": {
       "menu": "Ouvrir un élément de menu",
@@ -2396,6 +2426,18 @@ var fr = {
       "yamp_entity": "yamp_entity (Entité Music Assistant si configurée)",
       "yamp_main_entity": "yamp_main_entity (Entité principale du lecteur)",
       "yamp_playback_entity": "yamp_playback_entity (Entité de lecture active actuelle)"
+    },
+    "placements": {
+      "chip": "Puce d'action",
+      "menu": "Dans le menu",
+      "hidden": "Masqué (Appui sur l'image)",
+      "not_triggerable": "Non déclenchable"
+    },
+    "triggers": {
+      "none": "Aucun",
+      "tap": "Appui",
+      "hold": "Maintenir",
+      "double_tap": "Double appui"
     }
   },
   "card": {
@@ -2671,7 +2713,9 @@ var it = {
       "ma_entity": "Entità Music Assistant",
       "vol_entity": "Entità di volume",
       "selected_entity_helper": "Helper entità selezionata",
-      "sync_entity_type": "Tipo di entità da sincronizzare"
+      "sync_entity_type": "Tipo di entità da sincronizzare",
+      "placement": "Posizionamento",
+      "card_trigger": "Trigger della scheda"
     },
     "action_types": {
       "menu": "Apri un elemento del menu",
@@ -2687,6 +2731,18 @@ var it = {
       "yamp_entity": "yamp_entity (Entità Music Assistant se configurata)",
       "yamp_main_entity": "yamp_main_entity (Entità principale del lettore)",
       "yamp_playback_entity": "yamp_playback_entity (Entità di riproduzione attiva attuale)"
+    },
+    "placements": {
+      "chip": "Chip d'azione",
+      "menu": "Nel menu",
+      "hidden": "Nascosto (Tocco sull'immagine)",
+      "not_triggerable": "Non attivabile"
+    },
+    "triggers": {
+      "none": "Nessuno",
+      "tap": "Tocco",
+      "hold": "Mantieni",
+      "double_tap": "Doppio tocco"
     }
   },
   "card": {
@@ -2962,7 +3018,9 @@ var nl = {
       "ma_entity": "Music Assistant-entiteit",
       "vol_entity": "Volume-entiteit",
       "selected_entity_helper": "Geselecteerde entiteitshelper",
-      "sync_entity_type": "Synchronisatie entiteitstype"
+      "sync_entity_type": "Synchronisatie entiteitstype",
+      "placement": "Plaatsing",
+      "card_trigger": "Kaart trigger"
     },
     "action_types": {
       "menu": "Open een kaartmenu-item",
@@ -2978,6 +3036,18 @@ var nl = {
       "yamp_entity": "yamp_entity (Music Assistant-entiteit indien geconfigureerd)",
       "yamp_main_entity": "yamp_main_entity (Hoofd media player-entiteit)",
       "yamp_playback_entity": "yamp_playback_entity (Huidige actieve afspeelentiteit)"
+    },
+    "placements": {
+      "chip": "Actiechip",
+      "menu": "In menu",
+      "hidden": "Verborgen (Artwork-tik)",
+      "not_triggerable": "Niet triggerbaar"
+    },
+    "triggers": {
+      "none": "Geen",
+      "tap": "Tik",
+      "hold": "Vasthouden",
+      "double_tap": "Dubbeltik"
     }
   },
   "card": {
@@ -3253,7 +3323,9 @@ var pt = {
       "ma_entity": "Entidade Music Assistant",
       "vol_entity": "Entidade de volume",
       "selected_entity_helper": "Helper de entidade selecionada",
-      "sync_entity_type": "Tipo de entidade a sincronizar"
+      "sync_entity_type": "Tipo de entidade a sincronizar",
+      "placement": "Posicionamento",
+      "card_trigger": "Gatilho do cartão"
     },
     "action_types": {
       "menu": "Abrir um item do menu",
@@ -3269,6 +3341,18 @@ var pt = {
       "yamp_entity": "yamp_entity (Entidade Music Assistant se configurada)",
       "yamp_main_entity": "yamp_main_entity (Entidade principal do reprodutor)",
       "yamp_playback_entity": "yamp_playback_entity (Entidade de reprodução ativa atual)"
+    },
+    "placements": {
+      "chip": "Chip de ação",
+      "menu": "No menu",
+      "hidden": "Oculto (Toque no Artwork)",
+      "not_triggerable": "Não acionável"
+    },
+    "triggers": {
+      "none": "Nenhum",
+      "tap": "Toque",
+      "hold": "Manter premido",
+      "double_tap": "Toque duplo"
     }
   },
   "card": {
@@ -3544,7 +3628,9 @@ var sk = {
       "ma_entity": "Entita Music Assistant",
       "vol_entity": "Entita hlasitosti",
       "selected_entity_helper": "Pomocník vybratej entity",
-      "sync_entity_type": "Typ entity na synchronizáciu"
+      "sync_entity_type": "Typ entity na synchronizáciu",
+      "placement": "Umiestnenie",
+      "card_trigger": "Spúšťač karty"
     },
     "action_types": {
       "menu": "Otvoriť položku menu karty",
@@ -3560,6 +3646,18 @@ var sk = {
       "yamp_entity": "yamp_entity (Entita Music Assistant, ak je nakonfigurovaná)",
       "yamp_main_entity": "yamp_main_entity (Hlavná entita prehrávača médií)",
       "yamp_playback_entity": "yamp_playback_entity (Aktuálna aktívna entita prehrávania)"
+    },
+    "placements": {
+      "chip": "Akčný čip",
+      "menu": "V menu",
+      "hidden": "Skryté (Ťuknutie na grafiku)",
+      "not_triggerable": "Nespustiteľné"
+    },
+    "triggers": {
+      "none": "Žiadny",
+      "tap": "Ťuknutie",
+      "hold": "Podržanie",
+      "double_tap": "Dvojité ťuknutie"
     }
   },
   "card": {
@@ -3835,7 +3933,9 @@ var sl = {
       "ma_entity": "Entiteta Music Assistant",
       "vol_entity": "Entiteta glasnosti",
       "selected_entity_helper": "Pomočnik izbrane entitete",
-      "sync_entity_type": "Vrsta entitete za sinhronizacijo"
+      "sync_entity_type": "Vrsta entitete za sinhronizacijo",
+      "placement": "Namestitev",
+      "card_trigger": "Sprožilec kartice"
     },
     "action_types": {
       "menu": "Odpri element menija kartice",
@@ -3850,7 +3950,19 @@ var sl = {
     "sync_entity_options": {
       "yamp_entity": "yamp_entity (entiteta Music Assistant, če je nastavljena)",
       "yamp_main_entity": "yamp_main_entity (glavna entiteta predvajalnika medijev)",
-      "yamp_playback_entity": "yamp_playback_entity (trenutno aktivna entiteta predvajanja)"
+      "yamp_playback_entity": "yamp_playback_entity (trenutno aktivna entitea predvajanja)"
+    },
+    "placements": {
+      "chip": "Čip dejanja",
+      "menu": "V meniju",
+      "hidden": "Skrito (dotik grafike)",
+      "not_triggerable": "Ni mogoče sprožiti"
+    },
+    "triggers": {
+      "none": "Brez",
+      "tap": "Dotik",
+      "hold": "Pridržanje",
+      "double_tap": "Dvojni dotik"
     }
   },
   "card": {
@@ -11369,39 +11481,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     let actions = [...((_this$_config$actions3 = this._config.actions) !== null && _this$_config$actions3 !== void 0 ? _this$_config$actions3 : [])];
     return x(_templateObject19$1 || (_templateObject19$1 = _taggedTemplateLiteral(["\n        <div class=\"action-group config-section\">\n          <div class=\"action-group-header section-header\">\n            <div class=\"action-group-title section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <yamp-sortable @item-moved=", ">\n              <div class=\"sortable-container\">\n                ", "\n              </div>\n            </yamp-sortable>\n          </div>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Action\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n      "])), localize('editor.sections.actions.title'), localize('editor.sections.actions.description'), e => this._onActionMoved(e), actions.map((act, idx) => {
       var _act$name;
-      return x(_templateObject20$1 || (_templateObject20$1 = _taggedTemplateLiteral(["\n                  <div class=\"action-row-inner sortable-item\">\n                    <div class=\"handle action-handle\">\n                      <ha-icon icon=\"mdi:drag\"></ha-icon>\n                    </div>\n                    ", "\n                    <div class=\"grow-children\">\n                      <ha-textfield\n                        placeholder=\"(Icon Only)\"\n                        .value=", "\n                        .helper=", "\n                        .helperPersistent=", "\n                        @input=", "\n                      ></ha-textfield>\n                    </div>\n                    <div class=\"action-row-actions\">\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:pencil\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      ", "\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:trash-can\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                    </div>\n                  </div>\n                "])), act !== null && act !== void 0 && act.icon ? x(_templateObject21$1 || (_templateObject21$1 = _taggedTemplateLiteral(["\n                      <ha-icon class=\"action-icon\" icon=\"", "\"></ha-icon>\n                    "])), act === null || act === void 0 ? void 0 : act.icon) : x(_templateObject22$1 || (_templateObject22$1 = _taggedTemplateLiteral(["<span class=\"action-icon-placeholder\"></span>"]))), (_act$name = act === null || act === void 0 ? void 0 : act.name) !== null && _act$name !== void 0 ? _act$name : "", (() => {
-        const inMenuVal = act === null || act === void 0 ? void 0 : act.in_menu;
-        const placement = inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip";
-        const trigger = act === null || act === void 0 ? void 0 : act.card_trigger;
-        let placementText = "";
-        if (placement === "menu") placementText = " \u2022 In Menu";else if (placement === "hidden") {
-          if ((act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity") {
-            if (!trigger || trigger === "none") {
-              placementText = " \u2022 ".concat(localize('editor.placements.hidden'), " (").concat(localize('editor.placements.not_triggerable'), ")");
-            } else {
-              placementText = " \u2022 ".concat(localize('editor.placements.hidden'));
-            }
-          }
-        }
-        let triggerText = "";
-        if (trigger && trigger !== "none") {
-          triggerText = " \u2022 Trigger: ".concat(localize("editor.triggers.".concat(trigger)));
-        }
-        if ((act === null || act === void 0 ? void 0 : act.action) === "sync_selected_entity") {
-          return "".concat(localize('editor.action_helpers.sync_selected_entity'), " ").concat(act.sync_entity_helper || localize('editor.action_helpers.select_helper')).concat(placementText).concat(triggerText);
-        }
-        if (act !== null && act !== void 0 && act.menu_item) {
-          return "Open Menu Item: ".concat(act.menu_item).concat(placementText).concat(triggerText);
-        }
-        if (act !== null && act !== void 0 && act.service) {
-          return "Call Service: ".concat(act.service).concat(placementText).concat(triggerText);
-        }
-        if (act !== null && act !== void 0 && act.navigation_path || (act === null || act === void 0 ? void 0 : act.action) === "navigate") {
-          const newTab = act !== null && act !== void 0 && act.navigation_new_tab ? " (New Tab)" : "";
-          return "Navigate to ".concat(act.navigation_path || "(missing path)").concat(newTab).concat(placementText).concat(triggerText);
-        }
-        return placementText || triggerText ? "Not Configured".concat(placementText).concat(triggerText) : "Not Configured";
-      })(), true, a => this._onActionChanged(idx, a.target.value), localize('common.edit_action'), () => this._onEditAction(idx), (act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity" ? x(_templateObject23$1 || (_templateObject23$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-toggle ", "\"\n                        icon=\"", "\"\n                        title=\"", "\"\n                        role=\"button\"\n                        aria-label=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      "])), (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? "icon-button-disabled" : (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "active" : "", (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "mdi:menu" : (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? "mdi:image-outline" : "mdi:eye-off-outline" : "mdi:view-grid-outline", (() => {
+      return x(_templateObject20$1 || (_templateObject20$1 = _taggedTemplateLiteral(["\n                  <div class=\"action-row-inner sortable-item\">\n                    <div class=\"handle action-handle\">\n                      <ha-icon icon=\"mdi:drag\"></ha-icon>\n                    </div>\n                    ", "\n                    <div class=\"grow-children\">\n                      <ha-textfield\n                        placeholder=\"(Icon Only)\"\n                        .value=", "\n                        .helper=", "\n                        .helperPersistent=", "\n                        @input=", "\n                      ></ha-textfield>\n                    </div>\n                    <div class=\"action-row-actions\">\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:pencil\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      ", "\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:trash-can\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                    </div>\n                  </div>\n                "])), act !== null && act !== void 0 && act.icon ? x(_templateObject21$1 || (_templateObject21$1 = _taggedTemplateLiteral(["\n                      <ha-icon class=\"action-icon\" icon=\"", "\"></ha-icon>\n                    "])), act === null || act === void 0 ? void 0 : act.icon) : x(_templateObject22$1 || (_templateObject22$1 = _taggedTemplateLiteral(["<span class=\"action-icon-placeholder\"></span>"]))), (_act$name = act === null || act === void 0 ? void 0 : act.name) !== null && _act$name !== void 0 ? _act$name : "", this._getActionHelperText(act), true, a => this._onActionChanged(idx, a.target.value), localize('common.edit_action'), () => this._onEditAction(idx), (act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity" ? x(_templateObject23$1 || (_templateObject23$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-toggle ", "\"\n                        icon=\"", "\"\n                        title=\"", "\"\n                        role=\"button\"\n                        aria-label=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      "])), (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? "icon-button-disabled" : (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "active" : "", (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "mdi:menu" : (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? "mdi:image-outline" : "mdi:eye-off-outline" : "mdi:view-grid-outline", (() => {
         const placementText = (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? localize('editor.placements.hidden') : "".concat(localize('editor.placements.hidden'), " (").concat(localize('editor.placements.not_triggerable'), ")") : act !== null && act !== void 0 && act.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu');
         return placementText;
       })(), (act === null || act === void 0 ? void 0 : act.in_menu) === true ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), () => {
@@ -11710,6 +11790,39 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     });
     this._updateConfig("actions", updated);
   }
+  _getActionHelperText(act) {
+    const inMenuVal = act === null || act === void 0 ? void 0 : act.in_menu;
+    const placement = inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip";
+    const trigger = act === null || act === void 0 ? void 0 : act.card_trigger;
+    let placementText = "";
+    if (placement === "menu") placementText = " \u2022 In Menu";else if (placement === "hidden") {
+      if ((act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity") {
+        if (!trigger || trigger === "none") {
+          placementText = " \u2022 ".concat(localize('editor.placements.hidden'), " (").concat(localize('editor.placements.not_triggerable'), ")");
+        } else {
+          placementText = " \u2022 ".concat(localize('editor.placements.hidden'));
+        }
+      }
+    }
+    let triggerText = "";
+    if (trigger && trigger !== "none") {
+      triggerText = " \u2022 Trigger: ".concat(localize("editor.triggers.".concat(trigger)));
+    }
+    if ((act === null || act === void 0 ? void 0 : act.action) === "sync_selected_entity") {
+      return "".concat(localize('editor.action_helpers.sync_selected_entity'), " ").concat(act.sync_entity_helper || localize('editor.action_helpers.select_helper')).concat(placementText).concat(triggerText);
+    }
+    if (act !== null && act !== void 0 && act.menu_item) {
+      return "Open Menu Item: ".concat(act.menu_item).concat(placementText).concat(triggerText);
+    }
+    if (act !== null && act !== void 0 && act.service) {
+      return "Call Service: ".concat(act.service).concat(placementText).concat(triggerText);
+    }
+    if (act !== null && act !== void 0 && act.navigation_path || (act === null || act === void 0 ? void 0 : act.action) === "navigate") {
+      const newTab = act !== null && act !== void 0 && act.navigation_new_tab ? " (New Tab)" : "";
+      return "Navigate to ".concat(act.navigation_path || "(missing path)").concat(newTab).concat(placementText).concat(triggerText);
+    }
+    return placementText || triggerText ? "Not Configured".concat(placementText).concat(triggerText) : "Not Configured";
+  }
   _onEditEntity(index) {
     var _this$_config$entitie0;
     this._entityEditorIndex = index;
@@ -11876,6 +11989,10 @@ const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
   action_chips: "--yamp-text-scale-action-chips"
 });
 const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze(["media_title", "media_artist", "media_album_name", "media_content_id", "media_channel", "app_name", "media_content_type", "entity_id", "entity_state"]);
+const GESTURE_HOLD_TIMEOUT = 500;
+const GESTURE_MOVE_THRESHOLD = 15;
+const GESTURE_DOUBLE_TAP_MAX_DELAY = 300;
+const GESTURE_TAP_DELAY = 300;
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
@@ -16503,14 +16620,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
           this._gestureHoldTriggered = true;
           this._handleAction(this._cardTriggers.hold);
         }
-      }, 500);
+      }, GESTURE_HOLD_TIMEOUT);
     }
   }
   _onTapAreaPointerMove(e) {
     if (!this._gestureActive) return;
     const diffX = Math.abs(e.clientX - this._gestureStartX);
     const diffY = Math.abs(e.clientY - this._gestureStartY);
-    if (diffX > 15 || diffY > 15) {
+    if (diffX > GESTURE_MOVE_THRESHOLD || diffY > GESTURE_MOVE_THRESHOLD) {
       this._gestureActive = false;
       clearTimeout(this._gestureHoldTimer);
     }
@@ -16521,14 +16638,17 @@ class YetAnotherMediaPlayerCard extends i$2 {
     clearTimeout(this._gestureHoldTimer);
     if (this._gestureHoldTriggered) return;
 
+    // Reject taps that were actually holds (long presses)
+    if (Date.now() - this._gestureStartTime > GESTURE_HOLD_TIMEOUT) return;
+
     // Movement threshold check
     const diffX = Math.abs(e.clientX - this._gestureStartX);
     const diffY = Math.abs(e.clientY - this._gestureStartY);
-    if (diffX > 15 || diffY > 15) return;
+    if (diffX > GESTURE_MOVE_THRESHOLD || diffY > GESTURE_MOVE_THRESHOLD) return;
     const now = Date.now();
     const timeSinceLastTap = now - (this._lastTapTime || 0);
     this._lastTapTime = now;
-    if (timeSinceLastTap < 300) {
+    if (timeSinceLastTap < GESTURE_DOUBLE_TAP_MAX_DELAY) {
       var _this$_cardTriggers2;
       // Double Tap
       clearTimeout(this._tapTimer);
@@ -16542,7 +16662,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         if ((_this$_cardTriggers3 = this._cardTriggers) !== null && _this$_cardTriggers3 !== void 0 && _this$_cardTriggers3.tap) {
           this._handleAction(this._cardTriggers.tap);
         }
-      }, 250);
+      }, GESTURE_TAP_DELAY);
     }
   }
   _onMenuActionClick(idx) {

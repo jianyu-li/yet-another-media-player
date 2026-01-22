@@ -194,7 +194,9 @@ export default {
             "ma_entity": "Entidade Music Assistant",
             "vol_entity": "Entidade de volume",
             "selected_entity_helper": "Helper de entidade selecionada",
-            "sync_entity_type": "Tipo de entidade a sincronizar"
+            "sync_entity_type": "Tipo de entidade a sincronizar",
+            "placement": "Posicionamento",
+            "card_trigger": "Gatilho do cartão"
         },
         "action_types": {
             "menu": "Abrir um item do menu",
@@ -210,6 +212,18 @@ export default {
             "yamp_entity": "yamp_entity (Entidade Music Assistant se configurada)",
             "yamp_main_entity": "yamp_main_entity (Entidade principal do reprodutor)",
             "yamp_playback_entity": "yamp_playback_entity (Entidade de reprodução ativa atual)"
+        },
+        "placements": {
+            "chip": "Chip de ação",
+            "menu": "No menu",
+            "hidden": "Oculto (Toque no Artwork)",
+            "not_triggerable": "Não acionável"
+        },
+        "triggers": {
+            "none": "Nenhum",
+            "tap": "Toque",
+            "hold": "Manter premido",
+            "double_tap": "Toque duplo"
         }
     },
     "card": {
