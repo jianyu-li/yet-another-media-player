@@ -51,6 +51,11 @@ const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
   "media_content_type", "entity_id", "entity_state"
 ]);
 
+const GESTURE_HOLD_TIMEOUT = 500;
+const GESTURE_MOVE_THRESHOLD = 15;
+const GESTURE_DOUBLE_TAP_MAX_DELAY = 300;
+const GESTURE_TAP_DELAY = 300;
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "yet-another-media-player",
@@ -130,6 +135,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Stores the last grouping master id for group chip selection
   _lastGroupingMasterId = null;
   _groupedSortedCache = null;
+  _cardTriggers = { tap: null, hold: null, double_tap: null };
   _lastHassVersion = null;
   _debouncedVolumeTimer = null;
   _supportsFeature(stateObj, featureBit) {
@@ -5019,6 +5025,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
   async _onActionChipClick(idx) {
     const action = this.config.actions[idx];
     if (!action) return;
+    await this._handleAction(action);
+  }
+
+  async _handleAction(action) {
+    if (!action) return;
     if (action.menu_item) {
       // Enable quick-dismiss mode for menu_item actions
       this._quickMenuInvoke = true;
@@ -5116,7 +5127,83 @@ class YetAnotherMediaPlayerCard extends LitElement {
         data.entity_id = this.currentEntityId;
       }
     }
+
     this.hass.callService(domain, service, data);
+  }
+
+  _onTapAreaPointerDown(e) {
+    if (this.isAnyMenuOpen) return;
+
+    // Check if we clicked on something interactive
+    const path = e.composedPath();
+    const isInteractive = path.some(el =>
+      el.tagName === 'BUTTON' ||
+      el.tagName === 'HA-ICON' ||
+      el.tagName === 'INPUT' ||
+      (el.classList && el.classList.contains('clickable-artist')) ||
+      (el.classList && el.classList.contains('details'))
+    );
+    if (isInteractive) return;
+
+    this._gestureActive = true;
+    this._gestureStartTime = Date.now();
+    this._gestureStartX = e.clientX;
+    this._gestureStartY = e.clientY;
+    this._gestureHoldTriggered = false;
+
+    if (this._cardTriggers?.hold) {
+      this._gestureHoldTimer = setTimeout(() => {
+        if (this._gestureActive) {
+          this._gestureHoldTriggered = true;
+          this._handleAction(this._cardTriggers.hold);
+        }
+      }, GESTURE_HOLD_TIMEOUT);
+    }
+  }
+
+  _onTapAreaPointerMove(e) {
+    if (!this._gestureActive) return;
+    const diffX = Math.abs(e.clientX - this._gestureStartX);
+    const diffY = Math.abs(e.clientY - this._gestureStartY);
+    if (diffX > GESTURE_MOVE_THRESHOLD || diffY > GESTURE_MOVE_THRESHOLD) {
+      this._gestureActive = false;
+      clearTimeout(this._gestureHoldTimer);
+    }
+  }
+
+  _onTapAreaPointerUp(e) {
+    if (!this._gestureActive) return;
+    this._gestureActive = false;
+    clearTimeout(this._gestureHoldTimer);
+
+    if (this._gestureHoldTriggered) return;
+
+    // Reject taps that were actually holds (long presses)
+    if (Date.now() - this._gestureStartTime > GESTURE_HOLD_TIMEOUT) return;
+
+    // Movement threshold check
+    const diffX = Math.abs(e.clientX - this._gestureStartX);
+    const diffY = Math.abs(e.clientY - this._gestureStartY);
+    if (diffX > GESTURE_MOVE_THRESHOLD || diffY > GESTURE_MOVE_THRESHOLD) return;
+
+    const now = Date.now();
+    const timeSinceLastTap = now - (this._lastTapTime || 0);
+    this._lastTapTime = now;
+
+    if (timeSinceLastTap < GESTURE_DOUBLE_TAP_MAX_DELAY) {
+      // Double Tap
+      clearTimeout(this._tapTimer);
+      if (this._cardTriggers?.double_tap) {
+        this._handleAction(this._cardTriggers.double_tap);
+      }
+    } else {
+      // Tap (delayed to see if it's a double tap)
+      this._tapTimer = setTimeout(() => {
+        if (this._cardTriggers?.tap) {
+          this._handleAction(this._cardTriggers.tap);
+        }
+      }, GESTURE_TAP_DELAY);
+    }
   }
 
   _onMenuActionClick(idx) {
@@ -5754,8 +5841,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
     // Filter out sync_selected_entity actions entirely - they don't render as chips
     const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity");
-    const rowActions = visibleActions.filter(({ action }) => !action?.in_menu);
-    const menuOnlyActions = visibleActions.filter(({ action }) => action?.in_menu);
+
+    // Action placement logic
+    const getPlacement = (act) => {
+      if (act?.placement) return act.placement;
+      if (act?.in_menu === "hidden") return "hidden";
+      return act?.in_menu === true ? "menu" : "chip";
+    };
+
+    const rowActions = visibleActions.filter(({ action }) => getPlacement(action) === "chip");
+    const menuOnlyActions = visibleActions.filter(({ action }) => getPlacement(action) === "menu");
+
+    // Gesture trigger logic
+    const tapAction = visibleActions.find(({ action }) => action?.card_trigger === "tap");
+    const holdAction = visibleActions.find(({ action }) => action?.card_trigger === "hold");
+    const doubleTapAction = visibleActions.find(({ action }) => action?.card_trigger === "double_tap");
+
+    this._cardTriggers = {
+      tap: tapAction?.action,
+      hold: holdAction?.action,
+      double_tap: doubleTapAction?.action
+    };
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     const activeChipName = this.getChipName(this.currentEntityId);
     if (!stateObj) return html`<div class="details">${localize('common.not_found')}</div>`;
@@ -6192,9 +6298,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? html`
                   <div
                     class="collapsed-artwork-container"
+                    @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
+                    @pointermove=${(e) => this._onTapAreaPointerMove(e)}
+                    @pointerup=${(e) => this._onTapAreaPointerUp(e)}
+                    @pointercancel=${() => { this._gestureActive = false; clearTimeout(this._gestureHoldTimer); }}
                     style="${[
           `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
-          collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : ''
+          collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '',
+          (this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap) ? 'cursor:pointer; pointer-events:auto;' : ''
         ].filter(Boolean).join('; ')}"
                   >
                     <img
@@ -6209,7 +6320,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 ` : nothing}
                 ${(showCollapsedPlaceholder || !collapsed) ? html`
-                  <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}">
+                  <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
+                    @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
+                    @pointermove=${(e) => this._onTapAreaPointerMove(e)}
+                    @pointerup=${(e) => this._onTapAreaPointerUp(e)}
+                    @pointercancel=${() => { this._gestureActive = false; clearTimeout(this._gestureHoldTimer); }}
+                    style="${(this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap) ? 'cursor:pointer; pointer-events:auto;' : ''}"
+                  >
                     ${(!artworkUrl && !idleImageUrl) ? html`
                       <div class="media-artwork-placeholder">
                         <svg

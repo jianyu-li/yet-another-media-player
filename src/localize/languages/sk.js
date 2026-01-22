@@ -194,7 +194,9 @@ export default {
             "ma_entity": "Entita Music Assistant",
             "vol_entity": "Entita hlasitosti",
             "selected_entity_helper": "Pomocník vybratej entity",
-            "sync_entity_type": "Typ entity na synchronizáciu"
+            "sync_entity_type": "Typ entity na synchronizáciu",
+            "placement": "Umiestnenie",
+            "card_trigger": "Spúšťač karty"
         },
         "action_types": {
             "menu": "Otvoriť položku menu karty",
@@ -210,6 +212,18 @@ export default {
             "yamp_entity": "yamp_entity (Entita Music Assistant, ak je nakonfigurovaná)",
             "yamp_main_entity": "yamp_main_entity (Hlavná entita prehrávača médií)",
             "yamp_playback_entity": "yamp_playback_entity (Aktuálna aktívna entita prehrávania)"
+        },
+        "placements": {
+            "chip": "Akčný čip",
+            "menu": "V menu",
+            "hidden": "Skryté (Ťuknutie na grafiku)",
+            "not_triggerable": "Nespustiteľné"
+        },
+        "triggers": {
+            "none": "Žiadny",
+            "tap": "Ťuknutie",
+            "hold": "Podržanie",
+            "double_tap": "Dvojité ťuknutie"
         }
     },
     "card": {

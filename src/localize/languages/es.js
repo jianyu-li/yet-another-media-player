@@ -194,7 +194,9 @@ export default {
             "ma_entity": "Entidad de Music Assistant",
             "vol_entity": "Entidad de volumen",
             "selected_entity_helper": "Helper de entidad seleccionada",
-            "sync_entity_type": "Tipo de entidad a sincronizar"
+            "sync_entity_type": "Tipo de entidad a sincronizar",
+            "placement": "Colocación",
+            "card_trigger": "Activador de la tarjeta"
         },
         "action_types": {
             "menu": "Abrir un elemento del menú",
@@ -210,6 +212,18 @@ export default {
             "yamp_entity": "yamp_entity (Entidad de Music Assistant si está configurada)",
             "yamp_main_entity": "yamp_main_entity (Entidad principal del reproductor)",
             "yamp_playback_entity": "yamp_playback_entity (Entidad de reproducción activa actual)"
+        },
+        "placements": {
+            "chip": "Chip de acción",
+            "menu": "En el menú",
+            "hidden": "Oculto (Toque en el arte)",
+            "not_triggerable": "No activable"
+        },
+        "triggers": {
+            "none": "Ninguno",
+            "tap": "Toque",
+            "hold": "Mantener",
+            "double_tap": "Doble toque"
         }
     },
     "card": {

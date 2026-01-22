@@ -360,7 +360,23 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const actions = [...(this._config.actions ?? [])];
     const idx = this._actionEditorIndex;
     if (actions[idx]) {
-      actions[idx] = { ...actions[idx], [key]: value };
+      // Enforce single trigger per gesture (Tap, Hold, Double Tap)
+      if (key === "card_trigger" && value && value !== "none") {
+        actions.forEach((act, i) => {
+          if (i !== idx && act.card_trigger === value) {
+            actions[i] = { ...act, card_trigger: "none" };
+          }
+        });
+      }
+
+      const newAction = { ...actions[idx], [key]: value };
+
+      // If we're setting in_menu, remove the legacy placement property
+      if (key === "in_menu") {
+        delete newAction.placement;
+      }
+
+      actions[idx] = newAction;
       this._updateConfig("actions", actions);
     }
   }
@@ -1562,23 +1578,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-textfield
                         placeholder="(Icon Only)"
                         .value=${act?.name ?? ""}
-                        .helper=${(() => {
-        const inMenu = act?.in_menu ? " \u2022 In Menu" : "";
-        if (act?.action === "sync_selected_entity") {
-          return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}`;
-        }
-        if (act?.menu_item) {
-          return `Open Menu Item: ${act.menu_item}${inMenu}`;
-        }
-        if (act?.service) {
-          return `Call Service: ${act.service}${inMenu}`;
-        }
-        if (act?.navigation_path || act?.action === "navigate") {
-          const newTab = act?.navigation_new_tab ? " (New Tab)" : "";
-          return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${inMenu}`;
-        }
-        return act?.in_menu ? `Not Configured${inMenu}` : "Not Configured";
-      })()}
+                        .helper=${this._getActionHelperText(act)}
                         .helperPersistent=${true}
                         @input=${a => this._onActionChanged(idx, a.target.value)}
                       ></ha-textfield>
@@ -1592,14 +1592,29 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       ></ha-icon>
                       ${act?.action !== "sync_selected_entity" ? html`
                       <ha-icon
-                        class="icon-button icon-button-compact icon-button-toggle ${act?.in_menu ? "active" : ""}"
-                        icon="${act?.in_menu ? "mdi:menu" : "mdi:view-grid-outline"}"
-                        title="${act?.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
+                        class="icon-button icon-button-compact icon-button-toggle ${act?.in_menu === "hidden" ? "icon-button-disabled" : (act?.in_menu === true ? "active" : "")}"
+                        icon="${act?.in_menu === true ? "mdi:menu" : (act?.in_menu === "hidden" ? (act?.card_trigger && act.card_trigger !== "none" ? "mdi:image-outline" : "mdi:eye-off-outline") : "mdi:view-grid-outline")}"
+                        title="${(() => {
+          const placementText = act?.in_menu === "hidden"
+            ? (act?.card_trigger && act.card_trigger !== "none" ? localize('editor.placements.hidden') : `${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})`)
+            : (act?.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'));
+          return placementText;
+        })()}"
                         role="button"
-                        aria-label="${act?.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
-                        @click=${() => this._toggleActionInMenu(idx)}
+                        aria-label="${act?.in_menu === true ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
+                        @click=${() => {
+          if (act?.in_menu !== "hidden") {
+            this._toggleActionInMenu(idx);
+          }
+        }}
                       ></ha-icon>
-                      ` : nothing}
+                      ` : html`
+                      <ha-icon
+                        class="icon-button icon-button-compact icon-button-disabled"
+                        icon="mdi:eye-off-outline"
+                        title="${localize('editor.action_types.sync_selected_entity')}"
+                      ></ha-icon>
+                      `}
                       <ha-icon
                         class="icon-button icon-button-compact"
                         icon="mdi:trash-can"
@@ -1950,6 +1965,63 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         this._updateActionProperty("icon", e.detail.value)}
           ></ha-icon-picker>
         </div>
+ 
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              label="${localize('editor.fields.placement')}"
+              .disabled=${actionMode === "sync_selected_entity"}
+              .selector=${{
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "chip", label: localize('editor.placements.chip') },
+            { value: "menu", label: localize('editor.placements.menu') },
+            { value: "hidden", label: localize('editor.placements.hidden') }
+          ]
+        }
+      }}
+              .value=${action?.in_menu === "hidden" ? "hidden" : (action?.in_menu ? "menu" : "chip")}
+              @value-changed=${(e) => {
+        const val = e.detail.value;
+        let inMenu = false;
+        if (val === "menu") inMenu = true;
+        else if (val === "hidden") inMenu = "hidden";
+        this._updateActionProperty("in_menu", inMenu);
+        if (val !== "hidden") {
+          this._updateActionProperty("card_trigger", "none");
+        }
+      }}
+            ></ha-selector>
+          </div>
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              label="${localize('editor.fields.card_trigger')}"
+              .disabled=${actionMode === "sync_selected_entity" || action?.in_menu !== "hidden"}
+              .selector=${{
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "none", label: localize('editor.triggers.none') },
+            { value: "tap", label: localize('editor.triggers.tap') },
+            { value: "hold", label: localize('editor.triggers.hold') },
+            { value: "double_tap", label: localize('editor.triggers.double_tap') }
+          ]
+        }
+      }}
+              .value=${action?.card_trigger || "none"}
+              @value-changed=${(e) => this._updateActionProperty("card_trigger", e.detail.value)}
+            ></ha-selector>
+          </div>
+        </div>
+        ${action?.in_menu === "hidden" && (!action?.card_trigger || action?.card_trigger === "none") && actionMode !== "sync_selected_entity" ? html`
+          <div class="help-text">
+            <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+            ${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})
+          </div>
+        ` : nothing}
 
         <div class="form-row">
           <ha-selector
@@ -2003,6 +2075,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           this._updateActionProperty("navigation_path", undefined);
           this._updateActionProperty("navigation_new_tab", undefined);
           this._updateActionProperty("action", "sync_selected_entity");
+          this._updateActionProperty("in_menu", "hidden");
+          this._updateActionProperty("card_trigger", "none");
           if (!action?.sync_entity_type) {
             this._updateActionProperty("sync_entity_type", "yamp_entity");
           }
@@ -2010,6 +2084,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       }}
           ></ha-selector>
         </div>
+
         
         ${actionMode === "menu" ? html`
           <div class="form-row">
@@ -2233,6 +2308,42 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._updateConfig("actions", updated);
   }
 
+  _getActionHelperText(act) {
+    const inMenuVal = act?.in_menu;
+    const placement = inMenuVal === "hidden" ? "hidden" : (inMenuVal === true ? "menu" : "chip");
+    const trigger = act?.card_trigger;
+    let placementText = "";
+    if (placement === "menu") placementText = " \u2022 In Menu";
+    else if (placement === "hidden") {
+      if (act?.action !== "sync_selected_entity") {
+        if (!trigger || trigger === "none") {
+          placementText = ` \u2022 ${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})`;
+        } else {
+          placementText = ` \u2022 ${localize('editor.placements.hidden')}`;
+        }
+      }
+    }
+    let triggerText = "";
+    if (trigger && trigger !== "none") {
+      triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;
+    }
+
+    if (act?.action === "sync_selected_entity") {
+      return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}${placementText}${triggerText}`;
+    }
+    if (act?.menu_item) {
+      return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;
+    }
+    if (act?.service) {
+      return `Call Service: ${act.service}${placementText}${triggerText}`;
+    }
+    if (act?.navigation_path || act?.action === "navigate") {
+      const newTab = act?.navigation_new_tab ? " (New Tab)" : "";
+      return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${placementText}${triggerText}`;
+    }
+    return (placementText || triggerText) ? `Not Configured${placementText}${triggerText}` : "Not Configured";
+  }
+
   _onEditEntity(index) {
     this._entityEditorIndex = index;
     const ent = this._config.entities?.[index];
@@ -2307,7 +2418,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const actions = [...(this._config.actions ?? [])];
     if (!actions[index]) return;
     const current = !!actions[index].in_menu;
-    actions[index] = { ...actions[index], in_menu: !current };
+    const newAction = { ...actions[index], in_menu: !current };
+    delete newAction.placement;
+    actions[index] = newAction;
     this._updateConfig("actions", actions);
   }
 
