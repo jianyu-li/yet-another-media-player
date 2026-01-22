@@ -112,7 +112,8 @@ Below you will find a list of all configuration options.
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue` |
-| `in_menu`                  | boolean      | No           | `false`     | When `true`, moves actions alongside the built-in menu options instead of forward facing chips  |
+| `in_menu`                  | choice       | No           | `false`     | Placement of the action: `false` (Action Chip), `true` (In Menu), or `hidden` (Hidden - only triggerable via card gestures) |
+| `card_trigger`             | choice       | No           | `none`      | Assign action to a card-level gesture: `none`, `tap`, `hold`, or `double_tap` (only for `hidden` actions) |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 | `sync_entity_helper`       | string       | No           | —           | `input_text` entity to sync the currently selected entity to (used with `action: sync_selected_entity`) |
 
@@ -583,6 +584,32 @@ entities:
 actions:
   - action: sync_selected_entity
     sync_entity_helper: input_text.yamp_selected_entity
+    in_menu: hidden
+```
+
+> [!NOTE]
+> For **Sync Selected Entity** actions, the placement is automatically set to `hidden` and triggers are disabled, as this action runs in the background.
+
+### Gesture Triggers (Hidden Actions)
+
+You can assign actions to card-level gestures on the artwork area by setting `in_menu: hidden` and choosing a `card_trigger`.
+
+```yaml
+actions:
+  - icon: mdi:information
+    menu_item: more-info
+    in_menu: hidden
+    card_trigger: tap
+  - icon: mdi:magnify
+    menu_item: search
+    in_menu: hidden
+    card_trigger: hold
+  - icon: mdi:power
+    service: media_player.toggle
+    service_data:
+      entity_id: current
+    in_menu: hidden
+    card_trigger: double_tap
 ```
 
 #### Example Automation
