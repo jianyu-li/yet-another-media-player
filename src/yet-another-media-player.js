@@ -5939,7 +5939,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     const dimIdleFrame = !!idleImageUrl;
     const hideControlsNow = this._isIdle;
-    const shouldDimIdle = dimIdleFrame && this._isIdle;
+    const shouldDimIdle = this._isIdle;
     // Calculate useInsetArtwork early for artworkFullBleed unification
     // Note: collapsed and _alwaysCollapsed will be defined/checked later, so we can't use them here.
     // We'll set useInsetArtwork again later with full collapsed context for rendering.

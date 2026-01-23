@@ -154,7 +154,6 @@ export const yampCardStyles = css`
     );
     transform: translateZ(0);
   }
-  }
 
   /* Idle state dimming */
   .dim-idle .details,
