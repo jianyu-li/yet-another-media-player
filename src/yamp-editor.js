@@ -820,6 +820,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             { value: "contain", label: "Contain" },
             { value: "fill", label: "Fill" },
             { value: "scale-down", label: "Scale Down" },
+            { value: "scaled-contain", label: "Scaled Contain" },
             { value: "none", label: "None" }
           ]
         }
@@ -1008,6 +1009,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 { value: "contain", label: "Contain" },
                 { value: "fill", label: "Fill" },
                 { value: "scale-down", label: "Scale Down" },
+                { value: "scaled-contain", label: "Scaled Contain" },
                 { value: "none", label: "None" }
               ]
             }
