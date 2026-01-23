@@ -3370,6 +3370,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         return "contain";
       case "none":
         return "auto";
+      case "scaled-contain":
+        return "80%";
       case "cover":
       default:
         return "cover";
@@ -3480,7 +3482,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._customAccent = "#ff9800";
     }
-    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none"]);
+    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain"]);
     this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
       ? config.artwork_object_fit
       : "cover";
@@ -5937,9 +5939,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     const dimIdleFrame = !!idleImageUrl;
     const hideControlsNow = this._isIdle;
-    const shouldDimIdle = dimIdleFrame && this._isIdle;
-    // Extend artwork when configured, or when chips are hidden inline (in_menu_on_idle + idle)
-    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline;
+    const shouldDimIdle = this._isIdle;
+    // Calculate useInsetArtwork early for artworkFullBleed unification
+    // Note: collapsed and _alwaysCollapsed will be defined/checked later, so we can't use them here.
+    // We'll set useInsetArtwork again later with full collapsed context for rendering.
+    const preCalcInsetArtwork = this._artworkObjectFit === "scaled-contain";
+    // Extend artwork when configured, when chips are hidden inline (in_menu_on_idle + idle), or when using scaled-contain
+    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
@@ -6226,6 +6232,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastRenderedHideControls = hideControlsNow;
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
+    const useInsetArtwork = activeArtworkFit === "scaled-contain" && !collapsed && !this._alwaysCollapsed;
     const fitBehavior = this._getBackgroundSizeForFit(activeArtworkFit);
     let backgroundSize = fitBehavior;
 
@@ -6239,12 +6246,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
         ? `url('${artworkUrl}')`
         : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
-    const backgroundFilter = (collapsed && artworkUrl)
+    const backgroundFilter = (artworkUrl && (collapsed || useInsetArtwork))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
     const sharedBackgroundStyle = [
       `background-image: ${backgroundImageValue}`,
-      `background-size: ${backgroundSize}`,
+      `background-size: ${useInsetArtwork ? "cover" : backgroundSize}`,
       `background-position: ${this.config.artwork_position || "top center"}`,
       "background-repeat: no-repeat",
       `filter: ${backgroundFilter}`
@@ -6327,7 +6334,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     @pointercancel=${() => { this._gestureActive = false; clearTimeout(this._gestureHoldTimer); }}
                     style="${(this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap) ? 'cursor:pointer; pointer-events:auto;' : ''}"
                   >
-                    ${(!artworkUrl && !idleImageUrl) ? html`
+                    ${useInsetArtwork && artworkUrl ? html`
+                      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                        <img 
+                          src="${artworkUrl}" 
+                          style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;" 
+                        />
+                      </div>
+                    ` : nothing}
+                    ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
                       <div class="media-artwork-placeholder">
                         <svg
                           viewBox="0 0 184 184"

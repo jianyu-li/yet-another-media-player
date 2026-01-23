@@ -100,6 +100,7 @@ export const yampCardStyles = css`
     color: var(--primary-text);
     transition: background var(--transition-normal);
     overflow: hidden;
+    clip-path: inset(0 round var(--border-radius));
   }
 
   ha-card.yamp-card {
@@ -112,6 +113,8 @@ export const yampCardStyles = css`
     overflow: hidden;
     font-size: inherit;
     position: relative;
+    clip-path: inset(0 round var(--border-radius));
+    transform: translateZ(0);
   }
 
   .yamp-card-inner {
@@ -122,21 +125,25 @@ export const yampCardStyles = css`
     flex-direction: column;
     overflow: hidden;
     container-type: inline-size;
+    border-radius: var(--border-radius);
+    clip-path: inset(0 round var(--border-radius));
+    transform: translateZ(0);
   }
 
   .full-bleed-artwork-bg {
     position: absolute;
-    inset: 0;
+    inset: -50px;
     z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     background-size: var(--yamp-artwork-bg-size, cover);
     background-position: top center;
     background-repeat: no-repeat;
     pointer-events: none;
+    transform: translateZ(0);
   }
 
   .full-bleed-artwork-fade {
     position: absolute;
-    inset: 0;
+    inset: -50px;
     z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     pointer-events: none;
     background: linear-gradient(
@@ -145,6 +152,7 @@ export const yampCardStyles = css`
       rgba(0,0,0,0.40) 55%,
       rgba(0,0,0,0.92) 100%
     );
+    transform: translateZ(0);
   }
 
   /* Idle state dimming */
@@ -428,7 +436,7 @@ export const yampCardStyles = css`
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     max-width: 100vw;
-    background: var(--ha-chip-row-background, transparent);
+    background: transparent;
   }
 
   .chip-row::-webkit-scrollbar {
@@ -455,7 +463,7 @@ export const yampCardStyles = css`
     white-space: nowrap;
     scrollbar-width: none;
     font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));
-    background: var(--ha-action-row-background, transparent);
+    background: transparent;
   }
 
   .action-chip-row::-webkit-scrollbar {
