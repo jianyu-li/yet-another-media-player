@@ -6233,6 +6233,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const useInsetArtwork = activeArtworkFit === "scaled-contain" && !collapsed && !this._alwaysCollapsed;
+    // Add top padding to artwork spacer when scaled-contain and chips are not shown inline
+    const needsArtworkTopPadding = activeArtworkFit === "scaled-contain" &&
+      (showChipRow === "in_menu" || (hasSingleEntity && showChipRow !== "always"));
     const fitBehavior = this._getBackgroundSizeForFit(activeArtworkFit);
     let backgroundSize = fitBehavior;
 
@@ -6335,7 +6338,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     style="${(this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap) ? 'cursor:pointer; pointer-events:auto;' : ''}"
                   >
                     ${useInsetArtwork && artworkUrl ? html`
-                      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                      <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none;">
                         <img 
                           src="${artworkUrl}" 
                           style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;" 
