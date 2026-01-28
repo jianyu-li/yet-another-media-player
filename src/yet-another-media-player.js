@@ -5248,13 +5248,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       tapArea.appendChild(container);
     }
 
+    // Remove the ripple when the animation ends
+    ripple.addEventListener('animationend', () => ripple.remove());
     container.appendChild(ripple);
-
-    // Remove the ripple after animation completes
-    const animationDuration = type === 'hold' ? 600 : type === 'double_tap' ? 500 : 400;
-    setTimeout(() => {
-      ripple.remove();
-    }, animationDuration + 50);
   }
 
   _onMenuActionClick(idx) {
