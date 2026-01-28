@@ -3182,4 +3182,97 @@ export const yampCardStyles = css`
   .search-sheet[data-match-theme="false"] *[style*="color: var(--primary-color)"] {
     color: #ff9800 ;
   }
+
+  /* ============================================
+     Card Trigger Gesture Feedback Animations
+     ============================================ */
+
+  /* Base container for gesture feedback - positioned relative to tap area */
+  .gesture-feedback-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+  }
+
+  /* Base styles for ripple effect */
+  .gesture-ripple {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+
+  /* Tap: Quick expanding ripple */
+  @keyframes gestureTapRipple {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0.6;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0;
+    }
+  }
+
+  .gesture-ripple.tap {
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+    animation: gestureTapRipple 0.4s ease-out forwards;
+  }
+
+  /* Double-tap: Two rapid pulses */
+  @keyframes gestureDoubleTapRipple {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0.5;
+    }
+    25% {
+      transform: translate(-50%, -50%) scale(0.6);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(0.3);
+      opacity: 0.5;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0;
+    }
+  }
+
+  .gesture-ripple.double_tap {
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+    animation: gestureDoubleTapRipple 0.5s ease-out forwards;
+  }
+
+  /* Hold: Slower glowing pulse */
+  @keyframes gestureHoldPulse {
+    0% {
+      transform: translate(-50%, -50%) scale(0.2);
+      opacity: 0;
+      box-shadow: 0 0 0 0 rgba(255,255,255,0.4);
+    }
+    30% {
+      opacity: 0.5;
+      box-shadow: 0 0 20px 10px rgba(255,255,255,0.2);
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.2);
+      opacity: 0;
+      box-shadow: 0 0 40px 20px rgba(255,255,255,0);
+    }
+  }
+
+  .gesture-ripple.hold {
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 70%);
+    animation: gestureHoldPulse 0.6s ease-out forwards;
+  }
 `;
