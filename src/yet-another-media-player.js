@@ -5153,10 +5153,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._gestureStartY = e.clientY;
     this._gestureHoldTriggered = false;
 
+    // Store the target tap area for positioning feedback
+    this._gestureTapArea = e.currentTarget;
+
     if (this._cardTriggers?.hold) {
       this._gestureHoldTimer = setTimeout(() => {
         if (this._gestureActive) {
           this._gestureHoldTriggered = true;
+          this._showGestureFeedback('hold', this._gestureStartX, this._gestureStartY);
           this._handleAction(this._cardTriggers.hold);
         }
       }, GESTURE_HOLD_TIMEOUT);
@@ -5192,20 +5196,61 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const timeSinceLastTap = now - (this._lastTapTime || 0);
     this._lastTapTime = now;
 
+    // Store position for delayed tap feedback
+    const tapX = e.clientX;
+    const tapY = e.clientY;
+
     if (timeSinceLastTap < GESTURE_DOUBLE_TAP_MAX_DELAY) {
       // Double Tap
       clearTimeout(this._tapTimer);
       if (this._cardTriggers?.double_tap) {
+        this._showGestureFeedback('double_tap', tapX, tapY);
         this._handleAction(this._cardTriggers.double_tap);
       }
     } else {
       // Tap (delayed to see if it's a double tap)
       this._tapTimer = setTimeout(() => {
         if (this._cardTriggers?.tap) {
+          this._showGestureFeedback('tap', tapX, tapY);
           this._handleAction(this._cardTriggers.tap);
         }
       }, GESTURE_TAP_DELAY);
     }
+  }
+
+  /**
+   * Show visual feedback for card trigger gestures
+   * @param {string} type - 'tap' | 'double_tap' | 'hold'
+   * @param {number} clientX - Client X coordinate of the gesture
+   * @param {number} clientY - Client Y coordinate of the gesture
+   */
+  _showGestureFeedback(type, clientX, clientY) {
+    // Find the gesture feedback container in the shadow DOM
+    const tapArea = this._gestureTapArea || this.shadowRoot?.querySelector('.card-artwork-spacer') || this.shadowRoot?.querySelector('.collapsed-artwork-container');
+    if (!tapArea) return;
+
+    // Get the bounding rect of the tap area to calculate relative position
+    const rect = tapArea.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    // Create ripple element
+    const ripple = document.createElement('div');
+    ripple.className = `gesture-ripple ${type}`;
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+
+    // Find or create the feedback container
+    let container = tapArea.querySelector('.gesture-feedback-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'gesture-feedback-container';
+      tapArea.appendChild(container);
+    }
+
+    // Remove the ripple when the animation ends
+    ripple.addEventListener('animationend', () => ripple.remove());
+    container.appendChild(ripple);
   }
 
   _onMenuActionClick(idx) {
