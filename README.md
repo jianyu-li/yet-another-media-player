@@ -688,8 +688,8 @@ volume_mode: hidden
 This configuration:
 - Hides all playback controls for a clean look
 - **Tap** to play/pause
-- **Hold** to open more info
-- **Double tap** to open search
+- **Hold** to turn volume down
+- **Double tap** to turn volume up
 - **Swipe left** to skip to next track
 - **Swipe right** to go to previous track
 
