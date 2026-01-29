@@ -16714,13 +16714,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
       container.className = 'gesture-feedback-container';
       tapArea.appendChild(container);
     }
-    container.appendChild(ripple);
 
-    // Remove the ripple after animation completes
-    const animationDuration = type === 'hold' ? 600 : type === 'double_tap' ? 500 : 400;
-    setTimeout(() => {
-      ripple.remove();
-    }, animationDuration + 50);
+    // Remove the ripple when the animation ends
+    ripple.addEventListener('animationend', () => ripple.remove());
+    container.appendChild(ripple);
   }
   _onMenuActionClick(idx) {
     var _this$config$actions;
