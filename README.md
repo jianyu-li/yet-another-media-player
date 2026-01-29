@@ -630,6 +630,69 @@ actions:
     card_trigger: swipe_right
 ```
 
+#### Gesture-Only Card Example
+
+Create a minimal, gesture-controlled card by hiding all playback controls and relying entirely on taps and swipes:
+
+```
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.office_homepod
+    name: Office
+    hidden_controls:
+      - previous
+      - play_pause
+      - stop
+      - next
+      - shuffle
+      - repeat
+      - favorite
+      - power
+show_chip_row: in_menu
+actions:
+  - service: media_player.media_play_pause
+    service_data:
+      entity_id: current
+    in_menu: hidden
+    card_trigger: tap
+    name: Play/Pause
+  - in_menu: hidden
+    card_trigger: hold
+    name: Volume Down
+    service: media_player.volume_down
+    service_data:
+      entity_id: current
+  - in_menu: hidden
+    card_trigger: double_tap
+    service: media_player.volume_up
+    service_data:
+      entity_id: current
+    name: Volume Up
+  - service: media_player.media_next_track
+    service_data:
+      entity_id: current
+    in_menu: hidden
+    card_trigger: swipe_left
+    name: Next Track
+  - service: media_player.media_previous_track
+    service_data:
+      entity_id: current
+    in_menu: hidden
+    card_trigger: swipe_right
+    name: Previous Track
+alternate_progress_bar: true
+volume_mode: hidden
+
+```
+
+This configuration:
+- Hides all playback controls for a clean look
+- **Tap** to play/pause
+- **Hold** to open more info
+- **Double tap** to open search
+- **Swipe left** to skip to next track
+- **Swipe right** to go to previous track
+
 #### Example Automation
 
 ```yaml
