@@ -55,6 +55,7 @@ const GESTURE_HOLD_TIMEOUT = 500;
 const GESTURE_MOVE_THRESHOLD = 15;
 const GESTURE_DOUBLE_TAP_MAX_DELAY = 300;
 const GESTURE_TAP_DELAY = 300;
+const GESTURE_SWIPE_THRESHOLD = 50;
 
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -135,7 +136,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Stores the last grouping master id for group chip selection
   _lastGroupingMasterId = null;
   _groupedSortedCache = null;
-  _cardTriggers = { tap: null, hold: null, double_tap: null };
+  _cardTriggers = { tap: null, hold: null, double_tap: null, swipe_left: null, swipe_right: null };
   _lastHassVersion = null;
   _debouncedVolumeTimer = null;
   _supportsFeature(stateObj, featureBit) {
@@ -5171,8 +5172,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!this._gestureActive) return;
     const diffX = Math.abs(e.clientX - this._gestureStartX);
     const diffY = Math.abs(e.clientY - this._gestureStartY);
+    // Cancel hold timer on any significant movement, but keep gesture active for swipe detection
     if (diffX > GESTURE_MOVE_THRESHOLD || diffY > GESTURE_MOVE_THRESHOLD) {
-      this._gestureActive = false;
       clearTimeout(this._gestureHoldTimer);
     }
   }
@@ -5187,10 +5188,33 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Reject taps that were actually holds (long presses)
     if (Date.now() - this._gestureStartTime > GESTURE_HOLD_TIMEOUT) return;
 
-    // Movement threshold check
-    const diffX = Math.abs(e.clientX - this._gestureStartX);
-    const diffY = Math.abs(e.clientY - this._gestureStartY);
-    if (diffX > GESTURE_MOVE_THRESHOLD || diffY > GESTURE_MOVE_THRESHOLD) return;
+    // Calculate movement
+    const diffX = e.clientX - this._gestureStartX;
+    const diffY = e.clientY - this._gestureStartY;
+    const absDiffX = Math.abs(diffX);
+    const absDiffY = Math.abs(diffY);
+
+    // Check for swipe gestures (horizontal movement > threshold, vertical movement < threshold)
+    if (absDiffX >= GESTURE_SWIPE_THRESHOLD && absDiffY < GESTURE_SWIPE_THRESHOLD) {
+      clearTimeout(this._tapTimer);
+      const tapX = e.clientX;
+      const tapY = e.clientY;
+
+      if (diffX < 0 && this._cardTriggers?.swipe_left) {
+        // Swipe Left
+        this._showGestureFeedback('swipe_left', tapX, tapY);
+        this._handleAction(this._cardTriggers.swipe_left);
+        return;
+      } else if (diffX > 0 && this._cardTriggers?.swipe_right) {
+        // Swipe Right
+        this._showGestureFeedback('swipe_right', tapX, tapY);
+        this._handleAction(this._cardTriggers.swipe_right);
+        return;
+      }
+    }
+
+    // Movement threshold check for tap gestures
+    if (absDiffX > GESTURE_MOVE_THRESHOLD || absDiffY > GESTURE_MOVE_THRESHOLD) return;
 
     const now = Date.now();
     const timeSinceLastTap = now - (this._lastTapTime || 0);
@@ -5220,7 +5244,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   /**
    * Show visual feedback for card trigger gestures
-   * @param {string} type - 'tap' | 'double_tap' | 'hold'
+   * @param {string} type - 'tap' | 'double_tap' | 'hold' | 'swipe_left' | 'swipe_right'
    * @param {number} clientX - Client X coordinate of the gesture
    * @param {number} clientY - Client Y coordinate of the gesture
    */
@@ -5903,11 +5927,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const tapAction = visibleActions.find(({ action }) => action?.card_trigger === "tap");
     const holdAction = visibleActions.find(({ action }) => action?.card_trigger === "hold");
     const doubleTapAction = visibleActions.find(({ action }) => action?.card_trigger === "double_tap");
+    const swipeLeftAction = visibleActions.find(({ action }) => action?.card_trigger === "swipe_left");
+    const swipeRightAction = visibleActions.find(({ action }) => action?.card_trigger === "swipe_right");
 
     this._cardTriggers = {
       tap: tapAction?.action,
       hold: holdAction?.action,
-      double_tap: doubleTapAction?.action
+      double_tap: doubleTapAction?.action,
+      swipe_left: swipeLeftAction?.action,
+      swipe_right: swipeRightAction?.action
     };
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     const activeChipName = this.getChipName(this.currentEntityId);
@@ -6360,7 +6388,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     style="${[
           `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
           collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '',
-          (this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap) ? 'cursor:pointer; pointer-events:auto;' : ''
+          (this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right) ? 'cursor:pointer; pointer-events:auto;' : ''
         ].filter(Boolean).join('; ')}"
                   >
                     <img
@@ -6380,7 +6408,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     @pointermove=${(e) => this._onTapAreaPointerMove(e)}
                     @pointerup=${(e) => this._onTapAreaPointerUp(e)}
                     @pointercancel=${() => { this._gestureActive = false; clearTimeout(this._gestureHoldTimer); }}
-                    style="${(this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap) ? 'cursor:pointer; pointer-events:auto;' : ''}"
+                    style="${(this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right) ? 'cursor:pointer; pointer-events:auto;' : ''}"
                   >
                     ${useInsetArtwork && artworkUrl ? html`
                       <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none;">

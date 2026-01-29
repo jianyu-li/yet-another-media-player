@@ -223,7 +223,9 @@ export default {
             "none": "None",
             "tap": "Tap",
             "hold": "Hold",
-            "double_tap": "Double Tap"
+            "double_tap": "Double Tap",
+            "swipe_left": "Swipe Left",
+            "swipe_right": "Swipe Right"
         }
     },
     "card": {

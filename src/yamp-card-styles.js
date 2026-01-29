@@ -3275,4 +3275,52 @@ export const yampCardStyles = css`
     background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 70%);
     animation: gestureHoldPulse 0.6s ease-out forwards;
   }
+
+  /* Swipe Left: Arrow sweeping left */
+  @keyframes gestureSwipeLeft {
+    0% {
+      transform: translate(0%, -50%) scaleX(0);
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translate(-100%, -50%) scaleX(1);
+      opacity: 0;
+    }
+  }
+
+  .gesture-ripple.swipe_left {
+    width: 120px;
+    height: 60px;
+    border-radius: 30px;
+    background: linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.8) 100%);
+    animation: gestureSwipeLeft 0.35s ease-out forwards;
+    transform-origin: right center;
+  }
+
+  /* Swipe Right: Arrow sweeping right */
+  @keyframes gestureSwipeRight {
+    0% {
+      transform: translate(0%, -50%) scaleX(0);
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translate(100%, -50%) scaleX(1);
+      opacity: 0;
+    }
+  }
+
+  .gesture-ripple.swipe_right {
+    width: 120px;
+    height: 60px;
+    border-radius: 30px;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.8) 100%);
+    animation: gestureSwipeRight 0.35s ease-out forwards;
+    transform-origin: left center;
+  }
 `;

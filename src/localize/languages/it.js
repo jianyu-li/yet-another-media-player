@@ -223,7 +223,9 @@ export default {
             "none": "Nessuno",
             "tap": "Tocco",
             "hold": "Mantieni",
-            "double_tap": "Doppio tocco"
+            "double_tap": "Doppio tocco",
+            "swipe_left": "Scorri a sinistra",
+            "swipe_right": "Scorri a destra"
         }
     },
     "card": {

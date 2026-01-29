@@ -223,7 +223,9 @@ export default {
             "none": "Brez",
             "tap": "Dotik",
             "hold": "Pridržanje",
-            "double_tap": "Dvojni dotik"
+            "double_tap": "Dvojni dotik",
+            "swipe_left": "Podrsaj levo",
+            "swipe_right": "Podrsaj desno"
         }
     },
     "card": {

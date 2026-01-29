@@ -223,7 +223,9 @@ export default {
             "none": "Geen",
             "tap": "Tik",
             "hold": "Vasthouden",
-            "double_tap": "Dubbeltik"
+            "double_tap": "Dubbeltik",
+            "swipe_left": "Veeg naar links",
+            "swipe_right": "Veeg naar rechts"
         }
     },
     "card": {

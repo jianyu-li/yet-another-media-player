@@ -223,7 +223,9 @@ export default {
             "none": "Aucun",
             "tap": "Appui",
             "hold": "Maintenir",
-            "double_tap": "Double appui"
+            "double_tap": "Double appui",
+            "swipe_left": "Glisser vers la gauche",
+            "swipe_right": "Glisser vers la droite"
         }
     },
     "card": {
