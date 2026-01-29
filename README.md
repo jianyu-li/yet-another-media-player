@@ -114,7 +114,7 @@ Below you will find a list of all configuration options.
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue` |
 | `in_menu`                  | choice       | No           | `false`     | Placement of the action: `false` (Action Chip), `true` (In Menu), or `hidden` (Hidden - only triggerable via card gestures) |
-| `card_trigger`             | choice       | No           | `none`      | Assign action to a card-level gesture: `none`, `tap`, `hold`, or `double_tap` (only for `hidden` actions) |
+| `card_trigger`             | choice       | No           | `none`      | Assign action to a card-level gesture: `none`, `tap`, `hold`, `double_tap`, `swipe_left`, or `swipe_right` (only for `hidden` actions) |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 | `sync_entity_helper`       | string       | No           | —           | `input_text` entity to sync the currently selected entity to (used with `action: sync_selected_entity`) |
 
@@ -595,6 +595,13 @@ actions:
 
 You can assign actions to card-level gestures on the artwork area by setting `in_menu: hidden` and choosing a `card_trigger`.
 
+Available triggers:
+- `tap` - Single tap on the artwork
+- `hold` - Long press on the artwork
+- `double_tap` - Double tap on the artwork
+- `swipe_left` - Swipe left across the artwork
+- `swipe_right` - Swipe right across the artwork
+
 ```yaml
 actions:
   - icon: mdi:information
@@ -611,7 +618,80 @@ actions:
       entity_id: current
     in_menu: hidden
     card_trigger: double_tap
+  - service: media_player.media_next_track
+    service_data:
+      entity_id: current
+    in_menu: hidden
+    card_trigger: swipe_left
+  - service: media_player.media_previous_track
+    service_data:
+      entity_id: current
+    in_menu: hidden
+    card_trigger: swipe_right
 ```
+
+#### Gesture-Only Card Example
+
+Create a minimal, gesture-controlled card by hiding all playback controls and relying entirely on taps and swipes:
+
+```
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.office_homepod
+    name: Office
+    hidden_controls:
+      - previous
+      - play_pause
+      - stop
+      - next
+      - shuffle
+      - repeat
+      - favorite
+      - power
+show_chip_row: in_menu
+actions:
+  - service: media_player.media_play_pause
+    service_data:
+      entity_id: current
+    in_menu: hidden
+    card_trigger: tap
+    name: Play/Pause
+  - in_menu: hidden
+    card_trigger: hold
+    name: Volume Down
+    service: media_player.volume_down
+    service_data:
+      entity_id: current
+  - in_menu: hidden
+    card_trigger: double_tap
+    service: media_player.volume_up
+    service_data:
+      entity_id: current
+    name: Volume Up
+  - service: media_player.media_next_track
+    service_data:
+      entity_id: current
+    in_menu: hidden
+    card_trigger: swipe_left
+    name: Next Track
+  - service: media_player.media_previous_track
+    service_data:
+      entity_id: current
+    in_menu: hidden
+    card_trigger: swipe_right
+    name: Previous Track
+alternate_progress_bar: true
+volume_mode: hidden
+
+```
+
+This configuration:
+- Hides all playback controls for a clean look
+- **Tap** to play/pause
+- **Hold** to turn volume down
+- **Double tap** to turn volume up
+- **Swipe left** to skip to next track
+- **Swipe right** to go to previous track
 
 #### Example Automation
 

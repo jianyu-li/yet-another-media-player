@@ -223,7 +223,9 @@ export default {
             "none": "Žiadny",
             "tap": "Ťuknutie",
             "hold": "Podržanie",
-            "double_tap": "Dvojité ťuknutie"
+            "double_tap": "Dvojité ťuknutie",
+            "swipe_left": "Potiahnutie doľava",
+            "swipe_right": "Potiahnutie doprava"
         }
     },
     "card": {

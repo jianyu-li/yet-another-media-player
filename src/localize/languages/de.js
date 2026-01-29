@@ -223,7 +223,9 @@ export default {
             "none": "Keiner",
             "tap": "Tippen",
             "hold": "Halten",
-            "double_tap": "Doppeltippen"
+            "double_tap": "Doppeltippen",
+            "swipe_left": "Nach links wischen",
+            "swipe_right": "Nach rechts wischen"
         }
     },
     "card": {

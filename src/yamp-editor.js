@@ -2009,7 +2009,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             { value: "none", label: localize('editor.triggers.none') },
             { value: "tap", label: localize('editor.triggers.tap') },
             { value: "hold", label: localize('editor.triggers.hold') },
-            { value: "double_tap", label: localize('editor.triggers.double_tap') }
+            { value: "double_tap", label: localize('editor.triggers.double_tap') },
+            { value: "swipe_left", label: localize('editor.triggers.swipe_left') },
+            { value: "swipe_right", label: localize('editor.triggers.swipe_right') }
           ]
         }
       }}
