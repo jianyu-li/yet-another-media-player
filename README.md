@@ -18,6 +18,8 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 - **Adaptive Visual Theming** — Customize artwork scaling with various fit modes and add custom artwork overrides
 - **Many Layouts** — Collapse the card when idle or keep it compact while playing, change text sizing, and more to match your dashboard style
 - **Custom Actions** — Add action chips or menu items that call any Home Assistant action or script, with full access to the currently selected entity
+- **Idle Mode** — Display a custom background image when nothing is playing, from a local file, URL, or even a slideshow
+- **Jinja Template Support** — Use Jinja templates for dynamic configuration of volume entities, Music Assistant entities, artwork overrides, and more
 
 ---
 
