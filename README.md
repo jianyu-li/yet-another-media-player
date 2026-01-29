@@ -11,25 +11,13 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 
 ## Features
 
-- Switch between multiple media players in a single card using chips
-- Group supported players
-  - Control volume as a group or individually
-  - Separate volume entity 
-  - Override sync volume behavior on a per entity basis using `group_volume`
-- Music Assistant Support: Search music on compatible players
-- Add background image sensor for when not in use
-- Jump straight into search from the idle screen when you prefer browsing over artwork
-- Auto-switches to the active media player
-  - Entities can be excluded from auto-switching by enabling `disable_auto_select`
-  - Manually selected players will pin in place for the current session until manually removed
-- Transfer queue between compatible Music Assistant players directly from the card menu
-- Action buttons run any Home Assistant service or script 
-  - Pass currently selected entity to a script
-- Use "current" for the entity_id to reference the currently selected media player ([see example below](https://github.com/jianyu-li/yet-another-media-player#custom-actions))
-- Set match_theme to TRUE to have the cards accent colors follow your selected accent theme color
-- Prioritize replacement artwork with `media_artwork_overrides` and fine-tune scaling via `artwork_object_fit`
-- Use collapse_on_idle to collapse the card down when nothing is playing. This looks great on mobile!
-- Use always_collapsed to keep the card collapsed even when something is playing
+- **Multi-Player Control** — Switch between media players in a single card with chip-based selection. Control volume individually or as a group
+- **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
+- **Music Assistant Integration** — Full search, queue management, and transfer between compatible players without leaving the card
+- **mass_queue Support** — Have even more control over your queue with the optional [mass_queue](https://github.com/droans/mass_queue) integration
+- **Adaptive Visual Theming** — Customize artwork scaling with various fit modes and add custom artwork overrides
+- **Many Layouts** — Collapse the card when idle or keep it compact while playing, change text sizing, and more to match your dashboard style
+- **Custom Actions** — Add action chips or menu items that call any Home Assistant action or script, with full access to the currently selected entity
 
 ---
 
