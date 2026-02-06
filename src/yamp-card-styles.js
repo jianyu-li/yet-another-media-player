@@ -3004,6 +3004,8 @@ export const yampCardStyles = css`
     justify-content: center;
     text-align: center;
     margin: 2px 0;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .search-sheet-result:hover {

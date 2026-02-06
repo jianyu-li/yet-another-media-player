@@ -7555,6 +7555,8 @@ const yampCardStyles = i$5`
     justify-content: center;
     text-align: center;
     margin: 2px 0;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .search-sheet-result:hover {
@@ -8283,24 +8285,56 @@ function renderSearchResultSlideOut(_ref2) {
     successSearchRowMenuId,
     onPlayOption,
     onOptionsToggle,
-    searchView = 'list'
+    searchView = 'list',
+    isQueueItem = false,
+    onMoveUp,
+    onMoveDown,
+    onMoveNext,
+    onRemove
   } = _ref2;
   const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
   const isSuccess = successSearchRowMenuId === item.media_content_id;
   return x`
     <div class="search-row-slide-out ${isActive ? 'active' : ''}">
-      <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="${localize('search.labels.replace')}">
-        ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
-      </button>
-      <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="${localize('search.labels.next')}">
-        ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
-      </button>
-      <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="${localize('search.labels.replace_next')}">
-        ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
-      </button>
-      <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
-        ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
-      </button>
+      ${isQueueItem && searchView === 'card' ? x`
+        <button class="slide-out-button" @click=${() => {
+    onMoveUp(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.move_up')}">
+          ${localize('search.move_up')}
+        </button>
+        <button class="slide-out-button" @click=${() => {
+    onMoveDown(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.move_down')}">
+          ${localize('search.move_down')}
+        </button>
+        <button class="slide-out-button" @click=${() => {
+    onMoveNext(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.move_next')}">
+          ${localize('search.move_next')}
+        </button>
+        <button class="slide-out-button" @click=${() => {
+    onRemove(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.remove')}">
+          ${localize('search.remove')}
+        </button>
+      ` : x`
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="${localize('search.labels.replace')}">
+          ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
+        </button>
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="${localize('search.labels.next')}">
+          ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
+        </button>
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="${localize('search.labels.replace_next')}">
+          ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
+        </button>
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
+          ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
+        </button>
+      `}
       <div class="slide-out-close" @click=${e => {
     e.stopPropagation();
     onOptionsToggle(null);
@@ -8446,7 +8480,12 @@ function renderSearchSheet(_ref3) {
       successSearchRowMenuId,
       onPlayOption,
       onOptionsToggle,
-      searchView
+      searchView,
+      isQueueItem: isMA && item.queue_item_id && upcomingFilterActive && massQueueAvailable,
+      onMoveUp,
+      onMoveDown,
+      onMoveNext,
+      onRemove
     })}
                 </div>
               `;
@@ -24232,7 +24271,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
           this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
           this.requestUpdate();
         },
-        searchView: this.config.search_view
+        searchView: this.config.search_view,
+        isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
+        onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
+        onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
+        onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
+        onRemove: it => this._removeQueueItem(it.queue_item_id)
       })}
                             </div>
                           ` : x`

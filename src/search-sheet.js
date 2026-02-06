@@ -164,24 +164,44 @@ export function renderSearchResultSlideOut({
   onPlayOption,
   onOptionsToggle,
   searchView = 'list',
+  isQueueItem = false,
+  onMoveUp,
+  onMoveDown,
+  onMoveNext,
+  onRemove,
 }) {
   const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
   const isSuccess = successSearchRowMenuId === item.media_content_id;
 
   return html`
     <div class="search-row-slide-out ${isActive ? 'active' : ''}">
-      <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="${localize('search.labels.replace')}">
-        ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
-      </button>
-      <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="${localize('search.labels.next')}">
-        ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
-      </button>
-      <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="${localize('search.labels.replace_next')}">
-        ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
-      </button>
-      <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
-        ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
-      </button>
+      ${isQueueItem && searchView === 'card' ? html`
+        <button class="slide-out-button" @click=${() => { onMoveUp(item); onOptionsToggle(null); }} title="${localize('search.move_up')}">
+          ${localize('search.move_up')}
+        </button>
+        <button class="slide-out-button" @click=${() => { onMoveDown(item); onOptionsToggle(null); }} title="${localize('search.move_down')}">
+          ${localize('search.move_down')}
+        </button>
+        <button class="slide-out-button" @click=${() => { onMoveNext(item); onOptionsToggle(null); }} title="${localize('search.move_next')}">
+          ${localize('search.move_next')}
+        </button>
+        <button class="slide-out-button" @click=${() => { onRemove(item); onOptionsToggle(null); }} title="${localize('search.remove')}">
+          ${localize('search.remove')}
+        </button>
+      ` : html`
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="${localize('search.labels.replace')}">
+          ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
+        </button>
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="${localize('search.labels.next')}">
+          ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
+        </button>
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="${localize('search.labels.replace_next')}">
+          ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
+        </button>
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
+          ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
+        </button>
+      `}
       <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); onOptionsToggle(null); }}>
         <ha-icon icon="mdi:close"></ha-icon>
       </div>
@@ -321,7 +341,12 @@ export function renderSearchSheet({
             successSearchRowMenuId,
             onPlayOption,
             onOptionsToggle,
-            searchView
+            searchView,
+            isQueueItem: isMA && item.queue_item_id && upcomingFilterActive && massQueueAvailable,
+            onMoveUp,
+            onMoveDown,
+            onMoveNext,
+            onRemove,
           })}
                 </div>
               `;
