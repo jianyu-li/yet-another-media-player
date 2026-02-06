@@ -103,6 +103,78 @@ function transformMusicAssistantItem(item) {
  * @param {boolean} [opts.matchTheme] - Whether to match the theme of the parent.
  * @param {boolean} [opts.disableAutofocus] - Whether to disable search input autofocus.
  */
+export function renderSearchResultActions({
+  item,
+  onPlay,
+  onOptionsToggle,
+  upcomingFilterActive = false,
+  isMusicAssistant = false,
+  massQueueAvailable = false,
+  searchView = 'list',
+  isInline = false,
+}) {
+  const isQueueItem = !!(upcomingFilterActive && item.queue_item_id && isMusicAssistant && massQueueAvailable);
+
+  const containerClass = isInline ? 'entity-options-search-buttons' : (searchView === 'card' ? 'card-overlay-buttons' : 'search-sheet-buttons');
+  const playClass = isInline ? 'entity-options-search-play' : (searchView === 'card' ? 'search-sheet-play icon-only' : 'search-sheet-play');
+  const queueClass = isInline ? 'entity-options-search-queue' : (searchView === 'card' ? 'search-sheet-queue icon-only' : 'search-sheet-queue');
+
+  return html`
+    <div class="${containerClass}">
+      <button class="${playClass}" 
+              @click=${() => onPlay(item)} 
+              title="${localize('common.play_now')}">
+        <ha-icon icon="mdi:play"></ha-icon>
+      </button>
+      ${!isQueueItem ? html`
+        <button class="${queueClass}" 
+                @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} 
+                title="${localize('common.more_options')}">
+          <ha-icon icon="mdi:dots-vertical"></ha-icon>
+        </button>
+      ` : nothing}
+    </div>
+  `;
+}
+
+export function renderSearchResultSlideOut({
+  item,
+  activeSearchRowMenuId,
+  successSearchRowMenuId,
+  onPlayOption,
+  onOptionsToggle,
+  searchView = 'list',
+}) {
+  const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
+  const isSuccess = successSearchRowMenuId === item.media_content_id;
+
+  return html`
+    <div class="search-row-slide-out ${isActive ? 'active' : ''}">
+      <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="${localize('search.labels.replace')}">
+        ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
+      </button>
+      <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="${localize('search.labels.next')}">
+        ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
+      </button>
+      <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="${localize('search.labels.replace_next')}">
+        ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
+      </button>
+      <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
+        ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
+      </button>
+      <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); onOptionsToggle(null); }}>
+        <ha-icon icon="mdi:close"></ha-icon>
+      </div>
+
+      ${isSuccess ? html`
+        <div class="search-row-success-overlay">
+          ✅ ${localize('search.added')}
+        </div>
+      ` : nothing}
+    </div>
+  `;
+}
+
 export function renderSearchSheet({
   open,
   query,
@@ -146,7 +218,11 @@ export function renderSearchSheet({
         ${(results || []).length === 0 && !loading
       ? html`<div class="search-sheet-empty">${localize('common.no_results')}</div>`
       : (results || []).map(
-        (item) => html`
+        (item) => {
+          const isMA = isMusicAssistantEntity(item.media_content_id);
+          // For now we assume massQueue functionality is available if it's MA 
+          // (matching simplified search-sheet logic)
+          return html`
                 <div class="search-sheet-result ${searchView === 'card' ? 'search-result-card' : ''}" style="position:relative;overflow:hidden;">
                   <div class="search-sheet-thumb-container">
                     ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? html`
@@ -161,18 +237,15 @@ export function renderSearchSheet({
                         <ha-icon icon="mdi:music"></ha-icon>
                       </div>
                     `}
-                    ${searchView === 'card' ? html`
-                      <div class="card-overlay-buttons">
-                        <button class="search-sheet-play icon-only" @click=${() => onPlay(item)} title="${localize('common.play_now')}">
-                          <ha-icon icon="mdi:play"></ha-icon>
-                        </button>
-                        ${!(upcomingFilterActive && item.queue_item_id) ? html`
-                          <button class="search-sheet-queue icon-only" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="${localize('common.more_options')}">
-                            <ha-icon icon="mdi:dots-vertical"></ha-icon>
-                          </button>
-                        ` : nothing}
-                      </div>
-                    ` : nothing}
+                    ${searchView === 'card' ? renderSearchResultActions({
+            item,
+            onPlay,
+            onOptionsToggle,
+            upcomingFilterActive,
+            isMusicAssistant: isMA,
+            massQueueAvailable: isMA, // Simplified for search sheet
+            searchView: 'card'
+          }) : nothing}
                   </div>
                   <div class="search-sheet-info" style="${searchView === 'card' ? 'text-align:center;' : 'flex:1;min-width:0;'}">
                     <span 
@@ -189,46 +262,33 @@ export function renderSearchSheet({
                         ${item.artist}
                       </span>
                     ` : nothing}
-                  </div>
-                  ${searchView !== 'card' ? html`
-                    <div class="search-sheet-buttons">
-                      <button class="search-sheet-play" @click=${() => onPlay(item)} title="${localize('common.play_now')}">
-                        <ha-icon icon="mdi:play"></ha-icon>
-                      </button>
-                      ${!(upcomingFilterActive && item.queue_item_id) ? html`
-                        <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="${localize('common.more_options')}">
-                          <ha-icon icon="mdi:dots-vertical"></ha-icon>
-                        </button>
-                      ` : nothing}
-                    </div>
-                  ` : nothing}
-                  
-                  <!-- SLIDE-OUT MENU -->
-                  <div class="search-row-slide-out ${activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
-                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="Replace existing queue and play now">
-                      <ha-icon icon="mdi:playlist-remove"></ha-icon> Replace
-                    </button>
-                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="Play next">
-                      <ha-icon icon="mdi:playlist-play"></ha-icon> Next
-                    </button>
-                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="Replace queue">
-                      <ha-icon icon="mdi:playlist-music"></ha-icon> Replace Next
-                    </button>
-                    <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="Add to the end of the queue">
-                      <ha-icon icon="mdi:playlist-plus"></ha-icon> Add
-                    </button>
-                    <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); onOptionsToggle(null); }}>
-                      <ha-icon icon="mdi:close"></ha-icon>
-                    </div>
-
-                    ${successSearchRowMenuId === item.media_content_id ? html`
-                      <div class="search-row-success-overlay">
-                        ✅ Added to queue!
+                    ${searchView === 'card' ? html`
+                      <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }}>
+                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
                       </div>
                     ` : nothing}
                   </div>
+                  ${searchView !== 'card' ? renderSearchResultActions({
+            item,
+            onPlay,
+            onOptionsToggle,
+            upcomingFilterActive,
+            isMusicAssistant: isMA,
+            massQueueAvailable: isMA, // Simplified for search sheet
+            searchView: 'list'
+          }) : nothing}
+                  
+                  ${renderSearchResultSlideOut({
+            item,
+            activeSearchRowMenuId,
+            successSearchRowMenuId,
+            onPlayOption,
+            onOptionsToggle,
+            searchView
+          })}
                 </div>
-              `
+              `;
+        }
       )}
       </div>
     </div>

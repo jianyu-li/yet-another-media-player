@@ -2954,6 +2954,54 @@ export const yampCardStyles = css`
     align-items: center;
     gap: 8px;
     height: min-content;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-menu-button {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    z-index: 2;
+  }
+
+  .card-menu-button:hover {
+    opacity: 1;
+  }
+
+  .search-result-card .search-row-slide-out {
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    top: 100%;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    border-radius: 12px;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+    padding: 0 8px;
+    box-sizing: border-box;
+  }
+
+  .search-result-card .search-row-slide-out.active {
+    top: 0;
+  }
+
+  .search-result-card .slide-out-button {
+    font-size: 0.85em;
+    padding: 8px 12px;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    text-align: center;
+    margin: 2px 0;
   }
 
   .search-sheet-result:hover {

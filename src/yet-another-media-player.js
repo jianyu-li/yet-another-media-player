@@ -7,7 +7,19 @@ import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles, Z_LAYERS } from "./yamp-card-styles.js";
-import { renderSearchSheet, renderSearchOptionsOverlay, searchMedia, playSearchedMedia, getFavorites, getRecentlyPlayed, isTrackFavorited, getMusicAssistantConfigEntryId, getMassQueueConfigEntryId } from "./search-sheet.js";
+import {
+  renderSearchSheet,
+  renderSearchOptionsOverlay,
+  searchMedia,
+  playSearchedMedia,
+  getFavorites,
+  getRecentlyPlayed,
+  isTrackFavorited,
+  getMusicAssistantConfigEntryId,
+  getMassQueueConfigEntryId,
+  renderSearchResultActions,
+  renderSearchResultSlideOut
+} from "./search-sheet.js";
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
 import {
   resolveTemplateAtActionTime,
@@ -6908,18 +6920,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                     <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
                                   </div>
                                 `}
-                                ${this.config.search_view === 'card' ? html`
-                                  <div class="card-overlay-buttons">
-                                    <button class="entity-options-search-play icon-only" @click=${() => this._playMediaFromSearch(item)} title="${localize('common.play_now')}">
-                                      <ha-icon icon="mdi:play"></ha-icon>
-                                    </button>
-                                    ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
-                                      <button class="entity-options-search-queue icon-only" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="${localize('common.more_options')}">
-                                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
-                                      </button>
-                                    ` : nothing}
-                                  </div>
-                                ` : nothing}
+                                ${this.config.search_view === 'card' ? renderSearchResultActions({
+                        item,
+                        onPlay: (it) => this._playMediaFromSearch(it),
+                        onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+                        upcomingFilterActive: !!this._upcomingFilterActive,
+                        isMusicAssistant: this._isMusicAssistantEntity(),
+                        massQueueAvailable: this._massQueueAvailable,
+                        searchView: 'card'
+                      }) : nothing}
                               </div>
                               <div class="search-sheet-info" style="${this.config.search_view === 'card' ? 'text-align:center;' : 'flex:1; display:flex; flex-direction:column; justify-content:center;'}">
                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''} ${this.config.search_view === 'card' ? 'search-sheet-title' : ''}"
@@ -6944,65 +6953,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             : "";
                         })()}
                                 </span>
-                              </div>
-                              ${this.config.search_view !== 'card' ? html`
-                                <div class="entity-options-search-buttons">
-                                  <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="${localize('common.play_now')}">
-                                    <ha-icon icon="mdi:play"></ha-icon>
-                                  </button>
-                                  ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
-                                    <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="${localize('common.more_options')}">
-                                      <ha-icon icon="mdi:dots-vertical"></ha-icon>
-                                    </button>
-                                  ` : html`
-                                    <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->
-                                    ${this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? html`
-                                      <div class="queue-controls">
-                                        <button class="queue-btn queue-btn-up" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemUp(item.queue_item_id); }} title="${localize('search.move_up')}">
-                                          <ha-icon icon="mdi:arrow-up"></ha-icon>
-                                        </button>
-                                        <button class="queue-btn queue-btn-down" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemDown(item.queue_item_id); }} title="${localize('search.move_down')}">
-                                          <ha-icon icon="mdi:arrow-down"></ha-icon>
-                                        </button>
-                                        <button class="queue-btn queue-btn-next" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._moveQueueItemNext(item.queue_item_id); }} title="${localize('search.move_next')}">
-                                          <ha-icon icon="mdi:format-vertical-align-top"></ha-icon>
-                                        </button>
-                                        <button class="queue-btn queue-btn-remove" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._removeQueueItem(item.queue_item_id); }} title="${localize('search.remove')}">
-                                          <ha-icon icon="mdi:close"></ha-icon>
-                                        </button>
-                                      </div>
-                                    ` : html`
-                                      <button class="entity-options-search-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="More Options">
-                                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
-                                      </button>
-                                    `}
-                                  `}
-                                </div>
-                              ` : nothing}
-                                <!-- SLIDE-OUT MENU -->
-                                <div class="search-row-slide-out ${this._activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
-                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace')} title="${localize('search.replace_play')}">
-                                    <ha-icon icon="mdi:playlist-remove"></ha-icon> ${localize('search.labels.replace')}
-                                  </button>
-                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'next')} title="${localize('search.play_next')}">
-                                    <ha-icon icon="mdi:playlist-play"></ha-icon> ${localize('search.labels.next')}
-                                  </button>
-                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace_next')} title="${localize('search.replace')}">
-                                    <ha-icon icon="mdi:playlist-music"></ha-icon> ${localize('search.labels.replace_next')}
-                                  </button>
-                                  <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'add')} title="${localize('search.add_queue')}">
-                                    <ha-icon icon="mdi:playlist-plus"></ha-icon> ${localize('search.labels.add')}
-                                  </button>
-                                  <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); this._activeSearchRowMenuId = null; this.requestUpdate(); }}>
-                                    <ha-icon icon="mdi:close"></ha-icon>
+                                ${this.config.search_view === 'card' ? html`
+                                  <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }}>
+                                    <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                   </div>
+                                ` : nothing}
+                              </div>
+                              ${this.config.search_view !== 'card' ? renderSearchResultActions({
+                          item,
+                          onPlay: (it) => this._playMediaFromSearch(it),
+                          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+                          upcomingFilterActive: !!this._upcomingFilterActive,
+                          isMusicAssistant: this._isMusicAssistantEntity(),
+                          massQueueAvailable: this._massQueueAvailable,
+                          searchView: 'list',
+                          isInline: true
+                        }) : nothing}
 
-                                  ${this._successSearchRowMenuId === item.media_content_id ? html`
-                                    <div class="search-row-success-overlay">
-                                      ✅ ${localize('search.added')}
-                                    </div>
-                                  ` : nothing}
-                                </div>
+                                ${renderSearchResultSlideOut({
+                          item,
+                          activeSearchRowMenuId: this._activeSearchRowMenuId,
+                          successSearchRowMenuId: this._successSearchRowMenuId,
+                          onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
+                          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+                          searchView: this.config.search_view
+                        })}
                             </div>
                           ` : html`
                             <!-- placeholder row keeps height -->
