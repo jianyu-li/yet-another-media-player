@@ -7632,7 +7632,22 @@ const yampCardStyles = i$5`
     text-overflow: ellipsis;
   }
 
-  .search-result-card .search-sheet-title,
+  .search-result-card .search-sheet-title {
+    text-align: center;
+    width: 100%;
+    /* 2-line clamping with word-level breaks */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 14px;
+    line-height: 1.3;
+    min-height: 2.6em; /* Reserve space for 2 lines to keep all cards uniform */
+  }
+
   .search-result-card .search-sheet-subtitle {
     text-align: center;
     width: 100%;
