@@ -2688,7 +2688,9 @@ var it = {
       "image_url_helper": "Inserisci un URL diretto a un'immagine o un percorso file locale",
       "selected_entity_helper": "Helper di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato.",
       "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata).",
-      "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione."
+      "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione.",
+      "search_view": "Scegli tra una lista standard o una griglia di schede per i risultati della ricerca.",
+      "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente."
     },
     "titles": {
       "edit_entity": "Modifica entità",
@@ -2765,7 +2767,9 @@ var it = {
       "selected_entity_helper": "Helper entità selezionata",
       "sync_entity_type": "Tipo di entità da sincronizzare",
       "placement": "Posizionamento",
-      "card_trigger": "Trigger della scheda"
+      "card_trigger": "Trigger della scheda",
+      "search_view": "Vista risultati ricerca",
+      "search_card_columns": "Colonne schede"
     },
     "action_types": {
       "menu": "Apri un elemento del menu",
@@ -3310,7 +3314,9 @@ var pt = {
       "image_url_helper": "Insira um URL direto para uma imagem ou um caminho de arquivo local",
       "selected_entity_helper": "Helper de texto de entrada que será atualizado com o ID da entidade do reprodutor de mídia selecionado no momento.",
       "sync_entity_type": "Escolha qual ID de entidade sincronizar com o helper (padrão entidade Music Assistant se configurada).",
-      "disable_auto_select": "Impede que o chip desta entidade seja selecionado automaticamente quando a reprodução é iniciada."
+      "disable_auto_select": "Impede que o chip desta entidade seja selecionado automaticamente quando a reprodução é iniciada.",
+      "search_view": "Escolha entre uma lista padrão ou uma grade de cartões para os resultados da pesquisa.",
+      "search_card_columns": "Especifique quantas colunas usar na visualização de cartões. A capa será redimensionada automaticamente."
     },
     "titles": {
       "edit_entity": "Editar entidade",
@@ -3387,7 +3393,9 @@ var pt = {
       "selected_entity_helper": "Helper de entidade selecionada",
       "sync_entity_type": "Tipo de entidade a sincronizar",
       "placement": "Posicionamento",
-      "card_trigger": "Gatilho do cartão"
+      "card_trigger": "Gatilho do cartão",
+      "search_view": "Vista de resultados de pesquisa",
+      "search_card_columns": "Colunas de cartões"
     },
     "action_types": {
       "menu": "Abrir um item do menu",
@@ -3417,6 +3425,10 @@ var pt = {
       "double_tap": "Toque duplo",
       "swipe_left": "Deslizar para a esquerda",
       "swipe_right": "Deslizar para a direita"
+    },
+    "search_view_options": {
+      "list": "Lista",
+      "card": "Cartão"
     }
   },
   "card": {
@@ -3617,7 +3629,9 @@ var sk = {
       "image_url_helper": "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
       "selected_entity_helper": "Pomocník pre vstupný text, ktorý bude aktualizovaný o ID aktuálne vybranej entity prehrávača médií.",
       "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná).",
-      "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania."
+      "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania.",
+      "search_view": "Vyberte si medzi štandardným zoznamom alebo mriežkou kariet pre výsledky vyhľadávania.",
+      "search_card_columns": "Zadajte, koľko stĺpcov sa má použiť v zobrazení karty. Grafika sa automaticky prispôsobí."
     },
     "titles": {
       "edit_entity": "Upraviť entitu",
@@ -3694,7 +3708,9 @@ var sk = {
       "selected_entity_helper": "Pomocník vybratej entity",
       "sync_entity_type": "Typ entity na synchronizáciu",
       "placement": "Umiestnenie",
-      "card_trigger": "Spúšťač karty"
+      "card_trigger": "Spúšťač karty",
+      "search_view": "Zobrazenie výsledkov vyhľadávania",
+      "search_card_columns": "Stĺpce karty"
     },
     "action_types": {
       "menu": "Otvoriť položku menu karty",
@@ -3724,6 +3740,10 @@ var sk = {
       "double_tap": "Dvojité ťuknutie",
       "swipe_left": "Potiahnutie doľava",
       "swipe_right": "Potiahnutie doprava"
+    },
+    "search_view_options": {
+      "list": "Zoznam",
+      "card": "Karta"
     }
   },
   "card": {
@@ -6849,8 +6869,11 @@ const yampCardStyles = i$5`
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
+    flex-direction: column;
+    gap: 4px;
     align-items: center;
     justify-content: center;
+    text-align: center;
     color: #fff;
     font-weight: 600;
     font-size: 0.95em;
@@ -6859,6 +6882,10 @@ const yampCardStyles = i$5`
     border-radius: inherit;
     box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
     animation: success-fade-in 0.3s ease;
+  }
+
+  .search-row-success-overlay span:first-child {
+    font-size: 1.5em;
   }
 
   @keyframes success-fade-in {
@@ -7431,7 +7458,8 @@ const yampCardStyles = i$5`
   }
 
   .search-sheet-results.search-results-card-view,
-  .entity-options-search-results.search-results-card-view {
+  .entity-options-search-results.search-results-card-view,
+  .search-sheet[data-card-view="true"] .search-sheet-results {
     display: grid;
     grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
     gap: 12px;
@@ -7450,12 +7478,6 @@ const yampCardStyles = i$5`
     display: none;
   }
 
-  .search-sheet-results.card-view {
-    display: grid;
-    grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
-    gap: 12px;
-    padding: 12px;
-  }
 
   .search-sheet-result {
     display: flex;
@@ -7552,10 +7574,10 @@ const yampCardStyles = i$5`
   .search-result-card .entity-options-search-thumb,
   .search-result-card .search-sheet-thumb-placeholder,
   .search-result-card .entity-options-search-thumb-placeholder {
-    width: 100% !important;
-    height: auto !important;
+    width: 100%;
+    height: auto;
     aspect-ratio: 1 / 1;
-    margin-right: 0 !important;
+    margin-right: 0;
   }
 
   .search-sheet-thumb-placeholder {
@@ -7579,6 +7601,10 @@ const yampCardStyles = i$5`
 
   .search-result-card .search-sheet-thumb-container {
     width: 100%;
+  }
+
+  .search-sheet-thumb-container[data-clickable="true"] {
+    cursor: pointer;
   }
 
   .card-overlay-buttons {
@@ -7630,6 +7656,17 @@ const yampCardStyles = i$5`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+
+  .search-sheet-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-result-card .search-sheet-info {
+    text-align: center;
+    width: 100%;
   }
 
   .search-result-card .search-sheet-title {
@@ -8211,8 +8248,8 @@ function renderSearchResultSlideOut(_ref2) {
       </div>
 
       ${isSuccess ? x`
-        <div class="search-row-success-overlay" style="flex-direction: column; gap: 4px; align-items: center; text-align: center;">
-          <span style="font-size: 1.5em;">✅</span>
+        <div class="search-row-success-overlay">
+          <span>✅</span>
           <span>${localize('search.added')}</span>
         </div>
       ` : E}
@@ -8247,7 +8284,7 @@ function renderSearchSheet(_ref3) {
   } = _ref3;
   if (!open) return E;
   return x`
-    <div class="search-sheet" data-match-theme="${matchTheme}" style="${searchView === 'card' ? `--search-card-columns: ${searchCardColumns};` : ''}">
+    <div class="search-sheet" data-match-theme="${matchTheme}" data-card-view="${searchView === 'card'}">
       <div class="search-sheet-header">
         <input
           type="text"
@@ -8267,9 +8304,9 @@ function renderSearchSheet(_ref3) {
     // For now we assume massQueue functionality is available if it's MA 
     // (matching simplified search-sheet logic)
     return x`
-                <div class="search-sheet-result ${searchView === 'card' ? 'search-result-card' : ''}" style="position:relative;overflow:hidden;">
+                <div class="search-sheet-result ${searchView === 'card' ? 'search-result-card' : ''}">
                   <div class="search-sheet-thumb-container" 
-                       style="${searchView === 'card' ? 'cursor: pointer;' : ''}"
+                       data-clickable="${searchView === 'card'}"
                        @click=${searchView === 'card' ? () => onPlay(item) : null}>
                     ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x`
                       <img
@@ -8294,7 +8331,7 @@ function renderSearchSheet(_ref3) {
       searchView: 'card'
     }) : E}
                   </div>
-                  <div class="search-sheet-info" style="${searchView === 'card' ? 'text-align:center;' : 'flex:1;min-width:0;'}">
+                  <div class="search-sheet-info">
                     <span 
                       class="search-sheet-title ${item.is_browsable ? 'browsable' : ''}" 
                       @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
@@ -16215,6 +16252,9 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               ></ha-textfield>
             </div>
             <ha-icon
+                class="icon-button"
+                icon="mdi:restore"
+                title="${localize('common.reset_default')}"
                 @click=${() => this._updateConfig("card_height", undefined)}
               ></ha-icon>
             </div>
@@ -16460,7 +16500,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                       <ha-icon icon="mdi:drag"></ha-icon>
                     </div>
                     ${act !== null && act !== void 0 && act.icon ? x`
-                      <ha-icon class="action-icon" icon="${act === null || act === void 0 ? void 0 : act.icon}"></ha-icon>
+                      <ha-icon class="action-icon" icon="${act === null || act === void 0 ? void 0 : act.icon}" title="Action Icon"></ha-icon>
                     ` : x`<span class="action-icon-placeholder"></span>`}
                     <div class="grow-children">
                       <ha-textfield
@@ -16538,6 +16578,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           <ha-icon
             class="icon-button"
             icon="mdi:chevron-left"
+            title="${localize('common.back')}"
             @click=${this._onBackFromEntityEditor}>
           </ha-icon>
           <div class="entity-editor-title">${localize('editor.titles.edit_entity')}</div>
@@ -17177,13 +17218,12 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                     @click=${this._revertYamlEditor}
                   ></ha-icon>
                   <ha-icon
-
                     class="icon-button ${this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : ""}"
-
                     icon="mdi:play-circle-outline"
                     title="${localize('editor.fields.test_action')}"
                     @click=${this._testServiceCall}
-                  ></ha-icon>              
+                  ></ha-icon>
+              
                 </div>
             </div>
             <div class=${this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>

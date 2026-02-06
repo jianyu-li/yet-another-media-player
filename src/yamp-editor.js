@@ -1381,6 +1381,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-textfield>
             </div>
             <ha-icon
+                class="icon-button"
+                icon="mdi:restore"
+                title="${localize('common.reset_default')}"
                 @click=${() => this._updateConfig("card_height", undefined)}
               ></ha-icon>
             </div>
@@ -1600,7 +1603,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon icon="mdi:drag"></ha-icon>
                     </div>
                     ${act?.icon ? html`
-                      <ha-icon class="action-icon" icon="${act?.icon}"></ha-icon>
+                      <ha-icon class="action-icon" icon="${act?.icon}" title="Action Icon"></ha-icon>
                     ` : html`<span class="action-icon-placeholder"></span>`}
                     <div class="grow-children">
                       <ha-textfield
@@ -1682,6 +1685,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <ha-icon
             class="icon-button"
             icon="mdi:chevron-left"
+            title="${localize('common.back')}"
             @click=${this._onBackFromEntityEditor}>
           </ha-icon>
           <div class="entity-editor-title">${localize('editor.titles.edit_entity')}</div>
@@ -2264,14 +2268,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     @click=${this._revertYamlEditor}
                   ></ha-icon>
                   <ha-icon
-
                     class="icon-button ${this._yamlError || this._yamlDraftUsesCurrentEntity() || !action?.service
             ? "icon-button-disabled" : ""}"
-
                     icon="mdi:play-circle-outline"
                     title="${localize('editor.fields.test_action')}"
                     @click=${this._testServiceCall}
-                  ></ha-icon>              
+                  ></ha-icon>
+              
                 </div>
             </div>
             <div class=${this._yamlError && this._yamlDraft.trim() !== ""

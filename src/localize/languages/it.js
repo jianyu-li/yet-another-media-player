@@ -119,7 +119,9 @@ export default {
             "image_url_helper": "Inserisci un URL diretto a un'immagine o un percorso file locale",
             "selected_entity_helper": "Helper di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato.",
             "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata).",
-            "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione."
+            "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione.",
+            "search_view": "Scegli tra una lista standard o una griglia di schede per i risultati della ricerca.",
+            "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente."
         },
         "titles": {
             "edit_entity": "Modifica entità",
@@ -196,7 +198,9 @@ export default {
             "selected_entity_helper": "Helper entità selezionata",
             "sync_entity_type": "Tipo di entità da sincronizzare",
             "placement": "Posizionamento",
-            "card_trigger": "Trigger della scheda"
+            "card_trigger": "Trigger della scheda",
+            "search_view": "Vista risultati ricerca",
+            "search_card_columns": "Colonne schede"
         },
         "action_types": {
             "menu": "Apri un elemento del menu",

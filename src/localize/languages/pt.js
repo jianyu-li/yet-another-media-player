@@ -119,7 +119,9 @@ export default {
             "image_url_helper": "Insira um URL direto para uma imagem ou um caminho de arquivo local",
             "selected_entity_helper": "Helper de texto de entrada que será atualizado com o ID da entidade do reprodutor de mídia selecionado no momento.",
             "sync_entity_type": "Escolha qual ID de entidade sincronizar com o helper (padrão entidade Music Assistant se configurada).",
-            "disable_auto_select": "Impede que o chip desta entidade seja selecionado automaticamente quando a reprodução é iniciada."
+            "disable_auto_select": "Impede que o chip desta entidade seja selecionado automaticamente quando a reprodução é iniciada.",
+            "search_view": "Escolha entre uma lista padrão ou uma grade de cartões para os resultados da pesquisa.",
+            "search_card_columns": "Especifique quantas colunas usar na visualização de cartões. A capa será redimensionada automaticamente."
         },
         "titles": {
             "edit_entity": "Editar entidade",
@@ -196,7 +198,9 @@ export default {
             "selected_entity_helper": "Helper de entidade selecionada",
             "sync_entity_type": "Tipo de entidade a sincronizar",
             "placement": "Posicionamento",
-            "card_trigger": "Gatilho do cartão"
+            "card_trigger": "Gatilho do cartão",
+            "search_view": "Vista de resultados de pesquisa",
+            "search_card_columns": "Colunas de cartões"
         },
         "action_types": {
             "menu": "Abrir um item do menu",
@@ -226,6 +230,10 @@ export default {
             "double_tap": "Toque duplo",
             "swipe_left": "Deslizar para a esquerda",
             "swipe_right": "Deslizar para a direita"
+        },
+        "search_view_options": {
+            "list": "Lista",
+            "card": "Cartão"
         }
     },
     "card": {

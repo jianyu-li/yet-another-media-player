@@ -119,7 +119,9 @@ export default {
             "image_url_helper": "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
             "selected_entity_helper": "Pomocník pre vstupný text, ktorý bude aktualizovaný o ID aktuálne vybranej entity prehrávača médií.",
             "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná).",
-            "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania."
+            "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania.",
+            "search_view": "Vyberte si medzi štandardným zoznamom alebo mriežkou kariet pre výsledky vyhľadávania.",
+            "search_card_columns": "Zadajte, koľko stĺpcov sa má použiť v zobrazení karty. Grafika sa automaticky prispôsobí."
         },
         "titles": {
             "edit_entity": "Upraviť entitu",
@@ -196,7 +198,9 @@ export default {
             "selected_entity_helper": "Pomocník vybratej entity",
             "sync_entity_type": "Typ entity na synchronizáciu",
             "placement": "Umiestnenie",
-            "card_trigger": "Spúšťač karty"
+            "card_trigger": "Spúšťač karty",
+            "search_view": "Zobrazenie výsledkov vyhľadávania",
+            "search_card_columns": "Stĺpce karty"
         },
         "action_types": {
             "menu": "Otvoriť položku menu karty",
@@ -226,6 +230,10 @@ export default {
             "double_tap": "Dvojité ťuknutie",
             "swipe_left": "Potiahnutie doľava",
             "swipe_right": "Potiahnutie doprava"
+        },
+        "search_view_options": {
+            "list": "Zoznam",
+            "card": "Karta"
         }
     },
     "card": {

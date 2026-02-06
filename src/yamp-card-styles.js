@@ -2326,8 +2326,11 @@ export const yampCardStyles = css`
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
+    flex-direction: column;
+    gap: 4px;
     align-items: center;
     justify-content: center;
+    text-align: center;
     color: #fff;
     font-weight: 600;
     font-size: 0.95em;
@@ -2336,6 +2339,10 @@ export const yampCardStyles = css`
     border-radius: inherit;
     box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
     animation: success-fade-in 0.3s ease;
+  }
+
+  .search-row-success-overlay span:first-child {
+    font-size: 1.5em;
   }
 
   @keyframes success-fade-in {
@@ -2908,7 +2915,8 @@ export const yampCardStyles = css`
   }
 
   .search-sheet-results.search-results-card-view,
-  .entity-options-search-results.search-results-card-view {
+  .entity-options-search-results.search-results-card-view,
+  .search-sheet[data-card-view="true"] .search-sheet-results {
     display: grid;
     grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
     gap: 12px;
@@ -2927,12 +2935,6 @@ export const yampCardStyles = css`
     display: none;
   }
 
-  .search-sheet-results.card-view {
-    display: grid;
-    grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
-    gap: 12px;
-    padding: 12px;
-  }
 
   .search-sheet-result {
     display: flex;
@@ -3029,10 +3031,10 @@ export const yampCardStyles = css`
   .search-result-card .entity-options-search-thumb,
   .search-result-card .search-sheet-thumb-placeholder,
   .search-result-card .entity-options-search-thumb-placeholder {
-    width: 100% !important;
-    height: auto !important;
+    width: 100%;
+    height: auto;
     aspect-ratio: 1 / 1;
-    margin-right: 0 !important;
+    margin-right: 0;
   }
 
   .search-sheet-thumb-placeholder {
@@ -3056,6 +3058,10 @@ export const yampCardStyles = css`
 
   .search-result-card .search-sheet-thumb-container {
     width: 100%;
+  }
+
+  .search-sheet-thumb-container[data-clickable="true"] {
+    cursor: pointer;
   }
 
   .card-overlay-buttons {
@@ -3107,6 +3113,17 @@ export const yampCardStyles = css`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+
+  .search-sheet-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-result-card .search-sheet-info {
+    text-align: center;
+    width: 100%;
   }
 
   .search-result-card .search-sheet-title {

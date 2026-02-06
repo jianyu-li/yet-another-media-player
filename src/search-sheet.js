@@ -167,8 +167,8 @@ export function renderSearchResultSlideOut({
       </div>
 
       ${isSuccess ? html`
-        <div class="search-row-success-overlay" style="flex-direction: column; gap: 4px; align-items: center; text-align: center;">
-          <span style="font-size: 1.5em;">✅</span>
+        <div class="search-row-success-overlay">
+          <span>✅</span>
           <span>${localize('search.added')}</span>
         </div>
       ` : nothing}
@@ -201,7 +201,7 @@ export function renderSearchSheet({
 }) {
   if (!open) return nothing;
   return html`
-    <div class="search-sheet" data-match-theme="${matchTheme}" style="${searchView === 'card' ? `--search-card-columns: ${searchCardColumns};` : ''}">
+    <div class="search-sheet" data-match-theme="${matchTheme}" data-card-view="${searchView === 'card'}">
       <div class="search-sheet-header">
         <input
           type="text"
@@ -224,9 +224,9 @@ export function renderSearchSheet({
           // For now we assume massQueue functionality is available if it's MA 
           // (matching simplified search-sheet logic)
           return html`
-                <div class="search-sheet-result ${searchView === 'card' ? 'search-result-card' : ''}" style="position:relative;overflow:hidden;">
+                <div class="search-sheet-result ${searchView === 'card' ? 'search-result-card' : ''}">
                   <div class="search-sheet-thumb-container" 
-                       style="${searchView === 'card' ? 'cursor: pointer;' : ''}"
+                       data-clickable="${searchView === 'card'}"
                        @click=${searchView === 'card' ? () => onPlay(item) : null}>
                     ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? html`
                       <img
@@ -250,7 +250,7 @@ export function renderSearchSheet({
             searchView: 'card'
           }) : nothing}
                   </div>
-                  <div class="search-sheet-info" style="${searchView === 'card' ? 'text-align:center;' : 'flex:1;min-width:0;'}">
+                  <div class="search-sheet-info">
                     <span 
                       class="search-sheet-title ${item.is_browsable ? 'browsable' : ''}" 
                       @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
