@@ -2982,13 +2982,13 @@ export const yampCardStyles = css`
     left: 0;
     right: 0;
     bottom: 0;
-    justify-content: center;
+    justify-content: flex-start;
+    overflow-y: auto;
     background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(4px);
+    padding: 12px 8px;
     border-radius: 12px;
     transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 5;
-    padding: 0 8px;
     box-sizing: border-box;
   }
 
@@ -3006,6 +3006,12 @@ export const yampCardStyles = css`
     margin: 2px 0;
     white-space: normal;
     word-break: break-word;
+    flex-shrink: 0;
+  }
+
+  .search-result-card .slide-out-close {
+    margin: 8px 0 4px 0;
+    flex-shrink: 0;
   }
 
   .search-sheet-result:hover {
