@@ -7651,6 +7651,17 @@ const yampCardStyles = i$5`
   .search-result-card .search-sheet-subtitle {
     text-align: center;
     width: 100%;
+    /* 2-line clamping with word-level breaks */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 0.85em;
+    line-height: 1.3;
+    min-height: 2.6em; /* Reserve space for 2 lines to keep all cards uniform */
   }
 
   .search-sheet-title.browsable,
