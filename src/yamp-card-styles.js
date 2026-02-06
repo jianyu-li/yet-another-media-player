@@ -3095,6 +3095,38 @@ export const yampCardStyles = css`
     border-radius: 50%;
   }
 
+  .entity-options-search-thumb,
+  .entity-options-search-thumb-placeholder {
+    object-fit: var(--yamp-artwork-fit, cover);
+    border-radius: 5px;
+  }
+
+  .entity-options-search-thumb-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .entity-options-search-thumb-placeholder ha-icon {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+  }
+
+  .search-sheet-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .search-result-card .search-sheet-info {
+    text-align: center;
+    width: 100%;
+    display: block; /* Original card behavior */
+  }
+
   .search-sheet-title {
     flex: 1;
     color: #fff;
@@ -3115,11 +3147,12 @@ export const yampCardStyles = css`
     text-overflow: ellipsis;
   }
 
-
-  .search-sheet-info {
-    flex: 1;
-    min-width: 0;
+  .entity-options-search-result:not(.search-result-card) .search-sheet-subtitle {
+    font-size: 0.86em;
+    color: #bbb;
+    line-height: 1.16;
   }
+
 
   .search-result-card .search-sheet-info {
     text-align: center;

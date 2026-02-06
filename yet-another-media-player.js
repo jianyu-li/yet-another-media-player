@@ -2062,7 +2062,9 @@ var es = {
       "image_url_helper": "Ingrese una URL directa a una imagen o una ruta de archivo local",
       "selected_entity_helper": "Helper de texto de entrada que se actualizará con el ID de la entidad del reproductor de medios seleccionado actualmente.",
       "sync_entity_type": "Elija qué ID de entidad sincronizar con el helper (por defecto la entidad de Music Assistant si está configurada).",
-      "disable_auto_select": "Evita que el chip de esta entidad se seleccione automáticamente cuando comienza la reproducción."
+      "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione.",
+      "search_view": "Elegir entre una lista estándar o una cuadrícula de tarjetas para i risultati de la búsqueda.",
+      "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente."
     },
     "titles": {
       "edit_entity": "Editar entidad",
@@ -2139,7 +2141,9 @@ var es = {
       "selected_entity_helper": "Helper de entidad seleccionada",
       "sync_entity_type": "Tipo de entidad a sincronizar",
       "placement": "Colocación",
-      "card_trigger": "Activador de la tarjeta"
+      "card_trigger": "Activador de la tarjeta",
+      "search_view": "Vista de resultados de búsqueda",
+      "search_card_columns": "Columnas de tarjetas"
     },
     "action_types": {
       "menu": "Abrir un elemento del menú",
@@ -3003,7 +3007,9 @@ var nl = {
       "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
       "selected_entity_helper": "Invoerteksthelper die wordt bijgewerkt met de momenteel geselecteerde media player-entiteits-ID.",
       "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd).",
-      "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen."
+      "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen.",
+      "search_view": "Kies tussen een standaardlijst of een raster van kaarten voor zoekresultaten.",
+      "search_card_columns": "Geef aan hoeveel kolommen er gebruikt moeten worden in de kaartweergave. De afbeelding wordt automatisch aangepast."
     },
     "titles": {
       "edit_entity": "Entiteit Bewerken",
@@ -3080,7 +3086,9 @@ var nl = {
       "selected_entity_helper": "Geselecteerde entiteitshelper",
       "sync_entity_type": "Synchronisatie entiteitstype",
       "placement": "Plaatsing",
-      "card_trigger": "Kaart trigger"
+      "card_trigger": "Kaart trigger",
+      "search_view": "Zoekresultaten weergave",
+      "search_card_columns": "Kaart kolommen"
     },
     "action_types": {
       "menu": "Open een kaartmenu-item",
@@ -7638,6 +7646,38 @@ const yampCardStyles = i$5`
     border-radius: 50%;
   }
 
+  .entity-options-search-thumb,
+  .entity-options-search-thumb-placeholder {
+    object-fit: var(--yamp-artwork-fit, cover);
+    border-radius: 5px;
+  }
+
+  .entity-options-search-thumb-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .entity-options-search-thumb-placeholder ha-icon {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+  }
+
+  .search-sheet-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .search-result-card .search-sheet-info {
+    text-align: center;
+    width: 100%;
+    display: block; /* Original card behavior */
+  }
+
   .search-sheet-title {
     flex: 1;
     color: #fff;
@@ -7658,11 +7698,12 @@ const yampCardStyles = i$5`
     text-overflow: ellipsis;
   }
 
-
-  .search-sheet-info {
-    flex: 1;
-    min-width: 0;
+  .entity-options-search-result:not(.search-result-card) .search-sheet-subtitle {
+    font-size: 0.86em;
+    color: #bbb;
+    line-height: 1.16;
   }
+
 
   .search-result-card .search-sheet-info {
     text-align: center;
@@ -24072,22 +24113,20 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
-                              <div class="search-sheet-thumb-container"
-                                   style="${this.config.search_view === 'card' ? 'cursor: pointer;' : ''}"
-                                   @click=${this.config.search_view === 'card' ? () => this._playMediaFromSearch(item) : null}>
+                               <div class="search-sheet-thumb-container"
+                                    data-clickable="${this.config.search_view === 'card'}"
+                                    @click=${this.config.search_view === 'card' ? () => this._playMediaFromSearch(item) : null}>
                                 ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x`
-                                  <img
-                                    class="entity-options-search-thumb"
-                                    src=${item.thumbnail}
-                                    alt=${item.title}
-                                    style="object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;"
-                                    onerror="this.style.display='none'"
-                                  />
+                                   <img
+                                     class="entity-options-search-thumb"
+                                     src=${item.thumbnail}
+                                     alt=${item.title}
+                                     onerror="this.style.display='none'"
+                                   />
                                 ` : x`
-                                  <div class="entity-options-search-thumb-placeholder" 
-                                       style="border-radius:5px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
-                                    <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
-                                  </div>
+                                   <div class="entity-options-search-thumb-placeholder">
+                                     <ha-icon icon="mdi:music"></ha-icon>
+                                   </div>
                                 `}
                                 ${this.config.search_view === 'card' ? renderSearchResultActions({
         item,
@@ -24101,15 +24140,15 @@ class YetAnotherMediaPlayerCard extends i$2 {
         massQueueAvailable: this._massQueueAvailable,
         searchView: 'card'
       }) : E}
-                              </div>
-                              <div class="search-sheet-info" style="${this.config.search_view === 'card' ? 'text-align:center;' : 'flex:1; display:flex; flex-direction:column; justify-content:center;'}">
+                               </div>
+                               <div class="search-sheet-info">
                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''} ${this.config.search_view === 'card' ? 'search-sheet-title' : ''}"
                                       @touchstart=${e => this._handleSearchResultTouch(item, e)}
                                       @click=${() => this._handleSearchResultClick(item)}
                                       title=${this._getSearchResultClickTitle(item)}>
                                   ${item.title}
                                 </span>
-                                <span class="${this.config.search_view === 'card' ? 'search-sheet-subtitle' : ''}" style="${this.config.search_view === 'card' ? '' : 'font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;'}">
+                                 <span class="search-sheet-subtitle">
                                   ${(() => {
         // Prefer artist when available for tracks/albums and special filters
         const isTrackOrAlbum = this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album';

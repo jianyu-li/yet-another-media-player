@@ -6905,22 +6905,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
-                              <div class="search-sheet-thumb-container"
-                                   style="${this.config.search_view === 'card' ? 'cursor: pointer;' : ''}"
-                                   @click=${this.config.search_view === 'card' ? () => this._playMediaFromSearch(item) : null}>
+                               <div class="search-sheet-thumb-container"
+                                    data-clickable="${this.config.search_view === 'card'}"
+                                    @click=${this.config.search_view === 'card' ? () => this._playMediaFromSearch(item) : null}>
                                 ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
-                                  <img
-                                    class="entity-options-search-thumb"
-                                    src=${item.thumbnail}
-                                    alt=${item.title}
-                                    style="object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;"
-                                    onerror="this.style.display='none'"
-                                  />
+                                   <img
+                                     class="entity-options-search-thumb"
+                                     src=${item.thumbnail}
+                                     alt=${item.title}
+                                     onerror="this.style.display='none'"
+                                   />
                                 ` : html`
-                                  <div class="entity-options-search-thumb-placeholder" 
-                                       style="border-radius:5px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
-                                    <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
-                                  </div>
+                                   <div class="entity-options-search-thumb-placeholder">
+                                     <ha-icon icon="mdi:music"></ha-icon>
+                                   </div>
                                 `}
                                 ${this.config.search_view === 'card' ? renderSearchResultActions({
                         item,
@@ -6931,15 +6929,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         massQueueAvailable: this._massQueueAvailable,
                         searchView: 'card'
                       }) : nothing}
-                              </div>
-                              <div class="search-sheet-info" style="${this.config.search_view === 'card' ? 'text-align:center;' : 'flex:1; display:flex; flex-direction:column; justify-content:center;'}">
+                               </div>
+                               <div class="search-sheet-info">
                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''} ${this.config.search_view === 'card' ? 'search-sheet-title' : ''}"
                                       @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
                                       @click=${() => this._handleSearchResultClick(item)}
                                       title=${this._getSearchResultClickTitle(item)}>
                                   ${item.title}
                                 </span>
-                                <span class="${this.config.search_view === 'card' ? 'search-sheet-subtitle' : ''}" style="${this.config.search_view === 'card' ? '' : 'font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;'}">
+                                 <span class="search-sheet-subtitle">
                                   ${(() => {
                           // Prefer artist when available for tracks/albums and special filters
                           const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
