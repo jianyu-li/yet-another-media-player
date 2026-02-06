@@ -6905,7 +6905,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
-                              <div class="search-sheet-thumb-container">
+                              <div class="search-sheet-thumb-container"
+                                   style="${this.config.search_view === 'card' ? 'cursor: pointer;' : ''}"
+                                   @click=${this.config.search_view === 'card' ? () => this._playMediaFromSearch(item) : null}>
                                 ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
                                   <img
                                     class="entity-options-search-thumb"

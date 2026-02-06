@@ -8200,8 +8200,9 @@ function renderSearchResultSlideOut(_ref2) {
       </div>
 
       ${isSuccess ? x`
-        <div class="search-row-success-overlay">
-          ✅ ${localize('search.added')}
+        <div class="search-row-success-overlay" style="flex-direction: column; gap: 4px; align-items: center; text-align: center;">
+          <span style="font-size: 1.5em;">✅</span>
+          <span>${localize('search.added')}</span>
         </div>
       ` : E}
     </div>
@@ -8256,7 +8257,9 @@ function renderSearchSheet(_ref3) {
     // (matching simplified search-sheet logic)
     return x`
                 <div class="search-sheet-result ${searchView === 'card' ? 'search-result-card' : ''}" style="position:relative;overflow:hidden;">
-                  <div class="search-sheet-thumb-container">
+                  <div class="search-sheet-thumb-container" 
+                       style="${searchView === 'card' ? 'cursor: pointer;' : ''}"
+                       @click=${searchView === 'card' ? () => onPlay(item) : null}>
                     ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x`
                       <img
                         class="search-sheet-thumb"
@@ -24018,7 +24021,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
-                              <div class="search-sheet-thumb-container">
+                              <div class="search-sheet-thumb-container"
+                                   style="${this.config.search_view === 'card' ? 'cursor: pointer;' : ''}"
+                                   @click=${this.config.search_view === 'card' ? () => this._playMediaFromSearch(item) : null}>
                                 ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x`
                                   <img
                                     class="entity-options-search-thumb"
