@@ -2326,8 +2326,11 @@ export const yampCardStyles = css`
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
+    flex-direction: column;
+    gap: 4px;
     align-items: center;
     justify-content: center;
+    text-align: center;
     color: #fff;
     font-weight: 600;
     font-size: 0.95em;
@@ -2336,6 +2339,10 @@ export const yampCardStyles = css`
     border-radius: inherit;
     box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
     animation: success-fade-in 0.3s ease;
+  }
+
+  .search-row-success-overlay span:first-child {
+    font-size: 1.5em;
   }
 
   @keyframes success-fade-in {
@@ -2907,6 +2914,15 @@ export const yampCardStyles = css`
     100% { opacity: 0; transform: translate(-50%, -40%); }
   }
 
+  .search-sheet-results.search-results-card-view,
+  .entity-options-search-results.search-results-card-view,
+  .search-sheet[data-card-view="true"] .search-sheet-results {
+    display: grid;
+    grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
   .search-sheet-results {
     flex: 1;
     overflow-y: auto;
@@ -2919,6 +2935,7 @@ export const yampCardStyles = css`
     display: none;
   }
 
+
   .search-sheet-result {
     display: flex;
     align-items: center;
@@ -2929,15 +2946,193 @@ export const yampCardStyles = css`
     transition: background-color 0.2s;
   }
 
+  .search-sheet-result.search-result-card,
+  .entity-options-search-result.search-result-card {
+    flex-direction: column;
+    padding: 8px;
+    border-bottom: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    align-items: center;
+    gap: 8px;
+    height: min-content;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-menu-button {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    z-index: 2;
+  }
+
+  .card-menu-button:hover {
+    opacity: 1;
+  }
+
+  .search-result-card .search-row-slide-out {
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    top: 100%;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: flex-start;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 12px 8px;
+    border-radius: 12px;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+    box-sizing: border-box;
+  }
+
+  .search-result-card .search-row-slide-out.active {
+    top: 0;
+  }
+
+  .search-result-card .slide-out-button {
+    font-size: 0.85em;
+    padding: 8px 12px;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    text-align: center;
+    margin: 2px 0;
+    white-space: normal;
+    word-break: break-word;
+    flex-shrink: 0;
+  }
+
+  .search-result-card .slide-out-close {
+    margin: 8px 0 4px 0;
+    flex-shrink: 0;
+  }
+
   .search-sheet-result:hover {
     background: rgba(255, 255, 255, 0.1);
   }
 
-  .search-sheet-thumb {
+  .search-sheet-thumb,
+  .entity-options-search-thumb,
+  .entity-options-search-thumb-placeholder {
     width: 50px;
     height: 50px;
     border-radius: 8px;
     object-fit: var(--yamp-artwork-fit, cover);
+    margin-right: 15px;
+  }
+
+  .entity-options-search-thumb,
+  .entity-options-search-thumb-placeholder {
+    width: 38px;
+    height: 38px;
+    margin-right: 12px;
+  }
+
+  .search-result-card .search-sheet-thumb,
+  .search-result-card .entity-options-search-thumb,
+  .search-result-card .search-sheet-thumb-placeholder,
+  .search-result-card .entity-options-search-thumb-placeholder {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    margin-right: 0;
+  }
+
+  .search-sheet-thumb-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-result-card .search-sheet-thumb-placeholder {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+  }
+
+  .search-sheet-thumb-container {
+    position: relative;
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .search-result-card .search-sheet-thumb-container {
+    width: 100%;
+  }
+
+  .search-sheet-thumb-container[data-clickable="true"] {
+    cursor: pointer;
+  }
+
+  .card-overlay-buttons {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.2s;
+    border-radius: 8px;
+  }
+
+  .search-sheet-result:hover .card-overlay-buttons {
+    opacity: 1;
+  }
+
+  .icon-only.search-sheet-play, 
+  .icon-only.search-sheet-queue,
+  .icon-only.entity-options-search-play,
+  .icon-only.entity-options-search-queue {
+    background: var(--custom-accent);
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .entity-options-search-thumb,
+  .entity-options-search-thumb-placeholder {
+    object-fit: var(--yamp-artwork-fit, cover);
+    border-radius: 5px;
+  }
+
+  .entity-options-search-thumb-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .entity-options-search-thumb-placeholder ha-icon {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+  }
+
+  .search-sheet-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .search-result-card .search-sheet-info {
+    text-align: center;
+    width: 100%;
+    display: block; /* Original card behavior */
   }
 
   .search-sheet-title {
@@ -2958,6 +3153,50 @@ export const yampCardStyles = css`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .entity-options-search-result:not(.search-result-card) .search-sheet-subtitle {
+    font-size: 0.86em;
+    color: #bbb;
+    line-height: 1.16;
+  }
+
+
+  .search-result-card .search-sheet-info {
+    text-align: center;
+    width: 100%;
+  }
+
+  .search-result-card .search-sheet-title {
+    text-align: center;
+    width: 100%;
+    /* 2-line clamping with word-level breaks */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 14px;
+    line-height: 1.3;
+    min-height: 2.6em; /* Reserve space for 2 lines to keep all cards uniform */
+  }
+
+  .search-result-card .search-sheet-subtitle {
+    text-align: center;
+    width: 100%;
+    /* 2-line clamping with word-level breaks */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 0.85em;
+    line-height: 1.3;
+    min-height: 2.6em; /* Reserve space for 2 lines to keep all cards uniform */
   }
 
   .search-sheet-title.browsable,

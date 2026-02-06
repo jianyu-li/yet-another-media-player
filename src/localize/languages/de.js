@@ -119,7 +119,9 @@ export default {
             "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
             "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird.",
             "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert).",
-            "disable_auto_select": "Verhindert, dass der Chip dieser Entität automatisch ausgewählt wird, wenn die Wiedergabe startet."
+            "disable_auto_select": "Verhindert, dass der Chip dieser Entität automatisch ausgewählt wird, wenn die Wiedergabe startet.",
+            "search_view": "Wählen Sie zwischen einer Standardliste oder einem kartenbasierten Raster für Suchergebnisse.",
+            "search_card_columns": "Geben Sie an, wie viele Spalten in der Kartenansicht verwendet werden sollen. Das Artwork wird automatisch skaliert."
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",
@@ -196,7 +198,9 @@ export default {
             "selected_entity_helper": "Ausgewählter Entitäts-Helper",
             "sync_entity_type": "Synchronisierungs-Entitätstyp",
             "placement": "Platzierung",
-            "card_trigger": "Karten-Trigger"
+            "card_trigger": "Karten-Trigger",
+            "search_view": "Suchergebnis-Ansicht",
+            "search_card_columns": "Kartenspalten"
         },
         "action_types": {
             "menu": "Kartenmenüpunkt öffnen",
@@ -226,6 +230,10 @@ export default {
             "double_tap": "Doppeltippen",
             "swipe_left": "Nach links wischen",
             "swipe_right": "Nach rechts wischen"
+        },
+        "search_view_options": {
+            "list": "Liste",
+            "card": "Karte"
         }
     },
     "card": {

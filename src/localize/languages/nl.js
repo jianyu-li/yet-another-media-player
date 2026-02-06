@@ -119,7 +119,9 @@ export default {
             "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
             "selected_entity_helper": "Invoerteksthelper die wordt bijgewerkt met de momenteel geselecteerde media player-entiteits-ID.",
             "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd).",
-            "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen."
+            "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen.",
+            "search_view": "Kies tussen een standaardlijst of een raster van kaarten voor zoekresultaten.",
+            "search_card_columns": "Geef aan hoeveel kolommen er gebruikt moeten worden in de kaartweergave. De afbeelding wordt automatisch aangepast."
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",
@@ -196,7 +198,9 @@ export default {
             "selected_entity_helper": "Geselecteerde entiteitshelper",
             "sync_entity_type": "Synchronisatie entiteitstype",
             "placement": "Plaatsing",
-            "card_trigger": "Kaart trigger"
+            "card_trigger": "Kaart trigger",
+            "search_view": "Zoekresultaten weergave",
+            "search_card_columns": "Kaart kolommen"
         },
         "action_types": {
             "menu": "Open een kaartmenu-item",
@@ -226,6 +230,10 @@ export default {
             "double_tap": "Dubbeltik",
             "swipe_left": "Veeg naar links",
             "swipe_right": "Veeg naar rechts"
+        },
+        "search_view_options": {
+            "list": "Lijst",
+            "card": "Kaart"
         }
     },
     "card": {

@@ -1,54 +1,3 @@
-function _defineProperty$1(e, r, t) {
-  return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
-    value: t,
-    enumerable: true,
-    configurable: true,
-    writable: true
-  }) : e[r] = t, e;
-}
-function ownKeys$1(e, r) {
-  var t = Object.keys(e);
-  if (Object.getOwnPropertySymbols) {
-    var o = Object.getOwnPropertySymbols(e);
-    r && (o = o.filter(function (r) {
-      return Object.getOwnPropertyDescriptor(e, r).enumerable;
-    })), t.push.apply(t, o);
-  }
-  return t;
-}
-function _objectSpread2$1(e) {
-  for (var r = 1; r < arguments.length; r++) {
-    var t = null != arguments[r] ? arguments[r] : {};
-    r % 2 ? ownKeys$1(Object(t), true).forEach(function (r) {
-      _defineProperty$1(e, r, t[r]);
-    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$1(Object(t)).forEach(function (r) {
-      Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
-    });
-  }
-  return e;
-}
-function _taggedTemplateLiteral(e, t) {
-  return t || (t = e.slice(0)), Object.freeze(Object.defineProperties(e, {
-    raw: {
-      value: Object.freeze(t)
-    }
-  }));
-}
-function _toPrimitive(t, r) {
-  if ("object" != typeof t || !t) return t;
-  var e = t[Symbol.toPrimitive];
-  if (void 0 !== e) {
-    var i = e.call(t, r);
-    if ("object" != typeof i) return i;
-    throw new TypeError("@@toPrimitive must return a primitive value.");
-  }
-  return ("string" === r ? String : Number)(t);
-}
-function _toPropertyKey(t) {
-  var i = _toPrimitive(t, "string");
-  return "symbol" == typeof i ? i : i + "";
-}
-
 /**
  * @license
  * Copyright 2019 Google LLC
@@ -101,7 +50,6 @@ const r$2 = t => new n$2("string" == typeof t ? t : t + "", void 0, s$2),
     return r$2(e);
   })(t) : t;
 
-var _Symbol$metadata, _a$litPropertyMetadat, _a$reactiveElementVer;
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -161,11 +109,10 @@ const {
     useDefault: false,
     hasChanged: f$1
   };
-(_Symbol$metadata = Symbol.metadata) !== null && _Symbol$metadata !== void 0 ? _Symbol$metadata : Symbol.metadata = Symbol("metadata"), (_a$litPropertyMetadat = a$1.litPropertyMetadata) !== null && _a$litPropertyMetadat !== void 0 ? _a$litPropertyMetadat : a$1.litPropertyMetadata = new WeakMap();
+Symbol.metadata ??= Symbol("metadata"), a$1.litPropertyMetadata ??= new WeakMap();
 let y$1 = class y extends HTMLElement {
   static addInitializer(t) {
-    var _this$l;
-    this._$Ei(), ((_this$l = this.l) !== null && _this$l !== void 0 ? _this$l : this.l = []).push(t);
+    this._$Ei(), (this.l ??= []).push(t);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
@@ -179,11 +126,10 @@ let y$1 = class y extends HTMLElement {
     }
   }
   static getPropertyDescriptor(t, s, i) {
-    var _h;
     const {
       get: e,
       set: r
-    } = (_h = h$1(this.prototype, t)) !== null && _h !== void 0 ? _h : {
+    } = h$1(this.prototype, t) ?? {
       get() {
         return this[s];
       },
@@ -202,8 +148,7 @@ let y$1 = class y extends HTMLElement {
     };
   }
   static getPropertyOptions(t) {
-    var _this$elementProperti;
-    return (_this$elementProperti = this.elementProperties.get(t)) !== null && _this$elementProperti !== void 0 ? _this$elementProperti : b;
+    return this.elementProperties.get(t) ?? b;
   }
   static _$Ei() {
     if (this.hasOwnProperty(d$1("elementProperties"))) return;
@@ -249,12 +194,12 @@ let y$1 = class y extends HTMLElement {
     this._$ES = new Promise(t => this.enableUpdating = t), this._$AL = new Map(), this._$E_(), this.requestUpdate(), (_this$constructor$l = this.constructor.l) === null || _this$constructor$l === void 0 ? void 0 : _this$constructor$l.forEach(t => t(this));
   }
   addController(t) {
-    var _this$_$EO, _t$hostConnected;
-    ((_this$_$EO = this._$EO) !== null && _this$_$EO !== void 0 ? _this$_$EO : this._$EO = new Set()).add(t), void 0 !== this.renderRoot && this.isConnected && ((_t$hostConnected = t.hostConnected) === null || _t$hostConnected === void 0 ? void 0 : _t$hostConnected.call(t));
+    var _t$hostConnected;
+    (this._$EO ??= new Set()).add(t), void 0 !== this.renderRoot && this.isConnected && ((_t$hostConnected = t.hostConnected) === null || _t$hostConnected === void 0 ? void 0 : _t$hostConnected.call(t));
   }
   removeController(t) {
-    var _this$_$EO2;
-    (_this$_$EO2 = this._$EO) === null || _this$_$EO2 === void 0 || _this$_$EO2.delete(t);
+    var _this$_$EO;
+    (_this$_$EO = this._$EO) === null || _this$_$EO === void 0 || _this$_$EO.delete(t);
   }
   _$E_() {
     const t = new Map(),
@@ -263,21 +208,20 @@ let y$1 = class y extends HTMLElement {
     t.size > 0 && (this._$Ep = t);
   }
   createRenderRoot() {
-    var _this$shadowRoot;
-    const t = (_this$shadowRoot = this.shadowRoot) !== null && _this$shadowRoot !== void 0 ? _this$shadowRoot : this.attachShadow(this.constructor.shadowRootOptions);
+    const t = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
     return S$1(t, this.constructor.elementStyles), t;
   }
   connectedCallback() {
-    var _this$renderRoot, _this$_$EO3;
-    (_this$renderRoot = this.renderRoot) !== null && _this$renderRoot !== void 0 ? _this$renderRoot : this.renderRoot = this.createRenderRoot(), this.enableUpdating(true), (_this$_$EO3 = this._$EO) === null || _this$_$EO3 === void 0 ? void 0 : _this$_$EO3.forEach(t => {
+    var _this$_$EO2;
+    this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(true), (_this$_$EO2 = this._$EO) === null || _this$_$EO2 === void 0 ? void 0 : _this$_$EO2.forEach(t => {
       var _t$hostConnected2;
       return (_t$hostConnected2 = t.hostConnected) === null || _t$hostConnected2 === void 0 ? void 0 : _t$hostConnected2.call(t);
     });
   }
   enableUpdating(t) {}
   disconnectedCallback() {
-    var _this$_$EO4;
-    (_this$_$EO4 = this._$EO) === null || _this$_$EO4 === void 0 || _this$_$EO4.forEach(t => {
+    var _this$_$EO3;
+    (_this$_$EO3 = this._$EO) === null || _this$_$EO3 === void 0 || _this$_$EO3.forEach(t => {
       var _t$hostDisconnected;
       return (_t$hostDisconnected = t.hostDisconnected) === null || _t$hostDisconnected === void 0 ? void 0 : _t$hostDisconnected.call(t);
     });
@@ -298,32 +242,31 @@ let y$1 = class y extends HTMLElement {
     const i = this.constructor,
       e = i._$Eh.get(t);
     if (void 0 !== e && this._$Em !== e) {
-      var _t$converter, _ref, _h$fromAttribute, _this$_$Ej;
+      var _t$converter, _this$_$Ej;
       const t = i.getPropertyOptions(e),
         h = "function" == typeof t.converter ? {
           fromAttribute: t.converter
         } : void 0 !== ((_t$converter = t.converter) === null || _t$converter === void 0 ? void 0 : _t$converter.fromAttribute) ? t.converter : u$1;
-      this._$Em = e, this[e] = (_ref = (_h$fromAttribute = h.fromAttribute(s, t.type)) !== null && _h$fromAttribute !== void 0 ? _h$fromAttribute : (_this$_$Ej = this._$Ej) === null || _this$_$Ej === void 0 ? void 0 : _this$_$Ej.get(e)) !== null && _ref !== void 0 ? _ref : null, this._$Em = null;
+      this._$Em = e, this[e] = h.fromAttribute(s, t.type) ?? ((_this$_$Ej = this._$Ej) === null || _this$_$Ej === void 0 ? void 0 : _this$_$Ej.get(e)) ?? null, this._$Em = null;
     }
   }
   requestUpdate(t, s, i) {
     if (void 0 !== t) {
-      var _i$hasChanged, _this$_$Ej2;
+      var _this$_$Ej2;
       const e = this.constructor,
         h = this[t];
-      if (i !== null && i !== void 0 ? i : i = e.getPropertyOptions(t), !(((_i$hasChanged = i.hasChanged) !== null && _i$hasChanged !== void 0 ? _i$hasChanged : f$1)(h, s) || i.useDefault && i.reflect && h === ((_this$_$Ej2 = this._$Ej) === null || _this$_$Ej2 === void 0 ? void 0 : _this$_$Ej2.get(t)) && !this.hasAttribute(e._$Eu(t, i)))) return;
+      if (i ??= e.getPropertyOptions(t), !((i.hasChanged ?? f$1)(h, s) || i.useDefault && i.reflect && h === ((_this$_$Ej2 = this._$Ej) === null || _this$_$Ej2 === void 0 ? void 0 : _this$_$Ej2.get(t)) && !this.hasAttribute(e._$Eu(t, i)))) return;
       this.C(t, s, i);
     }
     false === this.isUpdatePending && (this._$ES = this._$EP());
   }
-  C(t, s, _ref2, r) {
-    var _this$_$Ej3, _ref3, _this$_$Eq;
+  C(t, s, _ref, r) {
     let {
       useDefault: i,
       reflect: e,
       wrapped: h
-    } = _ref2;
-    i && !((_this$_$Ej3 = this._$Ej) !== null && _this$_$Ej3 !== void 0 ? _this$_$Ej3 : this._$Ej = new Map()).has(t) && (this._$Ej.set(t, (_ref3 = r !== null && r !== void 0 ? r : s) !== null && _ref3 !== void 0 ? _ref3 : this[t]), true !== h || void 0 !== r) || (this._$AL.has(t) || (this.hasUpdated || i || (s = void 0), this._$AL.set(t, s)), true === e && this._$Em !== t && ((_this$_$Eq = this._$Eq) !== null && _this$_$Eq !== void 0 ? _this$_$Eq : this._$Eq = new Set()).add(t));
+    } = _ref;
+    i && !(this._$Ej ??= new Map()).has(t) && (this._$Ej.set(t, r ?? s ?? this[t]), true !== h || void 0 !== r) || (this._$AL.has(t) || (this.hasUpdated || i || (s = void 0), this._$AL.set(t, s)), true === e && this._$Em !== t && (this._$Eq ??= new Set()).add(t));
   }
   async _$EP() {
     this.isUpdatePending = true;
@@ -341,8 +284,7 @@ let y$1 = class y extends HTMLElement {
   performUpdate() {
     if (!this.isUpdatePending) return;
     if (!this.hasUpdated) {
-      var _this$renderRoot2;
-      if ((_this$renderRoot2 = this.renderRoot) !== null && _this$renderRoot2 !== void 0 ? _this$renderRoot2 : this.renderRoot = this.createRenderRoot(), this._$Ep) {
+      if (this.renderRoot ??= this.createRenderRoot(), this._$Ep) {
         for (const [t, s] of this._$Ep) this[t] = s;
         this._$Ep = void 0;
       }
@@ -358,8 +300,8 @@ let y$1 = class y extends HTMLElement {
     let t = false;
     const s = this._$AL;
     try {
-      var _this$_$EO5;
-      t = this.shouldUpdate(s), t ? (this.willUpdate(s), (_this$_$EO5 = this._$EO) !== null && _this$_$EO5 !== void 0 && _this$_$EO5.forEach(t => {
+      var _this$_$EO4;
+      t = this.shouldUpdate(s), t ? (this.willUpdate(s), (_this$_$EO4 = this._$EO) !== null && _this$_$EO4 !== void 0 && _this$_$EO4.forEach(t => {
         var _t$hostUpdate;
         return (_t$hostUpdate = t.hostUpdate) === null || _t$hostUpdate === void 0 ? void 0 : _t$hostUpdate.call(t);
       }), this.update(s)) : this._$EM();
@@ -370,8 +312,8 @@ let y$1 = class y extends HTMLElement {
   }
   willUpdate(t) {}
   _$AE(t) {
-    var _this$_$EO6;
-    (_this$_$EO6 = this._$EO) !== null && _this$_$EO6 !== void 0 && _this$_$EO6.forEach(t => {
+    var _this$_$EO5;
+    (_this$_$EO5 = this._$EO) !== null && _this$_$EO5 !== void 0 && _this$_$EO5.forEach(t => {
       var _t$hostUpdated;
       return (_t$hostUpdated = t.hostUpdated) === null || _t$hostUpdated === void 0 ? void 0 : _t$hostUpdated.call(t);
     }), this.hasUpdated || (this.hasUpdated = true, this.firstUpdated(t)), this.updated(t);
@@ -389,7 +331,7 @@ let y$1 = class y extends HTMLElement {
     return true;
   }
   update(t) {
-    this._$Eq && (this._$Eq = this._$Eq.forEach(t => this._$ET(t, this[t]))), this._$EM();
+    this._$Eq &&= this._$Eq.forEach(t => this._$ET(t, this[t])), this._$EM();
   }
   updated(t) {}
   firstUpdated(t) {}
@@ -398,9 +340,8 @@ y$1.elementStyles = [], y$1.shadowRootOptions = {
   mode: "open"
 }, y$1[d$1("elementProperties")] = new Map(), y$1[d$1("finalized")] = new Map(), p$1 !== null && p$1 !== void 0 && p$1({
   ReactiveElement: y$1
-}), ((_a$reactiveElementVer = a$1.reactiveElementVersions) !== null && _a$reactiveElementVer !== void 0 ? _a$reactiveElementVer : a$1.reactiveElementVersions = []).push("2.1.0");
+}), (a$1.reactiveElementVersions ??= []).push("2.1.0");
 
-var _t$litHtmlVersions;
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -412,9 +353,9 @@ const t$1 = globalThis,
     createHTML: t => t
   }) : void 0,
   e$2 = "$lit$",
-  h = "lit$".concat(Math.random().toFixed(9).slice(2), "$"),
+  h = `lit$${Math.random().toFixed(9).slice(2)}$`,
   o$1 = "?" + h,
-  n = "<".concat(o$1, ">"),
+  n = `<${o$1}>`,
   r = document,
   l = () => r.createComment(""),
   c = t => null === t || "object" != typeof t && "function" != typeof t,
@@ -424,7 +365,7 @@ const t$1 = globalThis,
   f = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,
   v = /-->/g,
   _ = />/g,
-  m = RegExp(">|".concat(d, "(?:([^\\s\"'>=/]+)(").concat(d, "*=").concat(d, "*(?:[^ \t\n\f\r\"'`<>=]|(\"|')|))|$)"), "g"),
+  m = RegExp(`>|${d}(?:([^\\s"'>=/]+)(${d}*=${d}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"),
   p = /'/g,
   g = /"/g,
   $ = /^(?:script|style|textarea|title)$/i,
@@ -459,7 +400,7 @@ const V = (t, i) => {
       u,
       d = -1,
       y = 0;
-    for (; y < s.length && (c.lastIndex = y, u = c.exec(s), null !== u);) y = c.lastIndex, c === f ? "!--" === u[1] ? c = v : void 0 !== u[1] ? c = _ : void 0 !== u[2] ? ($.test(u[2]) && (r = RegExp("</" + u[2], "g")), c = m) : void 0 !== u[3] && (c = m) : c === m ? ">" === u[0] ? (c = r !== null && r !== void 0 ? r : f, d = -1) : void 0 === u[1] ? d = -2 : (d = c.lastIndex - u[2].length, a = u[1], c = void 0 === u[3] ? m : '"' === u[3] ? g : p) : c === g || c === p ? c = m : c === v || c === _ ? c = f : (c = m, r = void 0);
+    for (; y < s.length && (c.lastIndex = y, u = c.exec(s), null !== u);) y = c.lastIndex, c === f ? "!--" === u[1] ? c = v : void 0 !== u[1] ? c = _ : void 0 !== u[2] ? ($.test(u[2]) && (r = RegExp("</" + u[2], "g")), c = m) : void 0 !== u[3] && (c = m) : c === m ? ">" === u[0] ? (c = r ?? f, d = -1) : void 0 === u[1] ? d = -2 : (d = c.lastIndex - u[2].length, a = u[1], c = void 0 === u[3] ? m : '"' === u[3] ? g : p) : c === g || c === p ? c = m : c === v || c === _ ? c = f : (c = m, r = void 0);
     const x = c === m && t[i + 1].startsWith("/>") ? " " : "";
     l += c === f ? s + n : d >= 0 ? (o.push(a), s.slice(0, d) + e$2 + s.slice(d) + h + x) : s + h + (-2 === d ? i : x);
   }
@@ -530,13 +471,13 @@ class N {
   }
 }
 function S(t, i) {
-  var _s$_$Co, _h, _h2, _h2$_$AO, _s$_$Co2;
+  var _s$_$Co, _h, _h2, _h2$_$AO;
   let s = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : t;
   let e = arguments.length > 3 ? arguments[3] : undefined;
   if (i === T) return i;
   let h = void 0 !== e ? (_s$_$Co = s._$Co) === null || _s$_$Co === void 0 ? void 0 : _s$_$Co[e] : s._$Cl;
   const o = c(i) ? void 0 : i._$litDirective$;
-  return ((_h = h) === null || _h === void 0 ? void 0 : _h.constructor) !== o && ((_h2 = h) !== null && _h2 !== void 0 && (_h2$_$AO = _h2._$AO) !== null && _h2$_$AO !== void 0 && _h2$_$AO.call(_h2, false), void 0 === o ? h = void 0 : (h = new o(t), h._$AT(t, s, e)), void 0 !== e ? ((_s$_$Co2 = s._$Co) !== null && _s$_$Co2 !== void 0 ? _s$_$Co2 : s._$Co = [])[e] = h : s._$Cl = h), void 0 !== h && (i = S(t, h._$AS(t, i.values), h, e)), i;
+  return ((_h = h) === null || _h === void 0 ? void 0 : _h.constructor) !== o && ((_h2 = h) !== null && _h2 !== void 0 && (_h2$_$AO = _h2._$AO) !== null && _h2$_$AO !== void 0 && _h2$_$AO.call(_h2, false), void 0 === o ? h = void 0 : (h = new o(t), h._$AT(t, s, e)), void 0 !== e ? (s._$Co ??= [])[e] = h : s._$Cl = h), void 0 !== h && (i = S(t, h._$AS(t, i.values), h, e)), i;
 }
 class M {
   constructor(t, i) {
@@ -549,14 +490,13 @@ class M {
     return this._$AM._$AU;
   }
   u(t) {
-    var _t$creationScope;
     const {
         el: {
           content: i
         },
         parts: s
       } = this._$AD,
-      e = ((_t$creationScope = t === null || t === void 0 ? void 0 : t.creationScope) !== null && _t$creationScope !== void 0 ? _t$creationScope : r).importNode(i, true);
+      e = ((t === null || t === void 0 ? void 0 : t.creationScope) ?? r).importNode(i, true);
     C.currentNode = e;
     let h = C.nextNode(),
       o = 0,
@@ -579,12 +519,11 @@ class M {
 }
 class R {
   get _$AU() {
-    var _this$_$AM$_$AU, _this$_$AM;
-    return (_this$_$AM$_$AU = (_this$_$AM = this._$AM) === null || _this$_$AM === void 0 ? void 0 : _this$_$AM._$AU) !== null && _this$_$AM$_$AU !== void 0 ? _this$_$AM$_$AU : this._$Cv;
+    var _this$_$AM;
+    return ((_this$_$AM = this._$AM) === null || _this$_$AM === void 0 ? void 0 : _this$_$AM._$AU) ?? this._$Cv;
   }
   constructor(t, i, s, e) {
-    var _e$isConnected;
-    this.type = 2, this._$AH = E, this._$AN = void 0, this._$AA = t, this._$AB = i, this._$AM = s, this.options = e, this._$Cv = (_e$isConnected = e === null || e === void 0 ? void 0 : e.isConnected) !== null && _e$isConnected !== void 0 ? _e$isConnected : true;
+    this.type = 2, this._$AH = E, this._$AN = void 0, this._$AA = t, this._$AB = i, this._$AM = s, this.options = e, this._$Cv = (e === null || e === void 0 ? void 0 : e.isConnected) ?? true;
   }
   get parentNode() {
     var _t;
@@ -669,12 +608,12 @@ class k {
     if (void 0 === h) t = S(this, t, i, 0), o = !c(t) || t !== this._$AH && t !== T, o && (this._$AH = t);else {
       const e = t;
       let n, r;
-      for (t = h[0], n = 0; n < h.length - 1; n++) r = S(this, e[s + n], i, n), r === T && (r = this._$AH[n]), o || (o = !c(r) || r !== this._$AH[n]), r === E ? t = E : t !== E && (t += (r !== null && r !== void 0 ? r : "") + h[n + 1]), this._$AH[n] = r;
+      for (t = h[0], n = 0; n < h.length - 1; n++) r = S(this, e[s + n], i, n), r === T && (r = this._$AH[n]), o ||= !c(r) || r !== this._$AH[n], r === E ? t = E : t !== E && (t += (r ?? "") + h[n + 1]), this._$AH[n] = r;
     }
     o && !e && this.j(t);
   }
   j(t) {
-    t === E ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t !== null && t !== void 0 ? t : "");
+    t === E ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t ?? "");
   }
 }
 class H extends k {
@@ -698,17 +637,16 @@ class L extends k {
     super(t, i, s, e, h), this.type = 5;
   }
   _$AI(t) {
-    var _S;
     let i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
-    if ((t = (_S = S(this, t, i, 0)) !== null && _S !== void 0 ? _S : E) === T) return;
+    if ((t = S(this, t, i, 0) ?? E) === T) return;
     const s = this._$AH,
       e = t === E && s !== E || t.capture !== s.capture || t.once !== s.once || t.passive !== s.passive,
       h = t !== E && (s === E || e);
     e && this.element.removeEventListener(this.name, this, s), h && this.element.addEventListener(this.name, this, t), this._$AH = t;
   }
   handleEvent(t) {
-    var _this$options$host, _this$options;
-    "function" == typeof this._$AH ? this._$AH.call((_this$options$host = (_this$options = this.options) === null || _this$options === void 0 ? void 0 : _this$options.host) !== null && _this$options$host !== void 0 ? _this$options$host : this.element, t) : this._$AH.handleEvent(t);
+    var _this$options;
+    "function" == typeof this._$AH ? this._$AH.call(((_this$options = this.options) === null || _this$options === void 0 ? void 0 : _this$options.host) ?? this.element, t) : this._$AH.handleEvent(t);
   }
 }
 class z {
@@ -723,20 +661,18 @@ class z {
   }
 }
 const j = t$1.litHtmlPolyfillSupport;
-j !== null && j !== void 0 && j(N, R), ((_t$litHtmlVersions = t$1.litHtmlVersions) !== null && _t$litHtmlVersions !== void 0 ? _t$litHtmlVersions : t$1.litHtmlVersions = []).push("3.3.0");
+j !== null && j !== void 0 && j(N, R), (t$1.litHtmlVersions ??= []).push("3.3.0");
 const B = (t, i, s) => {
-  var _s$renderBefore;
-  const e = (_s$renderBefore = s === null || s === void 0 ? void 0 : s.renderBefore) !== null && _s$renderBefore !== void 0 ? _s$renderBefore : i;
+  const e = (s === null || s === void 0 ? void 0 : s.renderBefore) ?? i;
   let h = e._$litPart$;
   if (void 0 === h) {
-    var _s$renderBefore2;
-    const t = (_s$renderBefore2 = s === null || s === void 0 ? void 0 : s.renderBefore) !== null && _s$renderBefore2 !== void 0 ? _s$renderBefore2 : null;
-    e._$litPart$ = h = new R(i.insertBefore(l(), t), t, void 0, s !== null && s !== void 0 ? s : {});
+    const t = (s === null || s === void 0 ? void 0 : s.renderBefore) ?? null;
+    e._$litPart$ = h = new R(i.insertBefore(l(), t), t, void 0, s ?? {});
   }
   return h._$AI(t), h;
 };
 
-var _s$litElementHydrateS, _s$litElementVersions;
+var _s$litElementHydrateS;
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -750,9 +686,8 @@ let i$2 = class i extends y$1 {
     }, this._$Do = void 0;
   }
   createRenderRoot() {
-    var _this$renderOptions, _this$renderOptions$r;
     const t = super.createRenderRoot();
-    return (_this$renderOptions$r = (_this$renderOptions = this.renderOptions).renderBefore) !== null && _this$renderOptions$r !== void 0 ? _this$renderOptions$r : _this$renderOptions.renderBefore = t.firstChild, t;
+    return this.renderOptions.renderBefore ??= t.firstChild, t;
   }
   update(t) {
     const r = this.render();
@@ -777,7 +712,7 @@ const o = s.litElementPolyfillSupport;
 o === null || o === void 0 || o({
   LitElement: i$2
 });
-((_s$litElementVersions = s.litElementVersions) !== null && _s$litElementVersions !== void 0 ? _s$litElementVersions : s.litElementVersions = []).push("4.2.0");
+(s.litElementVersions ??= []).push("4.2.0");
 
 /**
  * @license
@@ -981,12 +916,12 @@ function getSearchResultClickTitle(item) {
 
   // For tracks, show "Track Name - Artist"
   if (mediaType === 'track') {
-    return "".concat(title, " - ").concat(artist);
+    return `${title} - ${artist}`;
   }
 
   // For albums, show "Album Name - Artist"
   if (mediaType === 'album') {
-    return "".concat(title, " - ").concat(artist);
+    return `${title} - ${artist}`;
   }
 
   // For artists, just show the name
@@ -1003,7 +938,7 @@ function getSearchResultClickTitle(item) {
   return title;
 }
 
-var _templateObject$9, _templateObject2$8, _templateObject3$7, _templateObject4$5, _templateObject5$5, _templateObject6$5, _templateObject7$5, _templateObject8$5, _templateObject9$4, _templateObject0$4, _templateObject1$4, _templateObject10$4, _templateObject11$3;
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
 // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
 function getArtworkUrl(state) {
@@ -1040,9 +975,10 @@ function getArtworkUrl(state) {
         var _override;
         override = overrides.find(item => item === null || item === void 0 ? void 0 : item.missing_art_url);
         if ((_override = override) !== null && _override !== void 0 && _override.missing_art_url) {
-          override = _objectSpread2$1(_objectSpread2$1({}, override), {}, {
+          override = {
+            ...override,
             image_url: override.missing_art_url
-          });
+          };
         }
       }
     }
@@ -1106,11 +1042,41 @@ function renderChip(_ref2) {
     onPointerUp,
     objectFit
   } = _ref2;
-  const artStyle = objectFit ? "object-fit: ".concat(objectFit, ";") : "";
-  return x(_templateObject$9 || (_templateObject$9 = _taggedTemplateLiteral(["\n    <button class=\"chip\"\n            ?selected=", "\n            ?playing=", "\n            ?ma-active=", "\n            @click=", "\n            @pointerdown=", "\n            @pointermove=", "\n            @pointerup=", "\n            @pointerleave=", "\n            style=\"display:flex;align-items:center;justify-content:space-between;\">\n      <span class=\"chip-icon\">\n        ", "\n      </span>\n      <span class=\"chip-label\" style=\"flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;\">\n        ", "\n      </span>\n      ", "\n      ", "\n    </button>\n  "])), selected, playing, maActive, () => onChipClick(idx), onPointerDown, onPointerMove, onPointerUp, onPointerUp, art ? x(_templateObject2$8 || (_templateObject2$8 = _taggedTemplateLiteral(["<img class=\"chip-mini-art\" src=\"", "\" style=\"", "\" onerror=\"this.style.display='none'\" />"])), art, artStyle) : x(_templateObject3$7 || (_templateObject3$7 = _taggedTemplateLiteral(["<ha-icon .icon=", " style=\"font-size:28px;\"></ha-icon>"])), icon), name, playing ? x(_templateObject4$5 || (_templateObject4$5 = _taggedTemplateLiteral(["\n            <span class=\"chip-playing-indicator\">\n              <span class=\"bar\"></span>\n              <span class=\"bar\"></span>\n              <span class=\"bar\"></span>\n            </span>\n          "]))) : E, pinned ? x(_templateObject5$5 || (_templateObject5$5 = _taggedTemplateLiteral(["\n            <span class=\"chip-pin-inside\" @click=", " title=\"Unpin\">\n              <ha-icon .icon=", "></ha-icon>\n            </span>\n          "])), e => {
+  const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
+  return x`
+    <button class="chip"
+            ?selected=${selected}
+            ?playing=${playing}
+            ?ma-active=${maActive}
+            @click=${() => onChipClick(idx)}
+            @pointerdown=${onPointerDown}
+            @pointermove=${onPointerMove}
+            @pointerup=${onPointerUp}
+            @pointerleave=${onPointerUp}
+            style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="chip-icon">
+        ${art ? x`<img class="chip-mini-art" src="${art}" style="${artStyle}" onerror="this.style.display='none'" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+      </span>
+      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+        ${name}
+      </span>
+      ${playing ? x`
+            <span class="chip-playing-indicator">
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </span>
+          ` : E}
+      ${pinned ? x`
+            <span class="chip-pin-inside" @click=${e => {
     e.stopPropagation();
     onPinClick(idx, e);
-  }, "mdi:pin") : x(_templateObject6$5 || (_templateObject6$5 = _taggedTemplateLiteral(["<span class=\"chip-pin-spacer\"></span>"]))));
+  }} title="Unpin">
+              <ha-icon .icon=${"mdi:pin"}></ha-icon>
+            </span>
+          ` : x`<span class="chip-pin-spacer"></span>`}
+    </button>
+  `;
 }
 
 // Helper to render a group chip: same as chip but with label (with count), no badge/icon for group, just art/icon and label.
@@ -1132,26 +1098,63 @@ function renderGroupChip(_ref3) {
     onPointerUp,
     objectFit
   } = _ref3;
-  const artStyle = objectFit ? "object-fit: ".concat(objectFit, ";") : "";
-  return x(_templateObject7$5 || (_templateObject7$5 = _taggedTemplateLiteral(["\n    <button class=\"chip group\"\n            ?selected=", "\n            ?ma-active=", "\n            @click=", "\n            @pointerdown=", "\n            @pointermove=", "\n            @pointerup=", "\n            @pointerleave=", "\n            style=\"display:flex;align-items:center;justify-content:space-between;\">\n      <span class=\"chip-icon\"\n            style=\"cursor:pointer;\"\n            @click=", ">\n        ", "\n      </span>\n      <span class=\"chip-label\" style=\"flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;\">\n        ", "\n      </span>\n      ", "\n      ", "\n    </button>\n  "])), selected, maActive, () => onChipClick(idx), onPointerDown, onPointerMove, onPointerUp, onPointerUp, e => {
+  const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
+  return x`
+    <button class="chip group"
+            ?selected=${selected}
+            ?ma-active=${maActive}
+            @click=${() => onChipClick(idx)}
+            @pointerdown=${onPointerDown}
+            @pointermove=${onPointerMove}
+            @pointerup=${onPointerUp}
+            @pointerleave=${onPointerUp}
+            style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="chip-icon"
+            style="cursor:pointer;"
+            @click=${e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
     }
-  }, art ? x(_templateObject8$5 || (_templateObject8$5 = _taggedTemplateLiteral(["<img class=\"chip-mini-art\"\n                      src=\"", "\"\n                      style=\"cursor:pointer;", "\"\n                      onerror=\"this.style.display='none'\"\n                      @click=", "/>"])), art, artStyle, e => {
+  }}>
+        ${art ? x`<img class="chip-mini-art"
+                      src="${art}"
+                      style="cursor:pointer;${artStyle}"
+                      onerror="this.style.display='none'"
+                      @click=${e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
     }
-  }) : x(_templateObject9$4 || (_templateObject9$4 = _taggedTemplateLiteral(["<ha-icon .icon=", "\n                          style=\"font-size:28px;cursor:pointer;\"\n                          @click=", "></ha-icon>"])), icon, e => {
+  }}/>` : x`<ha-icon .icon=${icon}
+                          style="font-size:28px;cursor:pointer;"
+                          @click=${e => {
     e.stopPropagation();
     if (onIconClick) {
       onIconClick(idx, e);
     }
-  }), groupName, playing ? x(_templateObject0$4 || (_templateObject0$4 = _taggedTemplateLiteral(["\n            <span class=\"chip-playing-indicator\">\n              <span class=\"bar\"></span>\n              <span class=\"bar\"></span>\n              <span class=\"bar\"></span>\n            </span>\n          "]))) : E, pinned ? x(_templateObject1$4 || (_templateObject1$4 = _taggedTemplateLiteral(["\n            <span class=\"chip-pin-inside\" @click=", " title=\"Unpin\">\n              <ha-icon .icon=", "></ha-icon>\n            </span>\n          "])), e => {
+  }}></ha-icon>`}
+      </span>
+      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+        ${groupName}
+      </span>
+      ${playing ? x`
+            <span class="chip-playing-indicator">
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </span>
+          ` : E}
+      ${pinned ? x`
+            <span class="chip-pin-inside" @click=${e => {
     e.stopPropagation();
     onPinClick(idx, e);
-  }, "mdi:pin") : x(_templateObject10$4 || (_templateObject10$4 = _taggedTemplateLiteral(["<span class=\"chip-pin-spacer\"></span>"]))));
+  }} title="Unpin">
+              <ha-icon .icon=${"mdi:pin"}></ha-icon>
+            </span>
+          ` : x`<span class="chip-pin-spacer"></span>`}
+    </button>
+  `;
 }
 
 // Pin/hold logic helpers (timer, etc)
@@ -1224,7 +1227,8 @@ function renderChipRow(_ref5) {
     onPointerUp
   } = _ref5;
   if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return E;
-  return x(_templateObject11$3 || (_templateObject11$3 = _taggedTemplateLiteral(["\n    ", "\n  "])), groupedSortedEntityIds.map(group => {
+  return x`
+    ${groupedSortedEntityIds.map(group => {
     // If it's a group (more than one entity)
     if (group.length > 1) {
       var _hass$states, _state$attributes;
@@ -1241,7 +1245,7 @@ function renderChipRow(_ref5) {
         idx,
         selected: selectedEntityId === id,
         playing: isChipPlaying,
-        groupName: getChipName(id) + (group.length > 1 ? " [".concat(group.length, "]") : ""),
+        groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
         art,
         icon,
         pinned: pinnedIndex === idx,
@@ -1284,17 +1288,27 @@ function renderChipRow(_ref5) {
         objectFit
       });
     }
-  }));
+  })}
+  `;
 }
 
-var _templateObject$8, _templateObject2$7, _templateObject3$6;
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderActionChipRow(_ref) {
   let {
     actions,
     onActionChipClick
   } = _ref;
   if (!(actions !== null && actions !== void 0 && actions.length)) return E;
-  return x(_templateObject$8 || (_templateObject$8 = _taggedTemplateLiteral(["\n    <div class=\"action-chip-row\">\n      ", "\n    </div>\n  "])), actions.map((a, idx) => x(_templateObject2$7 || (_templateObject2$7 = _taggedTemplateLiteral(["\n          <button class=\"action-chip\" @click=", ">\n            ", "\n            ", "\n          </button>\n        "])), () => onActionChipClick(idx), a.icon ? x(_templateObject3$6 || (_templateObject3$6 = _taggedTemplateLiteral(["<ha-icon .icon=", " style=\"font-size: 22px; margin-right: ", ";\"></ha-icon>"])), a.icon, a.name ? '8px' : '0') : E, a.name || "")));
+  return x`
+    <div class="action-chip-row">
+      ${actions.map((a, idx) => x`
+          <button class="action-chip" @click=${() => onActionChipClick(idx)}>
+            ${a.icon ? x`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>` : E}
+            ${a.name || ""}
+          </button>
+        `)}
+    </div>
+  `;
 }
 
 var en = {
@@ -1418,7 +1432,9 @@ var en = {
       "image_url_helper": "Enter a direct URL to an image or a local file path",
       "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID.",
       "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
-      "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing."
+      "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing.",
+      "search_view": "Choose between a standard list or a card-based grid for search results.",
+      "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically."
     },
     "titles": {
       "edit_entity": "Edit Entity",
@@ -1495,7 +1511,9 @@ var en = {
       "selected_entity_helper": "Selected Entity Helper",
       "sync_entity_type": "Sync Entity Type",
       "placement": "Placement",
-      "card_trigger": "Card Trigger"
+      "card_trigger": "Card Trigger",
+      "search_view": "Search Result View",
+      "search_card_columns": "Card Columns"
     },
     "action_types": {
       "menu": "Open a Card Menu Item",
@@ -1525,6 +1543,10 @@ var en = {
       "double_tap": "Double Tap",
       "swipe_left": "Swipe Left",
       "swipe_right": "Swipe Right"
+    },
+    "search_view_options": {
+      "list": "List",
+      "card": "Card"
     }
   },
   "card": {
@@ -1725,7 +1747,9 @@ var de = {
       "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
       "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird.",
       "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert).",
-      "disable_auto_select": "Verhindert, dass der Chip dieser Entität automatisch ausgewählt wird, wenn die Wiedergabe startet."
+      "disable_auto_select": "Verhindert, dass der Chip dieser Entität automatisch ausgewählt wird, wenn die Wiedergabe startet.",
+      "search_view": "Wählen Sie zwischen einer Standardliste oder einem kartenbasierten Raster für Suchergebnisse.",
+      "search_card_columns": "Geben Sie an, wie viele Spalten in der Kartenansicht verwendet werden sollen. Das Artwork wird automatisch skaliert."
     },
     "titles": {
       "edit_entity": "Entität bearbeiten",
@@ -1802,7 +1826,9 @@ var de = {
       "selected_entity_helper": "Ausgewählter Entitäts-Helper",
       "sync_entity_type": "Synchronisierungs-Entitätstyp",
       "placement": "Platzierung",
-      "card_trigger": "Karten-Trigger"
+      "card_trigger": "Karten-Trigger",
+      "search_view": "Suchergebnis-Ansicht",
+      "search_card_columns": "Kartenspalten"
     },
     "action_types": {
       "menu": "Kartenmenüpunkt öffnen",
@@ -1832,6 +1858,10 @@ var de = {
       "double_tap": "Doppeltippen",
       "swipe_left": "Nach links wischen",
       "swipe_right": "Nach rechts wischen"
+    },
+    "search_view_options": {
+      "list": "Liste",
+      "card": "Karte"
     }
   },
   "card": {
@@ -2032,7 +2062,9 @@ var es = {
       "image_url_helper": "Ingrese una URL directa a una imagen o una ruta de archivo local",
       "selected_entity_helper": "Helper de texto de entrada que se actualizará con el ID de la entidad del reproductor de medios seleccionado actualmente.",
       "sync_entity_type": "Elija qué ID de entidad sincronizar con el helper (por defecto la entidad de Music Assistant si está configurada).",
-      "disable_auto_select": "Evita que el chip de esta entidad se seleccione automáticamente cuando comienza la reproducción."
+      "disable_auto_select": "Evita que el chip de esta entidad se seleccione automáticamente cuando comienza la reproducción.",
+      "search_view": "Elegir entre una lista estándar o una cuadrícula de tarjetas para los resultados de la búsqueda.",
+      "search_card_columns": "Especifica cuántas columnas usar en la vista de tarjetas. El artwork se adaptará automáticamente."
     },
     "titles": {
       "edit_entity": "Editar entidad",
@@ -2109,7 +2141,9 @@ var es = {
       "selected_entity_helper": "Helper de entidad seleccionada",
       "sync_entity_type": "Tipo de entidad a sincronizar",
       "placement": "Colocación",
-      "card_trigger": "Activador de la tarjeta"
+      "card_trigger": "Activador de la tarjeta",
+      "search_view": "Vista de resultados de búsqueda",
+      "search_card_columns": "Columnas de tarjetas"
     },
     "action_types": {
       "menu": "Abrir un elemento del menú",
@@ -2139,6 +2173,10 @@ var es = {
       "double_tap": "Doble toque",
       "swipe_left": "Deslizar a la izquierda",
       "swipe_right": "Deslizar a la derecha"
+    },
+    "search_view_options": {
+      "list": "Lista",
+      "card": "Tarjeta"
     }
   },
   "card": {
@@ -2339,7 +2377,9 @@ var fr = {
       "image_url_helper": "Entrez une URL directe vers une image ou un chemin de fichier local",
       "selected_entity_helper": "Helper de texte d'entrée qui sera mis à jour avec l'ID de l'entité du lecteur multimédia actuellement sélectionné.",
       "sync_entity_type": "Choisissez quel ID d'entité synchroniser avec le helper (par défaut l'entité Music Assistant si configurée).",
-      "disable_auto_select": "Empêche le jeton de cette entité d'être automatiquement sélectionné au début de la lecture."
+      "disable_auto_select": "Empêche le jeton de cette entité d'être automatiquement sélectionné au début de la lecture.",
+      "search_view": "Choisissez entre une liste standard ou une grille de cartes pour les résultats de recherche.",
+      "search_card_columns": "Spécifiez le nombre de colonnes à utiliser dans la vue carte. L'illustration s'adaptera automatiquement."
     },
     "titles": {
       "edit_entity": "Modifier l'entité",
@@ -2416,7 +2456,9 @@ var fr = {
       "selected_entity_helper": "Helper d'entité sélectionnée",
       "sync_entity_type": "Type d'entité à synchroniser",
       "placement": "Placement",
-      "card_trigger": "Déclencheur de carte"
+      "card_trigger": "Déclencheur de carte",
+      "search_view": "Vue des résultats de recherche",
+      "search_card_columns": "Colonnes de cartes"
     },
     "action_types": {
       "menu": "Ouvrir un élément de menu",
@@ -2446,6 +2488,10 @@ var fr = {
       "double_tap": "Double appui",
       "swipe_left": "Glisser vers la gauche",
       "swipe_right": "Glisser vers la droite"
+    },
+    "search_view_options": {
+      "list": "Liste",
+      "card": "Carte"
     }
   },
   "card": {
@@ -2646,7 +2692,9 @@ var it = {
       "image_url_helper": "Inserisci un URL diretto a un'immagine o un percorso file locale",
       "selected_entity_helper": "Helper di testo di input che verrà aggiornato con l'ID dell'entità del lettore multimediale attualmente selezionato.",
       "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata).",
-      "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione."
+      "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione.",
+      "search_view": "Scegli tra una lista standard o una griglia di schede per i risultati della ricerca.",
+      "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente."
     },
     "titles": {
       "edit_entity": "Modifica entità",
@@ -2723,7 +2771,9 @@ var it = {
       "selected_entity_helper": "Helper entità selezionata",
       "sync_entity_type": "Tipo di entità da sincronizzare",
       "placement": "Posizionamento",
-      "card_trigger": "Trigger della scheda"
+      "card_trigger": "Trigger della scheda",
+      "search_view": "Vista risultati ricerca",
+      "search_card_columns": "Colonne schede"
     },
     "action_types": {
       "menu": "Apri un elemento del menu",
@@ -2753,6 +2803,10 @@ var it = {
       "double_tap": "Doppio tocco",
       "swipe_left": "Scorri a sinistra",
       "swipe_right": "Scorri a destra"
+    },
+    "search_view_options": {
+      "list": "Lista",
+      "card": "Scheda"
     }
   },
   "card": {
@@ -2953,7 +3007,9 @@ var nl = {
       "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
       "selected_entity_helper": "Invoerteksthelper die wordt bijgewerkt met de momenteel geselecteerde media player-entiteits-ID.",
       "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd).",
-      "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen."
+      "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen.",
+      "search_view": "Kies tussen een standaardlijst of een raster van kaarten voor zoekresultaten.",
+      "search_card_columns": "Geef aan hoeveel kolommen er gebruikt moeten worden in de kaartweergave. De afbeelding wordt automatisch aangepast."
     },
     "titles": {
       "edit_entity": "Entiteit Bewerken",
@@ -3030,7 +3086,9 @@ var nl = {
       "selected_entity_helper": "Geselecteerde entiteitshelper",
       "sync_entity_type": "Synchronisatie entiteitstype",
       "placement": "Plaatsing",
-      "card_trigger": "Kaart trigger"
+      "card_trigger": "Kaart trigger",
+      "search_view": "Zoekresultaten weergave",
+      "search_card_columns": "Kaart kolommen"
     },
     "action_types": {
       "menu": "Open een kaartmenu-item",
@@ -3060,6 +3118,10 @@ var nl = {
       "double_tap": "Dubbeltik",
       "swipe_left": "Veeg naar links",
       "swipe_right": "Veeg naar rechts"
+    },
+    "search_view_options": {
+      "list": "Lijst",
+      "card": "Kaart"
     }
   },
   "card": {
@@ -3260,7 +3322,9 @@ var pt = {
       "image_url_helper": "Insira um URL direto para uma imagem ou um caminho de arquivo local",
       "selected_entity_helper": "Helper de texto de entrada que será atualizado com o ID da entidade do reprodutor de mídia selecionado no momento.",
       "sync_entity_type": "Escolha qual ID de entidade sincronizar com o helper (padrão entidade Music Assistant se configurada).",
-      "disable_auto_select": "Impede que o chip desta entidade seja selecionado automaticamente quando a reprodução é iniciada."
+      "disable_auto_select": "Impede que o chip desta entidade seja selecionado automaticamente quando a reprodução é iniciada.",
+      "search_view": "Escolha entre uma lista padrão ou uma grade de cartões para os resultados da pesquisa.",
+      "search_card_columns": "Especifique quantas colunas usar na visualização de cartões. A capa será redimensionada automaticamente."
     },
     "titles": {
       "edit_entity": "Editar entidade",
@@ -3337,7 +3401,9 @@ var pt = {
       "selected_entity_helper": "Helper de entidade selecionada",
       "sync_entity_type": "Tipo de entidade a sincronizar",
       "placement": "Posicionamento",
-      "card_trigger": "Gatilho do cartão"
+      "card_trigger": "Gatilho do cartão",
+      "search_view": "Vista de resultados de pesquisa",
+      "search_card_columns": "Colunas de cartões"
     },
     "action_types": {
       "menu": "Abrir um item do menu",
@@ -3367,6 +3433,10 @@ var pt = {
       "double_tap": "Toque duplo",
       "swipe_left": "Deslizar para a esquerda",
       "swipe_right": "Deslizar para a direita"
+    },
+    "search_view_options": {
+      "list": "Lista",
+      "card": "Cartão"
     }
   },
   "card": {
@@ -3567,7 +3637,9 @@ var sk = {
       "image_url_helper": "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
       "selected_entity_helper": "Pomocník pre vstupný text, ktorý bude aktualizovaný o ID aktuálne vybranej entity prehrávača médií.",
       "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná).",
-      "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania."
+      "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania.",
+      "search_view": "Vyberte si medzi štandardným zoznamom alebo mriežkou kariet pre výsledky vyhľadávania.",
+      "search_card_columns": "Zadajte, koľko stĺpcov sa má použiť v zobrazení karty. Grafika sa automaticky prispôsobí."
     },
     "titles": {
       "edit_entity": "Upraviť entitu",
@@ -3644,7 +3716,9 @@ var sk = {
       "selected_entity_helper": "Pomocník vybratej entity",
       "sync_entity_type": "Typ entity na synchronizáciu",
       "placement": "Umiestnenie",
-      "card_trigger": "Spúšťač karty"
+      "card_trigger": "Spúšťač karty",
+      "search_view": "Zobrazenie výsledkov vyhľadávania",
+      "search_card_columns": "Stĺpce karty"
     },
     "action_types": {
       "menu": "Otvoriť položku menu karty",
@@ -3674,6 +3748,10 @@ var sk = {
       "double_tap": "Dvojité ťuknutie",
       "swipe_left": "Potiahnutie doľava",
       "swipe_right": "Potiahnutie doprava"
+    },
+    "search_view_options": {
+      "list": "Zoznam",
+      "card": "Karta"
     }
   },
   "card": {
@@ -4101,7 +4179,7 @@ function localize(string) {
   return translated;
 }
 
-var _templateObject$7, _templateObject2$6, _templateObject3$5, _templateObject4$4, _templateObject5$4, _templateObject6$4, _templateObject7$4, _templateObject8$4, _templateObject9$3, _templateObject0$3, _templateObject1$3, _templateObject10$3, _templateObject11$2, _templateObject12$2, _templateObject13$2;
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderControlsRow(_ref) {
   let {
     stateObj,
@@ -4151,8 +4229,8 @@ function renderControlsRow(_ref) {
   }
   const controlCount = countMainControls(stateObj, supportsFeature, showFavorite, hiddenControls, showStop, normalizedLayout);
   const baseRowClass = adaptiveControls ? "controls-row adaptive" : "controls-row";
-  const rowClass = normalizedLayout === "modern" ? "".concat(baseRowClass, " modern") : baseRowClass;
-  let rowStyle = adaptiveControls ? "--yamp-control-count:".concat(Math.max(controlCount, 1), ";") : E;
+  const rowClass = normalizedLayout === "modern" ? `${baseRowClass} modern` : baseRowClass;
+  let rowStyle = adaptiveControls ? `--yamp-control-count:${Math.max(controlCount, 1)};` : E;
   if (adaptiveControls) {
     const sizing = (() => {
       if (controlCount <= 3) {
@@ -4204,12 +4282,99 @@ function renderControlsRow(_ref) {
         gap: 6
       };
     })();
-    rowStyle += ["--yamp-control-gap:".concat(sizing.gap, "px"), "--yamp-control-min-width:".concat(sizing.minWidth, "px"), "--yamp-control-max-width:".concat(sizing.maxWidth, "px"), "--yamp-control-min-height:".concat(sizing.minHeight, "px"), "--yamp-control-padding:".concat(sizing.padding, "px"), "--yamp-control-icon-size:".concat(sizing.icon, "px")].join(";");
+    rowStyle += [`--yamp-control-gap:${sizing.gap}px`, `--yamp-control-min-width:${sizing.minWidth}px`, `--yamp-control-max-width:${sizing.maxWidth}px`, `--yamp-control-min-height:${sizing.minHeight}px`, `--yamp-control-padding:${sizing.padding}px`, `--yamp-control-icon-size:${sizing.icon}px`].join(";");
   }
   if (normalizedLayout === "modern") {
-    return x(_templateObject$7 || (_templateObject$7 = _taggedTemplateLiteral(["\n      <div class=", " style=", ">\n        <div class=\"controls-left\">\n          ", "\n          ", "\n        </div>\n\n        <div class=\"controls-center\">\n          ", "\n        </div>\n\n        <div class=\"controls-right\">\n          ", "\n          ", "\n        </div>\n      </div>\n    "])), rowClass, rowStyle, showShuffleButton ? x(_templateObject2$6 || (_templateObject2$6 = _taggedTemplateLiteral(["\n            <button class=\"modern-button small", "\" @click=", " title=\"", "\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), shuffleActive ? " active" : "", () => onControlClick("shuffle"), localize('card.media_controls.shuffle'), "mdi:shuffle") : E, showPrevious ? x(_templateObject3$5 || (_templateObject3$5 = _taggedTemplateLiteral(["\n            <button class=\"modern-button medium\" @click=", " title=\"", "\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), () => onControlClick("prev"), localize('card.media_controls.previous'), "mdi:skip-previous") : E, showPlayPause ? x(_templateObject4$4 || (_templateObject4$4 = _taggedTemplateLiteral(["\n            <button\n              class=\"modern-button primary", "\"\n              @click=", "\n              title=\"", "\"\n            >\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), isPlayingState ? " active" : "", () => onControlClick(primaryUsesStop ? "stop" : "play_pause"), primaryUsesStop ? localize('card.media_controls.stop') : localize('card.media_controls.play_pause') || "Play/Pause", primaryUsesStop ? "mdi:stop" : isPlayingState ? "mdi:pause" : "mdi:play") : E, showNext ? x(_templateObject5$4 || (_templateObject5$4 = _taggedTemplateLiteral(["\n            <button class=\"modern-button medium\" @click=", " title=\"", "\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), () => onControlClick("next"), localize('card.media_controls.next'), "mdi:skip-next") : E, showRepeatButton ? x(_templateObject6$4 || (_templateObject6$4 = _taggedTemplateLiteral(["\n            <button class=\"modern-button small", "\" @click=", " title=\"", "\">\n              <ha-icon .icon=", "></ha-icon>\n            </button>\n          "])), repeatActive ? " active" : "", () => onControlClick("repeat"), localize('card.media_controls.repeat'), stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat") : E);
+    return x`
+      <div class=${rowClass} style=${rowStyle}>
+        <div class="controls-left">
+          ${showShuffleButton ? x`
+            <button class="modern-button small${shuffleActive ? " active" : ""}" @click=${() => onControlClick("shuffle")} title="${localize('card.media_controls.shuffle')}">
+              <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
+            </button>
+          ` : E}
+          ${showPrevious ? x`
+            <button class="modern-button medium" @click=${() => onControlClick("prev")} title="${localize('card.media_controls.previous')}">
+              <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+            </button>
+          ` : E}
+        </div>
+
+        <div class="controls-center">
+          ${showPlayPause ? x`
+            <button
+              class="modern-button primary${isPlayingState ? " active" : ""}"
+              @click=${() => onControlClick(primaryUsesStop ? "stop" : "play_pause")}
+              title="${primaryUsesStop ? localize('card.media_controls.stop') : localize('card.media_controls.play_pause') || "Play/Pause"}"
+            >
+              <ha-icon .icon=${primaryUsesStop ? "mdi:stop" : isPlayingState ? "mdi:pause" : "mdi:play"}></ha-icon>
+            </button>
+          ` : E}
+        </div>
+
+        <div class="controls-right">
+          ${showNext ? x`
+            <button class="modern-button medium" @click=${() => onControlClick("next")} title="${localize('card.media_controls.next')}">
+              <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+            </button>
+          ` : E}
+          ${showRepeatButton ? x`
+            <button class="modern-button small${repeatActive ? " active" : ""}" @click=${() => onControlClick("repeat")} title="${localize('card.media_controls.repeat')}">
+              <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
+            </button>
+          ` : E}
+        </div>
+      </div>
+    `;
   }
-  return x(_templateObject7$4 || (_templateObject7$4 = _taggedTemplateLiteral(["\n    <div class=", " style=", ">\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n      ", "\n    </div>\n  "])), rowClass, rowStyle, showPrevious ? x(_templateObject8$4 || (_templateObject8$4 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Previous\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("prev"), "mdi:skip-previous") : E, showPlayPause ? x(_templateObject9$3 || (_templateObject9$3 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Play/Pause\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("play_pause"), stateObj.state === "playing" ? "mdi:pause" : "mdi:play") : E, showStopButton ? x(_templateObject0$3 || (_templateObject0$3 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Stop\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("stop"), "mdi:stop") : E, showNext ? x(_templateObject1$3 || (_templateObject1$3 = _taggedTemplateLiteral(["\n        <button class=\"button\" @click=", " title=\"Next\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), () => onControlClick("next"), "mdi:skip-next") : E, showShuffleButton ? x(_templateObject10$3 || (_templateObject10$3 = _taggedTemplateLiteral(["\n        <button class=\"button", "\" @click=", " title=\"Shuffle\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), shuffleActive ? ' active' : '', () => onControlClick("shuffle"), "mdi:shuffle") : E, showRepeatButton ? x(_templateObject11$2 || (_templateObject11$2 = _taggedTemplateLiteral(["\n        <button class=\"button", "\" @click=", " title=\"Repeat\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), repeatActive ? ' active' : '', () => onControlClick("repeat"), stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat") : E, showFavoriteButton ? x(_templateObject12$2 || (_templateObject12$2 = _taggedTemplateLiteral(["\n        <button class=\"button", "\" @click=", " title=\"Favorite\">\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), favoriteActive ? ' active' : '', () => onControlClick("favorite"), favoriteActive ? "mdi:heart" : "mdi:heart-outline") : E, showPowerButton ? x(_templateObject13$2 || (_templateObject13$2 = _taggedTemplateLiteral(["\n        <button\n          class=\"button", "\"\n          @click=", "\n          title=\"Power\"\n        >\n          <ha-icon .icon=", "></ha-icon>\n        </button>\n      "])), stateObj.state !== "off" ? " active" : "", () => onControlClick("power"), "mdi:power") : E);
+  return x`
+    <div class=${rowClass} style=${rowStyle}>
+      ${showPrevious ? x`
+        <button class="button" @click=${() => onControlClick("prev")} title="Previous">
+          <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+        </button>
+      ` : E}
+      ${showPlayPause ? x`
+        <button class="button" @click=${() => onControlClick("play_pause")} title="Play/Pause">
+          <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+        </button>
+      ` : E}
+      ${showStopButton ? x`
+        <button class="button" @click=${() => onControlClick("stop")} title="Stop">
+          <ha-icon .icon=${"mdi:stop"}></ha-icon>
+        </button>
+      ` : E}
+      ${showNext ? x`
+        <button class="button" @click=${() => onControlClick("next")} title="Next">
+          <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+        </button>
+      ` : E}
+      ${showShuffleButton ? x`
+        <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="Shuffle">
+          <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
+        </button>
+      ` : E}
+      ${showRepeatButton ? x`
+        <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
+          <ha-icon .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon>
+        </button>
+      ` : E}
+      ${showFavoriteButton ? x`
+        <button class="button${favoriteActive ? ' active' : ''}" @click=${() => onControlClick("favorite")} title="Favorite">
+          <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
+        </button>
+      ` : E}
+      ${showPowerButton ? x`
+        <button
+          class="button${stateObj.state !== "off" ? " active" : ""}"
+          @click=${() => onControlClick("power")}
+          title="Power"
+        >
+          <ha-icon .icon=${"mdi:power"}></ha-icon>
+        </button>
+      ` : E}
+    </div>
+  `;
 }
 
 // Export a small helper used by the card for layout decisions
@@ -4237,7 +4402,7 @@ function countMainControls(stateObj, supportsFeature) {
   return count;
 }
 
-var _templateObject$6, _templateObject2$5, _templateObject3$4, _templateObject4$3, _templateObject5$3, _templateObject6$3, _templateObject7$3, _templateObject8$3;
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function renderVolumeRow(_ref) {
   let {
     isRemoteVolumeEntity,
@@ -4267,15 +4432,78 @@ function renderVolumeRow(_ref) {
     if (volume < 0.5) return "mdi:volume-medium";
     return "mdi:volume-high";
   };
-  return x(_templateObject$6 || (_templateObject$6 = _taggedTemplateLiteral(["\n    <div class=\"volume-row ", "\">\n      <div class=\"volume-left\">\n        ", "\n        ", "\n      </div>\n\n      <div class=\"volume-center\">\n        ", "\n      </div>\n\n      <div class=\"volume-right\">\n        ", "\n        ", "\n      </div>\n    </div>\n  "])), showSlider && !isRemoteVolumeEntity ? 'has-slider' : '', hasLeadingControl ? leadingControlTemplate : reserveLeadingControlSpace ? x(_templateObject2$5 || (_templateObject2$5 = _taggedTemplateLiteral(["<div class=\"volume-leading-placeholder\"></div>"]))) : E, !hideVolume && !isRemoteVolumeEntity ? x(_templateObject3$4 || (_templateObject3$4 = _taggedTemplateLiteral(["\n          <button \n            class=\"volume-icon-btn\" \n            @click=", " \n            title=", "\n          >\n            <ha-icon icon=", "></ha-icon>\n          </button>\n        "])), onMuteToggle, (supportsMute ? isMuted : vol === 0) ? localize('common.unmute') : localize('common.mute'), getVolumeIcon(vol, isMuted)) : E, !hideVolume ? x(_templateObject4$3 || (_templateObject4$3 = _taggedTemplateLiteral(["\n          ", "\n        "])), isRemoteVolumeEntity ? x(_templateObject5$3 || (_templateObject5$3 = _taggedTemplateLiteral(["\n              <div class=\"vol-stepper-container\">\n                <div class=\"vol-stepper\">\n                  <button class=\"button\" @click=", " title=\"", "\">\u2013</button>\n                  <span class=\"vol-label\">vol</span>\n                  <button class=\"button\" @click=", " title=\"", "\">+</button>\n                </div>\n              </div>\n            "])), () => onVolumeStep(-1), localize('common.vol_down'), () => onVolumeStep(1), localize('common.vol_up')) : showSlider ? x(_templateObject6$3 || (_templateObject6$3 = _taggedTemplateLiteral(["\n                <div class=\"volume-slider-container\">\n                  <input\n                    class=\"vol-slider\"\n                    type=\"range\"\n                    min=\"0\"\n                    max=\"1\"\n                    step=\"0.01\"\n                    .value=", "\n                    @mousedown=", "\n                    @touchstart=", "\n                    @change=", "\n                    @mouseup=", "\n                    @touchend=", "\n                    title=\"", "\"\n                  />\n                </div>\n              "])), vol, onVolumeDragStart, onVolumeDragStart, onVolumeChange, onVolumeDragEnd, onVolumeDragEnd, localize('common.volume')) : x(_templateObject7$3 || (_templateObject7$3 = _taggedTemplateLiteral(["\n              <div class=\"vol-stepper-container\">\n                <div class=\"vol-stepper\">\n                  <button class=\"button\" @click=", " title=\"", "\">\u2013</button>\n                  <span class=\"vol-value\">", "%</span>\n                  <button class=\"button\" @click=", " title=\"", "\">+</button>\n                </div>\n              </div>\n            "])), () => onVolumeStep(-1), localize('common.vol_down'), Math.round(vol * 100), () => onVolumeStep(1), localize('common.vol_up'))) : E, showRightPlaceholder ? x(_templateObject8$3 || (_templateObject8$3 = _taggedTemplateLiteral(["\n          <div class=\"volume-placeholder\">\n            ", "\n          </div>\n        "])), rightSlotTemplate || E) : E, moreInfoMenu);
+  return x`
+    <div class="volume-row ${showSlider && !isRemoteVolumeEntity ? 'has-slider' : ''}">
+      <div class="volume-left">
+        ${hasLeadingControl ? leadingControlTemplate : reserveLeadingControlSpace ? x`<div class="volume-leading-placeholder"></div>` : E}
+        ${!hideVolume && !isRemoteVolumeEntity ? x`
+          <button 
+            class="volume-icon-btn" 
+            @click=${onMuteToggle} 
+            title=${(supportsMute ? isMuted : vol === 0) ? localize('common.unmute') : localize('common.mute')}
+          >
+            <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
+          </button>
+        ` : E}
+      </div>
+
+      <div class="volume-center">
+        ${!hideVolume ? x`
+          ${isRemoteVolumeEntity ? x`
+              <div class="vol-stepper-container">
+                <div class="vol-stepper">
+                  <button class="button" @click=${() => onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
+                  <span class="vol-label">vol</span>
+                  <button class="button" @click=${() => onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
+                </div>
+              </div>
+            ` : showSlider ? x`
+                <div class="volume-slider-container">
+                  <input
+                    class="vol-slider"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    .value=${vol}
+                    @mousedown=${onVolumeDragStart}
+                    @touchstart=${onVolumeDragStart}
+                    @change=${onVolumeChange}
+                    @mouseup=${onVolumeDragEnd}
+                    @touchend=${onVolumeDragEnd}
+                    title="${localize('common.volume')}"
+                  />
+                </div>
+              ` : x`
+              <div class="vol-stepper-container">
+                <div class="vol-stepper">
+                  <button class="button" @click=${() => onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
+                  <span class="vol-value">${Math.round(vol * 100)}%</span>
+                  <button class="button" @click=${() => onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
+                </div>
+              </div>
+            `}
+        ` : E}
+      </div>
+
+      <div class="volume-right">
+        ${showRightPlaceholder ? x`
+          <div class="volume-placeholder">
+            ${rightSlotTemplate || E}
+          </div>
+        ` : E}
+        ${moreInfoMenu}
+      </div>
+    </div>
+  `;
 }
 
-var _templateObject$5, _templateObject2$4, _templateObject3$3;
+// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 function formatTime(seconds) {
   if (seconds === undefined || seconds === null || isNaN(seconds)) return "0:00";
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  return "".concat(m, ":").concat(s < 10 ? '0' : '').concat(s);
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 function renderProgressBar(_ref) {
   let {
@@ -4294,12 +4522,37 @@ function renderProgressBar(_ref) {
   const barColor = accent || "var(--custom-accent, #ff9800)";
   // Collapsed bar is typically smaller and positioned differently
   if (collapsed) {
-    return x(_templateObject$5 || (_templateObject$5 = _taggedTemplateLiteral(["\n      <div\n        class=\"collapsed-progress-bar\"\n        style=\"width: ", "%; background: ", "; height: 4px; ", "\"\n      ></div>\n    "])), progress * 100, barColor, style);
+    return x`
+      <div
+        class="collapsed-progress-bar"
+        style="width: ${progress * 100}%; background: ${barColor}; height: 4px; ${style}"
+      ></div>
+    `;
   }
-  return x(_templateObject2$4 || (_templateObject2$4 = _taggedTemplateLiteral(["\n    <div class=\"progress-bar-container\" style=\"", "\">\n      <div\n        class=\"progress-bar\"\n        style=\"height:", "px; background:rgba(255,255,255,0.22);\"\n        @click=", "\n        title=", "\n      >\n        <div\n          class=\"progress-inner\"\n          style=\"width: ", "%; background: ", "; height:", "px;\"\n        ></div>\n      </div>\n      ", "\n    </div>\n  "])), style, height, seekEnabled ? onSeek : null, seekEnabled ? localize('common.seek') : "", progress * 100, barColor, height, displayTimestamps ? x(_templateObject3$3 || (_templateObject3$3 = _taggedTemplateLiteral(["\n        <div class=\"timestamps-container\">\n           <span>", "</span>\n           <span>-", "</span>\n        </div>\n      "])), formatTime(currentTime), formatTime(Math.max(0, duration - currentTime))) : E);
+  return x`
+    <div class="progress-bar-container" style="${style}">
+      <div
+        class="progress-bar"
+        style="height:${height}px; background:rgba(255,255,255,0.22);"
+        @click=${seekEnabled ? onSeek : null}
+        title=${seekEnabled ? localize('common.seek') : ""}
+      >
+        <div
+          class="progress-inner"
+          style="width: ${progress * 100}%; background: ${barColor}; height:${height}px;"
+        ></div>
+      </div>
+      ${displayTimestamps ? x`
+        <div class="timestamps-container">
+           <span>${formatTime(currentTime)}</span>
+           <span>-${formatTime(Math.max(0, duration - currentTime))}</span>
+        </div>
+      ` : E}
+    </div>
+  `;
 }
 
-var _templateObject$4;
+// import { css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 const Z_LAYERS = Object.freeze({
   MEDIA_BACKGROUND: 0,
   MEDIA_OVERLAY: 0,
@@ -4313,9 +4566,3556 @@ const Z_LAYERS = Object.freeze({
   SEARCH_SLIDE_OUT: 1,
   SEARCH_SUCCESS: 1
 });
-const yampCardStyles = i$5(_templateObject$4 || (_templateObject$4 = _taggedTemplateLiteral(["\n  /* CSS Custom Properties for consistency */\n  :host {\n    --custom-accent: #ff9800;\n    --card-bg: var(--card-background-color, #222);\n    --primary-text: var(--primary-text-color, #fff);\n    --secondary-text: var(--secondary-text-color, #aaa);\n    --chip-bg: var(--chip-background, #333);\n    --transition-fast: 0.13s;\n    --transition-normal: 0.2s;\n    --transition-slow: 0.4s;\n    --border-radius: 16px;\n    --chip-border-radius: 24px;\n    --button-border-radius: 8px;\n    --shadow-light: 0 2px 8px rgba(0,0,0,0.13);\n    --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);\n    --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);\n    --yamp-artwork-fit: cover;\n    --yamp-text-scale: 1;\n    --yamp-text-scale-details: 1;\n    --yamp-text-scale-menu: 1;\n    --yamp-text-scale-action-chips: 1;\n    --yamp-details-scale: var(--yamp-text-scale-details, 1);\n    --yamp-details-line-height: 1.2;\n    --yamp-details-max-lines: 3;\n    --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));\n    --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));\n    --yamp-section-radius: 12px;\n    --yamp-section-divider: rgba(255,255,255,0.06);\n    --yamp-section-title-size: 1em;\n    --yamp-section-title-weight: 600;\n    --yamp-section-description-size: 0.9em;\n    --yamp-section-description-color: var(--secondary-text-color, #888);\n  }\n\n  :host([data-match-theme=\"false\"]) {\n    --custom-accent: #ff9800 ;\n    \n    /* Search sheet default theme variables when match_theme is false */\n    --search-overlay-bg: rgba(0, 0, 0, 0.8);\n    --search-input-bg: #333;\n    --search-input-text: #fff;\n    --search-text: #fff;\n    --search-error: #ff6b6b;\n    --search-success: #4caf50;\n    --search-success-bg: rgba(76, 175, 80, 0.95);\n    --search-border: rgba(255, 255, 255, 0.1);\n    --search-hover-bg: rgba(255, 255, 255, 0.1);\n    --search-play-hover: #e68900;\n    --search-queue-bg: #4a4a4a;\n    --search-queue-border: #666;\n    --search-queue-hover: #5a5a5a;\n    --search-queue-hover-border: #777;\n  }\n  \n  :host([data-match-theme=\"true\"]) {\n    /* Override custom-accent to use theme accent when match_theme is true */\n    --custom-accent: var(--accent-color, #ff9800);\n    \n    /* Search sheet theme-aware variables */\n    --search-overlay-bg: var(--ha-card-background, rgba(0, 0, 0, 0.8));\n    --search-input-bg: var(--ha-card-background, #333);\n    --search-input-text: var(--primary-text-color, #fff);\n    --search-text: var(--primary-text-color, #fff);\n    --search-error: var(--error-color, #ff6b6b);\n    --search-success: var(--success-color, #4caf50);\n    --search-success-bg: var(--success-color, rgba(76, 175, 80, 0.95));\n    --search-border: var(--divider-color, rgba(255, 255, 255, 0.1));\n    --search-hover-bg: var(--divider-color, rgba(255, 255, 255, 0.1));\n    --search-play-hover: var(--accent-color, #e68900);\n    --search-queue-bg: var(--ha-card-background, #4a4a4a);\n    --search-queue-border: var(--divider-color, #666);\n    --search-queue-hover: var(--secondary-background-color, #5a5a5a);\n    --search-queue-hover-border: var(--divider-color, #777);\n  }\n\n  /* Base card styles - set once, inherit everywhere */\n  :host {\n    display: block;\n    border-radius: var(--border-radius);\n    box-shadow: none;\n    background: transparent;\n    color: var(--primary-text);\n    transition: background var(--transition-normal);\n    overflow: hidden;\n    clip-path: inset(0 round var(--border-radius));\n  }\n\n  ha-card.yamp-card {\n    display: block;\n    border-radius: var(--border-radius);\n    box-shadow: none;\n    background: transparent;\n    color: var(--primary-text);\n    transition: background var(--transition-normal);\n    overflow: hidden;\n    font-size: inherit;\n    position: relative;\n    clip-path: inset(0 round var(--border-radius));\n    transform: translateZ(0);\n  }\n\n  .yamp-card-inner {\n    position: relative;\n    z-index: ", ";\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    container-type: inline-size;\n    border-radius: var(--border-radius);\n    clip-path: inset(0 round var(--border-radius));\n    transform: translateZ(0);\n  }\n\n  .full-bleed-artwork-bg {\n    position: absolute;\n    inset: -50px;\n    z-index: ", ";\n    background-size: var(--yamp-artwork-bg-size, cover);\n    background-position: top center;\n    background-repeat: no-repeat;\n    pointer-events: none;\n    transform: translateZ(0);\n  }\n\n  .full-bleed-artwork-fade {\n    position: absolute;\n    inset: -50px;\n    z-index: ", ";\n    pointer-events: none;\n    background: linear-gradient(\n      to bottom,\n      rgba(0,0,0,0.0) 0%,\n      rgba(0,0,0,0.40) 55%,\n      rgba(0,0,0,0.92) 100%\n    );\n    transform: translateZ(0);\n  }\n\n  /* Idle state dimming */\n  .dim-idle .details,\n  .dim-idle .controls-row,\n  .dim-idle .volume-row,\n  .dim-idle:not(.no-chip-dim) .chip-row,\n  .dim-idle:not(.no-chip-dim) .action-chip-row {\n    opacity: 0.28;\n    transition: opacity 0.5s;\n  }\n\n  /* Improve selected chip readability while idle */\n  .dim-idle .chip[selected] {\n    color: rgba(255,255,255,0.94);\n    text-shadow: 0 0 6px rgba(0,0,0,0.35);\n  }\n\n  /* More info menu */\n  .more-info-menu {\n    display: flex;\n    align-items: center;\n    margin-right: 0;\n    position: relative;\n    z-index: ", ";\n    margin-top: -6px;\n  }\n\n  .more-info-btn {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    height: 36px;\n    width: 36px;\n    padding: 0;\n    margin: 0;\n    background: none;\n    border: none;\n    color: var(--primary-text);\n    font: inherit;\n    cursor: pointer;\n    outline: none;\n  }\n\n  .more-info-btn ha-icon {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 1.5em;\n    width: 28px;\n    height: 28px;\n    line-height: 1;\n    vertical-align: middle;\n    position: relative;\n    margin: 0 0 2px 0;\n    color: #fff;\n    transition: color var(--transition-normal, 0.2s);\n  }\n\n  .dim-idle .more-info-btn ha-icon {\n    color: #9ea2a8;\n  }\n\n  .more-info-icon {\n    font-size: 1.7em;\n    line-height: 1;\n    color: #fff;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: color var(--transition-normal, 0.2s);\n  }\n\n  .dim-idle .more-info-icon {\n    color: #9ea2a8;\n  }\n\n  /* Card artwork spacer */\n  .card-artwork-spacer {\n    width: 100%;\n    flex: 1 1 0;\n    height: auto;\n    min-height: 180px;\n    pointer-events: none;\n    position: relative;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  :host([data-has-custom-height=\"true\"]) .card-artwork-spacer {\n    min-height: 0;\n  }\n\n  /* Media background */\n  .media-bg-full {\n    position: absolute;\n    inset: 0;\n    width: 100%;\n    height: 100%;\n    z-index: ", ";\n    background-size: var(--yamp-artwork-bg-size, cover);\n    background-position: top center;\n    background-repeat: no-repeat;\n    pointer-events: none;\n  }\n\n  .media-bg-dim {\n    position: absolute;\n    inset: 0;\n    width: 100%;\n    height: 100%;\n    background: rgba(0,0,0,0.5);\n    z-index: ", ";\n    pointer-events: none;\n  }\n\n  /* Source menu */\n  .source-menu {\n    position: relative;\n    display: flex;\n    flex-direction: column;\n    align-items: flex-end;\n    padding: 0;\n    margin: 0;\n  }\n\n  .source-menu-btn {\n    background: none;\n    border: none;\n    color: var(--primary-text);\n    font: inherit;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    gap: 1px;\n    padding: 2px 10px;\n    font-size: 1em;\n    outline: none;\n  }\n\n  .source-selected {\n    min-width: 64px;\n    font-weight: 500;\n    padding-right: 4px;\n    text-align: left;\n  }\n\n  .source-dropdown {\n    position: absolute;\n    top: 32px;\n    right: 0;\n    left: auto;\n    background: var(--card-bg);\n    color: var(--primary-text);\n    border-radius: var(--button-border-radius);\n    box-shadow: var(--shadow-light);\n    min-width: 110px;\n    z-index: ", ";\n    margin-top: 2px;\n    border: 1px solid #444;\n    overflow: hidden;\n    max-height: 220px;\n    overflow-y: auto;\n  }\n\n  .source-dropdown.up {\n    top: auto;\n    bottom: 38px;\n    border-radius: var(--button-border-radius);\n  }\n\n  .source-option {\n    padding: 8px 16px;\n    cursor: pointer;\n    transition: background var(--transition-fast);\n    white-space: nowrap;\n  }\n\n  .source-option:hover,\n  .source-option:focus {\n    background: var(--accent-color, #1976d2);\n    color: #fff;\n  }\n\n  .source-row {\n    display: flex;\n    align-items: center;\n    padding: 0 16px 8px 16px;\n    margin-top: 8px;\n  }\n\n  .source-select {\n    font-size: 1em;\n    padding: 4px 10px;\n    border-radius: var(--button-border-radius);\n    border: 1px solid #ccc;\n    background: var(--card-bg);\n    color: var(--primary-text);\n    outline: none;\n    margin-top: 2px;\n  }\n\n  /* Chip styles */\n  .chip-icon {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    width: 28px;\n    height: 28px;\n    margin-right: 8px;\n    background: transparent;\n    border-radius: 50%;\n    overflow: hidden;\n    padding: 0;\n  }\n\n  .chip[playing] .chip-icon {\n    background: #fff;\n  }\n\n  .chip-icon ha-icon {\n    width: 100%;\n    height: 100%;\n    font-size: 28px;\n    line-height: 1;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    margin: 0;\n    padding: 0;\n    color: var(--custom-accent);\n  }\n\n  .chip[selected] .chip-icon ha-icon {\n    color: #fff;\n  }\n\n  .chip[selected][playing] .chip-icon ha-icon {\n    color: var(--custom-accent);\n  }\n\n  .chip:hover .chip-icon ha-icon {\n    color: #fff;\n  }\n\n  .chip-mini-art {\n    width: 28px;\n    height: 28px;\n    border-radius: 50%;\n    object-fit: var(--yamp-artwork-fit, cover);\n    box-shadow: 0 1px 4px rgba(0,0,0,0.18);\n    display: block;\n  }\n\n  /* Chip rows */\n  .chip-row.grab-scroll-active,\n  .action-chip-row.grab-scroll-active,\n  .search-filter-chips.grab-scroll-active {\n    cursor: grabbing;\n  }\n\n  .chip-row,\n  .action-chip-row,\n  .search-filter-chips {\n    cursor: grab;\n  }\n\n  .chip-row {\n    display: flex;\n    gap: 8px;\n    padding: 8px 12px 0 12px;\n    margin-bottom: 12px;\n    position: relative;\n    z-index: ", ";\n    overflow-x: auto;\n    overflow-y: hidden;\n    white-space: nowrap;\n    scrollbar-width: none;\n    scrollbar-color: var(--accent-color, #1976d2) #222;\n    -webkit-overflow-scrolling: touch;\n    touch-action: pan-x;\n    max-width: 100vw;\n    background: transparent;\n  }\n\n  .chip-row::-webkit-scrollbar {\n    display: none;\n  }\n\n  .chip-row::-webkit-scrollbar-thumb {\n    background: var(--accent-color, #1976d2);\n    border-radius: 6px;\n  }\n\n  .chip-row::-webkit-scrollbar-track {\n    background: #222;\n  }\n\n  .action-chip-row {\n    display: flex;\n    gap: 8px;\n    padding: 2px 12px 0 12px;\n    margin-bottom: 8px;\n    position: relative;\n    z-index: ", ";\n    overflow-x: auto;\n    white-space: nowrap;\n    scrollbar-width: none;\n    font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));\n    background: transparent;\n  }\n\n  .action-chip-row::-webkit-scrollbar {\n    display: none;\n  }\n\n  /* Action chips */\n  .action-chip {\n    background: transparent;\n    opacity: 1;\n    border-radius: var(--button-border-radius);\n    color: var(--primary-text);\n    box-shadow: none;\n    text-shadow: none;\n    border: none;\n    outline: none;\n    padding: 4px 12px;\n    font-weight: 500;\n    font-size: 0.95em;\n    cursor: pointer;\n    margin: 4px 0;\n    transition: background var(--transition-normal) ease, transform 0.1s ease;\n    flex: 0 0 auto;\n    white-space: nowrap;\n    display: inline-flex;\n    align-items: center;\n    gap: 6px;\n  }\n\n  .action-chip:hover {\n    background: var(--custom-accent);\n    color: #fff;\n    box-shadow: none;\n    text-shadow: none;\n  }\n\n  .action-chip:active {\n    background: var(--custom-accent);\n    color: #fff;\n    transform: scale(0.96);\n    box-shadow: none;\n    text-shadow: none;\n  }\n\n  /* Override action chip colors when match_theme is false */\n  :host([data-match-theme=\"false\"]) .action-chip:hover,\n  :host([data-match-theme=\"false\"]) .action-chip:active {\n    background: #ff9800 ;\n  }\n\n  /* Main chips */\n  .chip {\n    display: flex;\n    align-items: center;\n    border-radius: var(--chip-border-radius);\n    padding: 6px 6px 6px 8px;\n    background: var(--chip-bg);\n    color: var(--primary-text);\n    cursor: pointer;\n    font-weight: 500;\n    opacity: 0.85;\n    border: none;\n    outline: none;\n    transition: background var(--transition-normal), opacity var(--transition-normal);\n    flex: 0 0 auto;\n    white-space: nowrap;\n    position: relative;\n  }\n\n  .chip:hover {\n    background: var(--custom-accent);\n    color: #fff;\n  }\n\n  .chip[selected] {\n    background: var(--custom-accent);\n    color: #fff;\n    opacity: 1;\n  }\n\n  .chip[playing] {\n    padding-right: 6px;\n  }\n\n  /* Playing indicator animation - equalizer bars */\n  @keyframes chipPlayingBar1 {\n    0%, 100% { height: 3px; }\n    50% { height: 10px; }\n  }\n  @keyframes chipPlayingBar2 {\n    0%, 100% { height: 5px; }\n    50% { height: 12px; }\n  }\n  @keyframes chipPlayingBar3 {\n    0%, 100% { height: 4px; }\n    50% { height: 8px; }\n  }\n\n  .chip-playing-indicator {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    gap: 2px;\n    margin-left: 6px;\n    height: 14px;\n  }\n\n  .chip-playing-indicator .bar {\n    width: 3px;\n    background: currentColor;\n    border-radius: 1px;\n  }\n\n  .chip-playing-indicator .bar:nth-child(1) {\n    animation: chipPlayingBar1 0.8s ease-in-out 0s infinite;\n  }\n\n  .chip-playing-indicator .bar:nth-child(2) {\n    animation: chipPlayingBar2 0.6s ease-in-out 0.15s infinite;\n  }\n\n  .chip-playing-indicator .bar:nth-child(3) {\n    animation: chipPlayingBar3 0.7s ease-in-out 0.3s infinite;\n  }\n\n  .chip[playing]:not([selected]) .chip-playing-indicator {\n    color: var(--custom-accent);\n  }\n\n  .chip[playing][selected] .chip-playing-indicator,\n  .chip[playing]:hover .chip-playing-indicator {\n    color: #fff;\n  }\n\n  /* Chip pin */\n  .chip-pin {\n    position: absolute;\n    top: -6px;\n    right: -6px;\n    background: #fff;\n    border-radius: 50%;\n    padding: 2px;\n    z-index: ", ";\n    width: 22px;\n    height: 22px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    border: 2px solid var(--custom-accent);\n    box-shadow: 0 1px 5px rgba(0,0,0,0.11);\n    cursor: pointer;\n    transition: box-shadow 0.18s;\n  }\n\n  .chip-pin:hover {\n    box-shadow: 0 2px 12px rgba(33,33,33,0.17);\n  }\n\n  .chip-pin ha-icon {\n    color: var(--custom-accent);\n    font-size: 16px;\n    background: transparent;\n    border-radius: 50%;\n    margin: 0;\n    padding: 0;\n  }\n\n  .chip-pin-inside {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    margin-left: 8px;\n    background: transparent;\n    border-radius: 50%;\n    padding: 2px;\n    cursor: pointer;\n  }\n\n  .chip-pin-inside ha-icon {\n    color: var(--custom-accent);\n    font-size: 17px;\n    margin: 0;\n  }\n\n  .chip[selected] .chip-pin-inside ha-icon {\n    color: #fff;\n  }\n\n  .chip-pin:hover ha-icon,\n  .chip-pin-inside:hover ha-icon {\n    color: #fff;\n  }\n\n  .chip:hover .chip-pin ha-icon,\n  .chip:hover .chip-pin-inside ha-icon {\n    color: #fff;\n  }\n\n  .chip-pin-spacer {\n    display: flex;\n    width: 24px;\n    min-width: 24px;\n    height: 1px;\n  }\n\n  /* Group icon */\n  .chip-icon.group-icon {\n    background: var(--custom-accent);\n    color: #fff;\n    position: relative;\n  }\n\n  .group-count {\n    font-weight: 700;\n    font-size: 0.9em;\n    line-height: 28px;\n    text-align: center;\n    width: 100%;\n    color: inherit;\n  }\n\n  /* Media artwork */\n  .media-artwork-bg {\n    position: relative;\n    width: 100%;\n    aspect-ratio: 1.75/1;\n    overflow: hidden;\n    background-size: var(--yamp-artwork-bg-size, cover);\n    background-repeat: no-repeat;\n    background-position: top center;\n  }\n\n  .artwork {\n    width: 96px;\n    height: 96px;\n    object-fit: var(--yamp-artwork-fit, cover);\n    border-radius: 12px;\n    box-shadow: var(--shadow-medium);\n    background: #222;\n  }\n\n  /* Details section */\n  .details {\n    padding-top: 0;\n    padding-right: calc(16px * var(--yamp-details-scale, 1));\n    padding-bottom: calc(12px * var(--yamp-details-scale, 1));\n    padding-left: calc(16px * var(--yamp-details-scale, 1));\n    display: flex;\n    flex-direction: column;\n    gap: calc(8px * var(--yamp-details-scale, 1));\n    margin-top: calc(8px * var(--yamp-details-scale, 1));\n    min-height: calc(48px * var(--yamp-details-scale, 1));\n    font-size: calc(1em * var(--yamp-details-scale, 1));\n  }\n\n  .details .title {\n    font-size: calc(1.1em * var(--yamp-details-scale, 1));\n    font-weight: 600;\n    line-height: var(--yamp-details-line-height, 1.2);\n    white-space: normal;\n    word-break: break-word;\n    overflow: visible;\n    text-overflow: unset;\n    display: -webkit-box;\n    -webkit-box-orient: vertical;\n    -webkit-line-clamp: var(--yamp-details-max-lines, 3);\n    overflow: hidden;\n    padding-top: calc(8px * var(--yamp-details-scale, 1));\n  }\n\n  .details .artist {\n    font-size: calc(1em * var(--yamp-details-scale, 1));\n    line-height: var(--yamp-details-line-height, 1.2);\n  }\n\n  .title {\n    font-size: 1.1em;\n    font-weight: 600;\n    line-height: 1.2;\n    white-space: normal;\n    word-break: break-word;\n    overflow: visible;\n    text-overflow: unset;\n    display: block;\n    padding-top: 8px;\n  }\n\n  .artist {\n    font-size: 1em;\n    font-weight: 400;\n    color: var(--secondary-text);\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    color: #fff;\n  }\n\n  /* Controls */\n  .controls-row {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    gap: 12px;\n    padding: 4px 16px;\n  }\n\n  .controls-row.adaptive {\n    justify-content: center;\n    gap: var(--yamp-control-gap, 10px);\n    flex-wrap: nowrap;\n  }\n\n  .controls-row.adaptive .button {\n    flex: 1 1 calc(\n      (100% - (var(--yamp-control-gap, 10px) * (var(--yamp-control-count, 5) - 1))) /\n      var(--yamp-control-count, 5)\n    );\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    min-width: var(--yamp-control-min-width, 48px);\n    max-width: var(--yamp-control-max-width, 120px);\n    min-height: var(--yamp-control-min-height, 48px);\n    padding: var(--yamp-control-padding, 8px);\n  }\n\n  .controls-row.adaptive .button ha-icon {\n    --mdc-icon-size: var(--yamp-control-icon-size, 36px);\n    width: var(--yamp-control-icon-size, 36px);\n    height: var(--yamp-control-icon-size, 36px);\n    font-size: var(--yamp-control-icon-size, 36px);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .controls-row.adaptive .button ha-icon svg,\n  .controls-row.adaptive .button ha-icon iron-icon {\n    width: 100%;\n    height: 100%;\n  }\n\n  .controls-row.modern {\n    justify-content: center;\n    gap: 14px;\n    padding: 10px 16px 2px 16px;\n    /* Grid layout for robust centering */\n    display: grid;\n    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  }\n\n  .controls-row.modern .controls-left {\n    grid-column: 1;\n    display: flex;\n    justify-content: flex-end;\n    align-items: center;\n    gap: 14px;\n  }\n\n  .controls-row.modern .controls-center {\n    grid-column: 2;\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    padding: 0 10px;\n  }\n\n  .controls-row.modern .controls-right {\n    grid-column: 3;\n    display: flex;\n    justify-content: flex-start;\n    align-items: center;\n    gap: 14px;\n  }\n\n  .modern-button {\n    background: rgba(255,255,255,0.15);\n    border: none;\n    color: inherit;\n    cursor: pointer;\n    border-radius: 999px;\n    transition: background var(--transition-normal), transform 0.12s ease;\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 6px 18px rgba(0,0,0,0.25);\n  }\n\n  .modern-button.small,\n  .modern-button.medium,\n  .modern-button.primary {\n    font-size: inherit;\n  }\n\n  .modern-button.small {\n    width: 42px;\n    height: 42px;\n    padding: 0;\n  }\n\n  .modern-button.medium {\n    width: 50px;\n    height: 50px;\n    padding: 0;\n  }\n\n  .modern-button.primary {\n    width: 70px;\n    height: 70px;\n    font-size: 1.9em;\n    background: rgba(255,255,255,0.1);\n  }\n\n  .modern-button ha-icon {\n    --mdc-icon-size: 24px;\n    width: 24px;\n    height: 24px;\n  }\n\n  .modern-button.medium ha-icon {\n    --mdc-icon-size: 28px;\n    width: 28px;\n    height: 28px;\n  }\n\n  .modern-button.primary ha-icon {\n    --mdc-icon-size: 36px;\n    width: 36px;\n    height: 36px;\n  }\n\n  .modern-button:hover {\n    background: rgba(255,255,255,0.25);\n  }\n\n  .modern-button:active {\n    transform: scale(0.95);\n  }\n\n  .modern-button.active:not(.primary) {\n    color: var(--custom-accent);\n  }\n\n  .modern-button.primary.active {\n    color: inherit;\n  }\n\n  /* Tighter spacing for collapsed mode with artwork */\n  .card-lower-content.collapsed.has-artwork .controls-row {\n    gap: 8px;\n    padding: 4px 12px 4px 16px;\n  }\n\n  .button {\n    background: none;\n    border: none;\n    color: inherit;\n    font-size: 1.5em;\n    cursor: pointer;\n    padding: 6px;\n    border-radius: var(--button-border-radius);\n    transition: background var(--transition-normal);\n  }\n\n  .button:active {\n    background: rgba(0,0,0,0.10);\n  }\n\n  .button.active ha-icon,\n  .button.active {\n    color: var(--custom-accent);\n  }\n\n  /* Progress bar */\n  .progress-bar-container {\n    padding-left: 24px;\n    padding-right: 24px;\n    box-sizing: border-box;\n  }\n\n  .progress-bar {\n    width: 100%;\n    height: 6px;\n    background: rgba(255,255,255,0.22);\n    border-radius: 3px;\n    margin: 8px 0;\n    cursor: pointer;\n    position: relative;\n    box-shadow: var(--shadow-heavy);\n  }\n\n  .progress-inner {\n    height: 100%;\n    background: var(--custom-accent);\n    border-radius: 3px 0 0 3px;\n    box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);\n  }\n\n  .timestamps-container {\n    display: flex;\n    justify-content: space-between;\n    font-size: 10px;\n    margin-top: -4px;\n    margin-bottom: 4px;\n    color: rgba(255, 255, 255, 0.9);\n    padding: 0 2px;\n  }\n\n  /* Volume controls */\n  .volume-row {\n    display: grid;\n    grid-template-columns: minmax(min-content, 1fr) auto minmax(min-content, 1fr);\n    align-items: center;\n    padding: 0 16px 14px 16px;\n  }\n\n  /* Remove flex:1 since we are using grid columns */\n  .volume-left, \n  .volume-right {\n    display: flex;\n    align-items: center;\n  }\n\n  .volume-left {\n    grid-column: 1;\n    justify-self: start;\n    justify-content: flex-start;\n    gap: 8px;\n  }\n\n  .volume-right {\n    grid-column: 3;\n    justify-self: end;\n    justify-content: flex-end;\n    gap: 8px;\n  }\n\n  .volume-center {\n    grid-column: 2;\n    justify-self: center;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    min-width: 0;\n  }\n\n  .volume-row.has-slider .volume-left,\n  .volume-row.has-slider .volume-right {\n    flex: 0 0 auto;\n  }\n\n  .volume-row.has-slider {\n    grid-template-columns: minmax(min-content, 1fr) 4fr minmax(min-content, 1fr);\n  }\n\n  .volume-row.has-slider .volume-center {\n    width: 100%;\n    justify-self: stretch;\n  }\n\n  .volume-controls {\n    display: flex;\n    align-items: center;\n    gap: 14px;\n    padding: 0;\n  }\n\n  .search-sheet-play,\n  .search-sheet-queue {\n    background: none;\n    border: none;\n    cursor: pointer;\n    color: #fff;\n    padding: 4px;\n    border-radius: 50%;\n    transition: background 0.2s;\n  }\n\n  .radio-mode-button {\n    background: none;\n    border: none;\n    font-size: 1.25em;\n    cursor: pointer;\n    padding: 4px 8px;\n    border-radius: 50%;\n    transition: all 0.2s ease;\n    margin-right: 8px;\n    display: flex;\n    align-items: center;\n    color: #fff;\n  }\n\n  .radio-mode-button.active {\n    color: var(--custom-accent, var(--accent-color));\n  }\n\n  .volume-icon-btn {\n    background: none;\n    border: none;\n    color: var(--primary-text);\n    cursor: pointer;\n    padding: 0px;\n    border-radius: 50%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: background-color var(--transition-normal);\n    min-width: 36px;\n    min-height: 36px;\n    margin: 0;\n  }\n\n  .volume-icon-btn:hover {\n    color: var(--custom-accent);\n  }\n\n  .volume-icon-btn ha-icon {\n    font-size: 1.2em;\n    color: #fff;\n  }\n\n  .volume-icon-btn.favorite-volume-btn {\n    width: 36px;\n    height: 36px;\n    min-width: 36px;\n    min-height: 36px;\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    color: rgba(255,255,255,0.7);\n    margin: 0;\n  }\n\n  .volume-leading-placeholder {\n    width: 36px;\n    height: 36px;\n    min-width: 36px;\n    min-height: 36px;\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    margin: 0;\n  }\n\n  .volume-icon-btn.favorite-volume-btn.active {\n    color: var(--custom-accent);\n  }\n\n  .volume-slider-container {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    flex: 1;\n    position: relative;\n    padding: 0 24px;\n  }\n\n  .volume-slider-icon {\n    font-size: 1em;\n    color: var(--primary-text);\n    opacity: 0.7;\n    min-width: 20px;\n  }\n\n  .vol-slider {\n    -webkit-appearance: none;\n    appearance: none;\n    height: 6px;\n    background: hsla(0, 0.00%, 100.00%, 0.22);\n    border-radius: 3px;\n    outline: none;\n    box-shadow: var(--shadow-heavy);\n    flex: 1 1 auto;\n    min-width: 80px;\n    max-width: none;\n    margin: 10px 0;\n  }\n\n  .volume-row .source-menu {\n    flex: 0 0 auto;\n  }\n\n  .volume-placeholder {\n    width: 36px;\n    min-width: 36px;\n    min-height: 36px;\n    height: 36px;\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  /* Volume slider thumbs */\n  .vol-slider::-webkit-slider-thumb {\n    -webkit-appearance: none;\n    appearance: none;\n    width: 18px;\n    height: 18px;\n    border-radius: 50%;\n    background: var(--custom-accent);\n    cursor: pointer;\n    box-shadow: 0 2px 8px rgba(0,0,0,0.12);\n    border: 2px solid #fff;\n  }\n\n  .vol-slider::-moz-range-thumb {\n    width: 18px;\n    height: 18px;\n    border-radius: 50%;\n    background: var(--custom-accent);\n    cursor: pointer;\n    border: 2px solid #fff;\n  }\n\n  .vol-slider::-moz-range-track {\n    height: 6px;\n    background: rgba(255,255,255,0.22);\n    border-radius: 3px;\n  }\n\n  .vol-slider::-ms-thumb {\n    width: 18px;\n    height: 18px;\n    border-radius: 50%;\n    background: var(--custom-accent);\n    cursor: pointer;\n    border: 2px solid #fff;\n  }\n\n  .vol-slider::-ms-fill-lower,\n  .vol-slider::-ms-fill-upper {\n    height: 6px;\n    background: rgba(255,255,255,0.22);\n    border-radius: 3px;\n  }\n\n  /* Touch device improvements */\n  @media (pointer: coarse) {\n    .vol-slider::-webkit-slider-thumb {\n      box-shadow: 0 0 0 18px rgba(0,0,0,0);\n    }\n    .vol-slider::-moz-range-thumb {\n      box-shadow: 0 0 0 18px rgba(0,0,0,0);\n    }\n    .vol-slider::-ms-thumb {\n      box-shadow: 0 0 0 18px rgba(0,0,0,0);\n    }\n  }\n\n  .vol-stepper-container {\n    display: flex;\n    align-items: center;\n    flex: 1;\n    justify-content: center;\n  }\n\n  .vol-stepper {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n  }\n\n  .vol-stepper .button {\n    min-width: 36px;\n    min-height: 36px;\n    font-size: 1.5em;\n    padding: 6px 0;\n    border-radius: 50%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .vol-value {\n    min-width: 48px;\n    display: inline-block;\n    text-align: center;\n    padding-left: 6px;\n  }\n\n  .vol-label {\n    width: 42px;\n    display: inline-block;\n    font-size: 0.85em;\n    text-transform: lowercase;\n    opacity: 0.9;\n  }\n\n  /* Light mode styles */\n  @media (prefers-color-scheme: light) {\n    :host {\n      background: var(--card-background-color, #fff);\n    }\n\n    .chip {\n      background: #f0f0f0;\n      color: #222;\n    }\n\n    :host([data-match-theme=\"true\"]) .chip[selected] {\n      background: var(--accent-color, #1976d2);\n      color: #fff;\n    }\n\n    .artwork {\n      background: #eee;\n    }\n\n    .progress-bar {\n      background: #eee;\n    }\n\n    .source-menu-btn {\n      color: #222;\n    }\n\n    .source-dropdown {\n      background: #fff;\n      color: #222;\n      border: 1px solid #bbb;\n    }\n\n    .source-option {\n      color: #222;\n      background: #fff;\n      transition: background var(--transition-fast), color var(--transition-fast);\n    }\n\n    .source-option:hover,\n    .source-option:focus {\n      background: var(--custom-accent);\n      color: #222;\n    }\n\n    .source-select {\n      background: #fff;\n      color: #222;\n      border: 1px solid #aaa;\n    }\n\n    .action-chip {\n      background: var(--card-background-color, #fff);\n      opacity: 1;\n      border-radius: var(--button-border-radius);\n      color: var(--primary-text-color, #222);\n      box-shadow: none;\n      text-shadow: none;\n      border: none;\n      outline: none;\n    }\n\n    .action-chip:active {\n      background: var(--accent-color, #1976d2);\n      color: #fff;\n      opacity: 1;\n      transform: scale(0.98);\n      box-shadow: none;\n      text-shadow: none;\n    }\n\n    .card-lower-content:not(.collapsed) .source-menu-btn,\n    .card-lower-content:not(.collapsed) .source-selected {\n      color: #fff;\n    }\n  }\n\n  /* Artwork overlay */\n  .artwork-dim-overlay {\n    position: absolute;\n    left: 0;\n    right: 0;\n    top: 0;\n    bottom: 0;\n    pointer-events: none;\n    background: linear-gradient(to bottom, \n      rgba(0,0,0,0.0) 0%,\n      rgba(0,0,0,0.40) 55%,\n      rgba(0,0,0,0.70) 100%);\n    z-index: ", ";\n  }\n\n  /* Card lower content */\n  .card-lower-content-container {\n    position: relative;\n    width: 100%;\n    min-height: auto;\n    height: 100%;\n    display: flex;\n    flex: 1 1 auto;\n    flex-direction: column;\n    border-radius: 0 0 var(--border-radius) var(--border-radius);\n    overflow: hidden;\n  }\n\n  .card-lower-content-bg {\n    position: absolute;\n    inset: 0;\n    z-index: ", ";\n    background-size: var(--yamp-artwork-bg-size, cover);\n    background-position: top center;\n    background-repeat: no-repeat;\n    pointer-events: none;\n    height: 100%;\n  }\n\n  .card-lower-fade {\n    position: absolute;\n    inset: 0;\n    pointer-events: none;\n    z-index: ", ";\n    background: linear-gradient(\n      to bottom,\n      rgba(0,0,0,0.0) 0%,\n      rgba(0,0,0,0.40) 55%,\n      rgba(0,0,0,0.92) 100%\n    );\n  }\n\n  .card-lower-content {\n    position: relative;\n    z-index: ", ";\n    display: flex;\n    flex-direction: column;\n    height: 100%;\n  }\n\n  .card-lower-content.transitioning .details,\n  .card-lower-content.transitioning .card-artwork-spacer {\n    transition: opacity 0.3s;\n  }\n\n  .card-lower-content.collapsed .details {\n    opacity: 1;\n    pointer-events: auto;\n    margin-right: var(--yamp-collapsed-details-offset, 120px);\n    transition: margin var(--transition-normal);\n  }\n\n  @media (max-width: 420px) {\n    .card-lower-content.collapsed .details {\n      margin-right: var(--yamp-collapsed-details-offset, 74px);\n    }\n  }\n\n  .card-lower-content.collapsed .card-artwork-spacer {\n    opacity: 0;\n    pointer-events: none;\n  }\n\n  .card-lower-content.collapsed .card-artwork-spacer.show-placeholder {\n    opacity: 1;\n    pointer-events: auto;\n  }\n\n  .collapsed-flex-spacer {\n    flex: 1 1 auto;\n    width: 100%;\n    min-height: 0;\n  }\n\n  .details,\n  .title,\n  .artist,\n  .controls-row,\n  .button,\n  .vol-stepper span,\n  .vol-label {\n    color: #fff;\n  }\n\n  .vol-stepper span {\n    width: 42px;\n    text-align: center;\n    display: inline-block;\n  }\n\n  .card-lower-content.collapsed .details .title,\n  .card-lower-content.collapsed .title {\n    font-size: calc(1.1em * var(--yamp-collapsed-title-scale, 1));\n    line-height: calc(1.2 * var(--yamp-collapsed-title-scale, 1));\n  }\n\n  .card-lower-content.collapsed .artist {\n    font-size: calc(1em * var(--yamp-collapsed-artist-scale, 1));\n  }\n  \n\n\n  /* Media artwork placeholder */\n  .media-artwork-placeholder {\n    position: relative;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    width: clamp(96px, 50%, 184px);\n    aspect-ratio: 1;\n    pointer-events: none;\n  }\n\n  .media-artwork-placeholder svg {\n    width: 100%;\n    height: 100%;\n    display: block;\n    opacity: 0.85;\n  }\n\n  /* Collapsed artwork */\n  .card-lower-content.collapsed .collapsed-artwork-container {\n    position: absolute;\n    top: 16px;\n    right: 6px;\n    width: 110px;\n    height: calc(100% - 60px);\n    display: flex;\n    align-items: flex-start;\n    justify-content: flex-end;\n    z-index: ", ";\n    background: transparent;\n    pointer-events: none;\n    box-shadow: none;\n    padding: 0;\n    transition: background var(--transition-slow);\n  }\n\n  .card-lower-content.collapsed .collapsed-artwork {\n    width: 102px;\n    height: 102px;\n    border-radius: 16px;\n    object-fit: var(--yamp-artwork-fit, cover);\n    background: transparent;\n    box-shadow: 0 1px 6px rgba(0,0,0,0.22);\n    pointer-events: none;\n    user-select: none;\n    display: block;\n    margin: 2px;\n  }\n\n  .card-lower-content.collapsed.has-artwork .controls-row {\n    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) ;\n    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) ;\n    width: auto ;\n  }\n\n  /* Medium screens */\n  @media (max-width: 600px) {\n    .card-lower-content.collapsed.has-artwork .controls-row {\n      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) ;\n      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) ;\n      width: auto ;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork-container {\n      width: 105px;\n      right: 4px;\n      top: 14px;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork {\n      width: 98px;\n      height: 98px;\n    }\n  }\n\n  /* Small screens */\n  @media (max-width: 420px) {\n    .card-lower-content.collapsed.has-artwork .controls-row {\n      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) ;\n      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) ;\n      width: auto ;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork-container {\n      width: 90px;\n      right: 3px;\n      top: 12px;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork {\n      width: 84px;\n      height: 84px;\n    }\n  }\n\n  /* Very small screens */\n  @media (max-width: 320px) {\n    .card-lower-content.collapsed.has-artwork .controls-row {\n      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) ;\n      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) ;\n      width: auto ;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork-container {\n      width: 80px;\n      right: 2px;\n      top: 10px;\n    }\n\n    .card-lower-content.collapsed .collapsed-artwork {\n      width: 74px;\n      height: 74px;\n    }\n  }\n\n  /* Collapsed progress bar */\n  .collapsed-progress-bar {\n    position: absolute;\n    left: 0;\n    bottom: 0;\n    height: 4px;\n    background: var(--custom-accent);\n    border-radius: 0 0 12px 12px;\n    z-index: ", ";\n    transition: width var(--transition-normal) linear;\n    pointer-events: none;\n  }\n\n  /* Entity options overlay */\n  .entity-options-overlay {\n    position: absolute;\n    left: 0;\n    right: 0;\n    top: 0;\n    bottom: 0;\n    z-index: ", ";\n    background: var(--ha-entity-menu-overlay, rgba(0,0,0,0.82));\n    display: flex;\n    align-items: flex-start;\n    justify-content: center;\n  }\n\n  /* Opening animations for hamburger menu */\n  @keyframes overlayFadeIn {\n    from {\n      opacity: 0;\n    }\n    to {\n      opacity: 1;\n    }\n  }\n\n  @keyframes containerSlideIn {\n    from {\n      transform: translateY(-20px);\n      opacity: 0;\n    }\n    to {\n      transform: translateY(0);\n      opacity: 1;\n    }\n  }\n\n  @keyframes sheetSlideIn {\n    from {\n      transform: translateY(10px);\n      opacity: 0;\n    }\n    to {\n      transform: translateY(0);\n      opacity: 1;\n    }\n  }\n\n  .entity-options-overlay-opening {\n    animation: overlayFadeIn 0.2s ease-out;\n  }\n\n  .entity-options-container-opening {\n    animation: containerSlideIn 0.3s ease-out;\n  }\n\n  .entity-options-sheet-opening {\n    animation: sheetSlideIn 0.25s ease-out 0.05s both;\n  }\n\n  /* Closing animations for hamburger menu */\n  @keyframes overlayFadeOut {\n    from {\n      opacity: 1;\n    }\n    to {\n      opacity: 0;\n    }\n  }\n\n  @keyframes containerSlideOut {\n    from {\n      transform: translateY(0);\n      opacity: 1;\n    }\n    to {\n      transform: translateY(-20px);\n      opacity: 0;\n    }\n  }\n\n  @keyframes sheetSlideOut {\n    from {\n      transform: translateY(0);\n      opacity: 1;\n    }\n    to {\n      transform: translateY(10px);\n      opacity: 0;\n    }\n  }\n\n  .entity-options-overlay-closing {\n    animation: overlayFadeOut 0.15s ease-in forwards;\n    pointer-events: none;\n  }\n\n  .entity-options-container-closing {\n    animation: containerSlideOut 0.2s ease-in forwards;\n  }\n\n  .entity-options-sheet-closing {\n    animation: sheetSlideOut 0.15s ease-in 0.05s both forwards;\n  }\n\n  .entity-options-container {\n    width: 100%;\n    box-sizing: border-box;\n    padding: 0;\n    margin: 2% auto;\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n    display: flex;\n    flex-direction: column;\n    max-height: calc(96% - 70px);\n    min-height: 90px;\n    position: relative;\n  }\n\n  /* Expand container height when hide_menu_player is enabled (no persistent controls) */\n  :host([data-hide-menu-player=\"true\"]) .entity-options-container {\n    max-height: 96%;\n  }\n\n  /* Expand container height when persistent controls are hidden due to layout constraints */\n  :host([data-hide-persistent-controls=\"true\"]) .entity-options-container,\n  :host([data-pin-search-headers=\"true\"]) .entity-options-container {\n    max-height: 96%;\n    scrollbar-width: none;\n  }\n\n  .entity-options-container::-webkit-scrollbar {\n    display: none;\n  }\n\n  /* Persistent Media Controls */\n  /* Persistent Media Controls */\n  .persistent-media-controls {\n    display: grid;\n    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n    align-items: center;\n    gap: 10px;\n    padding: 14px 22px 18px 22px;\n    margin: 0;\n    background: rgba(0, 0, 0, 0.1);\n    border-radius: 0;\n    border: none;\n    flex-shrink: 0;\n    position: absolute;\n    bottom: 0;\n    left: 0;\n    width: 100%;\n    box-sizing: border-box;\n    z-index: ", ";\n  }\n\n  /* Hide persistent controls when hide_menu_player is enabled */\n  :host([data-hide-menu-player=\"true\"]) .persistent-media-controls {\n    display: none;\n  }\n\n  /* Hide persistent controls when layout constraints require it */\n  :host([data-hide-persistent-controls=\"true\"]) .persistent-media-controls {\n    display: none;\n  }\n\n  .persistent-controls-artwork {\n    grid-column: 1;\n    justify-self: start;\n    flex-shrink: 0;\n  }\n\n  .persistent-artwork {\n    width: 40px;\n    height: 40px;\n    border-radius: 6px;\n    object-fit: var(--yamp-artwork-fit, cover);\n    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);\n  }\n\n  .persistent-artwork-placeholder {\n    width: 40px;\n    height: 40px;\n    border-radius: 6px;\n    background: rgba(255, 255, 255, 0.1);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);\n  }\n\n  .persistent-artwork-placeholder ha-icon {\n    color: rgba(255, 255, 255, 0.6);\n    font-size: 16px;\n  }\n\n  .persistent-controls-buttons {\n    grid-column: 2;\n    justify-self: center;\n    display: flex;\n    align-items: center;\n    gap: 8px;\n  }\n\n  .persistent-volume-stepper {\n    grid-column: 3;\n    justify-self: end;\n    display: flex;\n    align-items: center;\n    gap: 0px;\n  }\n\n  .persistent-volume-stepper .stepper-btn {\n    background: none;\n    border: none;\n    color: #fff;\n    font-size: 20px;\n    width: 36px;\n    height: 36px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    cursor: pointer;\n    transition: color 0.2s ease;\n  }\n\n  .persistent-volume-stepper .stepper-btn:hover {\n    color: var(--custom-accent);\n  }\n\n  .persistent-volume-stepper .stepper-btn:active {\n    transform: scale(0.92);\n  }\n\n  .persistent-volume-stepper .stepper-value {\n    font-size: 0.95em;\n    opacity: 0.85;\n    min-width: 48px;\n    text-align: center;\n    color: #fff;\n    padding-left: 6px;\n  }\n\n  .persistent-control-btn {\n    background: rgba(255, 255, 255, 0.1);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    border-radius: 50%;\n    width: 36px;\n    height: 36px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    color: #fff;\n  }\n\n  @container (max-width: 450px) {\n    .persistent-volume-stepper {\n      margin-right: -12px;\n    }\n    \n    .persistent-volume-stepper .stepper-value {\n      min-width: 36px;\n      padding-left: 2px;\n    }\n\n    .persistent-volume-stepper .stepper-btn {\n      width: 32px;\n      height: 32px;\n      font-size: 18px;\n    }\n  }\n\n  .persistent-control-btn:hover {\n    background: var(--custom-accent);\n    border-color: var(--custom-accent);\n    transform: scale(1.05);\n  }\n\n  .persistent-control-btn:active {\n    transform: scale(0.95);\n  }\n\n  .persistent-control-btn ha-icon {\n    font-size: 16px;\n    color: inherit;\n  }\n\n  .entity-options-sheet {\n    --custom-accent: var(--accent-color, #ff9800);\n    background: none;\n    border-radius: var(--border-radius);\n    box-shadow: none;\n    width: 100%;\n    padding: 18px 8px 0px 8px;\n    padding-top: clamp(12px, 6vh, 18px);\n    display: flex;\n    flex-direction: column;\n    align-items: stretch;\n    flex: 1;\n    overflow-y: auto;\n    overflow-x: hidden;\n    overscroll-behavior: contain;\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n    font-size: calc(1em * var(--yamp-text-scale-menu, 1));\n    position: relative;\n    box-sizing: border-box;\n  }\n\n  /* Main menu specific styling - move options down, adapt to card height */\n  .entity-options-sheet .entity-options-menu {\n    margin-top: 0px;\n    margin-bottom: 16px;\n  }\n\n  .in-menu-active-label {\n    position: absolute;\n    left: 50%;\n    bottom: 6px;\n    transform: translateX(-50%);\n    font-size: 0.78em;\n    font-weight: 500;\n    letter-spacing: 0.05em;\n    color: rgba(255, 255, 255, 0.78);\n    pointer-events: none;\n    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);\n  }\n\n  /* When always collapsed is enabled, keep menu at top */\n:host([data-always-collapsed=\"true\"]) .entity-options-sheet .entity-options-menu {\n  margin-top: 0px;\n}\n\n  /* Remove spacing between menu items */\n  .entity-options-sheet .entity-options-menu .entity-options-item {\n    margin-top: 0px;\n    margin-bottom: 0px;\n  }\n\n  .entity-options-container,\n  .entity-options-container-opening {\n    position: relative;\n  }\n\n  .entity-options-chips-wrapper {\n    position: sticky;\n    top: 0;\n    z-index: ", ";\n    padding: 2px 4px 2px 4px;\n    background: transparent;\n  }\n\n  .entity-options-chips-strip {\n    display: flex;\n    gap: 10px;\n    justify-content: flex-start;\n    align-items: center;\n    overflow-x: auto;\n    padding: 2px 8px 2px 8px;\n    background: var(--ha-menu-chip-row-background, transparent);\n  }\n\n  .entity-options-chips-strip .chip {\n    background: var(--chip-bg);\n    color: var(--primary-text);\n  }\n\n  .entity-options-chips-strip .chip:hover {\n    background: var(--custom-accent);\n    color: #fff;\n  }\n\n  .entity-options-chips-strip .chip[selected] {\n    background: var(--custom-accent);\n    color: #fff;\n  }\n\n  .entity-options-chips-strip::-webkit-scrollbar {\n    display: none;\n  }\n\n  .entity-options-menu.chips-in-menu {\n    margin-top: 4px;\n  }\n\n  .entity-options-sheet.chips-mode {\n    padding-top: 4px;\n  }\n\n\n  /* Ensure entity-options-sheet honors match_theme for accent color */\n  :host([data-match-theme=\"false\"]) .entity-options-sheet {\n    --custom-accent: #ff9800 ;\n  }\n  :host([data-match-theme=\"true\"]) .entity-options-sheet {\n    --custom-accent: var(--accent-color, #ff9800) ;\n  }\n\n  .entity-options-sheet::-webkit-scrollbar {\n    display: none;\n  }\n\n  .entity-options-sheet {\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n  }\n\n  /* Hide scrollbar for group list scroll container */\n  .group-list-scroll {\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n  }\n\n  .group-list-scroll::-webkit-scrollbar {\n    display: none;\n  }\n\n  /* Seamless grouping header and scrolling list */\n  .entity-options-sheet[data-pin-search-headers=\"true\"] .group-list-header {\n    z-index: 1;\n    padding-top: 4px;\n    margin-top: -4px;\n    padding-bottom: 4px;\n  }\n\n  .entity-options-sheet[data-pin-search-headers=\"true\"] .group-list-scroll {\n    flex: 1;\n    overflow-y: auto;\n    min-height: 0;\n    margin-bottom: 72px; /* Reserve space for controls */\n    padding-bottom: 0;\n    scrollbar-width: thin; /* Allow scrollbar if needed */\n  }\n\n  .entity-options-sheet[data-pin-search-headers=\"true\"] .group-list-scroll::-webkit-scrollbar {\n    display: block;\n    width: 6px;\n  }\n\n  :host([data-hide-persistent-controls=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"] .group-list-scroll,\n  :host([data-hide-menu-player=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"] .group-list-scroll {\n    margin-bottom: 12px;\n    padding-bottom: 0;\n  }\n\n  .entity-options-title {\n    font-size: 1.1em;\n    font-weight: bold;\n    margin-bottom: 18px;\n    text-align: center;\n    color: #fff;\n    background: none;\n    text-shadow: 0 2px 8px #0009;\n  }\n\n  .entity-options-item {\n    background: none;\n    color: #fff;\n    border: none;\n    border-radius: 10px;\n    font-size: 1.12em;\n    font-weight: 500;\n    margin: 4px 0;\n    padding: 6px 0 8px 0;\n    cursor: pointer;\n    transition: color var(--transition-fast), text-shadow var(--transition-fast);\n    text-align: center;\n    text-shadow: 0 2px 8px #0009;\n  }\n\n  .entity-options-item.menu-action-item {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    gap: 12px;\n    width: 100%;\n  }\n\n  .entity-options-item.menu-action-item .menu-action-icon {\n    color: inherit;\n    --mdc-icon-color: currentColor;\n    --icon-color: currentColor;\n    --paper-item-icon-color: currentColor;\n    --ha-icon-color: currentColor;\n    fill: currentColor;\n  }\n\n  .entity-options-item.menu-action-item .menu-action-label {\n    color: inherit;\n  }\n\n  .entity-options-item:hover {\n    color: var(--custom-accent, #ff9800);\n    text-shadow: none;\n    background: none;\n  }\n\n  .entity-options-item.close-item {\n    font-weight: 600;\n    margin: 1px 0;\n    padding: 4px 0 5px 0;\n    display: block;\n    width: 100%;\n  }\n\n  .entity-options-divider {\n    height: 1px;\n    background: rgba(255, 255, 255, 0.28);\n    margin: 1px 0 8px 0;\n    width: 100%;\n    display: block;\n  }\n\n  /* Ensure Group Players header always shows a single divider */\n  .grouping-header {\n    width: 100%;\n  }\n  .grouping-header .entity-options-item.close-item {\n    border-bottom: 1px solid rgba(255, 255, 255, 0.28);\n    margin-bottom: 6px;\n    padding-bottom: 6px;\n  }\n\n  /* Source index */\n  .source-index-letter:focus {\n    background: rgba(255,255,255,0.11);\n    outline: 1px solid #ff9800;\n  }\n\n  .source-list-centering-wrapper {\n    width: 100%;\n    margin: 0;\n    padding: 0;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  }\n\n  .source-list-sheet {\n    width: 100%;\n    position: relative;\n    overflow: visible;\n  }\n\n  .source-list-scroll {\n    overflow-y: auto;\n    max-height: 340px;\n    scrollbar-width: none;\n    width: 100%;\n  }\n\n  .source-list-scroll .entity-options-item {\n    width: 100%;\n  }\n\n  .source-list-scroll::-webkit-scrollbar {\n    display: none;\n  }\n\n  .floating-source-index.grab-scroll-active,\n  .floating-source-index.grab-scroll-active * {\n    cursor: grabbing;\n  }\n\n  .floating-source-index {\n    position: absolute;\n    top: 55px;\n    bottom: 20px;\n    right: 0;\n    width: 32px;\n    display: flex;\n    flex-direction: column;\n    justify-content: flex-start;\n    align-items: center;\n    pointer-events: auto;\n    overscroll-behavior: contain;\n    z-index: ", ";\n    padding: 0 8px 0 0;\n    overflow-y: auto;\n    max-height: calc(100% - 75px);\n    min-width: 38px;\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n  }\n\n  .entity-options-sheet.chips-mode .floating-source-index {\n    top: clamp(72px, 15vh, 120px);\n    height: calc(100% - clamp(72px, 15vh, 120px));\n  }\n\n  .floating-source-index::-webkit-scrollbar {\n    display: none;\n  }\n\n  .floating-source-index .source-index-letter {\n    background: none;\n    border: none;\n    color: #fff;\n    font-size: 0.9em;\n    cursor: pointer;\n    margin: 1px 0;\n    padding: 0;\n    pointer-events: auto;\n    outline: none;\n    transition: color var(--transition-fast), background var(--transition-fast), transform 0.16s cubic-bezier(.35,1.8,.4,1.04);\n    transform: scale(1);\n    z-index: ", ";\n    min-height: 22px;\n    min-width: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .floating-source-index .source-index-letter[data-scale=\"max\"] {\n    transform: scale(1.38);\n    z-index: ", ";\n  }\n\n  .floating-source-index .source-index-letter[data-scale=\"large\"] {\n    transform: scale(1.19);\n    z-index: ", ";\n  }\n\n  .floating-source-index .source-index-letter[data-scale=\"med\"] {\n    transform: scale(1.10);\n    z-index: ", ";\n  }\n\n  .floating-source-index .source-index-letter::after {\n    display: none;\n  }\n\n  .floating-source-index .source-index-letter:hover,\n  .floating-source-index .source-index-letter:focus {\n    color: #fff;\n  }\n\n  .floating-source-index .source-index-letter[disabled] {\n    opacity: 0.25;\n    cursor: default;\n  }\n\n  /* Group toggle buttons */\n  .group-toggle-btn {\n    background: none;\n    border: none;\n    border-radius: 50%;\n    width: 32px;\n    height: 32px;\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 1.2em;\n    margin-right: 10px;\n    cursor: pointer;\n    transition: background 0.15s ease;\n    color: #fff;\n  }\n\n  .group-toggle-btn ha-icon {\n    width: 22px;\n    height: 22px;\n  }\n\n  .group-toggle-transparent {\n    background: none;\n    border: none;\n    box-shadow: none;\n    color: transparent;\n    pointer-events: none;\n  }\n\n  .group-toggle-transparent:hover {\n    background: none;\n  }\n\n  /* Force white text in grouping sheet */\n  .entity-options-sheet,\n  .entity-options-sheet * {\n    color: #fff;\n  }\n\n  /* Search functionality */\n  .entity-options-search {\n    padding: 0px 10px 80px 10px;\n  }\n\n  .entity-options-search-row {\n    display: flex;\n    gap: 8px;\n    margin-bottom: 4px;\n    margin-top: 2px;\n  }\n\n  .entity-options-search-result.menu-active > *:not(.search-row-slide-out) {\n    opacity: 0;\n    visibility: hidden;\n    pointer-events: none;\n  }\n\n  .entity-options-search-result {\n    position: relative;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding: 9px 0;\n    border-bottom: 1px solid #2227;\n    font-size: 1.10em;\n    color: var(--primary-text);\n    background: none;\n  }\n  .search-row-slide-out {\n    position: absolute;\n    inset: 0;\n    left: 100%;\n    background: rgba(0, 0, 0, 0.01) ;\n    backdrop-filter: blur(10px);\n    -webkit-backdrop-filter: blur(10px);\n    z-index: ", ";\n    display: flex;\n    align-items: center;\n    padding: 0 8px;\n    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n    border-radius: 15px 0 0 15px;\n    overflow-x: auto;\n    scrollbar-width: none;\n    gap: 4px;\n  }\n\n  .search-row-slide-out::-webkit-scrollbar {\n    display: none;\n  }\n\n  .search-row-slide-out.active {\n    left: 0;\n  }\n\n  .search-row-success-overlay {\n    position: absolute;\n    inset: 0;\n    background: rgba(0, 0, 0, 0.7);\n    backdrop-filter: blur(20px);\n    -webkit-backdrop-filter: blur(20px);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #fff;\n    font-weight: 600;\n    font-size: 0.95em;\n    text-shadow: 0 1px 3px rgba(0,0,0,0.5);\n    z-index: ", ";\n    border-radius: inherit;\n    box-shadow: inset 0 0 10px rgba(255,255,255,0.05);\n    animation: success-fade-in 0.3s ease;\n  }\n\n  @keyframes success-fade-in {\n    from { opacity: 0; }\n    to { opacity: 1; }\n  }\n\n  .slide-out-button {\n    flex: 0 0 auto;\n    background: transparent;\n    border: none;\n    color: #fff;\n    padding: 6px 10px;\n    border-radius: 18px;\n    cursor: pointer;\n    font-size: 0.88em;\n    font-weight: 500;\n    white-space: nowrap;\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    transition: background 0.2s, color 0.2s;\n  }\n\n  .slide-out-button:hover {\n    background: var(--custom-accent);\n    color: #fff;\n  }\n\n  .slide-out-button ha-icon {\n    width: 18px;\n    height: 18px;\n  }\n\n  .slide-out-close {\n    margin-left: auto;\n    color: #888;\n    padding: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .slide-out-close:hover {\n    color: #fff;\n  }\n\n  .entity-options-search-result:last-child {\n    border-bottom: none;\n  }\n\n  .entity-options-search-result.placeholder {\n    visibility: hidden;\n    border-bottom: 1px solid transparent;\n    min-height: 46px;\n    box-sizing: border-box;\n  }\n\n  .entity-options-search-thumb {\n    height: 38px;\n    width: 38px;\n    border-radius: var(--button-border-radius);\n    object-fit: var(--yamp-artwork-fit, cover);\n    box-shadow: 0 1px 5px rgba(0,0,0,0.16);\n    margin-right: 12px;\n  }\n\n  .entity-options-search-buttons {\n    display: flex;\n    gap: 6px;\n    margin-left: 7px;\n    align-items: center;\n  }\n\n  .entity-options-search-play,\n  .entity-options-search-queue {\n    min-width: 34px;\n    font-size: 1.13em;\n    border: none;\n    background: transparent;\n    color: #fff;\n    border-radius: 10px;\n    padding: 6px 10px;\n    cursor: pointer;\n    box-shadow: none;\n    transition: background var(--transition-normal), color var(--transition-normal);\n    text-shadow: none;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .entity-options-search-play ha-icon,\n  .entity-options-search-queue ha-icon {\n    width: 16px;\n    height: 16px;\n    \n  \n  }\n\n  .entity-options-search-play:hover,\n  .entity-options-search-play:focus {\n    background: transparent;\n    color: var(--custom-accent) !important;\n    opacity: 0.8;\n  }\n\n  .entity-options-search-queue {\n    color: #666;\n    padding-right: 20px; /* Add right padding to prevent cutoff on mobile */\n  }\n\n  .entity-options-search-queue:hover,\n  .entity-options-search-queue:focus {\n    background: transparent;\n    border: none;\n    color: var(--custom-accent);\n    opacity: 0.8;\n  }\n\n  /* Queue control buttons */\n  .queue-controls {\n    display: flex;\n    gap: 4px;\n    padding-right: 8px; /* Add padding to prevent cutoff on mobile */\n  }\n\n  .queue-btn {\n    min-width: 28px;\n    height: 28px;\n    font-size: 0.9em;\n    border: none;\n    background: transparent;\n    color: #fff;\n    border-radius: 6px;\n    padding: 4px;\n    cursor: pointer;\n    box-shadow: none;\n    transition: all 0.2s ease;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  .queue-btn ha-icon {\n    width: 14px;\n    height: 14px;\n  }\n\n  .queue-btn-up:hover,\n  .queue-btn-up:focus {\n    background: transparent;\n    color: #4caf50;\n  }\n\n  .queue-btn-down:hover,\n  .queue-btn-down:focus {\n    background: transparent;\n    color: #4caf50;\n  }\n\n  .queue-btn-next:hover,\n  .queue-btn-next:focus {\n    background: transparent;\n    color: var(--custom-accent);\n  }\n\n  .queue-btn-remove:hover,\n  .queue-btn-remove:focus {\n    background: transparent;\n    color: #f44336;\n  }\n\n  /* Visual feedback for moved queue items */\n  .entity-options-search-result.just-moved {\n    background: rgba(76, 175, 80, 0.2) ;\n    border-left: 3px solid #4caf50 ;\n    animation: queueMoveHighlight 1s ease-out;\n  }\n\n  @keyframes queueMoveHighlight {\n    0% { background: rgba(76, 175, 80, 0.4); transform: scale(1.02); }\n    100% { background: rgba(76, 175, 80, 0.2); transform: scale(1); }\n  }\n\n  .entity-options-search-input {\n    border: 1px solid #333;\n    border-radius: var(--button-border-radius);\n    background: var(--card-bg);\n    color: var(--primary-text);\n    font-size: 1.12em;\n    outline: none;\n    transition: border var(--transition-fast);\n    margin-right: 7px;\n    box-sizing: border-box;\n  }\n\n  .entity-options-search-row .entity-options-search-input {\n    padding: 4px 10px;\n    height: 32px;\n    min-height: 32px;\n    line-height: 1.18;\n    box-sizing: border-box;\n    border: 1.5px solid var(--custom-accent);\n    background: #232323;\n    color: #fff;\n    transition: border var(--transition-fast), background var(--transition-fast);\n    outline: none;\n  }\n\n  .entity-options-search-input:focus {\n    border: 1.5px solid var(--custom-accent);\n    background: #232323;\n    color: #fff;\n    outline: none;\n  }\n\n  .entity-options-search-loading,\n  .entity-options-search-error,\n  .entity-options-search-empty {\n    padding: 8px 6px;\n    font-size: 1.09em;\n    opacity: 0.90;\n    color: var(--primary-text);\n    background: none;\n    text-align: left;\n  }\n\n  .entity-options-search-loading {\n    color: #fff;\n  }\n\n  .entity-options-search-error {\n    color: #e44747;\n    font-weight: 500;\n  }\n\n  .entity-options-search-empty {\n    color: #999;\n    font-style: italic;\n  }\n\n  .entity-options-search-row .entity-options-item {\n    height: 32px;\n    min-height: 32px;\n    box-sizing: border-box;\n    padding-top: 0;\n    padding-bottom: 0;\n    margin-top: 0;\n    margin-bottom: 0;\n    font-size: 1.12em;\n    vertical-align: middle;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n  }\n\n  /* Search filter chips */\n  .search-filter-chips .chip {\n    color: #fff;\n  }\n\n  .search-filter-chips .chip[selected],\n  .search-filter-chips .chip[style*=\"background: var(--customAccent\"],\n  .search-filter-chips .chip[style*=\"background: var(--custom-accent\"] {\n    color: #111;\n  }\n\n  .entity-options-sheet .search-filter-chips .chip:not([selected]) {\n    color: #fff;\n  }\n\n  .entity-options-sheet .search-filter-chips .chip[selected] {\n    color: #fff;\n  }\n\n  .entity-options-sheet .search-filter-chips .chip {\n    justify-content: center;\n  }\n\n  .entity-options-sheet .search-filter-chips .chip:hover {\n    background: var(--custom-accent) !important;\n    color: #fff ;\n    opacity: 1;\n  }\n\n  .entity-options-sheet .entity-options-search-results {\n    min-height: 210px;\n  }\n\n  /* Search layout */\n  .search-results-count {\n    margin-left: auto;\n    padding-left: 0px;\n    padding-right: 15px;\n    font-size: 0.85em;\n    font-style: italic;\n    color: rgba(255, 255, 255, 0.75);\n    white-space: nowrap;\n    text-align: right;\n    flex-shrink: 0;\n  }\n\n  .entity-options-sheet .entity-options-search {\n    display: flex;\n    flex-direction: column;\n    height: 100%;\n  }\n\n  .entity-options-sheet .entity-options-search-row,\n  .entity-options-sheet .search-filter-chips,\n  .entity-options-sheet .search-sub-filters {\n    flex: 0 0 auto;\n  }\n\n  .entity-options-sheet[data-pin-search-headers=\"true\"] {\n    overflow-y: hidden ;\n    display: flex;\n    flex-direction: column;\n    padding-bottom: 0px ;\n  }\n\n  .entity-options-sheet[data-pin-search-headers=\"true\"] .entity-options-search {\n    flex: 1;\n    display: flex;\n    flex-direction: column;\n    min-height: 0;\n    overflow: hidden;\n    padding-bottom: 0px ;\n  }\n\n  /* Unified Header and Scroll Containers for Menu Sheets */\n  .entity-options-header {\n    flex: 0 0 auto;\n    position: relative;\n    z-index: 10;\n  }\n\n  /* When pinning is active, the header is sticky and seamless */\n  .entity-options-sheet[data-pin-search-headers=\"true\"] .entity-options-header {\n    position: sticky;\n    top: 0;\n    background: none ;\n  }\n\n  /* The scrollable area for all menus */\n  .entity-options-scroll {\n    flex: 1;\n    overflow-y: auto;\n    min-height: 0;\n    scrollbar-width: none;\n    -ms-overflow-style: none;\n  }\n\n  .entity-options-scroll::-webkit-scrollbar {\n    display: none;\n  }\n\n  /* Reserved space for persistent media controls when pinning is active */\n  .entity-options-sheet[data-pin-search-headers=\"true\"] .entity-options-scroll,\n  .entity-options-sheet[data-pin-search-headers=\"true\"] .entity-options-search-results,\n  .entity-options-sheet[data-pin-search-headers=\"true\"] .group-list-scroll {\n    margin-bottom: 80px;\n    padding-bottom: 0px ;\n    background: none ;\n  }\n\n  /* Adjust spacing when persistent controls are hidden */\n  :host([data-hide-persistent-controls=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"],\n  :host([data-hide-menu-player=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"] {\n    padding-bottom: 12px ;\n  }\n\n  /* Clean up legacy margin override rules since we now use padding on parent */\n  :host([data-hide-persistent-controls=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"] .entity-options-scroll,\n  :host([data-hide-persistent-controls=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"] .entity-options-search-results,\n  :host([data-hide-persistent-controls=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"] .group-list-scroll,\n  :host([data-hide-menu-player=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"] .entity-options-scroll,\n  :host([data-hide-menu-player=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"] .entity-options-search-results,\n  :host([data-hide-menu-player=\"true\"]) .entity-options-sheet[data-pin-search-headers=\"true\"] .group-list-scroll {\n    margin-bottom: 0px;\n  }\n\n  .entity-options-sheet .entity-options-search-results {\n    flex: 1;\n    overflow-y: auto;\n    margin: 12px 0;\n    padding-bottom: 0px;\n    /* Hide scrollbars */\n    scrollbar-width: none; /* Firefox */\n    -ms-overflow-style: none; /* IE and Edge */\n  }\n\n  /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */\n  .entity-options-sheet .entity-options-search-results::-webkit-scrollbar {\n    display: none;\n  }\n\n  .entity-options-resolved-entities {\n    --custom-accent: var(--accent-color, #ff9800);\n    display: flex;\n    flex-direction: column;\n    height: 100%;\n  }\n\n  .entity-options-resolved-entities-list {\n    flex: 1;\n    overflow-y: auto;\n    margin: 12px 0;\n    /* Hide scrollbars */\n    scrollbar-width: none; /* Firefox */\n    -ms-overflow-style: none; /* IE and Edge */\n  }\n\n  .entity-options-resolved-entities-list::-webkit-scrollbar {\n    display: none;\n  }\n\n  .entity-options-resolved-entities .entity-options-item {\n    background: none;\n    color: #fff;\n    border: none;\n    border-radius: 10px;\n    font-size: 1.12em;\n    font-weight: 500;\n    margin: 4px 0;\n    padding: 6px 0 8px 0;\n    cursor: pointer;\n    transition: color var(--transition-fast), text-shadow var(--transition-fast);\n    text-align: left;\n    text-shadow: 0 2px 8px #0009;\n    width: 100%;\n    display: flex;\n    align-items: center;\n    gap: 12px;\n  }\n\n  .entity-options-resolved-entities .entity-options-item:hover,\n  .entity-options-resolved-entities .entity-options-item:focus {\n    color: var(--custom-accent) ;\n    text-shadow: none ;\n    background: none ;\n  }\n\n  .entity-options-resolved-entities .entity-options-item:last-child {\n    border-bottom: none;\n  }\n\n  /* Clickable artist */\n  .clickable-artist {\n    cursor: pointer;\n  }\n\n  .clickable-artist:hover {\n    text-decoration: underline;\n  }\n\n  /* Clickable search results */\n  .clickable-search-result {\n    cursor: pointer;\n    color: var(--custom-accent);\n    transition: color var(--transition-fast);\n  }\n\n  .clickable-search-result:hover {\n    text-decoration: underline;\n    color: #fff;\n  }\n\n  /* Search breadcrumb */\n  .entity-options-search-breadcrumb {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  }\n\n  .entity-options-search-breadcrumb-text {\n    font-size: 0.9em;\n    color: #fff;\n    font-style: italic;\n  }\n\n  /* Search sheet styles */\n  .search-sheet {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n    background: rgba(0, 0, 0, 0.8);\n    z-index: ", ";\n    display: flex;\n    flex-direction: column;\n    padding: 20px;\n  }\n\n  .search-sheet-header {\n    display: flex;\n    gap: 10px;\n    margin-bottom: 20px;\n  }\n\n  .search-sheet-header input {\n    flex: 1;\n    padding: 12px;\n    border: none;\n    border-radius: 8px;\n    background: #333;\n    color: #fff;\n    font-size: 16px;\n  }\n\n  .search-sheet-header button {\n    padding: 12px 20px;\n    border: none;\n    border-radius: 8px;\n    background: var(--custom-accent);\n    color: #fff;\n    cursor: pointer;\n    font-size: 16px;\n  }\n\n  .search-sheet-header button:disabled {\n    opacity: 0.5;\n    cursor: not-allowed;\n  }\n\n  .search-sheet-loading,\n  .search-sheet-error,\n  .search-sheet-success,\n  .search-sheet-empty {\n    text-align: center;\n    padding: 40px;\n    color: #fff;\n    font-size: 18px;\n  }\n\n  .search-sheet-error {\n    color: #ff6b6b;\n  }\n\n  .priority-toast-success {\n    color: #fff;\n    font-weight: 600;\n    background: rgba(76, 175, 80, 0.95);\n    border: 2px solid #4caf50;\n    border-radius: 8px;\n    padding: 20px;\n    margin: 20px;\n    font-size: 20px;\n    animation: fadeInOut 3s ease-in-out;\n    position: absolute;\n    top: 50%;\n    left: 50%;\n    transform: translate(-50%, -50%);\n    z-index: ", ";\n    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);\n    min-width: 200px;\n    text-align: center;\n    pointer-events: none;\n  }\n\n\n  @keyframes fadeInOut {\n    0% { opacity: 0; transform: translate(-50%, -60%); }\n    10% { opacity: 1; transform: translate(-50%, -50%); }\n    90% { opacity: 1; transform: translate(-50%, -50%); }\n    100% { opacity: 0; transform: translate(-50%, -40%); }\n  }\n\n  .search-sheet-results {\n    flex: 1;\n    overflow-y: auto;\n    /* Hide scrollbars */\n    scrollbar-width: none; /* Firefox */\n    -ms-overflow-style: none; /* IE and Edge */\n  }\n\n  .search-sheet-results::-webkit-scrollbar {\n    display: none;\n  }\n\n  .search-sheet-result {\n    display: flex;\n    align-items: center;\n    gap: 15px;\n    padding: 15px;\n    border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n    cursor: pointer;\n    transition: background-color 0.2s;\n  }\n\n  .search-sheet-result:hover {\n    background: rgba(255, 255, 255, 0.1);\n  }\n\n  .search-sheet-thumb {\n    width: 50px;\n    height: 50px;\n    border-radius: 8px;\n    object-fit: var(--yamp-artwork-fit, cover);\n  }\n\n  .search-sheet-title {\n    flex: 1;\n    color: #fff;\n    font-size: 16px;\n    display: block;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n  }\n\n  .search-sheet-subtitle {\n    display: block;\n    color: var(--secondary-text-color, #888);\n    font-size: 0.9em;\n    margin-top: 2px;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n  }\n\n  .search-sheet-title.browsable,\n  .search-sheet-subtitle.browsable {\n    color: var(--custom-accent) ;\n    text-decoration: none;\n    cursor: pointer;\n  }\n\n  .search-sheet-title.browsable:hover,\n  .search-sheet-subtitle.browsable:hover {\n    text-decoration: underline;\n  }\n\n  .search-sheet-buttons {\n    display: flex;\n    gap: 8px;\n  }\n\n  .search-sheet-play,\n  .search-sheet-queue {\n    width: 40px;\n    height: 40px;\n    border: none;\n    border-radius: 8px;\n    background: var(--custom-accent);\n    color: #fff;\n    cursor: pointer;\n    font-size: 18px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: background-color 0.2s;\n  }\n\n  .search-sheet-play ha-icon,\n  .search-sheet-queue ha-icon {\n    width: 20px;\n    height: 20px;\n  }\n\n  .search-sheet-play:hover,\n  .search-sheet-queue:hover {\n    background: #e68900;\n  }\n\n  .search-sheet-queue {\n    background: #4a4a4a;\n    border: 1px solid #666;\n  }\n\n  .search-sheet-queue:hover {\n    background: #5a5a5a;\n    border-color: #777;\n  }\n\n  /* Override styles when match_theme is false - force default colors */\n  .search-sheet[data-match-theme=\"false\"] {\n    background: rgba(0, 0, 0, 0.8) ;\n    \n    /* Define CSS custom properties directly on the search sheet when match_theme is false */\n    --custom-accent: #ff9800 ;\n    --search-overlay-bg: rgba(0, 0, 0, 0.8) ;\n    --search-input-bg: #333 ;\n    --search-input-text: #fff ;\n    --search-text: #fff ;\n    --search-error: #ff6b6b ;\n    --search-success: #4caf50 ;\n    --search-success-bg: rgba(76, 175, 80, 0.95) ;\n    --search-border: rgba(255, 255, 255, 0.1) ;\n    --search-hover-bg: rgba(255, 255, 255, 0.1) ;\n    --search-play-hover: #e68900 ;\n    --search-queue-bg: #4a4a4a ;\n    --search-queue-border: #666 ;\n    --search-queue-hover: #5a5a5a ;\n    --search-queue-hover-border: #777 ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-header input {\n    background: #333 ;\n    color: #fff ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-header button {\n    background: #ff9800 ;\n    color: #fff ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-loading,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-error,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-success,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-empty {\n    color: #fff ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-error {\n    color: #ff6b6b ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-success {\n    color: #4caf50 ;\n    background: rgba(76, 175, 80, 0.95) ;\n    border: 2px solid #4caf50 ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-result {\n    color: #fff ;\n    border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-result:hover {\n    background: rgba(255, 255, 255, 0.1) ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-title {\n    color: #fff ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-play {\n    background: var(--custom-accent) ;\n    color: #fff ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-play:hover {\n    background: #e68900 ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-queue {\n    background: #4a4a4a ;\n    color: #fff ;\n    border: 1px solid #666 ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-queue:hover {\n    background: #5a5a5a ;\n    border-color: #777 ;\n  }\n\n  /* Additional overrides for search sheet elements that might inherit theme colors */\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result {\n    color: #ff9800 ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result:hover {\n    color: #fff ;\n  }\n\n  /* Override the base clickable-search-result styles when match_theme is false */\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result,\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result:hover {\n    color: #ff9800 ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result:hover {\n    color: #fff ;\n  }\n\n  /* Override any other elements that might be using theme variables */\n  .search-sheet[data-match-theme=\"false\"] * {\n    color: #fff ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .clickable-search-result {\n    color: #ff9800 ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-play,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-queue {\n    color: #fff ;\n  }\n\n  /* Force all text to be white when match_theme is false */\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-title,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-loading,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-empty {\n    color: #fff ;\n  }\n\n  /* Nuclear option: Override ALL elements that might be using --custom-accent or theme colors */\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"color\"] {\n    color: #fff ;\n  }\n\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"background\"] {\n    background: rgba(0, 0, 0, 0.8) ;\n  }\n\n  /* Force override any CSS custom properties that might be inherited */\n  .search-sheet[data-match-theme=\"false\"] {\n    --custom-accent: #ff9800 ;\n    --accent-color: #ff9800 ;\n    --primary-color: #ff9800 ;\n    --ha-accent-color: #ff9800 ;\n  }\n\n  /* Also redefine --custom-accent locally in the search sheet, just like entity-options-resolved-entities does */\n  .search-sheet[data-match-theme=\"false\"] {\n    --custom-accent: #ff9800 ;\n  }\n\n  /* Also override at the root level when match_theme is false */\n  yet-another-media-player[data-match-theme=\"false\"] {\n    --custom-accent: #ff9800 ;\n    --accent-color: #ff9800 ;\n    --primary-color: #ff9800 ;\n    --ha-accent-color: #ff9800 ;\n  }\n\n  /* Override any elements that might be using CSS custom properties */\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-play,\n  .search-sheet[data-match-theme=\"false\"] .search-sheet-header button,\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"background: var(--custom-accent)\"],\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"background: var(--accent-color)\"],\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"background: var(--primary-color)\"] {\n    background: #ff9800 ;\n    color: #fff ;\n  }\n\n  /* Override any elements that might be using CSS custom properties for color */\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"color: var(--custom-accent)\"],\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"color: var(--accent-color)\"],\n  .search-sheet[data-match-theme=\"false\"] *[style*=\"color: var(--primary-color)\"] {\n    color: #ff9800 ;\n  }\n\n  /* ============================================\n     Card Trigger Gesture Feedback Animations\n     ============================================ */\n\n  /* Base container for gesture feedback - positioned relative to tap area */\n  .gesture-feedback-container {\n    position: absolute;\n    inset: 0;\n    pointer-events: none;\n    overflow: hidden;\n    z-index: ", ";\n  }\n\n  /* Base styles for ripple effect */\n  .gesture-ripple {\n    position: absolute;\n    border-radius: 50%;\n    pointer-events: none;\n    transform: translate(-50%, -50%) scale(0);\n    opacity: 0;\n  }\n\n  /* Tap: Quick expanding ripple */\n  @keyframes gestureTapRipple {\n    0% {\n      transform: translate(-50%, -50%) scale(0);\n      opacity: 0.6;\n    }\n    100% {\n      transform: translate(-50%, -50%) scale(1);\n      opacity: 0;\n    }\n  }\n\n  .gesture-ripple.tap {\n    width: 120px;\n    height: 120px;\n    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);\n    animation: gestureTapRipple 0.4s ease-out forwards;\n  }\n\n  /* Double-tap: Two rapid pulses */\n  @keyframes gestureDoubleTapRipple {\n    0% {\n      transform: translate(-50%, -50%) scale(0);\n      opacity: 0.5;\n    }\n    25% {\n      transform: translate(-50%, -50%) scale(0.6);\n      opacity: 0.3;\n    }\n    50% {\n      transform: translate(-50%, -50%) scale(0.3);\n      opacity: 0.5;\n    }\n    100% {\n      transform: translate(-50%, -50%) scale(1);\n      opacity: 0;\n    }\n  }\n\n  .gesture-ripple.double_tap {\n    width: 140px;\n    height: 140px;\n    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);\n    animation: gestureDoubleTapRipple 0.5s ease-out forwards;\n  }\n\n  /* Hold: Slower glowing pulse */\n  @keyframes gestureHoldPulse {\n    0% {\n      transform: translate(-50%, -50%) scale(0.2);\n      opacity: 0;\n      box-shadow: 0 0 0 0 rgba(255,255,255,0.4);\n    }\n    30% {\n      opacity: 0.5;\n      box-shadow: 0 0 20px 10px rgba(255,255,255,0.2);\n    }\n    100% {\n      transform: translate(-50%, -50%) scale(1.2);\n      opacity: 0;\n      box-shadow: 0 0 40px 20px rgba(255,255,255,0);\n    }\n  }\n\n  .gesture-ripple.hold {\n    width: 100px;\n    height: 100px;\n    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 70%);\n    animation: gestureHoldPulse 0.6s ease-out forwards;\n  }\n\n  /* Swipe Left: Arrow sweeping left */\n  @keyframes gestureSwipeLeft {\n    0% {\n      transform: translate(0%, -50%) scaleX(0);\n      opacity: 0.6;\n    }\n    50% {\n      opacity: 0.8;\n    }\n    100% {\n      transform: translate(-100%, -50%) scaleX(1);\n      opacity: 0;\n    }\n  }\n\n  .gesture-ripple.swipe_left {\n    width: 120px;\n    height: 60px;\n    border-radius: 30px;\n    background: linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.8) 100%);\n    animation: gestureSwipeLeft 0.35s ease-out forwards;\n    transform-origin: right center;\n  }\n\n  /* Swipe Right: Arrow sweeping right */\n  @keyframes gestureSwipeRight {\n    0% {\n      transform: translate(0%, -50%) scaleX(0);\n      opacity: 0.6;\n    }\n    50% {\n      opacity: 0.8;\n    }\n    100% {\n      transform: translate(100%, -50%) scaleX(1);\n      opacity: 0;\n    }\n  }\n\n  .gesture-ripple.swipe_right {\n    width: 120px;\n    height: 60px;\n    border-radius: 30px;\n    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.8) 100%);\n    animation: gestureSwipeRight 0.35s ease-out forwards;\n    transform-origin: left center;\n  }\n"])), Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.MEDIA_BACKGROUND, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.FLOATING_CONTROLS, Z_LAYERS.MEDIA_BACKGROUND, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.FLOATING_CONTROLS, Z_LAYERS.STICKY_CHIPS, Z_LAYERS.STICKY_CHIPS, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.MEDIA_BACKGROUND, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.ACCENT_FOREGROUND, Z_LAYERS.OVERLAY_BASE, Z_LAYERS.FLOATING_CONTROLS, Z_LAYERS.STICKY_CHIPS, Z_LAYERS.ACCENT_FOREGROUND, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.OVERLAY_BASE, Z_LAYERS.FLOATING_ELEMENT, Z_LAYERS.MEDIA_OVERLAY, Z_LAYERS.SEARCH_SLIDE_OUT, Z_LAYERS.SEARCH_SUCCESS, Z_LAYERS.MODAL_BACKDROP, Z_LAYERS.MODAL_TOAST, Z_LAYERS.FLOATING_ELEMENT);
+const yampCardStyles = i$5`
+  /* CSS Custom Properties for consistency */
+  :host {
+    --custom-accent: #ff9800;
+    --card-bg: var(--card-background-color, #222);
+    --primary-text: var(--primary-text-color, #fff);
+    --secondary-text: var(--secondary-text-color, #aaa);
+    --chip-bg: var(--chip-background, #333);
+    --transition-fast: 0.13s;
+    --transition-normal: 0.2s;
+    --transition-slow: 0.4s;
+    --border-radius: 16px;
+    --chip-border-radius: 24px;
+    --button-border-radius: 8px;
+    --shadow-light: 0 2px 8px rgba(0,0,0,0.13);
+    --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);
+    --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
+    --yamp-artwork-fit: cover;
+    --yamp-text-scale: 1;
+    --yamp-text-scale-details: 1;
+    --yamp-text-scale-menu: 1;
+    --yamp-text-scale-action-chips: 1;
+    --yamp-details-scale: var(--yamp-text-scale-details, 1);
+    --yamp-details-line-height: 1.2;
+    --yamp-details-max-lines: 3;
+    --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));
+    --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));
+    --yamp-section-radius: 12px;
+    --yamp-section-divider: rgba(255,255,255,0.06);
+    --yamp-section-title-size: 1em;
+    --yamp-section-title-weight: 600;
+    --yamp-section-description-size: 0.9em;
+    --yamp-section-description-color: var(--secondary-text-color, #888);
+  }
 
-var _templateObject$3, _templateObject2$3, _templateObject3$2, _templateObject4$2, _templateObject5$2, _templateObject6$2, _templateObject7$2, _templateObject8$2, _templateObject9$2, _templateObject0$2, _templateObject1$2, _templateObject10$2;
+  :host([data-match-theme="false"]) {
+    --custom-accent: #ff9800 ;
+    
+    /* Search sheet default theme variables when match_theme is false */
+    --search-overlay-bg: rgba(0, 0, 0, 0.8);
+    --search-input-bg: #333;
+    --search-input-text: #fff;
+    --search-text: #fff;
+    --search-error: #ff6b6b;
+    --search-success: #4caf50;
+    --search-success-bg: rgba(76, 175, 80, 0.95);
+    --search-border: rgba(255, 255, 255, 0.1);
+    --search-hover-bg: rgba(255, 255, 255, 0.1);
+    --search-play-hover: #e68900;
+    --search-queue-bg: #4a4a4a;
+    --search-queue-border: #666;
+    --search-queue-hover: #5a5a5a;
+    --search-queue-hover-border: #777;
+  }
+  
+  :host([data-match-theme="true"]) {
+    /* Override custom-accent to use theme accent when match_theme is true */
+    --custom-accent: var(--accent-color, #ff9800);
+    
+    /* Search sheet theme-aware variables */
+    --search-overlay-bg: var(--ha-card-background, rgba(0, 0, 0, 0.8));
+    --search-input-bg: var(--ha-card-background, #333);
+    --search-input-text: var(--primary-text-color, #fff);
+    --search-text: var(--primary-text-color, #fff);
+    --search-error: var(--error-color, #ff6b6b);
+    --search-success: var(--success-color, #4caf50);
+    --search-success-bg: var(--success-color, rgba(76, 175, 80, 0.95));
+    --search-border: var(--divider-color, rgba(255, 255, 255, 0.1));
+    --search-hover-bg: var(--divider-color, rgba(255, 255, 255, 0.1));
+    --search-play-hover: var(--accent-color, #e68900);
+    --search-queue-bg: var(--ha-card-background, #4a4a4a);
+    --search-queue-border: var(--divider-color, #666);
+    --search-queue-hover: var(--secondary-background-color, #5a5a5a);
+    --search-queue-hover-border: var(--divider-color, #777);
+  }
+
+  /* Base card styles - set once, inherit everywhere */
+  :host {
+    display: block;
+    border-radius: var(--border-radius);
+    box-shadow: none;
+    background: transparent;
+    color: var(--primary-text);
+    transition: background var(--transition-normal);
+    overflow: hidden;
+    clip-path: inset(0 round var(--border-radius));
+  }
+
+  ha-card.yamp-card {
+    display: block;
+    border-radius: var(--border-radius);
+    box-shadow: none;
+    background: transparent;
+    color: var(--primary-text);
+    transition: background var(--transition-normal);
+    overflow: hidden;
+    font-size: inherit;
+    position: relative;
+    clip-path: inset(0 round var(--border-radius));
+    transform: translateZ(0);
+  }
+
+  .yamp-card-inner {
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    container-type: inline-size;
+    border-radius: var(--border-radius);
+    clip-path: inset(0 round var(--border-radius));
+    transform: translateZ(0);
+  }
+
+  .full-bleed-artwork-bg {
+    position: absolute;
+    inset: -50px;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    background-size: var(--yamp-artwork-bg-size, cover);
+    background-position: top center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    transform: translateZ(0);
+  }
+
+  .full-bleed-artwork-fade {
+    position: absolute;
+    inset: -50px;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.0) 0%,
+      rgba(0,0,0,0.40) 55%,
+      rgba(0,0,0,0.92) 100%
+    );
+    transform: translateZ(0);
+  }
+
+  /* Idle state dimming */
+  .dim-idle .details,
+  .dim-idle .controls-row,
+  .dim-idle .volume-row,
+  .dim-idle:not(.no-chip-dim) .chip-row,
+  .dim-idle:not(.no-chip-dim) .action-chip-row {
+    opacity: 0.28;
+    transition: opacity 0.5s;
+  }
+
+  /* Improve selected chip readability while idle */
+  .dim-idle .chip[selected] {
+    color: rgba(255,255,255,0.94);
+    text-shadow: 0 0 6px rgba(0,0,0,0.35);
+  }
+
+  /* More info menu */
+  .more-info-menu {
+    display: flex;
+    align-items: center;
+    margin-right: 0;
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+    margin-top: -6px;
+  }
+
+  .more-info-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    width: 36px;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: none;
+    color: var(--primary-text);
+    font: inherit;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .more-info-btn ha-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    width: 28px;
+    height: 28px;
+    line-height: 1;
+    vertical-align: middle;
+    position: relative;
+    margin: 0 0 2px 0;
+    color: #fff;
+    transition: color var(--transition-normal, 0.2s);
+  }
+
+  .dim-idle .more-info-btn ha-icon {
+    color: #9ea2a8;
+  }
+
+  .more-info-icon {
+    font-size: 1.7em;
+    line-height: 1;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-normal, 0.2s);
+  }
+
+  .dim-idle .more-info-icon {
+    color: #9ea2a8;
+  }
+
+  /* Card artwork spacer */
+  .card-artwork-spacer {
+    width: 100%;
+    flex: 1 1 0;
+    height: auto;
+    min-height: 180px;
+    pointer-events: none;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :host([data-has-custom-height="true"]) .card-artwork-spacer {
+    min-height: 0;
+  }
+
+  /* Media background */
+  .media-bg-full {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    background-size: var(--yamp-artwork-bg-size, cover);
+    background-position: top center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+  }
+
+  .media-bg-dim {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
+    pointer-events: none;
+  }
+
+  /* Source menu */
+  .source-menu {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 0;
+    margin: 0;
+  }
+
+  .source-menu-btn {
+    background: none;
+    border: none;
+    color: var(--primary-text);
+    font: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 2px 10px;
+    font-size: 1em;
+    outline: none;
+  }
+
+  .source-selected {
+    min-width: 64px;
+    font-weight: 500;
+    padding-right: 4px;
+    text-align: left;
+  }
+
+  .source-dropdown {
+    position: absolute;
+    top: 32px;
+    right: 0;
+    left: auto;
+    background: var(--card-bg);
+    color: var(--primary-text);
+    border-radius: var(--button-border-radius);
+    box-shadow: var(--shadow-light);
+    min-width: 110px;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+    margin-top: 2px;
+    border: 1px solid #444;
+    overflow: hidden;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .source-dropdown.up {
+    top: auto;
+    bottom: 38px;
+    border-radius: var(--button-border-radius);
+  }
+
+  .source-option {
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    white-space: nowrap;
+  }
+
+  .source-option:hover,
+  .source-option:focus {
+    background: var(--accent-color, #1976d2);
+    color: #fff;
+  }
+
+  .source-row {
+    display: flex;
+    align-items: center;
+    padding: 0 16px 8px 16px;
+    margin-top: 8px;
+  }
+
+  .source-select {
+    font-size: 1em;
+    padding: 4px 10px;
+    border-radius: var(--button-border-radius);
+    border: 1px solid #ccc;
+    background: var(--card-bg);
+    color: var(--primary-text);
+    outline: none;
+    margin-top: 2px;
+  }
+
+  /* Chip styles */
+  .chip-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-right: 8px;
+    background: transparent;
+    border-radius: 50%;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .chip[playing] .chip-icon {
+    background: #fff;
+  }
+
+  .chip-icon ha-icon {
+    width: 100%;
+    height: 100%;
+    font-size: 28px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    color: var(--custom-accent);
+  }
+
+  .chip[selected] .chip-icon ha-icon {
+    color: #fff;
+  }
+
+  .chip[selected][playing] .chip-icon ha-icon {
+    color: var(--custom-accent);
+  }
+
+  .chip:hover .chip-icon ha-icon {
+    color: #fff;
+  }
+
+  .chip-mini-art {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: var(--yamp-artwork-fit, cover);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    display: block;
+  }
+
+  /* Chip rows */
+  .chip-row.grab-scroll-active,
+  .action-chip-row.grab-scroll-active,
+  .search-filter-chips.grab-scroll-active {
+    cursor: grabbing;
+  }
+
+  .chip-row,
+  .action-chip-row,
+  .search-filter-chips {
+    cursor: grab;
+  }
+
+  .chip-row {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px 0 12px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: ${Z_LAYERS.STICKY_CHIPS};
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    scrollbar-color: var(--accent-color, #1976d2) #222;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    max-width: 100vw;
+    background: transparent;
+  }
+
+  .chip-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip-row::-webkit-scrollbar-thumb {
+    background: var(--accent-color, #1976d2);
+    border-radius: 6px;
+  }
+
+  .chip-row::-webkit-scrollbar-track {
+    background: #222;
+  }
+
+  .action-chip-row {
+    display: flex;
+    gap: 8px;
+    padding: 2px 12px 0 12px;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: ${Z_LAYERS.STICKY_CHIPS};
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));
+    background: transparent;
+  }
+
+  .action-chip-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Action chips */
+  .action-chip {
+    background: transparent;
+    opacity: 1;
+    border-radius: var(--button-border-radius);
+    color: var(--primary-text);
+    box-shadow: none;
+    text-shadow: none;
+    border: none;
+    outline: none;
+    padding: 4px 12px;
+    font-weight: 500;
+    font-size: 0.95em;
+    cursor: pointer;
+    margin: 4px 0;
+    transition: background var(--transition-normal) ease, transform 0.1s ease;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .action-chip:hover {
+    background: var(--custom-accent);
+    color: #fff;
+    box-shadow: none;
+    text-shadow: none;
+  }
+
+  .action-chip:active {
+    background: var(--custom-accent);
+    color: #fff;
+    transform: scale(0.96);
+    box-shadow: none;
+    text-shadow: none;
+  }
+
+  /* Override action chip colors when match_theme is false */
+  :host([data-match-theme="false"]) .action-chip:hover,
+  :host([data-match-theme="false"]) .action-chip:active {
+    background: #ff9800 ;
+  }
+
+  /* Main chips */
+  .chip {
+    display: flex;
+    align-items: center;
+    border-radius: var(--chip-border-radius);
+    padding: 6px 6px 6px 8px;
+    background: var(--chip-bg);
+    color: var(--primary-text);
+    cursor: pointer;
+    font-weight: 500;
+    opacity: 0.85;
+    border: none;
+    outline: none;
+    transition: background var(--transition-normal), opacity var(--transition-normal);
+    flex: 0 0 auto;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .chip:hover {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .chip[selected] {
+    background: var(--custom-accent);
+    color: #fff;
+    opacity: 1;
+  }
+
+  .chip[playing] {
+    padding-right: 6px;
+  }
+
+  /* Playing indicator animation - equalizer bars */
+  @keyframes chipPlayingBar1 {
+    0%, 100% { height: 3px; }
+    50% { height: 10px; }
+  }
+  @keyframes chipPlayingBar2 {
+    0%, 100% { height: 5px; }
+    50% { height: 12px; }
+  }
+  @keyframes chipPlayingBar3 {
+    0%, 100% { height: 4px; }
+    50% { height: 8px; }
+  }
+
+  .chip-playing-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    margin-left: 6px;
+    height: 14px;
+  }
+
+  .chip-playing-indicator .bar {
+    width: 3px;
+    background: currentColor;
+    border-radius: 1px;
+  }
+
+  .chip-playing-indicator .bar:nth-child(1) {
+    animation: chipPlayingBar1 0.8s ease-in-out 0s infinite;
+  }
+
+  .chip-playing-indicator .bar:nth-child(2) {
+    animation: chipPlayingBar2 0.6s ease-in-out 0.15s infinite;
+  }
+
+  .chip-playing-indicator .bar:nth-child(3) {
+    animation: chipPlayingBar3 0.7s ease-in-out 0.3s infinite;
+  }
+
+  .chip[playing]:not([selected]) .chip-playing-indicator {
+    color: var(--custom-accent);
+  }
+
+  .chip[playing][selected] .chip-playing-indicator,
+  .chip[playing]:hover .chip-playing-indicator {
+    color: #fff;
+  }
+
+  /* Chip pin */
+  .chip-pin {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #fff;
+    border-radius: 50%;
+    padding: 2px;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--custom-accent);
+    box-shadow: 0 1px 5px rgba(0,0,0,0.11);
+    cursor: pointer;
+    transition: box-shadow 0.18s;
+  }
+
+  .chip-pin:hover {
+    box-shadow: 0 2px 12px rgba(33,33,33,0.17);
+  }
+
+  .chip-pin ha-icon {
+    color: var(--custom-accent);
+    font-size: 16px;
+    background: transparent;
+    border-radius: 50%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .chip-pin-inside {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    background: transparent;
+    border-radius: 50%;
+    padding: 2px;
+    cursor: pointer;
+  }
+
+  .chip-pin-inside ha-icon {
+    color: var(--custom-accent);
+    font-size: 17px;
+    margin: 0;
+  }
+
+  .chip[selected] .chip-pin-inside ha-icon {
+    color: #fff;
+  }
+
+  .chip-pin:hover ha-icon,
+  .chip-pin-inside:hover ha-icon {
+    color: #fff;
+  }
+
+  .chip:hover .chip-pin ha-icon,
+  .chip:hover .chip-pin-inside ha-icon {
+    color: #fff;
+  }
+
+  .chip-pin-spacer {
+    display: flex;
+    width: 24px;
+    min-width: 24px;
+    height: 1px;
+  }
+
+  /* Group icon */
+  .chip-icon.group-icon {
+    background: var(--custom-accent);
+    color: #fff;
+    position: relative;
+  }
+
+  .group-count {
+    font-weight: 700;
+    font-size: 0.9em;
+    line-height: 28px;
+    text-align: center;
+    width: 100%;
+    color: inherit;
+  }
+
+  /* Media artwork */
+  .media-artwork-bg {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.75/1;
+    overflow: hidden;
+    background-size: var(--yamp-artwork-bg-size, cover);
+    background-repeat: no-repeat;
+    background-position: top center;
+  }
+
+  .artwork {
+    width: 96px;
+    height: 96px;
+    object-fit: var(--yamp-artwork-fit, cover);
+    border-radius: 12px;
+    box-shadow: var(--shadow-medium);
+    background: #222;
+  }
+
+  /* Details section */
+  .details {
+    padding-top: 0;
+    padding-right: calc(16px * var(--yamp-details-scale, 1));
+    padding-bottom: calc(12px * var(--yamp-details-scale, 1));
+    padding-left: calc(16px * var(--yamp-details-scale, 1));
+    display: flex;
+    flex-direction: column;
+    gap: calc(8px * var(--yamp-details-scale, 1));
+    margin-top: calc(8px * var(--yamp-details-scale, 1));
+    min-height: calc(48px * var(--yamp-details-scale, 1));
+    font-size: calc(1em * var(--yamp-details-scale, 1));
+  }
+
+  .details .title {
+    font-size: calc(1.1em * var(--yamp-details-scale, 1));
+    font-weight: 600;
+    line-height: var(--yamp-details-line-height, 1.2);
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--yamp-details-max-lines, 3);
+    overflow: hidden;
+    padding-top: calc(8px * var(--yamp-details-scale, 1));
+  }
+
+  .details .artist {
+    font-size: calc(1em * var(--yamp-details-scale, 1));
+    line-height: var(--yamp-details-line-height, 1.2);
+  }
+
+  .title {
+    font-size: 1.1em;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+    display: block;
+    padding-top: 8px;
+  }
+
+  .artist {
+    font-size: 1em;
+    font-weight: 400;
+    color: var(--secondary-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+  }
+
+  /* Controls */
+  .controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 16px;
+  }
+
+  .controls-row.adaptive {
+    justify-content: center;
+    gap: var(--yamp-control-gap, 10px);
+    flex-wrap: nowrap;
+  }
+
+  .controls-row.adaptive .button {
+    flex: 1 1 calc(
+      (100% - (var(--yamp-control-gap, 10px) * (var(--yamp-control-count, 5) - 1))) /
+      var(--yamp-control-count, 5)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--yamp-control-min-width, 48px);
+    max-width: var(--yamp-control-max-width, 120px);
+    min-height: var(--yamp-control-min-height, 48px);
+    padding: var(--yamp-control-padding, 8px);
+  }
+
+  .controls-row.adaptive .button ha-icon {
+    --mdc-icon-size: var(--yamp-control-icon-size, 36px);
+    width: var(--yamp-control-icon-size, 36px);
+    height: var(--yamp-control-icon-size, 36px);
+    font-size: var(--yamp-control-icon-size, 36px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .controls-row.adaptive .button ha-icon svg,
+  .controls-row.adaptive .button ha-icon iron-icon {
+    width: 100%;
+    height: 100%;
+  }
+
+  .controls-row.modern {
+    justify-content: center;
+    gap: 14px;
+    padding: 10px 16px 2px 16px;
+    /* Grid layout for robust centering */
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .controls-row.modern .controls-left {
+    grid-column: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .controls-row.modern .controls-center {
+    grid-column: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 10px;
+  }
+
+  .controls-row.modern .controls-right {
+    grid-column: 3;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .modern-button {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: background var(--transition-normal), transform 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  }
+
+  .modern-button.small,
+  .modern-button.medium,
+  .modern-button.primary {
+    font-size: inherit;
+  }
+
+  .modern-button.small {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+  }
+
+  .modern-button.medium {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+  }
+
+  .modern-button.primary {
+    width: 70px;
+    height: 70px;
+    font-size: 1.9em;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .modern-button ha-icon {
+    --mdc-icon-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .modern-button.medium ha-icon {
+    --mdc-icon-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .modern-button.primary ha-icon {
+    --mdc-icon-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .modern-button:hover {
+    background: rgba(255,255,255,0.25);
+  }
+
+  .modern-button:active {
+    transform: scale(0.95);
+  }
+
+  .modern-button.active:not(.primary) {
+    color: var(--custom-accent);
+  }
+
+  .modern-button.primary.active {
+    color: inherit;
+  }
+
+  /* Tighter spacing for collapsed mode with artwork */
+  .card-lower-content.collapsed.has-artwork .controls-row {
+    gap: 8px;
+    padding: 4px 12px 4px 16px;
+  }
+
+  .button {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--button-border-radius);
+    transition: background var(--transition-normal);
+  }
+
+  .button:active {
+    background: rgba(0,0,0,0.10);
+  }
+
+  .button.active ha-icon,
+  .button.active {
+    color: var(--custom-accent);
+  }
+
+  /* Progress bar */
+  .progress-bar-container {
+    padding-left: 24px;
+    padding-right: 24px;
+    box-sizing: border-box;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 3px;
+    margin: 8px 0;
+    cursor: pointer;
+    position: relative;
+    box-shadow: var(--shadow-heavy);
+  }
+
+  .progress-inner {
+    height: 100%;
+    background: var(--custom-accent);
+    border-radius: 3px 0 0 3px;
+    box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
+  }
+
+  .timestamps-container {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-top: -4px;
+    margin-bottom: 4px;
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0 2px;
+  }
+
+  /* Volume controls */
+  .volume-row {
+    display: grid;
+    grid-template-columns: minmax(min-content, 1fr) auto minmax(min-content, 1fr);
+    align-items: center;
+    padding: 0 16px 14px 16px;
+  }
+
+  /* Remove flex:1 since we are using grid columns */
+  .volume-left, 
+  .volume-right {
+    display: flex;
+    align-items: center;
+  }
+
+  .volume-left {
+    grid-column: 1;
+    justify-self: start;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .volume-right {
+    grid-column: 3;
+    justify-self: end;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .volume-center {
+    grid-column: 2;
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .volume-row.has-slider .volume-left,
+  .volume-row.has-slider .volume-right {
+    flex: 0 0 auto;
+  }
+
+  .volume-row.has-slider {
+    grid-template-columns: minmax(min-content, 1fr) 4fr minmax(min-content, 1fr);
+  }
+
+  .volume-row.has-slider .volume-center {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .volume-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0;
+  }
+
+  .search-sheet-play,
+  .search-sheet-queue {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background 0.2s;
+  }
+
+  .radio-mode-button {
+    background: none;
+    border: none;
+    font-size: 1.25em;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    color: #fff;
+  }
+
+  .radio-mode-button.active {
+    color: var(--custom-accent, var(--accent-color));
+  }
+
+  .volume-icon-btn {
+    background: none;
+    border: none;
+    color: var(--primary-text);
+    cursor: pointer;
+    padding: 0px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-normal);
+    min-width: 36px;
+    min-height: 36px;
+    margin: 0;
+  }
+
+  .volume-icon-btn:hover {
+    color: var(--custom-accent);
+  }
+
+  .volume-icon-btn ha-icon {
+    font-size: 1.2em;
+    color: #fff;
+  }
+
+  .volume-icon-btn.favorite-volume-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.7);
+    margin: 0;
+  }
+
+  .volume-leading-placeholder {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+  }
+
+  .volume-icon-btn.favorite-volume-btn.active {
+    color: var(--custom-accent);
+  }
+
+  .volume-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    position: relative;
+    padding: 0 24px;
+  }
+
+  .volume-slider-icon {
+    font-size: 1em;
+    color: var(--primary-text);
+    opacity: 0.7;
+    min-width: 20px;
+  }
+
+  .vol-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: hsla(0, 0.00%, 100.00%, 0.22);
+    border-radius: 3px;
+    outline: none;
+    box-shadow: var(--shadow-heavy);
+    flex: 1 1 auto;
+    min-width: 80px;
+    max-width: none;
+    margin: 10px 0;
+  }
+
+  .volume-row .source-menu {
+    flex: 0 0 auto;
+  }
+
+  .volume-placeholder {
+    width: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Volume slider thumbs */
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--custom-accent);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 2px solid #fff;
+  }
+
+  .vol-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--custom-accent);
+    cursor: pointer;
+    border: 2px solid #fff;
+  }
+
+  .vol-slider::-moz-range-track {
+    height: 6px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 3px;
+  }
+
+  .vol-slider::-ms-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--custom-accent);
+    cursor: pointer;
+    border: 2px solid #fff;
+  }
+
+  .vol-slider::-ms-fill-lower,
+  .vol-slider::-ms-fill-upper {
+    height: 6px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 3px;
+  }
+
+  /* Touch device improvements */
+  @media (pointer: coarse) {
+    .vol-slider::-webkit-slider-thumb {
+      box-shadow: 0 0 0 18px rgba(0,0,0,0);
+    }
+    .vol-slider::-moz-range-thumb {
+      box-shadow: 0 0 0 18px rgba(0,0,0,0);
+    }
+    .vol-slider::-ms-thumb {
+      box-shadow: 0 0 0 18px rgba(0,0,0,0);
+    }
+  }
+
+  .vol-stepper-container {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .vol-stepper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .vol-stepper .button {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 1.5em;
+    padding: 6px 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .vol-value {
+    min-width: 48px;
+    display: inline-block;
+    text-align: center;
+    padding-left: 6px;
+  }
+
+  .vol-label {
+    width: 42px;
+    display: inline-block;
+    font-size: 0.85em;
+    text-transform: lowercase;
+    opacity: 0.9;
+  }
+
+  /* Light mode styles */
+  @media (prefers-color-scheme: light) {
+    :host {
+      background: var(--card-background-color, #fff);
+    }
+
+    .chip {
+      background: #f0f0f0;
+      color: #222;
+    }
+
+    :host([data-match-theme="true"]) .chip[selected] {
+      background: var(--accent-color, #1976d2);
+      color: #fff;
+    }
+
+    .artwork {
+      background: #eee;
+    }
+
+    .progress-bar {
+      background: #eee;
+    }
+
+    .source-menu-btn {
+      color: #222;
+    }
+
+    .source-dropdown {
+      background: #fff;
+      color: #222;
+      border: 1px solid #bbb;
+    }
+
+    .source-option {
+      color: #222;
+      background: #fff;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+
+    .source-option:hover,
+    .source-option:focus {
+      background: var(--custom-accent);
+      color: #222;
+    }
+
+    .source-select {
+      background: #fff;
+      color: #222;
+      border: 1px solid #aaa;
+    }
+
+    .action-chip {
+      background: var(--card-background-color, #fff);
+      opacity: 1;
+      border-radius: var(--button-border-radius);
+      color: var(--primary-text-color, #222);
+      box-shadow: none;
+      text-shadow: none;
+      border: none;
+      outline: none;
+    }
+
+    .action-chip:active {
+      background: var(--accent-color, #1976d2);
+      color: #fff;
+      opacity: 1;
+      transform: scale(0.98);
+      box-shadow: none;
+      text-shadow: none;
+    }
+
+    .card-lower-content:not(.collapsed) .source-menu-btn,
+    .card-lower-content:not(.collapsed) .source-selected {
+      color: #fff;
+    }
+  }
+
+  /* Artwork overlay */
+  .artwork-dim-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom, 
+      rgba(0,0,0,0.0) 0%,
+      rgba(0,0,0,0.40) 55%,
+      rgba(0,0,0,0.70) 100%);
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+  }
+
+  /* Card lower content */
+  .card-lower-content-container {
+    position: relative;
+    width: 100%;
+    min-height: auto;
+    height: 100%;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    overflow: hidden;
+  }
+
+  .card-lower-content-bg {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    background-size: var(--yamp-artwork-bg-size, cover);
+    background-position: top center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    height: 100%;
+  }
+
+  .card-lower-fade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.0) 0%,
+      rgba(0,0,0,0.40) 55%,
+      rgba(0,0,0,0.92) 100%
+    );
+  }
+
+  .card-lower-content {
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .card-lower-content.transitioning .details,
+  .card-lower-content.transitioning .card-artwork-spacer {
+    transition: opacity 0.3s;
+  }
+
+  .card-lower-content.collapsed .details {
+    opacity: 1;
+    pointer-events: auto;
+    margin-right: var(--yamp-collapsed-details-offset, 120px);
+    transition: margin var(--transition-normal);
+  }
+
+  @media (max-width: 420px) {
+    .card-lower-content.collapsed .details {
+      margin-right: var(--yamp-collapsed-details-offset, 74px);
+    }
+  }
+
+  .card-lower-content.collapsed .card-artwork-spacer {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .card-lower-content.collapsed .card-artwork-spacer.show-placeholder {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .collapsed-flex-spacer {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .details,
+  .title,
+  .artist,
+  .controls-row,
+  .button,
+  .vol-stepper span,
+  .vol-label {
+    color: #fff;
+  }
+
+  .vol-stepper span {
+    width: 42px;
+    text-align: center;
+    display: inline-block;
+  }
+
+  .card-lower-content.collapsed .details .title,
+  .card-lower-content.collapsed .title {
+    font-size: calc(1.1em * var(--yamp-collapsed-title-scale, 1));
+    line-height: calc(1.2 * var(--yamp-collapsed-title-scale, 1));
+  }
+
+  .card-lower-content.collapsed .artist {
+    font-size: calc(1em * var(--yamp-collapsed-artist-scale, 1));
+  }
+  
+
+
+  /* Media artwork placeholder */
+  .media-artwork-placeholder {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(96px, 50%, 184px);
+    aspect-ratio: 1;
+    pointer-events: none;
+  }
+
+  .media-artwork-placeholder svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    opacity: 0.85;
+  }
+
+  /* Collapsed artwork */
+  .card-lower-content.collapsed .collapsed-artwork-container {
+    position: absolute;
+    top: 16px;
+    right: 6px;
+    width: 110px;
+    height: calc(100% - 60px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+    background: transparent;
+    pointer-events: none;
+    box-shadow: none;
+    padding: 0;
+    transition: background var(--transition-slow);
+  }
+
+  .card-lower-content.collapsed .collapsed-artwork {
+    width: 102px;
+    height: 102px;
+    border-radius: 16px;
+    object-fit: var(--yamp-artwork-fit, cover);
+    background: transparent;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.22);
+    pointer-events: none;
+    user-select: none;
+    display: block;
+    margin: 2px;
+  }
+
+  .card-lower-content.collapsed.has-artwork .controls-row {
+    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) ;
+    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) ;
+    width: auto ;
+  }
+
+  /* Medium screens */
+  @media (max-width: 600px) {
+    .card-lower-content.collapsed.has-artwork .controls-row {
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) ;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) ;
+      width: auto ;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork-container {
+      width: 105px;
+      right: 4px;
+      top: 14px;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork {
+      width: 98px;
+      height: 98px;
+    }
+  }
+
+  /* Small screens */
+  @media (max-width: 420px) {
+    .card-lower-content.collapsed.has-artwork .controls-row {
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) ;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) ;
+      width: auto ;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork-container {
+      width: 90px;
+      right: 3px;
+      top: 12px;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork {
+      width: 84px;
+      height: 84px;
+    }
+  }
+
+  /* Very small screens */
+  @media (max-width: 320px) {
+    .card-lower-content.collapsed.has-artwork .controls-row {
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) ;
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) ;
+      width: auto ;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork-container {
+      width: 80px;
+      right: 2px;
+      top: 10px;
+    }
+
+    .card-lower-content.collapsed .collapsed-artwork {
+      width: 74px;
+      height: 74px;
+    }
+  }
+
+  /* Collapsed progress bar */
+  .collapsed-progress-bar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 4px;
+    background: var(--custom-accent);
+    border-radius: 0 0 12px 12px;
+    z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
+    transition: width var(--transition-normal) linear;
+    pointer-events: none;
+  }
+
+  /* Entity options overlay */
+  .entity-options-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: ${Z_LAYERS.OVERLAY_BASE};
+    background: var(--ha-entity-menu-overlay, rgba(0,0,0,0.82));
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  /* Opening animations for hamburger menu */
+  @keyframes overlayFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes containerSlideIn {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sheetSlideIn {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .entity-options-overlay-opening {
+    animation: overlayFadeIn 0.2s ease-out;
+  }
+
+  .entity-options-container-opening {
+    animation: containerSlideIn 0.3s ease-out;
+  }
+
+  .entity-options-sheet-opening {
+    animation: sheetSlideIn 0.25s ease-out 0.05s both;
+  }
+
+  /* Closing animations for hamburger menu */
+  @keyframes overlayFadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes containerSlideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes sheetSlideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+  }
+
+  .entity-options-overlay-closing {
+    animation: overlayFadeOut 0.15s ease-in forwards;
+    pointer-events: none;
+  }
+
+  .entity-options-container-closing {
+    animation: containerSlideOut 0.2s ease-in forwards;
+  }
+
+  .entity-options-sheet-closing {
+    animation: sheetSlideOut 0.15s ease-in 0.05s both forwards;
+  }
+
+  .entity-options-container {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 2% auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(96% - 70px);
+    min-height: 90px;
+    position: relative;
+  }
+
+  /* Expand container height when hide_menu_player is enabled (no persistent controls) */
+  :host([data-hide-menu-player="true"]) .entity-options-container {
+    max-height: 96%;
+  }
+
+  /* Expand container height when persistent controls are hidden due to layout constraints */
+  :host([data-hide-persistent-controls="true"]) .entity-options-container,
+  :host([data-pin-search-headers="true"]) .entity-options-container {
+    max-height: 96%;
+    scrollbar-width: none;
+  }
+
+  .entity-options-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Persistent Media Controls */
+  /* Persistent Media Controls */
+  .persistent-media-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px 18px 22px;
+    margin: 0;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    border: none;
+    flex-shrink: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+  }
+
+  /* Hide persistent controls when hide_menu_player is enabled */
+  :host([data-hide-menu-player="true"]) .persistent-media-controls {
+    display: none;
+  }
+
+  /* Hide persistent controls when layout constraints require it */
+  :host([data-hide-persistent-controls="true"]) .persistent-media-controls {
+    display: none;
+  }
+
+  .persistent-controls-artwork {
+    grid-column: 1;
+    justify-self: start;
+    flex-shrink: 0;
+  }
+
+  .persistent-artwork {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: var(--yamp-artwork-fit, cover);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .persistent-artwork-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .persistent-artwork-placeholder ha-icon {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+  }
+
+  .persistent-controls-buttons {
+    grid-column: 2;
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .persistent-volume-stepper {
+    grid-column: 3;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 0px;
+  }
+
+  .persistent-volume-stepper .stepper-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  .persistent-volume-stepper .stepper-btn:hover {
+    color: var(--custom-accent);
+  }
+
+  .persistent-volume-stepper .stepper-btn:active {
+    transform: scale(0.92);
+  }
+
+  .persistent-volume-stepper .stepper-value {
+    font-size: 0.95em;
+    opacity: 0.85;
+    min-width: 48px;
+    text-align: center;
+    color: #fff;
+    padding-left: 6px;
+  }
+
+  .persistent-control-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #fff;
+  }
+
+  @container (max-width: 450px) {
+    .persistent-volume-stepper {
+      margin-right: -12px;
+    }
+    
+    .persistent-volume-stepper .stepper-value {
+      min-width: 36px;
+      padding-left: 2px;
+    }
+
+    .persistent-volume-stepper .stepper-btn {
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+    }
+  }
+
+  .persistent-control-btn:hover {
+    background: var(--custom-accent);
+    border-color: var(--custom-accent);
+    transform: scale(1.05);
+  }
+
+  .persistent-control-btn:active {
+    transform: scale(0.95);
+  }
+
+  .persistent-control-btn ha-icon {
+    font-size: 16px;
+    color: inherit;
+  }
+
+  .entity-options-sheet {
+    --custom-accent: var(--accent-color, #ff9800);
+    background: none;
+    border-radius: var(--border-radius);
+    box-shadow: none;
+    width: 100%;
+    padding: 18px 8px 0px 8px;
+    padding-top: clamp(12px, 6vh, 18px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    font-size: calc(1em * var(--yamp-text-scale-menu, 1));
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  /* Main menu specific styling - move options down, adapt to card height */
+  .entity-options-sheet .entity-options-menu {
+    margin-top: 0px;
+    margin-bottom: 16px;
+  }
+
+  .in-menu-active-label {
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    font-size: 0.78em;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.78);
+    pointer-events: none;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  }
+
+  /* When always collapsed is enabled, keep menu at top */
+:host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
+  margin-top: 0px;
+}
+
+  /* Remove spacing between menu items */
+  .entity-options-sheet .entity-options-menu .entity-options-item {
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+
+  .entity-options-container,
+  .entity-options-container-opening {
+    position: relative;
+  }
+
+  .entity-options-chips-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: ${Z_LAYERS.STICKY_CHIPS};
+    padding: 2px 4px 2px 4px;
+    background: transparent;
+  }
+
+  .entity-options-chips-strip {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-x: auto;
+    padding: 2px 8px 2px 8px;
+    background: var(--ha-menu-chip-row-background, transparent);
+  }
+
+  .entity-options-chips-strip .chip {
+    background: var(--chip-bg);
+    color: var(--primary-text);
+  }
+
+  .entity-options-chips-strip .chip:hover {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .entity-options-chips-strip .chip[selected] {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .entity-options-chips-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .entity-options-menu.chips-in-menu {
+    margin-top: 4px;
+  }
+
+  .entity-options-sheet.chips-mode {
+    padding-top: 4px;
+  }
+
+
+  /* Ensure entity-options-sheet honors match_theme for accent color */
+  :host([data-match-theme="false"]) .entity-options-sheet {
+    --custom-accent: #ff9800 ;
+  }
+  :host([data-match-theme="true"]) .entity-options-sheet {
+    --custom-accent: var(--accent-color, #ff9800) ;
+  }
+
+  .entity-options-sheet::-webkit-scrollbar {
+    display: none;
+  }
+
+  .entity-options-sheet {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* Hide scrollbar for group list scroll container */
+  .group-list-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .group-list-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Seamless grouping header and scrolling list */
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-header {
+    z-index: 1;
+    padding-top: 4px;
+    margin-top: -4px;
+    padding-bottom: 4px;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    margin-bottom: 72px; /* Reserve space for controls */
+    padding-bottom: 0;
+    scrollbar-width: thin; /* Allow scrollbar if needed */
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+  }
+
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
+    margin-bottom: 12px;
+    padding-bottom: 0;
+  }
+
+  .entity-options-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 18px;
+    text-align: center;
+    color: #fff;
+    background: none;
+    text-shadow: 0 2px 8px #0009;
+  }
+
+  .entity-options-item {
+    background: none;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.12em;
+    font-weight: 500;
+    margin: 4px 0;
+    padding: 6px 0 8px 0;
+    cursor: pointer;
+    transition: color var(--transition-fast), text-shadow var(--transition-fast);
+    text-align: center;
+    text-shadow: 0 2px 8px #0009;
+  }
+
+  .entity-options-item.menu-action-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .entity-options-item.menu-action-item .menu-action-icon {
+    color: inherit;
+    --mdc-icon-color: currentColor;
+    --icon-color: currentColor;
+    --paper-item-icon-color: currentColor;
+    --ha-icon-color: currentColor;
+    fill: currentColor;
+  }
+
+  .entity-options-item.menu-action-item .menu-action-label {
+    color: inherit;
+  }
+
+  .entity-options-item:hover {
+    color: var(--custom-accent, #ff9800);
+    text-shadow: none;
+    background: none;
+  }
+
+  .entity-options-item.close-item {
+    font-weight: 600;
+    margin: 1px 0;
+    padding: 4px 0 5px 0;
+    display: block;
+    width: 100%;
+  }
+
+  .entity-options-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.28);
+    margin: 1px 0 8px 0;
+    width: 100%;
+    display: block;
+  }
+
+  /* Ensure Group Players header always shows a single divider */
+  .grouping-header {
+    width: 100%;
+  }
+  .grouping-header .entity-options-item.close-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+  }
+
+  /* Source index */
+  .source-index-letter:focus {
+    background: rgba(255,255,255,0.11);
+    outline: 1px solid #ff9800;
+  }
+
+  .source-list-centering-wrapper {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .source-list-sheet {
+    width: 100%;
+    position: relative;
+    overflow: visible;
+  }
+
+  .source-list-scroll {
+    overflow-y: auto;
+    max-height: 340px;
+    scrollbar-width: none;
+    width: 100%;
+  }
+
+  .source-list-scroll .entity-options-item {
+    width: 100%;
+  }
+
+  .source-list-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .floating-source-index.grab-scroll-active,
+  .floating-source-index.grab-scroll-active * {
+    cursor: grabbing;
+  }
+
+  .floating-source-index {
+    position: absolute;
+    top: 55px;
+    bottom: 20px;
+    right: 0;
+    width: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    pointer-events: auto;
+    overscroll-behavior: contain;
+    z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
+    padding: 0 8px 0 0;
+    overflow-y: auto;
+    max-height: calc(100% - 75px);
+    min-width: 38px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .entity-options-sheet.chips-mode .floating-source-index {
+    top: clamp(72px, 15vh, 120px);
+    height: calc(100% - clamp(72px, 15vh, 120px));
+  }
+
+  .floating-source-index::-webkit-scrollbar {
+    display: none;
+  }
+
+  .floating-source-index .source-index-letter {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 0.9em;
+    cursor: pointer;
+    margin: 1px 0;
+    padding: 0;
+    pointer-events: auto;
+    outline: none;
+    transition: color var(--transition-fast), background var(--transition-fast), transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
+    transform: scale(1);
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
+    min-height: 22px;
+    min-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .floating-source-index .source-index-letter[data-scale="max"] {
+    transform: scale(1.38);
+    z-index: ${Z_LAYERS.OVERLAY_BASE};
+  }
+
+  .floating-source-index .source-index-letter[data-scale="large"] {
+    transform: scale(1.19);
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+  }
+
+  .floating-source-index .source-index-letter[data-scale="med"] {
+    transform: scale(1.10);
+    z-index: ${Z_LAYERS.MEDIA_OVERLAY};
+  }
+
+  .floating-source-index .source-index-letter::after {
+    display: none;
+  }
+
+  .floating-source-index .source-index-letter:hover,
+  .floating-source-index .source-index-letter:focus {
+    color: #fff;
+  }
+
+  .floating-source-index .source-index-letter[disabled] {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  /* Group toggle buttons */
+  .group-toggle-btn {
+    background: none;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    color: #fff;
+  }
+
+  .group-toggle-btn ha-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .group-toggle-transparent {
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: transparent;
+    pointer-events: none;
+  }
+
+  .group-toggle-transparent:hover {
+    background: none;
+  }
+
+  /* Force white text in grouping sheet */
+  .entity-options-sheet,
+  .entity-options-sheet * {
+    color: #fff;
+  }
+
+  /* Search functionality */
+  .entity-options-search {
+    padding: 0px 10px 80px 10px;
+  }
+
+  .entity-options-search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+    margin-top: 2px;
+  }
+
+  .entity-options-search-result.menu-active > *:not(.search-row-slide-out) {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .entity-options-search-result {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid #2227;
+    font-size: 1.10em;
+    color: var(--primary-text);
+    background: none;
+  }
+  .search-row-slide-out {
+    position: absolute;
+    inset: 0;
+    left: 100%;
+    background: rgba(0, 0, 0, 0.01) ;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: ${Z_LAYERS.SEARCH_SLIDE_OUT};
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 15px 0 0 15px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 4px;
+  }
+
+  .search-row-slide-out::-webkit-scrollbar {
+    display: none;
+  }
+
+  .search-row-slide-out.active {
+    left: 0;
+  }
+
+  .search-row-success-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95em;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    z-index: ${Z_LAYERS.SEARCH_SUCCESS};
+    border-radius: inherit;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+    animation: success-fade-in 0.3s ease;
+  }
+
+  .search-row-success-overlay span:first-child {
+    font-size: 1.5em;
+  }
+
+  @keyframes success-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .slide-out-button {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 18px;
+    cursor: pointer;
+    font-size: 0.88em;
+    font-weight: 500;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .slide-out-button:hover {
+    background: var(--custom-accent);
+    color: #fff;
+  }
+
+  .slide-out-button ha-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .slide-out-close {
+    margin-left: auto;
+    color: #888;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .slide-out-close:hover {
+    color: #fff;
+  }
+
+  .entity-options-search-result:last-child {
+    border-bottom: none;
+  }
+
+  .entity-options-search-result.placeholder {
+    visibility: hidden;
+    border-bottom: 1px solid transparent;
+    min-height: 46px;
+    box-sizing: border-box;
+  }
+
+  .entity-options-search-thumb {
+    height: 38px;
+    width: 38px;
+    border-radius: var(--button-border-radius);
+    object-fit: var(--yamp-artwork-fit, cover);
+    box-shadow: 0 1px 5px rgba(0,0,0,0.16);
+    margin-right: 12px;
+  }
+
+  .entity-options-search-buttons {
+    display: flex;
+    gap: 6px;
+    margin-left: 7px;
+    align-items: center;
+  }
+
+  .entity-options-search-play,
+  .entity-options-search-queue {
+    min-width: 34px;
+    font-size: 1.13em;
+    border: none;
+    background: transparent;
+    color: #fff;
+    border-radius: 10px;
+    padding: 6px 10px;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background var(--transition-normal), color var(--transition-normal);
+    text-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .entity-options-search-play ha-icon,
+  .entity-options-search-queue ha-icon {
+    width: 16px;
+    height: 16px;
+    
+  
+  }
+
+  .entity-options-search-play:hover,
+  .entity-options-search-play:focus {
+    background: transparent;
+    color: var(--custom-accent) !important;
+    opacity: 0.8;
+  }
+
+  .entity-options-search-queue {
+    color: #666;
+    padding-right: 20px; /* Add right padding to prevent cutoff on mobile */
+  }
+
+  .entity-options-search-queue:hover,
+  .entity-options-search-queue:focus {
+    background: transparent;
+    border: none;
+    color: var(--custom-accent);
+    opacity: 0.8;
+  }
+
+  /* Queue control buttons */
+  .queue-controls {
+    display: flex;
+    gap: 4px;
+    padding-right: 8px; /* Add padding to prevent cutoff on mobile */
+  }
+
+  .queue-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.9em;
+    border: none;
+    background: transparent;
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    box-shadow: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .queue-btn ha-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .queue-btn-up:hover,
+  .queue-btn-up:focus {
+    background: transparent;
+    color: #4caf50;
+  }
+
+  .queue-btn-down:hover,
+  .queue-btn-down:focus {
+    background: transparent;
+    color: #4caf50;
+  }
+
+  .queue-btn-next:hover,
+  .queue-btn-next:focus {
+    background: transparent;
+    color: var(--custom-accent);
+  }
+
+  .queue-btn-remove:hover,
+  .queue-btn-remove:focus {
+    background: transparent;
+    color: #f44336;
+  }
+
+  /* Visual feedback for moved queue items */
+  .entity-options-search-result.just-moved {
+    background: rgba(76, 175, 80, 0.2) ;
+    border-left: 3px solid #4caf50 ;
+    animation: queueMoveHighlight 1s ease-out;
+  }
+
+  @keyframes queueMoveHighlight {
+    0% { background: rgba(76, 175, 80, 0.4); transform: scale(1.02); }
+    100% { background: rgba(76, 175, 80, 0.2); transform: scale(1); }
+  }
+
+  .entity-options-search-input {
+    border: 1px solid #333;
+    border-radius: var(--button-border-radius);
+    background: var(--card-bg);
+    color: var(--primary-text);
+    font-size: 1.12em;
+    outline: none;
+    transition: border var(--transition-fast);
+    margin-right: 7px;
+    box-sizing: border-box;
+  }
+
+  .entity-options-search-row .entity-options-search-input {
+    padding: 4px 10px;
+    height: 32px;
+    min-height: 32px;
+    line-height: 1.18;
+    box-sizing: border-box;
+    border: 1.5px solid var(--custom-accent);
+    background: #232323;
+    color: #fff;
+    transition: border var(--transition-fast), background var(--transition-fast);
+    outline: none;
+  }
+
+  .entity-options-search-input:focus {
+    border: 1.5px solid var(--custom-accent);
+    background: #232323;
+    color: #fff;
+    outline: none;
+  }
+
+  .entity-options-search-loading,
+  .entity-options-search-error,
+  .entity-options-search-empty {
+    padding: 8px 6px;
+    font-size: 1.09em;
+    opacity: 0.90;
+    color: var(--primary-text);
+    background: none;
+    text-align: left;
+  }
+
+  .entity-options-search-loading {
+    color: #fff;
+  }
+
+  .entity-options-search-error {
+    color: #e44747;
+    font-weight: 500;
+  }
+
+  .entity-options-search-empty {
+    color: #999;
+    font-style: italic;
+  }
+
+  .entity-options-search-row .entity-options-item {
+    height: 32px;
+    min-height: 32px;
+    box-sizing: border-box;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 1.12em;
+    vertical-align: middle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Search filter chips */
+  .search-filter-chips .chip {
+    color: #fff;
+  }
+
+  .search-filter-chips .chip[selected],
+  .search-filter-chips .chip[style*="background: var(--customAccent"],
+  .search-filter-chips .chip[style*="background: var(--custom-accent"] {
+    color: #111;
+  }
+
+  .entity-options-sheet .search-filter-chips .chip:not([selected]) {
+    color: #fff;
+  }
+
+  .entity-options-sheet .search-filter-chips .chip[selected] {
+    color: #fff;
+  }
+
+  .entity-options-sheet .search-filter-chips .chip {
+    justify-content: center;
+  }
+
+  .entity-options-sheet .search-filter-chips .chip:hover {
+    background: var(--custom-accent) !important;
+    color: #fff ;
+    opacity: 1;
+  }
+
+  .entity-options-sheet .entity-options-search-results {
+    min-height: 210px;
+  }
+
+  /* Search layout */
+  .search-results-count {
+    margin-left: auto;
+    padding-left: 0px;
+    padding-right: 15px;
+    font-size: 0.85em;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.75);
+    white-space: nowrap;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .entity-options-sheet .entity-options-search {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .entity-options-sheet .entity-options-search-row,
+  .entity-options-sheet .search-filter-chips,
+  .entity-options-sheet .search-sub-filters {
+    flex: 0 0 auto;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] {
+    overflow-y: hidden ;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0px ;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 0px ;
+  }
+
+  /* Unified Header and Scroll Containers for Menu Sheets */
+  .entity-options-header {
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* When pinning is active, the header is sticky and seamless */
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-header {
+    position: sticky;
+    top: 0;
+    background: none ;
+  }
+
+  /* The scrollable area for all menus */
+  .entity-options-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .entity-options-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Reserved space for persistent media controls when pinning is active */
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
+    margin-bottom: 80px;
+    padding-bottom: 0px ;
+    background: none ;
+  }
+
+  /* Adjust spacing when persistent controls are hidden */
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"],
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] {
+    padding-bottom: 12px ;
+  }
+
+  /* Clean up legacy margin override rules since we now use padding on parent */
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
+    margin-bottom: 0px;
+  }
+
+  .entity-options-sheet .entity-options-search-results {
+    flex: 1;
+    overflow-y: auto;
+    margin: 12px 0;
+    padding-bottom: 0px;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
+  .entity-options-sheet .entity-options-search-results::-webkit-scrollbar {
+    display: none;
+  }
+
+  .entity-options-resolved-entities {
+    --custom-accent: var(--accent-color, #ff9800);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .entity-options-resolved-entities-list {
+    flex: 1;
+    overflow-y: auto;
+    margin: 12px 0;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  .entity-options-resolved-entities-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .entity-options-resolved-entities .entity-options-item {
+    background: none;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.12em;
+    font-weight: 500;
+    margin: 4px 0;
+    padding: 6px 0 8px 0;
+    cursor: pointer;
+    transition: color var(--transition-fast), text-shadow var(--transition-fast);
+    text-align: left;
+    text-shadow: 0 2px 8px #0009;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .entity-options-resolved-entities .entity-options-item:hover,
+  .entity-options-resolved-entities .entity-options-item:focus {
+    color: var(--custom-accent) ;
+    text-shadow: none ;
+    background: none ;
+  }
+
+  .entity-options-resolved-entities .entity-options-item:last-child {
+    border-bottom: none;
+  }
+
+  /* Clickable artist */
+  .clickable-artist {
+    cursor: pointer;
+  }
+
+  .clickable-artist:hover {
+    text-decoration: underline;
+  }
+
+  /* Clickable search results */
+  .clickable-search-result {
+    cursor: pointer;
+    color: var(--custom-accent);
+    transition: color var(--transition-fast);
+  }
+
+  .clickable-search-result:hover {
+    text-decoration: underline;
+    color: #fff;
+  }
+
+  /* Search breadcrumb */
+  .entity-options-search-breadcrumb {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .entity-options-search-breadcrumb-text {
+    font-size: 0.9em;
+    color: #fff;
+    font-style: italic;
+  }
+
+  /* Search sheet styles */
+  .search-sheet {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: ${Z_LAYERS.MODAL_BACKDROP};
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .search-sheet-header {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .search-sheet-header input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #333;
+    color: #fff;
+    font-size: 16px;
+  }
+
+  .search-sheet-header button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: var(--custom-accent);
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .search-sheet-header button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .search-sheet-loading,
+  .search-sheet-error,
+  .search-sheet-success,
+  .search-sheet-empty {
+    text-align: center;
+    padding: 40px;
+    color: #fff;
+    font-size: 18px;
+  }
+
+  .search-sheet-error {
+    color: #ff6b6b;
+  }
+
+  .priority-toast-success {
+    color: #fff;
+    font-weight: 600;
+    background: rgba(76, 175, 80, 0.95);
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px;
+    font-size: 20px;
+    animation: fadeInOut 3s ease-in-out;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: ${Z_LAYERS.MODAL_TOAST};
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    min-width: 200px;
+    text-align: center;
+    pointer-events: none;
+  }
+
+
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -60%); }
+    10% { opacity: 1; transform: translate(-50%, -50%); }
+    90% { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, -40%); }
+  }
+
+  .search-sheet-results.search-results-card-view,
+  .entity-options-search-results.search-results-card-view,
+  .search-sheet[data-card-view="true"] .search-sheet-results {
+    display: grid;
+    grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .search-sheet-results {
+    flex: 1;
+    overflow-y: auto;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  .search-sheet-results::-webkit-scrollbar {
+    display: none;
+  }
+
+
+  .search-sheet-result {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .search-sheet-result.search-result-card,
+  .entity-options-search-result.search-result-card {
+    flex-direction: column;
+    padding: 8px;
+    border-bottom: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    align-items: center;
+    gap: 8px;
+    height: min-content;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-menu-button {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    z-index: 2;
+  }
+
+  .card-menu-button:hover {
+    opacity: 1;
+  }
+
+  .search-result-card .search-row-slide-out {
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    top: 100%;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: flex-start;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 12px 8px;
+    border-radius: 12px;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+    box-sizing: border-box;
+  }
+
+  .search-result-card .search-row-slide-out.active {
+    top: 0;
+  }
+
+  .search-result-card .slide-out-button {
+    font-size: 0.85em;
+    padding: 8px 12px;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    text-align: center;
+    margin: 2px 0;
+    white-space: normal;
+    word-break: break-word;
+    flex-shrink: 0;
+  }
+
+  .search-result-card .slide-out-close {
+    margin: 8px 0 4px 0;
+    flex-shrink: 0;
+  }
+
+  .search-sheet-result:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .search-sheet-thumb,
+  .entity-options-search-thumb,
+  .entity-options-search-thumb-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: var(--yamp-artwork-fit, cover);
+    margin-right: 15px;
+  }
+
+  .entity-options-search-thumb,
+  .entity-options-search-thumb-placeholder {
+    width: 38px;
+    height: 38px;
+    margin-right: 12px;
+  }
+
+  .search-result-card .search-sheet-thumb,
+  .search-result-card .entity-options-search-thumb,
+  .search-result-card .search-sheet-thumb-placeholder,
+  .search-result-card .entity-options-search-thumb-placeholder {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    margin-right: 0;
+  }
+
+  .search-sheet-thumb-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-result-card .search-sheet-thumb-placeholder {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+  }
+
+  .search-sheet-thumb-container {
+    position: relative;
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .search-result-card .search-sheet-thumb-container {
+    width: 100%;
+  }
+
+  .search-sheet-thumb-container[data-clickable="true"] {
+    cursor: pointer;
+  }
+
+  .card-overlay-buttons {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.2s;
+    border-radius: 8px;
+  }
+
+  .search-sheet-result:hover .card-overlay-buttons {
+    opacity: 1;
+  }
+
+  .icon-only.search-sheet-play, 
+  .icon-only.search-sheet-queue,
+  .icon-only.entity-options-search-play,
+  .icon-only.entity-options-search-queue {
+    background: var(--custom-accent);
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .entity-options-search-thumb,
+  .entity-options-search-thumb-placeholder {
+    object-fit: var(--yamp-artwork-fit, cover);
+    border-radius: 5px;
+  }
+
+  .entity-options-search-thumb-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .entity-options-search-thumb-placeholder ha-icon {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+  }
+
+  .search-sheet-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .search-result-card .search-sheet-info {
+    text-align: center;
+    width: 100%;
+    display: block; /* Original card behavior */
+  }
+
+  .search-sheet-title {
+    flex: 1;
+    color: #fff;
+    font-size: 16px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .search-sheet-subtitle {
+    display: block;
+    color: var(--secondary-text-color, #888);
+    font-size: 0.9em;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .entity-options-search-result:not(.search-result-card) .search-sheet-subtitle {
+    font-size: 0.86em;
+    color: #bbb;
+    line-height: 1.16;
+  }
+
+
+  .search-result-card .search-sheet-info {
+    text-align: center;
+    width: 100%;
+  }
+
+  .search-result-card .search-sheet-title {
+    text-align: center;
+    width: 100%;
+    /* 2-line clamping with word-level breaks */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 14px;
+    line-height: 1.3;
+    min-height: 2.6em; /* Reserve space for 2 lines to keep all cards uniform */
+  }
+
+  .search-result-card .search-sheet-subtitle {
+    text-align: center;
+    width: 100%;
+    /* 2-line clamping with word-level breaks */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 0.85em;
+    line-height: 1.3;
+    min-height: 2.6em; /* Reserve space for 2 lines to keep all cards uniform */
+  }
+
+  .search-sheet-title.browsable,
+  .search-sheet-subtitle.browsable {
+    color: var(--custom-accent) ;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .search-sheet-title.browsable:hover,
+  .search-sheet-subtitle.browsable:hover {
+    text-decoration: underline;
+  }
+
+  .search-sheet-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .search-sheet-play,
+  .search-sheet-queue {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: var(--custom-accent);
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+  }
+
+  .search-sheet-play ha-icon,
+  .search-sheet-queue ha-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .search-sheet-play:hover,
+  .search-sheet-queue:hover {
+    background: #e68900;
+  }
+
+  .search-sheet-queue {
+    background: #4a4a4a;
+    border: 1px solid #666;
+  }
+
+  .search-sheet-queue:hover {
+    background: #5a5a5a;
+    border-color: #777;
+  }
+
+  /* Override styles when match_theme is false - force default colors */
+  .search-sheet[data-match-theme="false"] {
+    background: rgba(0, 0, 0, 0.8) ;
+    
+    /* Define CSS custom properties directly on the search sheet when match_theme is false */
+    --custom-accent: #ff9800 ;
+    --search-overlay-bg: rgba(0, 0, 0, 0.8) ;
+    --search-input-bg: #333 ;
+    --search-input-text: #fff ;
+    --search-text: #fff ;
+    --search-error: #ff6b6b ;
+    --search-success: #4caf50 ;
+    --search-success-bg: rgba(76, 175, 80, 0.95) ;
+    --search-border: rgba(255, 255, 255, 0.1) ;
+    --search-hover-bg: rgba(255, 255, 255, 0.1) ;
+    --search-play-hover: #e68900 ;
+    --search-queue-bg: #4a4a4a ;
+    --search-queue-border: #666 ;
+    --search-queue-hover: #5a5a5a ;
+    --search-queue-hover-border: #777 ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-header input {
+    background: #333 ;
+    color: #fff ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-header button {
+    background: #ff9800 ;
+    color: #fff ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-loading,
+  .search-sheet[data-match-theme="false"] .search-sheet-error,
+  .search-sheet[data-match-theme="false"] .search-sheet-success,
+  .search-sheet[data-match-theme="false"] .search-sheet-empty {
+    color: #fff ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-error {
+    color: #ff6b6b ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-success {
+    color: #4caf50 ;
+    background: rgba(76, 175, 80, 0.95) ;
+    border: 2px solid #4caf50 ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-result {
+    color: #fff ;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-result:hover {
+    background: rgba(255, 255, 255, 0.1) ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-title {
+    color: #fff ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-play {
+    background: var(--custom-accent) ;
+    color: #fff ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-play:hover {
+    background: #e68900 ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-queue {
+    background: #4a4a4a ;
+    color: #fff ;
+    border: 1px solid #666 ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-queue:hover {
+    background: #5a5a5a ;
+    border-color: #777 ;
+  }
+
+  /* Additional overrides for search sheet elements that might inherit theme colors */
+  .search-sheet[data-match-theme="false"] .clickable-search-result {
+    color: #ff9800 ;
+  }
+
+  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
+    color: #fff ;
+  }
+
+  /* Override the base clickable-search-result styles when match_theme is false */
+  .search-sheet[data-match-theme="false"] .clickable-search-result,
+  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
+    color: #ff9800 ;
+  }
+
+  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
+    color: #fff ;
+  }
+
+  /* Override any other elements that might be using theme variables */
+  .search-sheet[data-match-theme="false"] * {
+    color: #fff ;
+  }
+
+  .search-sheet[data-match-theme="false"] .clickable-search-result {
+    color: #ff9800 ;
+  }
+
+  .search-sheet[data-match-theme="false"] .search-sheet-play,
+  .search-sheet[data-match-theme="false"] .search-sheet-queue {
+    color: #fff ;
+  }
+
+  /* Force all text to be white when match_theme is false */
+  .search-sheet[data-match-theme="false"] .search-sheet-title,
+  .search-sheet[data-match-theme="false"] .search-sheet-loading,
+  .search-sheet[data-match-theme="false"] .search-sheet-empty {
+    color: #fff ;
+  }
+
+  /* Nuclear option: Override ALL elements that might be using --custom-accent or theme colors */
+  .search-sheet[data-match-theme="false"] *[style*="color"] {
+    color: #fff ;
+  }
+
+  .search-sheet[data-match-theme="false"] *[style*="background"] {
+    background: rgba(0, 0, 0, 0.8) ;
+  }
+
+  /* Force override any CSS custom properties that might be inherited */
+  .search-sheet[data-match-theme="false"] {
+    --custom-accent: #ff9800 ;
+    --accent-color: #ff9800 ;
+    --primary-color: #ff9800 ;
+    --ha-accent-color: #ff9800 ;
+  }
+
+  /* Also redefine --custom-accent locally in the search sheet, just like entity-options-resolved-entities does */
+  .search-sheet[data-match-theme="false"] {
+    --custom-accent: #ff9800 ;
+  }
+
+  /* Also override at the root level when match_theme is false */
+  yet-another-media-player[data-match-theme="false"] {
+    --custom-accent: #ff9800 ;
+    --accent-color: #ff9800 ;
+    --primary-color: #ff9800 ;
+    --ha-accent-color: #ff9800 ;
+  }
+
+  /* Override any elements that might be using CSS custom properties */
+  .search-sheet[data-match-theme="false"] .search-sheet-play,
+  .search-sheet[data-match-theme="false"] .search-sheet-header button,
+  .search-sheet[data-match-theme="false"] *[style*="background: var(--custom-accent)"],
+  .search-sheet[data-match-theme="false"] *[style*="background: var(--accent-color)"],
+  .search-sheet[data-match-theme="false"] *[style*="background: var(--primary-color)"] {
+    background: #ff9800 ;
+    color: #fff ;
+  }
+
+  /* Override any elements that might be using CSS custom properties for color */
+  .search-sheet[data-match-theme="false"] *[style*="color: var(--custom-accent)"],
+  .search-sheet[data-match-theme="false"] *[style*="color: var(--accent-color)"],
+  .search-sheet[data-match-theme="false"] *[style*="color: var(--primary-color)"] {
+    color: #ff9800 ;
+  }
+
+  /* ============================================
+     Card Trigger Gesture Feedback Animations
+     ============================================ */
+
+  /* Base container for gesture feedback - positioned relative to tap area */
+  .gesture-feedback-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+  }
+
+  /* Base styles for ripple effect */
+  .gesture-ripple {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+
+  /* Tap: Quick expanding ripple */
+  @keyframes gestureTapRipple {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0.6;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0;
+    }
+  }
+
+  .gesture-ripple.tap {
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+    animation: gestureTapRipple 0.4s ease-out forwards;
+  }
+
+  /* Double-tap: Two rapid pulses */
+  @keyframes gestureDoubleTapRipple {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0.5;
+    }
+    25% {
+      transform: translate(-50%, -50%) scale(0.6);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(0.3);
+      opacity: 0.5;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0;
+    }
+  }
+
+  .gesture-ripple.double_tap {
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+    animation: gestureDoubleTapRipple 0.5s ease-out forwards;
+  }
+
+  /* Hold: Slower glowing pulse */
+  @keyframes gestureHoldPulse {
+    0% {
+      transform: translate(-50%, -50%) scale(0.2);
+      opacity: 0;
+      box-shadow: 0 0 0 0 rgba(255,255,255,0.4);
+    }
+    30% {
+      opacity: 0.5;
+      box-shadow: 0 0 20px 10px rgba(255,255,255,0.2);
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.2);
+      opacity: 0;
+      box-shadow: 0 0 40px 20px rgba(255,255,255,0);
+    }
+  }
+
+  .gesture-ripple.hold {
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 70%);
+    animation: gestureHoldPulse 0.6s ease-out forwards;
+  }
+
+  /* Swipe Left: Arrow sweeping left */
+  @keyframes gestureSwipeLeft {
+    0% {
+      transform: translate(0%, -50%) scaleX(0);
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translate(-100%, -50%) scaleX(1);
+      opacity: 0;
+    }
+  }
+
+  .gesture-ripple.swipe_left {
+    width: 120px;
+    height: 60px;
+    border-radius: 30px;
+    background: linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.8) 100%);
+    animation: gestureSwipeLeft 0.35s ease-out forwards;
+    transform-origin: right center;
+  }
+
+  /* Swipe Right: Arrow sweeping right */
+  @keyframes gestureSwipeRight {
+    0% {
+      transform: translate(0%, -50%) scaleX(0);
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translate(100%, -50%) scaleX(1);
+      opacity: 0;
+    }
+  }
+
+  .gesture-ripple.swipe_right {
+    width: 120px;
+    height: 60px;
+    border-radius: 30px;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.8) 100%);
+    animation: gestureSwipeRight 0.35s ease-out forwards;
+    transform-origin: left center;
+  }
+`;
+
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 const playOptions = [{
   mode: 'replace',
   icon: 'mdi:playlist-remove',
@@ -4394,19 +8194,20 @@ async function getMassQueueConfigEntryId(hass) {
 }
 function transformMusicAssistantItem(item) {
   if (!item) return null;
-  return _objectSpread2$1(_objectSpread2$1(_objectSpread2$1({
+  return {
     title: item.name,
     media_content_id: item.uri,
     media_content_type: item.media_type,
     media_class: item.media_type,
-    thumbnail: item.image
-  }, item.artists && {
-    artist: item.artists.map(a => a.name).join(', ')
-  }), item.album && {
-    album: item.album.name
-  }), {}, {
+    thumbnail: item.image,
+    ...(item.artists && {
+      artist: item.artists.map(a => a.name).join(', ')
+    }),
+    ...(item.album && {
+      album: item.album.name
+    }),
     is_browsable: item.media_type === 'artist' || item.media_type === 'album'
-  });
+  };
 }
 
 /**
@@ -4427,7 +8228,136 @@ function transformMusicAssistantItem(item) {
  * @param {boolean} [opts.matchTheme] - Whether to match the theme of the parent.
  * @param {boolean} [opts.disableAutofocus] - Whether to disable search input autofocus.
  */
-function renderSearchSheet(_ref) {
+function renderSearchResultActions(_ref) {
+  let {
+    item,
+    onPlay,
+    onOptionsToggle,
+    upcomingFilterActive = false,
+    isMusicAssistant = false,
+    massQueueAvailable = false,
+    searchView = 'list',
+    isInline = false,
+    onMoveUp,
+    onMoveDown,
+    onMoveNext,
+    onRemove
+  } = _ref;
+  const isQueueItem = !!(upcomingFilterActive && item.queue_item_id && isMusicAssistant && massQueueAvailable);
+  const containerClass = isInline ? 'entity-options-search-buttons' : searchView === 'card' ? 'card-overlay-buttons' : 'search-sheet-buttons';
+  const playClass = isInline ? 'entity-options-search-play' : searchView === 'card' ? 'search-sheet-play icon-only' : 'search-sheet-play';
+  const queueClass = isInline ? 'entity-options-search-queue' : searchView === 'card' ? 'search-sheet-queue icon-only' : 'search-sheet-queue';
+  return x`
+    <div class="${containerClass}">
+      ${isQueueItem && isInline ? x`
+        <div class="queue-controls">
+          <button class="queue-btn queue-btn-up" @click=${() => onMoveUp(item)} title="${localize('search.move_up')}">
+            <ha-icon icon="mdi:chevron-up"></ha-icon>
+          </button>
+          <button class="queue-btn queue-btn-down" @click=${() => onMoveDown(item)} title="${localize('search.move_down')}">
+            <ha-icon icon="mdi:chevron-down"></ha-icon>
+          </button>
+          <button class="queue-btn queue-btn-next" @click=${() => onMoveNext(item)} title="${localize('search.move_next')}">
+            <ha-icon icon="mdi:playlist-play"></ha-icon>
+          </button>
+          <button class="queue-btn queue-btn-remove" @click=${() => onRemove(item)} title="${localize('search.remove')}">
+            <ha-icon icon="mdi:close"></ha-icon>
+          </button>
+        </div>
+      ` : E}
+      <button class="${playClass}" 
+              @click=${() => onPlay(item)} 
+              title="${localize('common.play_now')}">
+        <ha-icon icon="mdi:play"></ha-icon>
+      </button>
+      ${!isQueueItem ? x`
+        <button class="${queueClass}" 
+                @click=${e => {
+    e.preventDefault();
+    e.stopPropagation();
+    onOptionsToggle(item);
+  }} 
+                title="${localize('common.more_options')}">
+          <ha-icon icon="mdi:dots-vertical"></ha-icon>
+        </button>
+      ` : E}
+    </div>
+  `;
+}
+function renderSearchResultSlideOut(_ref2) {
+  let {
+    item,
+    activeSearchRowMenuId,
+    successSearchRowMenuId,
+    onPlayOption,
+    onOptionsToggle,
+    searchView = 'list',
+    isQueueItem = false,
+    onMoveUp,
+    onMoveDown,
+    onMoveNext,
+    onRemove
+  } = _ref2;
+  const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
+  const isSuccess = successSearchRowMenuId === item.media_content_id;
+  return x`
+    <div class="search-row-slide-out ${isActive ? 'active' : ''}">
+      ${isQueueItem && searchView === 'card' ? x`
+        <button class="slide-out-button" @click=${() => {
+    onMoveUp(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.move_up')}">
+          ${localize('search.move_up')}
+        </button>
+        <button class="slide-out-button" @click=${() => {
+    onMoveDown(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.move_down')}">
+          ${localize('search.move_down')}
+        </button>
+        <button class="slide-out-button" @click=${() => {
+    onMoveNext(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.move_next')}">
+          ${localize('search.move_next')}
+        </button>
+        <button class="slide-out-button" @click=${() => {
+    onRemove(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.remove')}">
+          ${localize('search.remove')}
+        </button>
+      ` : x`
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="${localize('search.labels.replace')}">
+          ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
+        </button>
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="${localize('search.labels.next')}">
+          ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
+        </button>
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="${localize('search.labels.replace_next')}">
+          ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
+        </button>
+        <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
+          ${searchView === 'card' ? E : x`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
+        </button>
+      `}
+      <div class="slide-out-close" @click=${e => {
+    e.stopPropagation();
+    onOptionsToggle(null);
+  }}>
+        <ha-icon icon="mdi:close"></ha-icon>
+      </div>
+
+      ${isSuccess ? x`
+        <div class="search-row-success-overlay">
+          <span>✅</span>
+          <span>${localize('search.added')}</span>
+        </div>
+      ` : E}
+    </div>
+  `;
+}
+function renderSearchSheet(_ref3) {
   let {
     open,
     query,
@@ -4449,26 +8379,156 @@ function renderSearchSheet(_ref) {
     successSearchRowMenuId,
     onOptionsToggle,
     onPlayOption,
-    onResultClick
-  } = _ref;
+    onResultClick,
+    searchView = 'list',
+    searchCardColumns = 4,
+    massQueueAvailable = false,
+    onMoveUp,
+    onMoveDown,
+    onMoveNext,
+    onRemove
+  } = _ref3;
   if (!open) return E;
-  return x(_templateObject$3 || (_templateObject$3 = _taggedTemplateLiteral(["\n    <div class=\"search-sheet\" data-match-theme=\"", "\">\n      <div class=\"search-sheet-header\">\n        <input\n          type=\"text\"\n          .value=", "\n          @input=", "\n          placeholder=\"", "\"\n          ?autofocus=", "\n        />\n        <button @click=", " ?disabled=", ">", "</button>\n        <button @click=", " title=\"", "\">\u2715</button>\n      </div>\n      ", "\n      ", "\n      <div class=\"search-sheet-results\">\n        ", "\n      </div>\n    </div>\n  "])), matchTheme, query || "", onQueryInput, localize('editor.placeholders.search'), !disableAutofocus, onSearch, loading || !query, localize('common.search'), onClose, localize('search.close'), loading ? x(_templateObject2$3 || (_templateObject2$3 = _taggedTemplateLiteral(["<div class=\"search-sheet-loading\">", "</div>"])), localize('common.loading')) : E, error ? x(_templateObject3$2 || (_templateObject3$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-error\">", "</div>"])), error) : E, (results || []).length === 0 && !loading ? x(_templateObject4$2 || (_templateObject4$2 = _taggedTemplateLiteral(["<div class=\"search-sheet-empty\">", "</div>"])), localize('common.no_results')) : (results || []).map(item => x(_templateObject5$2 || (_templateObject5$2 = _taggedTemplateLiteral(["\n                <div class=\"search-sheet-result\" style=\"position:relative;overflow:hidden;\">\n                  ", "\n                  <div style=\"flex:1;min-width:0;\">\n                    <span \n                      class=\"search-sheet-title ", "\" \n                      @click=", "\n                    >\n                      ", "\n                    </span>\n                    ", "\n                  </div>\n                  <div class=\"search-sheet-buttons\">\n                    <button class=\"search-sheet-play\" @click=", " title=\"", "\">\n                      <ha-icon icon=\"mdi:play\"></ha-icon>\n                    </button>\n                    ", "\n                  </div>\n                  \n                  <!-- SLIDE-OUT MENU -->\n                  <div class=\"search-row-slide-out ", "\">\n                    <button class=\"slide-out-button\" @click=", " title=\"Replace existing queue and play now\">\n                      <ha-icon icon=\"mdi:playlist-remove\"></ha-icon> Replace\n                    </button>\n                    <button class=\"slide-out-button\" @click=", " title=\"Play next\">\n                      <ha-icon icon=\"mdi:playlist-play\"></ha-icon> Next\n                    </button>\n                    <button class=\"slide-out-button\" @click=", " title=\"Replace queue\">\n                      <ha-icon icon=\"mdi:playlist-music\"></ha-icon> Replace Next\n                    </button>\n                    <button class=\"slide-out-button\" @click=", " title=\"Add to the end of the queue\">\n                      <ha-icon icon=\"mdi:playlist-plus\"></ha-icon> Add\n                    </button>\n                    <div class=\"slide-out-close\" @click=", ">\n                      <ha-icon icon=\"mdi:close\"></ha-icon>\n                    </div>\n\n                    ", "\n                  </div>\n                </div>\n              "])), item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject6$2 || (_templateObject6$2 = _taggedTemplateLiteral(["\n                    <img\n                      class=\"search-sheet-thumb\"\n                      src=", "\n                      alt=", "\n                      onerror=\"this.style.display='none'\"\n                    />\n                  "])), item.thumbnail, item.title) : x(_templateObject7$2 || (_templateObject7$2 = _taggedTemplateLiteral(["\n                    <div class=\"search-sheet-thumb-placeholder\">\n                      <ha-icon icon=\"mdi:music\"></ha-icon>\n                    </div>\n                  "]))), item.is_browsable ? 'browsable' : '', () => item.is_browsable && onResultClick && onResultClick(item), item.title, item.artist ? x(_templateObject8$2 || (_templateObject8$2 = _taggedTemplateLiteral(["\n                      <span \n                        class=\"search-sheet-subtitle ", "\" \n                        @click=", "\n                      >\n                        ", "\n                      </span>\n                    "])), item.is_browsable ? 'browsable' : '', () => item.is_browsable && onResultClick && onResultClick(item), item.artist) : E, () => onPlay(item), localize('common.play_now'), !(upcomingFilterActive && item.queue_item_id) ? x(_templateObject9$2 || (_templateObject9$2 = _taggedTemplateLiteral(["\n                      <button class=\"search-sheet-queue\" @click=", " title=\"", "\">\n                        <ha-icon icon=\"mdi:dots-vertical\"></ha-icon>\n                      </button>\n                    "])), e => {
-    e.preventDefault();
-    e.stopPropagation();
-    onOptionsToggle(item);
-  }, localize('common.more_options')) : E, activeSearchRowMenuId === item.media_content_id ? 'active' : '', () => onPlayOption(item, 'replace'), () => onPlayOption(item, 'next'), () => onPlayOption(item, 'replace_next'), () => onPlayOption(item, 'add'), e => {
-    e.stopPropagation();
-    onOptionsToggle(null);
-  }, successSearchRowMenuId === item.media_content_id ? x(_templateObject0$2 || (_templateObject0$2 = _taggedTemplateLiteral(["\n                      <div class=\"search-row-success-overlay\">\n                        \u2705 Added to queue!\n                      </div>\n                    "]))) : E)));
+  return x`
+    <div class="search-sheet" data-match-theme="${matchTheme}" data-card-view="${searchView === 'card'}">
+      <div class="search-sheet-header">
+        <input
+          type="text"
+          .value=${query || ""}
+          @input=${onQueryInput}
+          placeholder="${localize('editor.placeholders.search')}"
+          ?autofocus=${!disableAutofocus}
+        />
+        <button @click=${onSearch} ?disabled=${loading || !query}>${localize('common.search')}</button>
+        <button @click=${onClose} title="${localize('search.close')}">✕</button>
+      </div>
+      ${loading ? x`<div class="search-sheet-loading">${localize('common.loading')}</div>` : E}
+      ${error ? x`<div class="search-sheet-error">${error}</div>` : E}
+      <div class="search-sheet-results ${searchView === 'card' ? 'search-results-card-view' : 'list-view'}">
+        ${(results || []).length === 0 && !loading ? x`<div class="search-sheet-empty">${localize('common.no_results')}</div>` : (results || []).map(item => {
+    const isMA = isMusicAssistantEntity(item.media_content_id);
+    // For now we assume massQueue functionality is available if it's MA 
+    // (matching simplified search-sheet logic)
+    return x`
+                <div class="search-sheet-result ${searchView === 'card' ? 'search-result-card' : ''}">
+                  <div class="search-sheet-thumb-container" 
+                       data-clickable="${searchView === 'card'}"
+                       @click=${searchView === 'card' ? () => onPlay(item) : null}>
+                    ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? x`
+                      <img
+                        class="search-sheet-thumb"
+                        src=${item.thumbnail}
+                        alt=${item.title}
+                        onerror="this.style.display='none'"
+                      />
+                    ` : x`
+                      <div class="search-sheet-thumb-placeholder">
+                        <ha-icon icon="mdi:music"></ha-icon>
+                      </div>
+                    `}
+                    ${searchView === 'card' ? renderSearchResultActions({
+      item,
+      onPlay,
+      onOptionsToggle,
+      upcomingFilterActive,
+      isMusicAssistant: isMA,
+      massQueueAvailable,
+      searchView: 'card',
+      onMoveUp,
+      onMoveDown,
+      onMoveNext,
+      onRemove
+    }) : E}
+                  </div>
+                  <div class="search-sheet-info">
+                    <span 
+                      class="search-sheet-title ${item.is_browsable ? 'browsable' : ''}" 
+                      @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
+                    >
+                      ${item.title}
+                    </span>
+                    ${item.artist ? x`
+                      <span 
+                        class="search-sheet-subtitle ${item.is_browsable ? 'browsable' : ''}" 
+                        @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
+                      >
+                        ${item.artist}
+                      </span>
+                    ` : E}
+                    ${searchView === 'card' ? x`
+                      <div class="card-menu-button" @click=${e => {
+      e.preventDefault();
+      e.stopPropagation();
+      onOptionsToggle(item);
+    }}>
+                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                      </div>
+                    ` : E}
+                  </div>
+                  ${searchView !== 'card' ? renderSearchResultActions({
+      item,
+      onPlay,
+      onOptionsToggle,
+      upcomingFilterActive,
+      isMusicAssistant: isMA,
+      massQueueAvailable,
+      searchView: 'list',
+      isInline: true,
+      onMoveUp,
+      onMoveDown,
+      onMoveNext,
+      onRemove
+    }) : E}
+                  
+                  ${renderSearchResultSlideOut({
+      item,
+      activeSearchRowMenuId,
+      successSearchRowMenuId,
+      onPlayOption,
+      onOptionsToggle,
+      searchView,
+      isQueueItem: isMA && item.queue_item_id && upcomingFilterActive && massQueueAvailable,
+      onMoveUp,
+      onMoveDown,
+      onMoveNext,
+      onRemove
+    })}
+                </div>
+              `;
+  })}
+      </div>
+    </div>
+  `;
 }
-function renderSearchOptionsOverlay(_ref2) {
+function renderSearchOptionsOverlay(_ref4) {
   let {
     item,
     onClose,
     onPlayOption
-  } = _ref2;
+  } = _ref4;
   if (!item) return E;
-  return x(_templateObject1$2 || (_templateObject1$2 = _taggedTemplateLiteral(["\n    <div class=\"entity-options-overlay entity-options-overlay-opening\" @click=", ">\n      <div class=\"entity-options-container entity-options-sheet-opening\" @click=", ">\n        <div class=\"entity-options-sheet\">\n          <div class=\"entity-options-title\">", "</div>\n          \n          ", "\n          \n          <div class=\"entity-options-divider\"></div>\n          \n          <button class=\"entity-options-item close-item\" @click=", ">\n            Cancel\n          </button>\n        </div>\n      </div>\n    </div>\n  "])), onClose, e => e.stopPropagation(), item.title, playOptions.map(option => x(_templateObject10$2 || (_templateObject10$2 = _taggedTemplateLiteral(["\n            <button class=\"entity-options-item menu-action-item\" @click=", ">\n              <ha-icon class=\"menu-action-icon\" .icon=", "></ha-icon>\n              <span class=\"menu-action-label\">", "</span>\n            </button>\n          "])), () => onPlayOption(item, option.mode), option.icon, option.label)), onClose);
+  return x`
+    <div class="entity-options-overlay entity-options-overlay-opening" @click=${onClose}>
+      <div class="entity-options-container entity-options-sheet-opening" @click=${e => e.stopPropagation()}>
+        <div class="entity-options-sheet">
+          <div class="entity-options-title">${item.title}</div>
+          
+          ${playOptions.map(option => x`
+            <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
+              <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
+              <span class="menu-action-label">${option.label}</span>
+            </button>
+          `)}
+          
+          <div class="entity-options-divider"></div>
+          
+          <button class="entity-options-item close-item" @click=${onClose}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // Service helpers to keep search-related logic colocated with the search UI module
@@ -4522,7 +8582,7 @@ async function searchMedia(hass, entityId, query) {
         // Validate media type strictly
         const allowedMediaTypes = ['artist', 'album', 'track', 'playlist', 'radio', 'audiobook', 'podcast'];
         if (!allowedMediaTypes.includes(mediaType)) {
-          console.warn("yamp: Unsupported media type for browsing: ".concat(mediaType, ". Skipping get_library call."));
+          console.warn(`yamp: Unsupported media type for browsing: ${mediaType}. Skipping get_library call.`);
           return {
             results: [],
             usedMusicAssistant: true
@@ -4593,8 +8653,8 @@ async function searchMedia(hass, entityId, query) {
       if (response) {
         // Convert grouped results to flat array and transform to expected format
         const flatResults = [];
-        Object.entries(response).forEach(_ref3 => {
-          let [mediaType, items] = _ref3;
+        Object.entries(response).forEach(_ref5 => {
+          let [mediaType, items] = _ref5;
           if (Array.isArray(items)) {
             items.forEach(item => {
               const transformedItem = transformMusicAssistantItem(item);
@@ -4866,7 +8926,7 @@ async function isTrackFavorited(hass, mediaContentId) {
         if (searchItems.length) {
           const idPart = (mediaContentId.split('/').pop() || '').trim();
           const byUri = searchItems.find(it => (it === null || it === void 0 ? void 0 : it.uri) === mediaContentId);
-          const byId = !byUri && /^\d+$/.test(idPart) ? searchItems.find(it => typeof (it === null || it === void 0 ? void 0 : it.uri) === 'string' && it.uri.endsWith("/".concat(idPart))) : null;
+          const byId = !byUri && /^\d+$/.test(idPart) ? searchItems.find(it => typeof (it === null || it === void 0 ? void 0 : it.uri) === 'string' && it.uri.endsWith(`/${idPart}`)) : null;
           const foundItem = byUri || byId || null;
           if (foundItem && typeof foundItem.favorite === 'boolean') {
             return !!foundItem.favorite;
@@ -10700,7 +14760,8 @@ _extends(Remove, {
 Sortable.mount(new AutoScrollPlugin());
 Sortable.mount(Remove, Revert);
 
-var _templateObject$2, _templateObject2$2;
+// import { LitElement, html, css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm";
 class YampSortable extends i$2 {
   static get properties() {
     return {
@@ -10716,7 +14777,38 @@ class YampSortable extends i$2 {
     };
   }
   static get styles() {
-    return i$5(_templateObject$2 || (_templateObject$2 = _taggedTemplateLiteral(["\n      :host {\n        display: block;\n      }\n      .sortable-fallback {\n        display: none !important;\n        visibility: hidden !important;\n        opacity: 0 !important;\n        pointer-events: none !important;\n      }\n      .sortable-ghost {\n        box-shadow: 0 0 0 2px var(--primary-color);\n        background: rgba(var(--rgb-primary-color), 0.25);\n        border-radius: 4px;\n        opacity: 0.4;\n      }\n      .sortable-drag {\n        border-radius: 4px;\n        opacity: 1;\n        background: var(--card-background-color);\n        box-shadow: 0px 4px 8px 3px #00000026;\n        cursor: grabbing;\n      }\n      /* Hide any fallback elements that might appear (mobile fix)*/\n      .sortable-fallback,\n      .sortable-fallback * {\n        display: none !important;\n        visibility: hidden !important;\n        opacity: 0 !important;\n        pointer-events: none !important;\n      }\n    "])));
+    return i$5`
+      :host {
+        display: block;
+      }
+      .sortable-fallback {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      .sortable-ghost {
+        box-shadow: 0 0 0 2px var(--primary-color);
+        background: rgba(var(--rgb-primary-color), 0.25);
+        border-radius: 4px;
+        opacity: 0.4;
+      }
+      .sortable-drag {
+        border-radius: 4px;
+        opacity: 1;
+        background: var(--card-background-color);
+        box-shadow: 0px 4px 8px 3px #00000026;
+        cursor: grabbing;
+      }
+      /* Hide any fallback elements that might appear (mobile fix)*/
+      .sortable-fallback,
+      .sortable-fallback * {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+    `;
   }
   constructor() {
     super();
@@ -10729,7 +14821,9 @@ class YampSortable extends i$2 {
     return this;
   }
   render() {
-    return x(_templateObject2$2 || (_templateObject2$2 = _taggedTemplateLiteral(["\n      <slot></slot>\n    "])));
+    return x`
+      <slot></slot>
+    `;
   }
   connectedCallback() {
     super.connectedCallback();
@@ -10822,7 +14916,8 @@ class YampSortable extends i$2 {
 }
 customElements.define("yamp-sortable", YampSortable);
 
-var _templateObject$1, _templateObject2$1, _templateObject3$1, _templateObject4$1, _templateObject5$1, _templateObject6$1, _templateObject7$1, _templateObject8$1, _templateObject9$1, _templateObject0$1, _templateObject1$1, _templateObject10$1, _templateObject11$1, _templateObject12$1, _templateObject13$1, _templateObject14$1, _templateObject15$1, _templateObject16$1, _templateObject17$1, _templateObject18$1, _templateObject19$1, _templateObject20$1, _templateObject21$1, _templateObject22$1, _templateObject23$1, _templateObject24$1, _templateObject25$1, _templateObject26$1, _templateObject27$1, _templateObject28$1, _templateObject29$1, _templateObject30$1, _templateObject31$1, _templateObject32$1, _templateObject33$1, _templateObject34$1, _templateObject35$1, _templateObject36$1, _templateObject37$1, _templateObject38$1, _templateObject39$1, _templateObject40$1, _templateObject41$1, _templateObject42$1, _templateObject43$1, _templateObject44$1;
+// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+// import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([{
   value: "details",
   label: localize('card.sections.details')
@@ -10901,7 +14996,6 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     if (!Array.isArray(overrides)) return [];
     const matchKeys = ["media_title", "media_artist", "media_album_name", "media_content_id", "media_channel", "app_name", "media_content_type", "entity_id"];
     return overrides.map(item => {
-      var _item$image_url;
       if (!item || typeof item !== "object") {
         return {
           match_type: "media_title",
@@ -10913,11 +15007,10 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       }
       const sizePercentage = item.size_percentage;
       if (item.missing_art_url !== undefined) {
-        var _item$missing_art_url;
         return {
           match_type: "missing_art",
           match_value: "",
-          image_url: (_item$missing_art_url = item.missing_art_url) !== null && _item$missing_art_url !== void 0 ? _item$missing_art_url : "",
+          image_url: item.missing_art_url ?? "",
           size_percentage: sizePercentage,
           object_fit: item.object_fit
         };
@@ -10926,53 +15019,54 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       let matchValue = "";
       for (const key of matchKeys) {
         if (item[key] !== undefined) {
-          var _item$key;
           matchType = key;
-          matchValue = (_item$key = item[key]) !== null && _item$key !== void 0 ? _item$key : "";
+          matchValue = item[key] ?? "";
           break;
         }
-        const legacyKey = "".concat(key, "_equals");
+        const legacyKey = `${key}_equals`;
         if (item[legacyKey] !== undefined) {
-          var _item$legacyKey;
           matchType = key;
-          matchValue = (_item$legacyKey = item[legacyKey]) !== null && _item$legacyKey !== void 0 ? _item$legacyKey : "";
+          matchValue = item[legacyKey] ?? "";
           break;
         }
       }
       return {
         match_type: matchType,
-        match_value: matchValue !== null && matchValue !== void 0 ? matchValue : "",
-        image_url: (_item$image_url = item.image_url) !== null && _item$image_url !== void 0 ? _item$image_url : "",
+        match_value: matchValue ?? "",
+        image_url: item.image_url ?? "",
         size_percentage: sizePercentage,
         object_fit: item.object_fit
       };
     });
   }
   _serializeArtworkOverride(rule) {
-    var _rule$image_url, _rule$match_value;
     if (!rule) return null;
-    const image = ((_rule$image_url = rule.image_url) !== null && _rule$image_url !== void 0 ? _rule$image_url : "").trim();
+    const image = (rule.image_url ?? "").trim();
     if (!image) return null;
     const objectFit = rule.object_fit === "default" ? undefined : rule.object_fit;
     if (rule.match_type === "missing_art") {
-      return _objectSpread2$1(_objectSpread2$1({
-        missing_art_url: image
-      }, rule.size_percentage !== undefined ? {
-        size_percentage: Number(rule.size_percentage)
-      } : {}), objectFit !== undefined ? {
-        object_fit: objectFit
-      } : {});
+      return {
+        missing_art_url: image,
+        ...(rule.size_percentage !== undefined ? {
+          size_percentage: Number(rule.size_percentage)
+        } : {}),
+        ...(objectFit !== undefined ? {
+          object_fit: objectFit
+        } : {})
+      };
     }
-    const value = ((_rule$match_value = rule.match_value) !== null && _rule$match_value !== void 0 ? _rule$match_value : "").trim();
+    const value = (rule.match_value ?? "").trim();
     if (!value) return null;
-    return _objectSpread2$1(_objectSpread2$1({
+    return {
       image_url: image,
-      [rule.match_type]: value
-    }, rule.size_percentage !== undefined ? {
-      size_percentage: Number(rule.size_percentage)
-    } : {}), objectFit !== undefined ? {
-      object_fit: objectFit
-    } : {});
+      [rule.match_type]: value,
+      ...(rule.size_percentage !== undefined ? {
+        size_percentage: Number(rule.size_percentage)
+      } : {}),
+      ...(objectFit !== undefined ? {
+        object_fit: objectFit
+      } : {})
+    };
   }
   _writeArtworkOverrides(list) {
     this._artworkOverrides = list;
@@ -10985,8 +15079,8 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     return Object.entries(this.hass.services).flatMap(_ref => {
       let [domain, services] = _ref;
       return Object.keys(services).map(svc => ({
-        label: "".concat(domain, ".").concat(svc),
-        value: "".concat(domain, ".").concat(svc)
+        label: `${domain}.${svc}`,
+        value: `${domain}.${svc}`
       }));
     });
   }
@@ -11022,7 +15116,17 @@ class YetAnotherMediaPlayerEditor extends i$2 {
   }
   _entityRowRenderer(item) {
     var _this$hass5;
-    return x(_templateObject$1 || (_templateObject$1 = _taggedTemplateLiteral(["\n      <ha-list-item twoline graphic=\"icon\">\n        <ha-state-icon\n          slot=\"graphic\"\n          .hass=", "\n          .stateObj=", "\n        ></ha-state-icon>\n        <span>", "</span>\n        <span slot=\"secondary\">", "</span>\n      </ha-list-item>\n    "])), this.hass, (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[item.id], item.primary, item.secondary);
+    return x`
+      <ha-list-item twoline graphic="icon">
+        <ha-state-icon
+          slot="graphic"
+          .hass=${this.hass}
+          .stateObj=${(_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[item.id]}
+        ></ha-state-icon>
+        <span>${item.primary}</span>
+        <span slot="secondary">${item.secondary}</span>
+      </ha-list-item>
+    `;
   }
   _getAdaptiveTextTargetsValue() {
     var _this$_config, _this$_config2;
@@ -11044,20 +15148,21 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     return typeof val === "string" && /^[a-z_]+\.[a-zA-Z0-9_]+$/.test(val.trim());
   }
   setConfig(config) {
-    var _config$entities;
-    const rawEntities = (_config$entities = config.entities) !== null && _config$entities !== void 0 ? _config$entities : [];
+    const rawEntities = config.entities ?? [];
     const normalizedEntities = rawEntities.map(e => typeof e === "string" ? {
       entity_id: e
     } : e);
-    this._config = _objectSpread2$1(_objectSpread2$1({}, config), {}, {
+    this._config = {
+      ...config,
       entities: normalizedEntities
-    });
+    };
     this._artworkOverrides = this._normalizeArtworkOverrides(config.media_artwork_overrides);
   }
   _updateConfig(key, value) {
-    const newConfig = _objectSpread2$1(_objectSpread2$1({}, this._config), {}, {
+    const newConfig = {
+      ...this._config,
       [key]: value
-    });
+    };
     this._config = newConfig;
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: {
@@ -11068,8 +15173,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }));
   }
   _addArtworkOverride() {
-    var _this$_artworkOverrid;
-    const list = [...((_this$_artworkOverrid = this._artworkOverrides) !== null && _this$_artworkOverrid !== void 0 ? _this$_artworkOverrid : [])];
+    const list = [...(this._artworkOverrides ?? [])];
     list.push({
       match_type: "media_title",
       match_value: "",
@@ -11080,20 +15184,19 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     this._writeArtworkOverrides(list);
   }
   _removeArtworkOverride(index) {
-    var _this$_artworkOverrid2;
-    const list = [...((_this$_artworkOverrid2 = this._artworkOverrides) !== null && _this$_artworkOverrid2 !== void 0 ? _this$_artworkOverrid2 : [])];
+    const list = [...(this._artworkOverrides ?? [])];
     if (index < 0 || index >= list.length) return;
     list.splice(index, 1);
     this._writeArtworkOverrides(list);
   }
   _onArtworkMatchTypeChange(index, newType) {
-    var _this$_artworkOverrid3;
     if (!newType) return;
-    const list = [...((_this$_artworkOverrid3 = this._artworkOverrides) !== null && _this$_artworkOverrid3 !== void 0 ? _this$_artworkOverrid3 : [])];
+    const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
-    const updated = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+    const updated = {
+      ...list[index],
       match_type: newType
-    });
+    };
     if (newType === "missing_art") {
       updated.match_value = "";
     }
@@ -11101,37 +15204,38 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     this._writeArtworkOverrides(list);
   }
   _onArtworkMatchValueChange(index, value) {
-    var _this$_artworkOverrid4;
-    const list = [...((_this$_artworkOverrid4 = this._artworkOverrides) !== null && _this$_artworkOverrid4 !== void 0 ? _this$_artworkOverrid4 : [])];
+    const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
-    list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+    list[index] = {
+      ...list[index],
       match_value: value
-    });
+    };
     this._writeArtworkOverrides(list);
   }
   _onArtworkImageUrlChange(index, value) {
-    var _this$_artworkOverrid5;
-    const list = [...((_this$_artworkOverrid5 = this._artworkOverrides) !== null && _this$_artworkOverrid5 !== void 0 ? _this$_artworkOverrid5 : [])];
+    const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
-    list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+    list[index] = {
+      ...list[index],
       image_url: value
-    });
+    };
     this._writeArtworkOverrides(list);
   }
   _onArtworkSizePercentageChange(index, value) {
-    var _this$_artworkOverrid6;
-    const list = [...((_this$_artworkOverrid6 = this._artworkOverrides) !== null && _this$_artworkOverrid6 !== void 0 ? _this$_artworkOverrid6 : [])];
+    const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
     if (value === "") {
-      list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+      list[index] = {
+        ...list[index],
         size_percentage: undefined
-      });
+      };
     } else {
       const num = Number(value);
       if (Number.isFinite(num)) {
-        list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+        list[index] = {
+          ...list[index],
           size_percentage: num
-        });
+        };
       } else {
         return; // Ignore invalid numeric input
       }
@@ -11139,22 +15243,21 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     this._writeArtworkOverrides(list);
   }
   _onArtworkObjectFitChange(index, value) {
-    var _this$_artworkOverrid7;
-    const list = [...((_this$_artworkOverrid7 = this._artworkOverrides) !== null && _this$_artworkOverrid7 !== void 0 ? _this$_artworkOverrid7 : [])];
+    const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
     const finalValue = value === "default" ? undefined : value;
-    list[index] = _objectSpread2$1(_objectSpread2$1({}, list[index]), {}, {
+    list[index] = {
+      ...list[index],
       object_fit: finalValue
-    });
+    };
     this._writeArtworkOverrides(list);
   }
   _onArtworkMoved(e) {
-    var _e$detail, _this$_artworkOverrid8;
     const {
       oldIndex,
       newIndex
-    } = (_e$detail = e.detail) !== null && _e$detail !== void 0 ? _e$detail : {};
-    const list = [...((_this$_artworkOverrid8 = this._artworkOverrides) !== null && _this$_artworkOverrid8 !== void 0 ? _this$_artworkOverrid8 : [])];
+    } = e.detail ?? {};
+    const list = [...(this._artworkOverrides ?? [])];
     if (oldIndex === undefined || newIndex === undefined) return;
     if (oldIndex < 0 || newIndex < 0 || oldIndex >= list.length || newIndex >= list.length) return;
     const [moved] = list.splice(oldIndex, 1);
@@ -11162,34 +15265,35 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     this._writeArtworkOverrides(list);
   }
   _updateEntityProperty(key, value) {
-    var _this$_config$entitie;
-    const entities = [...((_this$_config$entitie = this._config.entities) !== null && _this$_config$entitie !== void 0 ? _this$_config$entitie : [])];
+    const entities = [...(this._config.entities ?? [])];
     const idx = this._entityEditorIndex;
     if (entities[idx]) {
-      entities[idx] = _objectSpread2$1(_objectSpread2$1({}, entities[idx]), {}, {
+      entities[idx] = {
+        ...entities[idx],
         [key]: value
-      });
+      };
       this._updateConfig("entities", entities);
     }
   }
   _updateActionProperty(key, value) {
-    var _this$_config$actions;
-    const actions = [...((_this$_config$actions = this._config.actions) !== null && _this$_config$actions !== void 0 ? _this$_config$actions : [])];
+    const actions = [...(this._config.actions ?? [])];
     const idx = this._actionEditorIndex;
     if (actions[idx]) {
       // Enforce single trigger per gesture (Tap, Hold, Double Tap)
       if (key === "card_trigger" && value && value !== "none") {
         actions.forEach((act, i) => {
           if (i !== idx && act.card_trigger === value) {
-            actions[i] = _objectSpread2$1(_objectSpread2$1({}, act), {}, {
+            actions[i] = {
+              ...act,
               card_trigger: "none"
-            });
+            };
           }
         });
       }
-      const newAction = _objectSpread2$1(_objectSpread2$1({}, actions[idx]), {}, {
+      const newAction = {
+        ...actions[idx],
         [key]: value
-      });
+      };
 
       // If we're setting in_menu, remove the legacy placement property
       if (key === "in_menu") {
@@ -11208,30 +15312,397 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     return "service";
   }
   static get styles() {
-    return i$5(_templateObject2$1 || (_templateObject2$1 = _taggedTemplateLiteral(["\n        .form-row {\n          padding: 12px 16px;\n          gap: 8px;\n        }\n        .tabs {\n          display: flex;\n          gap: 4px;\n          padding: 8px 8px 0 8px;\n          border-bottom: 1px solid var(--divider-color, #444);\n          overflow-x: auto;\n          scrollbar-width: none;\n        }\n        .tabs::-webkit-scrollbar {\n          display: none;\n        }\n        .tab {\n          background: transparent;\n          border: none;\n          color: var(--primary-text-color, #fff);\n          cursor: pointer;\n          padding: 9px 14px;\n          border-radius: 8px 8px 0 0;\n          font-weight: 500;\n          opacity: 0.85;\n          border-bottom: 3px solid transparent;\n          transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);\n          font-size: 1.06em;\n          flex: 0 0 auto;\n        }\n        \n        \n        .tab:hover {\n          opacity: 1;\n          color: var(--custom-accent, var(--accent-color, #ff9800));\n          background: rgba(255,255,255,0.06);\n        }\n        .tab[selected] {\n          background: rgba(255,255,255,0.10);\n          color: var(--primary-text-color, #fff);\n          opacity: 1;\n          border-bottom-color: var(--custom-accent, var(--accent-color, #ff9800));\n          box-shadow: 0 2px 0 0 var(--custom-accent, var(--accent-color, #ff9800)) inset;\n        }\n        .tab:focus-visible {\n          outline: 2px solid var(--custom-accent, var(--accent-color, #ff9800));\n          outline-offset: 2px;\n        }\n        .tab-content {\n          padding-top: 4px;\n        }\n        /* add to rows with multiple elements to align the elements horizontally */\n        .form-row-multi-column {\n          display: flex;\n          flex-wrap: wrap;\n          gap: 12px;\n        }\n        .form-row-multi-column > div {\n          flex: 1;\n          display: flex;\n          align-items: center;\n          gap: 8px;\n          min-width: 120px;\n        }\n        .form-row-multi-column > div.number-input-with-note {\n          flex-direction: column;\n          align-items: stretch;\n          gap: 4px;\n        }\n        .config-subtitle.warning {\n          color: var(--error-color, #f44336);\n          font-style: normal;\n          margin-top: 6px;\n        }\n        #search-limit-reset {\n          align-self: flex-start;\n          margin-top: 6px;\n        }\n        .config-subtitle {\n          font-size: 0.85em;\n          color: var(--secondary-text-color, #888);\n          margin-top: 4px;\n          line-height: 1.3;\n          font-style: italic;\n        }\n        .form-label {\n          display: block;\n          font-weight: 600;\n          font-size: 0.95em;\n          color: var(--primary-text-color, #fff);\n          margin-bottom: 2px;\n        }\n        .form-row-compact {\n          padding-top: 4px;\n          padding-bottom: 4px;\n        }\n        /* reduced padding for entity selection subrows */\n        .entity-row {\n          padding: 6px;\n        }\n        /* visually isolate grouped controls */\n        .config-section,\n        .entity-group,\n        .action-group {\n          background: var(--yamp-section-bg, var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02))));\n          border: 1px solid var(--yamp-section-border, var(--divider-color, rgba(255,255,255,0.1)));\n          border-radius: var(--yamp-section-radius, 12px);\n          margin: 16px 0;\n          overflow: hidden;\n        }\n        .config-section:first-of-type,\n        .entity-group:first-of-type,\n        .action-group:first-of-type {\n          margin-top: 8px;\n        }\n        .config-section .form-row + .form-row,\n        .entity-group .form-row + .form-row,\n        .action-group .form-row + .form-row {\n          border-top: 1px solid var(--yamp-section-divider, rgba(255,255,255,0.06));\n        }\n        .section-header,\n        .entity-group-header,\n        .action-group-header {\n          display: block;\n          padding: 12px 16px 0 16px;\n          width: 100%;\n        }\n        .section-title,\n        .entity-group-title,\n        .action-group-title {\n          font-size: var(--yamp-section-title-size, 1em);\n          font-weight: var(--yamp-section-title-weight, 600);\n        }\n        .section-description {\n          display: block;\n          align-self: stretch;\n          font-size: var(--yamp-section-description-size, 0.9em);\n          color: var(--yamp-section-description-color, var(--secondary-text-color, #888));\n          margin-top: 2px;\n          line-height: 1.4;\n          width: 100%;\n          box-sizing: border-box;\n          padding-right: 24px;\n          white-space: normal;\n          word-break: break-word;\n          overflow-wrap: anywhere;\n        }\n        /* wraps the entity selector and edit button */\n        .entity-row-inner {\n          display: flex;\n          align-items: center;\n          gap: 8px;\n          padding: 6px;\n          margin: 0px;\n        }\n        /* wraps the action icon, name textbox and edit button */\n        .action-row-inner {\n          display: flex;\n          align-items: flex-start;\n          gap: 8px;\n          padding: 6px;\n          margin: 0px;\n        }\n        .action-row-inner > ha-icon {\n          margin-right: 5px;\n          margin-top: 0px;\n        }\n        /* allow children to fill all available space */\n        .grow-children {\n          flex: 1;\n          display: flex;\n        }\n        .grow-children > * {\n          flex: 1;\n          min-width: 0;\n        }\n        .entity-editor-header, .action-editor-header {\n          display: flex;\n          align-items: center;\n          gap: 12px;\n          padding: 8px;\n        }\n        .entity-editor-title, .action-editor-title {\n          font-weight: 500;\n          font-size: 1.1em;\n          line-height: 1;\n        }\n        .action-icon-placeholder {\n          width: 29px; \n          height: 24px; \n          display: inline-block;\n        }\n        .full-width {\n          width: 100%;\n        }\n        .entity-group-header,\n        .action-group-header {\n          width: 100%;\n        }\n        .entity-group-actions,\n        .action-group-actions {\n          display: flex;\n          align-items: center;\n        }\n        entity-row-actions {\n          display: flex;\n          align-items: center;\n        }\n        .action-row-actions {\n          display: flex;\n          align-items: flex-start;\n        }\n        .handle {\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          width: 24px;\n          height: 24px;\n          cursor: grab;\n          color: var(--secondary-text-color);\n          opacity: 0.7;\n          transition: opacity 0.2s ease;\n        }\n        .handle:hover {\n          opacity: 1;\n        }\n        .handle:active {\n          cursor: grabbing;\n        }\n        .handle-disabled {\n          opacity: 0.3;\n          cursor: default;\n          pointer-events: none;\n        }\n        .handle-disabled:hover {\n          opacity: 0.3;\n        }\n        .action-icon {\n          align-self: flex-start;\n          padding-top: 16px;\n        }\n        .action-handle {\n          align-self: flex-start;\n          padding-top: 18px;\n        }\n        .action-row-actions {\n          padding-top: 2px;\n        }\n        .service-data-editor-header {\n          display: flex;\n          align-items: center;\n          justify-content: space-between;\n          padding-bottom: 4px;\n        }\n        .service-data-editor-title {\n          font-weight: 500;\n        }\n        .service-data-editor-actions {\n          display: flex;\n          gap: 8px;\n        }\n        .code-editor-wrapper.error {\n          border: 1px solid color: var(--error-color, red);\n          border-radius: 4px;\n          padding: 1px;\n        }\n        .yaml-error-message {\n          color: var(--error-color, red);\n          font-size: 14px;\n          margin: 6px;\n          white-space: pre-wrap;\n          font-family: Consolas, Menlo, Monaco, monospace;\n          line-height: 1.4;\n        }\n        .help-table {\n          width: 100%;\n          border-collapse: collapse;\n          margin-top: 8px;\n          font-size: 0.9em;\n        }\n        .help-table th,\n        .help-table td {\n          border: 1px solid var(--divider-color, #444);\n          padding: 8px;\n          text-align: left;\n          vertical-align: top;\n        }\n        .help-table thead {\n          background: var(--card-background-color, #222);\n          font-weight: bold;\n        }\n        .help-title {\n          font-weight: bold;\n          margin-top: 16px;\n          font-size: 1em;\n        }\n        code {\n          font-family: monospace;\n          background: rgba(255, 255, 255, 0.05);\n          padding: 2px 4px;\n          border-radius: 4px;\n        }\n        .help-text pre {\n          margin: 8px 0 0 0;\n          background: rgba(255, 255, 255, 0.05);\n          padding: 8px 12px;\n          border-radius: 8px;\n          font-family: monospace;\n          font-size: 0.92em;\n          white-space: pre-wrap;\n        } \n        .icon-button {\n          display: inline-flex;\n          cursor: pointer;\n          position: relative;\n          transition: color 0.2s;\n          align-self: center;\n          align-items: center;\n          padding: 12px;\n        }\n        .icon-button-compact {\n          padding: 6px;\n        }\n        .icon-button:hover {\n          color: var(--primary-color, #2196f3);\n        }\n        .icon-button-disabled {\n          opacity: 0.4;\n          pointer-events: none;\n        }\n        .icon-button-toggle {\n          opacity: 0.8;\n        }\n        .icon-button-toggle.active {\n          color: var(--custom-accent, var(--accent-color, #ff9800));\n          opacity: 1;\n        }\n        .help-text {\n          padding: 12px 25px;\n        }\n        .add-action-button-wrapper {\n          display: flex;\n          justify-content: center;\n        }\n        .artwork-row .artwork-fields {\n          display: flex;\n          flex-direction: column;\n          gap: 8px;\n          flex: 1;\n        }\n        .config-subtitle.small {\n          font-size: 0.9em;\n          opacity: 0.75;\n          margin: 2px 0 0 0;\n        }\n      "])));
+    return i$5`
+        .form-row {
+          padding: 12px 16px;
+          gap: 8px;
+        }
+        .tabs {
+          display: flex;
+          gap: 4px;
+          padding: 8px 8px 0 8px;
+          border-bottom: 1px solid var(--divider-color, #444);
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .tabs::-webkit-scrollbar {
+          display: none;
+        }
+        .tab {
+          background: transparent;
+          border: none;
+          color: var(--primary-text-color, #fff);
+          cursor: pointer;
+          padding: 9px 14px;
+          border-radius: 8px 8px 0 0;
+          font-weight: 500;
+          opacity: 0.85;
+          border-bottom: 3px solid transparent;
+          transition: color var(--transition, 0.2s), background var(--transition, 0.2s), opacity var(--transition, 0.2s), border-color var(--transition, 0.2s);
+          font-size: 1.06em;
+          flex: 0 0 auto;
+        }
+        
+        
+        .tab:hover {
+          opacity: 1;
+          color: var(--custom-accent, var(--accent-color, #ff9800));
+          background: rgba(255,255,255,0.06);
+        }
+        .tab[selected] {
+          background: rgba(255,255,255,0.10);
+          color: var(--primary-text-color, #fff);
+          opacity: 1;
+          border-bottom-color: var(--custom-accent, var(--accent-color, #ff9800));
+          box-shadow: 0 2px 0 0 var(--custom-accent, var(--accent-color, #ff9800)) inset;
+        }
+        .tab:focus-visible {
+          outline: 2px solid var(--custom-accent, var(--accent-color, #ff9800));
+          outline-offset: 2px;
+        }
+        .tab-content {
+          padding-top: 4px;
+        }
+        /* add to rows with multiple elements to align the elements horizontally */
+        .form-row-multi-column {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .form-row-multi-column > div {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 120px;
+        }
+        .form-row-multi-column > div.number-input-with-note {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 4px;
+        }
+        .config-subtitle.warning {
+          color: var(--error-color, #f44336);
+          font-style: normal;
+          margin-top: 6px;
+        }
+        #search-limit-reset {
+          align-self: flex-start;
+          margin-top: 6px;
+        }
+        .config-subtitle {
+          font-size: 0.85em;
+          color: var(--secondary-text-color, #888);
+          margin-top: 4px;
+          line-height: 1.3;
+          font-style: italic;
+        }
+        .form-label {
+          display: block;
+          font-weight: 600;
+          font-size: 0.95em;
+          color: var(--primary-text-color, #fff);
+          margin-bottom: 2px;
+        }
+        .form-row-compact {
+          padding-top: 4px;
+          padding-bottom: 4px;
+        }
+        /* reduced padding for entity selection subrows */
+        .entity-row {
+          padding: 6px;
+        }
+        /* visually isolate grouped controls */
+        .config-section,
+        .entity-group,
+        .action-group {
+          background: var(--yamp-section-bg, var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02))));
+          border: 1px solid var(--yamp-section-border, var(--divider-color, rgba(255,255,255,0.1)));
+          border-radius: var(--yamp-section-radius, 12px);
+          margin: 16px 0;
+          overflow: hidden;
+        }
+        .config-section:first-of-type,
+        .entity-group:first-of-type,
+        .action-group:first-of-type {
+          margin-top: 8px;
+        }
+        .config-section .form-row + .form-row,
+        .entity-group .form-row + .form-row,
+        .action-group .form-row + .form-row {
+          border-top: 1px solid var(--yamp-section-divider, rgba(255,255,255,0.06));
+        }
+        .section-header,
+        .entity-group-header,
+        .action-group-header {
+          display: block;
+          padding: 12px 16px 0 16px;
+          width: 100%;
+        }
+        .section-title,
+        .entity-group-title,
+        .action-group-title {
+          font-size: var(--yamp-section-title-size, 1em);
+          font-weight: var(--yamp-section-title-weight, 600);
+        }
+        .section-description {
+          display: block;
+          align-self: stretch;
+          font-size: var(--yamp-section-description-size, 0.9em);
+          color: var(--yamp-section-description-color, var(--secondary-text-color, #888));
+          margin-top: 2px;
+          line-height: 1.4;
+          width: 100%;
+          box-sizing: border-box;
+          padding-right: 24px;
+          white-space: normal;
+          word-break: break-word;
+          overflow-wrap: anywhere;
+        }
+        /* wraps the entity selector and edit button */
+        .entity-row-inner {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px;
+          margin: 0px;
+        }
+        /* wraps the action icon, name textbox and edit button */
+        .action-row-inner {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          padding: 6px;
+          margin: 0px;
+        }
+        .action-row-inner > ha-icon {
+          margin-right: 5px;
+          margin-top: 0px;
+        }
+        /* allow children to fill all available space */
+        .grow-children {
+          flex: 1;
+          display: flex;
+        }
+        .grow-children > * {
+          flex: 1;
+          min-width: 0;
+        }
+        .entity-editor-header, .action-editor-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px;
+        }
+        .entity-editor-title, .action-editor-title {
+          font-weight: 500;
+          font-size: 1.1em;
+          line-height: 1;
+        }
+        .action-icon-placeholder {
+          width: 29px; 
+          height: 24px; 
+          display: inline-block;
+        }
+        .full-width {
+          width: 100%;
+        }
+        .entity-group-header,
+        .action-group-header {
+          width: 100%;
+        }
+        .entity-group-actions,
+        .action-group-actions {
+          display: flex;
+          align-items: center;
+        }
+        entity-row-actions {
+          display: flex;
+          align-items: center;
+        }
+        .action-row-actions {
+          display: flex;
+          align-items: flex-start;
+        }
+        .handle {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          cursor: grab;
+          color: var(--secondary-text-color);
+          opacity: 0.7;
+          transition: opacity 0.2s ease;
+        }
+        .handle:hover {
+          opacity: 1;
+        }
+        .handle:active {
+          cursor: grabbing;
+        }
+        .handle-disabled {
+          opacity: 0.3;
+          cursor: default;
+          pointer-events: none;
+        }
+        .handle-disabled:hover {
+          opacity: 0.3;
+        }
+        .action-icon {
+          align-self: flex-start;
+          padding-top: 16px;
+        }
+        .action-handle {
+          align-self: flex-start;
+          padding-top: 18px;
+        }
+        .action-row-actions {
+          padding-top: 2px;
+        }
+        .service-data-editor-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-bottom: 4px;
+        }
+        .service-data-editor-title {
+          font-weight: 500;
+        }
+        .service-data-editor-actions {
+          display: flex;
+          gap: 8px;
+        }
+        .code-editor-wrapper.error {
+          border: 1px solid color: var(--error-color, red);
+          border-radius: 4px;
+          padding: 1px;
+        }
+        .yaml-error-message {
+          color: var(--error-color, red);
+          font-size: 14px;
+          margin: 6px;
+          white-space: pre-wrap;
+          font-family: Consolas, Menlo, Monaco, monospace;
+          line-height: 1.4;
+        }
+        .help-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 8px;
+          font-size: 0.9em;
+        }
+        .help-table th,
+        .help-table td {
+          border: 1px solid var(--divider-color, #444);
+          padding: 8px;
+          text-align: left;
+          vertical-align: top;
+        }
+        .help-table thead {
+          background: var(--card-background-color, #222);
+          font-weight: bold;
+        }
+        .help-title {
+          font-weight: bold;
+          margin-top: 16px;
+          font-size: 1em;
+        }
+        code {
+          font-family: monospace;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 2px 4px;
+          border-radius: 4px;
+        }
+        .help-text pre {
+          margin: 8px 0 0 0;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 8px 12px;
+          border-radius: 8px;
+          font-family: monospace;
+          font-size: 0.92em;
+          white-space: pre-wrap;
+        } 
+        .icon-button {
+          display: inline-flex;
+          cursor: pointer;
+          position: relative;
+          transition: color 0.2s;
+          align-self: center;
+          align-items: center;
+          padding: 12px;
+        }
+        .icon-button-compact {
+          padding: 6px;
+        }
+        .icon-button:hover {
+          color: var(--primary-color, #2196f3);
+        }
+        .icon-button-disabled {
+          opacity: 0.4;
+          pointer-events: none;
+        }
+        .icon-button-toggle {
+          opacity: 0.8;
+        }
+        .icon-button-toggle.active {
+          color: var(--custom-accent, var(--accent-color, #ff9800));
+          opacity: 1;
+        }
+        .help-text {
+          padding: 12px 25px;
+        }
+        .add-action-button-wrapper {
+          display: flex;
+          justify-content: center;
+        }
+        .artwork-row .artwork-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          flex: 1;
+        }
+        .config-subtitle.small {
+          font-size: 0.9em;
+          opacity: 0.75;
+          margin: 2px 0 0 0;
+        }
+      `;
   }
   render() {
-    var _this$_config$entitie2, _this$_config$actions2;
-    if (!this._config) return x(_templateObject3$1 || (_templateObject3$1 = _taggedTemplateLiteral([""])));
+    var _this$_config$entitie, _this$_config$actions;
+    if (!this._config) return x``;
 
     // When editing an entity/action, keep tabs visible but show editor content
     const editingEntity = this._entityEditorIndex !== null;
     const editingAction = this._actionEditorIndex !== null;
-    return x(_templateObject4$1 || (_templateObject4$1 = _taggedTemplateLiteral(["\n        <div class=\"tabs\">\n          ", "\n        </div>\n        <div class=\"tab-content\">\n          ", "\n        </div>\n      "])), ["entities", "behavior", "look_and_feel", "artwork", "actions"].map(key => {
-      const name = localize("editor.tabs.".concat(key));
-      return x(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["\n              <button\n                class=\"tab\" ", "\n                @click=", "\n                ?selected=", "\n              >", "</button>\n            "])), this._activeTab === key ? 'selected' : '', () => {
+    return x`
+        <div class="tabs">
+          ${["entities", "behavior", "look_and_feel", "artwork", "actions"].map(key => {
+      const name = localize(`editor.tabs.${key}`);
+      return x`
+              <button
+                class="tab" ${this._activeTab === key ? 'selected' : ''}
+                @click=${() => {
         this._activeTab = key;
         // Exit any sub-editor when switching tabs
         this._entityEditorIndex = null;
         this._actionEditorIndex = null;
         this._useTemplate = null;
         this._useVolTemplate = null;
-      }, this._activeTab === key, name);
-    }), editingEntity ? this._renderEntityEditor((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions2 = this._config.actions) === null || _this$_config$actions2 === void 0 ? void 0 : _this$_config$actions2[this._actionEditorIndex]) : this._renderActiveTab());
+      }}
+                ?selected=${this._activeTab === key}
+              >${name}</button>
+            `;
+    })}
+        </div>
+        <div class="tab-content">
+          ${editingEntity ? this._renderEntityEditor((_this$_config$entitie = this._config.entities) === null || _this$_config$entitie === void 0 ? void 0 : _this$_config$entitie[this._entityEditorIndex]) : editingAction ? this._renderActionEditor((_this$_config$actions = this._config.actions) === null || _this$_config$actions === void 0 ? void 0 : _this$_config$actions[this._actionEditorIndex]) : this._renderActiveTab()}
+        </div>
+      `;
   }
   _renderArtworkTab() {
-    var _this$_artworkOverrid9, _this$_config$artwork, _this$_config$artwork2, _this$_config$artwork3, _this$_useIdleImageUr, _this$_config$idle_im, _this$_config$idle_im2;
-    const overrides = [...((_this$_artworkOverrid9 = this._artworkOverrides) !== null && _this$_artworkOverrid9 !== void 0 ? _this$_artworkOverrid9 : [])];
+    const overrides = [...(this._artworkOverrides ?? [])];
     const matchOptions = [{
       value: "media_title",
       label: "Media Title"
@@ -11260,7 +15731,19 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       value: "missing_art",
       label: "Missing Artwork"
     }];
-    return x(_templateObject6$1 || (_templateObject6$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"", "\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                label=\"", "\"\n                .selector=", "\n                .value=", "\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"display: flex; align-items: center; gap: 8px; flex: 1;\">\n              <ha-switch\n                id=\"extend-artwork-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <div style=\"display: flex; flex-direction: column;\">\n                <label for=\"extend-artwork-toggle\" style=\"font-weight: 500;\">", "</label>\n                <div style=\"font-size: 0.85em; opacity: 0.7;\">", "</div>\n              </div>\n            </div>\n          </div>\n          <div class=\"form-row\">\n            <ha-textfield\n              class=\"full-width\"\n              label=\"", "\"\n              .value=", "\n              @input=", "\n              helper=\"e.g. http://192.168.1.50:8123\"\n              .helperPersistent=", "\n            ></ha-textfield>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"display: flex; align-items: center; gap: 8px; flex: 1;\">\n              <ha-switch\n                id=\"idle-image-url-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"idle-image-url-toggle\">", "</label>\n            </div>\n            <div style=\"flex: 2;\">\n              ", "\n            </div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <yamp-sortable @item-moved=", ">\n            <div class=\"sortable-container\">\n              ", "\n            </div>\n          </yamp-sortable>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"", "\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n        </div>\n\n      "])), localize('editor.sections.artwork.general.title'), localize('editor.sections.artwork.general.description'), this.hass, localize('editor.fields.artwork_fit'), {
+    return x`
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize('editor.sections.artwork.general.title')}</div>
+            <div class="section-description">${localize('editor.sections.artwork.general.description')}</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                label="${localize('editor.fields.artwork_fit')}"
+                .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11283,10 +15766,19 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "None"
         }]
       }
-    }, (_this$_config$artwork = this._config.artwork_object_fit) !== null && _this$_config$artwork !== void 0 ? _this$_config$artwork : "cover", e => {
+    }}
+                .value=${this._config.artwork_object_fit ?? "cover"}
+                @value-changed=${e => {
       const value = e.detail.value;
       this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
-    }, this.hass, localize('editor.fields.artwork_position'), {
+    }}
+              ></ha-selector>
+            </div>
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                label="${localize('editor.fields.artwork_position')}"
+                .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11300,51 +15792,216 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "Bottom"
         }]
       }
-    }, (_this$_config$artwork2 = this._config.artwork_position) !== null && _this$_config$artwork2 !== void 0 ? _this$_config$artwork2 : "top center", e => {
+    }}
+                .value=${this._config.artwork_position ?? "top center"}
+                @value-changed=${e => {
       const value = e.detail.value;
       this._updateConfig("artwork_position", value === "top center" ? undefined : value);
-    }, this._config.extend_artwork === true, e => this._updateConfig("extend_artwork", e.target.checked), localize('editor.subtitles.artwork_extend_label'), localize('editor.subtitles.artwork_extend'), localize('editor.fields.artwork_hostname'), (_this$_config$artwork3 = this._config.artwork_hostname) !== null && _this$_config$artwork3 !== void 0 ? _this$_config$artwork3 : "", e => this._updateConfig("artwork_hostname", e.target.value), true, localize('editor.sections.artwork.idle.title'), localize('editor.sections.artwork.idle.description'), (_this$_useIdleImageUr = this._useIdleImageUrl) !== null && _this$_useIdleImageUr !== void 0 ? _this$_useIdleImageUr : this._looksLikeUrlOrPath(this._config.idle_image), e => {
+    }}
+              ></ha-selector>
+            </div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="extend-artwork-toggle"
+                .checked=${this._config.extend_artwork === true}
+                @change=${e => this._updateConfig("extend_artwork", e.target.checked)}
+              ></ha-switch>
+              <div style="display: flex; flex-direction: column;">
+                <label for="extend-artwork-toggle" style="font-weight: 500;">${localize('editor.subtitles.artwork_extend_label')}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.artwork_extend')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <ha-textfield
+              class="full-width"
+              label="${localize('editor.fields.artwork_hostname')}"
+              .value=${this._config.artwork_hostname ?? ""}
+              @input=${e => this._updateConfig("artwork_hostname", e.target.value)}
+              helper="e.g. http://192.168.1.50:8123"
+              .helperPersistent=${true}
+            ></ha-textfield>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize('editor.sections.artwork.idle.title')}</div>
+            <div class="section-description">${localize('editor.sections.artwork.idle.description')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="idle-image-url-toggle"
+                .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
+                @change=${e => {
       this._useIdleImageUrl = e.target.checked;
       if (e.target.checked) {
         this._updateConfig("idle_image", "");
       } else {
         this._updateConfig("idle_image", "");
       }
-    }, localize('editor.labels.use_url_path'), this._useIdleImageUrl ? x(_templateObject7$1 || (_templateObject7$1 = _taggedTemplateLiteral(["\n                <ha-textfield\n                  class=\"full-width\"\n                  placeholder=\"e.g., https://example.com/image.jpg or /local/custom/image.jpg\"\n                  .value=", "\n                  @input=", "\n                  helper=\"", "\"\n                  .helperPersistent=", "\n                ></ha-textfield>\n              "])), (_this$_config$idle_im = this._config.idle_image) !== null && _this$_config$idle_im !== void 0 ? _this$_config$idle_im : "", e => this._updateConfig("idle_image", e.target.value), localize('editor.subtitles.image_url_helper'), true) : x(_templateObject8$1 || (_templateObject8$1 = _taggedTemplateLiteral(["\n                <ha-generic-picker\n                  class=\"full-width\"\n                  .hass=", "\n                  .value=", "\n                  .label=", "\n                  .valueRenderer=", "\n                  .rowRenderer=", "\n                  .getItems=", "\n                  @value-changed=", "\n                  allow-custom-value\n                ></ha-generic-picker>\n              "])), this.hass, (_this$_config$idle_im2 = this._config.idle_image) !== null && _this$_config$idle_im2 !== void 0 ? _this$_config$idle_im2 : "", localize('editor.fields.idle_image_entity'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["camera", "image"]), e => this._updateConfig("idle_image", e.detail.value)), localize('editor.sections.artwork.overrides.title'), localize('editor.sections.artwork.overrides.description'), e => this._onArtworkMoved(e), overrides.length ? overrides.map((rule, idx) => {
-      var _rule$match_type, _rule$match_value2, _rule$match_value3, _rule$image_url2, _rule$size_percentage;
-      return x(_templateObject9$1 || (_templateObject9$1 = _taggedTemplateLiteral(["\n                    <div class=\"action-row-inner sortable-item artwork-row\">\n                      <div class=\"handle action-handle\">\n                        <ha-icon icon=\"mdi:drag\"></ha-icon>\n                      </div>\n                      <div class=\"artwork-fields\">\n                        <ha-selector\n                          .hass=", "\n                          label=\"", "\"\n                          .selector=", "\n                          .value=", "\n                          @value-changed=", "\n                        ></ha-selector>\n                        ", "\n                        <ha-textfield\n                          class=\"full-width\"\n                          label=", "\n                          .value=", "\n                          @input=", "\n                        ></ha-textfield>\n                        <div class=\"form-row-multi-column\" style=\"gap:12px; flex-wrap:wrap; align-items:flex-start;\">\n                          <div class=\"grow-children\" style=\"flex:1;\">\n                            <ha-textfield\n                              class=\"full-width\"\n                              label=\"", "\"\n                              type=\"number\"\n                              min=\"1\"\n                              max=\"100\"\n                              .value=", "\n                              @input=", "\n                            ></ha-textfield>\n                          </div>\n                          <div class=\"grow-children\" style=\"flex:1.5;\">\n                            <ha-selector\n                              .hass=", "\n                              label=\"", "\"\n                              .selector=", "\n                              .value=", "\n                              @value-changed=", "\n                            ></ha-selector>\n                          </div>\n                        </div>\n                      </div>\n                      <div class=\"action-row-actions\">\n                        <ha-icon\n                          class=\"icon-button\"\n                          icon=\"mdi:trash-can\"\n                          title=\"Delete Override\"\n                          @click=", "\n                        ></ha-icon>\n                      </div>\n                    </div>\n                  "])), this.hass, localize('editor.fields.match_field'), {
-        select: {
-          mode: "dropdown",
-          options: matchOptions
-        }
-      }, (_rule$match_type = rule.match_type) !== null && _rule$match_type !== void 0 ? _rule$match_type : "media_title", e => this._onArtworkMatchTypeChange(idx, e.detail.value), rule.match_type === "missing_art" ? x(_templateObject0$1 || (_templateObject0$1 = _taggedTemplateLiteral(["\n                                <div class=\"config-subtitle small\">\n                                  Applies when the selected media provides no artwork.\n                                </div>\n                              "]))) : rule.match_type === "entity_id" ? x(_templateObject1$1 || (_templateObject1$1 = _taggedTemplateLiteral(["\n                                  <ha-generic-picker\n                                    class=\"full-width\"\n                                    .hass=", "\n                                    .value=", "\n                                    .label=", "\n                                    .valueRenderer=", "\n                                    .rowRenderer=", "\n                                    .getItems=", "\n                                    @value-changed=", "\n                                    allow-custom-value\n                                  ></ha-generic-picker>\n                                "])), this.hass, (_rule$match_value2 = rule.match_value) !== null && _rule$match_value2 !== void 0 ? _rule$match_value2 : "", localize('editor.fields.match_entity'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["media_player"]), e => this._onArtworkMatchValueChange(idx, e.detail.value)) : x(_templateObject10$1 || (_templateObject10$1 = _taggedTemplateLiteral(["\n                                  <ha-textfield\n                                    class=\"full-width\"\n                                    label=\"", "\"\n                                    .value=", "\n                                    @input=", "\n                                  ></ha-textfield>\n                                "])), localize('editor.fields.match_value'), (_rule$match_value3 = rule.match_value) !== null && _rule$match_value3 !== void 0 ? _rule$match_value3 : "", e => this._onArtworkMatchValueChange(idx, e.target.value)), rule.match_type === "missing_art" ? localize('editor.fields.fallback_image_url') : localize('editor.fields.image_url'), (_rule$image_url2 = rule.image_url) !== null && _rule$image_url2 !== void 0 ? _rule$image_url2 : "", e => this._onArtworkImageUrlChange(idx, e.target.value), localize('editor.fields.size_percent'), (_rule$size_percentage = rule.size_percentage) !== null && _rule$size_percentage !== void 0 ? _rule$size_percentage : "", e => this._onArtworkSizePercentageChange(idx, e.target.value), this.hass, localize('editor.fields.object_fit'), {
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "default",
-            label: "Default"
-          }, {
-            value: "cover",
-            label: "Cover"
-          }, {
-            value: "contain",
-            label: "Contain"
-          }, {
-            value: "fill",
-            label: "Fill"
-          }, {
-            value: "scale-down",
-            label: "Scale Down"
-          }, {
-            value: "scaled-contain",
-            label: "Scaled Contain"
-          }, {
-            value: "none",
-            label: "None"
-          }]
-        }
-      }, rule.object_fit || "default", e => this._onArtworkObjectFitChange(idx, e.detail.value), () => this._removeArtworkOverride(idx));
-    }) : x(_templateObject11$1 || (_templateObject11$1 = _taggedTemplateLiteral(["<div class=\"config-subtitle\" style=\"padding:12px 0;text-align:center;\">", "</div>"])), localize('editor.subtitles.no_artwork_overrides')), localize('editor.titles.add_artwork_override'), this._addArtworkOverride);
+    }}
+              ></ha-switch>
+              <label for="idle-image-url-toggle">${localize('editor.labels.use_url_path')}</label>
+            </div>
+            <div style="flex: 2;">
+              ${this._useIdleImageUrl ? x`
+                <ha-textfield
+                  class="full-width"
+                  placeholder="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                  .value=${this._config.idle_image ?? ""}
+                  @input=${e => this._updateConfig("idle_image", e.target.value)}
+                  helper="${localize('editor.subtitles.image_url_helper')}"
+                  .helperPersistent=${true}
+                ></ha-textfield>
+              ` : x`
+                <ha-generic-picker
+                  class="full-width"
+                  .hass=${this.hass}
+                  .value=${this._config.idle_image ?? ""}
+                  .label=${localize('editor.fields.idle_image_entity')}
+                  .valueRenderer=${v => this._entityValueRenderer(v)}
+                  .rowRenderer=${item => this._entityRowRenderer(item)}
+                  .getItems=${this._getEntityItems(["camera", "image"])}
+                  @value-changed=${e => this._updateConfig("idle_image", e.detail.value)}
+                  allow-custom-value
+                ></ha-generic-picker>
+              `}
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize('editor.sections.artwork.overrides.title')}</div>
+            <div class="section-description">${localize('editor.sections.artwork.overrides.description')}</div>
+          </div>
+          <yamp-sortable @item-moved=${e => this._onArtworkMoved(e)}>
+            <div class="sortable-container">
+              ${overrides.length ? overrides.map((rule, idx) => x`
+                    <div class="action-row-inner sortable-item artwork-row">
+                      <div class="handle action-handle">
+                        <ha-icon icon="mdi:drag"></ha-icon>
+                      </div>
+                      <div class="artwork-fields">
+                        <ha-selector
+                          .hass=${this.hass}
+                          label="${localize('editor.fields.match_field')}"
+                          .selector=${{
+      select: {
+        mode: "dropdown",
+        options: matchOptions
+      }
+    }}
+                          .value=${rule.match_type ?? "media_title"}
+                          @value-changed=${e => this._onArtworkMatchTypeChange(idx, e.detail.value)}
+                        ></ha-selector>
+                        ${rule.match_type === "missing_art" ? x`
+                                <div class="config-subtitle small">
+                                  Applies when the selected media provides no artwork.
+                                </div>
+                              ` : rule.match_type === "entity_id" ? x`
+                                  <ha-generic-picker
+                                    class="full-width"
+                                    .hass=${this.hass}
+                                    .value=${rule.match_value ?? ""}
+                                    .label=${localize('editor.fields.match_entity')}
+                                    .valueRenderer=${v => this._entityValueRenderer(v)}
+                                    .rowRenderer=${item => this._entityRowRenderer(item)}
+                                    .getItems=${this._getEntityItems(["media_player"])}
+                                    @value-changed=${e => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                    allow-custom-value
+                                  ></ha-generic-picker>
+                                ` : x`
+                                  <ha-textfield
+                                    class="full-width"
+                                    label="${localize('editor.fields.match_value')}"
+                                    .value=${rule.match_value ?? ""}
+                                    @input=${e => this._onArtworkMatchValueChange(idx, e.target.value)}
+                                  ></ha-textfield>
+                                `}
+                        <ha-textfield
+                          class="full-width"
+                          label=${rule.match_type === "missing_art" ? localize('editor.fields.fallback_image_url') : localize('editor.fields.image_url')}
+                          .value=${rule.image_url ?? ""}
+                          @input=${e => this._onArtworkImageUrlChange(idx, e.target.value)}
+                        ></ha-textfield>
+                        <div class="form-row-multi-column" style="gap:12px; flex-wrap:wrap; align-items:flex-start;">
+                          <div class="grow-children" style="flex:1;">
+                            <ha-textfield
+                              class="full-width"
+                              label="${localize('editor.fields.size_percent')}"
+                              type="number"
+                              min="1"
+                              max="100"
+                              .value=${rule.size_percentage ?? ""}
+                              @input=${e => this._onArtworkSizePercentageChange(idx, e.target.value)}
+                            ></ha-textfield>
+                          </div>
+                          <div class="grow-children" style="flex:1.5;">
+                            <ha-selector
+                              .hass=${this.hass}
+                              label="${localize('editor.fields.object_fit')}"
+                              .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "default",
+          label: "Default"
+        }, {
+          value: "cover",
+          label: "Cover"
+        }, {
+          value: "contain",
+          label: "Contain"
+        }, {
+          value: "fill",
+          label: "Fill"
+        }, {
+          value: "scale-down",
+          label: "Scale Down"
+        }, {
+          value: "scaled-contain",
+          label: "Scaled Contain"
+        }, {
+          value: "none",
+          label: "None"
+        }]
+      }
+    }}
+                              .value=${rule.object_fit || "default"}
+                              @value-changed=${e => this._onArtworkObjectFitChange(idx, e.detail.value)}
+                            ></ha-selector>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="action-row-actions">
+                        <ha-icon
+                          class="icon-button"
+                          icon="mdi:trash-can"
+                          title="Delete Override"
+                          @click=${() => this._removeArtworkOverride(idx)}
+                        ></ha-icon>
+                      </div>
+                    </div>
+                  `) : x`<div class="config-subtitle" style="padding:12px 0;text-align:center;">${localize('editor.subtitles.no_artwork_overrides')}</div>`}
+            </div>
+          </yamp-sortable>
+          <div class="add-action-button-wrapper">
+            <ha-icon
+              class="icon-button"
+              icon="mdi:plus"
+              title="${localize('editor.titles.add_artwork_override')}"
+              @click=${this._addArtworkOverride}
+            ></ha-icon>
+          </div>
+        </div>
+        </div>
+
+      `;
   }
   _renderActiveTab() {
     switch (this._activeTab) {
@@ -11363,30 +16020,98 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }
   }
   _renderEntitiesTab() {
-    var _this$_config$entitie3;
-    if (!this._config) return x(_templateObject12$1 || (_templateObject12$1 = _taggedTemplateLiteral([""])));
-    let entities = [...((_this$_config$entitie3 = this._config.entities) !== null && _this$_config$entitie3 !== void 0 ? _this$_config$entitie3 : [])];
+    if (!this._config) return x``;
+    let entities = [...(this._config.entities ?? [])];
     if (entities.length === 0 || entities[entities.length - 1].entity_id) {
       entities.push({
         entity_id: ""
       });
     }
-    return x(_templateObject13$1 || (_templateObject13$1 = _taggedTemplateLiteral(["\n        <div class=\"entity-group\">\n          <div class=\"entity-group-header section-header\">\n            <div class=\"entity-group-title section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <yamp-sortable @item-moved=", ">\n              <div class=\"sortable-container\">\n                ", "\n              </div>\n            </yamp-sortable>\n          </div>\n        </div>\n      "])), localize('editor.sections.entities.title'), localize('editor.sections.entities.description'), e => this._onEntityMoved(e), entities.map((ent, idx) => {
-      var _this$_config$entitie4, _this$_config$entitie5;
-      return x(_templateObject14$1 || (_templateObject14$1 = _taggedTemplateLiteral(["\n                  <div class=\"entity-row-inner ", "\" data-index=\"", "\">\n                    <div class=\"handle ", "\">\n                      <ha-icon icon=\"mdi:drag\"></ha-icon>\n                    </div>\n                    <div class=\"grow-children\">\n                      <ha-generic-picker\n                        class=\"full-width\"\n                        style=\"display: block; width: 100%;\"\n                        .hass=", "\n                        .value=", "\n                        .label=", "\n                        .valueRenderer=", "\n                        .rowRenderer=", "\n                        .getItems=", "\n                        @value-changed=", "\n                        allow-custom-value\n                      ></ha-generic-picker>\n                    </div>\n                    <div class=\"entity-row-actions\">\n                      <ha-icon\n                        class=\"icon-button ", "\"\n                        icon=\"mdi:pencil\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                    </div>\n                  </div>\n                "])), idx < entities.length - 1 ? 'sortable-item' : '', idx, idx === entities.length - 1 ? 'handle-disabled' : '', this.hass, ent.entity_id || "", localize('common.media_player'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["media_player"], idx === entities.length - 1 && !ent.entity_id ? (_this$_config$entitie4 = (_this$_config$entitie5 = this._config.entities) === null || _this$_config$entitie5 === void 0 ? void 0 : _this$_config$entitie5.map(e => e.entity_id)) !== null && _this$_config$entitie4 !== void 0 ? _this$_config$entitie4 : [] : []), e => this._onEntityChanged(idx, e.detail.value), !ent.entity_id ? "icon-button-disabled" : "", localize('common.edit_entity'), () => this._onEditEntity(idx));
-    }));
+    return x`
+        <div class="entity-group">
+          <div class="entity-group-header section-header">
+            <div class="entity-group-title section-title">${localize('editor.sections.entities.title')}</div>
+            <div class="section-description">${localize('editor.sections.entities.description')}</div>
+          </div>
+          <div class="form-row">
+            <yamp-sortable @item-moved=${e => this._onEntityMoved(e)}>
+              <div class="sortable-container">
+                ${entities.map((ent, idx) => {
+      var _this$_config$entitie2;
+      return x`
+                  <div class="entity-row-inner ${idx < entities.length - 1 ? 'sortable-item' : ''}" data-index="${idx}">
+                    <div class="handle ${idx === entities.length - 1 ? 'handle-disabled' : ''}">
+                      <ha-icon icon="mdi:drag"></ha-icon>
+                    </div>
+                    <div class="grow-children">
+                      <ha-generic-picker
+                        class="full-width"
+                        style="display: block; width: 100%;"
+                        .hass=${this.hass}
+                        .value=${ent.entity_id || ""}
+                        .label=${localize('common.media_player')}
+                        .valueRenderer=${v => this._entityValueRenderer(v)}
+                        .rowRenderer=${item => this._entityRowRenderer(item)}
+                        .getItems=${this._getEntityItems(["media_player"], idx === entities.length - 1 && !ent.entity_id ? ((_this$_config$entitie2 = this._config.entities) === null || _this$_config$entitie2 === void 0 ? void 0 : _this$_config$entitie2.map(e => e.entity_id)) ?? [] : [])}
+                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                        allow-custom-value
+                      ></ha-generic-picker>
+                    </div>
+                    <div class="entity-row-actions">
+                      <ha-icon
+                        class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
+                        icon="mdi:pencil"
+                        title="${localize('common.edit_entity')}"
+                        @click=${() => this._onEditEntity(idx)}
+                      ></ha-icon>
+                    </div>
+                  </div>
+                `;
+    })}
+              </div>
+            </yamp-sortable>
+          </div>
+        </div>
+      `;
   }
   _renderBehaviorTab() {
-    var _this$_config$idle_ti, _this$_config$show_ch, _this$_config$dim_chi, _this$_config$hold_to, _this$_config$disable, _this$_config$keep_fi, _this$_config$dismiss, _this$_config$entitie6, _this$_config$entitie7, _this$_config$pin_sea, _this$_config$entitie8, _this$_config$disable2, _this$_config$search_, _this$_config$search_2;
+    var _this$_config$entitie3, _this$_config$entitie4, _this$_config$entitie5;
     const searchLimitWarningActive = Number(this._config.search_results_limit) > 100;
-    return x(_templateObject15$1 || (_templateObject15$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                .selector=", "\n                .value=", "\n                label=\"", "\"\n                @value-changed=", "\n              ></ha-selector>\n              <div class=\"config-subtitle\">", "</div>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"", "\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"dim-chips-on-idle-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"hold-to-pin-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"dismiss-search-on-play-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n\n          <div class=\"form-row form-row-multi-column\">\n            <div style=\"", "\"\n              title=\"", "\">\n              <ha-switch\n                id=\"pin-search-headers-toggle\"\n                .checked=", "\n                @change=", "\n                .disabled=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"disable-mass-queue-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n            <div class=\"form-row form-row-multi-column\">\n              <div class=\"grow-children number-input-with-note\">\n                <ha-selector-number\n                  .selector=", "\n                  .value=", "\n                  label=\"", "\"\n                  helper=\"", "\"\n                  @value-changed=", "\n                ></ha-selector-number>\n                ", "\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              id=\"search-limit-reset\"\n              icon=\"mdi:restore\"\n              title=\"", "\"\n              @click=", "\n            ></ha-icon>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              helper=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n      "])), localize('editor.sections.behavior.idle_chips.title'), localize('editor.sections.behavior.idle_chips.description'), this.hass, {
+    return x`
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize('editor.sections.behavior.idle_chips.title')}</div>
+            <div class="section-description">${localize('editor.sections.behavior.idle_chips.description')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
       number: {
         min: 0,
         step: 1000,
         unit_of_measurement: "ms",
         mode: "box"
       }
-    }, (_this$_config$idle_ti = this._config.idle_timeout_ms) !== null && _this$_config$idle_ti !== void 0 ? _this$_config$idle_ti : 60000, localize('editor.fields.idle_timeout'), e => this._updateConfig("idle_timeout_ms", e.detail.value), localize('editor.subtitles.idle_timeout'), localize('common.reset_default'), () => this._updateConfig("idle_timeout_ms", 60000), this.hass, {
+    }}
+                .value=${this._config.idle_timeout_ms ?? 60000}
+                label="${localize('editor.fields.idle_timeout')}"
+                @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
+              ></ha-selector>
+              <div class="config-subtitle">${localize('editor.subtitles.idle_timeout')}</div>
+            </div>
+            <ha-icon
+              class="icon-button"
+              icon="mdi:restore"
+              title="${localize('common.reset_default')}"
+              @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
+            ></ha-icon>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11403,14 +16128,134 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "In Menu on Idle"
         }]
       }
-    }, (_this$_config$show_ch = this._config.show_chip_row) !== null && _this$_config$show_ch !== void 0 ? _this$_config$show_ch : "auto", localize('editor.fields.show_chip_row'), e => this._updateConfig("show_chip_row", e.detail.value), localize('editor.subtitles.show_chip_row'), (_this$_config$dim_chi = this._config.dim_chips_on_idle) !== null && _this$_config$dim_chi !== void 0 ? _this$_config$dim_chi : true, e => this._updateConfig("dim_chips_on_idle", e.target.checked), localize('editor.labels.dim_chips'), localize('editor.subtitles.dim_chips'), localize('editor.sections.behavior.interactions_search.title'), localize('editor.sections.behavior.interactions_search.description'), (_this$_config$hold_to = this._config.hold_to_pin) !== null && _this$_config$hold_to !== void 0 ? _this$_config$hold_to : false, e => this._updateConfig("hold_to_pin", e.target.checked), localize('editor.labels.hold_to_pin'), localize('editor.subtitles.hold_to_pin'), (_this$_config$disable = this._config.disable_autofocus) !== null && _this$_config$disable !== void 0 ? _this$_config$disable : false, e => this._updateConfig("disable_autofocus", e.target.checked), localize('editor.labels.disable_autofocus'), localize('editor.subtitles.disable_autofocus'), (_this$_config$keep_fi = this._config.keep_filters_on_search) !== null && _this$_config$keep_fi !== void 0 ? _this$_config$keep_fi : false, e => this._updateConfig("keep_filters_on_search", e.target.checked), localize('editor.labels.keep_filters'), localize('editor.subtitles.search_within_filter'), (_this$_config$dismiss = this._config.dismiss_search_on_play) !== null && _this$_config$dismiss !== void 0 ? _this$_config$dismiss : true, e => this._updateConfig("dismiss_search_on_play", e.target.checked), localize('editor.labels.dismiss_on_play'), localize('editor.subtitles.close_search_on_play'), ((_this$_config$entitie6 = this._config.entities) === null || _this$_config$entitie6 === void 0 ? void 0 : _this$_config$entitie6.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true ? "opacity: 0.5;" : "", ((_this$_config$entitie7 = this._config.entities) === null || _this$_config$entitie7 === void 0 ? void 0 : _this$_config$entitie7.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true ? "Not available with one entity in Always Collapsed mode unless Expand on Search is enabled" : "", (_this$_config$pin_sea = this._config.pin_search_headers) !== null && _this$_config$pin_sea !== void 0 ? _this$_config$pin_sea : false, e => this._updateConfig("pin_search_headers", e.target.checked), ((_this$_config$entitie8 = this._config.entities) === null || _this$_config$entitie8 === void 0 ? void 0 : _this$_config$entitie8.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true, localize('editor.labels.pin_headers'), localize('editor.subtitles.pin_search_headers'), (_this$_config$disable2 = this._config.disable_mass_queue) !== null && _this$_config$disable2 !== void 0 ? _this$_config$disable2 : false, e => this._updateConfig("disable_mass_queue", e.target.checked), localize('editor.labels.disable_mass'), localize('editor.subtitles.disable_mass'), {
+    }}
+              .value=${this._config.show_chip_row ?? "auto"}
+              label="${localize('editor.fields.show_chip_row')}"
+              @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">${localize('editor.subtitles.show_chip_row')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="dim-chips-on-idle-toggle"
+                .checked=${this._config.dim_chips_on_idle ?? true}
+                @change=${e => this._updateConfig("dim_chips_on_idle", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.dim_chips')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.dim_chips')}</div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize('editor.sections.behavior.interactions_search.title')}</div>
+            <div class="section-description">${localize('editor.sections.behavior.interactions_search.description')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="hold-to-pin-toggle"
+                .checked=${this._config.hold_to_pin ?? false}
+                @change=${e => this._updateConfig("hold_to_pin", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.hold_to_pin')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.hold_to_pin')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                .checked=${this._config.disable_autofocus ?? false}
+                @change=${e => this._updateConfig("disable_autofocus", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.disable_autofocus')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.disable_autofocus')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                .checked=${this._config.keep_filters_on_search ?? false}
+                @change=${e => this._updateConfig("keep_filters_on_search", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.keep_filters')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.search_within_filter')}</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="dismiss-search-on-play-toggle"
+                .checked=${this._config.dismiss_search_on_play ?? true}
+                @change=${e => this._updateConfig("dismiss_search_on_play", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.dismiss_on_play')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.close_search_on_play')}</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
+            <div style="${((_this$_config$entitie3 = this._config.entities) === null || _this$_config$entitie3 === void 0 ? void 0 : _this$_config$entitie3.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true ? "opacity: 0.5;" : ""}"
+              title="${((_this$_config$entitie4 = this._config.entities) === null || _this$_config$entitie4 === void 0 ? void 0 : _this$_config$entitie4.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true ? "Not available with one entity in Always Collapsed mode unless Expand on Search is enabled" : ""}">
+              <ha-switch
+                id="pin-search-headers-toggle"
+                .checked=${this._config.pin_search_headers ?? false}
+                @change=${e => this._updateConfig("pin_search_headers", e.target.checked)}
+                .disabled=${((_this$_config$entitie5 = this._config.entities) === null || _this$_config$entitie5 === void 0 ? void 0 : _this$_config$entitie5.length) === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true}
+              ></ha-switch>
+              <span>${localize('editor.labels.pin_headers')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.pin_search_headers')}</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="disable-mass-queue-toggle"
+                .checked=${this._config.disable_mass_queue ?? false}
+                @change=${e => this._updateConfig("disable_mass_queue", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.disable_mass')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.disable_mass')}</div>
+          </div>
+            <div class="form-row form-row-multi-column">
+              <div class="grow-children number-input-with-note">
+                <ha-selector-number
+                  .selector=${{
       number: {
         min: 0,
         max: 1000,
         step: 1,
         mode: "box"
       }
-    }, (_this$_config$search_ = this._config.search_results_limit) !== null && _this$_config$search_ !== void 0 ? _this$_config$search_ : 20, localize('editor.fields.search_limit'), localize('editor.subtitles.search_limit_full'), e => this._updateConfig("search_results_limit", e.detail.value), searchLimitWarningActive ? x(_templateObject16$1 || (_templateObject16$1 = _taggedTemplateLiteral(["\n                  <div class=\"config-subtitle warning\">\n                    Warning: requesting higher results can cause performance issues.\n                  </div>\n                "]))) : E, localize('common.reset_default'), () => this._updateConfig("search_results_limit", 20), this.hass, {
+    }}
+                  .value=${this._config.search_results_limit ?? 20}
+                  label="${localize('editor.fields.search_limit')}"
+                  helper="${localize('editor.subtitles.search_limit_full')}"
+                  @value-changed=${e => this._updateConfig("search_results_limit", e.detail.value)}
+                ></ha-selector-number>
+                ${searchLimitWarningActive ? x`
+                  <div class="config-subtitle warning">
+                    Warning: requesting higher results can cause performance issues.
+                  </div>
+                ` : E}
+            </div>
+            <ha-icon
+              class="icon-button"
+              id="search-limit-reset"
+              icon="mdi:restore"
+              title="${localize('common.reset_default')}"
+              @click=${() => this._updateConfig("search_results_limit", 20)}
+            ></ha-icon>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11430,11 +16275,23 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "Artist Descending"
         }]
       }
-    }, (_this$_config$search_2 = this._config.search_results_sort) !== null && _this$_config$search_2 !== void 0 ? _this$_config$search_2 : "default", localize('editor.fields.result_sorting'), localize('editor.subtitles.result_sorting_full'), e => this._updateConfig("search_results_sort", e.detail.value));
+    }}
+              .value=${this._config.search_results_sort ?? "default"}
+              label="${localize('editor.fields.result_sorting')}"
+              helper="${localize('editor.subtitles.result_sorting_full')}"
+              @value-changed=${e => this._updateConfig("search_results_sort", e.detail.value)}
+            ></ha-selector>
+          </div>
+        </div>
+      `;
   }
   _renderVisualTab() {
-    var _this$_config$volume_, _this$_config$match_t, _this$_config$alterna, _this$_config$display, _this$_config$card_he, _this$_config$control, _this$_config$control2, _this$_config$control3, _this$_config$swap_pa, _this$_config$control4, _this$_config$adaptiv, _this$_config$hide_ac, _this$_config$volume_2, _this$_config$collaps, _this$_config$hide_me, _this$_config$always_, _this$_config$expand_, _this$_config$idle_sc;
-    const renderVolumeStep = this._config.volume_mode === "stepper" ? x(_templateObject17$1 || (_templateObject17$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-selector\n                .hass=", "\n                .selector=", "\n                .value=", "\n                label=\"", "\"\n                @value-changed=", "\n              ></ha-selector>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"", "\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        "])), this.hass, {
+    const renderVolumeStep = this._config.volume_mode === "stepper" ? x`
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
       number: {
         min: 0.01,
         max: 1,
@@ -11442,8 +16299,66 @@ class YetAnotherMediaPlayerEditor extends i$2 {
         unit_of_measurement: "",
         mode: "box"
       }
-    }, (_this$_config$volume_ = this._config.volume_step) !== null && _this$_config$volume_ !== void 0 ? _this$_config$volume_ : 0.05, localize('editor.fields.vol_step'), e => this._updateConfig("volume_step", e.detail.value), localize('common.reset_default'), () => this._updateConfig("volume_step", 0.05)) : E;
-    return x(_templateObject18$1 || (_templateObject18$1 = _taggedTemplateLiteral(["\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"match-theme-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div>\n              <ha-switch\n                id=\"alternate-progress-bar-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div title=", ">\n              <ha-switch\n                id=\"display-timestamps-toggle\"\n                .checked=", "\n                @change=", "\n                .disabled=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div class=\"grow-children\">\n              <ha-textfield\n                class=\"full-width\"\n                type=\"number\"\n                min=\"0\"\n                label=\"", "\"\n                .value=", "\n                helper=\"", "\"\n                .helperPersistent=", "\n                @input=", "\n              ></ha-textfield>\n            </div>\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:restore\"\n              title=\"", "\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              helper=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n          <div class=\"form-row\"\n            style=\"", "\"\n            title=\"", "\"}>\n            <div>\n              <ha-switch\n                .checked=", "\n                @change=", "\n                .disabled=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <div>\n              <ha-switch\n                id=\"adaptive-controls-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <div>\n              <ha-switch\n                id=\"hide-active-entity-label-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n        <div class=\"form-row\">\n          <div class=\"full-width\">\n            <span class=\"form-label\">", "</span>\n            <div class=\"config-subtitle\">", "</div>\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n          ", "\n        </div>\n\n        <div class=\"config-section\">\n          <div class=\"section-header\">\n            <div class=\"section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"collapse-on-idle-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div style=\"", "\"\n              title=\"", "\">\n              <ha-switch\n                id=\"hide-menu-player-toggle\"\n                .checked=", "\n                @change=", "\n                .disabled=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"always-collapsed-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n            <div style=\"", "\"\n              title=\"", "\">\n              <ha-switch\n                id=\"expand-on-search-toggle\"\n                .checked=", "\n                @change=", "\n                .disabled=", "\n              ></ha-switch>\n              <span>", "</span>\n            </div>\n          </div>\n          <div class=\"form-row\">\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n        </div>\n\n      "])), localize('editor.sections.look_and_feel.theme_layout.title'), localize('editor.sections.look_and_feel.theme_layout.description'), (_this$_config$match_t = this._config.match_theme) !== null && _this$_config$match_t !== void 0 ? _this$_config$match_t : false, e => this._updateConfig("match_theme", e.target.checked), localize('editor.labels.match_theme'), (_this$_config$alterna = this._config.alternate_progress_bar) !== null && _this$_config$alterna !== void 0 ? _this$_config$alterna : false, e => this._updateConfig("alternate_progress_bar", e.target.checked), localize('editor.labels.alt_progress'), this._config.alternate_progress_bar || this._config.always_collapsed ? localize('editor.subtitles.not_available_alt_collapsed') : "", (_this$_config$display = this._config.display_timestamps) !== null && _this$_config$display !== void 0 ? _this$_config$display : false, e => this._updateConfig("display_timestamps", e.target.checked), this._config.alternate_progress_bar || this._config.always_collapsed, localize('editor.labels.display_timestamps'), localize('editor.fields.card_height'), (_this$_config$card_he = this._config.card_height) !== null && _this$_config$card_he !== void 0 ? _this$_config$card_he : "", localize('editor.subtitles.card_height_full'), true, e => {
+    }}
+                .value=${this._config.volume_step ?? 0.05}
+                label="${localize('editor.fields.vol_step')}"
+                @value-changed=${e => this._updateConfig("volume_step", e.detail.value)}
+              ></ha-selector>
+            </div>
+            <ha-icon
+              class="icon-button"
+              icon="mdi:restore"
+              title="${localize('common.reset_default')}"
+              @click=${() => this._updateConfig("volume_step", 0.05)}
+            ></ha-icon>
+          </div>
+        ` : E;
+    return x`
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize('editor.sections.look_and_feel.theme_layout.title')}</div>
+            <div class="section-description">${localize('editor.sections.look_and_feel.theme_layout.description')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="match-theme-toggle"
+                .checked=${this._config.match_theme ?? false}
+                @change=${e => this._updateConfig("match_theme", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.match_theme')}</span>
+            </div>
+            <div>
+              <ha-switch
+                id="alternate-progress-bar-toggle"
+                .checked=${this._config.alternate_progress_bar ?? false}
+                @change=${e => this._updateConfig("alternate_progress_bar", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.alt_progress')}</span>
+            </div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div title=${this._config.alternate_progress_bar || this._config.always_collapsed ? localize('editor.subtitles.not_available_alt_collapsed') : ""}>
+              <ha-switch
+                id="display-timestamps-toggle"
+                .checked=${this._config.display_timestamps ?? false}
+                @change=${e => this._updateConfig("display_timestamps", e.target.checked)}
+                .disabled=${this._config.alternate_progress_bar || this._config.always_collapsed}
+              ></ha-switch>
+              <span>${localize('editor.labels.display_timestamps')}</span>
+            </div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-textfield
+                class="full-width"
+                type="number"
+                min="0"
+                label="${localize('editor.fields.card_height')}"
+                .value=${this._config.card_height ?? ""}
+                helper="${localize('editor.subtitles.card_height_full')}"
+                .helperPersistent=${true}
+                @input=${e => {
       const raw = e.target.value;
       if (raw === "") {
         this._updateConfig("card_height", undefined);
@@ -11451,7 +16366,67 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       }
       const parsed = Number(raw);
       this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
-    }, localize('common.reset_default'), () => this._updateConfig("card_height", undefined), localize('editor.sections.look_and_feel.controls_typography.title'), localize('editor.sections.look_and_feel.controls_typography.description'), this.hass, {
+    }}
+              ></ha-textfield>
+            </div>
+            <ha-icon
+                class="icon-button"
+                icon="mdi:restore"
+                title="${localize('common.reset_default')}"
+                @click=${() => this._updateConfig("card_height", undefined)}
+              ></ha-icon>
+            </div>
+            <div class="form-row">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "list",
+          label: localize('editor.search_view_options.list')
+        }, {
+          value: "card",
+          label: localize('editor.search_view_options.card')
+        }]
+      }
+    }}
+                .value=${this._config.search_view ?? "list"}
+                label="${localize('editor.fields.search_view')}"
+                helper="${localize('editor.subtitles.search_view')}"
+                @value-changed=${e => this._updateConfig("search_view", e.detail.value)}
+              ></ha-selector>
+            </div>
+            ${this._config.search_view === 'card' ? x`
+              <div class="form-row">
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{
+      number: {
+        min: 1,
+        max: 12,
+        step: 1,
+        mode: "box"
+      }
+    }}
+                  .value=${this._config.search_card_columns ?? 4}
+                  label="${localize('editor.fields.search_card_columns')}"
+                  helper="${localize('editor.subtitles.search_card_columns')}"
+                  @value-changed=${e => this._updateConfig("search_card_columns", e.detail.value)}
+                ></ha-selector>
+              </div>
+            ` : E}
+          </div>
+
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize('editor.sections.look_and_feel.controls_typography.title')}</div>
+            <div class="section-description">${localize('editor.sections.look_and_feel.controls_typography.description')}</div>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11462,12 +16437,69 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "Modern"
         }]
       }
-    }, (_this$_config$control = this._config.control_layout) !== null && _this$_config$control !== void 0 ? _this$_config$control : "classic", localize('editor.fields.control_layout'), localize('editor.subtitles.control_layout_full'), e => this._updateConfig("control_layout", e.detail.value), ((_this$_config$control2 = this._config.control_layout) !== null && _this$_config$control2 !== void 0 ? _this$_config$control2 : "classic") === "modern" ? "" : "opacity: 0.5;", ((_this$_config$control3 = this._config.control_layout) !== null && _this$_config$control3 !== void 0 ? _this$_config$control3 : "classic") === "modern" ? "" : localize('editor.subtitles.only_available_modern'), (_this$_config$swap_pa = this._config.swap_pause_for_stop) !== null && _this$_config$swap_pa !== void 0 ? _this$_config$swap_pa : false, e => this._updateConfig("swap_pause_for_stop", e.target.checked), ((_this$_config$control4 = this._config.control_layout) !== null && _this$_config$control4 !== void 0 ? _this$_config$control4 : "classic") !== "modern", localize('editor.labels.swap_pause_stop'), localize('editor.subtitles.swap_pause_stop'), (_this$_config$adaptiv = this._config.adaptive_controls) !== null && _this$_config$adaptiv !== void 0 ? _this$_config$adaptiv : false, e => this._updateConfig("adaptive_controls", e.target.checked), localize('editor.labels.adaptive_controls'), localize('editor.subtitles.adaptive_controls'), (_this$_config$hide_ac = this._config.hide_active_entity_label) !== null && _this$_config$hide_ac !== void 0 ? _this$_config$hide_ac : false, e => this._updateConfig("hide_active_entity_label", e.target.checked), localize('editor.labels.hide_active_entity'), localize('editor.subtitles.hide_menu_player'), localize('editor.labels.adaptive_text_elements'), localize('editor.subtitles.adaptive_text'), this.hass, {
+    }}
+              .value=${this._config.control_layout ?? "classic"}
+              label="${localize('editor.fields.control_layout')}"
+              helper="${localize('editor.subtitles.control_layout_full')}"
+              @value-changed=${e => this._updateConfig("control_layout", e.detail.value)}
+            ></ha-selector>
+          </div>
+          <div class="form-row"
+            style="${(this._config.control_layout ?? "classic") === "modern" ? "" : "opacity: 0.5;"}"
+            title="${(this._config.control_layout ?? "classic") === "modern" ? "" : localize('editor.subtitles.only_available_modern')}"}>
+            <div>
+              <ha-switch
+                .checked=${this._config.swap_pause_for_stop ?? false}
+                @change=${e => this._updateConfig("swap_pause_for_stop", e.target.checked)}
+                .disabled=${(this._config.control_layout ?? "classic") !== "modern"}
+              ></ha-switch>
+              <span>${localize('editor.labels.swap_pause_stop')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.swap_pause_stop')}</div>
+          </div>
+          <div class="form-row">
+            <div>
+              <ha-switch
+                id="adaptive-controls-toggle"
+                .checked=${this._config.adaptive_controls ?? false}
+                @change=${e => this._updateConfig("adaptive_controls", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.adaptive_controls')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.adaptive_controls')}</div>
+          </div>
+          <div class="form-row">
+            <div>
+              <ha-switch
+                id="hide-active-entity-label-toggle"
+                .checked=${this._config.hide_active_entity_label ?? false}
+                @change=${e => this._updateConfig("hide_active_entity_label", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.hide_active_entity')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.hide_menu_player')}</div>
+          </div>
+        <div class="form-row">
+          <div class="full-width">
+            <span class="form-label">${localize('editor.labels.adaptive_text_elements')}</span>
+            <div class="config-subtitle">${localize('editor.subtitles.adaptive_text')}</div>
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
       select: {
         multiple: true,
         options: ADAPTIVE_TEXT_SELECTOR_OPTIONS
       }
-    }, this._getAdaptiveTextTargetsValue(), e => this._onAdaptiveTextTargetsChanged(e.detail.value), this.hass, {
+    }}
+              .value=${this._getAdaptiveTextTargetsValue()}
+              @value-changed=${e => this._onAdaptiveTextTargetsChanged(e.detail.value)}
+            ></ha-selector>
+          </div>
+        </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11481,7 +16513,67 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "Hidden"
         }]
       }
-    }, (_this$_config$volume_2 = this._config.volume_mode) !== null && _this$_config$volume_2 !== void 0 ? _this$_config$volume_2 : "slider", localize('editor.fields.volume_mode'), e => this._updateConfig("volume_mode", e.detail.value), renderVolumeStep, localize('editor.sections.look_and_feel.collapsed_idle.title'), localize('editor.sections.look_and_feel.collapsed_idle.description'), (_this$_config$collaps = this._config.collapse_on_idle) !== null && _this$_config$collaps !== void 0 ? _this$_config$collaps : false, e => this._updateConfig("collapse_on_idle", e.target.checked), localize('editor.labels.collapse_on_idle'), !this._config.always_collapsed ? "" : "opacity: 0.5;", !this._config.always_collapsed ? "" : localize('editor.subtitles.not_available_collapsed'), (_this$_config$hide_me = this._config.hide_menu_player) !== null && _this$_config$hide_me !== void 0 ? _this$_config$hide_me : false, e => this._updateConfig("hide_menu_player", e.target.checked), !!this._config.always_collapsed || this._config.always_collapsed === true && this._config.pin_search_headers === true && this._config.expand_on_search === true, localize('editor.labels.hide_menu_player_toggle'), (_this$_config$always_ = this._config.always_collapsed) !== null && _this$_config$always_ !== void 0 ? _this$_config$always_ : false, e => this._updateConfig("always_collapsed", e.target.checked), localize('editor.labels.always_collapsed'), this._config.always_collapsed ? "" : "opacity: 0.5;", this._config.always_collapsed ? "" : localize('editor.subtitles.only_available_collapsed'), (_this$_config$expand_ = this._config.expand_on_search) !== null && _this$_config$expand_ !== void 0 ? _this$_config$expand_ : false, e => this._updateConfig("expand_on_search", e.target.checked), !this._config.always_collapsed, localize('editor.labels.expand_on_search'), localize('editor.subtitles.collapse_expand'), this.hass, {
+    }}
+              .value=${this._config.volume_mode ?? "slider"}
+              label="${localize('editor.fields.volume_mode')}"
+              @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
+            ></ha-selector>
+          </div>
+          ${renderVolumeStep}
+        </div>
+
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize('editor.sections.look_and_feel.collapsed_idle.title')}</div>
+            <div class="section-description">${localize('editor.sections.look_and_feel.collapsed_idle.description')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="collapse-on-idle-toggle"
+                .checked=${this._config.collapse_on_idle ?? false}
+                @change=${e => this._updateConfig("collapse_on_idle", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.collapse_on_idle')}</span>
+            </div>
+            <div style="${!this._config.always_collapsed ? "" : "opacity: 0.5;"}"
+              title="${!this._config.always_collapsed ? "" : localize('editor.subtitles.not_available_collapsed')}">
+              <ha-switch
+                id="hide-menu-player-toggle"
+                .checked=${this._config.hide_menu_player ?? false}
+                @change=${e => this._updateConfig("hide_menu_player", e.target.checked)}
+                .disabled=${!!this._config.always_collapsed || this._config.always_collapsed === true && this._config.pin_search_headers === true && this._config.expand_on_search === true}
+              ></ha-switch>
+              <span>${localize('editor.labels.hide_menu_player_toggle')}</span>
+            </div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="always-collapsed-toggle"
+                .checked=${this._config.always_collapsed ?? false}
+                @change=${e => this._updateConfig("always_collapsed", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.always_collapsed')}</span>
+            </div>
+            <div style="${this._config.always_collapsed ? "" : "opacity: 0.5;"}"
+              title="${this._config.always_collapsed ? "" : localize('editor.subtitles.only_available_collapsed')}">
+              <ha-switch
+                id="expand-on-search-toggle"
+                .checked=${this._config.expand_on_search ?? false}
+                @change=${e => this._updateConfig("expand_on_search", e.target.checked)}
+                .disabled=${!this._config.always_collapsed}
+              ></ha-switch>
+              <span>${localize('editor.labels.expand_on_search')}</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="config-subtitle">${localize('editor.subtitles.collapse_expand')}</div>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11498,38 +16590,145 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "Next Up"
         }]
       }
-    }, (_this$_config$idle_sc = this._config.idle_screen) !== null && _this$_config$idle_sc !== void 0 ? _this$_config$idle_sc : "default", localize('editor.fields.idle_screen'), e => this._updateConfig("idle_screen", e.detail.value), localize('editor.subtitles.idle_screen'));
+    }}
+              .value=${this._config.idle_screen ?? "default"}
+              label="${localize('editor.fields.idle_screen')}"
+              @value-changed=${e => this._updateConfig("idle_screen", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">${localize('editor.subtitles.idle_screen')}</div>
+          </div>
+        </div>
+
+      `;
   }
   _renderActionsTab() {
-    var _this$_config$actions3;
-    let actions = [...((_this$_config$actions3 = this._config.actions) !== null && _this$_config$actions3 !== void 0 ? _this$_config$actions3 : [])];
-    return x(_templateObject19$1 || (_templateObject19$1 = _taggedTemplateLiteral(["\n        <div class=\"action-group config-section\">\n          <div class=\"action-group-header section-header\">\n            <div class=\"action-group-title section-title\">", "</div>\n            <div class=\"section-description\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <yamp-sortable @item-moved=", ">\n              <div class=\"sortable-container\">\n                ", "\n              </div>\n            </yamp-sortable>\n          </div>\n          <div class=\"add-action-button-wrapper\">\n            <ha-icon\n              class=\"icon-button\"\n              icon=\"mdi:plus\"\n              title=\"Add Action\"\n              @click=", "\n            ></ha-icon>\n          </div>\n        </div>\n      "])), localize('editor.sections.actions.title'), localize('editor.sections.actions.description'), e => this._onActionMoved(e), actions.map((act, idx) => {
-      var _act$name;
-      return x(_templateObject20$1 || (_templateObject20$1 = _taggedTemplateLiteral(["\n                  <div class=\"action-row-inner sortable-item\">\n                    <div class=\"handle action-handle\">\n                      <ha-icon icon=\"mdi:drag\"></ha-icon>\n                    </div>\n                    ", "\n                    <div class=\"grow-children\">\n                      <ha-textfield\n                        placeholder=\"(Icon Only)\"\n                        .value=", "\n                        .helper=", "\n                        .helperPersistent=", "\n                        @input=", "\n                      ></ha-textfield>\n                    </div>\n                    <div class=\"action-row-actions\">\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:pencil\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      ", "\n                      <ha-icon\n                        class=\"icon-button icon-button-compact\"\n                        icon=\"mdi:trash-can\"\n                        title=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                    </div>\n                  </div>\n                "])), act !== null && act !== void 0 && act.icon ? x(_templateObject21$1 || (_templateObject21$1 = _taggedTemplateLiteral(["\n                      <ha-icon class=\"action-icon\" icon=\"", "\"></ha-icon>\n                    "])), act === null || act === void 0 ? void 0 : act.icon) : x(_templateObject22$1 || (_templateObject22$1 = _taggedTemplateLiteral(["<span class=\"action-icon-placeholder\"></span>"]))), (_act$name = act === null || act === void 0 ? void 0 : act.name) !== null && _act$name !== void 0 ? _act$name : "", this._getActionHelperText(act), true, a => this._onActionChanged(idx, a.target.value), localize('common.edit_action'), () => this._onEditAction(idx), (act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity" ? x(_templateObject23$1 || (_templateObject23$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-toggle ", "\"\n                        icon=\"", "\"\n                        title=\"", "\"\n                        role=\"button\"\n                        aria-label=\"", "\"\n                        @click=", "\n                      ></ha-icon>\n                      "])), (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? "icon-button-disabled" : (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "active" : "", (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "mdi:menu" : (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? "mdi:image-outline" : "mdi:eye-off-outline" : "mdi:view-grid-outline", (() => {
-        const placementText = (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? localize('editor.placements.hidden') : "".concat(localize('editor.placements.hidden'), " (").concat(localize('editor.placements.not_triggerable'), ")") : act !== null && act !== void 0 && act.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu');
-        return placementText;
-      })(), (act === null || act === void 0 ? void 0 : act.in_menu) === true ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'), () => {
-        if ((act === null || act === void 0 ? void 0 : act.in_menu) !== "hidden") {
-          this._toggleActionInMenu(idx);
-        }
-      }) : x(_templateObject24$1 || (_templateObject24$1 = _taggedTemplateLiteral(["\n                      <ha-icon\n                        class=\"icon-button icon-button-compact icon-button-disabled\"\n                        icon=\"mdi:eye-off-outline\"\n                        title=\"", "\"\n                      ></ha-icon>\n                      "])), localize('editor.action_types.sync_selected_entity')), localize('editor.fields.delete_action'), () => this._removeAction(idx));
-    }), () => {
-      var _this$_config$actions4;
-      const newActions = [...((_this$_config$actions4 = this._config.actions) !== null && _this$_config$actions4 !== void 0 ? _this$_config$actions4 : []), {}];
+    let actions = [...(this._config.actions ?? [])];
+    return x`
+        <div class="action-group config-section">
+          <div class="action-group-header section-header">
+            <div class="action-group-title section-title">${localize('editor.sections.actions.title')}</div>
+            <div class="section-description">${localize('editor.sections.actions.description')}</div>
+          </div>
+          <div class="form-row">
+            <yamp-sortable @item-moved=${e => this._onActionMoved(e)}>
+              <div class="sortable-container">
+                ${actions.map((act, idx) => x`
+                  <div class="action-row-inner sortable-item">
+                    <div class="handle action-handle">
+                      <ha-icon icon="mdi:drag"></ha-icon>
+                    </div>
+                    ${act !== null && act !== void 0 && act.icon ? x`
+                      <ha-icon class="action-icon" icon="${act === null || act === void 0 ? void 0 : act.icon}" title="Action Icon"></ha-icon>
+                    ` : x`<span class="action-icon-placeholder"></span>`}
+                    <div class="grow-children">
+                      <ha-textfield
+                        placeholder="(Icon Only)"
+                        .value=${(act === null || act === void 0 ? void 0 : act.name) ?? ""}
+                        .helper=${this._getActionHelperText(act)}
+                        .helperPersistent=${true}
+                        @input=${a => this._onActionChanged(idx, a.target.value)}
+                      ></ha-textfield>
+                    </div>
+                    <div class="action-row-actions">
+                      <ha-icon
+                        class="icon-button icon-button-compact"
+                        icon="mdi:pencil"
+                        title="${localize('common.edit_action')}"
+                        @click=${() => this._onEditAction(idx)}
+                      ></ha-icon>
+                      ${(act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity" ? x`
+                      <ha-icon
+                        class="icon-button icon-button-compact icon-button-toggle ${(act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? "icon-button-disabled" : (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "active" : ""}"
+                        icon="${(act === null || act === void 0 ? void 0 : act.in_menu) === true ? "mdi:menu" : (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? "mdi:image-outline" : "mdi:eye-off-outline" : "mdi:view-grid-outline"}"
+                        title="${(() => {
+      const placementText = (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? localize('editor.placements.hidden') : `${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})` : act !== null && act !== void 0 && act.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu');
+      return placementText;
+    })()}"
+                        role="button"
+                        aria-label="${(act === null || act === void 0 ? void 0 : act.in_menu) === true ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
+                        @click=${() => {
+      if ((act === null || act === void 0 ? void 0 : act.in_menu) !== "hidden") {
+        this._toggleActionInMenu(idx);
+      }
+    }}
+                      ></ha-icon>
+                      ` : x`
+                      <ha-icon
+                        class="icon-button icon-button-compact icon-button-disabled"
+                        icon="mdi:eye-off-outline"
+                        title="${localize('editor.action_types.sync_selected_entity')}"
+                      ></ha-icon>
+                      `}
+                      <ha-icon
+                        class="icon-button icon-button-compact"
+                        icon="mdi:trash-can"
+                        title="${localize('editor.fields.delete_action')}"
+                        @click=${() => this._removeAction(idx)}
+                      ></ha-icon>
+                    </div>
+                  </div>
+                `)}
+              </div>
+            </yamp-sortable>
+          </div>
+          <div class="add-action-button-wrapper">
+            <ha-icon
+              class="icon-button"
+              icon="mdi:plus"
+              title="Add Action"
+              @click=${() => {
+      const newActions = [...(this._config.actions ?? []), {}];
       const newIndex = newActions.length - 1;
       this._updateConfig("actions", newActions);
       this._onEditAction(newIndex);
-    });
+    }}
+            ></ha-icon>
+          </div>
+        </div>
+      `;
   }
   _renderEntityEditor(entity) {
-    var _this$hass6, _entity$entity_id, _entity$name, _this$_useTemplate, _this$_useTemplate2, _entity$music_assista, _entity$music_assista2, _entity$disable_auto_, _entity$group_volume, _entity$follow_active, _entity$follow_active2, _this$_useVolTemplate, _entity$follow_active3, _this$_useVolTemplate2, _entity$volume_entity, _entity$volume_entity2, _entity$entity_id2, _entity$follow_active4, _entity$sync_power;
+    var _this$hass6;
     const stateObj = (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[entity === null || entity === void 0 ? void 0 : entity.entity_id];
     const showGroupVolume = this._isGroupCapable(stateObj);
-    return x(_templateObject25$1 || (_templateObject25$1 = _taggedTemplateLiteral(["\n        <div class=\"entity-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"entity-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n          \n            disabled\n          ></ha-selector>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            .selector=", "\n            .value=", "\n            .required=", "\n            .invalid=", "\n            label=\"", "\"\n            helper=\"", "\"\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n \n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"ma-template-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"ma-template-toggle\">", "</label>\n          </div>\n        </div>\n\n        ", "\n\n        <div class=\"form-row\">\n          <ha-switch\n            id=\"disable-auto-select-toggle\"\n            .checked=", "\n            @change=", "\n          ></ha-switch>\n          <label for=\"disable-auto-select-toggle\">", "</label>\n          <div class=\"config-subtitle\">", "</div>\n        </div>\n\n        ", "\n\n        <div class=\"form-row form-row-multi-column\">\n          <div>\n            <ha-switch\n              id=\"follow-active-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"follow-active-toggle\">", "</label>\n          </div>\n          ", "\n        </div>\n\n        ", "\n\n        ", "\n\n        ", "\n        </div>\n      "])), this._onBackFromEntityEditor, localize('editor.titles.edit_entity'), this.hass, {
+    return x`
+        <div class="entity-editor-header">
+          <ha-icon
+            class="icon-button"
+            icon="mdi:chevron-left"
+            title="${localize('common.back')}"
+            @click=${this._onBackFromEntityEditor}>
+          </ha-icon>
+          <div class="entity-editor-title">${localize('editor.titles.edit_entity')}</div>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
       entity: {
         domain: "media_player"
       }
-    }, (_entity$entity_id = entity === null || entity === void 0 ? void 0 : entity.entity_id) !== null && _entity$entity_id !== void 0 ? _entity$entity_id : "", localize('editor.fields.name'), (_entity$name = entity === null || entity === void 0 ? void 0 : entity.name) !== null && _entity$name !== void 0 ? _entity$name : "", e => this._updateEntityProperty("name", e.target.value), this.hass, {
+    }}
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
+          
+            disabled
+          ></ha-selector>
+        </div>
+
+        <div class="form-row">
+          <ha-textfield
+            class="full-width"
+            label="${localize('editor.fields.name')}"
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.name) ?? ""}
+            @input=${e => this._updateEntityProperty("name", e.target.value)}
+          ></ha-textfield>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
       select: {
         mode: "dropdown",
         multiple: true,
@@ -11559,9 +16758,69 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "Power"
         }]
       }
-    }, Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ? entity.hidden_controls : [], false, false, localize('editor.fields.hidden_controls'), localize('editor.subtitles.hide_controls'), e => this._updateEntityProperty("hidden_controls", e.detail.value), (_this$_useTemplate = this._useTemplate) !== null && _this$_useTemplate !== void 0 ? _this$_useTemplate : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity), e => {
+    }}
+            .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ? entity.hidden_controls : []}
+            .required=${false}
+            .invalid=${false}
+            label="${localize('editor.fields.hidden_controls')}"
+            helper="${localize('editor.subtitles.hide_controls')}"
+            @value-changed=${e => this._updateEntityProperty("hidden_controls", e.detail.value)}
+          ></ha-selector>
+        </div>
+
+ 
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="ma-template-toggle"
+              .checked=${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)}
+              @change=${e => {
       this._useTemplate = e.target.checked;
-    }, localize('editor.labels.use_ma_template'), ((_this$_useTemplate2 = this._useTemplate) !== null && _this$_useTemplate2 !== void 0 ? _this$_useTemplate2 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)) ? x(_templateObject26$1 || (_templateObject26$1 = _taggedTemplateLiteral(["\n      <div class=\"form-row\">\n        <div class=", ">\n          <ha-code-editor\n            id=\"ma-template-editor\"\n            label=\"", "\"\n            .hass=", "\n            mode=\"jinja2\"\n            autocomplete-entities\n            .value=", "\n            @value-changed=", "\n          ></ha-code-editor>\n          <div class=\"help-text\">\n            <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n            ", "\n            <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}\n  media_player.picore_house\n{% else %}\n  media_player.ma_wiim_mini\n{% endif %}</pre>\n           </pre>\n          </div>\n        </div>\n      </div>\n    "])), this._yamlError && ((_entity$music_assista = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista !== void 0 ? _entity$music_assista : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.ma_template'), this.hass, (_entity$music_assista2 = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) !== null && _entity$music_assista2 !== void 0 ? _entity$music_assista2 : "", e => this._updateEntityProperty("music_assistant_entity", e.detail.value), localize('editor.subtitles.jinja_template_hint')) : x(_templateObject27$1 || (_templateObject27$1 = _taggedTemplateLiteral(["\n      <div class=\"form-row\">\n        <ha-generic-picker\n          .hass=", "\n          .value=", "\n          .label=", "\n          .valueRenderer=", "\n          .rowRenderer=", "\n          .getItems=", "\n          @value-changed=", "\n          allow-custom-value\n        ></ha-generic-picker>\n      </div>\n      ", "\n    "])), this.hass, this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? entity.music_assistant_entity : "", localize('editor.fields.ma_entity'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["media_player"]), e => this._updateEntityProperty("music_assistant_entity", e.detail.value), ((_this$hass7, _this$_looksLikeTempl, _this$hass8) => {
+    }}
+            ></ha-switch>
+            <label for="ma-template-toggle">${localize('editor.labels.use_ma_template')}</label>
+          </div>
+        </div>
+
+        ${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? x`
+      <div class="form-row">
+        <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+          <ha-code-editor
+            id="ma-template-editor"
+            label="${localize('editor.fields.ma_template')}"
+            .hass=${this.hass}
+            mode="jinja2"
+            autocomplete-entities
+            .value=${(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ?? ""}
+            @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+          ></ha-code-editor>
+          <div class="help-text">
+            <ha-icon icon="mdi:information-outline"></ha-icon>
+            ${localize('editor.subtitles.jinja_template_hint')}
+            <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
+  media_player.picore_house
+{% else %}
+  media_player.ma_wiim_mini
+{% endif %}</pre>
+           </pre>
+          </div>
+        </div>
+      </div>
+    ` : x`
+      <div class="form-row">
+        <ha-generic-picker
+          .hass=${this.hass}
+          .value=${this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity) ? entity.music_assistant_entity : ""}
+          .label=${localize('editor.fields.ma_entity')}
+          .valueRenderer=${v => this._entityValueRenderer(v)}
+          .rowRenderer=${item => this._entityRowRenderer(item)}
+          .getItems=${this._getEntityItems(["media_player"])}
+          @value-changed=${e => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+          allow-custom-value
+        ></ha-generic-picker>
+      </div>
+      ${((_this$hass7, _this$_looksLikeTempl, _this$hass8) => {
       const mainId = entity === null || entity === void 0 ? void 0 : entity.entity_id;
       const mainState = mainId ? (_this$hass7 = this.hass) === null || _this$hass7 === void 0 || (_this$hass7 = _this$hass7.states) === null || _this$hass7 === void 0 ? void 0 : _this$hass7[mainId] : undefined;
       const mainIsMA = mainState ? isMusicAssistantEntity(mainState) : false;
@@ -11573,7 +16832,11 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       // Only show under the dropdown (non-template path)
       const showHiddenFilterChips = mainIsMA || maIsMA;
       if (!showHiddenFilterChips) return E;
-      return x(_templateObject28$1 || (_templateObject28$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              .required=", "\n              .invalid=", "\n              label=\"", "\"\n              helper=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, {
+      return x`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
         select: {
           mode: "dropdown",
           multiple: true,
@@ -11600,22 +16863,171 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             label: "Episode"
           }]
         }
-      }, Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ? entity.hidden_filter_chips : [], false, false, localize('editor.fields.hidden_chips'), localize('editor.subtitles.hide_search_chips'), e => this._updateEntityProperty("hidden_filter_chips", e.detail.value));
-    })()), (_entity$disable_auto_ = entity === null || entity === void 0 ? void 0 : entity.disable_auto_select) !== null && _entity$disable_auto_ !== void 0 ? _entity$disable_auto_ : false, e => this._updateEntityProperty("disable_auto_select", e.target.checked), localize('editor.labels.disable_auto_select'), localize('editor.subtitles.disable_auto_select'), showGroupVolume ? x(_templateObject29$1 || (_templateObject29$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-switch\n              id=\"group-volume-toggle\"\n              .checked=", "\n              @change=", "\n            ></ha-switch>\n            <label for=\"group-volume-toggle\">Group Volume</label>\n          </div>\n        "])), (_entity$group_volume = entity === null || entity === void 0 ? void 0 : entity.group_volume) !== null && _entity$group_volume !== void 0 ? _entity$group_volume : true, e => this._updateEntityProperty("group_volume", e.target.checked)) : E, (_entity$follow_active = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active !== void 0 ? _entity$follow_active : false, e => this._updateEntityProperty("follow_active_volume", e.target.checked), localize('editor.labels.follow_active_entity'), !((_entity$follow_active2 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active2 !== void 0 ? _entity$follow_active2 : false) ? x(_templateObject30$1 || (_templateObject30$1 = _taggedTemplateLiteral(["\n            <div>\n              <ha-switch\n                id=\"vol-template-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"vol-template-toggle\">", "</label>\n            </div>\n          "])), (_this$_useVolTemplate = this._useVolTemplate) !== null && _this$_useVolTemplate !== void 0 ? _this$_useVolTemplate : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity), e => {
+      }}
+              .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ? entity.hidden_filter_chips : []}
+              .required=${false}
+              .invalid=${false}
+              label="${localize('editor.fields.hidden_chips')}"
+              helper="${localize('editor.subtitles.hide_search_chips')}"
+              @value-changed=${e => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
+            ></ha-selector>
+          </div>
+        `;
+    })()}
+    `}
+
+        <div class="form-row">
+          <ha-switch
+            id="disable-auto-select-toggle"
+            .checked=${(entity === null || entity === void 0 ? void 0 : entity.disable_auto_select) ?? false}
+            @change=${e => this._updateEntityProperty("disable_auto_select", e.target.checked)}
+          ></ha-switch>
+          <label for="disable-auto-select-toggle">${localize('editor.labels.disable_auto_select')}</label>
+          <div class="config-subtitle">${localize('editor.subtitles.disable_auto_select')}</div>
+        </div>
+
+        ${showGroupVolume ? x`
+          <div class="form-row">
+            <ha-switch
+              id="group-volume-toggle"
+              .checked=${(entity === null || entity === void 0 ? void 0 : entity.group_volume) ?? true}
+              @change=${e => this._updateEntityProperty("group_volume", e.target.checked)}
+            ></ha-switch>
+            <label for="group-volume-toggle">Group Volume</label>
+          </div>
+        ` : E}
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="follow-active-toggle"
+              .checked=${(entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false}
+              @change=${e => this._updateEntityProperty("follow_active_volume", e.target.checked)}
+            ></ha-switch>
+            <label for="follow-active-toggle">${localize('editor.labels.follow_active_entity')}</label>
+          </div>
+          ${!((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
+            <div>
+              <ha-switch
+                id="vol-template-toggle"
+                .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)}
+                @change=${e => {
       this._useVolTemplate = e.target.checked;
-    }, localize('editor.labels.use_vol_template')) : E, !((_entity$follow_active3 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active3 !== void 0 ? _entity$follow_active3 : false) ? x(_templateObject31$1 || (_templateObject31$1 = _taggedTemplateLiteral(["\n          ", "\n        "])), ((_this$_useVolTemplate2 = this._useVolTemplate) !== null && _this$_useVolTemplate2 !== void 0 ? _this$_useVolTemplate2 : this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)) ? x(_templateObject32$1 || (_templateObject32$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <div class=", ">\n                    <ha-code-editor\n                      id=\"vol-template-editor\"\n                      label=\"", "\"\n                      .hass=", "\n                      mode=\"jinja2\"\n                      autocomplete-entities\n                      .value=", "\n                      @value-changed=", "\n                    ></ha-code-editor>\n                    <div class=\"help-text\">\n                      <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n                      ", "\n                      <pre style=\"margin:6px 0; white-space:pre-wrap;\">{% if is_state('input_boolean.tv_volume','on') %}\n  remote.soundbar\n{% else %}\n  media_player.office_homepod\n{% endif %}</pre>\n                    </div>\n                  </div>\n                </div>\n              "])), this._yamlError && ((_entity$volume_entity = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity !== void 0 ? _entity$volume_entity : "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.vol_template'), this.hass, (_entity$volume_entity2 = entity === null || entity === void 0 ? void 0 : entity.volume_entity) !== null && _entity$volume_entity2 !== void 0 ? _entity$volume_entity2 : "", e => this._updateEntityProperty("volume_entity", e.detail.value), localize('editor.subtitles.jinja_template_vol_hint')) : x(_templateObject33$1 || (_templateObject33$1 = _taggedTemplateLiteral(["\n                <div class=\"form-row\">\n                  <ha-generic-picker\n                    .hass=", "\n                    .value=", "\n                    .label=", "\n                    .valueRenderer=", "\n                    .rowRenderer=", "\n                    .getItems=", "\n                    @value-changed=", "\n                    allow-custom-value\n                  ></ha-generic-picker>\n                </div>\n              "])), this.hass, this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (_entity$entity_id2 = entity === null || entity === void 0 ? void 0 : entity.entity_id) !== null && _entity$entity_id2 !== void 0 ? _entity$entity_id2 : "", localize('editor.fields.vol_entity'), v => this._entityValueRenderer(v), item => this._entityRowRenderer(item), this._getEntityItems(["media_player", "remote"]), e => {
+    }}
+              ></ha-switch>
+              <label for="vol-template-toggle">${localize('editor.labels.use_vol_template')}</label>
+            </div>
+          ` : E}
+        </div>
+
+        ${!((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
+          ${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? x`
+                <div class="form-row">
+                  <div class=${this._yamlError && ((entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? "").trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+                    <ha-code-editor
+                      id="vol-template-editor"
+                      label="${localize('editor.fields.vol_template')}"
+                      .hass=${this.hass}
+                      mode="jinja2"
+                      autocomplete-entities
+                      .value=${(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ?? ""}
+                      @value-changed=${e => this._updateEntityProperty("volume_entity", e.detail.value)}
+                    ></ha-code-editor>
+                    <div class="help-text">
+                      <ha-icon icon="mdi:information-outline"></ha-icon>
+                      ${localize('editor.subtitles.jinja_template_vol_hint')}
+                      <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
+  remote.soundbar
+{% else %}
+  media_player.office_homepod
+{% endif %}</pre>
+                    </div>
+                  </div>
+                </div>
+              ` : x`
+                <div class="form-row">
+                  <ha-generic-picker
+                    .hass=${this.hass}
+                    .value=${this._isEntityId(entity === null || entity === void 0 ? void 0 : entity.volume_entity) ? entity.volume_entity : (entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
+                    .label=${localize('editor.fields.vol_entity')}
+                    .valueRenderer=${v => this._entityValueRenderer(v)}
+                    .rowRenderer=${item => this._entityRowRenderer(item)}
+                    .getItems=${this._getEntityItems(["media_player", "remote"])}
+                    @value-changed=${e => {
       const value = e.detail.value;
       this._updateEntityProperty("volume_entity", value);
       if (!value || value === entity.entity_id) {
         // sync_power is meaningless in these cases
         this._updateEntityProperty("sync_power", false);
       }
-    })) : E, entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((_entity$follow_active4 = entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) !== null && _entity$follow_active4 !== void 0 ? _entity$follow_active4 : false) ? x(_templateObject34$1 || (_templateObject34$1 = _taggedTemplateLiteral(["\n              <div class=\"form-row form-row-multi-column\">\n                <div>\n                  <ha-switch\n                    id=\"sync-power-toggle\"\n                    .checked=", "\n                    @change=", "\n                  ></ha-switch>\n                  <label for=\"sync-power-toggle\">Sync Power</label>\n                </div>\n              </div>\n            "])), (_entity$sync_power = entity === null || entity === void 0 ? void 0 : entity.sync_power) !== null && _entity$sync_power !== void 0 ? _entity$sync_power : false, e => this._updateEntityProperty("sync_power", e.target.checked)) : E, entity !== null && entity !== void 0 && entity.follow_active_volume ? x(_templateObject35$1 || (_templateObject35$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon icon=\"mdi:information-outline\"></ha-icon>\n              ", "\n              <br><br>\n            </div>\n        "])), localize('editor.subtitles.follow_active_entity')) : E);
+    }}
+                    allow-custom-value
+                  ></ha-generic-picker>
+                </div>
+              `}
+        ` : E}
+
+        ${entity !== null && entity !== void 0 && entity.volume_entity && entity.volume_entity !== entity.entity_id && !((entity === null || entity === void 0 ? void 0 : entity.follow_active_volume) ?? false) ? x`
+              <div class="form-row form-row-multi-column">
+                <div>
+                  <ha-switch
+                    id="sync-power-toggle"
+                    .checked=${(entity === null || entity === void 0 ? void 0 : entity.sync_power) ?? false}
+                    @change=${e => this._updateEntityProperty("sync_power", e.target.checked)}
+                  ></ha-switch>
+                  <label for="sync-power-toggle">Sync Power</label>
+                </div>
+              </div>
+            ` : E}
+
+        ${entity !== null && entity !== void 0 && entity.follow_active_volume ? x`
+            <div class="help-text">
+              <ha-icon icon="mdi:information-outline"></ha-icon>
+              ${localize('editor.subtitles.follow_active_entity')}
+              <br><br>
+            </div>
+        ` : E}
+        </div>
+      `;
   }
   _renderActionEditor(action) {
-    var _this$_actionMode, _action$name, _action$icon, _this$_actionMode2, _action$menu_item, _action$navigation_pa, _action$navigation_ne, _action$sync_entity_h, _action$sync_entity_t, _action$service, _action$script_variab;
-    const actionMode = (_this$_actionMode = this._actionMode) !== null && _this$_actionMode !== void 0 ? _this$_actionMode : this._deriveActionMode(action);
-    return x(_templateObject36$1 || (_templateObject36$1 = _taggedTemplateLiteral(["\n        <div class=\"action-editor-header\">\n          <ha-icon\n            class=\"icon-button\"\n            icon=\"mdi:chevron-left\"\n            @click=", ">\n          </ha-icon>\n          <div class=\"action-editor-title\">", "</div>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-textfield\n            class=\"full-width\"\n            label=\"", "\"\n            placeholder=\"(Icon Only)\"\n            .value=", "\n            @input=", "\n          ></ha-textfield>\n        </div>\n\n        <div class=\"form-row\">\n          <ha-icon-picker\n            label=\"", "\"\n            .hass=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-icon-picker>\n        </div>\n \n        <div class=\"form-row form-row-multi-column\">\n          <div class=\"grow-children\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .disabled=", "\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n          <div class=\"grow-children\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .disabled=", "\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        </div>\n        ", "\n\n        <div class=\"form-row\">\n          <ha-selector\n            .hass=", "\n            label=\"", "\"\n            .selector=", "\n            .value=", "\n            @value-changed=", "\n          ></ha-selector>\n        </div>\n\n        \n        ", " \n        ", "\n        ", "\n        ", "\n      </div>"])), this._onBackFromActionEditor, localize('editor.titles.edit_action'), localize('editor.fields.name'), (_action$name = action === null || action === void 0 ? void 0 : action.name) !== null && _action$name !== void 0 ? _action$name : "", e => this._updateActionProperty("name", e.target.value), localize('editor.fields.icon'), this.hass, (_action$icon = action === null || action === void 0 ? void 0 : action.icon) !== null && _action$icon !== void 0 ? _action$icon : "", e => this._updateActionProperty("icon", e.detail.value), this.hass, localize('editor.fields.placement'), actionMode === "sync_selected_entity", {
+    const actionMode = this._actionMode ?? this._deriveActionMode(action);
+    return x`
+        <div class="action-editor-header">
+          <ha-icon
+            class="icon-button"
+            icon="mdi:chevron-left"
+            @click=${this._onBackFromActionEditor}>
+          </ha-icon>
+          <div class="action-editor-title">${localize('editor.titles.edit_action')}</div>
+        </div>
+
+        <div class="form-row">
+          <ha-textfield
+            class="full-width"
+            label="${localize('editor.fields.name')}"
+            placeholder="(Icon Only)"
+            .value=${(action === null || action === void 0 ? void 0 : action.name) ?? ""}
+            @input=${e => this._updateActionProperty("name", e.target.value)}
+          ></ha-textfield>
+        </div>
+
+        <div class="form-row">
+          <ha-icon-picker
+            label="${localize('editor.fields.icon')}"
+            .hass=${this.hass}
+            .value=${(action === null || action === void 0 ? void 0 : action.icon) ?? ""}
+            @value-changed=${e => this._updateActionProperty("icon", e.detail.value)}
+          ></ha-icon-picker>
+        </div>
+ 
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              label="${localize('editor.fields.placement')}"
+              .disabled=${actionMode === "sync_selected_entity"}
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11629,7 +17041,9 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: localize('editor.placements.hidden')
         }]
       }
-    }, (action === null || action === void 0 ? void 0 : action.in_menu) === "hidden" ? "hidden" : action !== null && action !== void 0 && action.in_menu ? "menu" : "chip", e => {
+    }}
+              .value=${(action === null || action === void 0 ? void 0 : action.in_menu) === "hidden" ? "hidden" : action !== null && action !== void 0 && action.in_menu ? "menu" : "chip"}
+              @value-changed=${e => {
       const val = e.detail.value;
       let inMenu = false;
       if (val === "menu") inMenu = true;else if (val === "hidden") inMenu = "hidden";
@@ -11637,7 +17051,15 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       if (val !== "hidden") {
         this._updateActionProperty("card_trigger", "none");
       }
-    }, this.hass, localize('editor.fields.card_trigger'), actionMode === "sync_selected_entity" || (action === null || action === void 0 ? void 0 : action.in_menu) !== "hidden", {
+    }}
+            ></ha-selector>
+          </div>
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              label="${localize('editor.fields.card_trigger')}"
+              .disabled=${actionMode === "sync_selected_entity" || (action === null || action === void 0 ? void 0 : action.in_menu) !== "hidden"}
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11660,7 +17082,24 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: localize('editor.triggers.swipe_right')
         }]
       }
-    }, (action === null || action === void 0 ? void 0 : action.card_trigger) || "none", e => this._updateActionProperty("card_trigger", e.detail.value), (action === null || action === void 0 ? void 0 : action.in_menu) === "hidden" && (!(action !== null && action !== void 0 && action.card_trigger) || (action === null || action === void 0 ? void 0 : action.card_trigger) === "none") && actionMode !== "sync_selected_entity" ? x(_templateObject37$1 || (_templateObject37$1 = _taggedTemplateLiteral(["\n          <div class=\"help-text\">\n            <ha-icon icon=\"mdi:alert-circle-outline\"></ha-icon>\n            ", " (", ")\n          </div>\n        "])), localize('editor.placements.hidden'), localize('editor.placements.not_triggerable')) : E, this.hass, localize('editor.fields.action_type'), {
+    }}
+              .value=${(action === null || action === void 0 ? void 0 : action.card_trigger) || "none"}
+              @value-changed=${e => this._updateActionProperty("card_trigger", e.detail.value)}
+            ></ha-selector>
+          </div>
+        </div>
+        ${(action === null || action === void 0 ? void 0 : action.in_menu) === "hidden" && (!(action !== null && action !== void 0 && action.card_trigger) || (action === null || action === void 0 ? void 0 : action.card_trigger) === "none") && actionMode !== "sync_selected_entity" ? x`
+          <div class="help-text">
+            <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+            ${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})
+          </div>
+        ` : E}
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            label="${localize('editor.fields.action_type')}"
+            .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11677,17 +17116,19 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: localize('editor.action_types.sync_selected_entity')
         }]
       }
-    }, (_this$_actionMode2 = this._actionMode) !== null && _this$_actionMode2 !== void 0 ? _this$_actionMode2 : this._deriveActionMode(action), e => {
+    }}
+            .value=${this._actionMode ?? this._deriveActionMode(action)}
+            @value-changed=${e => {
       const mode = e.detail.value;
       this._actionMode = mode;
       if (mode === "service") {
-        var _this$_config$actions5;
+        var _this$_config$actions2;
         this._updateActionProperty("menu_item", undefined);
         this._updateActionProperty("navigation_path", undefined);
         this._updateActionProperty("navigation_new_tab", undefined);
         this._updateActionProperty("action", undefined);
         // Initialize service to empty string so Service Data editor renders immediately
-        if (!((_this$_config$actions5 = this._config.actions) !== null && _this$_config$actions5 !== void 0 && (_this$_config$actions5 = _this$_config$actions5[this._actionEditorIndex]) !== null && _this$_config$actions5 !== void 0 && _this$_config$actions5.service)) {
+        if (!((_this$_config$actions2 = this._config.actions) !== null && _this$_config$actions2 !== void 0 && (_this$_config$actions2 = _this$_config$actions2[this._actionEditorIndex]) !== null && _this$_config$actions2 !== void 0 && _this$_config$actions2.service)) {
           this._updateActionProperty("service", "");
         }
       } else if (mode === "menu") {
@@ -11720,7 +17161,17 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           this._updateActionProperty("sync_entity_type", "yamp_entity");
         }
       }
-    }, actionMode === "menu" ? x(_templateObject38$1 || (_templateObject38$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n        "])), this.hass, localize('editor.fields.menu_item'), {
+    }}
+          ></ha-selector>
+        </div>
+
+        
+        ${actionMode === "menu" ? x`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              label="${localize('editor.fields.menu_item')}"
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11749,14 +17200,59 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: "Transfer Queue"
         }]
       }
-    }, (_action$menu_item = action === null || action === void 0 ? void 0 : action.menu_item) !== null && _action$menu_item !== void 0 ? _action$menu_item : "", e => this._updateActionProperty("menu_item", e.detail.value || undefined)) : E, actionMode === "navigate" ? x(_templateObject39$1 || (_templateObject39$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-textfield\n              class=\"full-width\"\n              label=\"", "\"\n              placeholder=\"/lovelace/music or #popup\"\n              .value=", "\n              @input=", "\n            ></ha-textfield>\n          </div>\n          <div class=\"form-row form-row-multi-column\">\n            <div>\n              <ha-switch\n                id=\"navigation-new-tab-toggle\"\n                .checked=", "\n                @change=", "\n              ></ha-switch>\n              <label for=\"navigation-new-tab-toggle\">Open External URLs in New Tab</label>\n            </div>\n          </div>\n          <div class=\"form-row\">\n            <div class=\"config-subtitle\">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>\n          </div>\n        "])), localize('editor.fields.nav_path'), (_action$navigation_pa = action === null || action === void 0 ? void 0 : action.navigation_path) !== null && _action$navigation_pa !== void 0 ? _action$navigation_pa : "", e => {
+    }}
+              .value=${(action === null || action === void 0 ? void 0 : action.menu_item) ?? ""}
+              @value-changed=${e => this._updateActionProperty("menu_item", e.detail.value || undefined)}
+            ></ha-selector>
+          </div>
+        ` : E} 
+        ${actionMode === "navigate" ? x`
+          <div class="form-row">
+            <ha-textfield
+              class="full-width"
+              label="${localize('editor.fields.nav_path')}"
+              placeholder="/lovelace/music or #popup"
+              .value=${(action === null || action === void 0 ? void 0 : action.navigation_path) ?? ""}
+              @input=${e => {
       this._updateActionProperty("navigation_path", e.target.value);
       this._updateActionProperty("action", "navigate");
-    }, (_action$navigation_ne = action === null || action === void 0 ? void 0 : action.navigation_new_tab) !== null && _action$navigation_ne !== void 0 ? _action$navigation_ne : false, e => this._updateActionProperty("navigation_new_tab", e.target.checked)) : E, actionMode === "sync_selected_entity" ? x(_templateObject40$1 || (_templateObject40$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              label=\"", "\"\n              .selector=", "\n              .value=", "\n              @value-changed=", "\n            ></ha-selector>\n            <div class=\"config-subtitle\">", "</div>\n          </div>\n        "])), this.hass, {
+    }}
+            ></ha-textfield>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="navigation-new-tab-toggle"
+                .checked=${(action === null || action === void 0 ? void 0 : action.navigation_new_tab) ?? false}
+                @change=${e => this._updateActionProperty("navigation_new_tab", e.target.checked)}
+              ></ha-switch>
+              <label for="navigation-new-tab-toggle">Open External URLs in New Tab</label>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="config-subtitle">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>
+          </div>
+        ` : E}
+        ${actionMode === "sync_selected_entity" ? x`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
       entity: {
         domain: "input_text"
       }
-    }, (_action$sync_entity_h = action === null || action === void 0 ? void 0 : action.sync_entity_helper) !== null && _action$sync_entity_h !== void 0 ? _action$sync_entity_h : "", localize('editor.fields.selected_entity_helper'), e => this._updateActionProperty("sync_entity_helper", e.detail.value), localize('editor.subtitles.selected_entity_helper'), this.hass, localize('editor.fields.sync_entity_type'), {
+    }}
+              .value=${(action === null || action === void 0 ? void 0 : action.sync_entity_helper) ?? ""}
+              label="${localize('editor.fields.selected_entity_helper')}"
+              @value-changed=${e => this._updateActionProperty("sync_entity_helper", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">${localize('editor.subtitles.selected_entity_helper')}</div>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              label="${localize('editor.fields.sync_entity_type')}"
+              .selector=${{
       select: {
         mode: "dropdown",
         options: [{
@@ -11770,13 +17266,94 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           label: localize('editor.sync_entity_options.yamp_playback_entity')
         }]
       }
-    }, (_action$sync_entity_t = action === null || action === void 0 ? void 0 : action.sync_entity_type) !== null && _action$sync_entity_t !== void 0 ? _action$sync_entity_t : "yamp_entity", e => this._updateActionProperty("sync_entity_type", e.detail.value), localize('editor.subtitles.sync_entity_type')) : E, actionMode === 'service' ? x(_templateObject41$1 || (_templateObject41$1 = _taggedTemplateLiteral(["\n          <div class=\"form-row\">\n            <ha-selector\n              .hass=", "\n              .selector=", "\n              .value=", "\n              label=\"", "\"\n              .required=", "\n              @value-changed=", "\n            ></ha-selector>\n          </div>\n\n          ", "\n\n          ", "\n        "])), this.hass, {
+    }}
+              .value=${(action === null || action === void 0 ? void 0 : action.sync_entity_type) ?? "yamp_entity"}
+              @value-changed=${e => this._updateActionProperty("sync_entity_type", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">${localize('editor.subtitles.sync_entity_type')}</div>
+          </div>
+        ` : E}
+        ${actionMode === 'service' ? x`
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
       select: {
         mode: "dropdown",
         filterable: true,
         options: this._serviceItems || []
       }
-    }, (_action$service = action.service) !== null && _action$service !== void 0 ? _action$service : "", localize('editor.fields.service'), true, e => this._updateActionProperty("service", e.detail.value), typeof action.service === "string" && action.service.startsWith("script.") ? x(_templateObject42$1 || (_templateObject42$1 = _taggedTemplateLiteral(["\n            <div class=\"form-row form-row-multi-column\">\n              <div>\n                <ha-switch\n                  id=\"script-variable-toggle\"\n                  .checked=", "\n                  @change=", "\n                ></ha-switch>\n                <span>", "</span>\n              </div>\n            </div>\n          "])), (_action$script_variab = action === null || action === void 0 ? void 0 : action.script_variable) !== null && _action$script_variab !== void 0 ? _action$script_variab : false, e => this._updateActionProperty("script_variable", e.target.checked), localize('editor.labels.script_var')) : E, typeof action.service === "string" ? x(_templateObject43$1 || (_templateObject43$1 = _taggedTemplateLiteral(["\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n\n              ", "\n\n            </div>\n            <div class=\"help-text\">\n              <ha-icon\n                icon=\"mdi:information-outline\"\n              ></ha-icon>\n            ", "\n            </div>\n            <div class=\"form-row\">\n              <div class=\"service-data-editor-header\">\n                <div class=\"service-data-editor-title\">", "</div>\n                <div class=\"service-data-editor-actions\">\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:content-save\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n                    class=\"icon-button ", "\"\n                    icon=\"mdi:backup-restore\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>\n                  <ha-icon\n\n                    class=\"icon-button ", "\"\n\n                    icon=\"mdi:play-circle-outline\"\n                    title=\"", "\"\n                    @click=", "\n                  ></ha-icon>              \n                </div>\n            </div>\n            <div class=", ">\n              <ha-code-editor\n                id=\"service-data-editor\"\n                label=\"", "\"\n                autocomplete-entities\n                autocomplete-icons\n                .hass=", "\n                mode=\"yaml\"\n                .value=", "\n                @value-changed=", "\n              ></ha-code-editor>\n              ", "\n            </div>\n          "])), localize('editor.subtitles.entity_current_hint'), localize('editor.subtitles.service_data_note'), localize('editor.titles.service_data'), !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.save_service_data'), this._saveYamlEditor, !this._yamlModified ? "icon-button-disabled" : "", localize('editor.fields.revert_service_data'), this._revertYamlEditor, this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : "", localize('editor.fields.test_action'), this._testServiceCall, this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper", localize('editor.fields.service_data'), this.hass, action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : "", e => {
+    }}
+              .value=${action.service ?? ""}
+              label="${localize('editor.fields.service')}"
+              .required=${true}
+              @value-changed=${e => this._updateActionProperty("service", e.detail.value)}
+            ></ha-selector>
+          </div>
+
+          ${typeof action.service === "string" && action.service.startsWith("script.") ? x`
+            <div class="form-row form-row-multi-column">
+              <div>
+                <ha-switch
+                  id="script-variable-toggle"
+                  .checked=${(action === null || action === void 0 ? void 0 : action.script_variable) ?? false}
+                  @change=${e => this._updateActionProperty("script_variable", e.target.checked)}
+                ></ha-switch>
+                <span>${localize('editor.labels.script_var')}</span>
+              </div>
+            </div>
+          ` : E}
+
+          ${typeof action.service === "string" ? x`
+            <div class="help-text">
+              <ha-icon
+                icon="mdi:information-outline"
+              ></ha-icon>
+
+              ${localize('editor.subtitles.entity_current_hint')}
+
+            </div>
+            <div class="help-text">
+              <ha-icon
+                icon="mdi:information-outline"
+              ></ha-icon>
+            ${localize('editor.subtitles.service_data_note')}
+            </div>
+            <div class="form-row">
+              <div class="service-data-editor-header">
+                <div class="service-data-editor-title">${localize('editor.titles.service_data')}</div>
+                <div class="service-data-editor-actions">
+                  <ha-icon
+                    class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
+                    icon="mdi:content-save"
+                    title="${localize('editor.fields.save_service_data')}"
+                    @click=${this._saveYamlEditor}
+                  ></ha-icon>
+                  <ha-icon
+                    class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
+                    icon="mdi:backup-restore"
+                    title="${localize('editor.fields.revert_service_data')}"
+                    @click=${this._revertYamlEditor}
+                  ></ha-icon>
+                  <ha-icon
+                    class="icon-button ${this._yamlError || this._yamlDraftUsesCurrentEntity() || !(action !== null && action !== void 0 && action.service) ? "icon-button-disabled" : ""}"
+                    icon="mdi:play-circle-outline"
+                    title="${localize('editor.fields.test_action')}"
+                    @click=${this._testServiceCall}
+                  ></ha-icon>
+              
+                </div>
+            </div>
+            <div class=${this._yamlError && this._yamlDraft.trim() !== "" ? "code-editor-wrapper error" : "code-editor-wrapper"}>
+              <ha-code-editor
+                id="service-data-editor"
+                label="${localize('editor.fields.service_data')}"
+                autocomplete-entities
+                autocomplete-icons
+                .hass=${this.hass}
+                mode="yaml"
+                .value=${action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : ""}
+                @value-changed=${e => {
       /* the yaml will be parsed in real time to detect errors, but we will defer 
         updating the config until the save button above the editor is clicked.
       */
@@ -11792,19 +17369,25 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       } catch (err) {
         this._yamlError = err.message;
       }
-    }, this._yamlError && this._yamlDraft.trim() !== "" ? x(_templateObject44$1 || (_templateObject44$1 = _taggedTemplateLiteral(["<div class=\"yaml-error-message\">", "</div>"])), this._yamlError) : E) : E) : E);
+    }}
+              ></ha-code-editor>
+              ${this._yamlError && this._yamlDraft.trim() !== "" ? x`<div class="yaml-error-message">${this._yamlError}</div>` : E}
+            </div>
+          ` : E}
+        ` : E}
+      </div>`;
   }
   _onEntityChanged(index, newValue) {
-    var _this$_config$entitie9;
-    const original = (_this$_config$entitie9 = this._config.entities) !== null && _this$_config$entitie9 !== void 0 ? _this$_config$entitie9 : [];
+    const original = this._config.entities ?? [];
     const updated = [...original];
     if (!newValue) {
       // Remove empty row
       updated.splice(index, 1);
     } else {
-      updated[index] = _objectSpread2$1(_objectSpread2$1({}, updated[index]), {}, {
+      updated[index] = {
+        ...updated[index],
         entity_id: newValue
-      });
+      };
     }
 
     // Always strip blank row before writing to config
@@ -11812,12 +17395,12 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     this._updateConfig("entities", cleaned);
   }
   _onActionChanged(index, newValue) {
-    var _this$_config$actions6;
-    const original = (_this$_config$actions6 = this._config.actions) !== null && _this$_config$actions6 !== void 0 ? _this$_config$actions6 : [];
+    const original = this._config.actions ?? [];
     const updated = [...original];
-    updated[index] = _objectSpread2$1(_objectSpread2$1({}, updated[index]), {}, {
+    updated[index] = {
+      ...updated[index],
       name: newValue
-    });
+    };
     this._updateConfig("actions", updated);
   }
   _getActionHelperText(act) {
@@ -11828,44 +17411,44 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     if (placement === "menu") placementText = " \u2022 In Menu";else if (placement === "hidden") {
       if ((act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity") {
         if (!trigger || trigger === "none") {
-          placementText = " \u2022 ".concat(localize('editor.placements.hidden'), " (").concat(localize('editor.placements.not_triggerable'), ")");
+          placementText = ` \u2022 ${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})`;
         } else {
-          placementText = " \u2022 ".concat(localize('editor.placements.hidden'));
+          placementText = ` \u2022 ${localize('editor.placements.hidden')}`;
         }
       }
     }
     let triggerText = "";
     if (trigger && trigger !== "none") {
-      triggerText = " \u2022 Trigger: ".concat(localize("editor.triggers.".concat(trigger)));
+      triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;
     }
     if ((act === null || act === void 0 ? void 0 : act.action) === "sync_selected_entity") {
-      return "".concat(localize('editor.action_helpers.sync_selected_entity'), " ").concat(act.sync_entity_helper || localize('editor.action_helpers.select_helper')).concat(placementText).concat(triggerText);
+      return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}${placementText}${triggerText}`;
     }
     if (act !== null && act !== void 0 && act.menu_item) {
-      return "Open Menu Item: ".concat(act.menu_item).concat(placementText).concat(triggerText);
+      return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;
     }
     if (act !== null && act !== void 0 && act.service) {
-      return "Call Service: ".concat(act.service).concat(placementText).concat(triggerText);
+      return `Call Service: ${act.service}${placementText}${triggerText}`;
     }
     if (act !== null && act !== void 0 && act.navigation_path || (act === null || act === void 0 ? void 0 : act.action) === "navigate") {
       const newTab = act !== null && act !== void 0 && act.navigation_new_tab ? " (New Tab)" : "";
-      return "Navigate to ".concat(act.navigation_path || "(missing path)").concat(newTab).concat(placementText).concat(triggerText);
+      return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${placementText}${triggerText}`;
     }
-    return placementText || triggerText ? "Not Configured".concat(placementText).concat(triggerText) : "Not Configured";
+    return placementText || triggerText ? `Not Configured${placementText}${triggerText}` : "Not Configured";
   }
   _onEditEntity(index) {
-    var _this$_config$entitie0;
+    var _this$_config$entitie6;
     this._entityEditorIndex = index;
-    const ent = (_this$_config$entitie0 = this._config.entities) === null || _this$_config$entitie0 === void 0 ? void 0 : _this$_config$entitie0[index];
+    const ent = (_this$_config$entitie6 = this._config.entities) === null || _this$_config$entitie6 === void 0 ? void 0 : _this$_config$entitie6[index];
     const mae = ent === null || ent === void 0 ? void 0 : ent.music_assistant_entity;
     this._useTemplate = this._looksLikeTemplate(mae) ? true : false;
     const vol = ent === null || ent === void 0 ? void 0 : ent.volume_entity;
     this._useVolTemplate = this._looksLikeTemplate(vol) ? true : false;
   }
   _onEditAction(index) {
-    var _this$_config$actions7;
+    var _this$_config$actions3;
     this._actionEditorIndex = index;
-    const action = (_this$_config$actions7 = this._config.actions) === null || _this$_config$actions7 === void 0 ? void 0 : _this$_config$actions7[index];
+    const action = (_this$_config$actions3 = this._config.actions) === null || _this$_config$actions3 === void 0 ? void 0 : _this$_config$actions3[index];
     this._actionMode = this._deriveActionMode(action);
     // If mode is service and no service is set yet, initialize to empty string
     // so the Service Data editor renders immediately
@@ -11911,20 +17494,19 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     this._updateConfig("actions", actions);
   }
   _removeAction(index) {
-    var _this$_config$actions8;
-    const actions = [...((_this$_config$actions8 = this._config.actions) !== null && _this$_config$actions8 !== void 0 ? _this$_config$actions8 : [])];
+    const actions = [...(this._config.actions ?? [])];
     if (index < 0 || index >= actions.length) return;
     actions.splice(index, 1);
     this._updateConfig("actions", actions);
   }
   _toggleActionInMenu(index) {
-    var _this$_config$actions9;
-    const actions = [...((_this$_config$actions9 = this._config.actions) !== null && _this$_config$actions9 !== void 0 ? _this$_config$actions9 : [])];
+    const actions = [...(this._config.actions ?? [])];
     if (!actions[index]) return;
     const current = !!actions[index].in_menu;
-    const newAction = _objectSpread2$1(_objectSpread2$1({}, actions[index]), {}, {
+    const newAction = {
+      ...actions[index],
       in_menu: !current
-    });
+    };
     delete newAction.placement;
     actions[index] = newAction;
     this._updateConfig("actions", actions);
@@ -11945,9 +17527,9 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }
   }
   _revertYamlEditor() {
-    var _this$_config$actions0;
+    var _this$_config$actions4;
     const editor = this.shadowRoot.querySelector("#service-data-editor");
-    const currentAction = (_this$_config$actions0 = this._config.actions) === null || _this$_config$actions0 === void 0 ? void 0 : _this$_config$actions0[this._actionEditorIndex];
+    const currentAction = (_this$_config$actions4 = this._config.actions) === null || _this$_config$actions4 === void 0 ? void 0 : _this$_config$actions4[this._actionEditorIndex];
     if (!editor || !currentAction) return;
     const yamlText = currentAction.service_data ? jsYaml.dump(currentAction.service_data) : "";
     editor.value = yamlText;
@@ -11962,7 +17544,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     return result;
   }
   async _testServiceCall() {
-    var _this$_yamlDraft, _this$_config$actions1;
+    var _this$_yamlDraft, _this$_config$actions5;
     if (this._yamlError || !((_this$_yamlDraft = this._yamlDraft) !== null && _this$_yamlDraft !== void 0 && _this$_yamlDraft.trim())) {
       return;
     }
@@ -11977,7 +17559,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
       this._yamlError = e.message;
       return;
     }
-    const action = (_this$_config$actions1 = this._config.actions) === null || _this$_config$actions1 === void 0 ? void 0 : _this$_config$actions1[this._actionEditorIndex];
+    const action = (_this$_config$actions5 = this._config.actions) === null || _this$_config$actions5 === void 0 ? void 0 : _this$_config$actions5[this._actionEditorIndex];
     const service = action === null || action === void 0 ? void 0 : action.service;
     if (!service || !this.hass) {
       return;
@@ -11993,9 +17575,10 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     }
   }
   _onToggleChanged(e) {
-    const newConfig = _objectSpread2$1(_objectSpread2$1({}, this._config), {}, {
+    const newConfig = {
+      ...this._config,
       always_collapsed: e.target.checked
-    });
+    };
     this._config = newConfig;
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: {
@@ -12010,7 +17593,6 @@ class YetAnotherMediaPlayerEditor extends i$2 {
 }
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
 
-var _templateObject, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7, _templateObject8, _templateObject9, _templateObject0, _templateObject1, _templateObject10, _templateObject11, _templateObject12, _templateObject13, _templateObject14, _templateObject15, _templateObject16, _templateObject17, _templateObject18, _templateObject19, _templateObject20, _templateObject21, _templateObject22, _templateObject23, _templateObject24, _templateObject25, _templateObject26, _templateObject27, _templateObject28, _templateObject29, _templateObject30, _templateObject31, _templateObject32, _templateObject33, _templateObject34, _templateObject35, _templateObject36, _templateObject37, _templateObject38, _templateObject39, _templateObject40, _templateObject41, _templateObject42, _templateObject43, _templateObject44, _templateObject45, _templateObject46, _templateObject47, _templateObject48, _templateObject49, _templateObject50, _templateObject51, _templateObject52, _templateObject53, _templateObject54, _templateObject55, _templateObject56, _templateObject57, _templateObject58, _templateObject59, _templateObject60, _templateObject61, _templateObject62, _templateObject63, _templateObject64, _templateObject65, _templateObject66, _templateObject67, _templateObject68, _templateObject69, _templateObject70, _templateObject71, _templateObject72, _templateObject73, _templateObject74, _templateObject75, _templateObject76, _templateObject77, _templateObject78, _templateObject79, _templateObject80, _templateObject81, _templateObject82;
 const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
 const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
@@ -12093,6 +17675,19 @@ class YetAnotherMediaPlayerCard extends i$2 {
       this._holdHandler.pointerUp(e, idx);
     }
   }
+  _hoveredSourceLetterIndex = null;
+  // Stores the last grouping master id for group chip selection
+  _lastGroupingMasterId = null;
+  _groupedSortedCache = null;
+  _cardTriggers = {
+    tap: null,
+    hold: null,
+    double_tap: null,
+    swipe_left: null,
+    swipe_right: null
+  };
+  _lastHassVersion = null;
+  _debouncedVolumeTimer = null;
   _supportsFeature(stateObj, featureBit) {
     if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
     return (stateObj.attributes.supported_features & featureBit) !== 0;
@@ -12313,21 +17908,61 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._lastHassVersion = this.hass;
     return result;
   }
+  static properties = {
+    hass: {},
+    config: {},
+    _selectedIndex: {
+      state: true
+    },
+    _lastPlaying: {
+      state: true
+    },
+    _shouldDropdownOpenUp: {
+      state: true
+    },
+    _pinnedIndex: {
+      state: true
+    },
+    _showSourceList: {
+      state: true
+    },
+    _holdToPin: {
+      state: true
+    },
+    _showQueueSuccessMessage: {
+      state: true
+    },
+    _searchActiveOptionsItem: {
+      state: true
+    },
+    _activeSearchRowMenuId: {
+      state: true
+    },
+    _successSearchRowMenuId: {
+      state: true
+    },
+    _radioModeActive: {
+      state: true
+    },
+    _showEntityOptions: {
+      state: true
+    },
+    _showGrouping: {
+      state: true
+    },
+    _showTransferQueue: {
+      state: true
+    },
+    _showResolvedEntities: {
+      state: true
+    },
+    _showSearchInSheet: {
+      state: true
+    }
+  };
+  static styles = (() => yampCardStyles)();
   constructor() {
     super();
-    _defineProperty$1(this, "_hoveredSourceLetterIndex", null);
-    // Stores the last grouping master id for group chip selection
-    _defineProperty$1(this, "_lastGroupingMasterId", null);
-    _defineProperty$1(this, "_groupedSortedCache", null);
-    _defineProperty$1(this, "_cardTriggers", {
-      tap: null,
-      hold: null,
-      double_tap: null,
-      swipe_left: null,
-      swipe_right: null
-    });
-    _defineProperty$1(this, "_lastHassVersion", null);
-    _defineProperty$1(this, "_debouncedVolumeTimer", null);
     this._selectedIndex = 0;
     this._lastSyncedEntityId = null;
     this._lastPlaying = null;
@@ -12921,9 +18556,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   _sortSearchResults(results) {
-    var _ref2, _this$config;
+    var _this$config;
     let sortModeOverride = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    const sortMode = (_ref2 = sortModeOverride !== null && sortModeOverride !== void 0 ? sortModeOverride : (_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_sort) !== null && _ref2 !== void 0 ? _ref2 : "default";
+    const sortMode = sortModeOverride ?? ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_sort) ?? "default";
     const list = Array.isArray(results) ? [...results] : [];
     if (sortMode === "default") {
       return list;
@@ -12932,15 +18567,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       sensitivity: "base",
       numeric: true
     });
-    const normalize = val => typeof val === "string" ? val : (val !== null && val !== void 0 ? val : "").toString();
-    const getTitle = item => {
-      var _ref3, _item$title;
-      return normalize((_ref3 = (_item$title = item === null || item === void 0 ? void 0 : item.title) !== null && _item$title !== void 0 ? _item$title : item === null || item === void 0 ? void 0 : item.name) !== null && _ref3 !== void 0 ? _ref3 : "");
-    };
-    const getArtist = item => {
-      var _ref4, _item$artist;
-      return normalize((_ref4 = (_item$artist = item === null || item === void 0 ? void 0 : item.artist) !== null && _item$artist !== void 0 ? _item$artist : item === null || item === void 0 ? void 0 : item.artist_name) !== null && _ref4 !== void 0 ? _ref4 : "");
-    };
+    const normalize = val => typeof val === "string" ? val : (val ?? "").toString();
+    const getTitle = item => normalize((item === null || item === void 0 ? void 0 : item.title) ?? (item === null || item === void 0 ? void 0 : item.name) ?? "");
+    const getArtist = item => normalize((item === null || item === void 0 ? void 0 : item.artist) ?? (item === null || item === void 0 ? void 0 : item.artist_name) ?? "");
     const compareWithFallback = function (primaryGetter, secondaryGetter) {
       let direction = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
       return (a, b) => {
@@ -12990,7 +18619,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
     const [, field, direction] = match;
     const oppositeDirection = direction === "asc" ? "desc" : "asc";
-    return "".concat(field, "_").concat(oppositeDirection);
+    return `${field}_${oppositeDirection}`;
   }
   _shouldShowSearchSortToggle() {
     return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
@@ -13039,7 +18668,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const [field, direction] = mode.split("_");
     const labelField = field === "artist" ? "artist" : "title";
     const labelDirection = direction === "asc" ? "ascending" : "descending";
-    return "Sort ".concat(labelField, " ").concat(labelDirection);
+    return `Sort ${labelField} ${labelDirection}`;
   }
   _getDisplaySearchResults() {
     const baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
@@ -13080,7 +18709,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
   _getSearchResultsCountLabel() {
     const count = this._getSearchResultsCount();
     const key = count === 1 ? 'search.result' : 'search.results';
-    return "".concat(count, " ").concat(localize(key));
+    return `${count} ${localize(key)}`;
   }
   async _doSearch() {
     var _this$config4;
@@ -13110,7 +18739,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
 
     // Use cached results if available for this media type and search params
-    const cacheKey = "".concat(mediaType || 'all').concat(isFavorites ? '_favorites' : '').concat(isRecentlyPlayed ? '_recently_played' : '').concat(isUpcoming ? '_upcoming' : '').concat(isRecommendations ? '_recommendations' : '');
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}`;
     if (this._searchResultsByType[cacheKey]) {
       if (this._searchTimeoutHandle) {
         clearTimeout(this._searchTimeoutHandle);
@@ -13165,9 +18794,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
       } else if (isFavorites) {
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, _objectSpread2$1(_objectSpread2$1({}, searchParams), {}, {
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
+          ...searchParams,
           favorites: true
-        }), this._getSearchResultsLimit());
+        }, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
         searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this._getSearchResultsLimit(), {
@@ -13378,12 +19008,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return snapshot;
     }
     entityIds.forEach(id => {
-      var _this$hass5, _stateObj$state2, _stateObj$attributes$, _stateObj$attributes4, _stateObj$attributes$2, _stateObj$attributes5;
+      var _this$hass5, _stateObj$attributes4, _stateObj$attributes5;
       const stateObj = id ? (_this$hass5 = this.hass) === null || _this$hass5 === void 0 || (_this$hass5 = _this$hass5.states) === null || _this$hass5 === void 0 ? void 0 : _this$hass5[id] : null;
       snapshot[id] = {
-        state: (_stateObj$state2 = stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== null && _stateObj$state2 !== void 0 ? _stateObj$state2 : null,
-        mediaId: (_stateObj$attributes$ = stateObj === null || stateObj === void 0 || (_stateObj$attributes4 = stateObj.attributes) === null || _stateObj$attributes4 === void 0 ? void 0 : _stateObj$attributes4.media_content_id) !== null && _stateObj$attributes$ !== void 0 ? _stateObj$attributes$ : null,
-        mediaTitle: (_stateObj$attributes$2 = stateObj === null || stateObj === void 0 || (_stateObj$attributes5 = stateObj.attributes) === null || _stateObj$attributes5 === void 0 ? void 0 : _stateObj$attributes5.media_title) !== null && _stateObj$attributes$2 !== void 0 ? _stateObj$attributes$2 : null
+        state: (stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) ?? null,
+        mediaId: (stateObj === null || stateObj === void 0 || (_stateObj$attributes4 = stateObj.attributes) === null || _stateObj$attributes4 === void 0 ? void 0 : _stateObj$attributes4.media_content_id) ?? null,
+        mediaTitle: (stateObj === null || stateObj === void 0 || (_stateObj$attributes5 = stateObj.attributes) === null || _stateObj$attributes5 === void 0 ? void 0 : _stateObj$attributes5.media_title) ?? null
       };
     });
     return snapshot;
@@ -13397,7 +19027,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     while (Date.now() - start < timeout) {
       await this._delay(150);
       for (const id of entityIds) {
-        var _this$hass6, _stateObj$attributes$3, _stateObj$attributes6, _stateObj$attributes$4, _stateObj$attributes7;
+        var _this$hass6, _stateObj$attributes6, _stateObj$attributes7;
         if (!id) continue;
         const stateObj = (_this$hass6 = this.hass) === null || _this$hass6 === void 0 || (_this$hass6 = _this$hass6.states) === null || _this$hass6 === void 0 ? void 0 : _this$hass6[id];
         if (!stateObj) continue;
@@ -13405,8 +19035,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
           return true;
         }
         const previous = snapshot[id] || {};
-        const currentMediaId = (_stateObj$attributes$3 = (_stateObj$attributes6 = stateObj.attributes) === null || _stateObj$attributes6 === void 0 ? void 0 : _stateObj$attributes6.media_content_id) !== null && _stateObj$attributes$3 !== void 0 ? _stateObj$attributes$3 : null;
-        const currentTitle = (_stateObj$attributes$4 = (_stateObj$attributes7 = stateObj.attributes) === null || _stateObj$attributes7 === void 0 ? void 0 : _stateObj$attributes7.media_title) !== null && _stateObj$attributes$4 !== void 0 ? _stateObj$attributes$4 : null;
+        const currentMediaId = ((_stateObj$attributes6 = stateObj.attributes) === null || _stateObj$attributes6 === void 0 ? void 0 : _stateObj$attributes6.media_content_id) ?? null;
+        const currentTitle = ((_stateObj$attributes7 = stateObj.attributes) === null || _stateObj$attributes7 === void 0 ? void 0 : _stateObj$attributes7.media_title) ?? null;
         if (currentMediaId && currentMediaId !== previous.mediaId) {
           return true;
         }
@@ -13529,7 +19159,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       name: artistName,
       query: this._searchQuery
     });
-    this._searchBreadcrumb = "Albums by ".concat(artistName);
+    this._searchBreadcrumb = `Albums by ${artistName}`;
     this._searchQuery = artistName;
     this._searchResultsByType = {}; // Clear cache for new search
     this._currentSearchQuery = artistName;
@@ -13570,13 +19200,13 @@ class YetAnotherMediaPlayerCard extends i$2 {
     } else {
       const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
       if (currentLevel.type === 'artist') {
-        this._searchBreadcrumb = "Albums by ".concat(currentLevel.name);
+        this._searchBreadcrumb = `Albums by ${currentLevel.name}`;
         this._searchMediaClassFilter = 'album';
         this._doSearch('album', {
           artist: currentLevel.name
         });
       } else if (currentLevel.type === 'album') {
-        this._searchBreadcrumb = "Tracks from ".concat(currentLevel.name);
+        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
         this._searchMediaClassFilter = 'track';
         if (currentLevel.uri && this._isMusicAssistantEntity()) {
           this._searchQuery = currentLevel.name;
@@ -13593,7 +19223,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
         this._doSearch('track', searchParams);
       } else if (currentLevel.type === 'playlist') {
-        this._searchBreadcrumb = "Tracks in ".concat(currentLevel.name);
+        this._searchBreadcrumb = `Tracks in ${currentLevel.name}`;
         this._searchMediaClassFilter = 'track';
         if (currentLevel.uri && this._isMusicAssistantEntity()) {
           this._searchQuery = currentLevel.name;
@@ -13667,7 +19297,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
   // Force-invalidate the "Next Up" results cache
   _invalidateUpcomingCache() {
     const classFilter = this._searchMediaClassFilter || 'all';
-    const cacheKey = "".concat(classFilter, "_upcoming");
+    const cacheKey = `${classFilter}_upcoming`;
     if (this._searchResultsByType) {
       delete this._searchResultsByType[cacheKey];
       this.requestUpdate();
@@ -13752,7 +19382,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = "".concat(this._searchMediaClassFilter || 'all');
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
         if (this._searchResultsByType[cacheKey]) {
           this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
           this.requestUpdate();
@@ -13782,7 +19412,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       // Clear search box since it's not used in upcoming mode
       this._searchQuery = '';
       // Clear cache to force fresh fetch
-      const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
+      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
       delete this._searchResultsByType[cacheKey];
       // Subscribe to queue update events
       await this._subscribeToQueueUpdates();
@@ -13805,7 +19435,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = "".concat(this._searchMediaClassFilter || 'all');
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
         if (this._searchResultsByType[cacheKey]) {
           this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
           this.requestUpdate();
@@ -13854,7 +19484,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         const currentMediaType = this._searchMediaClassFilter;
         await this._doSearch(currentMediaType);
       } else {
-        const cacheKey = "".concat(this._searchMediaClassFilter || 'all');
+        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
         if (this._searchResultsByType[cacheKey]) {
           this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
           this.requestUpdate();
@@ -14092,7 +19722,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       // Process the upcoming items like the companion card does
       const itemsToRender = normalizedLimit > 0 ? upcomingItems.slice(0, normalizedLimit) : upcomingItems;
       const results = itemsToRender.map((item, index) => ({
-        media_content_id: item.media_content_id || "queue_".concat(index),
+        media_content_id: item.media_content_id || `queue_${index}`,
         media_content_type: 'track',
         media_class: 'track',
         title: item.media_title || 'Unknown Track',
@@ -14218,7 +19848,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Update queue items in UI immediately (like companion card does)
   _moveQueueItemInUI(queueItemId, direction) {
-    const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
     const currentResults = this._searchResultsByType[cacheKey];
     if (!currentResults || !Array.isArray(currentResults.results)) {
       return;
@@ -14265,7 +19895,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Remove queue item from UI immediately
   _removeQueueItemFromUI(queueItemId) {
-    const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
     const currentResults = this._searchResultsByType[cacheKey];
     if (!currentResults || !Array.isArray(currentResults.results)) {
       return;
@@ -14288,7 +19918,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // Check if the Music Assistant entity has the right attributes
     const hasMassAttributes = isMusicAssistantEntity(maState) || ((_maState$attributes5 = maState.attributes) === null || _maState$attributes5 === void 0 ? void 0 : _maState$attributes5.mass_player_id) || ((_maState$attributes6 = maState.attributes) === null || _maState$attributes6 === void 0 ? void 0 : _maState$attributes6.active_queue) ||
     // If we're in upcoming mode and getting queue items, assume it's MA
-    this._upcomingFilterActive && ((_this$_searchResultsB = this._searchResultsByType["".concat(this._searchMediaClassFilter || 'all', "_upcoming")]) === null || _this$_searchResultsB === void 0 || (_this$_searchResultsB = _this$_searchResultsB.results) === null || _this$_searchResultsB === void 0 ? void 0 : _this$_searchResultsB.some(item => item.queue_item_id));
+    this._upcomingFilterActive && ((_this$_searchResultsB = this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming`]) === null || _this$_searchResultsB === void 0 || (_this$_searchResultsB = _this$_searchResultsB.results) === null || _this$_searchResultsB === void 0 ? void 0 : _this$_searchResultsB.some(item => item.queue_item_id));
     return hasMassAttributes;
   }
   _looksLikeMusicAssistantState(state) {
@@ -14354,7 +19984,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
 
     // Fall back to cached upcoming results if we've loaded them
-    const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
     const cached = (_this$_searchResultsB2 = this._searchResultsByType) === null || _this$_searchResultsB2 === void 0 ? void 0 : _this$_searchResultsB2[cacheKey];
     if (cached && Array.isArray(cached.results) && cached.results.length > 0) {
       return true;
@@ -14438,7 +20068,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       await this.hass.callService("music_assistant", "transfer_queue", payload);
       this._transferQueueStatus = {
         type: "success",
-        message: "Queue sent to ".concat(target.name, ".")
+        message: `Queue sent to ${target.name}.`
       };
       const targetIdx = typeof target.index === "number" ? target.index : this.entityIds.indexOf(target.entityId);
       if (targetIdx !== undefined && targetIdx !== null && targetIdx >= 0) {
@@ -14533,7 +20163,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
   _refreshQueue() {
     if (this._upcomingFilterActive) {
       // Clear cache to force fresh fetch
-      const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
+      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
       delete this._searchResultsByType[cacheKey];
       // Reload upcoming queue items
       this._doSearch('all', {
@@ -14606,7 +20236,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         var _item$media_item, _item$media_item2, _item$media_item3, _item$media_item4, _item$media_item5, _item$media_item6;
         const item = queueData.next_item;
         results.push({
-          media_content_id: ((_item$media_item = item.media_item) === null || _item$media_item === void 0 ? void 0 : _item$media_item.uri) || "queue_next",
+          media_content_id: ((_item$media_item = item.media_item) === null || _item$media_item === void 0 ? void 0 : _item$media_item.uri) || `queue_next`,
           media_content_type: ((_item$media_item2 = item.media_item) === null || _item$media_item2 === void 0 ? void 0 : _item$media_item2.media_type) || 'track',
           media_class: 'track',
           title: item.name || ((_item$media_item3 = item.media_item) === null || _item$media_item3 === void 0 ? void 0 : _item$media_item3.name) || 'Unknown Track',
@@ -14683,7 +20313,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       query: this._searchQuery,
       uri: albumUri
     });
-    this._searchBreadcrumb = "Tracks from ".concat(albumName);
+    this._searchBreadcrumb = `Tracks from ${albumName}`;
     this._searchResultsByType = {}; // Clear cache for new search
     this._currentSearchQuery = albumName;
     this._searchMediaClassFilter = 'track';
@@ -14805,7 +20435,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // Fallback to search-based navigation
     let searchQuery = albumName;
     if (artistName) {
-      searchQuery = "".concat(artistName, " ").concat(albumName);
+      searchQuery = `${artistName} ${albumName}`;
     }
     this._searchQuery = searchQuery;
 
@@ -14979,7 +20609,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       const result = await this.hass.callApi('POST', 'template', {
         template: this._idleImageTemplate
       });
-      this._idleImageTemplateResult = (result !== null && result !== void 0 ? result : "").toString().trim();
+      this._idleImageTemplateResult = (result ?? "").toString().trim();
     } catch (error) {
       this._idleImageTemplateResult = "";
     } finally {
@@ -15009,10 +20639,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // templates are re-evaluated when the track changes.
     const mediaTitle = (stateObj === null || stateObj === void 0 || (_stateObj$attributes8 = stateObj.attributes) === null || _stateObj$attributes8 === void 0 ? void 0 : _stateObj$attributes8.media_title) || "";
     const mediaArtist = (stateObj === null || stateObj === void 0 || (_stateObj$attributes9 = stateObj.attributes) === null || _stateObj$attributes9 === void 0 ? void 0 : _stateObj$attributes9.media_artist) || "";
-    const stateKey = "".concat(mediaTitle, ":").concat(mediaArtist);
+    const stateKey = `${mediaTitle}:${mediaArtist}`;
     const idx = override && ((_this$_artworkOverrid = this._artworkOverrideIndexMap) === null || _this$_artworkOverrid === void 0 ? void 0 : _this$_artworkOverrid.get(override));
     const prefix = typeof idx === "number" ? idx : "generic";
-    return "".concat(prefix, ":").concat(type, ":").concat(stateKey);
+    return `${prefix}:${type}:${stateKey}`;
   }
   _getResolvedArtworkOverrideSource(override, sourceValue) {
     let type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "image";
@@ -15039,7 +20669,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       this.hass.callApi('POST', 'template', {
         template: sourceValue
       }).then(res => {
-        entry.value = this._normalizeImageSourceValue((res !== null && res !== void 0 ? res : "").toString());
+        entry.value = this._normalizeImageSourceValue((res ?? "").toString());
       }).catch(() => {
         entry.value = "";
       }).finally(() => {
@@ -15117,10 +20747,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (override && overrideSource) {
         const resolvedOverride = this._getResolvedArtworkOverrideSource(override, overrideSource, overrideType, state);
         if (resolvedOverride) {
-          var _override3, _override$object_fit, _override4;
+          var _override3, _override4;
           artworkUrl = resolvedOverride;
           sizePercentage = (_override3 = override) === null || _override3 === void 0 ? void 0 : _override3.size_percentage;
-          objectFit = (_override$object_fit = (_override4 = override) === null || _override4 === void 0 ? void 0 : _override4.object_fit) !== null && _override$object_fit !== void 0 ? _override$object_fit : null;
+          objectFit = ((_override4 = override) === null || _override4 === void 0 ? void 0 : _override4.object_fit) ?? null;
         }
       }
     }
@@ -15161,7 +20791,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (artworkUrl && prefix && !artworkUrl.startsWith('http') && !artworkUrl.startsWith('data:')) {
       // Ensure prefix doesn't result in double slashes if artworkUrl starts with /
       const cleanPrefix = prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;
-      const cleanUrl = artworkUrl.startsWith('/') ? artworkUrl : "/".concat(artworkUrl);
+      const cleanUrl = artworkUrl.startsWith('/') ? artworkUrl : `/${artworkUrl}`;
       artworkUrl = cleanPrefix + cleanUrl;
     }
 
@@ -15213,7 +20843,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     try {
       new URL(url);
       return true;
-    } catch (_unused) {
+    } catch {
       return false;
     }
   }
@@ -15231,7 +20861,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, 1, 1);
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-        resolve("rgb(".concat(r, ",").concat(g, ",").concat(b, ")"));
+        resolve(`rgb(${r},${g},${b})`);
       };
       img.onerror = function () {
         resolve("#888");
@@ -15269,7 +20899,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
-    this.config = _objectSpread2$1({}, config);
+    this.config = {
+      ...config
+    };
     const layoutPref = typeof config.control_layout === "string" ? config.control_layout.toLowerCase() : "classic";
     this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
     this._swapPauseForStop = config.swap_pause_for_stop === true;
@@ -15332,9 +20964,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._currentDetailsScale = null;
     this._updateAdaptiveTextObserverState();
     if (this._adaptiveText) {
-      var _this$_currentTextSca, _this$_currentDetails;
-      const initialScale = (_this$_currentTextSca = this._currentTextScale) !== null && _this$_currentTextSca !== void 0 ? _this$_currentTextSca : 1;
-      const initialDetailsScale = (_this$_currentDetails = this._currentDetailsScale) !== null && _this$_currentDetails !== void 0 ? _this$_currentDetails : 1;
+      const initialScale = this._currentTextScale ?? 1;
+      const initialDetailsScale = this._currentDetailsScale ?? 1;
       this._setAdaptiveTextVars(initialScale, undefined, initialDetailsScale);
       this._updateAdaptiveTextScale();
     } else {
@@ -15348,7 +20979,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (Array.isArray(config.media_artwork_overrides)) {
       // Create a copy of the overrides array and objects to avoid "not extensible" errors
       // with Home Assistant's frozen config objects.
-      this.config.media_artwork_overrides = config.media_artwork_overrides.map(o => _objectSpread2$1({}, o));
+      this.config.media_artwork_overrides = config.media_artwork_overrides.map(o => ({
+        ...o
+      }));
       this.config.media_artwork_overrides.forEach(override => {
         if (!override || typeof override !== "object") return;
         override.__cachedRegexes = {};
@@ -15357,7 +20990,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
           if (typeof pattern === "string" && pattern.includes("*") && pattern !== "*") {
             try {
               const regexPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
-              override.__cachedRegexes[key] = new RegExp("^".concat(regexPattern, "$"), "i");
+              override.__cachedRegexes[key] = new RegExp(`^${regexPattern}$`, "i");
             } catch (e) {
               console.warn("yamp: Failed to compile artwork override regex for", key, pattern);
             }
@@ -15417,7 +21050,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
           group_volume = visibleMembers.length > 0;
         }
       }
-      return _objectSpread2$1({
+      return {
         entity_id,
         name,
         volume_entity,
@@ -15426,10 +21059,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
         follow_active_volume,
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
-        disable_auto_select: this._isAutoSelectDisabled(index)
-      }, typeof group_volume !== "undefined" ? {
-        group_volume
-      } : {});
+        disable_auto_select: this._isAutoSelectDisabled(index),
+        ...(typeof group_volume !== "undefined" ? {
+          group_volume
+        } : {})
+      };
     });
   }
 
@@ -15860,7 +21494,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     var _this$hass16, _this$hass17;
     // Cache the result to prevent continuous re-calling during renders
     // Only recalculate if the cache is invalid or if key state has changed
-    const cacheKey = "".concat(this._selectedIndex, "-").concat((_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16[this.currentEntityId]) === null || _this$hass16 === void 0 ? void 0 : _this$hass16.state, "-").concat((_this$hass17 = this.hass) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17.states) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17[this._getSearchEntityId(this._selectedIndex)]) === null || _this$hass17 === void 0 ? void 0 : _this$hass17.state);
+    const cacheKey = `${this._selectedIndex}-${(_this$hass16 = this.hass) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16.states) === null || _this$hass16 === void 0 || (_this$hass16 = _this$hass16[this.currentEntityId]) === null || _this$hass16 === void 0 ? void 0 : _this$hass16.state}-${(_this$hass17 = this.hass) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17.states) === null || _this$hass17 === void 0 || (_this$hass17 = _this$hass17[this._getSearchEntityId(this._selectedIndex)]) === null || _this$hass17 === void 0 ? void 0 : _this$hass17.state}`;
     if (this._cachedActivePlaybackEntityId === undefined || this._cachedActivePlaybackEntityKey !== cacheKey) {
       this._cachedActivePlaybackEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
       this._cachedActivePlaybackEntityKey = cacheKey;
@@ -15880,7 +21514,15 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return this._showEntityOptions || this._showGrouping || this._showSourceList || this._showTransferQueue || this._searchOpen || this._showSourceMenu || !!this._searchActiveOptionsItem || !!this._activeSearchRowMenuId || !!this._queueActionsMenuOpenId;
   }
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
-    return x(_templateObject || (_templateObject = _taggedTemplateLiteral(["\n      <div class=\"entity-options-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n        <div class=\"entity-options-divider\"></div>\n      </div>\n      <div class=\"entity-options-menu ", " entity-options-scroll\" style=\"display:flex; flex-direction:column;\">\n        <button class=\"entity-options-item\" @click=", ">", "</button>\n        <button class=\"entity-options-item\" @click=", ">", "</button>\n\n        ", "\n        \n        ", "\n        \n        ", "\n        \n        ", "\n      </div>\n    "])), () => this._closeEntityOptions(), localize('common.close'), showChipsInMenu ? 'chips-in-menu' : '', () => {
+    return x`
+      <div class="entity-options-header">
+        <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
+          ${localize('common.close')}
+        </button>
+        <div class="entity-options-divider"></div>
+      </div>
+      <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} entity-options-scroll" style="display:flex; flex-direction:column;">
+        <button class="entity-options-item" @click=${() => {
       const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
       if (resolvedEntities.length === 1) {
         this._openMoreInfoForEntity(resolvedEntities[0]);
@@ -15889,21 +21531,53 @@ class YetAnotherMediaPlayerCard extends i$2 {
         this._showResolvedEntities = true;
       }
       this.requestUpdate();
-    }, localize('card.menu.more_info'), () => {
+    }}>${localize('card.menu.more_info')}</button>
+        <button class="entity-options-item" @click=${() => {
       this._showSearchSheetInOptions();
-    }, localize('common.search'), Array.isArray(sourceList) && sourceList.length > 0 ? x(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["\n          <button class=\"entity-options-item\" @click=", ">", "</button>\n        "])), () => this._openSourceList(), localize('card.menu.source')) : E, this._canShowTransferQueueOption() ? x(_templateObject3 || (_templateObject3 = _taggedTemplateLiteral(["\n          <button class=\"entity-options-item\" @click=", ">", "</button>\n        "])), () => this._openTransferQueue(), localize('card.menu.transfer_queue')) : E, this._renderGroupingMenuOption(), menuOnlyActions.length ? x(_templateObject4 || (_templateObject4 = _taggedTemplateLiteral(["\n          ", "\n        "])), menuOnlyActions.map(_ref5 => {
+    }}>${localize('common.search')}</button>
+
+        ${Array.isArray(sourceList) && sourceList.length > 0 ? x`
+          <button class="entity-options-item" @click=${() => this._openSourceList()}>${localize('card.menu.source')}</button>
+        ` : E}
+        
+        ${this._canShowTransferQueueOption() ? x`
+          <button class="entity-options-item" @click=${() => this._openTransferQueue()}>${localize('card.menu.transfer_queue')}</button>
+        ` : E}
+        
+        ${this._renderGroupingMenuOption()}
+        
+        ${menuOnlyActions.length ? x`
+          ${menuOnlyActions.map(_ref2 => {
       let {
         action,
         idx
-      } = _ref5;
+      } = _ref2;
       const label = this._getActionLabel(action);
-      return x(_templateObject5 || (_templateObject5 = _taggedTemplateLiteral(["\n              <button\n                class=\"entity-options-item menu-action-item\"\n                @click=", "\n              >\n                ", "\n                ", "\n              </button>\n            "])), () => this._onMenuActionClick(idx), action.icon ? x(_templateObject6 || (_templateObject6 = _taggedTemplateLiteral(["\n                  <ha-icon\n                    class=\"menu-action-icon\"\n                    .icon=", "\n                  ></ha-icon>\n                "])), action.icon) : E, label ? x(_templateObject7 || (_templateObject7 = _taggedTemplateLiteral(["<span class=\"menu-action-label\">", "</span>"])), label) : E);
-    })) : E);
+      return x`
+              <button
+                class="entity-options-item menu-action-item"
+                @click=${() => this._onMenuActionClick(idx)}
+              >
+                ${action.icon ? x`
+                  <ha-icon
+                    class="menu-action-icon"
+                    .icon=${action.icon}
+                  ></ha-icon>
+                ` : E}
+                ${label ? x`<span class="menu-action-label">${label}</span>` : E}
+              </button>
+            `;
+    })}
+        ` : E}
+      </div>
+    `;
   }
   _renderInlineChipRow(showChipsInline, chipsHiddenInline) {
     var _this$config0, _this$config1, _this$config10;
     if (!showChipsInline) return E;
-    return x(_templateObject8 || (_templateObject8 = _taggedTemplateLiteral(["\n      <div class=\"chip-row\" style=\"", "\">\n        ", "\n      </div>\n    "])), chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : "", renderChipRow({
+    return x`
+      <div class="chip-row" style="${chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : ""}">
+        ${renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
       selectedEntityId: this.currentEntityId,
@@ -15984,15 +21658,19 @@ class YetAnotherMediaPlayerCard extends i$2 {
       onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
       onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
       onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
-    }));
+    })}
+      </div>
+    `;
   }
   _renderInlineActionRow(rowActions) {
     if (!rowActions || !rowActions.length) return E;
-    return x(_templateObject9 || (_templateObject9 = _taggedTemplateLiteral(["\n      <div style=\"", "\">\n        ", "\n      </div>\n    "])), this._showEntityOptions ? 'visibility: hidden; pointer-events: none;' : '', renderActionChipRow({
-      actions: rowActions.map(_ref6 => {
+    return x`
+      <div style="${this._showEntityOptions ? 'visibility: hidden; pointer-events: none;' : ''}">
+        ${renderActionChipRow({
+      actions: rowActions.map(_ref3 => {
         let {
           action
-        } = _ref6;
+        } = _ref3;
         return action;
       }),
       onActionChipClick: idx => {
@@ -16000,7 +21678,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
         if (!target) return;
         this._onActionChipClick(target.idx);
       }
-    }));
+    })}
+      </div>
+    `;
   }
   _renderGroupingMenuOption() {
     const totalEntities = this.entityIds.length;
@@ -16018,7 +21698,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const groupKey = this._getGroupKey(currentId);
     const isFollower = groupKey !== currentId;
     if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
-      return x(_templateObject0 || (_templateObject0 = _taggedTemplateLiteral(["\n        <button class=\"entity-options-item\" @click=", ">", "</button>\n      "])), () => this._openGrouping(), localize('card.menu.group_players'));
+      return x`
+        <button class="entity-options-item" @click=${() => this._openGrouping()}>${localize('card.menu.group_players')}</button>
+      `;
     }
     return E;
   }
@@ -16071,13 +21753,24 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const activeGroupKey = this._getGroupKey(activeId);
     const activeIsBusy = activeGroupKey !== activeId;
     if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
-      return x(_templateObject1 || (_templateObject1 = _taggedTemplateLiteral(["\n        <div class=\"entity-options-header\">\n          <button class=\"entity-options-item close-item\" @click=", ">\n            ", "\n          </button>\n          <div class=\"entity-options-divider\"></div>\n        </div>\n        <div class=\"entity-options-title\" style=\"margin-bottom:8px;\">", "</div>\n        <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n          ", "\n        </div>\n      "])), () => {
+      return x`
+        <div class="entity-options-header">
+          <button class="entity-options-item close-item" @click=${() => {
         if (this._quickMenuInvoke) {
           this._dismissWithAnimation();
         } else {
           this._closeGrouping();
         }
-      }, localize('common.back'), localize('card.grouping.title'), activeIsBusy ? localize('card.grouping.unavailable') : localize('card.grouping.no_players'));
+      }}>
+            ${localize('common.back')}
+          </button>
+          <div class="entity-options-divider"></div>
+        </div>
+        <div class="entity-options-title" style="margin-bottom:8px;">${localize('card.grouping.title')}</div>
+        <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
+          ${activeIsBusy ? localize('card.grouping.unavailable') : localize('card.grouping.no_players')}
+        </div>
+      `;
     }
     const sortedGroupIds = [...groupPlayerIds].sort((a, b) => {
       if (groupedAny) {
@@ -16090,13 +21783,39 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (a.isBusy === b.isBusy) return 0;
       return a.isBusy ? 1 : -1;
     });
-    return x(_templateObject10 || (_templateObject10 = _taggedTemplateLiteral(["\n      <div class=\"grouping-header group-list-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n      </div>\n      <div class=\"entity-options-title\" style=\"margin-bottom:8px; margin-top:8px;\">", "</div>\n      <div style=\"display:flex; align-items:center; gap:8px; margin-bottom:12px;\">\n        ", "\n        <button class=\"entity-options-item\"\n          @click=", "\n          style=\"flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;\">\n          ", "\n        </button>\n      </div>\n      <div class=\"group-list-scroll\">\n        ", "\n      </div>\n    "])), () => {
+    return x`
+      <div class="grouping-header group-list-header">
+        <button class="entity-options-item close-item" @click=${() => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeGrouping();
       }
-    }, localize('common.back'), localize('card.grouping.title'), groupedAny ? x(_templateObject11 || (_templateObject11 = _taggedTemplateLiteral(["\n          <button class=\"entity-options-item\"\n            @click=", "\n            style=\"flex:0 0 auto; min-width:140px; text-align:center;\">\n            ", "\n          </button>\n        "])), () => this._syncGroupVolume(), localize('card.grouping.sync_volume')) : E, () => groupedAny ? this._ungroupAll() : this._groupAll(), groupedAny ? localize('card.grouping.ungroup_all') : localize('card.grouping.group_all'), sortedGroupIds.length === 0 ? x(_templateObject12 || (_templateObject12 = _taggedTemplateLiteral(["\n          <div class=\"entity-options-item\" style=\"padding:12px; opacity:0.75; text-align:center;\">\n            ", "\n          </div>\n        "])), localize('card.grouping.no_players')) : sortedGroupIds.map(item => {
+    }}>
+          ${localize('common.back')}
+        </button>
+      </div>
+      <div class="entity-options-title" style="margin-bottom:8px; margin-top:8px;">${localize('card.grouping.title')}</div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+        ${groupedAny ? x`
+          <button class="entity-options-item"
+            @click=${() => this._syncGroupVolume()}
+            style="flex:0 0 auto; min-width:140px; text-align:center;">
+            ${localize('card.grouping.sync_volume')}
+          </button>
+        ` : E}
+        <button class="entity-options-item"
+          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
+          style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
+          ${groupedAny ? localize('card.grouping.ungroup_all') : localize('card.grouping.group_all')}
+        </button>
+      </div>
+      <div class="group-list-scroll">
+        ${sortedGroupIds.length === 0 ? x`
+          <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
+            ${localize('card.grouping.no_players')}
+          </div>
+        ` : sortedGroupIds.map(item => {
       var _masterState$attribut2, _displayVolumeState$a;
       const id = item.id;
       const actualGroupId = item.groupId;
@@ -16118,24 +21837,125 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (isBusy) {
         stateLabel = busyLabel || "Unavailable";
       }
-      return x(_templateObject13 || (_templateObject13 = _taggedTemplateLiteral(["\n            <div class=\"entity-options-item group-player-row\" style=\"\n              display:flex;\n              align-items:center;\n              gap:6px;\n              padding:4px 8px;\n              margin-bottom:1px;\n              ", "\n            \">\n              <div style=\"flex:1; min-width:120px;\">\n                <div style=\"font-weight:600; text-align:left;\">", "</div>\n                <div style=\"font-size:0.8em; opacity:0.7; text-align:left;\">", "</div>\n              </div>\n              <div style=\"flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;\">\n                ", "\n                <span style=\"min-width:36px;display:inline-block;text-align:right;\">", "</span>\n              </div>\n              ", "\n            </div>\n          "])), isBusy ? "opacity: 0.5;" : "", name, stateLabel, isRemoteVol ? x(_templateObject14 || (_templateObject14 = _taggedTemplateLiteral(["\n                    <div class=\"vol-stepper\" style=\"display:flex;align-items:center;gap:4px;\">\n                      <button @click=", " title=\"Vol Down\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                        <ha-icon icon=\"mdi:minus\"></ha-icon>\n                      </button>\n                      <button @click=", " title=\"Vol Up\" style=\"background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;\">\n                        <ha-icon icon=\"mdi:plus\"></ha-icon>\n                      </button>\n                    </div>\n                  "])), () => this._onGroupVolumeStep(displayEntity, -1), () => this._onGroupVolumeStep(displayEntity, 1)) : x(_templateObject15 || (_templateObject15 = _taggedTemplateLiteral(["\n                    <input\n                      class=\"vol-slider\"\n                      type=\"range\"\n                      min=\"0\"\n                      max=\"1\"\n                      step=\"0.01\"\n                      .value=", "\n                      @change=", "\n                      title=\"Volume\"\n                      style=\"width:100%;max-width:260px;\"\n                    />\n                  "])), volVal, e => this._onGroupVolumeChange(id, displayEntity, e)), typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--", showToggleButton ? x(_templateObject16 || (_templateObject16 = _taggedTemplateLiteral(["\n                    <button class=\"group-toggle-btn\"\n                            @click=", "\n                            title=", "\n                            style=\"margin-left:4px; ", "\">\n                      <ha-icon icon=", "></ha-icon>\n                    </button>\n                  "])), () => !isBusy && this._toggleGroup(id), isBusy ? "Player is unavailable" : grouped ? "Unjoin" : "Join", isBusy ? "cursor: not-allowed; opacity: 0.5;" : "", grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline") : x(_templateObject17 || (_templateObject17 = _taggedTemplateLiteral(["<span style=\"margin-left:4px;margin-right:10px;width:32px;display:inline-block;\"></span>"]))));
-    }));
+      return x`
+            <div class="entity-options-item group-player-row" style="
+              display:flex;
+              align-items:center;
+              gap:6px;
+              padding:4px 8px;
+              margin-bottom:1px;
+              ${isBusy ? "opacity: 0.5;" : ""}
+            ">
+              <div style="flex:1; min-width:120px;">
+                <div style="font-weight:600; text-align:left;">${name}</div>
+                <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
+              </div>
+              <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
+                ${isRemoteVol ? x`
+                    <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
+                      <button @click=${() => this._onGroupVolumeStep(displayEntity, -1)} title="Vol Down" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                        <ha-icon icon="mdi:minus"></ha-icon>
+                      </button>
+                      <button @click=${() => this._onGroupVolumeStep(displayEntity, 1)} title="Vol Up" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                        <ha-icon icon="mdi:plus"></ha-icon>
+                      </button>
+                    </div>
+                  ` : x`
+                    <input
+                      class="vol-slider"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      .value=${volVal}
+                      @change=${e => this._onGroupVolumeChange(id, displayEntity, e)}
+                      title="Volume"
+                      style="width:100%;max-width:260px;"
+                    />
+                  `}
+                <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
+              </div>
+              ${showToggleButton ? x`
+                    <button class="group-toggle-btn"
+                            @click=${() => !isBusy && this._toggleGroup(id)}
+                            title=${isBusy ? "Player is unavailable" : grouped ? "Unjoin" : "Join"}
+                            style="margin-left:4px; ${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""}">
+                      <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
+                    </button>
+                  ` : x`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`}
+            </div>
+          `;
+    })}
+      </div>
+    `;
   }
   _renderTransferQueueSheet() {
     const targets = this._getTransferQueueTargets();
-    return x(_templateObject18 || (_templateObject18 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n        <div class=\"entity-options-divider\"></div>\n        <div class=\"entity-options-title\" style=\"margin-bottom:12px;\">", "</div>\n      </div>\n      <div class=\"entity-options-scroll\">\n        ", "\n        ", "\n      </div>\n    "])), () => {
+    return x`
+      <div class="entity-options-header">
+        <button class="entity-options-item close-item" @click=${() => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeTransferQueue();
       }
-    }, localize('common.back'), localize('card.menu.transfer_to'), !targets.length ? x(_templateObject19 || (_templateObject19 = _taggedTemplateLiteral(["\n          <div style=\"padding: 12px; opacity: 0.75;\">", "</div>\n        "])), localize('card.menu.no_players')) : x(_templateObject20 || (_templateObject20 = _taggedTemplateLiteral(["\n          <div style=\"display:flex;flex-direction:column;gap:8px;\">\n            ", "\n          </div>\n        "])), targets.map(target => x(_templateObject21 || (_templateObject21 = _taggedTemplateLiteral(["\n              <button\n                class=\"entity-options-item\"\n                ?disabled=", "\n                @click=", "\n                style=\"display:flex;align-items:center;justify-content:flex-start;gap:12px;", "\">\n                <ha-icon .icon=", " style=\"margin-right:4px;\"></ha-icon>\n                <div style=\"display:flex;flex-direction:column;align-items:flex-start;\">\n                  <div>", "</div>\n                  <div style=\"font-size:0.82em;opacity:0.7;\">", "</div>\n                </div>\n                ", "\n              </button>\n            "])), this._transferQueuePendingTarget === target.maEntityId, () => this._transferQueueTo(target), this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : '', target.icon, target.name, target.subtitle, target.state ? x(_templateObject22 || (_templateObject22 = _taggedTemplateLiteral(["<div style=\"margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;\">", "</div>"])), target.state) : E))), this._transferQueueStatus ? x(_templateObject23 || (_templateObject23 = _taggedTemplateLiteral(["\n          <div style=\"\n            margin-top: 14px;\n            padding: 10px 12px;\n            border-radius: 8px;\n            font-weight: 600;\n            text-align: center;\n            background: ", ";\n            color: ", ";\n          \">\n            ", "\n          </div>\n        "])), this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)', this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a', this._transferQueueStatus.message) : E);
+    }}>
+          ${localize('common.back')}
+        </button>
+        <div class="entity-options-divider"></div>
+        <div class="entity-options-title" style="margin-bottom:12px;">${localize('card.menu.transfer_to')}</div>
+      </div>
+      <div class="entity-options-scroll">
+        ${!targets.length ? x`
+          <div style="padding: 12px; opacity: 0.75;">${localize('card.menu.no_players')}</div>
+        ` : x`
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${targets.map(target => x`
+              <button
+                class="entity-options-item"
+                ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
+                @click=${() => this._transferQueueTo(target)}
+                style="display:flex;align-items:center;justify-content:flex-start;gap:12px;${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
+                <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
+                <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                  <div>${target.name}</div>
+                  <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
+                </div>
+                ${target.state ? x`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : E}
+              </button>
+            `)}
+          </div>
+        `}
+        ${this._transferQueueStatus ? x`
+          <div style="
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            background: ${this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)'};
+            color: ${this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a'};
+          ">
+            ${this._transferQueueStatus.message}
+          </div>
+        ` : E}
+      </div>
+    `;
   }
   _renderResolvedEntitiesSheet() {
-    return x(_templateObject24 || (_templateObject24 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-header\">\n        <button class=\"entity-options-item close-item\" @click=", ">\n          ", "\n        </button>\n        <div class=\"entity-options-divider\"></div>\n        <div class=\"entity-options-resolved-entities\" style=\"margin-top:12px;\">\n          <div class=\"entity-options-title\">", "</div>\n          <div class=\"entity-options-resolved-entities-list\">\n            ", "\n          </div>\n        </div>\n      </div>\n    "])), () => {
+    return x`
+      <div class="entity-options-header">
+        <button class="entity-options-item close-item" @click=${() => {
       this._showResolvedEntities = false;
       this.requestUpdate();
-    }, localize('common.back'), localize('card.menu.select_entity'), this._getResolvedEntitiesForCurrentChip().map(entityId => {
+    }}>
+          ${localize('common.back')}
+        </button>
+        <div class="entity-options-divider"></div>
+        <div class="entity-options-resolved-entities" style="margin-top:12px;">
+          <div class="entity-options-title">${localize('card.menu.select_entity')}</div>
+          <div class="entity-options-resolved-entities-list">
+            ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
       var _this$hass23, _state$attributes3, _state$attributes4;
       const state = (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[entityId];
       const name = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.friendly_name) || entityId;
@@ -16155,13 +21975,25 @@ class YetAnotherMediaPlayerCard extends i$2 {
           role = "Volume Entity";
         }
       }
-      return x(_templateObject25 || (_templateObject25 = _taggedTemplateLiteral(["\n                <button class=\"entity-options-item\" @click=", ">\n                  <ha-icon .icon=", " style=\"margin-right: 8px;\"></ha-icon>\n                  <div style=\"display: flex; flex-direction: column; align-items: flex-start;\">\n                    <div>", "</div>\n                    <div style=\"font-size: 0.85em; opacity: 0.7;\">", "</div>\n                  </div>\n                </button>\n              "])), () => {
+      return x`
+                <button class="entity-options-item" @click=${() => {
         this._openMoreInfoForEntity(entityId);
         this._showEntityOptions = false;
         this._showResolvedEntities = false;
         this.requestUpdate();
-      }, icon, isActive ? "".concat(name, " (Active)") : name, role);
-    }));
+      }}>
+                  <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
+                  <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                    <div>${isActive ? `${name} (Active)` : name}</div>
+                    <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
+                  </div>
+                </button>
+              `;
+    })}
+          </div>
+        </div>
+      </div>
+    `;
   }
   updated(changedProps) {
     var _super$updated;
@@ -16201,7 +22033,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
             this._searchLoading = true;
             this.requestUpdate();
             // Clear cache and refresh with 4 second delay
-            const cacheKey = "".concat(this._searchMediaClassFilter || 'all', "_upcoming");
+            const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
             delete this._searchResultsByType[cacheKey];
             setTimeout(() => {
               this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
@@ -16607,7 +22439,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
     if (!action.service) return;
     const [domain, service] = action.service.split(".");
-    let data = _objectSpread2$1({}, action.service_data || {});
+    let data = {
+      ...(action.service_data || {})
+    };
     if (domain === "script" && action.script_variable === true) {
       const currentMainId = this.currentEntityId;
       const currentMaIdTemplate = this._getSearchEntityId(this._selectedIndex);
@@ -16753,9 +22587,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // Create ripple element
     const ripple = document.createElement('div');
-    ripple.className = "gesture-ripple ".concat(type);
-    ripple.style.left = "".concat(x, "px");
-    ripple.style.top = "".concat(y, "px");
+    ripple.className = `gesture-ripple ${type}`;
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
 
     // Find or create the feedback container
     let container = tapArea.querySelector('.gesture-feedback-container');
@@ -16787,7 +22621,6 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (hasName) return action.name.trim();
     const iconOnly = !!action.icon;
     if (action.menu_item) {
-      var _menuLabels$action$me;
       if (iconOnly) return "";
       const menuLabels = {
         "search": "Search",
@@ -16798,7 +22631,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         "group-players": "Group Players",
         "transfer-queue": "Transfer Queue"
       };
-      return (_menuLabels$action$me = menuLabels[action.menu_item]) !== null && _menuLabels$action$me !== void 0 ? _menuLabels$action$me : action.menu_item;
+      return menuLabels[action.menu_item] ?? action.menu_item;
     }
     if (typeof action.navigation_path === "string" && action.navigation_path.trim() !== "" || action.action === "navigate") {
       return iconOnly ? "" : "Navigate";
@@ -17179,15 +23012,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   async _onMuteToggle() {
-    var _stateObj$attributes$5, _stateObj$attributes$6;
     const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
     if (!entity) return;
     const isRemoteVolumeEntity = entity.startsWith && entity.startsWith("remote.");
     const stateObj = this.currentVolumeStateObj;
     if (!stateObj) return;
-    const isMuted = (_stateObj$attributes$5 = stateObj.attributes.is_volume_muted) !== null && _stateObj$attributes$5 !== void 0 ? _stateObj$attributes$5 : false;
-    const currentVolume = (_stateObj$attributes$6 = stateObj.attributes.volume_level) !== null && _stateObj$attributes$6 !== void 0 ? _stateObj$attributes$6 : 0;
+    const isMuted = stateObj.attributes.is_volume_muted ?? false;
+    const currentVolume = stateObj.attributes.volume_level ?? 0;
     if (isRemoteVolumeEntity) {
       // For remote entities, we can't easily toggle mute, so just set volume to 0 or restore
       if (isMuted) {
@@ -17218,9 +23050,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
           volume_level: 0
         });
       } else {
-        var _this$_previousVolume;
         // Restore previous volume
-        const restoreVolume = (_this$_previousVolume = this._previousVolume) !== null && _this$_previousVolume !== void 0 ? _this$_previousVolume : 0.5;
+        const restoreVolume = this._previousVolume ?? 0.5;
         this.hass.callService("media_player", "volume_set", {
           entity_id: entity,
           volume_level: restoreVolume
@@ -17252,9 +23083,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
             is_volume_muted: !isMuted
           });
         } else {
-          var _targetState$attribut, _targetState$attribut2;
+          var _targetState$attribut;
           // For entities that don't support mute, set volume to 0 or restore
-          const targetVolume = (_targetState$attribut = targetState === null || targetState === void 0 || (_targetState$attribut2 = targetState.attributes) === null || _targetState$attribut2 === void 0 ? void 0 : _targetState$attribut2.volume_level) !== null && _targetState$attribut !== void 0 ? _targetState$attribut : 0;
+          const targetVolume = (targetState === null || targetState === void 0 || (_targetState$attribut = targetState.attributes) === null || _targetState$attribut === void 0 ? void 0 : _targetState$attribut.volume_level) ?? 0;
           if (targetVolume > 0) {
             // Store current volume and mute (simplified - in a real implementation you'd want to store per entity)
             this.hass.callService("media_player", "volume_set", {
@@ -17383,7 +23214,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   render() {
-    var _this$config$actions2, _this$_optimisticPlay, _this$hass31, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass32, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot$host, _this$shadowRoot3, _this$currentVolumeSt3, _this$currentVolumeSt4, _this$config14, _this$config15, _this$config16, _this$config17;
+    var _this$_optimisticPlay, _this$hass31, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass32, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot3, _this$currentVolumeSt3, _this$config14, _this$config15, _this$config16, _this$config17;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -17417,15 +23248,15 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const chipsHiddenInline = showChipRow === "in_menu_on_idle" && this._isIdle && hasMultipleEntities;
     // Always reserve space in menu for chips when in_menu_on_idle, even when playing (to prevent menu jump)
     const reserveChipSpaceInMenu = showChipRow === "in_menu_on_idle" && hasMultipleEntities;
-    const decoratedActions = ((_this$config$actions2 = this.config.actions) !== null && _this$config$actions2 !== void 0 ? _this$config$actions2 : []).map((action, idx) => ({
+    const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({
       action,
       idx
     }));
     // Filter out sync_selected_entity actions entirely - they don't render as chips
-    const visibleActions = decoratedActions.filter(_ref7 => {
+    const visibleActions = decoratedActions.filter(_ref4 => {
       let {
         action
-      } = _ref7;
+      } = _ref4;
       return (action === null || action === void 0 ? void 0 : action.action) !== "sync_selected_entity";
     });
 
@@ -17435,48 +23266,48 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if ((act === null || act === void 0 ? void 0 : act.in_menu) === "hidden") return "hidden";
       return (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "menu" : "chip";
     };
-    const rowActions = visibleActions.filter(_ref8 => {
+    const rowActions = visibleActions.filter(_ref5 => {
       let {
         action
-      } = _ref8;
+      } = _ref5;
       return getPlacement(action) === "chip";
     });
-    const menuOnlyActions = visibleActions.filter(_ref9 => {
+    const menuOnlyActions = visibleActions.filter(_ref6 => {
       let {
         action
-      } = _ref9;
+      } = _ref6;
       return getPlacement(action) === "menu";
     });
 
     // Gesture trigger logic
-    const tapAction = visibleActions.find(_ref0 => {
+    const tapAction = visibleActions.find(_ref7 => {
+      let {
+        action
+      } = _ref7;
+      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "tap";
+    });
+    const holdAction = visibleActions.find(_ref8 => {
+      let {
+        action
+      } = _ref8;
+      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "hold";
+    });
+    const doubleTapAction = visibleActions.find(_ref9 => {
+      let {
+        action
+      } = _ref9;
+      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "double_tap";
+    });
+    const swipeLeftAction = visibleActions.find(_ref0 => {
       let {
         action
       } = _ref0;
-      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "tap";
+      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "swipe_left";
     });
-    const holdAction = visibleActions.find(_ref1 => {
+    const swipeRightAction = visibleActions.find(_ref1 => {
       let {
         action
       } = _ref1;
-      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "hold";
-    });
-    const doubleTapAction = visibleActions.find(_ref10 => {
-      let {
-        action
-      } = _ref10;
-      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "double_tap";
-    });
-    const swipeLeftAction = visibleActions.find(_ref11 => {
-      let {
-        action
-      } = _ref11;
-      return (action === null || action === void 0 ? void 0 : action.card_trigger) === "swipe_left";
-    });
-    const swipeRightAction = visibleActions.find(_ref12 => {
-      let {
-        action
-      } = _ref12;
       return (action === null || action === void 0 ? void 0 : action.card_trigger) === "swipe_right";
     });
     this._cardTriggers = {
@@ -17488,7 +23319,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     };
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     const activeChipName = this.getChipName(this.currentEntityId);
-    if (!stateObj) return x(_templateObject26 || (_templateObject26 = _taggedTemplateLiteral(["<div class=\"details\">", "</div>"])), localize('common.not_found'));
+    if (!stateObj) return x`<div class="details">${localize('common.not_found')}</div>`;
     const currentHiddenControls = this._getHiddenControlsForCurrentEntity();
     const showFavoriteButton = !!this._getFavoriteButtonEntity() && !currentHiddenControls.favorite;
     const favoriteActive = this._isCurrentTrackFavorited();
@@ -17497,11 +23328,38 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
     let leadingVolumeControl = E;
     if (showModernPowerButton) {
-      leadingVolumeControl = x(_templateObject27 || (_templateObject27 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn", "\"\n            @click=", "\n            title=\"", "\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), (stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== "off" ? " active" : "", () => this._onControlClick("power"), localize('common.power'), "mdi:power");
+      leadingVolumeControl = x`
+          <button
+            class="volume-icon-btn favorite-volume-btn${(stateObj === null || stateObj === void 0 ? void 0 : stateObj.state) !== "off" ? " active" : ""}"
+            @click=${() => this._onControlClick("power")}
+            title="${localize('common.power')}"
+          >
+            <ha-icon .icon=${"mdi:power"}></ha-icon>
+          </button>
+        `;
     } else if (this._controlLayout === "modern") {
-      leadingVolumeControl = x(_templateObject28 || (_templateObject28 = _taggedTemplateLiteral(["\n          <button\n            class=\"volume-icon-btn favorite-volume-btn\"\n            @click=", "\n            title=\"", "\"\n          >\n            <ha-icon .icon=", "></ha-icon>\n          </button>\n        "])), () => this._openQuickSearchOverlay(), localize('common.search'), "mdi:magnify");
+      leadingVolumeControl = x`
+          <button
+            class="volume-icon-btn favorite-volume-btn"
+            @click=${() => this._openQuickSearchOverlay()}
+            title="${localize('common.search')}"
+          >
+            <ha-icon .icon=${"mdi:magnify"}></ha-icon>
+          </button>
+        `;
     }
-    const rightSlotTemplate = showModernFavoriteButton ? x(_templateObject29 || (_templateObject29 = _taggedTemplateLiteral(["\n        <button\n          class=\"volume-icon-btn favorite-volume-btn", "\"\n          @click=", "\n          title=\"", "\"\n        >\n          <ha-icon\n            style=", "\n            .icon=", "\n          ></ha-icon>\n        </button>\n      "])), favoriteActive ? " active" : "", () => this._onControlClick("favorite"), localize('common.favorite'), favoriteActive ? "color: var(--custom-accent);" : E, favoriteActive ? "mdi:heart" : "mdi:heart-outline") : E;
+    const rightSlotTemplate = showModernFavoriteButton ? x`
+        <button
+          class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
+          @click=${() => this._onControlClick("favorite")}
+          title="${localize('common.favorite')}"
+        >
+          <ha-icon
+            style=${favoriteActive ? "color: var(--custom-accent);" : E}
+            .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}
+          ></ha-icon>
+        </button>
+      ` : E;
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -17714,8 +23572,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const shouldShowPersistentControls = this.config.hide_menu_player === true ? false : !collapsed || meetsPersistentHeight;
     const releaseControlsRow = controlSpacerSize >= 48;
     const collapsedDetailsOffset = collapsedExtraSpace > 0 ? Math.max(100, Math.round(collapsedArtworkSize + 24 + Math.min(40, collapsedExtraSpace * 0.12))) : null;
-    const collapsedControlsOffset = releaseControlsRow ? 0 : collapsedDetailsOffset !== null && collapsedDetailsOffset !== void 0 ? collapsedDetailsOffset : 0;
-    let cardWidth = this.offsetWidth || ((_this$shadowRoot$host = (_this$shadowRoot3 = this.shadowRoot) === null || _this$shadowRoot3 === void 0 || (_this$shadowRoot3 = _this$shadowRoot3.host) === null || _this$shadowRoot3 === void 0 ? void 0 : _this$shadowRoot3.offsetWidth) !== null && _this$shadowRoot$host !== void 0 ? _this$shadowRoot$host : 0);
+    const collapsedControlsOffset = releaseControlsRow ? 0 : collapsedDetailsOffset ?? 0;
+    let cardWidth = this.offsetWidth || (((_this$shadowRoot3 = this.shadowRoot) === null || _this$shadowRoot3 === void 0 || (_this$shadowRoot3 = _this$shadowRoot3.host) === null || _this$shadowRoot3 === void 0 ? void 0 : _this$shadowRoot3.offsetWidth) ?? 0);
     const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
     const heightScale = collapsedExtraSpace > 0 ? Math.min(1.45, 1 + effectiveExtraSpace / 180) : 1;
     const titleScale = heightScale > 1 || widthScale > 1 ? Math.min(1.6, Math.max(heightScale, widthScale)) : 1;
@@ -17723,9 +23581,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (this.shadowRoot && this.shadowRoot.host) {
       if (collapsedExtraSpace > 0) {
         if (collapsedDetailsOffset != null) {
-          this.shadowRoot.host.style.setProperty('--yamp-collapsed-details-offset', "".concat(collapsedDetailsOffset, "px"));
+          this.shadowRoot.host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
         }
-        this.shadowRoot.host.style.setProperty('--yamp-collapsed-controls-offset', "".concat(collapsedControlsOffset, "px"));
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
         this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
         this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
       }
@@ -17776,48 +23634,123 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const fitBehavior = this._getBackgroundSizeForFit(activeArtworkFit);
     let backgroundSize = fitBehavior;
     if (artworkSizePercentage) {
-      backgroundSize = "".concat(artworkSizePercentage, "%");
+      backgroundSize = `${artworkSizePercentage}%`;
     }
-    const backgroundImageValue = idleImageUrl ? "url('".concat(idleImageUrl, "')") : artworkUrl ? "url('".concat(artworkUrl, "')") : "none";
+    const backgroundImageValue = idleImageUrl ? `url('${idleImageUrl}')` : artworkUrl ? `url('${artworkUrl}')` : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
     const backgroundFilter = artworkUrl && (collapsed || useInsetArtwork) ? "blur(18px) brightness(0.7) saturate(1.15)" : "none";
-    const sharedBackgroundStyle = ["background-image: ".concat(backgroundImageValue), "background-size: ".concat(useInsetArtwork ? "cover" : backgroundSize), "background-position: ".concat(this.config.artwork_position || "top center"), "background-repeat: no-repeat", "filter: ".concat(backgroundFilter)].join('; ');
+    const sharedBackgroundStyle = [`background-image: ${backgroundImageValue}`, `background-size: ${useInsetArtwork ? "cover" : backgroundSize}`, `background-position: ${this.config.artwork_position || "top center"}`, "background-repeat: no-repeat", `filter: ${backgroundFilter}`].join('; ');
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
       this.shadowRoot.host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
     }
-    return x(_templateObject30 || (_templateObject30 = _taggedTemplateLiteral(["\n        <ha-card class=\"yamp-card\" style=", ">\n          <div\n            data-match-theme=\"", "\"\n            class=", "\n          >\n            ", "\n            ", "\n            <div class=\"card-lower-content-container\" style=\"", "\">\n              <div class=\"card-lower-content-bg\"\n                style=\"", "\"\n              ></div>\n              ", "\n              <div class=\"card-lower-content", "", "\" style=\"", "\">\n                ", "\n                ", "\n                <div class=\"details\" style=\"", "\">\n                  <div class=\"title\">\n                    ", "\n                  </div>\n                  <div\n                      class=\"artist ", "\"\n                      @click=", "\n                      title=", "\n                    >", "</div>\n                </div>\n                ", "\n                ", "\n                ", "\n                <div style=\"", "\">\n                    ", "\n\n                    ", "\n                  </div>\n            ", "\n            ", "\n          </div>\n        </div>\n\n      ", "\n          ", "\n          ", "\n          </div>\n    </ha-card>\n  "])), hasCustomCardHeight && (!collapsed || this._alwaysCollapsed) ? "height:".concat(customCardHeight, "px;") : E, String(this.config.match_theme === true), e({
+    return x`
+        <ha-card class="yamp-card" style=${hasCustomCardHeight && (!collapsed || this._alwaysCollapsed) ? `height:${customCardHeight}px;` : E}>
+          <div
+            data-match-theme="${String(this.config.match_theme === true)}"
+            class=${e({
       "yamp-card-inner": true,
       "dim-idle": shouldDimIdle,
       "no-chip-dim": this.config.dim_chips_on_idle === false
-    }), artworkFullBleed && hasBackgroundImage ? x(_templateObject31 || (_templateObject31 = _taggedTemplateLiteral(["\n              <div class=\"full-bleed-artwork-bg\" style=\"", "\"></div>\n              ", "\n            "])), sharedBackgroundStyle, !dimIdleFrame ? x(_templateObject32 || (_templateObject32 = _taggedTemplateLiteral(["<div class=\"full-bleed-artwork-fade\"></div>"]))) : E) : E, chipsHiddenInline ? x(_templateObject33 || (_templateObject33 = _taggedTemplateLiteral(["", "", ""])), this._renderInlineActionRow(rowActions), this._renderInlineChipRow(showChipsInline, chipsHiddenInline)) : x(_templateObject34 || (_templateObject34 = _taggedTemplateLiteral(["", "", ""])), this._renderInlineChipRow(showChipsInline, chipsHiddenInline), this._renderInlineActionRow(rowActions)), idleMinHeight ? "min-height:".concat(idleMinHeight, "px;") : '', (() => {
+    })}
+          >
+            ${artworkFullBleed && hasBackgroundImage ? x`
+              <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
+              ${!dimIdleFrame ? x`<div class="full-bleed-artwork-fade"></div>` : E}
+            ` : E}
+            ${chipsHiddenInline ? x`${this._renderInlineActionRow(rowActions)}${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}` : x`${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}${this._renderInlineActionRow(rowActions)}`}
+            <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
+              <div class="card-lower-content-bg"
+                style="${(() => {
       const styles = [];
       if (!(artworkFullBleed && hasBackgroundImage)) {
         styles.push(sharedBackgroundStyle);
       } else {
         styles.push('background-image: none', 'filter: none');
       }
-      styles.push("min-height: ".concat(collapsed ? hideControlsNow ? "".concat(this._collapsedBaselineHeight || 220, "px") : '0px' : hideControlsNow ? '350px' : '350px'));
+      styles.push(`min-height: ${collapsed ? hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px' : hideControlsNow ? '350px' : '350px'}`);
       styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
       return styles.join('; ');
-    })(), !dimIdleFrame ? x(_templateObject35 || (_templateObject35 = _taggedTemplateLiteral(["<div class=\"card-lower-fade\"></div>"]))) : E, collapsed ? ' collapsed transitioning' : ' transitioning', collapsed && artworkUrl ? ' has-artwork' : '', (() => {
+    })()}"
+              ></div>
+              ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
       if (!hideControlsNow) return '';
-      return collapsed ? "min-height: ".concat(this._collapsedBaselineHeight || 220, "px;") : 'min-height: 350px;';
-    })(), collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x(_templateObject36 || (_templateObject36 = _taggedTemplateLiteral(["\n                  <div\n                    class=\"collapsed-artwork-container\"\n                    @pointerdown=", "\n                    @pointermove=", "\n                    @pointerup=", "\n                    @pointercancel=", "\n                    style=\"", "\"\n                  >\n                    <img\n                      class=\"collapsed-artwork\"\n                      src=\"", "\" \n                      style=\"", "\" \n                      onload=\"this.style.display='block'\"\n                      onerror=\"this.style.display='none'\" />\n                  </div>\n                "])), e => this._onTapAreaPointerDown(e), e => this._onTapAreaPointerMove(e), e => this._onTapAreaPointerUp(e), () => {
+      return collapsed ? `min-height: ${this._collapsedBaselineHeight || 220}px;` : 'min-height: 350px;';
+    })()}">
+                ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x`
+                  <div
+                    class="collapsed-artwork-container"
+                    @pointerdown=${e => this._onTapAreaPointerDown(e)}
+                    @pointermove=${e => this._onTapAreaPointerMove(e)}
+                    @pointerup=${e => this._onTapAreaPointerUp(e)}
+                    @pointercancel=${() => {
       this._gestureActive = false;
       clearTimeout(this._gestureHoldTimer);
-    }, ["background: linear-gradient(120deg, ".concat(this._collapsedArtDominantColor, "bb 60%, transparent 100%)"), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize + 8), "px") : '', this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right ? 'cursor:pointer; pointer-events:auto;' : ''].filter(Boolean).join('; '), artworkUrl, [this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? "width:".concat(Math.round(collapsedArtworkSize), "px; height:").concat(Math.round(collapsedArtworkSize), "px;") : ''].filter(Boolean).join(' ')) : E, showCollapsedPlaceholder || !collapsed ? x(_templateObject37 || (_templateObject37 = _taggedTemplateLiteral(["\n                  <div class=\"card-artwork-spacer", "\"\n                    @pointerdown=", "\n                    @pointermove=", "\n                    @pointerup=", "\n                    @pointercancel=", "\n                    style=\"", "\"\n                  >\n                    ", "\n                    ", "\n                  </div>\n                "])), showCollapsedPlaceholder ? ' show-placeholder' : '', e => this._onTapAreaPointerDown(e), e => this._onTapAreaPointerMove(e), e => this._onTapAreaPointerUp(e), () => {
+    }}
+                    style="${[`background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`, collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '', this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right ? 'cursor:pointer; pointer-events:auto;' : ''].filter(Boolean).join('; ')}"
+                  >
+                    <img
+                      class="collapsed-artwork"
+                      src="${artworkUrl}" 
+                      style="${[this._getCollapsedArtworkStyle(), collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize)}px; height:${Math.round(collapsedArtworkSize)}px;` : ''].filter(Boolean).join(' ')}" 
+                      onload="this.style.display='block'"
+                      onerror="this.style.display='none'" />
+                  </div>
+                ` : E}
+                ${showCollapsedPlaceholder || !collapsed ? x`
+                  <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
+                    @pointerdown=${e => this._onTapAreaPointerDown(e)}
+                    @pointermove=${e => this._onTapAreaPointerMove(e)}
+                    @pointerup=${e => this._onTapAreaPointerUp(e)}
+                    @pointercancel=${() => {
       this._gestureActive = false;
       clearTimeout(this._gestureHoldTimer);
-    }, this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right ? 'cursor:pointer; pointer-events:auto;' : '', useInsetArtwork && artworkUrl ? x(_templateObject38 || (_templateObject38 = _taggedTemplateLiteral(["\n                      <div style=\"position: absolute; ", " display: flex; align-items: center; justify-content: center; pointer-events: none;\">\n                        <img \n                          src=\"", "\" \n                          style=\"max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;\" \n                        />\n                      </div>\n                    "])), needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;', artworkUrl) : E, !useInsetArtwork && !artworkUrl && !idleImageUrl ? x(_templateObject39 || (_templateObject39 = _taggedTemplateLiteral(["\n                      <div class=\"media-artwork-placeholder\">\n                        <svg\n                          viewBox=\"0 0 184 184\"\n                          style=\"", "\"\n                          xmlns=\"http://www.w3.org/2000/svg\">\n                          <rect x=\"36\" y=\"86\" width=\"22\" height=\"62\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"68\" y=\"58\" width=\"22\" height=\"90\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"100\" y=\"34\" width=\"22\" height=\"114\" rx=\"8\" fill=\"currentColor\"></rect>\n                          <rect x=\"132\" y=\"74\" width=\"22\" height=\"74\" rx=\"8\" fill=\"currentColor\"></rect>\n                        </svg>\n                      </div>\n                    "])), this.config.match_theme === true ? 'color:#fff;' : "color:".concat(this._customAccent, ";")) : E) : E, (() => {
+    }}
+                    style="${this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right ? 'cursor:pointer; pointer-events:auto;' : ''}"
+                  >
+                    ${useInsetArtwork && artworkUrl ? x`
+                      <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                        <img 
+                          src="${artworkUrl}" 
+                          style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;" 
+                        />
+                      </div>
+                    ` : E}
+                    ${!useInsetArtwork && !artworkUrl && !idleImageUrl ? x`
+                      <div class="media-artwork-placeholder">
+                        <svg
+                          viewBox="0 0 184 184"
+                          style="${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"></rect>
+                          <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"></rect>
+                          <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"></rect>
+                          <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"></rect>
+                        </svg>
+                      </div>
+                    ` : E}
+                  </div>
+                ` : E}
+                <div class="details" style="${(() => {
       const detailStyleParts = [];
       if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
-      detailStyleParts.push("min-height:".concat(detailsMinHeight, "px"));
+      detailStyleParts.push(`min-height:${detailsMinHeight}px`);
       if (!shouldShowDetails) detailStyleParts.push('opacity:0');
       return detailStyleParts.join(';');
-    })(), shouldShowDetails && title ? title : x(_templateObject40 || (_templateObject40 = _taggedTemplateLiteral(["&nbsp;"]))), shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : '', () => {
+    })()}">
+                  <div class="title">
+                    ${shouldShowDetails && title ? title : x`&nbsp;`}
+                  </div>
+                  <div
+                      class="artist ${shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
+                      @click=${() => {
       if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-    }, shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : "", shouldShowDetails && artist ? artist : x(_templateObject41 || (_templateObject41 = _taggedTemplateLiteral(["&nbsp;"]))), !collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
+    }}
+                      title=${shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
+                    >${shouldShowDetails && artist ? artist : x`&nbsp;`}</div>
+                </div>
+                ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
       seekEnabled: true,
       onSeek: e => this._onProgressBarClick(e),
@@ -17836,7 +23769,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
       displayTimestamps: this._displayTimestamps,
       currentTime: 0,
       duration: 0
-    }) : E, collapsed || this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
+    }) : E}
+                ${collapsed || this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
       progress,
       collapsed: true,
       accent: this._customAccent,
@@ -17846,7 +23780,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
       collapsed: true,
       accent: this._customAccent,
       style: "visibility:hidden"
-    }) : E, !hideControlsNow && controlSpacerSize > 0 ? x(_templateObject42 || (_templateObject42 = _taggedTemplateLiteral(["\n                  <div class=\"collapsed-flex-spacer\" style=\"flex: 1 0 ", "px;\"></div>\n                "])), Math.round(controlSpacerSize)) : E, hideControlsNow || this._showEntityOptions ? 'visibility:hidden; pointer-events:none;' : '', renderControlsRow({
+    }) : E}
+                ${!hideControlsNow && controlSpacerSize > 0 ? x`
+                  <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
+                ` : E}
+                <div style="${hideControlsNow || this._showEntityOptions ? 'visibility:hidden; pointer-events:none;' : ''}">
+                    ${renderControlsRow({
       stateObj: playbackStateObj,
       showStop: this._shouldShowStopButton(playbackStateObj),
       shuffleActive,
@@ -17859,11 +23798,13 @@ class YetAnotherMediaPlayerCard extends i$2 {
       adaptiveControls: this._adaptiveControls,
       controlLayout: this._controlLayout,
       swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop
-    }), renderVolumeRow({
+    })}
+
+                    ${renderVolumeRow({
       isRemoteVolumeEntity,
       showSlider,
       vol,
-      isMuted: (_this$currentVolumeSt3 = (_this$currentVolumeSt4 = this.currentVolumeStateObj) === null || _this$currentVolumeSt4 === void 0 || (_this$currentVolumeSt4 = _this$currentVolumeSt4.attributes) === null || _this$currentVolumeSt4 === void 0 ? void 0 : _this$currentVolumeSt4.is_volume_muted) !== null && _this$currentVolumeSt3 !== void 0 ? _this$currentVolumeSt3 : false,
+      isMuted: ((_this$currentVolumeSt3 = this.currentVolumeStateObj) === null || _this$currentVolumeSt3 === void 0 || (_this$currentVolumeSt3 = _this$currentVolumeSt3.attributes) === null || _this$currentVolumeSt3 === void 0 ? void 0 : _this$currentVolumeSt3.is_volume_muted) ?? false,
       supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
       onVolumeDragStart: e => this._onVolumeDragStart(e),
       onVolumeDragEnd: e => this._onVolumeDragEnd(e),
@@ -17875,8 +23816,38 @@ class YetAnotherMediaPlayerCard extends i$2 {
       showRightPlaceholder: this._controlLayout === "modern",
       rightSlotTemplate,
       hideVolume: this.config.volume_mode === "hidden",
-      moreInfoMenu: x(_templateObject43 || (_templateObject43 = _taggedTemplateLiteral(["\n                        <div class=\"more-info-menu\">\n                          <button class=\"more-info-btn\" @click=", ">\n                            <span class=\"more-info-icon\">&#9776;</span>\n                          </button>\n                        </div>\n                      "])), async () => await this._openEntityOptions())
-    }), hideControlsNow && !this._showEntityOptions ? x(_templateObject44 || (_templateObject44 = _taggedTemplateLiteral(["\n              <div class=\"more-info-menu\" style=\"position: absolute; right: 18px; bottom: 18px; z-index: ", ";\">\n                <button class=\"more-info-btn\" @click=", ">\n                  <span class=\"more-info-icon\">&#9776;</span>\n                </button>\n              </div>\n            "])), Z_LAYERS.FLOATING_ELEMENT, async () => await this._openEntityOptions()) : E, showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x(_templateObject45 || (_templateObject45 = _taggedTemplateLiteral(["\n              <div class=\"in-menu-active-label\">", "</div>\n            "])), activeChipName) : E, this._showEntityOptions ? x(_templateObject46 || (_templateObject46 = _taggedTemplateLiteral(["\n      <div class=\"entity-options-overlay entity-options-overlay-opening\" @click=", ">\n        <div class=\"entity-options-container entity-options-container-opening\">\n          <div class=\"entity-options-sheet", " entity-options-sheet-opening\" \n               @click=", "\n               data-pin-search-headers=\"", "\">\n            ", "\n              ", "\n              </div>\n            </div>\n            <!-- Persistent Media Controls Section - Outside Scrollable Area -->\n            ", "\n          </div>\n        "])), e => this._closeEntityOptions(e), showChipsInMenu || reserveChipSpaceInMenu ? ' chips-mode' : '', e => e.stopPropagation(), effectivePinHeaders, showChipsInMenu || reserveChipSpaceInMenu ? x(_templateObject47 || (_templateObject47 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-chips-wrapper\" style=\"", "\" @click=", ">\n                <div class=\"chip-row entity-options-chips-strip\">\n                  ", "\n                </div>\n              </div>\n            "])), reserveChipSpaceInMenu && !showChipsInMenu ? 'visibility:hidden;pointer-events:none;' : '', e => e.stopPropagation(), renderChipRow({
+      moreInfoMenu: x`
+                        <div class="more-info-menu">
+                          <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                            <span class="more-info-icon">&#9776;</span>
+                          </button>
+                        </div>
+                      `
+    })}
+                  </div>
+            ${hideControlsNow && !this._showEntityOptions ? x`
+              <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: ${Z_LAYERS.FLOATING_ELEMENT};">
+                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                  <span class="more-info-icon">&#9776;</span>
+                </button>
+              </div>
+            ` : E}
+            ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? x`
+              <div class="in-menu-active-label">${activeChipName}</div>
+            ` : E}
+          </div>
+        </div>
+
+      ${this._showEntityOptions ? x`
+      <div class="entity-options-overlay entity-options-overlay-opening" @click=${e => this._closeEntityOptions(e)}>
+        <div class="entity-options-container entity-options-container-opening">
+          <div class="entity-options-sheet${showChipsInMenu || reserveChipSpaceInMenu ? ' chips-mode' : ''} entity-options-sheet-opening" 
+               @click=${e => e.stopPropagation()}
+               data-pin-search-headers="${effectivePinHeaders}">
+            ${showChipsInMenu || reserveChipSpaceInMenu ? x`
+                <div class="entity-options-chips-wrapper" style="${reserveChipSpaceInMenu && !showChipsInMenu ? 'visibility:hidden;pointer-events:none;' : ''}" @click=${e => e.stopPropagation()}>
+                <div class="chip-row entity-options-chips-strip">
+                  ${renderChipRow({
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
       selectedEntityId: this.currentEntityId,
@@ -17943,16 +23914,41 @@ class YetAnotherMediaPlayerCard extends i$2 {
       onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
       onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
       onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
-    })) : E, !this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) : this._showGrouping ? this._renderGroupingSheet() : this._showTransferQueue ? this._renderTransferQueueSheet() : this._showResolvedEntities ? this._renderResolvedEntitiesSheet() : this._showSearchInSheet ? x(_templateObject48 || (_templateObject48 = _taggedTemplateLiteral(["\n              <div class=\"entity-options-search\" style = \"margin-top:12px;\" >\n                ", "\n                  ", "\n                  <div class=\"entity-options-search-row\">\n                      <input\n                        type=\"text\"\n                        id=\"search-input-box\"\n                        ?autofocus=", "\n                        class=\"entity-options-search-input\"\n                        .value=", "\n                        @input=", "\n                        @keydown=", "\n                        placeholder=\"", "\"\n                        style=\"flex:1; min-width:0; font-size:1.1em;\"\n                      />\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", "\n                      ?disabled=", ">\n                      ", "\n                    </button>\n                    <button\n                      class=\"entity-options-item\"\n                      style=\"min-width:80px;\"\n                      @click=", ">\n              ", "\n                    </button>\n                  </div>\n                  <!--FILTER CHIPS-->\n              ", "\n                  ", "\n                  ", "\n                  \n                  ", "\n\n            <div class=\"entity-options-search-results\">\n              ", "\n            </div>\n                  </div>\n                </div>\n              "])), this._searchHierarchy.length > 0 ? x(_templateObject49 || (_templateObject49 = _taggedTemplateLiteral(["\n                    <button class=\"entity-options-item close-item\" @click=", ">\n                      Back\n                    </button>\n                    <div class=\"entity-options-divider\"></div>\n                  "])), () => {
+    })}
+                </div>
+              </div>
+            ` : E}
+              ${!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) : this._showGrouping ? this._renderGroupingSheet() : this._showTransferQueue ? this._renderTransferQueueSheet() : this._showResolvedEntities ? this._renderResolvedEntitiesSheet() : this._showSearchInSheet ? x`
+              <div class="entity-options-search" style = "margin-top:12px;" >
+                ${this._searchHierarchy.length > 0 ? x`
+                    <button class="entity-options-item close-item" @click=${() => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._goBackInSearch();
       }
-    }) : E, this._searchBreadcrumb ? x(_templateObject50 || (_templateObject50 = _taggedTemplateLiteral(["\n                    <div class=\"entity-options-search-breadcrumb\">\n                      <div class=\"entity-options-search-breadcrumb-text\">", "</div>\n                    </div>\n                  "])), this._searchBreadcrumb) : x(_templateObject51 || (_templateObject51 = _taggedTemplateLiteral(["<div class=\"entity-options-search-skeleton\"></div>"]))), !this._disableSearchAutofocus, this._searchQuery, e => {
+    }}>
+                      Back
+                    </button>
+                    <div class="entity-options-divider"></div>
+                  ` : E}
+                  ${this._searchBreadcrumb ? x`
+                    <div class="entity-options-search-breadcrumb">
+                      <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
+                    </div>
+                  ` : x`<div class="entity-options-search-skeleton"></div>`}
+                  <div class="entity-options-search-row">
+                      <input
+                        type="text"
+                        id="search-input-box"
+                        ?autofocus=${!this._disableSearchAutofocus}
+                        class="entity-options-search-input"
+                        .value=${this._searchQuery}
+                        @input=${e => {
       this._searchQuery = e.target.value;
       this.requestUpdate();
-    }, e => {
+    }}
+                        @keydown=${e => {
       if (e.key === "Enter") {
         e.preventDefault();
         this._handleSearchSubmit();
@@ -17960,13 +23956,32 @@ class YetAnotherMediaPlayerCard extends i$2 {
         e.preventDefault();
         this._hideSearchSheetInOptions();
       }
-    }, localize('editor.placeholders.search'), () => this._handleSearchSubmit(), this._searchLoading, localize('common.search'), () => {
+    }}
+                        placeholder="${localize('editor.placeholders.search')}"
+                        style="flex:1; min-width:0; font-size:1.1em;"
+                      />
+                    <button
+                      class="entity-options-item"
+                      style="min-width:80px;"
+                      @click=${() => this._handleSearchSubmit()}
+                      ?disabled=${this._searchLoading}>
+                      ${localize('common.search')}
+                    </button>
+                    <button
+                      class="entity-options-item"
+                      style="min-width:80px;"
+                      @click=${() => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._hideSearchSheetInOptions();
       }
-    }, localize('common.cancel'), (() => {
+    }}>
+              ${localize('common.cancel')}
+                    </button>
+                  </div>
+                  <!--FILTER CHIPS-->
+              ${(() => {
       const classes = this._getVisibleSearchFilterClasses();
       const filter = this._searchMediaClassFilter || "all";
 
@@ -17975,16 +23990,195 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
       // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
       if (classes.length < 2 && !this._usingMusicAssistant) return E;
-      return x(_templateObject52 || (_templateObject52 = _taggedTemplateLiteral(["\n                      <div class=\"chip-row search-filter-chips\" id=\"search-filter-chip-row\" style=\"margin-bottom:12px; justify-content: center; align-items: center;\">\n                        <button\n                          class=\"chip\"\n                          style=\"\n                            width: 72px;\n                            background: ", ";\n                            opacity: ", ";\n                            font-weight: ", ";\n                          \"\n                          ?selected=", "\n                          @click=", "\n                        >", "</button>\n                        ", "\n                      </div>\n                    "])), filter === 'all' ? this._customAccent : '#282828', filter === 'all' ? '1' : '0.8', filter === 'all' ? 'bold' : 'normal', filter === 'all', () => this._doSearch(), localize('search.filters.all'), classes.map(c => x(_templateObject53 || (_templateObject53 = _taggedTemplateLiteral(["\n                          <button\n                            class=\"chip\"\n                            style=\"\n                              width: 72px;\n                              background: ", ";\n                              opacity: ", ";\n                              font-weight: ", ";\n                            \"\n                            ?selected=", "\n                            @click=", "\n                          >\n                            ", "\n                          </button>\n                        "])), filter === c ? this._customAccent : '#282828', filter === c ? '1' : '0.8', filter === c ? 'bold' : 'normal', filter === c, () => this._doSearch(c), localize("search.filters.".concat(c)))));
-    })(), this._searchLoading ? x(_templateObject54 || (_templateObject54 = _taggedTemplateLiteral(["<div class=\"entity-options-search-loading\">", "</div>"])), localize('common.loading')) : E, this._searchError ? x(_templateObject55 || (_templateObject55 = _taggedTemplateLiteral(["<div class=\"entity-options-search-error\">", "</div>"])), this._searchError) : E, this._usingMusicAssistant && !this._searchLoading ? x(_templateObject56 || (_templateObject56 = _taggedTemplateLiteral(["\n                    <div class=\"search-sub-filters\" style=\"display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;\">\n                      <div style=\"display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;\">\n                        <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"", "\"\n                        >\n                                                  <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      <button\n                          class=\"button", "\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=\"", "\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                          ", "\n                      </button>\n                      ", "\n                      <button\n                          class=\"radio-mode-button", "\"\n                          @click=", "\n                          title=\"Radio Mode\"\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                      </button>\n                      ", "\n                      ", "\n                    </div>\n                  "])), this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
+      return x`
+                      <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
+                        <button
+                          class="chip"
+                          style="
+                            width: 72px;
+                            background: ${filter === 'all' ? this._customAccent : '#282828'};
+                            opacity: ${filter === 'all' ? '1' : '0.8'};
+                            font-weight: ${filter === 'all' ? 'bold' : 'normal'};
+                          "
+                          ?selected=${filter === 'all'}
+                          @click=${() => this._doSearch()}
+                        >${localize('search.filters.all')}</button>
+                        ${classes.map(c => x`
+                          <button
+                            class="chip"
+                            style="
+                              width: 72px;
+                              background: ${filter === c ? this._customAccent : '#282828'};
+                              opacity: ${filter === c ? '1' : '0.8'};
+                              font-weight: ${filter === c ? 'bold' : 'normal'};
+                            "
+                            ?selected=${filter === c}
+                            @click=${() => this._doSearch(c)}
+                          >
+                            ${localize(`search.filters.${c}`)}
+                          </button>
+                        `)}
+                      </div>
+                    `;
+    })()}
+                  ${this._searchLoading ? x`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : E}
+                  ${this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
+                  
+                  ${this._usingMusicAssistant && !this._searchLoading ? x`
+                    <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
+                      <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
+                        <button
+                          class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
+                          style="
+                            background: none;
+                            border: none;
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px 8px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            display: flex;
+                            align-items: center;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => {
       this._toggleFavoritesFilter();
-    } : () => {}, localize('search.favorites'), this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline', this._initialFavoritesLoaded || this._favoritesFilterActive ? x(_templateObject57 || (_templateObject57 = _taggedTemplateLiteral(["\n                            <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                              ", "\n                            </span>\n                          "])), localize('search.favorites')) : E, this._recentlyPlayedFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
+    } : () => {}}
+                          title="${localize('search.favorites')}"
+                        >
+                                                  <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
+                          ${this._initialFavoritesLoaded || this._favoritesFilterActive ? x`
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                              ${localize('search.favorites')}
+                            </span>
+                          ` : E}
+                      </button>
+                      <button
+                          class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
+                          style="
+                            background: none;
+                            border: none;
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px 8px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            display: flex;
+                            align-items: center;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => {
       this._toggleRecentlyPlayedFilter();
-    } : () => {}, localize('search.recently_played'), this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline', this._recentlyPlayedFilterActive ? x(_templateObject58 || (_templateObject58 = _taggedTemplateLiteral(["\n                            <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                              ", "\n                            </span>\n                          "])), localize('search.recently_played')) : E, this._isMusicAssistantEntity() ? x(_templateObject59 || (_templateObject59 = _taggedTemplateLiteral(["\n                        <button\n                            class=\"button", "\"\n                            style=\"\n                              background: none;\n                              border: none;\n                              font-size: 1.2em;\n                              cursor: ", ";\n                              padding: 4px 8px;\n                              border-radius: 50%;\n                              transition: all 0.2s ease;\n                              margin-right: 8px;\n                              display: flex;\n                              align-items: center;\n                              opacity: ", ";\n                            \"\n                            @click=", "\n                            title=\"", "\"\n                          >\n                            <ha-icon .icon=", "></ha-icon>\n                            ", "\n                        </button>\n                        ", "\n                      "])), this._upcomingFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
+    } : () => {}}
+                          title="${localize('search.recently_played')}"
+                        >
+                          <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
+                          ${this._recentlyPlayedFilterActive ? x`
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                              ${localize('search.recently_played')}
+                            </span>
+                          ` : E}
+                      </button>
+                      ${this._isMusicAssistantEntity() ? x`
+                        <button
+                            class="button${this._upcomingFilterActive ? ' active' : ''}"
+                            style="
+                              background: none;
+                              border: none;
+                              font-size: 1.2em;
+                              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                              padding: 4px 8px;
+                              border-radius: 50%;
+                              transition: all 0.2s ease;
+                              margin-right: 8px;
+                              display: flex;
+                              align-items: center;
+                              opacity: ${this._searchAttempted ? '1' : '0.5'};
+                            "
+                            @click=${this._searchAttempted ? () => {
       this._toggleUpcomingFilter();
-    } : () => {}, localize('search.next_up'), this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline', this._upcomingFilterActive ? x(_templateObject60 || (_templateObject60 = _taggedTemplateLiteral(["\n                              <span style=\"margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                ", "\n                              </span>\n                            "])), localize('search.next_up')) : E, this._hasMassQueueIntegration ? x(_templateObject61 || (_templateObject61 = _taggedTemplateLiteral(["\n                          <button\n                              class=\"button", "\"\n                              style=\"\n                                background: none;\n                                border: none;\n                                font-size: 1.2em;\n                                cursor: ", ";\n                                padding: 4px 8px;\n                                border-radius: 50%;\n                                transition: all 0.2s ease;\n                                margin-right: 8px;\n                                display: flex;\n                                align-items: center;\n                                opacity: ", ";\n                              \"\n                              @click=", "\n                              title=\"", "\"\n                            >\n                              <ha-icon .icon=", "></ha-icon>\n                              ", "\n                          </button>\n                        "])), this._recommendationsFilterActive ? ' active' : '', this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => {
+    } : () => {}}
+                            title="${localize('search.next_up')}"
+                          >
+                            <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+                            ${this._upcomingFilterActive ? x`
+                              <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                ${localize('search.next_up')}
+                              </span>
+                            ` : E}
+                        </button>
+                        ${this._hasMassQueueIntegration ? x`
+                          <button
+                              class="button${this._recommendationsFilterActive ? ' active' : ''}"
+                              style="
+                                background: none;
+                                border: none;
+                                font-size: 1.2em;
+                                cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                                padding: 4px 8px;
+                                border-radius: 50%;
+                                transition: all 0.2s ease;
+                                margin-right: 8px;
+                                display: flex;
+                                align-items: center;
+                                opacity: ${this._searchAttempted ? '1' : '0.5'};
+                              "
+                              @click=${this._searchAttempted ? () => {
       this._toggleRecommendationsFilter();
-    } : () => {}, localize('search.recommendations'), this._recommendationsFilterActive ? 'mdi:thumb-up' : 'mdi:thumb-up-outline', this._recommendationsFilterActive ? x(_templateObject62 || (_templateObject62 = _taggedTemplateLiteral(["\n                                <span style=\"margin-left:6px;font-size:0.81em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;\">\n                                  ", "\n                                </span>\n                              "])), localize('search.recommendations')) : E) : E) : E, this._radioModeActive ? ' active' : '', () => this._toggleRadioMode(), this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off', this._shouldShowSearchSortToggle() ? x(_templateObject63 || (_templateObject63 = _taggedTemplateLiteral(["\n                        <button\n                          class=\"button\"\n                          style=\"\n                            background: none;\n                            border: none;\n                            font-size: 1.2em;\n                            cursor: ", ";\n                            padding: 4px 8px;\n                            border-radius: 50%;\n                            transition: all 0.2s ease;\n                            margin-right: 8px;\n                            display: flex;\n                            align-items: center;\n                            opacity: ", ";\n                          \"\n                          @click=", "\n                          title=", "\n                        >\n                          <ha-icon .icon=", "></ha-icon>\n                        </button>\n                      "])), this._searchAttempted ? 'pointer' : 'default', this._searchAttempted ? '1' : '0.5', this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}, this._getSearchSortToggleTitle(), this._getSearchSortToggleIcon()) : E, this._shouldShowSearchResultsCount() ? x(_templateObject64 || (_templateObject64 = _taggedTemplateLiteral(["\n                        <span class=\"search-results-count\">\n                          ", "\n                        </span>\n                      "])), this._getSearchResultsCountLabel()) : E) : E, (() => {
+    } : () => {}}
+                              title="${localize('search.recommendations')}"
+                            >
+                              <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'}></ha-icon>
+                              ${this._recommendationsFilterActive ? x`
+                                <span style="margin-left:6px;font-size:0.81em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                  ${localize('search.recommendations')}
+                                </span>
+                              ` : E}
+                          </button>
+                        ` : E}
+                      ` : E}
+                      <button
+                          class="radio-mode-button${this._radioModeActive ? ' active' : ''}"
+                          @click=${() => this._toggleRadioMode()}
+                          title="Radio Mode"
+                        >
+                          <ha-icon .icon=${this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off'}></ha-icon>
+                      </button>
+                      ${this._shouldShowSearchSortToggle() ? x`
+                        <button
+                          class="button"
+                          style="
+                            background: none;
+                            border: none;
+                            font-size: 1.2em;
+                            cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                            padding: 4px 8px;
+                            border-radius: 50%;
+                            transition: all 0.2s ease;
+                            margin-right: 8px;
+                            display: flex;
+                            align-items: center;
+                            opacity: ${this._searchAttempted ? '1' : '0.5'};
+                          "
+                          @click=${this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}}
+                          title=${this._getSearchSortToggleTitle()}
+                        >
+                          <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
+                        </button>
+                      ` : E}
+                      ${this._shouldShowSearchResultsCount() ? x`
+                        <span class="search-results-count">
+                          ${this._getSearchResultsCountLabel()}
+                        </span>
+                      ` : E}
+                    </div>
+                  ` : E}
+
+            <div class="entity-options-search-results ${this.config.search_view === 'card' ? 'search-results-card-view' : 'list-view'}" 
+                 style="${this.config.search_view === 'card' ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
+              ${(() => {
       this._searchMediaClassFilter || "all";
       const currentResults = this._getDisplaySearchResults();
       // Build padded array so row‑count stays constant
@@ -17993,7 +24187,46 @@ class YetAnotherMediaPlayerCard extends i$2 {
         length: Math.max(0, totalRows - currentResults.length)
       }, () => null)];
       // Always render paddedResults, even before first search
-      return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x(_templateObject65 || (_templateObject65 = _taggedTemplateLiteral(["<div class=\"entity-options-search-empty\" style=\"color: white;\">No results.</div>"]))) : paddedResults.map(item => item ? x(_templateObject66 || (_templateObject66 = _taggedTemplateLiteral(["\n                            <!-- EXISTING non\u2011placeholder row markup -->\n                            <div class=\"entity-options-search-result ", " ", "\">\n                              ", "\n                              <div style=\"flex:1; display:flex; flex-direction:column; justify-content:center;\">\n                                <span class=\"", "\"\n                                      @touchstart=", "\n                                      @click=", "\n                                      title=", ">\n                                  ", "\n                                </span>\n                                <span style=\"font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;\">\n                                  ", "\n                                </span>\n                              </div>\n                                <div class=\"entity-options-search-buttons\">\n                              <button class=\"entity-options-search-play\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:play\"></ha-icon>\n                                  </button>\n                                  ", "\n                                </div>\n                                <!-- SLIDE-OUT MENU -->\n                                <div class=\"search-row-slide-out ", "\">\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-remove\"></ha-icon> ", "\n                                  </button>\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-play\"></ha-icon> ", "\n                                  </button>\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-music\"></ha-icon> ", "\n                                  </button>\n                                  <button class=\"slide-out-button\" @click=", " title=\"", "\">\n                                    <ha-icon icon=\"mdi:playlist-plus\"></ha-icon> ", "\n                                  </button>\n                                  <div class=\"slide-out-close\" @click=", ">\n                                    <ha-icon icon=\"mdi:close\"></ha-icon>\n                                  </div>\n\n                                  ", "\n                                </div>\n                            </div>\n                          "])), item._justMoved ? 'just-moved' : '', item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : '', item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x(_templateObject67 || (_templateObject67 = _taggedTemplateLiteral(["\n                                <img\n                                  class=\"entity-options-search-thumb\"\n                                  src=", "\n                                  alt=", "\n                                  style=\"height:38px;width:38px;object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;margin-right:12px;\"\n                                  onerror=\"this.style.display='none'\"\n                                />\n                              "])), item.thumbnail, item.title) : x(_templateObject68 || (_templateObject68 = _taggedTemplateLiteral(["\n                                <div class=\"entity-options-search-thumb-placeholder\" \n                                     style=\"height:38px;width:38px;border-radius:5px;margin-right:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;\">\n                                  <ha-icon icon=\"mdi:music\" style=\"color:rgba(255,255,255,0.6);font-size:16px;\"></ha-icon>\n                                </div>\n                              "]))), this._isClickableSearchResult(item) ? 'clickable-search-result' : '', e => this._handleSearchResultTouch(item, e), () => this._handleSearchResultClick(item), this._getSearchResultClickTitle(item), item.title, (() => {
+      return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
+                            <!-- EXISTING non‑placeholder row markup -->
+                            <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
+                               <div class="search-sheet-thumb-container"
+                                    data-clickable="${this.config.search_view === 'card'}"
+                                    @click=${this.config.search_view === 'card' ? () => this._playMediaFromSearch(item) : null}>
+                                ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? x`
+                                   <img
+                                     class="entity-options-search-thumb"
+                                     src=${item.thumbnail}
+                                     alt=${item.title}
+                                     onerror="this.style.display='none'"
+                                   />
+                                ` : x`
+                                   <div class="entity-options-search-thumb-placeholder">
+                                     <ha-icon icon="mdi:music"></ha-icon>
+                                   </div>
+                                `}
+                                ${this.config.search_view === 'card' ? renderSearchResultActions({
+        item,
+        onPlay: it => this._playMediaFromSearch(it),
+        onOptionsToggle: it => {
+          this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
+          this.requestUpdate();
+        },
+        upcomingFilterActive: !!this._upcomingFilterActive,
+        isMusicAssistant: this._isMusicAssistantEntity(),
+        massQueueAvailable: this._massQueueAvailable,
+        searchView: 'card'
+      }) : E}
+                               </div>
+                               <div class="search-sheet-info">
+                                <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''} ${this.config.search_view === 'card' ? 'search-sheet-title' : ''}"
+                                      @touchstart=${e => this._handleSearchResultTouch(item, e)}
+                                      @click=${() => this._handleSearchResultClick(item)}
+                                      title=${this._getSearchResultClickTitle(item)}>
+                                  ${item.title}
+                                </span>
+                                 <span class="search-sheet-subtitle">
+                                  ${(() => {
         // Prefer artist when available for tracks/albums and special filters
         const isTrackOrAlbum = this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album';
         const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
@@ -18004,44 +24237,86 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }
         // Otherwise show media class as before
         return item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : "";
-      })(), () => this._playMediaFromSearch(item), localize('common.play_now'), !(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? x(_templateObject69 || (_templateObject69 = _taggedTemplateLiteral(["\n                                    <button class=\"entity-options-search-queue\" @click=", " title=\"", "\">\n                                      <ha-icon icon=\"mdi:dots-vertical\"></ha-icon>\n                                    </button>\n                                  "])), e => {
+      })()}
+                                </span>
+                                ${this.config.search_view === 'card' ? x`
+                                  <div class="card-menu-button" @click=${e => {
         e.preventDefault();
         e.stopPropagation();
         this._activeSearchRowMenuId = item.media_content_id;
         this.requestUpdate();
-      }, localize('common.more_options')) : x(_templateObject70 || (_templateObject70 = _taggedTemplateLiteral(["\n                                    <!-- Queue reordering buttons for upcoming items (only for Music Assistant entities with working mass_queue) -->\n                                    ", "\n                                  "])), this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable ? x(_templateObject71 || (_templateObject71 = _taggedTemplateLiteral(["\n                                      <div class=\"queue-controls\">\n                                        <button class=\"queue-btn queue-btn-up\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:arrow-up\"></ha-icon>\n                                        </button>\n                                        <button class=\"queue-btn queue-btn-down\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:arrow-down\"></ha-icon>\n                                        </button>\n                                        <button class=\"queue-btn queue-btn-next\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:format-vertical-align-top\"></ha-icon>\n                                        </button>\n                                        <button class=\"queue-btn queue-btn-remove\" @click=", " title=\"", "\">\n                                          <ha-icon icon=\"mdi:close\"></ha-icon>\n                                        </button>\n                                      </div>\n                                    "])), e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this._moveQueueItemUp(item.queue_item_id);
-      }, localize('search.move_up'), e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this._moveQueueItemDown(item.queue_item_id);
-      }, localize('search.move_down'), e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this._moveQueueItemNext(item.queue_item_id);
-      }, localize('search.move_next'), e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this._removeQueueItem(item.queue_item_id);
-      }, localize('search.remove')) : x(_templateObject72 || (_templateObject72 = _taggedTemplateLiteral(["\n                                      <button class=\"entity-options-search-queue\" @click=", " title=\"More Options\">\n                                        <ha-icon icon=\"mdi:dots-vertical\"></ha-icon>\n                                      </button>\n                                    "])), e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this._activeSearchRowMenuId = item.media_content_id;
-        this.requestUpdate();
-      })), this._activeSearchRowMenuId === item.media_content_id ? 'active' : '', () => this._performSearchOptionAction(item, 'replace'), localize('search.replace_play'), localize('search.labels.replace'), () => this._performSearchOptionAction(item, 'next'), localize('search.play_next'), localize('search.labels.next'), () => this._performSearchOptionAction(item, 'replace_next'), localize('search.replace'), localize('search.labels.replace_next'), () => this._performSearchOptionAction(item, 'add'), localize('search.add_queue'), localize('search.labels.add'), e => {
-        e.stopPropagation();
-        this._activeSearchRowMenuId = null;
-        this.requestUpdate();
-      }, this._successSearchRowMenuId === item.media_content_id ? x(_templateObject73 || (_templateObject73 = _taggedTemplateLiteral(["\n                                    <div class=\"search-row-success-overlay\">\n                                      \u2705 ", "\n                                    </div>\n                                  "])), localize('search.added')) : E) : x(_templateObject74 || (_templateObject74 = _taggedTemplateLiteral(["\n                            <!-- placeholder row keeps height -->\n                            <div class=\"entity-options-search-result placeholder\"></div>\n                          "]))));
-    })()) : this._showGrouping ? this._renderGroupingSheet() : x(_templateObject75 || (_templateObject75 = _taggedTemplateLiteral(["\n                <div class=\"entity-options-header\">\n                  <button class=\"entity-options-item close-item\" @click=", ">\n                    ", "\n                  </button>\n                  <div class=\"entity-options-divider\"></div>\n                </div>\n                <div class=\"entity-options-scroll source-list-centering-wrapper\">\n                  <div class=\"source-list-sheet\">\n                    <div class=\"source-list-scroll\">\n                      ", "\n                    </div>\n                  </div>\n                </div>\n                <div class=\"floating-source-index\">\n                  ", "\n                </div>\n"])), () => {
+      }}>
+                                    <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                                  </div>
+                                ` : E}
+                              </div>
+                              ${this.config.search_view !== 'card' ? renderSearchResultActions({
+        item,
+        onPlay: it => this._playMediaFromSearch(it),
+        onOptionsToggle: it => {
+          this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
+          this.requestUpdate();
+        },
+        upcomingFilterActive: !!this._upcomingFilterActive,
+        isMusicAssistant: this._isMusicAssistantEntity(),
+        massQueueAvailable: this._massQueueAvailable,
+        searchView: 'list',
+        isInline: true,
+        onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
+        onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
+        onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
+        onRemove: it => this._removeQueueItem(it.queue_item_id)
+      }) : E}
+
+                                ${renderSearchResultSlideOut({
+        item,
+        activeSearchRowMenuId: this._activeSearchRowMenuId,
+        successSearchRowMenuId: this._successSearchRowMenuId,
+        onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
+        onOptionsToggle: it => {
+          this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
+          this.requestUpdate();
+        },
+        searchView: this.config.search_view,
+        isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
+        onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
+        onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
+        onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
+        onRemove: it => this._removeQueueItem(it.queue_item_id)
+      })}
+                            </div>
+                          ` : x`
+                            <!-- placeholder row keeps height -->
+                            <div class="entity-options-search-result placeholder"></div>
+                          `);
+    })()}
+            </div>
+                  </div>
+                </div>
+              ` : this._showGrouping ? this._renderGroupingSheet() : x`
+                <div class="entity-options-header">
+                  <button class="entity-options-item close-item" @click=${() => {
       if (this._quickMenuInvoke) {
         this._dismissWithAnimation();
       } else {
         this._closeSourceList();
       }
-    }, localize('common.back'), sourceList.map(src => x(_templateObject76 || (_templateObject76 = _taggedTemplateLiteral(["\n                        <div class=\"entity-options-item\" data-source-name=\"", "\" @click=", ">", "</div>\n                      "])), src, () => this._selectSource(src), src)), sourceLetters.map((letter, i) => {
+    }}>
+                    ${localize('common.back')}
+                  </button>
+                  <div class="entity-options-divider"></div>
+                </div>
+                <div class="entity-options-scroll source-list-centering-wrapper">
+                  <div class="source-list-sheet">
+                    <div class="source-list-scroll">
+                      ${sourceList.map(src => x`
+                        <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
+                      `)}
+                    </div>
+                  </div>
+                </div>
+                <div class="floating-source-index">
+                  ${sourceLetters.map((letter, i) => {
       const isAvailable = availableSourceFirstLetters.has(letter);
       const hovered = this._hoveredSourceLetterIndex;
       let scale = "";
@@ -18049,37 +24324,88 @@ class YetAnotherMediaPlayerCard extends i$2 {
         const dist = Math.abs(hovered - i);
         if (dist === 0) scale = "max";else if (dist === 1) scale = "large";else if (dist === 2) scale = "med";
       }
-      return x(_templateObject77 || (_templateObject77 = _taggedTemplateLiteral(["\n                      <button\n                        class=\"source-index-letter\"\n                        ?disabled=", "\n                        data-scale=", "\n                        @mouseenter=", "\n                        @mouseleave=", "\n                        @click=", "\n                      >\n                        ", "\n                      </button>\n                    "])), !isAvailable, scale, isAvailable ? () => {
+      return x`
+                      <button
+                        class="source-index-letter"
+                        ?disabled=${!isAvailable}
+                        data-scale=${scale}
+                        @mouseenter=${isAvailable ? () => {
         this._hoveredSourceLetterIndex = i;
         this.requestUpdate();
-      } : E, () => {
+      } : E}
+                        @mouseleave=${() => {
         this._hoveredSourceLetterIndex = null;
         this.requestUpdate();
-      }, isAvailable ? () => this._scrollToSourceLetter(letter) : E, letter);
-    })), shouldShowPersistentControls ? x(_templateObject78 || (_templateObject78 = _taggedTemplateLiteral(["\n              <div class=\"persistent-media-controls\" @click=", ">\n                <div class=\"persistent-controls-artwork\">\n                  ", "\n                </div>\n                <div class=\"persistent-controls-buttons\">\n                  <button class=\"persistent-control-btn\" @click=", " title=\"", "\">\n                    <ha-icon icon=\"mdi:skip-previous\"></ha-icon>\n                  </button>\n                  <button class=\"persistent-control-btn\" @click=", " title=\"", "\">\n                    <ha-icon icon=", "></ha-icon>\n                  </button>\n                  <button class=\"persistent-control-btn\" @click=", " title=\"", "\">\n                    <ha-icon icon=\"mdi:skip-next\"></ha-icon>\n                  </button>\n                </div>\n                ", "\n              </div>\n            "])), e => e.stopPropagation(), (() => {
+      }}
+                        @click=${isAvailable ? () => this._scrollToSourceLetter(letter) : E}
+                      >
+                        ${letter}
+                      </button>
+                    `;
+    })}
+                </div>
+`}
+              </div>
+            </div>
+            <!-- Persistent Media Controls Section - Outside Scrollable Area -->
+            ${shouldShowPersistentControls ? x`
+              <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
+                <div class="persistent-controls-artwork">
+                  ${(() => {
       // Use the same entity resolution as the main card
       const playbackStateObj = this.currentPlaybackStateObj;
       const mainState = this.currentStateObj;
       const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
-      return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x(_templateObject79 || (_templateObject79 = _taggedTemplateLiteral(["\n                      <img src=\"", "\" alt=\"Album Art\" class=\"persistent-artwork\" onerror=\"this.style.display='none'\">\n                    "])), artwork.url) : x(_templateObject80 || (_templateObject80 = _taggedTemplateLiteral(["\n                      <div class=\"persistent-artwork-placeholder\">\n                        <ha-icon icon=\"mdi:music\"></ha-icon>\n                      </div>\n                    "])));
-    })(), () => this._onControlClick("prev"), localize('card.media_controls.previous'), () => this._onControlClick("play_pause"), localize('card.media_controls.play_pause'), this._isEntityPlaying(this.currentPlaybackStateObj) ? "mdi:pause" : "mdi:play", () => this._onControlClick("next"), localize('card.media_controls.next'), ((_volumeState$attribut, _volumeState$attribut2) => {
+      return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x`
+                      <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
+                    ` : x`
+                      <div class="persistent-artwork-placeholder">
+                        <ha-icon icon="mdi:music"></ha-icon>
+                      </div>
+                    `;
+    })()}
+                </div>
+                <div class="persistent-controls-buttons">
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="${localize('card.media_controls.previous')}">
+                    <ha-icon icon="mdi:skip-previous"></ha-icon>
+                  </button>
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="${localize('card.media_controls.play_pause')}">
+                    <ha-icon icon=${this._isEntityPlaying(this.currentPlaybackStateObj) ? "mdi:pause" : "mdi:play"}></ha-icon>
+                  </button>
+                  <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="${localize('card.media_controls.next')}">
+                    <ha-icon icon="mdi:skip-next"></ha-icon>
+                  </button>
+                </div>
+                ${(_volumeState$attribut => {
       const idx = this._selectedIndex;
       const volumeEntity = this._getVolumeEntity(idx);
       if (!volumeEntity) return E;
       const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
       const volumeState = this.currentVolumeStateObj;
-      const volumeLevel = Number((_volumeState$attribut = volumeState === null || volumeState === void 0 || (_volumeState$attribut2 = volumeState.attributes) === null || _volumeState$attribut2 === void 0 ? void 0 : _volumeState$attribut2.volume_level) !== null && _volumeState$attribut !== void 0 ? _volumeState$attribut : 0);
-      const percentLabel = !isRemote ? "".concat(Math.round((volumeLevel || 0) * 100), "%") : null;
+      const volumeLevel = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) ?? 0);
+      const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
       if (this.config.volume_mode === "hidden") return E;
-      return x(_templateObject81 || (_templateObject81 = _taggedTemplateLiteral(["\n                    <div class=\"persistent-volume-stepper\">\n                      <button class=\"stepper-btn\" @click=", " title=\"", "\">\u2013</button>\n                      ", "\n                      <button class=\"stepper-btn\" @click=", " title=\"", "\">+</button>\n                    </div>\n                  "])), () => this._onVolumeStep(-1), localize('common.vol_down'), percentLabel ? x(_templateObject82 || (_templateObject82 = _taggedTemplateLiteral(["<span class=\"stepper-value\">", "</span>"])), percentLabel) : E, () => this._onVolumeStep(1), localize('common.vol_up'));
-    })()) : E) : E, this._searchActiveOptionsItem ? renderSearchOptionsOverlay({
+      return x`
+                    <div class="persistent-volume-stepper">
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
+                      ${percentLabel ? x`<span class="stepper-value">${percentLabel}</span>` : E}
+                      <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
+                    </div>
+                  `;
+    })()}
+              </div>
+            ` : E}
+          </div>
+        ` : E}
+          ${this._searchActiveOptionsItem ? renderSearchOptionsOverlay({
       item: this._searchActiveOptionsItem,
       onClose: () => {
         this._searchActiveOptionsItem = null;
         this.requestUpdate();
       },
       onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode)
-    }) : E, this._searchOpen ? renderSearchSheet({
+    }) : E}
+          ${this._searchOpen ? renderSearchSheet({
       open: this._searchOpen,
       query: this._searchQuery,
       loading: this._searchLoading,
@@ -18110,8 +24436,18 @@ class YetAnotherMediaPlayerCard extends i$2 {
         this.requestUpdate();
       },
       upcomingFilterActive: this._upcomingFilterActive,
-      disableAutofocus: this._disableSearchAutofocus
-    }) : E);
+      disableAutofocus: this._disableSearchAutofocus,
+      searchView: this.config.search_view || 'list',
+      searchCardColumns: this.config.search_card_columns || 4,
+      massQueueAvailable: this._massQueueAvailable,
+      onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
+      onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
+      onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
+      onRemove: it => this._removeQueueItem(it.queue_item_id)
+    }) : E}
+          </div>
+    </ha-card>
+  `;
   }
   _updateIdleState() {
     // Consider both main and Music Assistant entities so we can wake from idle
@@ -18924,7 +25260,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (!targetId) continue;
 
       // Check if we already synced this value for this helper/action combination
-      const cacheKey = "".concat(helperId, "-").concat(syncType);
+      const cacheKey = `${helperId}-${syncType}`;
       if (this._lastSyncedActionValues.get(cacheKey) === targetId) continue;
 
       // Check if the current state of the helper is already correct to avoid redundant calls
@@ -18939,57 +25275,4 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
 }
-_defineProperty$1(YetAnotherMediaPlayerCard, "properties", {
-  hass: {},
-  config: {},
-  _selectedIndex: {
-    state: true
-  },
-  _lastPlaying: {
-    state: true
-  },
-  _shouldDropdownOpenUp: {
-    state: true
-  },
-  _pinnedIndex: {
-    state: true
-  },
-  _showSourceList: {
-    state: true
-  },
-  _holdToPin: {
-    state: true
-  },
-  _showQueueSuccessMessage: {
-    state: true
-  },
-  _searchActiveOptionsItem: {
-    state: true
-  },
-  _activeSearchRowMenuId: {
-    state: true
-  },
-  _successSearchRowMenuId: {
-    state: true
-  },
-  _radioModeActive: {
-    state: true
-  },
-  _showEntityOptions: {
-    state: true
-  },
-  _showGrouping: {
-    state: true
-  },
-  _showTransferQueue: {
-    state: true
-  },
-  _showResolvedEntities: {
-    state: true
-  },
-  _showSearchInSheet: {
-    state: true
-  }
-});
-_defineProperty$1(YetAnotherMediaPlayerCard, "styles", yampCardStyles);
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
