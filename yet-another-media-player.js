@@ -2062,9 +2062,9 @@ var es = {
       "image_url_helper": "Ingrese una URL directa a una imagen o una ruta de archivo local",
       "selected_entity_helper": "Helper de texto de entrada que se actualizará con el ID de la entidad del reproductor de medios seleccionado actualmente.",
       "sync_entity_type": "Elija qué ID de entidad sincronizar con el helper (por defecto la entidad de Music Assistant si está configurada).",
-      "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione.",
-      "search_view": "Elegir entre una lista estándar o una cuadrícula de tarjetas para i risultati de la búsqueda.",
-      "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente."
+      "disable_auto_select": "Evita que el chip de esta entidad se seleccione automáticamente cuando comienza la reproducción.",
+      "search_view": "Elegir entre una lista estándar o una cuadrícula de tarjetas para los resultados de la búsqueda.",
+      "search_card_columns": "Especifica cuántas columnas usar en la vista de tarjetas. El artwork se adaptará automáticamente."
     },
     "titles": {
       "edit_entity": "Editar entidad",
@@ -8229,7 +8229,11 @@ function renderSearchResultActions(_ref) {
     isMusicAssistant = false,
     massQueueAvailable = false,
     searchView = 'list',
-    isInline = false
+    isInline = false,
+    onMoveUp,
+    onMoveDown,
+    onMoveNext,
+    onRemove
   } = _ref;
   const isQueueItem = !!(upcomingFilterActive && item.queue_item_id && isMusicAssistant && massQueueAvailable);
   const containerClass = isInline ? 'entity-options-search-buttons' : searchView === 'card' ? 'card-overlay-buttons' : 'search-sheet-buttons';
@@ -8237,6 +8241,22 @@ function renderSearchResultActions(_ref) {
   const queueClass = isInline ? 'entity-options-search-queue' : searchView === 'card' ? 'search-sheet-queue icon-only' : 'search-sheet-queue';
   return x`
     <div class="${containerClass}">
+      ${isQueueItem && isInline ? x`
+        <div class="queue-controls">
+          <button class="queue-btn queue-btn-up" @click=${() => onMoveUp(item)} title="${localize('search.move_up')}">
+            <ha-icon icon="mdi:chevron-up"></ha-icon>
+          </button>
+          <button class="queue-btn queue-btn-down" @click=${() => onMoveDown(item)} title="${localize('search.move_down')}">
+            <ha-icon icon="mdi:chevron-down"></ha-icon>
+          </button>
+          <button class="queue-btn queue-btn-next" @click=${() => onMoveNext(item)} title="${localize('search.move_next')}">
+            <ha-icon icon="mdi:playlist-play"></ha-icon>
+          </button>
+          <button class="queue-btn queue-btn-remove" @click=${() => onRemove(item)} title="${localize('search.remove')}">
+            <ha-icon icon="mdi:close"></ha-icon>
+          </button>
+        </div>
+      ` : E}
       <button class="${playClass}" 
               @click=${() => onPlay(item)} 
               title="${localize('common.play_now')}">
@@ -8321,7 +8341,12 @@ function renderSearchSheet(_ref3) {
     onPlayOption,
     onResultClick,
     searchView = 'list',
-    searchCardColumns = 4
+    searchCardColumns = 4,
+    massQueueAvailable = false,
+    onMoveUp,
+    onMoveDown,
+    onMoveNext,
+    onRemove
   } = _ref3;
   if (!open) return E;
   return x`
@@ -8367,9 +8392,12 @@ function renderSearchSheet(_ref3) {
       onOptionsToggle,
       upcomingFilterActive,
       isMusicAssistant: isMA,
-      massQueueAvailable: isMA,
-      // Simplified for search sheet
-      searchView: 'card'
+      massQueueAvailable,
+      searchView: 'card',
+      onMoveUp,
+      onMoveDown,
+      onMoveNext,
+      onRemove
     }) : E}
                   </div>
                   <div class="search-sheet-info">
@@ -8403,9 +8431,13 @@ function renderSearchSheet(_ref3) {
       onOptionsToggle,
       upcomingFilterActive,
       isMusicAssistant: isMA,
-      massQueueAvailable: isMA,
-      // Simplified for search sheet
-      searchView: 'list'
+      massQueueAvailable,
+      searchView: 'list',
+      isInline: true,
+      onMoveUp,
+      onMoveDown,
+      onMoveNext,
+      onRemove
     }) : E}
                   
                   ${renderSearchResultSlideOut({
@@ -24184,7 +24216,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
         isMusicAssistant: this._isMusicAssistantEntity(),
         massQueueAvailable: this._massQueueAvailable,
         searchView: 'list',
-        isInline: true
+        isInline: true,
+        onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
+        onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
+        onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
+        onRemove: it => this._removeQueueItem(it.queue_item_id)
       }) : E}
 
                                 ${renderSearchResultSlideOut({
@@ -24352,7 +24388,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
       upcomingFilterActive: this._upcomingFilterActive,
       disableAutofocus: this._disableSearchAutofocus,
       searchView: this.config.search_view || 'list',
-      searchCardColumns: this.config.search_card_columns || 4
+      searchCardColumns: this.config.search_card_columns || 4,
+      massQueueAvailable: this._massQueueAvailable,
+      onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
+      onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
+      onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
+      onRemove: it => this._removeQueueItem(it.queue_item_id)
     }) : E}
           </div>
     </ha-card>

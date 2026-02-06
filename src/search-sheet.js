@@ -112,6 +112,10 @@ export function renderSearchResultActions({
   massQueueAvailable = false,
   searchView = 'list',
   isInline = false,
+  onMoveUp,
+  onMoveDown,
+  onMoveNext,
+  onRemove,
 }) {
   const isQueueItem = !!(upcomingFilterActive && item.queue_item_id && isMusicAssistant && massQueueAvailable);
 
@@ -121,6 +125,22 @@ export function renderSearchResultActions({
 
   return html`
     <div class="${containerClass}">
+      ${isQueueItem && isInline ? html`
+        <div class="queue-controls">
+          <button class="queue-btn queue-btn-up" @click=${() => onMoveUp(item)} title="${localize('search.move_up')}">
+            <ha-icon icon="mdi:chevron-up"></ha-icon>
+          </button>
+          <button class="queue-btn queue-btn-down" @click=${() => onMoveDown(item)} title="${localize('search.move_down')}">
+            <ha-icon icon="mdi:chevron-down"></ha-icon>
+          </button>
+          <button class="queue-btn queue-btn-next" @click=${() => onMoveNext(item)} title="${localize('search.move_next')}">
+            <ha-icon icon="mdi:playlist-play"></ha-icon>
+          </button>
+          <button class="queue-btn queue-btn-remove" @click=${() => onRemove(item)} title="${localize('search.remove')}">
+            <ha-icon icon="mdi:close"></ha-icon>
+          </button>
+        </div>
+      ` : nothing}
       <button class="${playClass}" 
               @click=${() => onPlay(item)} 
               title="${localize('common.play_now')}">
@@ -198,6 +218,11 @@ export function renderSearchSheet({
   onResultClick,
   searchView = 'list',
   searchCardColumns = 4,
+  massQueueAvailable = false,
+  onMoveUp,
+  onMoveDown,
+  onMoveNext,
+  onRemove,
 }) {
   if (!open) return nothing;
   return html`
@@ -246,8 +271,12 @@ export function renderSearchSheet({
             onOptionsToggle,
             upcomingFilterActive,
             isMusicAssistant: isMA,
-            massQueueAvailable: isMA, // Simplified for search sheet
-            searchView: 'card'
+            massQueueAvailable,
+            searchView: 'card',
+            onMoveUp,
+            onMoveDown,
+            onMoveNext,
+            onRemove,
           }) : nothing}
                   </div>
                   <div class="search-sheet-info">
@@ -277,8 +306,13 @@ export function renderSearchSheet({
             onOptionsToggle,
             upcomingFilterActive,
             isMusicAssistant: isMA,
-            massQueueAvailable: isMA, // Simplified for search sheet
-            searchView: 'list'
+            massQueueAvailable,
+            searchView: 'list',
+            isInline: true,
+            onMoveUp,
+            onMoveDown,
+            onMoveNext,
+            onRemove,
           }) : nothing}
                   
                   ${renderSearchResultSlideOut({

@@ -6967,7 +6967,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           isMusicAssistant: this._isMusicAssistantEntity(),
                           massQueueAvailable: this._massQueueAvailable,
                           searchView: 'list',
-                          isInline: true
+                          isInline: true,
+                          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+                          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+                          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+                          onRemove: (it) => this._removeQueueItem(it.queue_item_id)
                         }) : nothing}
 
                                 ${renderSearchResultSlideOut({
@@ -7128,6 +7132,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
           disableAutofocus: this._disableSearchAutofocus,
           searchView: this.config.search_view || 'list',
           searchCardColumns: this.config.search_card_columns || 4,
+          massQueueAvailable: this._massQueueAvailable,
+          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+          onRemove: (it) => this._removeQueueItem(it.queue_item_id),
         })
         : nothing
       }
