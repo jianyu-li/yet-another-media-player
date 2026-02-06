@@ -1381,13 +1381,39 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-textfield>
             </div>
             <ha-icon
-              class="icon-button"
-              icon="mdi:restore"
-              title="${localize('common.reset_default')}"
-              @click=${() => this._updateConfig("card_height", undefined)}
-            ></ha-icon>
+                @click=${() => this._updateConfig("card_height", undefined)}
+              ></ha-icon>
+            </div>
+            <div class="form-row">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
+        select: {
+          mode: "dropdown", options: [
+            { value: "list", label: localize('editor.search_view_options.list') },
+            { value: "card", label: localize('editor.search_view_options.card') },
+          ]
+        }
+      }}
+                .value=${this._config.search_view ?? "list"}
+                label="${localize('editor.fields.search_view')}"
+                helper="${localize('editor.subtitles.search_view')}"
+                @value-changed=${(e) => this._updateConfig("search_view", e.detail.value)}
+              ></ha-selector>
+            </div>
+            ${this._config.search_view === 'card' ? html`
+              <div class="form-row">
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
+                  .value=${this._config.search_card_columns ?? 4}
+                  label="${localize('editor.fields.search_card_columns')}"
+                  helper="${localize('editor.subtitles.search_card_columns')}"
+                  @value-changed=${(e) => this._updateConfig("search_card_columns", e.detail.value)}
+                ></ha-selector>
+              </div>
+            ` : nothing}
           </div>
-        </div>
 
         <div class="config-section">
           <div class="section-header">

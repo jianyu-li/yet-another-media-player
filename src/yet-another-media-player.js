@@ -6876,7 +6876,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ` : nothing
                   }
 
-            <div class="entity-options-search-results">
+            <div class="entity-options-search-results ${this.config.search_view === 'card' ? 'search-results-card-view' : 'list-view'}" 
+                 style="${this.config.search_view === 'card' ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
               ${(() => {
                     const filter = this._searchMediaClassFilter || "all";
                     const currentResults = this._getDisplaySearchResults();
@@ -6891,29 +6892,43 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       ? html`<div class="entity-options-search-empty" style="color: white;">No results.</div>`
                       : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
-                            <div class="entity-options-search-result ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
-                              ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
-                                <img
-                                  class="entity-options-search-thumb"
-                                  src=${item.thumbnail}
-                                  alt=${item.title}
-                                  style="height:38px;width:38px;object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;margin-right:12px;"
-                                  onerror="this.style.display='none'"
-                                />
-                              ` : html`
-                                <div class="entity-options-search-thumb-placeholder" 
-                                     style="height:38px;width:38px;border-radius:5px;margin-right:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
-                                  <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
-                                </div>
-                              `}
-                              <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-                                <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
+                            <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
+                              <div class="search-sheet-thumb-container">
+                                ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
+                                  <img
+                                    class="entity-options-search-thumb"
+                                    src=${item.thumbnail}
+                                    alt=${item.title}
+                                    style="object-fit:var(--yamp-artwork-fit, cover);border-radius:5px;"
+                                    onerror="this.style.display='none'"
+                                  />
+                                ` : html`
+                                  <div class="entity-options-search-thumb-placeholder" 
+                                       style="border-radius:5px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
+                                    <ha-icon icon="mdi:music" style="color:rgba(255,255,255,0.6);font-size:16px;"></ha-icon>
+                                  </div>
+                                `}
+                                ${this.config.search_view === 'card' ? html`
+                                  <div class="card-overlay-buttons">
+                                    <button class="entity-options-search-play icon-only" @click=${() => this._playMediaFromSearch(item)} title="${localize('common.play_now')}">
+                                      <ha-icon icon="mdi:play"></ha-icon>
+                                    </button>
+                                    ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
+                                      <button class="entity-options-search-queue icon-only" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }} title="${localize('common.more_options')}">
+                                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                                      </button>
+                                    ` : nothing}
+                                  </div>
+                                ` : nothing}
+                              </div>
+                              <div class="search-sheet-info" style="${this.config.search_view === 'card' ? 'text-align:center;' : 'flex:1; display:flex; flex-direction:column; justify-content:center;'}">
+                                <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''} ${this.config.search_view === 'card' ? 'search-sheet-title' : ''}"
                                       @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
                                       @click=${() => this._handleSearchResultClick(item)}
                                       title=${this._getSearchResultClickTitle(item)}>
                                   ${item.title}
                                 </span>
-                                <span style="font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;">
+                                <span class="${this.config.search_view === 'card' ? 'search-sheet-subtitle' : ''}" style="${this.config.search_view === 'card' ? '' : 'font-size:0.86em; color:#bbb; line-height:1.16; margin-top:2px;'}">
                                   ${(() => {
                           // Prefer artist when available for tracks/albums and special filters
                           const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
@@ -6930,8 +6945,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         })()}
                                 </span>
                               </div>
+                              ${this.config.search_view !== 'card' ? html`
                                 <div class="entity-options-search-buttons">
-                              <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="${localize('common.play_now')}">
+                                  <button class="entity-options-search-play" @click=${() => this._playMediaFromSearch(item)} title="${localize('common.play_now')}">
                                     <ha-icon icon="mdi:play"></ha-icon>
                                   </button>
                                   ${!(this._upcomingFilterActive && item.queue_item_id && this._isMusicAssistantEntity() && this._massQueueAvailable) ? html`
@@ -6962,6 +6978,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                     `}
                                   `}
                                 </div>
+                              ` : nothing}
                                 <!-- SLIDE-OUT MENU -->
                                 <div class="search-row-slide-out ${this._activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">
                                   <button class="slide-out-button" @click=${() => this._performSearchOptionAction(item, 'replace')} title="${localize('search.replace_play')}">
@@ -7134,6 +7151,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           },
           upcomingFilterActive: this._upcomingFilterActive,
           disableAutofocus: this._disableSearchAutofocus,
+          searchView: this.config.search_view || 'list',
+          searchCardColumns: this.config.search_card_columns || 4,
         })
         : nothing
       }

@@ -119,7 +119,9 @@ export default {
             "image_url_helper": "Enter a direct URL to an image or a local file path",
             "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID.",
             "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
-            "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing."
+            "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing.",
+            "search_view": "Choose between a standard list or a card-based grid for search results.",
+            "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically."
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -196,7 +198,9 @@ export default {
             "selected_entity_helper": "Selected Entity Helper",
             "sync_entity_type": "Sync Entity Type",
             "placement": "Placement",
-            "card_trigger": "Card Trigger"
+            "card_trigger": "Card Trigger",
+            "search_view": "Search Result View",
+            "search_card_columns": "Card Columns"
         },
         "action_types": {
             "menu": "Open a Card Menu Item",
@@ -226,6 +230,10 @@ export default {
             "double_tap": "Double Tap",
             "swipe_left": "Swipe Left",
             "swipe_right": "Swipe Right"
+        },
+        "search_view_options": {
+            "list": "List",
+            "card": "Card"
         }
     },
     "card": {

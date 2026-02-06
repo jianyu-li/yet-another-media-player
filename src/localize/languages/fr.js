@@ -119,7 +119,9 @@ export default {
             "image_url_helper": "Entrez une URL directe vers une image ou un chemin de fichier local",
             "selected_entity_helper": "Helper de texte d'entrée qui sera mis à jour avec l'ID de l'entité du lecteur multimédia actuellement sélectionné.",
             "sync_entity_type": "Choisissez quel ID d'entité synchroniser avec le helper (par défaut l'entité Music Assistant si configurée).",
-            "disable_auto_select": "Empêche le jeton de cette entité d'être automatiquement sélectionné au début de la lecture."
+            "disable_auto_select": "Empêche le jeton de cette entité d'être automatiquement sélectionné au début de la lecture.",
+            "search_view": "Choisissez entre une liste standard ou une grille de cartes pour les résultats de recherche.",
+            "search_card_columns": "Spécifiez le nombre de colonnes à utiliser dans la vue carte. L'illustration s'adaptera automatiquement."
         },
         "titles": {
             "edit_entity": "Modifier l'entité",
@@ -196,7 +198,9 @@ export default {
             "selected_entity_helper": "Helper d'entité sélectionnée",
             "sync_entity_type": "Type d'entité à synchroniser",
             "placement": "Placement",
-            "card_trigger": "Déclencheur de carte"
+            "card_trigger": "Déclencheur de carte",
+            "search_view": "Vue des résultats de recherche",
+            "search_card_columns": "Colonnes de cartes"
         },
         "action_types": {
             "menu": "Ouvrir un élément de menu",
@@ -226,6 +230,10 @@ export default {
             "double_tap": "Double appui",
             "swipe_left": "Glisser vers la gauche",
             "swipe_right": "Glisser vers la droite"
+        },
+        "search_view_options": {
+            "list": "Liste",
+            "card": "Carte"
         }
     },
     "card": {

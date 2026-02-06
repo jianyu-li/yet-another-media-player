@@ -123,10 +123,12 @@ export function renderSearchSheet({
   onOptionsToggle,
   onPlayOption,
   onResultClick,
+  searchView = 'list',
+  searchCardColumns = 4,
 }) {
   if (!open) return nothing;
   return html`
-    <div class="search-sheet" data-match-theme="${matchTheme}">
+    <div class="search-sheet" data-match-theme="${matchTheme}" style="${searchView === 'card' ? `--search-card-columns: ${searchCardColumns};` : ''}">
       <div class="search-sheet-header">
         <input
           type="text"
@@ -140,25 +142,39 @@ export function renderSearchSheet({
       </div>
       ${loading ? html`<div class="search-sheet-loading">${localize('common.loading')}</div>` : nothing}
       ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
-      <div class="search-sheet-results">
+      <div class="search-sheet-results ${searchView === 'card' ? 'search-results-card-view' : 'list-view'}">
         ${(results || []).length === 0 && !loading
       ? html`<div class="search-sheet-empty">${localize('common.no_results')}</div>`
       : (results || []).map(
         (item) => html`
-                <div class="search-sheet-result" style="position:relative;overflow:hidden;">
-                  ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? html`
-                    <img
-                      class="search-sheet-thumb"
-                      src=${item.thumbnail}
-                      alt=${item.title}
-                      onerror="this.style.display='none'"
-                    />
-                  ` : html`
-                    <div class="search-sheet-thumb-placeholder">
-                      <ha-icon icon="mdi:music"></ha-icon>
-                    </div>
-                  `}
-                  <div style="flex:1;min-width:0;">
+                <div class="search-sheet-result ${searchView === 'card' ? 'search-result-card' : ''}" style="position:relative;overflow:hidden;">
+                  <div class="search-sheet-thumb-container">
+                    ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? html`
+                      <img
+                        class="search-sheet-thumb"
+                        src=${item.thumbnail}
+                        alt=${item.title}
+                        onerror="this.style.display='none'"
+                      />
+                    ` : html`
+                      <div class="search-sheet-thumb-placeholder">
+                        <ha-icon icon="mdi:music"></ha-icon>
+                      </div>
+                    `}
+                    ${searchView === 'card' ? html`
+                      <div class="card-overlay-buttons">
+                        <button class="search-sheet-play icon-only" @click=${() => onPlay(item)} title="${localize('common.play_now')}">
+                          <ha-icon icon="mdi:play"></ha-icon>
+                        </button>
+                        ${!(upcomingFilterActive && item.queue_item_id) ? html`
+                          <button class="search-sheet-queue icon-only" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="${localize('common.more_options')}">
+                            <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                          </button>
+                        ` : nothing}
+                      </div>
+                    ` : nothing}
+                  </div>
+                  <div class="search-sheet-info" style="${searchView === 'card' ? 'text-align:center;' : 'flex:1;min-width:0;'}">
                     <span 
                       class="search-sheet-title ${item.is_browsable ? 'browsable' : ''}" 
                       @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
@@ -174,16 +190,18 @@ export function renderSearchSheet({
                       </span>
                     ` : nothing}
                   </div>
-                  <div class="search-sheet-buttons">
-                    <button class="search-sheet-play" @click=${() => onPlay(item)} title="${localize('common.play_now')}">
-                      <ha-icon icon="mdi:play"></ha-icon>
-                    </button>
-                    ${!(upcomingFilterActive && item.queue_item_id) ? html`
-                      <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="${localize('common.more_options')}">
-                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                  ${searchView !== 'card' ? html`
+                    <div class="search-sheet-buttons">
+                      <button class="search-sheet-play" @click=${() => onPlay(item)} title="${localize('common.play_now')}">
+                        <ha-icon icon="mdi:play"></ha-icon>
                       </button>
-                    ` : nothing}
-                  </div>
+                      ${!(upcomingFilterActive && item.queue_item_id) ? html`
+                        <button class="search-sheet-queue" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} title="${localize('common.more_options')}">
+                          <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                        </button>
+                      ` : nothing}
+                    </div>
+                  ` : nothing}
                   
                   <!-- SLIDE-OUT MENU -->
                   <div class="search-row-slide-out ${activeSearchRowMenuId === item.media_content_id ? 'active' : ''}">

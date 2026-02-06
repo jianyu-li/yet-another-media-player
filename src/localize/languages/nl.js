@@ -226,6 +226,10 @@ export default {
             "double_tap": "Dubbeltik",
             "swipe_left": "Veeg naar links",
             "swipe_right": "Veeg naar rechts"
+        },
+        "search_view_options": {
+            "list": "Lijst",
+            "card": "Kaart"
         }
     },
     "card": {

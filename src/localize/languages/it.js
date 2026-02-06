@@ -226,6 +226,10 @@ export default {
             "double_tap": "Doppio tocco",
             "swipe_left": "Scorri a sinistra",
             "swipe_right": "Scorri a destra"
+        },
+        "search_view_options": {
+            "list": "Lista",
+            "card": "Scheda"
         }
     },
     "card": {
