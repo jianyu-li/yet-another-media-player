@@ -5895,6 +5895,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const hasSingleEntity = this.entityObjs.length === 1;
     const isMinHeight = hasSingleEntity && this.config.always_collapsed === true && this.config.expand_on_search !== true;
     const effectivePinHeaders = this.config.pin_search_headers === true && !isMinHeight;
+    const showSearchHeaders = !(this.config.hide_search_headers_on_idle === true && this._isIdle);
 
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
@@ -6651,12 +6652,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <div class="entity-options-divider"></div>
                   ` : nothing
                   }
-                  ${this._searchBreadcrumb ? html`
+                  ${(showSearchHeaders && this._searchBreadcrumb) ? html`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
-                  ` : html`<div class="entity-options-search-skeleton"></div>`
+                  ` : (showSearchHeaders ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
                   }
+                  ${showSearchHeaders ? html`
                   <div class="entity-options-search-row">
                       <input
                         type="text"
@@ -6666,12 +6668,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         .value=${this._searchQuery}
                         @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
                         @keydown=${e => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      this._handleSearchSubmit();
-                    }
-                    else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
-                  }}
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        this._handleSearchSubmit();
+                      }
+                      else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
+                    }}
                         placeholder="${localize('editor.placeholders.search')}"
                         style="flex:1; min-width:0; font-size:1.1em;"
                       />
@@ -6689,8 +6691,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ${localize('common.cancel')}
                     </button>
                   </div>
+                  ` : nothing}
                   <!--FILTER CHIPS-->
-              ${(() => {
+               ${showSearchHeaders ? (() => {
                     const classes = this._getVisibleSearchFilterClasses();
                     const filter = this._searchMediaClassFilter || "all";
 
@@ -6730,12 +6733,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         `)}
                       </div>
                     `;
-                  })()
+                  })() : nothing
                   }
-                  ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
-                  ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
+                  ${showSearchHeaders && this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
+                  ${showSearchHeaders && this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   
-                  ${this._usingMusicAssistant && !this._searchLoading ? html`
+                  ${showSearchHeaders && this._usingMusicAssistant && !this._searchLoading ? html`
                     <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
                       <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
                         <button
