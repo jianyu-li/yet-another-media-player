@@ -23,6 +23,7 @@ import {
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
 import {
   resolveTemplateAtActionTime,
+  resolveStringTemplate,
   findAssociatedButtonEntities,
   getMusicAssistantState,
   getSearchResultClickTitle,
@@ -5066,7 +5067,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
       (typeof action.navigation_path === "string" && action.navigation_path.trim() !== "") ||
       action.action === "navigate"
     ) {
-      const path = (typeof action.navigation_path === "string" ? action.navigation_path : action.path || "").trim();
+      let path = (typeof action.navigation_path === "string" ? action.navigation_path : action.path || "").trim();
+
+      // Create context for template resolution
+      const context = {
+        current: this.currentEntityId || '',
+        user: this.hass?.user?.name || '',
+        config: JSON.stringify(this._config || {})
+      };
+
+      path = await resolveStringTemplate(this.hass, path, context);
       const openInNewTab = action.navigation_new_tab === true;
       this._handleNavigate(path, openInNewTab);
       return;
