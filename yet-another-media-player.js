@@ -1435,8 +1435,7 @@ var en = {
       "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
       "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing.",
       "search_view": "Choose between a standard list or a card-based grid for search results.",
-      "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically.",
-      "randomize_initial": "Shuffle the favorites list each time you open the search screen."
+      "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically."
     },
     "titles": {
       "edit_entity": "Edit Entity",
@@ -1469,8 +1468,7 @@ var en = {
       "follow_active_entity": "Volume Entity Follows Active Entity",
       "use_url_path": "Use URL or Path",
       "adaptive_text_elements": "Adaptive Text Size Elements",
-      "disable_auto_select": "Disable Auto-Select",
-      "randomize_initial": "Randomize Initial Results"
+      "disable_auto_select": "Disable Auto-Select"
     },
     "fields": {
       "artwork_fit": "Artwork Fit",
@@ -16255,18 +16253,6 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
-                id="randomize-initial-results-toggle"
-                .checked=${this._config.randomize_initial_results ?? false}
-                @change=${e => this._updateConfig("randomize_initial_results", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.randomize_initial')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.randomize_initial')}</div>
-          </div>
-
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
                 id="disable-mass-queue-toggle"
                 .checked=${this._config.disable_mass_queue ?? false}
                 @change=${e => this._updateConfig("disable_mass_queue", e.target.checked)}
@@ -18860,7 +18846,6 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
-        var _searchResponse;
         const orderBy = this._getActiveSearchDisplaySortMode();
         searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this._getSearchResultsLimit(), {
           onChunk: progressiveUpdate,
@@ -18871,10 +18856,6 @@ class YetAnotherMediaPlayerCard extends i$2 {
           this._initialFavoritesLoaded = true;
         }
         this._lastSearchUsedServerFavorites = true;
-        // Randomize initial favorites when the option is enabled
-        if (this._randomizeInitialResults && (_searchResponse = searchResponse) !== null && _searchResponse !== void 0 && _searchResponse.results) {
-          searchResponse.results = this._sortSearchResults(searchResponse.results, 'random');
-        }
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
@@ -21026,8 +21007,6 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._displayTimestamps = !!config.display_timestamps;
     // Keep search filters on submit
     this._keepFiltersOnSearch = !!config.keep_filters_on_search;
-    // Randomize the initial favorites list each time the search screen opens
-    this._randomizeInitialResults = !!config.randomize_initial_results;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space

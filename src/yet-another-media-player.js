@@ -1241,10 +1241,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._initialFavoritesLoaded = true;
         }
         this._lastSearchUsedServerFavorites = true;
-        // Randomize initial favorites when the option is enabled
-        if (this._randomizeInitialResults && searchResponse?.results) {
-          searchResponse.results = this._sortSearchResults(searchResponse.results, 'random');
-        }
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
@@ -3494,8 +3490,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._displayTimestamps = !!config.display_timestamps;
     // Keep search filters on submit
     this._keepFiltersOnSearch = !!config.keep_filters_on_search;
-    // Randomize the initial favorites list each time the search screen opens
-    this._randomizeInitialResults = !!config.randomize_initial_results;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space

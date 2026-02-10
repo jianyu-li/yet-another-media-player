@@ -103,7 +103,7 @@ export default {
             "hide_search_chips": "Hide specific search filter chips for this entity",
             "follow_active_entity": "When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.",
             "search_limit_full": "Maximum number of search results to display (1-1000, default: 20)",
-            "result_sorting_full": "Choose how results are ordered. Sorting is handled server-side by Music Assistant.",
+            "result_sorting_full": "Choose how results are ordered.",
             "card_height_full": "Leave blank for automatic height",
             "control_layout_full": "Choose between the legacy evenly sized controls or the modern Home Assistant layout.",
             "artwork_extend": "Let the artwork background continue underneath the chip and action rows.",
@@ -122,8 +122,7 @@ export default {
             "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
             "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing.",
             "search_view": "Choose between a standard list or a card-based grid for search results.",
-            "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically.",
-            "randomize_initial": "Shuffle the favorites list each time you open the search screen."
+            "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically."
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -156,8 +155,7 @@ export default {
             "follow_active_entity": "Volume Entity Follows Active Entity",
             "use_url_path": "Use URL or Path",
             "adaptive_text_elements": "Adaptive Text Size Elements",
-            "disable_auto_select": "Disable Auto-Select",
-            "randomize_initial": "Randomize Initial Results"
+            "disable_auto_select": "Disable Auto-Select"
         },
         "fields": {
             "artwork_fit": "Artwork Fit",
