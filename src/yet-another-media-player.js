@@ -1038,6 +1038,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._searchDisplaySortOverride = alternate;
     }
+    // Clear cached results so _doSearch re-fetches with the new order_by
+    this._searchResultsByType = {};
     // Re-trigger search with new sort order
     this._doSearch(this._activeMediaType || 'all', { orderBy: this._getActiveSearchDisplaySortMode() });
     this.requestUpdate();
@@ -1150,7 +1152,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}`;
+    const sortMode = this._getActiveSearchDisplaySortMode();
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}_sort_${sortMode}`;
     if (this._searchResultsByType[cacheKey]) {
       if (this._searchTimeoutHandle) {
         clearTimeout(this._searchTimeoutHandle);

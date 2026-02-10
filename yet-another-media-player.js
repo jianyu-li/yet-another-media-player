@@ -1416,7 +1416,7 @@ var en = {
       "hide_search_chips": "Hide specific search filter chips for this entity",
       "follow_active_entity": "When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.",
       "search_limit_full": "Maximum number of search results to display (1-1000, default: 20)",
-      "result_sorting_full": "Choose how results are ordered. Sorting is handled server-side by Music Assistant.",
+      "result_sorting_full": "Choose how results are ordered.",
       "card_height_full": "Leave blank for automatic height",
       "control_layout_full": "Choose between the legacy evenly sized controls or the modern Home Assistant layout.",
       "artwork_extend": "Let the artwork background continue underneath the chip and action rows.",
@@ -8563,34 +8563,38 @@ async function searchMedia(hass, entityId, query) {
         const mediaTypes = mediaType && mediaType !== 'all' ? [mediaType] : ['artist', 'album', 'track', 'playlist', 'radio', 'audiobook', 'podcast'];
         const flatResultsFav = [];
         await Promise.all(mediaTypes.map(async mt => {
-          const message = {
-            type: "call_service",
-            domain: "music_assistant",
-            service: "get_library",
-            service_data: {
-              config_entry_id: configEntryId,
-              media_type: mt,
-              favorite: true,
-              search: query
-            },
-            return_response: true
-          };
-          const favoritesLimit = resolveLimitValue(searchResultsLimit);
-          if (favoritesLimit !== undefined) {
-            message.service_data.limit = favoritesLimit;
-          }
-          if (searchParams.orderBy && searchParams.orderBy !== 'default') {
-            message.service_data.order_by = searchParams.orderBy;
-          }
-          const favRes = await hass.connection.sendMessagePromise(message);
-          const favResponse = favRes === null || favRes === void 0 ? void 0 : favRes.response;
-          const items = (favResponse === null || favResponse === void 0 ? void 0 : favResponse.items) || [];
-          items.forEach(item => {
-            const transformedItem = transformMusicAssistantItem(item);
-            if (transformedItem) {
-              flatResultsFav.push(transformedItem);
+          try {
+            const message = {
+              type: "call_service",
+              domain: "music_assistant",
+              service: "get_library",
+              service_data: {
+                config_entry_id: configEntryId,
+                media_type: mt,
+                favorite: true,
+                search: query
+              },
+              return_response: true
+            };
+            const favoritesLimit = resolveLimitValue(searchResultsLimit);
+            if (favoritesLimit !== undefined) {
+              message.service_data.limit = favoritesLimit;
             }
-          });
+            if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+              message.service_data.order_by = searchParams.orderBy;
+            }
+            const favRes = await hass.connection.sendMessagePromise(message);
+            const favResponse = favRes === null || favRes === void 0 ? void 0 : favRes.response;
+            const items = (favResponse === null || favResponse === void 0 ? void 0 : favResponse.items) || [];
+            items.forEach(item => {
+              const transformedItem = transformMusicAssistantItem(item);
+              if (transformedItem) {
+                flatResultsFav.push(transformedItem);
+              }
+            });
+          } catch (error) {
+            console.error('yamp: Error searching favorites for type', mt, error);
+          }
         }));
         return {
           results: flatResultsFav,
@@ -8609,38 +8613,46 @@ async function searchMedia(hass, entityId, query) {
             usedMusicAssistant: true
           };
         }
-        const message = {
-          type: "call_service",
-          domain: "music_assistant",
-          service: "get_library",
-          service_data: {
-            config_entry_id: configEntryId,
-            media_type: mediaType
-            // favorite param omitted to get ALL items
-          },
-          return_response: true
-        };
-        const limit = resolveLimitValue(searchResultsLimit);
-        if (limit !== undefined) {
-          message.service_data.limit = limit;
-        }
-        if (searchParams.orderBy && searchParams.orderBy !== 'default') {
-          message.service_data.order_by = searchParams.orderBy;
-        }
-        const res = await hass.connection.sendMessagePromise(message);
-        const response = res === null || res === void 0 ? void 0 : res.response;
-        const items = (response === null || response === void 0 ? void 0 : response.items) || [];
-        const browseResults = [];
-        items.forEach(item => {
-          const transformedItem = transformMusicAssistantItem(item);
-          if (transformedItem) {
-            browseResults.push(transformedItem);
+        try {
+          const message = {
+            type: "call_service",
+            domain: "music_assistant",
+            service: "get_library",
+            service_data: {
+              config_entry_id: configEntryId,
+              media_type: mediaType
+              // favorite param omitted to get ALL items
+            },
+            return_response: true
+          };
+          const limit = resolveLimitValue(searchResultsLimit);
+          if (limit !== undefined) {
+            message.service_data.limit = limit;
           }
-        });
-        return {
-          results: browseResults,
-          usedMusicAssistant: true
-        };
+          if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+            message.service_data.order_by = searchParams.orderBy;
+          }
+          const res = await hass.connection.sendMessagePromise(message);
+          const response = res === null || res === void 0 ? void 0 : res.response;
+          const items = (response === null || response === void 0 ? void 0 : response.items) || [];
+          const browseResults = [];
+          items.forEach(item => {
+            const transformedItem = transformMusicAssistantItem(item);
+            if (transformedItem) {
+              browseResults.push(transformedItem);
+            }
+          });
+          return {
+            results: browseResults,
+            usedMusicAssistant: true
+          };
+        } catch (error) {
+          console.error('yamp: Error browsing library for type', mediaType, error);
+          return {
+            results: [],
+            usedMusicAssistant: true
+          };
+        }
       }
       const serviceData = {
         name: query,
@@ -18689,6 +18701,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     } else {
       this._searchDisplaySortOverride = alternate;
     }
+    // Clear cached results so _doSearch re-fetches with the new order_by
+    this._searchResultsByType = {};
     // Re-trigger search with new sort order
     this._doSearch(this._activeMediaType || 'all', {
       orderBy: this._getActiveSearchDisplaySortMode()
@@ -18783,7 +18797,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
 
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}`;
+    const sortMode = this._getActiveSearchDisplaySortMode();
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}_sort_${sortMode}`;
     if (this._searchResultsByType[cacheKey]) {
       if (this._searchTimeoutHandle) {
         clearTimeout(this._searchTimeoutHandle);

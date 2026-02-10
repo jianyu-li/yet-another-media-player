@@ -400,34 +400,38 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
         const flatResultsFav = [];
         await Promise.all(
           mediaTypes.map(async (mt) => {
-            const message = {
-              type: "call_service",
-              domain: "music_assistant",
-              service: "get_library",
-              service_data: {
-                config_entry_id: configEntryId,
-                media_type: mt,
-                favorite: true,
-                search: query,
-              },
-              return_response: true,
-            };
-            const favoritesLimit = resolveLimitValue(searchResultsLimit);
-            if (favoritesLimit !== undefined) {
-              message.service_data.limit = favoritesLimit;
-            }
-            if (searchParams.orderBy && searchParams.orderBy !== 'default') {
-              message.service_data.order_by = searchParams.orderBy;
-            }
-            const favRes = await hass.connection.sendMessagePromise(message);
-            const favResponse = favRes?.response;
-            const items = favResponse?.items || [];
-            items.forEach(item => {
-              const transformedItem = transformMusicAssistantItem(item);
-              if (transformedItem) {
-                flatResultsFav.push(transformedItem);
+            try {
+              const message = {
+                type: "call_service",
+                domain: "music_assistant",
+                service: "get_library",
+                service_data: {
+                  config_entry_id: configEntryId,
+                  media_type: mt,
+                  favorite: true,
+                  search: query,
+                },
+                return_response: true,
+              };
+              const favoritesLimit = resolveLimitValue(searchResultsLimit);
+              if (favoritesLimit !== undefined) {
+                message.service_data.limit = favoritesLimit;
               }
-            });
+              if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+                message.service_data.order_by = searchParams.orderBy;
+              }
+              const favRes = await hass.connection.sendMessagePromise(message);
+              const favResponse = favRes?.response;
+              const items = favResponse?.items || [];
+              items.forEach(item => {
+                const transformedItem = transformMusicAssistantItem(item);
+                if (transformedItem) {
+                  flatResultsFav.push(transformedItem);
+                }
+              });
+            } catch (error) {
+              console.error('yamp: Error searching favorites for type', mt, error);
+            }
           })
         );
         return { results: flatResultsFav, usedMusicAssistant: true };
@@ -442,39 +446,44 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
           return { results: [], usedMusicAssistant: true };
         }
 
-        const message = {
-          type: "call_service",
-          domain: "music_assistant",
-          service: "get_library",
-          service_data: {
-            config_entry_id: configEntryId,
-            media_type: mediaType
-            // favorite param omitted to get ALL items
-          },
-          return_response: true,
-        };
+        try {
+          const message = {
+            type: "call_service",
+            domain: "music_assistant",
+            service: "get_library",
+            service_data: {
+              config_entry_id: configEntryId,
+              media_type: mediaType
+              // favorite param omitted to get ALL items
+            },
+            return_response: true,
+          };
 
-        const limit = resolveLimitValue(searchResultsLimit);
-        if (limit !== undefined) {
-          message.service_data.limit = limit;
-        }
-        if (searchParams.orderBy && searchParams.orderBy !== 'default') {
-          message.service_data.order_by = searchParams.orderBy;
-        }
-
-        const res = await hass.connection.sendMessagePromise(message);
-        const response = res?.response;
-        const items = response?.items || [];
-
-        const browseResults = [];
-        items.forEach(item => {
-          const transformedItem = transformMusicAssistantItem(item);
-          if (transformedItem) {
-            browseResults.push(transformedItem);
+          const limit = resolveLimitValue(searchResultsLimit);
+          if (limit !== undefined) {
+            message.service_data.limit = limit;
           }
-        });
+          if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+            message.service_data.order_by = searchParams.orderBy;
+          }
 
-        return { results: browseResults, usedMusicAssistant: true };
+          const res = await hass.connection.sendMessagePromise(message);
+          const response = res?.response;
+          const items = response?.items || [];
+
+          const browseResults = [];
+          items.forEach(item => {
+            const transformedItem = transformMusicAssistantItem(item);
+            if (transformedItem) {
+              browseResults.push(transformedItem);
+            }
+          });
+
+          return { results: browseResults, usedMusicAssistant: true };
+        } catch (error) {
+          console.error('yamp: Error browsing library for type', mediaType, error);
+          return { results: [], usedMusicAssistant: true };
+        }
       }
 
       const serviceData = {
