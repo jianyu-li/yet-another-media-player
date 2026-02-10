@@ -67,7 +67,7 @@ Below you will find a list of all configuration options.
 |                                                                                                 |
 | **Search**                 |              |              |             |                                                                                                 |
 | `search_results_limit`     | number       | No           | `20`        | Maximum number of results to request per media category (artist/album/track/etc.) across favorites, recently played, and standard searches; set to `0` to fall back to Music Assistant’s own limits |
-| `search_results_sort`      | choice       | No           | `default`   | Order search results by `default`, `title_asc`, `title_desc`, `artist_asc`, or `artist_desc`; sorting happens within the results returned by `search_results_limit` |
+| `search_results_sort`      | choice       | No           | `default`   | Order results using Music Assistant's server-side sorting; see [Result Sorting Configuration](#result-sorting-configuration) for all values |
 | `disable_autofocus`        | boolean      | No           | `false`     | Prevent the search box from auto-focusing so on-screen keyboards stay hidden when opening search sheets |
 | `keep_filters_on_search`   | boolean      | No           | `false`     | Enable this to search within the current active filter (Favorites, etc) instead of clearing it |
 | `randomize_initial_results`| boolean      | No           | `false`     | Shuffle the initial favorites list each time the search screen opens so the results feel fresh |
@@ -340,19 +340,24 @@ entities:
 
 ### Result Sorting Configuration
 
-Use the `search_results_sort` option to change how search results are ordered. The default behavior keeps the original order returned by the music service. Sorting is applied within the results already constrained by `search_results_limit`. Available values are:
+Use the `search_results_sort` option to change how results are ordered. Sorting is handled server-side by Music Assistant using the `order_by` parameter on `get_library` calls. The default behavior keeps the original order returned by the music service. Available values are:
 
 - `default` (source order)
-- `random` (shuffled)
-- `title_asc`
-- `title_desc`
-- `artist_asc`
-- `artist_desc`
+- `name` / `name_desc`
+- `sort_name` / `sort_name_desc`
+- `timestamp_added` / `timestamp_added_desc`
+- `last_played` / `last_played_desc`
+- `play_count` / `play_count_desc`
+- `year` / `year_desc`
+- `position` / `position_desc`
+- `artist_name` / `artist_name_desc`
+- `random`
+- `random_play_count` (random + least played)
 
 #### Example Configuration
 ```yaml
 type: custom:yet-another-media-player-alpha
-search_results_sort: title_asc
+search_results_sort: timestamp_added_desc
 entities:
   - entity_id: media_player.office_homepod
     name: Office

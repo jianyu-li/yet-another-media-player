@@ -1308,11 +1308,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         select: {
           mode: "dropdown", options: [
             { value: "default", label: "Default" },
+            { value: "name", label: "Name (A→Z)" },
+            { value: "name_desc", label: "Name (Z→A)" },
+            { value: "sort_name", label: "Sort Name (A→Z)" },
+            { value: "sort_name_desc", label: "Sort Name (Z→A)" },
+            { value: "timestamp_added", label: "Date Added (Oldest)" },
+            { value: "timestamp_added_desc", label: "Date Added (Newest)" },
+            { value: "last_played", label: "Last Played (Oldest)" },
+            { value: "last_played_desc", label: "Last Played (Recent)" },
+            { value: "play_count", label: "Play Count (Low→High)" },
+            { value: "play_count_desc", label: "Play Count (High→Low)" },
+            { value: "year", label: "Year (Oldest)" },
+            { value: "year_desc", label: "Year (Newest)" },
+            { value: "position", label: "Position (Asc)" },
+            { value: "position_desc", label: "Position (Desc)" },
+            { value: "artist_name", label: "Artist (A→Z)" },
+            { value: "artist_name_desc", label: "Artist (Z→A)" },
             { value: "random", label: "Random" },
-            { value: "title_asc", label: "Title Ascending" },
-            { value: "title_desc", label: "Title Descending" },
-            { value: "artist_asc", label: "Artist Ascending" },
-            { value: "artist_desc", label: "Artist Descending" },
+            { value: "random_play_count", label: "Random + Least Played" },
           ]
         }
       }}

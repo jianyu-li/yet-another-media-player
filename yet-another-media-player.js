@@ -1416,7 +1416,7 @@ var en = {
       "hide_search_chips": "Hide specific search filter chips for this entity",
       "follow_active_entity": "When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.",
       "search_limit_full": "Maximum number of search results to display (1-1000, default: 20)",
-      "result_sorting_full": "Choose how search results are ordered. Default keeps the source order.",
+      "result_sorting_full": "Choose how results are ordered. Sorting is handled server-side by Music Assistant.",
       "card_height_full": "Leave blank for automatic height",
       "control_layout_full": "Choose between the legacy evenly sized controls or the modern Home Assistant layout.",
       "artwork_extend": "Let the artwork background continue underneath the chip and action rows.",
@@ -8581,6 +8581,9 @@ async function searchMedia(hass, entityId, query) {
           if (favoritesLimit !== undefined) {
             message.service_data.limit = favoritesLimit;
           }
+          if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+            message.service_data.order_by = searchParams.orderBy;
+          }
           const favRes = await hass.connection.sendMessagePromise(message);
           const favResponse = favRes === null || favRes === void 0 ? void 0 : favRes.response;
           const items = (favResponse === null || favResponse === void 0 ? void 0 : favResponse.items) || [];
@@ -8622,6 +8625,9 @@ async function searchMedia(hass, entityId, query) {
         const limit = resolveLimitValue(searchResultsLimit);
         if (limit !== undefined) {
           message.service_data.limit = limit;
+        }
+        if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+          message.service_data.order_by = searchParams.orderBy;
         }
         const res = await hass.connection.sendMessagePromise(message);
         const response = res === null || res === void 0 ? void 0 : res.response;
@@ -8802,6 +8808,9 @@ async function getFavorites(hass, entityId) {
     });
     if (favoritesLimit !== undefined) {
       message.service_data.limit = favoritesLimit;
+    }
+    if (options.orderBy && options.orderBy !== 'default') {
+      message.service_data.order_by = options.orderBy;
     }
     try {
       const res = await hass.connection.sendMessagePromise(message);
@@ -16306,20 +16315,59 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           value: "default",
           label: "Default"
         }, {
+          value: "name",
+          label: "Name (A→Z)"
+        }, {
+          value: "name_desc",
+          label: "Name (Z→A)"
+        }, {
+          value: "sort_name",
+          label: "Sort Name (A→Z)"
+        }, {
+          value: "sort_name_desc",
+          label: "Sort Name (Z→A)"
+        }, {
+          value: "timestamp_added",
+          label: "Date Added (Oldest)"
+        }, {
+          value: "timestamp_added_desc",
+          label: "Date Added (Newest)"
+        }, {
+          value: "last_played",
+          label: "Last Played (Oldest)"
+        }, {
+          value: "last_played_desc",
+          label: "Last Played (Recent)"
+        }, {
+          value: "play_count",
+          label: "Play Count (Low→High)"
+        }, {
+          value: "play_count_desc",
+          label: "Play Count (High→Low)"
+        }, {
+          value: "year",
+          label: "Year (Oldest)"
+        }, {
+          value: "year_desc",
+          label: "Year (Newest)"
+        }, {
+          value: "position",
+          label: "Position (Asc)"
+        }, {
+          value: "position_desc",
+          label: "Position (Desc)"
+        }, {
+          value: "artist_name",
+          label: "Artist (A→Z)"
+        }, {
+          value: "artist_name_desc",
+          label: "Artist (Z→A)"
+        }, {
           value: "random",
           label: "Random"
         }, {
-          value: "title_asc",
-          label: "Title Ascending"
-        }, {
-          value: "title_desc",
-          label: "Title Descending"
-        }, {
-          value: "artist_asc",
-          label: "Artist Ascending"
-        }, {
-          value: "artist_desc",
-          label: "Artist Descending"
+          value: "random_play_count",
+          label: "Random + Least Played"
         }]
       }
     }}
@@ -18607,9 +18655,6 @@ class YetAnotherMediaPlayerCard extends i$2 {
     let sortModeOverride = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     const sortMode = sortModeOverride ?? ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_sort) ?? "default";
     const list = Array.isArray(results) ? [...results] : [];
-    if (sortMode === "default") {
-      return list;
-    }
     if (sortMode === "random") {
       // Fisher-Yates shuffle for an unbiased random order
       for (let i = list.length - 1; i > 0; i--) {
@@ -18618,46 +18663,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       }
       return list;
     }
-    const collator = new Intl.Collator(undefined, {
-      sensitivity: "base",
-      numeric: true
-    });
-    const normalize = val => typeof val === "string" ? val : (val ?? "").toString();
-    const getTitle = item => normalize((item === null || item === void 0 ? void 0 : item.title) ?? (item === null || item === void 0 ? void 0 : item.name) ?? "");
-    const getArtist = item => normalize((item === null || item === void 0 ? void 0 : item.artist) ?? (item === null || item === void 0 ? void 0 : item.artist_name) ?? "");
-    const compareWithFallback = function (primaryGetter, secondaryGetter) {
-      let direction = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-      return (a, b) => {
-        const primaryA = primaryGetter(a);
-        const primaryB = primaryGetter(b);
-        if (!primaryA && !primaryB) {
-          const secondaryA = secondaryGetter(a);
-          const secondaryB = secondaryGetter(b);
-          return direction * collator.compare(secondaryA, secondaryB);
-        }
-        if (!primaryA) return 1;
-        if (!primaryB) return -1;
-        const primaryCompare = collator.compare(primaryA, primaryB);
-        if (primaryCompare !== 0) {
-          return direction * primaryCompare;
-        }
-        const secondaryA = secondaryGetter(a);
-        const secondaryB = secondaryGetter(b);
-        return direction * collator.compare(secondaryA, secondaryB);
-      };
-    };
-    switch (sortMode) {
-      case "title_asc":
-        return list.sort(compareWithFallback(getTitle, getArtist, 1));
-      case "title_desc":
-        return list.sort(compareWithFallback(getTitle, getArtist, -1));
-      case "artist_asc":
-        return list.sort(compareWithFallback(getArtist, getTitle, 1));
-      case "artist_desc":
-        return list.sort(compareWithFallback(getArtist, getTitle, -1));
-      default:
-        return list;
-    }
+
+    // All other sorting is handled server-side via order_by parameter
+    return list;
   }
   _getConfiguredSearchResultsSortMode() {
     var _this$config2;
@@ -18665,16 +18673,16 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return typeof configured === "string" ? configured : "default";
   }
   _isSortableSearchMode(mode) {
-    return typeof mode === "string" && /^(title|artist)_(asc|desc)$/.test(mode);
+    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return false;
+    return true;
   }
   _getOppositeSearchSortMode(mode) {
-    const match = /^(title|artist)_(asc|desc)$/.exec(mode || "");
-    if (!match) {
-      return null;
+    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return null;
+    // Toggle between asc and desc variants
+    if (mode.endsWith("_desc")) {
+      return mode.replace(/_desc$/, "");
     }
-    const [, field, direction] = match;
-    const oppositeDirection = direction === "asc" ? "desc" : "asc";
-    return `${field}_${oppositeDirection}`;
+    return `${mode}_desc`;
   }
   _shouldShowSearchSortToggle() {
     return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
@@ -18695,6 +18703,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
     } else {
       this._searchDisplaySortOverride = alternate;
     }
+    // Re-trigger search with new sort order
+    this._doSearch(this._activeMediaType || 'all', {
+      orderBy: this._getActiveSearchDisplaySortMode()
+    });
     this.requestUpdate();
   }
   _getActiveSearchDisplaySortMode() {
@@ -18712,30 +18724,21 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (!this._isSortableSearchMode(mode)) {
       return "mdi:sort-variant";
     }
-    const [, direction] = mode.split("_");
-    return direction === "asc" ? "mdi:sort-alphabetical-ascending" : "mdi:sort-alphabetical-descending";
+    return mode.endsWith("_desc") ? "mdi:sort-descending" : "mdi:sort-ascending";
   }
   _getSearchSortToggleTitle() {
     const mode = this._getActiveSearchDisplaySortMode();
     if (!this._isSortableSearchMode(mode)) {
       return "Toggle search result order";
     }
-    const [field, direction] = mode.split("_");
-    const labelField = field === "artist" ? "artist" : "title";
-    const labelDirection = direction === "asc" ? "ascending" : "descending";
-    return `Sort ${labelField} ${labelDirection}`;
+    const isDesc = mode.endsWith("_desc");
+    const baseName = isDesc ? mode.replace(/_desc$/, "") : mode;
+    const label = baseName.replace(/_/g, " ");
+    return `Sort by ${label} ${isDesc ? "descending" : "ascending"}`;
   }
   _getDisplaySearchResults() {
     const baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
-    if (!this._shouldShowSearchSortToggle()) {
-      return baseResults;
-    }
-    const configured = this._getConfiguredSearchResultsSortMode();
-    const activeMode = this._getActiveSearchDisplaySortMode();
-    if (!this._isSortableSearchMode(activeMode) || activeMode === configured) {
-      return baseResults;
-    }
-    return this._sortSearchResults(baseResults, activeMode);
+    return baseResults;
   }
   _getSearchResultsLimit() {
     var _this$config3;
@@ -18849,15 +18852,19 @@ class YetAnotherMediaPlayerCard extends i$2 {
       } else if (isFavorites) {
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
+        const orderBy = this._getActiveSearchDisplaySortMode();
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
           ...searchParams,
-          favorites: true
+          favorites: true,
+          orderBy: orderBy !== 'default' ? orderBy : undefined
         }, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
         var _searchResponse;
+        const orderBy = this._getActiveSearchDisplaySortMode();
         searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this._getSearchResultsLimit(), {
-          onChunk: progressiveUpdate
+          onChunk: progressiveUpdate,
+          orderBy: orderBy !== 'default' ? orderBy : undefined
         });
         // Mark that initial favorites have been loaded only if we're in default view
         if (!this._searchQuery || this._searchQuery.trim() === '') {
@@ -18871,7 +18878,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this._getSearchResultsLimit());
+        const orderBy = this._getActiveSearchDisplaySortMode();
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
+          ...searchParams,
+          orderBy: orderBy !== 'default' ? orderBy : undefined
+        }, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = false;
       }
 

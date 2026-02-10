@@ -103,7 +103,7 @@ export default {
             "hide_search_chips": "Hide specific search filter chips for this entity",
             "follow_active_entity": "When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.",
             "search_limit_full": "Maximum number of search results to display (1-1000, default: 20)",
-            "result_sorting_full": "Choose how search results are ordered. Default keeps the source order.",
+            "result_sorting_full": "Choose how results are ordered. Sorting is handled server-side by Music Assistant.",
             "card_height_full": "Leave blank for automatic height",
             "control_layout_full": "Choose between the legacy evenly sized controls or the modern Home Assistant layout.",
             "artwork_extend": "Let the artwork background continue underneath the chip and action rows.",

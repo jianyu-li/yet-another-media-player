@@ -416,6 +416,9 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
             if (favoritesLimit !== undefined) {
               message.service_data.limit = favoritesLimit;
             }
+            if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+              message.service_data.order_by = searchParams.orderBy;
+            }
             const favRes = await hass.connection.sendMessagePromise(message);
             const favResponse = favRes?.response;
             const items = favResponse?.items || [];
@@ -454,6 +457,9 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
         const limit = resolveLimitValue(searchResultsLimit);
         if (limit !== undefined) {
           message.service_data.limit = limit;
+        }
+        if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+          message.service_data.order_by = searchParams.orderBy;
         }
 
         const res = await hass.connection.sendMessagePromise(message);
@@ -627,6 +633,9 @@ export async function getFavorites(hass, entityId, mediaType = null, searchResul
     );
     if (favoritesLimit !== undefined) {
       message.service_data.limit = favoritesLimit;
+    }
+    if (options.orderBy && options.orderBy !== 'default') {
+      message.service_data.order_by = options.orderBy;
     }
     try {
       const res = await hass.connection.sendMessagePromise(message);
