@@ -990,6 +990,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return list;
     }
 
+    if (sortMode === "random") {
+      // Fisher-Yates shuffle for an unbiased random order
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
+      return list;
+    }
+
     const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
     const normalize = (val) => (typeof val === "string" ? val : (val ?? "").toString());
     const getTitle = (item) => normalize(item?.title ?? item?.name ?? "");
@@ -1278,6 +1287,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._initialFavoritesLoaded = true;
         }
         this._lastSearchUsedServerFavorites = true;
+        // Randomize initial favorites when the option is enabled
+        if (this._randomizeInitialResults && searchResponse?.results) {
+          searchResponse.results = this._sortSearchResults(searchResponse.results, 'random');
+        }
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
@@ -3526,6 +3539,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._displayTimestamps = !!config.display_timestamps;
     // Keep search filters on submit
     this._keepFiltersOnSearch = !!config.keep_filters_on_search;
+    // Randomize the initial favorites list each time the search screen opens
+    this._randomizeInitialResults = !!config.randomize_initial_results;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space

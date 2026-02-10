@@ -1258,6 +1258,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
+                id="randomize-initial-results-toggle"
+                .checked=${this._config.randomize_initial_results ?? false}
+                @change=${(e) => this._updateConfig("randomize_initial_results", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.randomize_initial')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.randomize_initial')}</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
                 id="disable-mass-queue-toggle"
                 .checked=${this._config.disable_mass_queue ?? false}
                 @change=${(e) => this._updateConfig("disable_mass_queue", e.target.checked)}
@@ -1296,6 +1308,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         select: {
           mode: "dropdown", options: [
             { value: "default", label: "Default" },
+            { value: "random", label: "Random" },
             { value: "title_asc", label: "Title Ascending" },
             { value: "title_desc", label: "Title Descending" },
             { value: "artist_asc", label: "Artist Ascending" },

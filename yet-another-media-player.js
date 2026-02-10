@@ -1435,7 +1435,8 @@ var en = {
       "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
       "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing.",
       "search_view": "Choose between a standard list or a card-based grid for search results.",
-      "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically."
+      "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically.",
+      "randomize_initial": "Shuffle the favorites list each time you open the search screen."
     },
     "titles": {
       "edit_entity": "Edit Entity",
@@ -1468,7 +1469,8 @@ var en = {
       "follow_active_entity": "Volume Entity Follows Active Entity",
       "use_url_path": "Use URL or Path",
       "adaptive_text_elements": "Adaptive Text Size Elements",
-      "disable_auto_select": "Disable Auto-Select"
+      "disable_auto_select": "Disable Auto-Select",
+      "randomize_initial": "Randomize Initial Results"
     },
     "fields": {
       "artwork_fit": "Artwork Fit",
@@ -1721,6 +1723,7 @@ var de = {
       "search_within_filter": "Innerhalb des aktiven Filters suchen (Favoriten, etc.), anstatt ihn zu löschen.",
       "close_search_on_play": "Suchbildschirm beim Abspielen automatisch schließen.",
       "pin_search_headers": "Sucheingabe und Filter beim Scrollen oben fixieren.",
+      "hide_search_headers_on_idle": "Sucheingabe und Filter im Leerlauf ausblenden.",
       "disable_mass": "Optionale Mass Queue Integration deaktivieren, auch wenn sie installiert ist.",
       "swap_pause_stop": "Pause-Taste durch Stop-Taste im modernen Layout ersetzen.",
       "adaptive_controls": "Wiedergabetasten an verfügbaren Platz anpassen.",
@@ -1766,6 +1769,7 @@ var de = {
       "keep_filters": "Filter bei Suche beibehalten",
       "dismiss_on_play": "Suche beim Abspielen beenden",
       "pin_headers": "Such-Header fixieren",
+      "hide_search_headers_on_idle": "Such-Header im Leerlauf ausblenden",
       "disable_mass": "Mass Queue deaktivieren",
       "match_theme": "Theme anpassen",
       "alt_progress": "Alternativer Fortschrittsbalken",
@@ -2036,6 +2040,7 @@ var es = {
       "search_within_filter": "Buscar dentro del filtro activo (Favoritos, etc.).",
       "close_search_on_play": "Cerrar búsqueda al reproducir.",
       "pin_search_headers": "Fijar encabezados de búsqueda al hacer scroll.",
+      "hide_search_headers_on_idle": "Ocultar encabezados de búsqueda en inactividad.",
       "disable_mass": "Desactivar integración con Mass Queue.",
       "swap_pause_stop": "Cambiar pausa por stop en diseño moderno.",
       "adaptive_controls": "Permitir que los botones se adapten al espacio.",
@@ -2081,6 +2086,7 @@ var es = {
       "keep_filters": "Mantener filtros",
       "dismiss_on_play": "Cerrar al reproducir",
       "pin_headers": "Fijar encabezados",
+      "hide_search_headers_on_idle": "Ocultar encabezados en inactividad",
       "disable_mass": "Desactivar Mass Queue",
       "match_theme": "Seguir tema",
       "alt_progress": "Barra de progreso alternativa",
@@ -2351,6 +2357,7 @@ var fr = {
       "search_within_filter": "Rechercher dans le filtre actif actuel (Favoris, etc.).",
       "close_search_on_play": "Fermer automatiquement la recherche à la lecture.",
       "pin_search_headers": "Garder la recherche et les filtres fixes en haut.",
+      "hide_search_headers_on_idle": "Masquer la recherche et les filtres en mode veille.",
       "disable_mass": "Désactiver l'intégration Mass Queue.",
       "swap_pause_stop": "Remplacer le bouton pause par stop en mode moderne.",
       "adaptive_controls": "Laisser les boutons s'adapter à l'espace disponible.",
@@ -2396,6 +2403,7 @@ var fr = {
       "keep_filters": "Garder les filtres",
       "dismiss_on_play": "Fermer en lecture",
       "pin_headers": "Épingler les en-têtes",
+      "hide_search_headers_on_idle": "Masquer les en-têtes en veille",
       "disable_mass": "Désactiver Mass Queue",
       "match_theme": "Suivre le thème",
       "alt_progress": "Barre de progression alternative",
@@ -2666,6 +2674,7 @@ var it = {
       "search_within_filter": "Cerca nel filtro attivo (Preferiti, ecc.).",
       "close_search_on_play": "Chiudi ricerca alla riproduzione.",
       "pin_search_headers": "Fissa le intestazioni di ricerca durante lo scorrimento.",
+      "hide_search_headers_on_idle": "Nascondi la ricerca e i filtri quando inattivo.",
       "disable_mass": "Disabilita integrazione Mass Queue.",
       "swap_pause_stop": "Sostituisci pausa con stop nel design moderno.",
       "adaptive_controls": "Permetti ai pulsanti di adattarsi allo spazio.",
@@ -2711,6 +2720,7 @@ var it = {
       "keep_filters": "Mantieni filtri",
       "dismiss_on_play": "Chiudi alla riproduzione",
       "pin_headers": "Fissa intestazioni",
+      "hide_search_headers_on_idle": "Nascondi intestazioni in inattività",
       "disable_mass": "Disabilita Mass Queue",
       "match_theme": "Segui tema",
       "alt_progress": "Barra progresso alternativa",
@@ -2981,6 +2991,7 @@ var nl = {
       "search_within_filter": "Schakel dit in om te zoeken binnen het huidige actieve filter (Favorieten, Recent Afgespeeld, etc) in plaats van dit te wissen.",
       "close_search_on_play": "Sluit het zoekscherm automatisch wanneer een nummer wordt afgespeeld.",
       "pin_search_headers": "Houd de zoekinvoer en filters bovenaan vast tijdens het scrollen door resultaten.",
+      "hide_search_headers_on_idle": "Verberg zoekinvoer en filters wanneer inactief.",
       "disable_mass": "Schakel de optionele Mass Queue integratie uit, zelfs als deze is geïnstalleerd.",
       "swap_pause_stop": "Vervang de pauzeknop door stop bij gebruik van de moderne lay-out.",
       "adaptive_controls": "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
@@ -3026,6 +3037,7 @@ var nl = {
       "keep_filters": "Filters behouden bij zoeken",
       "dismiss_on_play": "Zoeken sluiten bij afspelen",
       "pin_headers": "Zoekkoppen vastzetten",
+      "hide_search_headers_on_idle": "Zoekkoppen verbergen bij inactiviteit",
       "disable_mass": "Mass Queue uitschakelen",
       "match_theme": "Thema matchen",
       "alt_progress": "Alternatieve Voortgangsbalk",
@@ -3296,6 +3308,7 @@ var pt = {
       "search_within_filter": "Procurar no filtro ativo (Favoritos, etc.).",
       "close_search_on_play": "Fechar procura ao reproduzir.",
       "pin_search_headers": "Fixar cabeçalhos de procura ao fazer scroll.",
+      "hide_search_headers_on_idle": "Ocultar pesquisa e filtros quando inativo.",
       "disable_mass": "Desativar integração Mass Queue.",
       "swap_pause_stop": "Substituir pausa por stop no design moderno.",
       "adaptive_controls": "Permitir que os botões se adaptem ao espaço.",
@@ -3341,6 +3354,7 @@ var pt = {
       "keep_filters": "Manter filtros",
       "dismiss_on_play": "Fechar ao reproduzir",
       "pin_headers": "Fixar cabeçalhos",
+      "hide_search_headers_on_idle": "Ocultar cabeçalhos em inatividade",
       "disable_mass": "Desativar Mass Queue",
       "match_theme": "Seguir tema",
       "alt_progress": "Barra de progresso alternativa",
@@ -3611,6 +3625,7 @@ var sk = {
       "search_within_filter": "Povoliť vyhľadávanie v rámci aktuálneho aktívneho filtra (Obľúbené, Nedávno prehrávané atď.) namiesto jeho vymazania.",
       "close_search_on_play": "Automaticky zatvoriť obrazovku vyhľadávania po spustení skladby.",
       "pin_search_headers": "Ponechať pole vyhľadávania a filtre pevne navrchu počas posúvania výsledkov.",
+      "hide_search_headers_on_idle": "Skryť vyhľadávanie a filtre, keď je prehrávač nečinný.",
       "disable_mass": "Deaktivovať voliteľnú integráciu Mass Queue, aj keď je nainštalovaná.",
       "swap_pause_stop": "Nahradiť tlačidlo pauzy tlačidlom zastavenia pri použití moderného rozloženia.",
       "adaptive_controls": "Umožniť tlačidlám prehrávania meniť veľkosť podľa dostupného priestoru.",
@@ -3656,6 +3671,7 @@ var sk = {
       "keep_filters": "Zachovať filtre pri hľadaní",
       "dismiss_on_play": "Zavrieť hľadanie po spustení",
       "pin_headers": "Pripnúť hlavičky hľadania",
+      "hide_search_headers_on_idle": "Skryť hlavičky pri nečinnosti",
       "disable_mass": "Deaktivovať Mass Queue",
       "match_theme": "Podľa témy",
       "alt_progress": "Alternatívny indikátor priebehu",
@@ -3926,6 +3942,7 @@ var sl = {
       "search_within_filter": "Išči znotraj trenutnega filtra.",
       "close_search_on_play": "Samodejno zapri iskanje ob predvajanju.",
       "pin_search_headers": "Pripni iskalno polje in filtre na vrh.",
+      "hide_search_headers_on_idle": "Skrij iskalno polje in filtre med mirovanjem.",
       "disable_mass": "Onemogoči integracijo Mass Queue.",
       "swap_pause_stop": "Zamenjaj gumb pavze z gumbom zaustavitve med uporabo moderne postavitve.",
       "adaptive_controls": "Prilagodi velikost gumbov glede na prostor.",
@@ -3969,6 +3986,7 @@ var sl = {
       "keep_filters": "Ohrani filtre",
       "dismiss_on_play": "Zapri iskanje ob predvajanju",
       "pin_headers": "Pripni glave iskanja",
+      "hide_search_headers_on_idle": "Skrij glave iskanja med mirovanjem",
       "disable_mass": "Onemogoči Mass Queue",
       "match_theme": "Ujemaj temo",
       "alt_progress": "Alternativna vrstica napredka",
@@ -16228,6 +16246,18 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
+                id="randomize-initial-results-toggle"
+                .checked=${this._config.randomize_initial_results ?? false}
+                @change=${e => this._updateConfig("randomize_initial_results", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.randomize_initial')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.randomize_initial')}</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
                 id="disable-mass-queue-toggle"
                 .checked=${this._config.disable_mass_queue ?? false}
                 @change=${e => this._updateConfig("disable_mass_queue", e.target.checked)}
@@ -16275,6 +16305,9 @@ class YetAnotherMediaPlayerEditor extends i$2 {
         options: [{
           value: "default",
           label: "Default"
+        }, {
+          value: "random",
+          label: "Random"
         }, {
           value: "title_asc",
           label: "Title Ascending"
@@ -18577,6 +18610,14 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (sortMode === "default") {
       return list;
     }
+    if (sortMode === "random") {
+      // Fisher-Yates shuffle for an unbiased random order
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
+      return list;
+    }
     const collator = new Intl.Collator(undefined, {
       sensitivity: "base",
       numeric: true
@@ -18814,6 +18855,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         }, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
+        var _searchResponse;
         searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this._getSearchResultsLimit(), {
           onChunk: progressiveUpdate
         });
@@ -18822,6 +18864,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
           this._initialFavoritesLoaded = true;
         }
         this._lastSearchUsedServerFavorites = true;
+        // Randomize initial favorites when the option is enabled
+        if (this._randomizeInitialResults && (_searchResponse = searchResponse) !== null && _searchResponse !== void 0 && _searchResponse.results) {
+          searchResponse.results = this._sortSearchResults(searchResponse.results, 'random');
+        }
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
@@ -20969,6 +21015,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     this._displayTimestamps = !!config.display_timestamps;
     // Keep search filters on submit
     this._keepFiltersOnSearch = !!config.keep_filters_on_search;
+    // Randomize the initial favorites list each time the search screen opens
+    this._randomizeInitialResults = !!config.randomize_initial_results;
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space
