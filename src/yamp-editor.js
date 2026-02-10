@@ -1246,6 +1246,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
+                id="hide-search-headers-on-idle-toggle"
+                .checked=${this._config.hide_search_headers_on_idle ?? false}
+                @change=${(e) => this._updateConfig("hide_search_headers_on_idle", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.hide_search_headers_on_idle')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.hide_search_headers_on_idle')}</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
                 id="disable-mass-queue-toggle"
                 .checked=${this._config.disable_mass_queue ?? false}
                 @change=${(e) => this._updateConfig("disable_mass_queue", e.target.checked)}

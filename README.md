@@ -71,6 +71,7 @@ Below you will find a list of all configuration options.
 | `disable_autofocus`        | boolean      | No           | `false`     | Prevent the search box from auto-focusing so on-screen keyboards stay hidden when opening search sheets |
 | `keep_filters_on_search`   | boolean      | No           | `false`     | Enable this to search within the current active filter (Favorites, etc) instead of clearing it |
 | `pin_search_headers`       | boolean      | No           | `false`     | Always keep search and menu headers pinned at the top while scrolling through results           |
+| `hide_search_headers_on_idle` | boolean    | No           | `false`     | Hide search input and filters when the player is idle                                           |
 | `disable_mass_queue`       | boolean      | No           | `false`     | Disable the optional mass_queue integration even if it is installed |
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
@@ -298,6 +299,7 @@ In this example:
 - **Pin Search Headers**: Enable this to pin the header of search and grouping sheets. This keeps the "Back" and "Close" buttons always accessible while you scroll through long lists of results or players.
 - **Disable Search Autofocus**: Keep the search box from stealing focus so on-screen keyboards stay hidden.
 - **Keep Filters on Search**: Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.
+- **Hide Search Headers on Idle**: Use with `idle_screen: search` and `search_view: card` to create a nice landing page. 
 
 ### Search
 Initiate a search using the hamburger menu and selecting `search`. Press Enter or click the `search` button after inputing your search query. To exit, click `cancel` or Esc on your keyboard. 

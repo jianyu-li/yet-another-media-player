@@ -1404,6 +1404,7 @@ var en = {
       "search_within_filter": "Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.",
       "close_search_on_play": "Automatically close the search screen when a track is played.",
       "pin_search_headers": "Keep search input and filters fixed at the top while scrolling results.",
+      "hide_search_headers_on_idle": "Hide search input and filters when the player is idle.",
       "disable_mass": "Disable the optional Mass Queue integration even if it is installed.",
       "swap_pause_stop": "Replace the pause button with stop while using the modern layout.",
       "adaptive_controls": "Let the playback buttons grow or shrink to fit the available space.",
@@ -1449,6 +1450,7 @@ var en = {
       "keep_filters": "Keep Filters on Search",
       "dismiss_on_play": "Dismiss search on play",
       "pin_headers": "Pin search headers",
+      "hide_search_headers_on_idle": "Hide search headers on idle",
       "disable_mass": "Disable Mass Queue",
       "match_theme": "Match Theme",
       "alt_progress": "Alternate Progress Bar",
@@ -16214,6 +16216,18 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
+                id="hide-search-headers-on-idle-toggle"
+                .checked=${this._config.hide_search_headers_on_idle ?? false}
+                @change=${e => this._updateConfig("hide_search_headers_on_idle", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.hide_search_headers_on_idle')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.hide_search_headers_on_idle')}</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
                 id="disable-mass-queue-toggle"
                 .checked=${this._config.disable_mass_queue ?? false}
                 @change=${e => this._updateConfig("disable_mass_queue", e.target.checked)}
@@ -23224,6 +23238,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const hasSingleEntity = this.entityObjs.length === 1;
     const isMinHeight = hasSingleEntity && this.config.always_collapsed === true && this.config.expand_on_search !== true;
     const effectivePinHeaders = this.config.pin_search_headers === true && !isMinHeight;
+    const showSearchHeaders = !(this.config.hide_search_headers_on_idle === true && this._isIdle);
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
@@ -23932,11 +23947,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
                     </button>
                     <div class="entity-options-divider"></div>
                   ` : E}
-                  ${this._searchBreadcrumb ? x`
+                  ${showSearchHeaders && this._searchBreadcrumb ? x`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
-                  ` : x`<div class="entity-options-search-skeleton"></div>`}
+                  ` : showSearchHeaders ? x`<div class="entity-options-search-skeleton"></div>` : E}
+                  ${showSearchHeaders ? x`
                   <div class="entity-options-search-row">
                       <input
                         type="text"
@@ -23980,8 +23996,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
               ${localize('common.cancel')}
                     </button>
                   </div>
+                  ` : E}
                   <!--FILTER CHIPS-->
-              ${(() => {
+               ${showSearchHeaders ? (() => {
       const classes = this._getVisibleSearchFilterClasses();
       const filter = this._searchMediaClassFilter || "all";
 
@@ -24020,11 +24037,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
                         `)}
                       </div>
                     `;
-    })()}
-                  ${this._searchLoading ? x`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : E}
-                  ${this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
+    })() : E}
+                  ${showSearchHeaders && this._searchLoading ? x`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : E}
+                  ${showSearchHeaders && this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
                   
-                  ${this._usingMusicAssistant && !this._searchLoading ? x`
+                  ${showSearchHeaders && this._usingMusicAssistant && !this._searchLoading ? x`
                     <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
                       <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
                         <button
