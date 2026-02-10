@@ -103,6 +103,7 @@ export default {
             "hide_search_chips": "Hide specific search filter chips for this entity",
             "follow_active_entity": "When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.",
             "search_limit_full": "Maximum number of search results to display (1-1000, default: 20)",
+            "default_search_filter_full": "Choose which filter is active by default when the search screen opens.",
             "result_sorting_full": "Choose how results are ordered.",
             "card_height_full": "Leave blank for automatic height",
             "control_layout_full": "Choose between the legacy evenly sized controls or the modern Home Assistant layout.",
@@ -138,6 +139,7 @@ export default {
             "dismiss_on_play": "Dismiss search on play",
             "pin_headers": "Pin search headers",
             "hide_search_headers_on_idle": "Hide search headers on idle",
+            "default_search_filter": "Default Search Filter",
             "disable_mass": "Disable Mass Queue",
             "match_theme": "Match Theme",
             "alt_progress": "Alternate Progress Bar",
@@ -309,7 +311,8 @@ export default {
             "radio": "Radio",
             "music": "Music",
             "station": "Station",
-            "podcast": "Podcast"
+            "podcast": "Podcast",
+            "audiobook": "Audiobook"
         },
         "search_artist": "Search for this artist"
     }

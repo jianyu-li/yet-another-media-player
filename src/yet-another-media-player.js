@@ -844,7 +844,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           promise = this._toggleRecommendationsFilter(true);
           break;
         default:
-          promise = this._doSearch();
+          {
+            const defaultFilter = this.config.default_search_filter === 'all' ? null : this.config.default_search_filter;
+            promise = this._doSearch(defaultFilter);
+          }
           break;
       }
       if (promise?.catch) {

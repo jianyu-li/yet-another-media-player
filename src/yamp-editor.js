@@ -1289,6 +1289,32 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               @click=${() => this._updateConfig("search_results_limit", 20)}
             ></ha-icon>
           </div>
+
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "all", label: localize('search.filters.all') },
+            { value: "artist", label: localize('search.filters.artist') },
+            { value: "album", label: localize('search.filters.album') },
+            { value: "track", label: localize('search.filters.track') },
+            { value: "playlist", label: localize('search.filters.playlist') },
+            { value: "radio", label: localize('search.filters.radio') },
+            { value: "podcast", label: localize('search.filters.podcast') },
+            { value: "audiobook", label: localize('search.filters.audiobook') },
+          ]
+        }
+      }}
+              .value=${this._config.default_search_filter ?? "all"}
+              label="${localize('editor.labels.default_search_filter')}"
+              helper="${localize('editor.subtitles.default_search_filter_full')}"
+              @value-changed=${(e) => this._updateConfig("default_search_filter", e.detail.value)}
+            ></ha-selector>
+          </div>
+
           <div class="form-row">
             <ha-selector
               .hass=${this.hass}

@@ -1416,6 +1416,7 @@ var en = {
       "hide_search_chips": "Hide specific search filter chips for this entity",
       "follow_active_entity": "When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.",
       "search_limit_full": "Maximum number of search results to display (1-1000, default: 20)",
+      "default_search_filter_full": "Choose which filter is active by default when the search screen opens.",
       "result_sorting_full": "Choose how results are ordered.",
       "card_height_full": "Leave blank for automatic height",
       "control_layout_full": "Choose between the legacy evenly sized controls or the modern Home Assistant layout.",
@@ -1451,6 +1452,7 @@ var en = {
       "dismiss_on_play": "Dismiss search on play",
       "pin_headers": "Pin search headers",
       "hide_search_headers_on_idle": "Hide search headers on idle",
+      "default_search_filter": "Default Search Filter",
       "disable_mass": "Disable Mass Queue",
       "match_theme": "Match Theme",
       "alt_progress": "Alternate Progress Bar",
@@ -1622,7 +1624,8 @@ var en = {
       "radio": "Radio",
       "music": "Music",
       "station": "Station",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Audiobook"
     },
     "search_artist": "Search for this artist"
   }
@@ -16303,6 +16306,47 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               @click=${() => this._updateConfig("search_results_limit", 20)}
             ></ha-icon>
           </div>
+
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "all",
+          label: localize('search.filters.all')
+        }, {
+          value: "artist",
+          label: localize('search.filters.artist')
+        }, {
+          value: "album",
+          label: localize('search.filters.album')
+        }, {
+          value: "track",
+          label: localize('search.filters.track')
+        }, {
+          value: "playlist",
+          label: localize('search.filters.playlist')
+        }, {
+          value: "radio",
+          label: localize('search.filters.radio')
+        }, {
+          value: "podcast",
+          label: localize('search.filters.podcast')
+        }, {
+          value: "audiobook",
+          label: localize('search.filters.audiobook')
+        }]
+      }
+    }}
+              .value=${this._config.default_search_filter ?? "all"}
+              label="${localize('editor.labels.default_search_filter')}"
+              helper="${localize('editor.subtitles.default_search_filter_full')}"
+              @value-changed=${e => this._updateConfig("default_search_filter", e.detail.value)}
+            ></ha-selector>
+          </div>
+
           <div class="form-row">
             <ha-selector
               .hass=${this.hass}
@@ -18513,7 +18557,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
           promise = this._toggleRecommendationsFilter(true);
           break;
         default:
-          promise = this._doSearch();
+          {
+            const defaultFilter = this.config.default_search_filter === 'all' ? null : this.config.default_search_filter;
+            promise = this._doSearch(defaultFilter);
+          }
           break;
       }
       if ((_promise = promise) !== null && _promise !== void 0 && _promise.catch) {
