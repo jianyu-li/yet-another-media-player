@@ -5071,9 +5071,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // Create context for template resolution
       const context = {
-        current: this.currentEntityId || '',
-        user: this.hass?.user?.name || '',
-        config: JSON.stringify(this._config || {})
+        current: this.currentEntityId || ''
       };
 
       path = await resolveStringTemplate(this.hass, path, context);

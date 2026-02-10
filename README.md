@@ -571,6 +571,33 @@ actions:
     navigation_new_tab: true
 ```
 
+### Dynamic Navigation (Jinja)
+
+You can use Jinja templates in `navigation_path` to create dynamic URLs based on the currently playing media. This is great for linking to external sites like IMDb, Genius, or YouTube.
+
+The following variables are available in the template context:
+- `current`: The entity ID of the currently selected media player.
+
+#### Example: Search IMDb for Current Title
+```yaml
+actions:
+  - name: IMDb
+    icon: mdi:movie-search
+    action: navigate
+    navigation_path: 'https://www.imdb.com/find/?q={{ state_attr(current, "media_title") }}'
+    navigation_new_tab: true
+```
+
+#### Example: Search Genius for Lyrics
+```yaml
+actions:
+  - name: Lyrics
+    icon: mdi:music-clef-treble
+    action: navigate
+    navigation_path: 'https://genius.com/search?q={{ state_attr(current, "media_title") }} {{ state_attr(current, "media_artist") }}'
+    navigation_new_tab: true
+```
+
 ### Sync Selected Entity Action
 
 Use the **Sync Selected Entity** action to automatically keep an `input_text` helper in sync with the currently selected media player. This is useful for automations that need to know which entity is active in the card.
