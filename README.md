@@ -867,7 +867,7 @@ idle_screen: search-next-up
 actions:
   - name: Transfer Queue
     transfer_queue: true
-    in_menu: true
+    in_menu: false
   - name: Search Queue
     icon: mdi:magnify
     menu_item: search-next-up
