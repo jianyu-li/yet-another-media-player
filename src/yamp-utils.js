@@ -72,7 +72,7 @@ export async function resolveStringTemplate(hass, templateString, context = {}) 
   let finalTemplate = templateString;
   if (context && Object.keys(context).length > 0) {
     const setStatements = Object.entries(context)
-      .map(([key, value]) => `{% set ${key} = '${value}' %}`)
+      .map(([key, value]) => `{% set ${key} = ${JSON.stringify(value)} %}`)
       .join(' ');
     finalTemplate = `${setStatements} ${templateString}`;
   }
