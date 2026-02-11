@@ -38,7 +38,7 @@ const r$2 = t => new n$2("string" == typeof t ? t : t + "", void 0, s$2),
     return new n$2(o, t, s$2);
   },
   S$1 = (s, o) => {
-    if (e$4) s.adoptedStyleSheets = o.map(t => t instanceof CSSStyleSheet ? t : t.styleSheet); else for (const e of o) {
+    if (e$4) s.adoptedStyleSheets = o.map(t => t instanceof CSSStyleSheet ? t : t.styleSheet);else for (const e of o) {
       const o = document.createElement("style"),
         n = t$2.litNonce;
       void 0 !== n && o.setAttribute("nonce", n), o.textContent = e.cssText, s.appendChild(o);
@@ -56,13 +56,13 @@ const r$2 = t => new n$2("string" == typeof t ? t : t + "", void 0, s$2),
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const {
-  is: i$4,
-  defineProperty: e$3,
-  getOwnPropertyDescriptor: h$1,
-  getOwnPropertyNames: r$1,
-  getOwnPropertySymbols: o$2,
-  getPrototypeOf: n$1
-} = Object,
+    is: i$4,
+    defineProperty: e$3,
+    getOwnPropertyDescriptor: h$1,
+    getOwnPropertyNames: r$1,
+    getOwnPropertySymbols: o$2,
+    getPrototypeOf: n$1
+  } = Object,
   a$1 = globalThis,
   c$1 = a$1.trustedTypes,
   l$1 = c$1 ? c$1.emptyScript : "",
@@ -218,7 +218,7 @@ let y$1 = class y extends HTMLElement {
       return (_t$hostConnected2 = t.hostConnected) === null || _t$hostConnected2 === void 0 ? void 0 : _t$hostConnected2.call(t);
     });
   }
-  enableUpdating(t) { }
+  enableUpdating(t) {}
   disconnectedCallback() {
     var _this$_$EO3;
     (_this$_$EO3 = this._$EO) === null || _this$_$EO3 === void 0 || _this$_$EO3.forEach(t => {
@@ -291,8 +291,8 @@ let y$1 = class y extends HTMLElement {
       const t = this.constructor.elementProperties;
       if (t.size > 0) for (const [s, i] of t) {
         const {
-          wrapped: t
-        } = i,
+            wrapped: t
+          } = i,
           e = this[s];
         true !== t || this._$AL.has(s) || void 0 === e || this.C(s, void 0, i, e);
       }
@@ -310,7 +310,7 @@ let y$1 = class y extends HTMLElement {
     }
     t && this._$AE(s);
   }
-  willUpdate(t) { }
+  willUpdate(t) {}
   _$AE(t) {
     var _this$_$EO5;
     (_this$_$EO5 = this._$EO) !== null && _this$_$EO5 !== void 0 && _this$_$EO5.forEach(t => {
@@ -333,8 +333,8 @@ let y$1 = class y extends HTMLElement {
   update(t) {
     this._$Eq &&= this._$Eq.forEach(t => this._$ET(t, this[t])), this._$EM();
   }
-  updated(t) { }
-  firstUpdated(t) { }
+  updated(t) {}
+  firstUpdated(t) {}
 };
 y$1.elementStyles = [], y$1.shadowRootOptions = {
   mode: "open"
@@ -455,7 +455,7 @@ class N {
       } else if (8 === r.nodeType) if (r.data === o$1) d.push({
         type: 2,
         index: c
-      }); else {
+      });else {
         let t = -1;
         for (; -1 !== (t = r.data.indexOf(h, t + 1));) d.push({
           type: 7,
@@ -491,11 +491,11 @@ class M {
   }
   u(t) {
     const {
-      el: {
-        content: i
-      },
-      parts: s
-    } = this._$AD,
+        el: {
+          content: i
+        },
+        parts: s
+      } = this._$AD,
       e = ((t === null || t === void 0 ? void 0 : t.creationScope) ?? r).importNode(i, true);
     C.currentNode = e;
     let h = C.nextNode(),
@@ -553,11 +553,11 @@ class R {
   $(t) {
     var _this$_$AH;
     const {
-      values: i,
-      _$litType$: s
-    } = t,
+        values: i,
+        _$litType$: s
+      } = t,
       e = "number" == typeof s ? this._$AC(t) : (void 0 === s.el && (s.el = N.createElement(P(s.h, s.h[0]), this.options)), s);
-    if (((_this$_$AH = this._$AH) === null || _this$_$AH === void 0 ? void 0 : _this$_$AH._$AD) === e) this._$AH.p(i); else {
+    if (((_this$_$AH = this._$AH) === null || _this$_$AH === void 0 ? void 0 : _this$_$AH._$AD) === e) this._$AH.p(i);else {
       const t = new M(e, this),
         s = t.u(this.options);
       t.p(i), this.T(s), this._$AH = t;
@@ -605,7 +605,7 @@ class k {
     let e = arguments.length > 3 ? arguments[3] : undefined;
     const h = this.strings;
     let o = false;
-    if (void 0 === h) t = S(this, t, i, 0), o = !c(t) || t !== this._$AH && t !== T, o && (this._$AH = t); else {
+    if (void 0 === h) t = S(this, t, i, 0), o = !c(t) || t !== this._$AH && t !== T, o && (this._$AH = t);else {
       const e = t;
       let n, r;
       for (t = h[0], n = 0; n < h.length - 1; n++) r = S(this, e[s + n], i, n), r === T && (r = this._$AH[n]), o ||= !c(r) || r !== this._$AH[n], r === E ? t = E : t !== E && (t += (r ?? "") + h[n + 1]), this._$AH[n] = r;
@@ -720,8 +720,7 @@ o === null || o === void 0 || o({
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const t = {
-  ATTRIBUTE: 1
-},
+    ATTRIBUTE: 1},
   e$1 = t => function () {
     for (var _len = arguments.length, e = new Array(_len), _key = 0; _key < _len; _key++) {
       e[_key] = arguments[_key];
@@ -732,7 +731,7 @@ const t = {
     };
   };
 let i$1 = class i {
-  constructor(t) { }
+  constructor(t) {}
   get _$AU() {
     return this._$AM._$AU;
   }
@@ -1118,9 +1117,9 @@ function renderChip(_ref2) {
           ` : E}
       ${pinned ? x`
             <span class="chip-pin-inside" @click=${e => {
-        e.stopPropagation();
-        onPinClick(idx, e);
-      }} title="Unpin">
+    e.stopPropagation();
+    onPinClick(idx, e);
+  }} title="Unpin">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           ` : x`<span class="chip-pin-spacer"></span>`}
@@ -1161,28 +1160,28 @@ function renderGroupChip(_ref3) {
       <span class="chip-icon"
             style="cursor:pointer;"
             @click=${e => {
-      e.stopPropagation();
-      if (onIconClick) {
-        onIconClick(idx, e);
-      }
-    }}>
+    e.stopPropagation();
+    if (onIconClick) {
+      onIconClick(idx, e);
+    }
+  }}>
         ${art ? x`<img class="chip-mini-art"
                       src="${art}"
                       style="cursor:pointer;${artStyle}"
                       onerror="this.style.display='none'"
                       @click=${e => {
-        e.stopPropagation();
-        if (onIconClick) {
-          onIconClick(idx, e);
-        }
-      }}/>` : x`<ha-icon .icon=${icon}
+    e.stopPropagation();
+    if (onIconClick) {
+      onIconClick(idx, e);
+    }
+  }}/>` : x`<ha-icon .icon=${icon}
                           style="font-size:28px;cursor:pointer;"
                           @click=${e => {
-          e.stopPropagation();
-          if (onIconClick) {
-            onIconClick(idx, e);
-          }
-        }}></ha-icon>`}
+    e.stopPropagation();
+    if (onIconClick) {
+      onIconClick(idx, e);
+    }
+  }}></ha-icon>`}
       </span>
       <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
         ${groupName}
@@ -1196,9 +1195,9 @@ function renderGroupChip(_ref3) {
           ` : E}
       ${pinned ? x`
             <span class="chip-pin-inside" @click=${e => {
-        e.stopPropagation();
-        onPinClick(idx, e);
-      }} title="Unpin">
+    e.stopPropagation();
+    onPinClick(idx, e);
+  }} title="Unpin">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           ` : x`<span class="chip-pin-spacer"></span>`}
@@ -1785,6 +1784,7 @@ var de = {
       "hide_search_chips": "Bestimmte Suchfilter-Chips für diese Entität ausblenden.",
       "follow_active_entity": "Lautstärke-Entität folgt automatisch der aktiven Wiedergabe-Entität.",
       "search_limit_full": "Maximale Anzahl an Suchergebnissen (1-1000, Standard: 20).",
+      "default_search_filter_full": "Wählen Sie den Filter, der beim Öffnen der Suche standardmäßig aktiv ist.",
       "result_sorting_full": "Sortierung der Suchergebnisse wählen. Standard behält die Quellreihenfolge bei.",
       "card_height_full": "Leer lassen für automatische Höhe.",
       "control_layout_full": "Wählen Sie zwischen manuellem oder modernem Home Assistant Layout.",
@@ -1818,6 +1818,7 @@ var de = {
       "disable_autofocus": "Such-Autofocus deaktivieren",
       "keep_filters": "Filter bei Suche beibehalten",
       "dismiss_on_play": "Suche beim Abspielen beenden",
+      "default_search_filter": "Standard-Suchfilter",
       "pin_headers": "Such-Header fixieren",
       "hide_search_headers_on_idle": "Such-Header im Leerlauf ausblenden",
       "disable_mass": "Mass Queue deaktivieren",
@@ -1991,7 +1992,8 @@ var de = {
       "radio": "Radio",
       "music": "Musik",
       "station": "Station",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Hörbuch"
     },
     "search_artist": "Nach diesem Künstler suchen"
   }
@@ -2102,6 +2104,7 @@ var es = {
       "hide_search_chips": "Ocultar chips de filtro de búsqueda.",
       "follow_active_entity": "La entidad de volumen seguirá a la activa.",
       "search_limit_full": "Máximo de resultados (1-1000, defecto: 20).",
+      "default_search_filter_full": "Elige qué filtro está activo por defecto cuando se abre la pantalla de búsqueda.",
       "result_sorting_full": "Elegir orden de resultados.",
       "card_height_full": "Dejar vacío para altura automática.",
       "control_layout_full": "Elegir entre diseño antiguo o moderno.",
@@ -2135,6 +2138,7 @@ var es = {
       "disable_autofocus": "Desactivar autofoco",
       "keep_filters": "Mantener filtros",
       "dismiss_on_play": "Cerrar al reproducir",
+      "default_search_filter": "Filtro de búsqueda predeterminado",
       "pin_headers": "Fijar encabezados",
       "hide_search_headers_on_idle": "Ocultar encabezados en inactividad",
       "disable_mass": "Desactivar Mass Queue",
@@ -2308,7 +2312,8 @@ var es = {
       "radio": "Radio",
       "music": "Música",
       "station": "Emisora",
-      "podcast": "Pódcast"
+      "podcast": "Pódcast",
+      "audiobook": "Audiolibro"
     },
     "search_artist": "Buscar este artista"
   }
@@ -2419,6 +2424,7 @@ var fr = {
       "hide_search_chips": "Masquer des jetons de filtrage spécifiques.",
       "follow_active_entity": "L'entité de volume suivra automatiquement l'entité active.",
       "search_limit_full": "Nombre maximum de résultats (1-1000, défaut: 20).",
+      "default_search_filter_full": "Choisissez quel filtre est actif par défaut à l'ouverture de la recherche.",
       "result_sorting_full": "Choisir l'ordre des résultats. Par défaut conserve l'ordre source.",
       "card_height_full": "Laisser vide pour une hauteur automatique.",
       "control_layout_full": "Choisir entre l'ancienne mise en page ou la moderne.",
@@ -2452,6 +2458,7 @@ var fr = {
       "disable_autofocus": "Désactiver l'autofocus",
       "keep_filters": "Garder les filtres",
       "dismiss_on_play": "Fermer en lecture",
+      "default_search_filter": "Filtre de recherche par défaut",
       "pin_headers": "Épingler les en-têtes",
       "hide_search_headers_on_idle": "Masquer les en-têtes en veille",
       "disable_mass": "Désactiver Mass Queue",
@@ -2625,7 +2632,8 @@ var fr = {
       "radio": "Radio",
       "music": "Musique",
       "station": "Station",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Livre audio"
     },
     "search_artist": "Chercher cet artiste"
   }
@@ -2736,6 +2744,7 @@ var it = {
       "hide_search_chips": "Nascondi chip di filtro ricerca.",
       "follow_active_entity": "L'entità volume seguirà quella attiva.",
       "search_limit_full": "Massimo risultati (1-1000, default: 20).",
+      "default_search_filter_full": "Scegli quale filtro è attivo per impostazione predefinita all'apertura della ricerca.",
       "result_sorting_full": "Scegli ordine risultati.",
       "card_height_full": "Lascia vuoto per altezza automatica.",
       "control_layout_full": "Scegli tra design vecchio o moderno.",
@@ -2769,6 +2778,7 @@ var it = {
       "disable_autofocus": "Disabilita autofocus",
       "keep_filters": "Mantieni filtri",
       "dismiss_on_play": "Chiudi alla riproduzione",
+      "default_search_filter": "Filtro di ricerca predefinito",
       "pin_headers": "Fissa intestazioni",
       "hide_search_headers_on_idle": "Nascondi intestazioni in inattività",
       "disable_mass": "Disabilita Mass Queue",
@@ -2942,7 +2952,8 @@ var it = {
       "radio": "Radio",
       "music": "Musica",
       "station": "Stazione",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Audiolibro"
     },
     "search_artist": "Cerca questo artista"
   }
@@ -3053,6 +3064,7 @@ var nl = {
       "hide_search_chips": "Verberg specifieke zoekfilterchips voor deze entiteit",
       "follow_active_entity": "Indien ingeschakeld, zal de volume-entiteit automatisch de actieve afspeel-entiteit volgen. Let op: dit overschrijft de geselecteerde volume-entiteit.",
       "search_limit_full": "Maximaal aantal zoekresultaten om weer te geven (1-1000, standaard: 20)",
+      "default_search_filter_full": "Kies welk filter standaard actief is wanneer het zoekscherm wordt geopend.",
       "result_sorting_full": "Kies hoe zoekresultaten worden gesorteerd. Standaard behoudt de bronvolgorde.",
       "card_height_full": "Laat leeg voor automatische hoogte",
       "control_layout_full": "Kies tussen de oude gelijkmatig verdeelde knoppen of de moderne Home Assistant lay-out.",
@@ -3086,6 +3098,7 @@ var nl = {
       "disable_autofocus": "Zoek-autofocus uitschakelen",
       "keep_filters": "Filters behouden bij zoeken",
       "dismiss_on_play": "Zoeken sluiten bij afspelen",
+      "default_search_filter": "Standaard zoekfilter",
       "pin_headers": "Zoekkoppen vastzetten",
       "hide_search_headers_on_idle": "Zoekkoppen verbergen bij inactiviteit",
       "disable_mass": "Mass Queue uitschakelen",
@@ -3259,7 +3272,8 @@ var nl = {
       "radio": "Radio",
       "music": "Muziek",
       "station": "Zender",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Luisterboek"
     },
     "search_artist": "Zoek naar deze artiest"
   }
@@ -3370,6 +3384,7 @@ var pt = {
       "hide_search_chips": "Ocultar chips de filtro de procura.",
       "follow_active_entity": "A entidade de volume seguirá a ativa.",
       "search_limit_full": "Máximo de resultados (1-1000, default: 20).",
+      "default_search_filter_full": "Escolha qual filtro está ativo por padrão quando a tela de pesquisa é aberta.",
       "result_sorting_full": "Escolher ordem dos resultados.",
       "card_height_full": "Deixar vazio para altura automática.",
       "control_layout_full": "Escolher entre design antigo ou moderno.",
@@ -3403,6 +3418,7 @@ var pt = {
       "disable_autofocus": "Desativar autofoco",
       "keep_filters": "Manter filtros",
       "dismiss_on_play": "Fechar ao reproduzir",
+      "default_search_filter": "Filtro de pesquisa padrão",
       "pin_headers": "Fixar cabeçalhos",
       "hide_search_headers_on_idle": "Ocultar cabeçalhos em inatividade",
       "disable_mass": "Desativar Mass Queue",
@@ -3576,7 +3592,8 @@ var pt = {
       "radio": "Rádio",
       "music": "Música",
       "station": "Estação",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Audiolivro"
     },
     "search_artist": "Procurar este artista"
   }
@@ -3687,6 +3704,7 @@ var sk = {
       "hide_search_chips": "Skryť konkrétne čipy filtra vyhľadávania pre túto entitu.",
       "follow_active_entity": "Ak je povolené, entita hlasitosti bude automaticky sledovať aktívny prehrávač. Poznámka: Toto prepíše vybranú entitu hlasitosti.",
       "search_limit_full": "Maximálny počet výsledkov vyhľadávania (1-1000, predvolené: 20).",
+      "default_search_filter_full": "Vyberte, ktorý filter bude predvolene aktívny pri otvorení vyhľadávania.",
       "result_sorting_full": "Vyberte spôsob zoradenia výsledkov. Predvolené ponecháva poradie zo zdroja.",
       "card_height_full": "Nechajte prázdne pre automatickú výšku.",
       "control_layout_full": "Vyberte si medzi starším (rovnako veľké prvky) alebo moderným rozložením Home Assistant.",
@@ -3720,6 +3738,7 @@ var sk = {
       "disable_autofocus": "Vypnúť automatické zameranie hľadania",
       "keep_filters": "Zachovať filtre pri hľadaní",
       "dismiss_on_play": "Zavrieť hľadanie po spustení",
+      "default_search_filter": "Predvolený filter vyhľadávania",
       "pin_headers": "Pripnúť hlavičky hľadania",
       "hide_search_headers_on_idle": "Skryť hlavičky pri nečinnosti",
       "disable_mass": "Deaktivovať Mass Queue",
@@ -3893,7 +3912,8 @@ var sk = {
       "radio": "Rádio",
       "music": "Hudba",
       "station": "Stanica",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Audiokniha"
     },
     "search_artist": "Hľadať tohto interpreta"
   }
@@ -4004,6 +4024,7 @@ var sl = {
       "hide_search_chips": "Skrij določene iskalne filtre.",
       "follow_active_entity": "Entiteta glasnosti sledi aktivni entiteti. Opomba: To prepiše izbrano entiteto za glasnost.",
       "search_limit_full": "Največje število rezultatov (1–1000, privzeto: 20).",
+      "default_search_filter_full": "Izberite, kateri filter je privzeto aktiven ob odprtju iskanja.",
       "result_sorting_full": "Izberi razvrščanje rezultatov.",
       "card_height_full": "Pustite prazno za samodejno višino.",
       "control_layout_full": "Izberi med staro in moderno postavitvijo.",
@@ -4037,6 +4058,7 @@ var sl = {
       "disable_autofocus": "Onemogoči samodejni fokus",
       "keep_filters": "Ohrani filtre",
       "dismiss_on_play": "Zapri iskanje ob predvajanju",
+      "default_search_filter": "Privzeti iskalni filter",
       "pin_headers": "Pripni glave iskanja",
       "hide_search_headers_on_idle": "Skrij glave iskanja med mirovanjem",
       "disable_mass": "Onemogoči Mass Queue",
@@ -4210,7 +4232,8 @@ var sl = {
       "radio": "Radio",
       "music": "Glasba",
       "station": "Postaja",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Zvočna knjiga"
     },
     "search_artist": "Išči tega izvajalca"
   }
@@ -8351,10 +8374,10 @@ function renderSearchResultActions(_ref) {
       ${!isQueueItem ? x`
         <button class="${queueClass}" 
                 @click=${e => {
-        e.preventDefault();
-        e.stopPropagation();
-        onOptionsToggle(item);
-      }} 
+    e.preventDefault();
+    e.stopPropagation();
+    onOptionsToggle(item);
+  }} 
                 title="${localize('common.more_options')}">
           <ha-icon icon="mdi:dots-vertical"></ha-icon>
         </button>
@@ -8382,27 +8405,27 @@ function renderSearchResultSlideOut(_ref2) {
     <div class="search-row-slide-out ${isActive ? 'active' : ''}">
       ${isQueueItem && searchView === 'card' ? x`
         <button class="slide-out-button" @click=${() => {
-        onMoveUp(item);
-        onOptionsToggle(null);
-      }} title="${localize('search.move_up')}">
+    onMoveUp(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.move_up')}">
           ${localize('search.move_up')}
         </button>
         <button class="slide-out-button" @click=${() => {
-        onMoveDown(item);
-        onOptionsToggle(null);
-      }} title="${localize('search.move_down')}">
+    onMoveDown(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.move_down')}">
           ${localize('search.move_down')}
         </button>
         <button class="slide-out-button" @click=${() => {
-        onMoveNext(item);
-        onOptionsToggle(null);
-      }} title="${localize('search.move_next')}">
+    onMoveNext(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.move_next')}">
           ${localize('search.move_next')}
         </button>
         <button class="slide-out-button" @click=${() => {
-        onRemove(item);
-        onOptionsToggle(null);
-      }} title="${localize('search.remove')}">
+    onRemove(item);
+    onOptionsToggle(null);
+  }} title="${localize('search.remove')}">
           ${localize('search.remove')}
         </button>
       ` : x`
@@ -8420,9 +8443,9 @@ function renderSearchResultSlideOut(_ref2) {
         </button>
       `}
       <div class="slide-out-close" @click=${e => {
-      e.stopPropagation();
-      onOptionsToggle(null);
-    }}>
+    e.stopPropagation();
+    onOptionsToggle(null);
+  }}>
         <ha-icon icon="mdi:close"></ha-icon>
       </div>
 
@@ -8535,42 +8558,42 @@ function renderSearchSheet(_ref3) {
                     ` : E}
                     ${searchView === 'card' ? x`
                       <div class="card-menu-button" @click=${e => {
-          e.preventDefault();
-          e.stopPropagation();
-          onOptionsToggle(item);
-        }}>
+      e.preventDefault();
+      e.stopPropagation();
+      onOptionsToggle(item);
+    }}>
                         <ha-icon icon="mdi:dots-vertical"></ha-icon>
                       </div>
                     ` : E}
                   </div>
                   ${searchView !== 'card' ? renderSearchResultActions({
-          item,
-          onPlay,
-          onOptionsToggle,
-          upcomingFilterActive,
-          isMusicAssistant: isMA,
-          massQueueAvailable,
-          searchView: 'list',
-          isInline: true,
-          onMoveUp,
-          onMoveDown,
-          onMoveNext,
-          onRemove
-        }) : E}
+      item,
+      onPlay,
+      onOptionsToggle,
+      upcomingFilterActive,
+      isMusicAssistant: isMA,
+      massQueueAvailable,
+      searchView: 'list',
+      isInline: true,
+      onMoveUp,
+      onMoveDown,
+      onMoveNext,
+      onRemove
+    }) : E}
                   
                   ${renderSearchResultSlideOut({
-          item,
-          activeSearchRowMenuId,
-          successSearchRowMenuId,
-          onPlayOption,
-          onOptionsToggle,
-          searchView,
-          isQueueItem: isMA && item.queue_item_id && upcomingFilterActive && massQueueAvailable,
-          onMoveUp,
-          onMoveDown,
-          onMoveNext,
-          onRemove
-        })}
+      item,
+      activeSearchRowMenuId,
+      successSearchRowMenuId,
+      onPlayOption,
+      onOptionsToggle,
+      searchView,
+      isQueueItem: isMA && item.queue_item_id && upcomingFilterActive && massQueueAvailable,
+      onMoveUp,
+      onMoveDown,
+      onMoveNext,
+      onRemove
+    })}
                 </div>
               `;
   })}
@@ -9108,7 +9131,7 @@ function isObject(subject) {
   return typeof subject === 'object' && subject !== null;
 }
 function toArray(sequence) {
-  if (Array.isArray(sequence)) return sequence; else if (isNothing(sequence)) return [];
+  if (Array.isArray(sequence)) return sequence;else if (isNothing(sequence)) return [];
   return [sequence];
 }
 function extend$1(target, source) {
@@ -9313,17 +9336,17 @@ function compileList(schema, name) {
 function compileMap(/* lists... */
 ) {
   var result = {
-    scalar: {},
-    sequence: {},
-    mapping: {},
-    fallback: {},
-    multi: {
-      scalar: [],
-      sequence: [],
-      mapping: [],
-      fallback: []
-    }
-  },
+      scalar: {},
+      sequence: {},
+      mapping: {},
+      fallback: {},
+      multi: {
+        scalar: [],
+        sequence: [],
+        mapping: [],
+        fallback: []
+      }
+    },
     index,
     length;
   function collectType(type) {
@@ -9602,21 +9625,21 @@ var int = new type('tag:yaml.org,2002:int', {
   }
 });
 var YAML_FLOAT_PATTERN = new RegExp(
-  // 2.5e4, 2.5 and integers
-  '^(?:[-+]?(?:[0-9][0-9_]*)(?:\\.[0-9_]*)?(?:[eE][-+]?[0-9]+)?' +
-  // .2e4, .2
-  // special case, seems not from spec
-  '|\\.[0-9_]+(?:[eE][-+]?[0-9]+)?' +
-  // .inf
-  '|[-+]?\\.(?:inf|Inf|INF)' +
-  // .nan
-  '|\\.(?:nan|NaN|NAN))$');
+// 2.5e4, 2.5 and integers
+'^(?:[-+]?(?:[0-9][0-9_]*)(?:\\.[0-9_]*)?(?:[eE][-+]?[0-9]+)?' +
+// .2e4, .2
+// special case, seems not from spec
+'|\\.[0-9_]+(?:[eE][-+]?[0-9]+)?' +
+// .inf
+'|[-+]?\\.(?:inf|Inf|INF)' +
+// .nan
+'|\\.(?:nan|NaN|NAN))$');
 function resolveYamlFloat(data) {
   if (data === null) return false;
   if (!YAML_FLOAT_PATTERN.test(data) ||
-    // Quick hack to not allow integers end with `_`
-    // Probably should update regexp & check speed
-    data[data.length - 1] === '_') {
+  // Quick hack to not allow integers end with `_`
+  // Probably should update regexp & check speed
+  data[data.length - 1] === '_') {
     return false;
   }
   return true;
@@ -9691,30 +9714,30 @@ var json = failsafe.extend({
 });
 var core = json;
 var YAML_DATE_REGEXP = new RegExp('^([0-9][0-9][0-9][0-9])' +
-  // [1] year
-  '-([0-9][0-9])' +
-  // [2] month
-  '-([0-9][0-9])$'); // [3] day
+// [1] year
+'-([0-9][0-9])' +
+// [2] month
+'-([0-9][0-9])$'); // [3] day
 
 var YAML_TIMESTAMP_REGEXP = new RegExp('^([0-9][0-9][0-9][0-9])' +
-  // [1] year
-  '-([0-9][0-9]?)' +
-  // [2] month
-  '-([0-9][0-9]?)' +
-  // [3] day
-  '(?:[Tt]|[ \\t]+)' +
-  // ...
-  '([0-9][0-9]?)' +
-  // [4] hour
-  ':([0-9][0-9])' +
-  // [5] minute
-  ':([0-9][0-9])' +
-  // [6] second
-  '(?:\\.([0-9]*))?' +
-  // [7] fraction
-  '(?:[ \\t]*(Z|([-+])([0-9][0-9]?)' +
-  // [8] tz [9] tz_sign [10] tz_hour
-  '(?::([0-9][0-9]))?))?$'); // [11] tz_minute
+// [1] year
+'-([0-9][0-9]?)' +
+// [2] month
+'-([0-9][0-9]?)' +
+// [3] day
+'(?:[Tt]|[ \\t]+)' +
+// ...
+'([0-9][0-9]?)' +
+// [4] hour
+':([0-9][0-9])' +
+// [5] minute
+':([0-9][0-9])' +
+// [6] second
+'(?:\\.([0-9]*))?' +
+// [7] fraction
+'(?:[ \\t]*(Z|([-+])([0-9][0-9]?)' +
+// [8] tz [9] tz_sign [10] tz_hour
+'(?::([0-9][0-9]))?))?$'); // [11] tz_minute
 
 function resolveYamlTimestamp(data) {
   if (data === null) return false;
@@ -9924,11 +9947,11 @@ function resolveYamlOmap(data) {
     if (_toString$2.call(pair) !== '[object Object]') return false;
     for (pairKey in pair) {
       if (_hasOwnProperty$3.call(pair, pairKey)) {
-        if (!pairHasKey) pairHasKey = true; else return false;
+        if (!pairHasKey) pairHasKey = true;else return false;
       }
     }
     if (!pairHasKey) return false;
-    if (objectKeys.indexOf(pairKey) === -1) objectKeys.push(pairKey); else return false;
+    if (objectKeys.indexOf(pairKey) === -1) objectKeys.push(pairKey);else return false;
   }
   return true;
 }
@@ -11511,8 +11534,8 @@ function isPrintable(c) {
 // ns-char ::= c-printable - b-line-feed - b-carriage-return - c-byte-order-mark
 function isNsCharOrWhitespace(c) {
   return isPrintable(c) && c !== CHAR_BOM
-    // - b-char
-    && c !== CHAR_CARRIAGE_RETURN && c !== CHAR_LINE_FEED;
+  // - b-char
+  && c !== CHAR_CARRIAGE_RETURN && c !== CHAR_LINE_FEED;
 }
 
 // [127]  ns-plain-safe(c) ::= c = flow-out  ⇒ ns-plain-safe-out
@@ -11528,18 +11551,18 @@ function isPlainSafe(c, prev, inblock) {
   var cIsNsCharOrWhitespace = isNsCharOrWhitespace(c);
   var cIsNsChar = cIsNsCharOrWhitespace && !isWhitespace(c);
   return (
-    // ns-plain-safe
-    inblock ?
-      // c = flow-in
-      cIsNsCharOrWhitespace : cIsNsCharOrWhitespace
-      // - c-flow-indicator
-      && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET
+  // ns-plain-safe
+  inblock ?
+  // c = flow-in
+  cIsNsCharOrWhitespace : cIsNsCharOrWhitespace
+  // - c-flow-indicator
+  && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET
 
-    // ns-plain-char
+  // ns-plain-char
   ) && c !== CHAR_SHARP // false on '#'
-    && !(prev === CHAR_COLON && !cIsNsChar) // false on ': '
-    || isNsCharOrWhitespace(prev) && !isWhitespace(prev) && c === CHAR_SHARP // change to true on '[^ ]#'
-    || prev === CHAR_COLON && cIsNsChar; // change to true on ':[^ ]'
+  && !(prev === CHAR_COLON && !cIsNsChar) // false on ': '
+  || isNsCharOrWhitespace(prev) && !isWhitespace(prev) && c === CHAR_SHARP // change to true on '[^ ]#'
+  || prev === CHAR_COLON && cIsNsChar; // change to true on ':[^ ]'
 }
 
 // Simplified test for values allowed as the first character in plain style.
@@ -11548,13 +11571,13 @@ function isPlainSafeFirst(c) {
   // where ns-char = nb-char - s-white.
   // No support of ( ( “?” | “:” | “-” ) /* Followed by an ns-plain-safe(c)) */ ) part
   return isPrintable(c) && c !== CHAR_BOM && !isWhitespace(c) // - s-white
-    // - (c-indicator ::=
-    // “-” | “?” | “:” | “,” | “[” | “]” | “{” | “}”
-    && c !== CHAR_MINUS && c !== CHAR_QUESTION && c !== CHAR_COLON && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET
-    // | “#” | “&” | “*” | “!” | “|” | “=” | “>” | “'” | “"”
-    && c !== CHAR_SHARP && c !== CHAR_AMPERSAND && c !== CHAR_ASTERISK && c !== CHAR_EXCLAMATION && c !== CHAR_VERTICAL_LINE && c !== CHAR_EQUALS && c !== CHAR_GREATER_THAN && c !== CHAR_SINGLE_QUOTE && c !== CHAR_DOUBLE_QUOTE
-    // | “%” | “@” | “`”)
-    && c !== CHAR_PERCENT && c !== CHAR_COMMERCIAL_AT && c !== CHAR_GRAVE_ACCENT;
+  // - (c-indicator ::=
+  // “-” | “?” | “:” | “,” | “[” | “]” | “{” | “}”
+  && c !== CHAR_MINUS && c !== CHAR_QUESTION && c !== CHAR_COLON && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET
+  // | “#” | “&” | “*” | “!” | “|” | “=” | “>” | “'” | “"”
+  && c !== CHAR_SHARP && c !== CHAR_AMPERSAND && c !== CHAR_ASTERISK && c !== CHAR_EXCLAMATION && c !== CHAR_VERTICAL_LINE && c !== CHAR_EQUALS && c !== CHAR_GREATER_THAN && c !== CHAR_SINGLE_QUOTE && c !== CHAR_DOUBLE_QUOTE
+  // | “%” | “@” | “`”)
+  && c !== CHAR_PERCENT && c !== CHAR_COMMERCIAL_AT && c !== CHAR_GRAVE_ACCENT;
 }
 
 // Simplified test for values allowed as the last character in plain style.
@@ -11624,8 +11647,8 @@ function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, te
         // Check if any line can be folded.
         if (shouldTrackWidth) {
           hasFoldableLine = hasFoldableLine ||
-            // Foldable line = too long, and not more-indented.
-            i - previousLineBreak - 1 > lineWidth && string[previousLineBreak + 1] !== ' ';
+          // Foldable line = too long, and not more-indented.
+          i - previousLineBreak - 1 > lineWidth && string[previousLineBreak + 1] !== ' ';
           previousLineBreak = i;
         }
       } else if (!isPrintable(char)) {
@@ -11688,8 +11711,8 @@ function writeScalar(state, string, level, iskey, inblock) {
 
     // Without knowing if keys are implicit/explicit, assume implicit for safety.
     var singleLineOnly = iskey
-      // No block styles in flow mode.
-      || state.flowLevel > -1 && level >= state.flowLevel;
+    // No block styles in flow mode.
+    || state.flowLevel > -1 && level >= state.flowLevel;
     function testAmbiguity(string) {
       return testImplicitResolving(state, string);
     }
@@ -12779,8 +12802,8 @@ function AnimationStateManager() {
         if (target.thisAnimationDuration) {
           // Could also check if animatingRect is between fromRect and toRect
           if (isRectEqual(prevFromRect, toRect) && !isRectEqual(fromRect, toRect) &&
-            // Make sure animatingRect is on line between toRect & fromRect
-            (animatingRect.top - toRect.top) / (animatingRect.left - toRect.left) === (fromRect.top - toRect.top) / (fromRect.left - toRect.left)) {
+          // Make sure animatingRect is on line between toRect & fromRect
+          (animatingRect.top - toRect.top) / (animatingRect.left - toRect.left) === (fromRect.top - toRect.top) / (fromRect.left - toRect.left)) {
             // If returning to same place as started from animation and on same axis
             time = calculateRealTime(animatingRect, prevFromRect, prevToRect, _this.options);
           }
@@ -13576,7 +13599,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       } else {
         window.getSelection().removeAllRanges();
       }
-    } catch (err) { }
+    } catch (err) {}
   },
   _dragStarted: function _dragStarted(fallback, evt) {
     awaitingDragStarted = false;
@@ -13918,7 +13941,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     }
     ignoreNextClick = false;
     if (activeSortable && !options.disabled && (isOwner ? canSort || (revert = parentEl !== rootEl) // Reverting item into the original list
-      : putSortable === this || (this.lastPutMode = activeGroup.checkPull(this, activeSortable, dragEl, evt)) && group.checkPut(this, activeSortable, dragEl, evt))) {
+    : putSortable === this || (this.lastPutMode = activeGroup.checkPull(this, activeSortable, dragEl, evt)) && group.checkPut(this, activeSortable, dragEl, evt))) {
       vertical = this._getDirection(evt, target) === 'vertical';
       dragRect = getRect(dragEl);
       dragOverEvent('dragOverValid');
@@ -14447,7 +14470,7 @@ function _getSwapDirection(evt, target, targetRect, vertical, swapThreshold, inv
       if (!pastFirstInvertThresh) {
         // dragEl shadow (target move distance shadow)
         if (lastDirection === 1 ? mouseOnAxis < targetS1 + targetMoveDistance // over dragEl shadow
-          : mouseOnAxis > targetS2 - targetMoveDistance) {
+        : mouseOnAxis > targetS2 - targetMoveDistance) {
           return -lastDirection;
         }
       } else {
@@ -14811,7 +14834,7 @@ var drop = function drop(_ref) {
     });
   }
 };
-function Revert() { }
+function Revert() {}
 Revert.prototype = {
   startIndex: null,
   dragStart: function dragStart(_ref2) {
@@ -14841,7 +14864,7 @@ Revert.prototype = {
 _extends(Revert, {
   pluginName: 'revertOnSpill'
 });
-function Remove() { }
+function Remove() {}
 Remove.prototype = {
   onSpill: function onSpill(_ref4) {
     var dragEl = _ref4.dragEl,
@@ -15783,13 +15806,13 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               <button
                 class="tab" ${this._activeTab === key ? 'selected' : ''}
                 @click=${() => {
-          this._activeTab = key;
-          // Exit any sub-editor when switching tabs
-          this._entityEditorIndex = null;
-          this._actionEditorIndex = null;
-          this._useTemplate = null;
-          this._useVolTemplate = null;
-        }}
+        this._activeTab = key;
+        // Exit any sub-editor when switching tabs
+        this._entityEditorIndex = null;
+        this._actionEditorIndex = null;
+        this._useTemplate = null;
+        this._useVolTemplate = null;
+      }}
                 ?selected=${this._activeTab === key}
               >${name}</button>
             `;
@@ -15843,34 +15866,34 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                 .hass=${this.hass}
                 label="${localize('editor.fields.artwork_fit')}"
                 .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "cover",
-            label: "Cover (default)"
-          }, {
-            value: "contain",
-            label: "Contain"
-          }, {
-            value: "fill",
-            label: "Fill"
-          }, {
-            value: "scale-down",
-            label: "Scale Down"
-          }, {
-            value: "scaled-contain",
-            label: "Scaled Contain"
-          }, {
-            value: "none",
-            label: "None"
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "cover",
+          label: "Cover (default)"
+        }, {
+          value: "contain",
+          label: "Contain"
+        }, {
+          value: "fill",
+          label: "Fill"
+        }, {
+          value: "scale-down",
+          label: "Scale Down"
+        }, {
+          value: "scaled-contain",
+          label: "Scaled Contain"
+        }, {
+          value: "none",
+          label: "None"
+        }]
+      }
+    }}
                 .value=${this._config.artwork_object_fit ?? "cover"}
                 @value-changed=${e => {
-        const value = e.detail.value;
-        this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
-      }}
+      const value = e.detail.value;
+      this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
+    }}
               ></ha-selector>
             </div>
             <div class="grow-children">
@@ -15878,25 +15901,25 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                 .hass=${this.hass}
                 label="${localize('editor.fields.artwork_position')}"
                 .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "top center",
-            label: "Top (default)"
-          }, {
-            value: "center center",
-            label: "Center"
-          }, {
-            value: "bottom center",
-            label: "Bottom"
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "top center",
+          label: "Top (default)"
+        }, {
+          value: "center center",
+          label: "Center"
+        }, {
+          value: "bottom center",
+          label: "Bottom"
+        }]
+      }
+    }}
                 .value=${this._config.artwork_position ?? "top center"}
                 @value-changed=${e => {
-        const value = e.detail.value;
-        this._updateConfig("artwork_position", value === "top center" ? undefined : value);
-      }}
+      const value = e.detail.value;
+      this._updateConfig("artwork_position", value === "top center" ? undefined : value);
+    }}
               ></ha-selector>
             </div>
           </div>
@@ -15936,13 +15959,13 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                 id="idle-image-url-toggle"
                 .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
                 @change=${e => {
-        this._useIdleImageUrl = e.target.checked;
-        if (e.target.checked) {
-          this._updateConfig("idle_image", "");
-        } else {
-          this._updateConfig("idle_image", "");
-        }
-      }}
+      this._useIdleImageUrl = e.target.checked;
+      if (e.target.checked) {
+        this._updateConfig("idle_image", "");
+      } else {
+        this._updateConfig("idle_image", "");
+      }
+    }}
               ></ha-switch>
               <label for="idle-image-url-toggle">${localize('editor.labels.use_url_path')}</label>
             </div>
@@ -15990,11 +16013,11 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                           .hass=${this.hass}
                           label="${localize('editor.fields.match_field')}"
                           .selector=${{
-          select: {
-            mode: "dropdown",
-            options: matchOptions
-          }
-        }}
+      select: {
+        mode: "dropdown",
+        options: matchOptions
+      }
+    }}
                           .value=${rule.match_type ?? "media_title"}
                           @value-changed=${e => this._onArtworkMatchTypeChange(idx, e.detail.value)}
                         ></ha-selector>
@@ -16045,32 +16068,32 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                               .hass=${this.hass}
                               label="${localize('editor.fields.object_fit')}"
                               .selector=${{
-          select: {
-            mode: "dropdown",
-            options: [{
-              value: "default",
-              label: "Default"
-            }, {
-              value: "cover",
-              label: "Cover"
-            }, {
-              value: "contain",
-              label: "Contain"
-            }, {
-              value: "fill",
-              label: "Fill"
-            }, {
-              value: "scale-down",
-              label: "Scale Down"
-            }, {
-              value: "scaled-contain",
-              label: "Scaled Contain"
-            }, {
-              value: "none",
-              label: "None"
-            }]
-          }
-        }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "default",
+          label: "Default"
+        }, {
+          value: "cover",
+          label: "Cover"
+        }, {
+          value: "contain",
+          label: "Contain"
+        }, {
+          value: "fill",
+          label: "Fill"
+        }, {
+          value: "scale-down",
+          label: "Scale Down"
+        }, {
+          value: "scaled-contain",
+          label: "Scaled Contain"
+        }, {
+          value: "none",
+          label: "None"
+        }]
+      }
+    }}
                               .value=${rule.object_fit || "default"}
                               @value-changed=${e => this._onArtworkObjectFitChange(idx, e.detail.value)}
                             ></ha-selector>
@@ -16187,13 +16210,13 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               <ha-selector
                 .hass=${this.hass}
                 .selector=${{
-        number: {
-          min: 0,
-          step: 1000,
-          unit_of_measurement: "ms",
-          mode: "box"
-        }
-      }}
+      number: {
+        min: 0,
+        step: 1000,
+        unit_of_measurement: "ms",
+        mode: "box"
+      }
+    }}
                 .value=${this._config.idle_timeout_ms ?? 60000}
                 label="${localize('editor.fields.idle_timeout')}"
                 @value-changed=${e => this._updateConfig("idle_timeout_ms", e.detail.value)}
@@ -16211,23 +16234,23 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "auto",
-            label: "Auto"
-          }, {
-            value: "always",
-            label: "Always"
-          }, {
-            value: "in_menu",
-            label: "In Menu"
-          }, {
-            value: "in_menu_on_idle",
-            label: "In Menu on Idle"
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "auto",
+          label: "Auto"
+        }, {
+          value: "always",
+          label: "Always"
+        }, {
+          value: "in_menu",
+          label: "In Menu"
+        }, {
+          value: "in_menu_on_idle",
+          label: "In Menu on Idle"
+        }]
+      }
+    }}
               .value=${this._config.show_chip_row ?? "auto"}
               label="${localize('editor.fields.show_chip_row')}"
               @value-changed=${e => this._updateConfig("show_chip_row", e.detail.value)}
@@ -16337,13 +16360,13 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               <div class="grow-children number-input-with-note">
                 <ha-selector-number
                   .selector=${{
-        number: {
-          min: 0,
-          max: 1000,
-          step: 1,
-          mode: "box"
-        }
-      }}
+      number: {
+        min: 0,
+        max: 1000,
+        step: 1,
+        mode: "box"
+      }
+    }}
                   .value=${this._config.search_results_limit ?? 20}
                   label="${localize('editor.fields.search_limit')}"
                   helper="${localize('editor.subtitles.search_limit_full')}"
@@ -16368,35 +16391,35 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "all",
-            label: localize('search.filters.all')
-          }, {
-            value: "artist",
-            label: localize('search.filters.artist')
-          }, {
-            value: "album",
-            label: localize('search.filters.album')
-          }, {
-            value: "track",
-            label: localize('search.filters.track')
-          }, {
-            value: "playlist",
-            label: localize('search.filters.playlist')
-          }, {
-            value: "radio",
-            label: localize('search.filters.radio')
-          }, {
-            value: "podcast",
-            label: localize('search.filters.podcast')
-          }, {
-            value: "audiobook",
-            label: localize('search.filters.audiobook')
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "all",
+          label: localize('search.filters.all')
+        }, {
+          value: "artist",
+          label: localize('search.filters.artist')
+        }, {
+          value: "album",
+          label: localize('search.filters.album')
+        }, {
+          value: "track",
+          label: localize('search.filters.track')
+        }, {
+          value: "playlist",
+          label: localize('search.filters.playlist')
+        }, {
+          value: "radio",
+          label: localize('search.filters.radio')
+        }, {
+          value: "podcast",
+          label: localize('search.filters.podcast')
+        }, {
+          value: "audiobook",
+          label: localize('search.filters.audiobook')
+        }]
+      }
+    }}
               .value=${this._config.default_search_filter ?? "all"}
               label="${localize('editor.labels.default_search_filter')}"
               helper="${localize('editor.subtitles.default_search_filter_full')}"
@@ -16408,68 +16431,68 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "default",
-            label: "Default"
-          }, {
-            value: "name",
-            label: "Name (A→Z)"
-          }, {
-            value: "name_desc",
-            label: "Name (Z→A)"
-          }, {
-            value: "sort_name",
-            label: "Sort Name (A→Z)"
-          }, {
-            value: "sort_name_desc",
-            label: "Sort Name (Z→A)"
-          }, {
-            value: "timestamp_added",
-            label: "Date Added (Oldest)"
-          }, {
-            value: "timestamp_added_desc",
-            label: "Date Added (Newest)"
-          }, {
-            value: "last_played",
-            label: "Last Played (Oldest)"
-          }, {
-            value: "last_played_desc",
-            label: "Last Played (Recent)"
-          }, {
-            value: "play_count",
-            label: "Play Count (Low→High)"
-          }, {
-            value: "play_count_desc",
-            label: "Play Count (High→Low)"
-          }, {
-            value: "year",
-            label: "Year (Oldest)"
-          }, {
-            value: "year_desc",
-            label: "Year (Newest)"
-          }, {
-            value: "position",
-            label: "Position (Asc)"
-          }, {
-            value: "position_desc",
-            label: "Position (Desc)"
-          }, {
-            value: "artist_name",
-            label: "Artist (A→Z)"
-          }, {
-            value: "artist_name_desc",
-            label: "Artist (Z→A)"
-          }, {
-            value: "random",
-            label: "Random"
-          }, {
-            value: "random_play_count",
-            label: "Random + Least Played"
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "default",
+          label: "Default"
+        }, {
+          value: "name",
+          label: "Name (A→Z)"
+        }, {
+          value: "name_desc",
+          label: "Name (Z→A)"
+        }, {
+          value: "sort_name",
+          label: "Sort Name (A→Z)"
+        }, {
+          value: "sort_name_desc",
+          label: "Sort Name (Z→A)"
+        }, {
+          value: "timestamp_added",
+          label: "Date Added (Oldest)"
+        }, {
+          value: "timestamp_added_desc",
+          label: "Date Added (Newest)"
+        }, {
+          value: "last_played",
+          label: "Last Played (Oldest)"
+        }, {
+          value: "last_played_desc",
+          label: "Last Played (Recent)"
+        }, {
+          value: "play_count",
+          label: "Play Count (Low→High)"
+        }, {
+          value: "play_count_desc",
+          label: "Play Count (High→Low)"
+        }, {
+          value: "year",
+          label: "Year (Oldest)"
+        }, {
+          value: "year_desc",
+          label: "Year (Newest)"
+        }, {
+          value: "position",
+          label: "Position (Asc)"
+        }, {
+          value: "position_desc",
+          label: "Position (Desc)"
+        }, {
+          value: "artist_name",
+          label: "Artist (A→Z)"
+        }, {
+          value: "artist_name_desc",
+          label: "Artist (Z→A)"
+        }, {
+          value: "random",
+          label: "Random"
+        }, {
+          value: "random_play_count",
+          label: "Random + Least Played"
+        }]
+      }
+    }}
               .value=${this._config.search_results_sort ?? "default"}
               label="${localize('editor.fields.result_sorting')}"
               helper="${localize('editor.subtitles.result_sorting_full')}"
@@ -16486,14 +16509,14 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               <ha-selector
                 .hass=${this.hass}
                 .selector=${{
-        number: {
-          min: 0.01,
-          max: 1,
-          step: 0.01,
-          unit_of_measurement: "",
-          mode: "box"
-        }
-      }}
+      number: {
+        min: 0.01,
+        max: 1,
+        step: 0.01,
+        unit_of_measurement: "",
+        mode: "box"
+      }
+    }}
                 .value=${this._config.volume_step ?? 0.05}
                 label="${localize('editor.fields.vol_step')}"
                 @value-changed=${e => this._updateConfig("volume_step", e.detail.value)}
@@ -16553,14 +16576,14 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                 helper="${localize('editor.subtitles.card_height_full')}"
                 .helperPersistent=${true}
                 @input=${e => {
-        const raw = e.target.value;
-        if (raw === "") {
-          this._updateConfig("card_height", undefined);
-          return;
-        }
-        const parsed = Number(raw);
-        this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
-      }}
+      const raw = e.target.value;
+      if (raw === "") {
+        this._updateConfig("card_height", undefined);
+        return;
+      }
+      const parsed = Number(raw);
+      this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
+    }}
               ></ha-textfield>
             </div>
             <ha-icon
@@ -16574,17 +16597,17 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               <ha-selector
                 .hass=${this.hass}
                 .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "list",
-            label: localize('editor.search_view_options.list')
-          }, {
-            value: "card",
-            label: localize('editor.search_view_options.card')
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "list",
+          label: localize('editor.search_view_options.list')
+        }, {
+          value: "card",
+          label: localize('editor.search_view_options.card')
+        }]
+      }
+    }}
                 .value=${this._config.search_view ?? "list"}
                 label="${localize('editor.fields.search_view')}"
                 helper="${localize('editor.subtitles.search_view')}"
@@ -16596,13 +16619,13 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                 <ha-selector
                   .hass=${this.hass}
                   .selector=${{
-          number: {
-            min: 1,
-            max: 12,
-            step: 1,
-            mode: "box"
-          }
-        }}
+      number: {
+        min: 1,
+        max: 12,
+        step: 1,
+        mode: "box"
+      }
+    }}
                   .value=${this._config.search_card_columns ?? 4}
                   label="${localize('editor.fields.search_card_columns')}"
                   helper="${localize('editor.subtitles.search_card_columns')}"
@@ -16621,17 +16644,17 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "classic",
-            label: "Classic"
-          }, {
-            value: "modern",
-            label: "Modern"
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "classic",
+          label: "Classic"
+        }, {
+          value: "modern",
+          label: "Modern"
+        }]
+      }
+    }}
               .value=${this._config.control_layout ?? "classic"}
               label="${localize('editor.fields.control_layout')}"
               helper="${localize('editor.subtitles.control_layout_full')}"
@@ -16680,11 +16703,11 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-        select: {
-          multiple: true,
-          options: ADAPTIVE_TEXT_SELECTOR_OPTIONS
-        }
-      }}
+      select: {
+        multiple: true,
+        options: ADAPTIVE_TEXT_SELECTOR_OPTIONS
+      }
+    }}
               .value=${this._getAdaptiveTextTargetsValue()}
               @value-changed=${e => this._onAdaptiveTextTargetsChanged(e.detail.value)}
             ></ha-selector>
@@ -16694,20 +16717,20 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "slider",
-            label: "Slider"
-          }, {
-            value: "stepper",
-            label: "Stepper"
-          }, {
-            value: "hidden",
-            label: "Hidden"
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "slider",
+          label: "Slider"
+        }, {
+          value: "stepper",
+          label: "Stepper"
+        }, {
+          value: "hidden",
+          label: "Hidden"
+        }]
+      }
+    }}
               .value=${this._config.volume_mode ?? "slider"}
               label="${localize('editor.fields.volume_mode')}"
               @value-changed=${e => this._updateConfig("volume_mode", e.detail.value)}
@@ -16768,23 +16791,23 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "default",
-            label: "Default"
-          }, {
-            value: "search",
-            label: "Search"
-          }, {
-            value: "search-recently-played",
-            label: "Recently Played"
-          }, {
-            value: "search-next-up",
-            label: "Next Up"
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "default",
+          label: "Default"
+        }, {
+          value: "search",
+          label: "Search"
+        }, {
+          value: "search-recently-played",
+          label: "Recently Played"
+        }, {
+          value: "search-next-up",
+          label: "Next Up"
+        }]
+      }
+    }}
               .value=${this._config.idle_screen ?? "default"}
               label="${localize('editor.fields.idle_screen')}"
               @value-changed=${e => this._updateConfig("idle_screen", e.detail.value)}
@@ -16835,16 +16858,16 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                         class="icon-button icon-button-compact icon-button-toggle ${(act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? "icon-button-disabled" : (act === null || act === void 0 ? void 0 : act.in_menu) === true ? "active" : ""}"
                         icon="${(act === null || act === void 0 ? void 0 : act.in_menu) === true ? "mdi:menu" : (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? "mdi:image-outline" : "mdi:eye-off-outline" : "mdi:view-grid-outline"}"
                         title="${(() => {
-          const placementText = (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? localize('editor.placements.hidden') : `${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})` : act !== null && act !== void 0 && act.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu');
-          return placementText;
-        })()}"
+      const placementText = (act === null || act === void 0 ? void 0 : act.in_menu) === "hidden" ? act !== null && act !== void 0 && act.card_trigger && act.card_trigger !== "none" ? localize('editor.placements.hidden') : `${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})` : act !== null && act !== void 0 && act.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu');
+      return placementText;
+    })()}"
                         role="button"
                         aria-label="${(act === null || act === void 0 ? void 0 : act.in_menu) === true ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
                         @click=${() => {
-          if ((act === null || act === void 0 ? void 0 : act.in_menu) !== "hidden") {
-            this._toggleActionInMenu(idx);
-          }
-        }}
+      if ((act === null || act === void 0 ? void 0 : act.in_menu) !== "hidden") {
+        this._toggleActionInMenu(idx);
+      }
+    }}
                       ></ha-icon>
                       ` : x`
                       <ha-icon
@@ -16871,11 +16894,11 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               icon="mdi:plus"
               title="Add Action"
               @click=${() => {
-        const newActions = [...(this._config.actions ?? []), {}];
-        const newIndex = newActions.length - 1;
-        this._updateConfig("actions", newActions);
-        this._onEditAction(newIndex);
-      }}
+      const newActions = [...(this._config.actions ?? []), {}];
+      const newIndex = newActions.length - 1;
+      this._updateConfig("actions", newActions);
+      this._onEditAction(newIndex);
+    }}
             ></ha-icon>
           </div>
         </div>
@@ -16900,10 +16923,10 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           <ha-selector
             .hass=${this.hass}
             .selector=${{
-        entity: {
-          domain: "media_player"
-        }
-      }}
+      entity: {
+        domain: "media_player"
+      }
+    }}
             .value=${(entity === null || entity === void 0 ? void 0 : entity.entity_id) ?? ""}
           
             disabled
@@ -16923,36 +16946,36 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           <ha-selector
             .hass=${this.hass}
             .selector=${{
-        select: {
-          mode: "dropdown",
-          multiple: true,
-          options: [{
-            value: "previous",
-            label: "Previous Track"
-          }, {
-            value: "play_pause",
-            label: "Play/Pause"
-          }, {
-            value: "stop",
-            label: "Stop"
-          }, {
-            value: "next",
-            label: "Next Track"
-          }, {
-            value: "shuffle",
-            label: "Shuffle"
-          }, {
-            value: "repeat",
-            label: "Repeat"
-          }, {
-            value: "favorite",
-            label: "Favorite"
-          }, {
-            value: "power",
-            label: "Power"
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        multiple: true,
+        options: [{
+          value: "previous",
+          label: "Previous Track"
+        }, {
+          value: "play_pause",
+          label: "Play/Pause"
+        }, {
+          value: "stop",
+          label: "Stop"
+        }, {
+          value: "next",
+          label: "Next Track"
+        }, {
+          value: "shuffle",
+          label: "Shuffle"
+        }, {
+          value: "repeat",
+          label: "Repeat"
+        }, {
+          value: "favorite",
+          label: "Favorite"
+        }, {
+          value: "power",
+          label: "Power"
+        }]
+      }
+    }}
             .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_controls) ? entity.hidden_controls : []}
             .required=${false}
             .invalid=${false}
@@ -16970,8 +16993,8 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               id="ma-template-toggle"
               .checked=${this._useTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity)}
               @change=${e => {
-        this._useTemplate = e.target.checked;
-      }}
+      this._useTemplate = e.target.checked;
+    }}
             ></ha-switch>
             <label for="ma-template-toggle">${localize('editor.labels.use_ma_template')}</label>
           </div>
@@ -17015,49 +17038,49 @@ class YetAnotherMediaPlayerEditor extends i$2 {
         ></ha-generic-picker>
       </div>
       ${((_this$hass7, _this$_looksLikeTempl, _this$hass8) => {
-          const mainId = entity === null || entity === void 0 ? void 0 : entity.entity_id;
-          const mainState = mainId ? (_this$hass7 = this.hass) === null || _this$hass7 === void 0 || (_this$hass7 = _this$hass7.states) === null || _this$hass7 === void 0 ? void 0 : _this$hass7[mainId] : undefined;
-          const mainIsMA = mainState ? isMusicAssistantEntity(mainState) : false;
-          const rawMa = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity;
-          const isTemplate = (_this$_looksLikeTempl = this._looksLikeTemplate) === null || _this$_looksLikeTempl === void 0 ? void 0 : _this$_looksLikeTempl.call(this, rawMa);
-          const maId = typeof rawMa === 'string' && !isTemplate ? rawMa : undefined;
-          const maState = maId ? (_this$hass8 = this.hass) === null || _this$hass8 === void 0 || (_this$hass8 = _this$hass8.states) === null || _this$hass8 === void 0 ? void 0 : _this$hass8[maId] : undefined;
-          const maIsMA = maState ? isMusicAssistantEntity(maState) : false;
-          // Only show under the dropdown (non-template path)
-          const showHiddenFilterChips = mainIsMA || maIsMA;
-          if (!showHiddenFilterChips) return E;
-          return x`
+      const mainId = entity === null || entity === void 0 ? void 0 : entity.entity_id;
+      const mainState = mainId ? (_this$hass7 = this.hass) === null || _this$hass7 === void 0 || (_this$hass7 = _this$hass7.states) === null || _this$hass7 === void 0 ? void 0 : _this$hass7[mainId] : undefined;
+      const mainIsMA = mainState ? isMusicAssistantEntity(mainState) : false;
+      const rawMa = entity === null || entity === void 0 ? void 0 : entity.music_assistant_entity;
+      const isTemplate = (_this$_looksLikeTempl = this._looksLikeTemplate) === null || _this$_looksLikeTempl === void 0 ? void 0 : _this$_looksLikeTempl.call(this, rawMa);
+      const maId = typeof rawMa === 'string' && !isTemplate ? rawMa : undefined;
+      const maState = maId ? (_this$hass8 = this.hass) === null || _this$hass8 === void 0 || (_this$hass8 = _this$hass8.states) === null || _this$hass8 === void 0 ? void 0 : _this$hass8[maId] : undefined;
+      const maIsMA = maState ? isMusicAssistantEntity(maState) : false;
+      // Only show under the dropdown (non-template path)
+      const showHiddenFilterChips = mainIsMA || maIsMA;
+      if (!showHiddenFilterChips) return E;
+      return x`
           <div class="form-row">
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-              select: {
-                mode: "dropdown",
-                multiple: true,
-                options: [{
-                  value: "artist",
-                  label: "Artist"
-                }, {
-                  value: "album",
-                  label: "Album"
-                }, {
-                  value: "track",
-                  label: "Track"
-                }, {
-                  value: "playlist",
-                  label: "Playlist"
-                }, {
-                  value: "radio",
-                  label: "Radio"
-                }, {
-                  value: "podcast",
-                  label: "Podcast"
-                }, {
-                  value: "episode",
-                  label: "Episode"
-                }]
-              }
-            }}
+        select: {
+          mode: "dropdown",
+          multiple: true,
+          options: [{
+            value: "artist",
+            label: "Artist"
+          }, {
+            value: "album",
+            label: "Album"
+          }, {
+            value: "track",
+            label: "Track"
+          }, {
+            value: "playlist",
+            label: "Playlist"
+          }, {
+            value: "radio",
+            label: "Radio"
+          }, {
+            value: "podcast",
+            label: "Podcast"
+          }, {
+            value: "episode",
+            label: "Episode"
+          }]
+        }
+      }}
               .value=${Array.isArray(entity === null || entity === void 0 ? void 0 : entity.hidden_filter_chips) ? entity.hidden_filter_chips : []}
               .required=${false}
               .invalid=${false}
@@ -17067,7 +17090,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             ></ha-selector>
           </div>
         `;
-        })()}
+    })()}
     `}
 
         <div class="form-row">
@@ -17106,8 +17129,8 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                 id="vol-template-toggle"
                 .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity === null || entity === void 0 ? void 0 : entity.volume_entity)}
                 @change=${e => {
-          this._useVolTemplate = e.target.checked;
-        }}
+      this._useVolTemplate = e.target.checked;
+    }}
               ></ha-switch>
               <label for="vol-template-toggle">${localize('editor.labels.use_vol_template')}</label>
             </div>
@@ -17148,13 +17171,13 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                     .rowRenderer=${item => this._entityRowRenderer(item)}
                     .getItems=${this._getEntityItems(["media_player", "remote"])}
                     @value-changed=${e => {
-            const value = e.detail.value;
-            this._updateEntityProperty("volume_entity", value);
-            if (!value || value === entity.entity_id) {
-              // sync_power is meaningless in these cases
-              this._updateEntityProperty("sync_power", false);
-            }
-          }}
+      const value = e.detail.value;
+      this._updateEntityProperty("volume_entity", value);
+      if (!value || value === entity.entity_id) {
+        // sync_power is meaningless in these cases
+        this._updateEntityProperty("sync_power", false);
+      }
+    }}
                     allow-custom-value
                   ></ha-generic-picker>
                 </div>
@@ -17222,30 +17245,30 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               label="${localize('editor.fields.placement')}"
               .disabled=${actionMode === "sync_selected_entity"}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "chip",
-            label: localize('editor.placements.chip')
-          }, {
-            value: "menu",
-            label: localize('editor.placements.menu')
-          }, {
-            value: "hidden",
-            label: localize('editor.placements.hidden')
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "chip",
+          label: localize('editor.placements.chip')
+        }, {
+          value: "menu",
+          label: localize('editor.placements.menu')
+        }, {
+          value: "hidden",
+          label: localize('editor.placements.hidden')
+        }]
+      }
+    }}
               .value=${(action === null || action === void 0 ? void 0 : action.in_menu) === "hidden" ? "hidden" : action !== null && action !== void 0 && action.in_menu ? "menu" : "chip"}
               @value-changed=${e => {
-        const val = e.detail.value;
-        let inMenu = false;
-        if (val === "menu") inMenu = true; else if (val === "hidden") inMenu = "hidden";
-        this._updateActionProperty("in_menu", inMenu);
-        if (val !== "hidden") {
-          this._updateActionProperty("card_trigger", "none");
-        }
-      }}
+      const val = e.detail.value;
+      let inMenu = false;
+      if (val === "menu") inMenu = true;else if (val === "hidden") inMenu = "hidden";
+      this._updateActionProperty("in_menu", inMenu);
+      if (val !== "hidden") {
+        this._updateActionProperty("card_trigger", "none");
+      }
+    }}
             ></ha-selector>
           </div>
           <div class="grow-children">
@@ -17254,29 +17277,29 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               label="${localize('editor.fields.card_trigger')}"
               .disabled=${actionMode === "sync_selected_entity" || (action === null || action === void 0 ? void 0 : action.in_menu) !== "hidden"}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "none",
-            label: localize('editor.triggers.none')
-          }, {
-            value: "tap",
-            label: localize('editor.triggers.tap')
-          }, {
-            value: "hold",
-            label: localize('editor.triggers.hold')
-          }, {
-            value: "double_tap",
-            label: localize('editor.triggers.double_tap')
-          }, {
-            value: "swipe_left",
-            label: localize('editor.triggers.swipe_left')
-          }, {
-            value: "swipe_right",
-            label: localize('editor.triggers.swipe_right')
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "none",
+          label: localize('editor.triggers.none')
+        }, {
+          value: "tap",
+          label: localize('editor.triggers.tap')
+        }, {
+          value: "hold",
+          label: localize('editor.triggers.hold')
+        }, {
+          value: "double_tap",
+          label: localize('editor.triggers.double_tap')
+        }, {
+          value: "swipe_left",
+          label: localize('editor.triggers.swipe_left')
+        }, {
+          value: "swipe_right",
+          label: localize('editor.triggers.swipe_right')
+        }]
+      }
+    }}
               .value=${(action === null || action === void 0 ? void 0 : action.card_trigger) || "none"}
               @value-changed=${e => this._updateActionProperty("card_trigger", e.detail.value)}
             ></ha-selector>
@@ -17294,68 +17317,68 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             .hass=${this.hass}
             label="${localize('editor.fields.action_type')}"
             .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [{
-            value: "menu",
-            label: localize('editor.action_types.menu')
-          }, {
-            value: "service",
-            label: localize('editor.action_types.service')
-          }, {
-            value: "navigate",
-            label: localize('editor.action_types.navigate')
-          }, {
-            value: "sync_selected_entity",
-            label: localize('editor.action_types.sync_selected_entity')
-          }]
-        }
-      }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "menu",
+          label: localize('editor.action_types.menu')
+        }, {
+          value: "service",
+          label: localize('editor.action_types.service')
+        }, {
+          value: "navigate",
+          label: localize('editor.action_types.navigate')
+        }, {
+          value: "sync_selected_entity",
+          label: localize('editor.action_types.sync_selected_entity')
+        }]
+      }
+    }}
             .value=${this._actionMode ?? this._deriveActionMode(action)}
             @value-changed=${e => {
-        const mode = e.detail.value;
-        this._actionMode = mode;
-        if (mode === "service") {
-          var _this$_config$actions2;
-          this._updateActionProperty("menu_item", undefined);
-          this._updateActionProperty("navigation_path", undefined);
-          this._updateActionProperty("navigation_new_tab", undefined);
-          this._updateActionProperty("action", undefined);
-          // Initialize service to empty string so Service Data editor renders immediately
-          if (!((_this$_config$actions2 = this._config.actions) !== null && _this$_config$actions2 !== void 0 && (_this$_config$actions2 = _this$_config$actions2[this._actionEditorIndex]) !== null && _this$_config$actions2 !== void 0 && _this$_config$actions2.service)) {
-            this._updateActionProperty("service", "");
-          }
-        } else if (mode === "menu") {
-          this._updateActionProperty("service", undefined);
-          this._updateActionProperty("service_data", undefined);
-          this._updateActionProperty("script_variable", undefined);
-          this._updateActionProperty("navigation_path", undefined);
-          this._updateActionProperty("navigation_new_tab", undefined);
-          this._updateActionProperty("action", undefined);
-        } else if (mode === "navigate") {
-          this._updateActionProperty("menu_item", undefined);
-          this._updateActionProperty("service", undefined);
-          this._updateActionProperty("service_data", undefined);
-          this._updateActionProperty("script_variable", undefined);
-          this._updateActionProperty("action", "navigate");
-          if (!(action !== null && action !== void 0 && action.navigation_path)) {
-            this._updateActionProperty("navigation_path", "");
-          }
-        } else if (mode === "sync_selected_entity") {
-          this._updateActionProperty("menu_item", undefined);
-          this._updateActionProperty("service", undefined);
-          this._updateActionProperty("service_data", undefined);
-          this._updateActionProperty("script_variable", undefined);
-          this._updateActionProperty("navigation_path", undefined);
-          this._updateActionProperty("navigation_new_tab", undefined);
-          this._updateActionProperty("action", "sync_selected_entity");
-          this._updateActionProperty("in_menu", "hidden");
-          this._updateActionProperty("card_trigger", "none");
-          if (!(action !== null && action !== void 0 && action.sync_entity_type)) {
-            this._updateActionProperty("sync_entity_type", "yamp_entity");
-          }
+      const mode = e.detail.value;
+      this._actionMode = mode;
+      if (mode === "service") {
+        var _this$_config$actions2;
+        this._updateActionProperty("menu_item", undefined);
+        this._updateActionProperty("navigation_path", undefined);
+        this._updateActionProperty("navigation_new_tab", undefined);
+        this._updateActionProperty("action", undefined);
+        // Initialize service to empty string so Service Data editor renders immediately
+        if (!((_this$_config$actions2 = this._config.actions) !== null && _this$_config$actions2 !== void 0 && (_this$_config$actions2 = _this$_config$actions2[this._actionEditorIndex]) !== null && _this$_config$actions2 !== void 0 && _this$_config$actions2.service)) {
+          this._updateActionProperty("service", "");
         }
-      }}
+      } else if (mode === "menu") {
+        this._updateActionProperty("service", undefined);
+        this._updateActionProperty("service_data", undefined);
+        this._updateActionProperty("script_variable", undefined);
+        this._updateActionProperty("navigation_path", undefined);
+        this._updateActionProperty("navigation_new_tab", undefined);
+        this._updateActionProperty("action", undefined);
+      } else if (mode === "navigate") {
+        this._updateActionProperty("menu_item", undefined);
+        this._updateActionProperty("service", undefined);
+        this._updateActionProperty("service_data", undefined);
+        this._updateActionProperty("script_variable", undefined);
+        this._updateActionProperty("action", "navigate");
+        if (!(action !== null && action !== void 0 && action.navigation_path)) {
+          this._updateActionProperty("navigation_path", "");
+        }
+      } else if (mode === "sync_selected_entity") {
+        this._updateActionProperty("menu_item", undefined);
+        this._updateActionProperty("service", undefined);
+        this._updateActionProperty("service_data", undefined);
+        this._updateActionProperty("script_variable", undefined);
+        this._updateActionProperty("navigation_path", undefined);
+        this._updateActionProperty("navigation_new_tab", undefined);
+        this._updateActionProperty("action", "sync_selected_entity");
+        this._updateActionProperty("in_menu", "hidden");
+        this._updateActionProperty("card_trigger", "none");
+        if (!(action !== null && action !== void 0 && action.sync_entity_type)) {
+          this._updateActionProperty("sync_entity_type", "yamp_entity");
+        }
+      }
+    }}
           ></ha-selector>
         </div>
 
@@ -17366,35 +17389,35 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               .hass=${this.hass}
               label="${localize('editor.fields.menu_item')}"
               .selector=${{
-          select: {
-            mode: "dropdown",
-            options: [{
-              value: "",
-              label: ""
-            }, {
-              value: "search",
-              label: "Search"
-            }, {
-              value: "search-recently-played",
-              label: "Recently Played"
-            }, {
-              value: "search-next-up",
-              label: "Next Up"
-            }, {
-              value: "source",
-              label: "Source"
-            }, {
-              value: "more-info",
-              label: "More Info"
-            }, {
-              value: "group-players",
-              label: "Group Players"
-            }, {
-              value: "transfer-queue",
-              label: "Transfer Queue"
-            }]
-          }
-        }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "",
+          label: ""
+        }, {
+          value: "search",
+          label: "Search"
+        }, {
+          value: "search-recently-played",
+          label: "Recently Played"
+        }, {
+          value: "search-next-up",
+          label: "Next Up"
+        }, {
+          value: "source",
+          label: "Source"
+        }, {
+          value: "more-info",
+          label: "More Info"
+        }, {
+          value: "group-players",
+          label: "Group Players"
+        }, {
+          value: "transfer-queue",
+          label: "Transfer Queue"
+        }]
+      }
+    }}
               .value=${(action === null || action === void 0 ? void 0 : action.menu_item) ?? ""}
               @value-changed=${e => this._updateActionProperty("menu_item", e.detail.value || undefined)}
             ></ha-selector>
@@ -17408,9 +17431,9 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               placeholder="/lovelace/music or #popup"
               .value=${(action === null || action === void 0 ? void 0 : action.navigation_path) ?? ""}
               @input=${e => {
-          this._updateActionProperty("navigation_path", e.target.value);
-          this._updateActionProperty("action", "navigate");
-        }}
+      this._updateActionProperty("navigation_path", e.target.value);
+      this._updateActionProperty("action", "navigate");
+    }}
             ></ha-textfield>
           </div>
           <div class="form-row form-row-multi-column">
@@ -17432,10 +17455,10 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-          entity: {
-            domain: "input_text"
-          }
-        }}
+      entity: {
+        domain: "input_text"
+      }
+    }}
               .value=${(action === null || action === void 0 ? void 0 : action.sync_entity_helper) ?? ""}
               label="${localize('editor.fields.selected_entity_helper')}"
               @value-changed=${e => this._updateActionProperty("sync_entity_helper", e.detail.value)}
@@ -17447,20 +17470,20 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               .hass=${this.hass}
               label="${localize('editor.fields.sync_entity_type')}"
               .selector=${{
-          select: {
-            mode: "dropdown",
-            options: [{
-              value: "yamp_entity",
-              label: localize('editor.sync_entity_options.yamp_entity')
-            }, {
-              value: "yamp_main_entity",
-              label: localize('editor.sync_entity_options.yamp_main_entity')
-            }, {
-              value: "yamp_playback_entity",
-              label: localize('editor.sync_entity_options.yamp_playback_entity')
-            }]
-          }
-        }}
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "yamp_entity",
+          label: localize('editor.sync_entity_options.yamp_entity')
+        }, {
+          value: "yamp_main_entity",
+          label: localize('editor.sync_entity_options.yamp_main_entity')
+        }, {
+          value: "yamp_playback_entity",
+          label: localize('editor.sync_entity_options.yamp_playback_entity')
+        }]
+      }
+    }}
               .value=${(action === null || action === void 0 ? void 0 : action.sync_entity_type) ?? "yamp_entity"}
               @value-changed=${e => this._updateActionProperty("sync_entity_type", e.detail.value)}
             ></ha-selector>
@@ -17472,12 +17495,12 @@ class YetAnotherMediaPlayerEditor extends i$2 {
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-          select: {
-            mode: "dropdown",
-            filterable: true,
-            options: this._serviceItems || []
-          }
-        }}
+      select: {
+        mode: "dropdown",
+        filterable: true,
+        options: this._serviceItems || []
+      }
+    }}
               .value=${action.service ?? ""}
               label="${localize('editor.fields.service')}"
               .required=${true}
@@ -17548,22 +17571,22 @@ class YetAnotherMediaPlayerEditor extends i$2 {
                 mode="yaml"
                 .value=${action !== null && action !== void 0 && action.service_data ? jsYaml.dump(action.service_data) : ""}
                 @value-changed=${e => {
-            /* the yaml will be parsed in real time to detect errors, but we will defer 
-              updating the config until the save button above the editor is clicked.
-            */
-            this._yamlDraft = e.detail.value;
-            this._yamlModified = true;
-            try {
-              const parsed = jsYaml.load(this._yamlDraft);
-              if (parsed && typeof parsed === "object") {
-                this._yamlError = null;
-              } else {
-                this._yamlError = "Invalid YAML";
-              }
-            } catch (err) {
-              this._yamlError = err.message;
-            }
-          }}
+      /* the yaml will be parsed in real time to detect errors, but we will defer 
+        updating the config until the save button above the editor is clicked.
+      */
+      this._yamlDraft = e.detail.value;
+      this._yamlModified = true;
+      try {
+        const parsed = jsYaml.load(this._yamlDraft);
+        if (parsed && typeof parsed === "object") {
+          this._yamlError = null;
+        } else {
+          this._yamlError = "Invalid YAML";
+        }
+      } catch (err) {
+        this._yamlError = err.message;
+      }
+    }}
               ></ha-code-editor>
               ${this._yamlError && this._yamlDraft.trim() !== "" ? x`<div class="yaml-error-message">${this._yamlError}</div>` : E}
             </div>
@@ -17602,7 +17625,7 @@ class YetAnotherMediaPlayerEditor extends i$2 {
     const placement = inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip";
     const trigger = act === null || act === void 0 ? void 0 : act.card_trigger;
     let placementText = "";
-    if (placement === "menu") placementText = " \u2022 In Menu"; else if (placement === "hidden") {
+    if (placement === "menu") placementText = " \u2022 In Menu";else if (placement === "hidden") {
       if ((act === null || act === void 0 ? void 0 : act.action) !== "sync_selected_entity") {
         if (!trigger || trigger === "none") {
           placementText = ` \u2022 ${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})`;
@@ -18096,7 +18119,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (b.ts === a.ts) return a.minIdx - b.minIdx;
       return b.ts - a.ts;
     }) // sort groups by recency
-      .map(g => g.ids.sort()); // sort ids alphabetically inside each group
+    .map(g => g.ids.sort()); // sort ids alphabetically inside each group
 
     this._groupedSortedCache = result;
     this._lastHassVersion = this.hass;
@@ -20098,8 +20121,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // Check if the Music Assistant entity has the right attributes
     const hasMassAttributes = isMusicAssistantEntity(maState) || ((_maState$attributes5 = maState.attributes) === null || _maState$attributes5 === void 0 ? void 0 : _maState$attributes5.mass_player_id) || ((_maState$attributes6 = maState.attributes) === null || _maState$attributes6 === void 0 ? void 0 : _maState$attributes6.active_queue) ||
-      // If we're in upcoming mode and getting queue items, assume it's MA
-      this._upcomingFilterActive && ((_this$_searchResultsB = this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming`]) === null || _this$_searchResultsB === void 0 || (_this$_searchResultsB = _this$_searchResultsB.results) === null || _this$_searchResultsB === void 0 ? void 0 : _this$_searchResultsB.some(item => item.queue_item_id));
+    // If we're in upcoming mode and getting queue items, assume it's MA
+    this._upcomingFilterActive && ((_this$_searchResultsB = this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming`]) === null || _this$_searchResultsB === void 0 || (_this$_searchResultsB = _this$_searchResultsB.results) === null || _this$_searchResultsB === void 0 ? void 0 : _this$_searchResultsB.some(item => item.queue_item_id));
     return hasMassAttributes;
   }
   _looksLikeMusicAssistantState(state) {
@@ -21704,18 +21727,18 @@ class YetAnotherMediaPlayerCard extends i$2 {
       </div>
       <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} entity-options-scroll" style="display:flex; flex-direction:column;">
         <button class="entity-options-item" @click=${() => {
-        const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
-        if (resolvedEntities.length === 1) {
-          this._openMoreInfoForEntity(resolvedEntities[0]);
-          this._showEntityOptions = false;
-        } else {
-          this._showResolvedEntities = true;
-        }
-        this.requestUpdate();
-      }}>${localize('card.menu.more_info')}</button>
+      const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
+      if (resolvedEntities.length === 1) {
+        this._openMoreInfoForEntity(resolvedEntities[0]);
+        this._showEntityOptions = false;
+      } else {
+        this._showResolvedEntities = true;
+      }
+      this.requestUpdate();
+    }}>${localize('card.menu.more_info')}</button>
         <button class="entity-options-item" @click=${() => {
-        this._showSearchSheetInOptions();
-      }}>${localize('common.search')}</button>
+      this._showSearchSheetInOptions();
+    }}>${localize('common.search')}</button>
 
         ${Array.isArray(sourceList) && sourceList.length > 0 ? x`
           <button class="entity-options-item" @click=${() => this._openSourceList()}>${localize('card.menu.source')}</button>
@@ -21729,12 +21752,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
         
         ${menuOnlyActions.length ? x`
           ${menuOnlyActions.map(_ref2 => {
-        let {
-          action,
-          idx
-        } = _ref2;
-        const label = this._getActionLabel(action);
-        return x`
+      let {
+        action,
+        idx
+      } = _ref2;
+      const label = this._getActionLabel(action);
+      return x`
               <button
                 class="entity-options-item menu-action-item"
                 @click=${() => this._onMenuActionClick(idx)}
@@ -21748,7 +21771,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
                 ${label ? x`<span class="menu-action-label">${label}</span>` : E}
               </button>
             `;
-      })}
+    })}
         ` : E}
       </div>
     `;
@@ -21937,12 +21960,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return x`
         <div class="entity-options-header">
           <button class="entity-options-item close-item" @click=${() => {
-          if (this._quickMenuInvoke) {
-            this._dismissWithAnimation();
-          } else {
-            this._closeGrouping();
-          }
-        }}>
+        if (this._quickMenuInvoke) {
+          this._dismissWithAnimation();
+        } else {
+          this._closeGrouping();
+        }
+      }}>
             ${localize('common.back')}
           </button>
           <div class="entity-options-divider"></div>
@@ -21967,12 +21990,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return x`
       <div class="grouping-header group-list-header">
         <button class="entity-options-item close-item" @click=${() => {
-        if (this._quickMenuInvoke) {
-          this._dismissWithAnimation();
-        } else {
-          this._closeGrouping();
-        }
-      }}>
+      if (this._quickMenuInvoke) {
+        this._dismissWithAnimation();
+      } else {
+        this._closeGrouping();
+      }
+    }}>
           ${localize('common.back')}
         </button>
       </div>
@@ -21997,28 +22020,28 @@ class YetAnotherMediaPlayerCard extends i$2 {
             ${localize('card.grouping.no_players')}
           </div>
         ` : sortedGroupIds.map(item => {
-        var _masterState$attribut2, _displayVolumeState$a;
-        const id = item.id;
-        const actualGroupId = item.groupId;
-        const filteredMembers = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut2 = masterState.attributes) === null || _masterState$attribut2 === void 0 ? void 0 : _masterState$attribut2.group_members) ? masterState.attributes.group_members : [];
-        const grouped = filteredMembers.includes(actualGroupId);
-        const name = this.getChipName(id);
-        const isBusy = item.isBusy;
-        const busyLabel = item.busyLabel;
-        const entityIdx = this.entityIds.indexOf(id);
-        const volumeEntity = this._getVolumeEntityForGrouping(entityIdx);
-        const displayEntity = volumeEntity || actualGroupId;
-        const displayVolumeState = this.hass.states[displayEntity];
-        const isRemoteVol = (displayEntity === null || displayEntity === void 0 ? void 0 : displayEntity.startsWith) && displayEntity.startsWith("remote.");
-        const volVal = Number((displayVolumeState === null || displayVolumeState === void 0 || (_displayVolumeState$a = displayVolumeState.attributes) === null || _displayVolumeState$a === void 0 ? void 0 : _displayVolumeState$a.volume_level) || 0);
-        const isPrimaryRow = id === masterId;
-        const showToggleButton = !isPrimaryRow;
-        const isCurrent = id === activeId;
-        let stateLabel = groupedAny ? isPrimaryRow ? localize('card.grouping.master') : grouped ? localize('card.grouping.joined') : localize('card.grouping.available') : isCurrent ? localize('card.grouping.current') : localize('card.grouping.available');
-        if (isBusy) {
-          stateLabel = busyLabel || "Unavailable";
-        }
-        return x`
+      var _masterState$attribut2, _displayVolumeState$a;
+      const id = item.id;
+      const actualGroupId = item.groupId;
+      const filteredMembers = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut2 = masterState.attributes) === null || _masterState$attribut2 === void 0 ? void 0 : _masterState$attribut2.group_members) ? masterState.attributes.group_members : [];
+      const grouped = filteredMembers.includes(actualGroupId);
+      const name = this.getChipName(id);
+      const isBusy = item.isBusy;
+      const busyLabel = item.busyLabel;
+      const entityIdx = this.entityIds.indexOf(id);
+      const volumeEntity = this._getVolumeEntityForGrouping(entityIdx);
+      const displayEntity = volumeEntity || actualGroupId;
+      const displayVolumeState = this.hass.states[displayEntity];
+      const isRemoteVol = (displayEntity === null || displayEntity === void 0 ? void 0 : displayEntity.startsWith) && displayEntity.startsWith("remote.");
+      const volVal = Number((displayVolumeState === null || displayVolumeState === void 0 || (_displayVolumeState$a = displayVolumeState.attributes) === null || _displayVolumeState$a === void 0 ? void 0 : _displayVolumeState$a.volume_level) || 0);
+      const isPrimaryRow = id === masterId;
+      const showToggleButton = !isPrimaryRow;
+      const isCurrent = id === activeId;
+      let stateLabel = groupedAny ? isPrimaryRow ? localize('card.grouping.master') : grouped ? localize('card.grouping.joined') : localize('card.grouping.available') : isCurrent ? localize('card.grouping.current') : localize('card.grouping.available');
+      if (isBusy) {
+        stateLabel = busyLabel || "Unavailable";
+      }
+      return x`
             <div class="entity-options-item group-player-row" style="
               display:flex;
               align-items:center;
@@ -22066,7 +22089,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
                   ` : x`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`}
             </div>
           `;
-      })}
+    })}
       </div>
     `;
   }
@@ -22075,12 +22098,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return x`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => {
-        if (this._quickMenuInvoke) {
-          this._dismissWithAnimation();
-        } else {
-          this._closeTransferQueue();
-        }
-      }}>
+      if (this._quickMenuInvoke) {
+        this._dismissWithAnimation();
+      } else {
+        this._closeTransferQueue();
+      }
+    }}>
           ${localize('common.back')}
         </button>
         <div class="entity-options-divider"></div>
@@ -22127,9 +22150,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return x`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => {
-        this._showResolvedEntities = false;
-        this.requestUpdate();
-      }}>
+      this._showResolvedEntities = false;
+      this.requestUpdate();
+    }}>
           ${localize('common.back')}
         </button>
         <div class="entity-options-divider"></div>
@@ -22137,32 +22160,32 @@ class YetAnotherMediaPlayerCard extends i$2 {
           <div class="entity-options-title">${localize('card.menu.select_entity')}</div>
           <div class="entity-options-resolved-entities-list">
             ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
-        var _this$hass23, _state$attributes3, _state$attributes4;
-        const state = (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[entityId];
-        const name = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.friendly_name) || entityId;
-        const icon = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.icon) || "mdi:help-circle";
-        const idx = this._selectedIndex;
-        const obj = this.entityObjs[idx];
-        let role = "Main Entity";
-        let isActive = false;
-        if (obj) {
-          const maEntity = this._getActualResolvedMaEntityForState(idx);
-          const volEntity = this._getVolumeEntity(idx);
-          const activeEntity = this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
-          isActive = activeEntity === entityId;
-          if (entityId === maEntity && maEntity !== obj.entity_id) {
-            role = "Music Assistant Entity";
-          } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
-            role = "Volume Entity";
-          }
+      var _this$hass23, _state$attributes3, _state$attributes4;
+      const state = (_this$hass23 = this.hass) === null || _this$hass23 === void 0 || (_this$hass23 = _this$hass23.states) === null || _this$hass23 === void 0 ? void 0 : _this$hass23[entityId];
+      const name = (state === null || state === void 0 || (_state$attributes3 = state.attributes) === null || _state$attributes3 === void 0 ? void 0 : _state$attributes3.friendly_name) || entityId;
+      const icon = (state === null || state === void 0 || (_state$attributes4 = state.attributes) === null || _state$attributes4 === void 0 ? void 0 : _state$attributes4.icon) || "mdi:help-circle";
+      const idx = this._selectedIndex;
+      const obj = this.entityObjs[idx];
+      let role = "Main Entity";
+      let isActive = false;
+      if (obj) {
+        const maEntity = this._getActualResolvedMaEntityForState(idx);
+        const volEntity = this._getVolumeEntity(idx);
+        const activeEntity = this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+        isActive = activeEntity === entityId;
+        if (entityId === maEntity && maEntity !== obj.entity_id) {
+          role = "Music Assistant Entity";
+        } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
+          role = "Volume Entity";
         }
-        return x`
+      }
+      return x`
                 <button class="entity-options-item" @click=${() => {
-            this._openMoreInfoForEntity(entityId);
-            this._showEntityOptions = false;
-            this._showResolvedEntities = false;
-            this.requestUpdate();
-          }}>
+        this._openMoreInfoForEntity(entityId);
+        this._showEntityOptions = false;
+        this._showResolvedEntities = false;
+        this.requestUpdate();
+      }}>
                   <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
                   <div style="display: flex; flex-direction: column; align-items: flex-start;">
                     <div>${isActive ? `${name} (Active)` : name}</div>
@@ -22170,7 +22193,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
                   </div>
                 </button>
               `;
-      })}
+    })}
           </div>
         </div>
       </div>
@@ -22928,7 +22951,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
           // Cycle: off → all → one → off
           let curr = stateObj.attributes.repeat || "off";
           let next;
-          if (curr === "off") next = "all"; else if (curr === "all") next = "one"; else next = "off";
+          if (curr === "off") next = "all";else if (curr === "all") next = "one";else next = "off";
           this.hass.callService("media_player", "repeat_set", {
             entity_id: targetEntity,
             repeat: next
@@ -23850,22 +23873,22 @@ class YetAnotherMediaPlayerCard extends i$2 {
             <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
                 style="${(() => {
-        const styles = [];
-        if (!(artworkFullBleed && hasBackgroundImage)) {
-          styles.push(sharedBackgroundStyle);
-        } else {
-          styles.push('background-image: none', 'filter: none');
-        }
-        styles.push(`min-height: ${collapsed ? hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px' : hideControlsNow ? '350px' : '350px'}`);
-        styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
-        return styles.join('; ');
-      })()}"
+      const styles = [];
+      if (!(artworkFullBleed && hasBackgroundImage)) {
+        styles.push(sharedBackgroundStyle);
+      } else {
+        styles.push('background-image: none', 'filter: none');
+      }
+      styles.push(`min-height: ${collapsed ? hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px' : hideControlsNow ? '350px' : '350px'}`);
+      styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
+      return styles.join('; ');
+    })()}"
               ></div>
               ${!dimIdleFrame ? x`<div class="card-lower-fade"></div>` : E}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
-        if (!hideControlsNow) return '';
-        return collapsed ? `min-height: ${this._collapsedBaselineHeight || 220}px;` : 'min-height: 350px;';
-      })()}">
+      if (!hideControlsNow) return '';
+      return collapsed ? `min-height: ${this._collapsedBaselineHeight || 220}px;` : 'min-height: 350px;';
+    })()}">
                 ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? x`
                   <div
                     class="collapsed-artwork-container"
@@ -23873,9 +23896,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
                     @pointermove=${e => this._onTapAreaPointerMove(e)}
                     @pointerup=${e => this._onTapAreaPointerUp(e)}
                     @pointercancel=${() => {
-          this._gestureActive = false;
-          clearTimeout(this._gestureHoldTimer);
-        }}
+      this._gestureActive = false;
+      clearTimeout(this._gestureHoldTimer);
+    }}
                     style="${[`background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`, collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '', this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right ? 'cursor:pointer; pointer-events:auto;' : ''].filter(Boolean).join('; ')}"
                   >
                     <img
@@ -23892,9 +23915,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
                     @pointermove=${e => this._onTapAreaPointerMove(e)}
                     @pointerup=${e => this._onTapAreaPointerUp(e)}
                     @pointercancel=${() => {
-          this._gestureActive = false;
-          clearTimeout(this._gestureHoldTimer);
-        }}
+      this._gestureActive = false;
+      clearTimeout(this._gestureHoldTimer);
+    }}
                     style="${this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right ? 'cursor:pointer; pointer-events:auto;' : ''}"
                   >
                     ${useInsetArtwork && artworkUrl ? x`
@@ -23921,97 +23944,97 @@ class YetAnotherMediaPlayerCard extends i$2 {
                   </div>
                 ` : E}
                 <div class="details" style="${(() => {
-        const detailStyleParts = [];
-        if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
-        detailStyleParts.push(`min-height:${detailsMinHeight}px`);
-        if (!shouldShowDetails) detailStyleParts.push('opacity:0');
-        return detailStyleParts.join(';');
-      })()}">
+      const detailStyleParts = [];
+      if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
+      detailStyleParts.push(`min-height:${detailsMinHeight}px`);
+      if (!shouldShowDetails) detailStyleParts.push('opacity:0');
+      return detailStyleParts.join(';');
+    })()}">
                   <div class="title">
                     ${shouldShowDetails && title ? title : x`&nbsp;`}
                   </div>
                   <div
                       class="artist ${shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
                       @click=${() => {
-        if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-      }}
+      if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
+    }}
                       title=${shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
                     >${shouldShowDetails && artist ? artist : x`&nbsp;`}</div>
                 </div>
                 ${!collapsed && !this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
-        progress,
-        seekEnabled: true,
-        onSeek: e => this._onProgressBarClick(e),
-        collapsed: false,
-        accent: this._customAccent,
-        style: this._showEntityOptions ? "visibility:hidden" : "",
-        displayTimestamps: this._displayTimestamps,
-        currentTime: pos,
-        duration: duration
-      }) : renderProgressBar({
-        progress: 0,
-        seekEnabled: false,
-        collapsed: false,
-        accent: this._customAccent,
-        style: "visibility:hidden",
-        displayTimestamps: this._displayTimestamps,
-        currentTime: 0,
-        duration: 0
-      }) : E}
+      progress,
+      seekEnabled: true,
+      onSeek: e => this._onProgressBarClick(e),
+      collapsed: false,
+      accent: this._customAccent,
+      style: this._showEntityOptions ? "visibility:hidden" : "",
+      displayTimestamps: this._displayTimestamps,
+      currentTime: pos,
+      duration: duration
+    }) : renderProgressBar({
+      progress: 0,
+      seekEnabled: false,
+      collapsed: false,
+      accent: this._customAccent,
+      style: "visibility:hidden",
+      displayTimestamps: this._displayTimestamps,
+      currentTime: 0,
+      duration: 0
+    }) : E}
                 ${collapsed || this._alternateProgressBar ? isPlaying && duration ? renderProgressBar({
-        progress,
-        collapsed: true,
-        accent: this._customAccent,
-        style: this._showEntityOptions ? "visibility:hidden" : ""
-      }) : renderProgressBar({
-        progress: 0,
-        collapsed: true,
-        accent: this._customAccent,
-        style: "visibility:hidden"
-      }) : E}
+      progress,
+      collapsed: true,
+      accent: this._customAccent,
+      style: this._showEntityOptions ? "visibility:hidden" : ""
+    }) : renderProgressBar({
+      progress: 0,
+      collapsed: true,
+      accent: this._customAccent,
+      style: "visibility:hidden"
+    }) : E}
                 ${!hideControlsNow && controlSpacerSize > 0 ? x`
                   <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
                 ` : E}
                 <div style="${hideControlsNow || this._showEntityOptions ? 'visibility:hidden; pointer-events:none;' : ''}">
                     ${renderControlsRow({
-        stateObj: playbackStateObj,
-        showStop: this._shouldShowStopButton(playbackStateObj),
-        shuffleActive,
-        repeatActive,
-        onControlClick: action => this._onControlClick(action),
-        supportsFeature: (state, feature) => this._supportsFeature(state, feature),
-        showFavorite: showFavoriteButton,
-        favoriteActive,
-        hiddenControls: currentHiddenControls,
-        adaptiveControls: this._adaptiveControls,
-        controlLayout: this._controlLayout,
-        swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop
-      })}
+      stateObj: playbackStateObj,
+      showStop: this._shouldShowStopButton(playbackStateObj),
+      shuffleActive,
+      repeatActive,
+      onControlClick: action => this._onControlClick(action),
+      supportsFeature: (state, feature) => this._supportsFeature(state, feature),
+      showFavorite: showFavoriteButton,
+      favoriteActive,
+      hiddenControls: currentHiddenControls,
+      adaptiveControls: this._adaptiveControls,
+      controlLayout: this._controlLayout,
+      swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop
+    })}
 
                     ${renderVolumeRow({
-        isRemoteVolumeEntity,
-        showSlider,
-        vol,
-        isMuted: ((_this$currentVolumeSt3 = this.currentVolumeStateObj) === null || _this$currentVolumeSt3 === void 0 || (_this$currentVolumeSt3 = _this$currentVolumeSt3.attributes) === null || _this$currentVolumeSt3 === void 0 ? void 0 : _this$currentVolumeSt3.is_volume_muted) ?? false,
-        supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
-        onVolumeDragStart: e => this._onVolumeDragStart(e),
-        onVolumeDragEnd: e => this._onVolumeDragEnd(e),
-        onVolumeChange: e => this._onVolumeChange(e),
-        onVolumeStep: dir => this._onVolumeStep(dir),
-        onMuteToggle: () => this._onMuteToggle(),
-        leadingControlTemplate: leadingVolumeControl,
-        reserveLeadingControlSpace: this._controlLayout === "modern",
-        showRightPlaceholder: this._controlLayout === "modern",
-        rightSlotTemplate,
-        hideVolume: this.config.volume_mode === "hidden",
-        moreInfoMenu: x`
+      isRemoteVolumeEntity,
+      showSlider,
+      vol,
+      isMuted: ((_this$currentVolumeSt3 = this.currentVolumeStateObj) === null || _this$currentVolumeSt3 === void 0 || (_this$currentVolumeSt3 = _this$currentVolumeSt3.attributes) === null || _this$currentVolumeSt3 === void 0 ? void 0 : _this$currentVolumeSt3.is_volume_muted) ?? false,
+      supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
+      onVolumeDragStart: e => this._onVolumeDragStart(e),
+      onVolumeDragEnd: e => this._onVolumeDragEnd(e),
+      onVolumeChange: e => this._onVolumeChange(e),
+      onVolumeStep: dir => this._onVolumeStep(dir),
+      onMuteToggle: () => this._onMuteToggle(),
+      leadingControlTemplate: leadingVolumeControl,
+      reserveLeadingControlSpace: this._controlLayout === "modern",
+      showRightPlaceholder: this._controlLayout === "modern",
+      rightSlotTemplate,
+      hideVolume: this.config.volume_mode === "hidden",
+      moreInfoMenu: x`
                         <div class="more-info-menu">
                           <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                             <span class="more-info-icon">&#9776;</span>
                           </button>
                         </div>
                       `
-      })}
+    })}
                   </div>
             ${hideControlsNow && !this._showEntityOptions ? x`
               <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: ${Z_LAYERS.FLOATING_ELEMENT};">
@@ -24036,73 +24059,73 @@ class YetAnotherMediaPlayerCard extends i$2 {
                 <div class="entity-options-chips-wrapper" style="${reserveChipSpaceInMenu && !showChipsInMenu ? 'visibility:hidden;pointer-events:none;' : ''}" @click=${e => e.stopPropagation()}>
                 <div class="chip-row entity-options-chips-strip">
                   ${renderChipRow({
-        groupedSortedEntityIds: this.groupedSortedEntityIds,
-        entityIds: this.entityIds,
-        selectedEntityId: this.currentEntityId,
-        pinnedIndex: this._pinnedIndex,
-        holdToPin: this._holdToPin,
-        getChipName: id => this.getChipName(id),
-        getActualGroupMaster: group => this._getActualGroupMaster(group),
-        getIsChipPlaying: (id, isSelected) => {
-          var _this$hass33;
-          const obj = this._findEntityObjByAnyId(id);
-          const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
-          const idx = this.entityIds.indexOf(mainId);
-          if (idx < 0) return false;
-          const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-          const playbackState = (_this$hass33 = this.hass) === null || _this$hass33 === void 0 || (_this$hass33 = _this$hass33.states) === null || _this$hass33 === void 0 ? void 0 : _this$hass33[playbackEntityId];
-          // Return actual playing state - animation should only show when truly playing
-          return this._isEntityPlaying(playbackState);
-        },
-        getChipArt: id => {
-          var _this$hass34, _this$hass35;
-          const obj = this._findEntityObjByAnyId(id);
-          const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
-          const idx = this.entityIds.indexOf(mainId);
-          if (idx < 0) return null;
-          const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-          const playbackState = (_this$hass34 = this.hass) === null || _this$hass34 === void 0 || (_this$hass34 = _this$hass34.states) === null || _this$hass34 === void 0 ? void 0 : _this$hass34[playbackEntityId];
-          const mainState = (_this$hass35 = this.hass) === null || _this$hass35 === void 0 || (_this$hass35 = _this$hass35.states) === null || _this$hass35 === void 0 ? void 0 : _this$hass35[mainId];
-          const playbackArtwork = this._getArtworkUrl(playbackState);
-          const mainArtwork = this._getArtworkUrl(mainState);
-          return playbackArtwork || mainArtwork;
-        },
-        getIsMaActive: id => {
-          var _this$hass36;
-          const obj = this._findEntityObjByAnyId(id);
-          const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
-          const idx = this.entityIds.indexOf(mainId);
-          if (idx < 0) return false;
-          const entityObj = this.entityObjs[idx];
-          if (!(entityObj !== null && entityObj !== void 0 && entityObj.music_assistant_entity)) return false;
-          const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-          const playbackState = (_this$hass36 = this.hass) === null || _this$hass36 === void 0 || (_this$hass36 = _this$hass36.states) === null || _this$hass36 === void 0 ? void 0 : _this$hass36[playbackEntityId];
-          return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && this._isEntityPlaying(playbackState);
-        },
-        isIdle: this._isIdle,
-        hass: this.hass,
-        artworkHostname: ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.artwork_hostname) || '',
-        mediaArtworkOverrides: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.media_artwork_overrides) || [],
-        fallbackArtwork: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.fallback_artwork) || null,
-        onChipClick: idx => this._onChipClick(idx),
-        onIconClick: (idx, e) => {
-          const entityId = this.entityIds[idx];
-          const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
-          if (group && group.length > 1) {
-            this._selectedIndex = idx;
-            this._showEntityOptions = true;
-            this._showGrouping = true;
-            this.requestUpdate();
-          }
-        },
-        onPinClick: (idx, e) => {
-          e.stopPropagation();
-          this._onPinClick(e);
-        },
-        onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
-        onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
-        onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
-      })}
+      groupedSortedEntityIds: this.groupedSortedEntityIds,
+      entityIds: this.entityIds,
+      selectedEntityId: this.currentEntityId,
+      pinnedIndex: this._pinnedIndex,
+      holdToPin: this._holdToPin,
+      getChipName: id => this.getChipName(id),
+      getActualGroupMaster: group => this._getActualGroupMaster(group),
+      getIsChipPlaying: (id, isSelected) => {
+        var _this$hass33;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return false;
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass33 = this.hass) === null || _this$hass33 === void 0 || (_this$hass33 = _this$hass33.states) === null || _this$hass33 === void 0 ? void 0 : _this$hass33[playbackEntityId];
+        // Return actual playing state - animation should only show when truly playing
+        return this._isEntityPlaying(playbackState);
+      },
+      getChipArt: id => {
+        var _this$hass34, _this$hass35;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return null;
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass34 = this.hass) === null || _this$hass34 === void 0 || (_this$hass34 = _this$hass34.states) === null || _this$hass34 === void 0 ? void 0 : _this$hass34[playbackEntityId];
+        const mainState = (_this$hass35 = this.hass) === null || _this$hass35 === void 0 || (_this$hass35 = _this$hass35.states) === null || _this$hass35 === void 0 ? void 0 : _this$hass35[mainId];
+        const playbackArtwork = this._getArtworkUrl(playbackState);
+        const mainArtwork = this._getArtworkUrl(mainState);
+        return playbackArtwork || mainArtwork;
+      },
+      getIsMaActive: id => {
+        var _this$hass36;
+        const obj = this._findEntityObjByAnyId(id);
+        const mainId = (obj === null || obj === void 0 ? void 0 : obj.entity_id) || id;
+        const idx = this.entityIds.indexOf(mainId);
+        if (idx < 0) return false;
+        const entityObj = this.entityObjs[idx];
+        if (!(entityObj !== null && entityObj !== void 0 && entityObj.music_assistant_entity)) return false;
+        const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
+        const playbackState = (_this$hass36 = this.hass) === null || _this$hass36 === void 0 || (_this$hass36 = _this$hass36.states) === null || _this$hass36 === void 0 ? void 0 : _this$hass36[playbackEntityId];
+        return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) && this._isEntityPlaying(playbackState);
+      },
+      isIdle: this._isIdle,
+      hass: this.hass,
+      artworkHostname: ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.fallback_artwork) || null,
+      onChipClick: idx => this._onChipClick(idx),
+      onIconClick: (idx, e) => {
+        const entityId = this.entityIds[idx];
+        const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
+        if (group && group.length > 1) {
+          this._selectedIndex = idx;
+          this._showEntityOptions = true;
+          this._showGrouping = true;
+          this.requestUpdate();
+        }
+      },
+      onPinClick: (idx, e) => {
+        e.stopPropagation();
+        this._onPinClick(e);
+      },
+      onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
+      onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
+      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
+    })}
                 </div>
               </div>
             ` : E}
@@ -24110,12 +24133,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
               <div class="entity-options-search" style = "margin-top:12px;" >
                 ${this._searchHierarchy.length > 0 ? x`
                     <button class="entity-options-item close-item" @click=${() => {
-              if (this._quickMenuInvoke) {
-                this._dismissWithAnimation();
-              } else {
-                this._goBackInSearch();
-              }
-            }}>
+      if (this._quickMenuInvoke) {
+        this._dismissWithAnimation();
+      } else {
+        this._goBackInSearch();
+      }
+    }}>
                       Back
                     </button>
                     <div class="entity-options-divider"></div>
@@ -24134,18 +24157,18 @@ class YetAnotherMediaPlayerCard extends i$2 {
                         class="entity-options-search-input"
                         .value=${this._searchQuery}
                         @input=${e => {
-              this._searchQuery = e.target.value;
-              this.requestUpdate();
-            }}
+      this._searchQuery = e.target.value;
+      this.requestUpdate();
+    }}
                         @keydown=${e => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                this._handleSearchSubmit();
-              } else if (e.key === "Escape") {
-                e.preventDefault();
-                this._hideSearchSheetInOptions();
-              }
-            }}
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this._handleSearchSubmit();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        this._hideSearchSheetInOptions();
+      }
+    }}
                         placeholder="${localize('editor.placeholders.search')}"
                         style="flex:1; min-width:0; font-size:1.1em;"
                       />
@@ -24160,27 +24183,27 @@ class YetAnotherMediaPlayerCard extends i$2 {
                       class="entity-options-item"
                       style="min-width:80px;"
                       @click=${() => {
-              if (this._quickMenuInvoke) {
-                this._dismissWithAnimation();
-              } else {
-                this._hideSearchSheetInOptions();
-              }
-            }}>
+      if (this._quickMenuInvoke) {
+        this._dismissWithAnimation();
+      } else {
+        this._hideSearchSheetInOptions();
+      }
+    }}>
               ${localize('common.cancel')}
                     </button>
                   </div>
                   ` : E}
                   <!--FILTER CHIPS-->
                ${showSearchHeaders ? (() => {
-            const classes = this._getVisibleSearchFilterClasses();
-            const filter = this._searchMediaClassFilter || "all";
+      const classes = this._getVisibleSearchFilterClasses();
+      const filter = this._searchMediaClassFilter || "all";
 
-            // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
-            if (this._searchHierarchy.length > 0) return E;
+      // Don't show filter chips when in a hierarchy (artist -> albums -> tracks)
+      if (this._searchHierarchy.length > 0) return E;
 
-            // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
-            if (classes.length < 2 && !this._usingMusicAssistant) return E;
-            return x`
+      // Show filter chips if we have multiple classes OR if we're using Music Assistant (for Favorites)
+      if (classes.length < 2 && !this._usingMusicAssistant) return E;
+      return x`
                       <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
                         <button
                           class="chip"
@@ -24210,7 +24233,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
                         `)}
                       </div>
                     `;
-          })() : E}
+    })() : E}
                   ${showSearchHeaders && this._searchLoading ? x`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : E}
                   ${showSearchHeaders && this._searchError ? x`<div class="entity-options-search-error">${this._searchError}</div>` : E}
                   
@@ -24233,8 +24256,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
-              this._toggleFavoritesFilter();
-            } : () => { }}
+      this._toggleFavoritesFilter();
+    } : () => {}}
                           title="${localize('search.favorites')}"
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
@@ -24260,8 +24283,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
                           @click=${this._searchAttempted ? () => {
-              this._toggleRecentlyPlayedFilter();
-            } : () => { }}
+      this._toggleRecentlyPlayedFilter();
+    } : () => {}}
                           title="${localize('search.recently_played')}"
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
@@ -24288,8 +24311,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
                               opacity: ${this._searchAttempted ? '1' : '0.5'};
                             "
                             @click=${this._searchAttempted ? () => {
-                this._toggleUpcomingFilter();
-              } : () => { }}
+      this._toggleUpcomingFilter();
+    } : () => {}}
                             title="${localize('search.next_up')}"
                           >
                             <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
@@ -24316,8 +24339,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
                                 opacity: ${this._searchAttempted ? '1' : '0.5'};
                               "
                               @click=${this._searchAttempted ? () => {
-                  this._toggleRecommendationsFilter();
-                } : () => { }}
+      this._toggleRecommendationsFilter();
+    } : () => {}}
                               title="${localize('search.recommendations')}"
                             >
                               <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'}></ha-icon>
@@ -24352,7 +24375,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
                             align-items: center;
                             opacity: ${this._searchAttempted ? '1' : '0.5'};
                           "
-                          @click=${this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => { }}
+                          @click=${this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => {}}
                           title=${this._getSearchSortToggleTitle()}
                         >
                           <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
@@ -24369,15 +24392,15 @@ class YetAnotherMediaPlayerCard extends i$2 {
             <div class="entity-options-search-results ${this.config.search_view === 'card' ? 'search-results-card-view' : 'list-view'}" 
                  style="${this.config.search_view === 'card' ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
               ${(() => {
-            this._searchMediaClassFilter || "all";
-            const currentResults = this._getDisplaySearchResults();
-            // Build padded array so row‑count stays constant
-            const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
-            const paddedResults = [...currentResults, ...Array.from({
-              length: Math.max(0, totalRows - currentResults.length)
-            }, () => null)];
-            // Always render paddedResults, even before first search
-            return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
+      this._searchMediaClassFilter || "all";
+      const currentResults = this._getDisplaySearchResults();
+      // Build padded array so row‑count stays constant
+      const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
+      const paddedResults = [...currentResults, ...Array.from({
+        length: Math.max(0, totalRows - currentResults.length)
+      }, () => null)];
+      // Always render paddedResults, even before first search
+      return this._searchAttempted && currentResults.length === 0 && !this._searchLoading ? x`<div class="entity-options-search-empty" style="color: white;">No results.</div>` : paddedResults.map(item => item ? x`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
                                <div class="search-sheet-thumb-container"
@@ -24396,17 +24419,17 @@ class YetAnotherMediaPlayerCard extends i$2 {
                                    </div>
                                 `}
                                 ${this.config.search_view === 'card' ? renderSearchResultActions({
-              item,
-              onPlay: it => this._playMediaFromSearch(it),
-              onOptionsToggle: it => {
-                this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
-                this.requestUpdate();
-              },
-              upcomingFilterActive: !!this._upcomingFilterActive,
-              isMusicAssistant: this._isMusicAssistantEntity(),
-              massQueueAvailable: this._massQueueAvailable,
-              searchView: 'card'
-            }) : E}
+        item,
+        onPlay: it => this._playMediaFromSearch(it),
+        onOptionsToggle: it => {
+          this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
+          this.requestUpdate();
+        },
+        upcomingFilterActive: !!this._upcomingFilterActive,
+        isMusicAssistant: this._isMusicAssistantEntity(),
+        massQueueAvailable: this._massQueueAvailable,
+        searchView: 'card'
+      }) : E}
                                </div>
                                <div class="search-sheet-info">
                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''} ${this.config.search_view === 'card' ? 'search-sheet-title' : ''}"
@@ -24417,81 +24440,81 @@ class YetAnotherMediaPlayerCard extends i$2 {
                                 </span>
                                  <span class="search-sheet-subtitle">
                                   ${(() => {
-                // Prefer artist when available for tracks/albums and special filters
-                const isTrackOrAlbum = this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album';
-                const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
-                const isUpcoming = !!this._upcomingFilterActive;
-                const isRecommendations = !!this._recommendationsFilterActive;
-                if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
-                  return item.artist;
-                }
-                // Otherwise show media class as before
-                return item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : "";
-              })()}
+        // Prefer artist when available for tracks/albums and special filters
+        const isTrackOrAlbum = this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album';
+        const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
+        const isUpcoming = !!this._upcomingFilterActive;
+        const isRecommendations = !!this._recommendationsFilterActive;
+        if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
+          return item.artist;
+        }
+        // Otherwise show media class as before
+        return item.media_class ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1) : "";
+      })()}
                                 </span>
                                 ${this.config.search_view === 'card' ? x`
                                   <div class="card-menu-button" @click=${e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  this._activeSearchRowMenuId = item.media_content_id;
-                  this.requestUpdate();
-                }}>
+        e.preventDefault();
+        e.stopPropagation();
+        this._activeSearchRowMenuId = item.media_content_id;
+        this.requestUpdate();
+      }}>
                                     <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                   </div>
                                 ` : E}
                               </div>
                               ${this.config.search_view !== 'card' ? renderSearchResultActions({
-                  item,
-                  onPlay: it => this._playMediaFromSearch(it),
-                  onOptionsToggle: it => {
-                    this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
-                    this.requestUpdate();
-                  },
-                  upcomingFilterActive: !!this._upcomingFilterActive,
-                  isMusicAssistant: this._isMusicAssistantEntity(),
-                  massQueueAvailable: this._massQueueAvailable,
-                  searchView: 'list',
-                  isInline: true,
-                  onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
-                  onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
-                  onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
-                  onRemove: it => this._removeQueueItem(it.queue_item_id)
-                }) : E}
+        item,
+        onPlay: it => this._playMediaFromSearch(it),
+        onOptionsToggle: it => {
+          this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
+          this.requestUpdate();
+        },
+        upcomingFilterActive: !!this._upcomingFilterActive,
+        isMusicAssistant: this._isMusicAssistantEntity(),
+        massQueueAvailable: this._massQueueAvailable,
+        searchView: 'list',
+        isInline: true,
+        onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
+        onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
+        onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
+        onRemove: it => this._removeQueueItem(it.queue_item_id)
+      }) : E}
 
                                 ${renderSearchResultSlideOut({
-                  item,
-                  activeSearchRowMenuId: this._activeSearchRowMenuId,
-                  successSearchRowMenuId: this._successSearchRowMenuId,
-                  onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
-                  onOptionsToggle: it => {
-                    this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
-                    this.requestUpdate();
-                  },
-                  searchView: this.config.search_view,
-                  isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
-                  onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
-                  onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
-                  onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
-                  onRemove: it => this._removeQueueItem(it.queue_item_id)
-                })}
+        item,
+        activeSearchRowMenuId: this._activeSearchRowMenuId,
+        successSearchRowMenuId: this._successSearchRowMenuId,
+        onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
+        onOptionsToggle: it => {
+          this._activeSearchRowMenuId = (it === null || it === void 0 ? void 0 : it.media_content_id) || null;
+          this.requestUpdate();
+        },
+        searchView: this.config.search_view,
+        isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
+        onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
+        onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
+        onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
+        onRemove: it => this._removeQueueItem(it.queue_item_id)
+      })}
                             </div>
                           ` : x`
                             <!-- placeholder row keeps height -->
                             <div class="entity-options-search-result placeholder"></div>
                           `);
-          })()}
+    })()}
             </div>
                   </div>
                 </div>
               ` : this._showGrouping ? this._renderGroupingSheet() : x`
                 <div class="entity-options-header">
                   <button class="entity-options-item close-item" @click=${() => {
-            if (this._quickMenuInvoke) {
-              this._dismissWithAnimation();
-            } else {
-              this._closeSourceList();
-            }
-          }}>
+      if (this._quickMenuInvoke) {
+        this._dismissWithAnimation();
+      } else {
+        this._closeSourceList();
+      }
+    }}>
                     ${localize('common.back')}
                   </button>
                   <div class="entity-options-divider"></div>
@@ -24507,32 +24530,32 @@ class YetAnotherMediaPlayerCard extends i$2 {
                 </div>
                 <div class="floating-source-index">
                   ${sourceLetters.map((letter, i) => {
-            const isAvailable = availableSourceFirstLetters.has(letter);
-            const hovered = this._hoveredSourceLetterIndex;
-            let scale = "";
-            if (isAvailable && hovered !== null && hovered !== undefined) {
-              const dist = Math.abs(hovered - i);
-              if (dist === 0) scale = "max"; else if (dist === 1) scale = "large"; else if (dist === 2) scale = "med";
-            }
-            return x`
+      const isAvailable = availableSourceFirstLetters.has(letter);
+      const hovered = this._hoveredSourceLetterIndex;
+      let scale = "";
+      if (isAvailable && hovered !== null && hovered !== undefined) {
+        const dist = Math.abs(hovered - i);
+        if (dist === 0) scale = "max";else if (dist === 1) scale = "large";else if (dist === 2) scale = "med";
+      }
+      return x`
                       <button
                         class="source-index-letter"
                         ?disabled=${!isAvailable}
                         data-scale=${scale}
                         @mouseenter=${isAvailable ? () => {
-                this._hoveredSourceLetterIndex = i;
-                this.requestUpdate();
-              } : E}
+        this._hoveredSourceLetterIndex = i;
+        this.requestUpdate();
+      } : E}
                         @mouseleave=${() => {
-                this._hoveredSourceLetterIndex = null;
-                this.requestUpdate();
-              }}
+        this._hoveredSourceLetterIndex = null;
+        this.requestUpdate();
+      }}
                         @click=${isAvailable ? () => this._scrollToSourceLetter(letter) : E}
                       >
                         ${letter}
                       </button>
                     `;
-          })}
+    })}
                 </div>
 `}
               </div>
@@ -24542,18 +24565,18 @@ class YetAnotherMediaPlayerCard extends i$2 {
               <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
                 <div class="persistent-controls-artwork">
                   ${(() => {
-            // Use the same entity resolution as the main card
-            const playbackStateObj = this.currentPlaybackStateObj;
-            const mainState = this.currentStateObj;
-            const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
-            return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x`
+      // Use the same entity resolution as the main card
+      const playbackStateObj = this.currentPlaybackStateObj;
+      const mainState = this.currentStateObj;
+      const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
+      return artwork !== null && artwork !== void 0 && artwork.url && this._isValidArtworkUrl(artwork.url) ? x`
                       <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
                     ` : x`
                       <div class="persistent-artwork-placeholder">
                         <ha-icon icon="mdi:music"></ha-icon>
                       </div>
                     `;
-          })()}
+    })()}
                 </div>
                 <div class="persistent-controls-buttons">
                   <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="${localize('card.media_controls.previous')}">
@@ -24567,74 +24590,74 @@ class YetAnotherMediaPlayerCard extends i$2 {
                   </button>
                 </div>
                 ${(_volumeState$attribut => {
-            const idx = this._selectedIndex;
-            const volumeEntity = this._getVolumeEntity(idx);
-            if (!volumeEntity) return E;
-            const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
-            const volumeState = this.currentVolumeStateObj;
-            const volumeLevel = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) ?? 0);
-            const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
-            if (this.config.volume_mode === "hidden") return E;
-            return x`
+      const idx = this._selectedIndex;
+      const volumeEntity = this._getVolumeEntity(idx);
+      if (!volumeEntity) return E;
+      const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
+      const volumeState = this.currentVolumeStateObj;
+      const volumeLevel = Number((volumeState === null || volumeState === void 0 || (_volumeState$attribut = volumeState.attributes) === null || _volumeState$attribut === void 0 ? void 0 : _volumeState$attribut.volume_level) ?? 0);
+      const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
+      if (this.config.volume_mode === "hidden") return E;
+      return x`
                     <div class="persistent-volume-stepper">
                       <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
                       ${percentLabel ? x`<span class="stepper-value">${percentLabel}</span>` : E}
                       <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
                     </div>
                   `;
-          })()}
+    })()}
               </div>
             ` : E}
           </div>
         ` : E}
           ${this._searchActiveOptionsItem ? renderSearchOptionsOverlay({
-            item: this._searchActiveOptionsItem,
-            onClose: () => {
-              this._searchActiveOptionsItem = null;
-              this.requestUpdate();
-            },
-            onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode)
-          }) : E}
+      item: this._searchActiveOptionsItem,
+      onClose: () => {
+        this._searchActiveOptionsItem = null;
+        this.requestUpdate();
+      },
+      onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode)
+    }) : E}
           ${this._searchOpen ? renderSearchSheet({
-            open: this._searchOpen,
-            query: this._searchQuery,
-            loading: this._searchLoading,
-            results: this._getDisplaySearchResults(),
-            error: this._searchError,
-            matchTheme: (_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.match_theme,
-            // Add matchTheme parameter
-            onClose: () => this._searchCloseSheet(),
-            onQueryInput: e => {
-              this._searchQuery = e.target.value;
-              this.requestUpdate();
-            },
-            onSearch: () => {
-              // Clear recently played filter when user initiates search
-              this._recentlyPlayedFilterActive = false;
-              this._upcomingFilterActive = false;
-              this._recommendationsFilterActive = false;
-              this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
-            },
-            onPlay: item => this._playMediaFromSearch(item),
-            onQueue: item => this._queueMediaFromSearch(item),
-            onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
-            onResultClick: item => this._handleSearchResultClick(item),
-            activeSearchRowMenuId: this._activeSearchRowMenuId,
-            successSearchRowMenuId: this._successSearchRowMenuId,
-            onOptionsToggle: item => {
-              this._activeSearchRowMenuId = item ? item.media_content_id : null;
-              this.requestUpdate();
-            },
-            upcomingFilterActive: this._upcomingFilterActive,
-            disableAutofocus: this._disableSearchAutofocus,
-            searchView: this.config.search_view || 'list',
-            searchCardColumns: this.config.search_card_columns || 4,
-            massQueueAvailable: this._massQueueAvailable,
-            onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
-            onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
-            onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
-            onRemove: it => this._removeQueueItem(it.queue_item_id)
-          }) : E}
+      open: this._searchOpen,
+      query: this._searchQuery,
+      loading: this._searchLoading,
+      results: this._getDisplaySearchResults(),
+      error: this._searchError,
+      matchTheme: (_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.match_theme,
+      // Add matchTheme parameter
+      onClose: () => this._searchCloseSheet(),
+      onQueryInput: e => {
+        this._searchQuery = e.target.value;
+        this.requestUpdate();
+      },
+      onSearch: () => {
+        // Clear recently played filter when user initiates search
+        this._recentlyPlayedFilterActive = false;
+        this._upcomingFilterActive = false;
+        this._recommendationsFilterActive = false;
+        this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
+      },
+      onPlay: item => this._playMediaFromSearch(item),
+      onQueue: item => this._queueMediaFromSearch(item),
+      onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
+      onResultClick: item => this._handleSearchResultClick(item),
+      activeSearchRowMenuId: this._activeSearchRowMenuId,
+      successSearchRowMenuId: this._successSearchRowMenuId,
+      onOptionsToggle: item => {
+        this._activeSearchRowMenuId = item ? item.media_content_id : null;
+        this.requestUpdate();
+      },
+      upcomingFilterActive: this._upcomingFilterActive,
+      disableAutofocus: this._disableSearchAutofocus,
+      searchView: this.config.search_view || 'list',
+      searchCardColumns: this.config.search_card_columns || 4,
+      massQueueAvailable: this._massQueueAvailable,
+      onMoveUp: it => this._moveQueueItemUp(it.queue_item_id),
+      onMoveDown: it => this._moveQueueItemDown(it.queue_item_id),
+      onMoveNext: it => this._moveQueueItemNext(it.queue_item_id),
+      onRemove: it => this._removeQueueItem(it.queue_item_id)
+    }) : E}
           </div>
     </ha-card>
   `;
