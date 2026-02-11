@@ -844,7 +844,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           promise = this._toggleRecommendationsFilter(true);
           break;
         default:
-          promise = this._doSearch();
+          {
+            const defaultFilter = this.config.default_search_filter === 'all' ? null : this.config.default_search_filter;
+            promise = this._doSearch(defaultFilter);
+          }
           break;
       }
       if (promise?.catch) {
@@ -983,71 +986,51 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _sortSearchResults(results, sortModeOverride = null) {
-    const sortMode = sortModeOverride ?? this.config?.search_results_sort ?? "default";
+    const sortMode = sortModeOverride ?? this._getConfiguredSearchResultsSortMode();
     const list = Array.isArray(results) ? [...results] : [];
 
-    if (sortMode === "default") {
+    if (sortMode === "random") {
+      // Fisher-Yates shuffle for an unbiased random order
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
       return list;
     }
 
-    const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
-    const normalize = (val) => (typeof val === "string" ? val : (val ?? "").toString());
-    const getTitle = (item) => normalize(item?.title ?? item?.name ?? "");
-    const getArtist = (item) => normalize(item?.artist ?? item?.artist_name ?? "");
-
-    const compareWithFallback = (primaryGetter, secondaryGetter, direction = 1) => (a, b) => {
-      const primaryA = primaryGetter(a);
-      const primaryB = primaryGetter(b);
-
-      if (!primaryA && !primaryB) {
-        const secondaryA = secondaryGetter(a);
-        const secondaryB = secondaryGetter(b);
-        return direction * collator.compare(secondaryA, secondaryB);
-      }
-      if (!primaryA) return 1;
-      if (!primaryB) return -1;
-
-      const primaryCompare = collator.compare(primaryA, primaryB);
-      if (primaryCompare !== 0) {
-        return direction * primaryCompare;
-      }
-
-      const secondaryA = secondaryGetter(a);
-      const secondaryB = secondaryGetter(b);
-      return direction * collator.compare(secondaryA, secondaryB);
-    };
-
-    switch (sortMode) {
-      case "title_asc":
-        return list.sort(compareWithFallback(getTitle, getArtist, 1));
-      case "title_desc":
-        return list.sort(compareWithFallback(getTitle, getArtist, -1));
-      case "artist_asc":
-        return list.sort(compareWithFallback(getArtist, getTitle, 1));
-      case "artist_desc":
-        return list.sort(compareWithFallback(getArtist, getTitle, -1));
-      default:
-        return list;
-    }
+    // All other sorting is handled server-side via order_by parameter
+    return list;
   }
 
   _getConfiguredSearchResultsSortMode() {
     const configured = this.config?.search_results_sort;
-    return typeof configured === "string" ? configured : "default";
+    const mode = typeof configured === "string" ? configured : "default";
+    return this._mapLegacySortOption(mode);
+  }
+
+  _mapLegacySortOption(mode) {
+    if (!mode) return "default";
+    const legacyMap = {
+      "title_asc": "name",
+      "title_desc": "name_desc",
+      "artist_asc": "artist_name",
+      "artist_desc": "artist_name_desc"
+    };
+    return legacyMap[mode] || mode;
   }
 
   _isSortableSearchMode(mode) {
-    return typeof mode === "string" && /^(title|artist)_(asc|desc)$/.test(mode);
+    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return false;
+    return true;
   }
 
   _getOppositeSearchSortMode(mode) {
-    const match = /^(title|artist)_(asc|desc)$/.exec(mode || "");
-    if (!match) {
-      return null;
+    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return null;
+    // Toggle between asc and desc variants
+    if (mode.endsWith("_desc")) {
+      return mode.replace(/_desc$/, "");
     }
-    const [, field, direction] = match;
-    const oppositeDirection = direction === "asc" ? "desc" : "asc";
-    return `${field}_${oppositeDirection}`;
+    return `${mode}_desc`;
   }
 
   _shouldShowSearchSortToggle() {
@@ -1070,6 +1053,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._searchDisplaySortOverride = alternate;
     }
+    // Clear cached results so _doSearch re-fetches with the new order_by
+    this._searchResultsByType = {};
+    // Re-trigger search with new sort order
+    this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, { orderBy: this._getActiveSearchDisplaySortMode() });
     this.requestUpdate();
   }
 
@@ -1089,8 +1076,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!this._isSortableSearchMode(mode)) {
       return "mdi:sort-variant";
     }
-    const [, direction] = mode.split("_");
-    return direction === "asc" ? "mdi:sort-alphabetical-ascending" : "mdi:sort-alphabetical-descending";
+    return mode.endsWith("_desc") ? "mdi:sort-descending" : "mdi:sort-ascending";
   }
 
   _getSearchSortToggleTitle() {
@@ -1098,23 +1084,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!this._isSortableSearchMode(mode)) {
       return "Toggle search result order";
     }
-    const [field, direction] = mode.split("_");
-    const labelField = field === "artist" ? "artist" : "title";
-    const labelDirection = direction === "asc" ? "ascending" : "descending";
-    return `Sort ${labelField} ${labelDirection}`;
+    const isDesc = mode.endsWith("_desc");
+    const baseName = isDesc ? mode.replace(/_desc$/, "") : mode;
+    const label = baseName.replace(/_/g, " ");
+    return `Sort by ${label} ${isDesc ? "descending" : "ascending"}`;
   }
 
   _getDisplaySearchResults() {
     const baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
-    if (!this._shouldShowSearchSortToggle()) {
-      return baseResults;
-    }
-    const configured = this._getConfiguredSearchResultsSortMode();
-    const activeMode = this._getActiveSearchDisplaySortMode();
-    if (!this._isSortableSearchMode(activeMode) || activeMode === configured) {
-      return baseResults;
-    }
-    return this._sortSearchResults(baseResults, activeMode);
+    return baseResults;
   }
 
   _getSearchResultsLimit() {
@@ -1189,7 +1167,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}`;
+    const sortMode = this._getActiveSearchDisplaySortMode();
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}_sort_${sortMode}`;
     if (this._searchResultsByType[cacheKey]) {
       if (this._searchTimeoutHandle) {
         clearTimeout(this._searchTimeoutHandle);
@@ -1256,22 +1235,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else if (isFavorites) {
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
+        const orderBy = this._getActiveSearchDisplaySortMode();
         searchResponse = await searchMedia(
           this.hass,
           searchEntityId,
           this._searchQuery,
           mediaType,
-          { ...searchParams, favorites: true },
+          { ...searchParams, favorites: true, orderBy: orderBy !== 'default' ? orderBy : undefined },
           this._getSearchResultsLimit()
         );
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
+        const orderBy = this._getActiveSearchDisplaySortMode();
         searchResponse = await getFavorites(
           this.hass,
           searchEntityId,
           mediaType === 'favorites' ? null : mediaType,
           this._getSearchResultsLimit(),
-          { onChunk: progressiveUpdate }
+          { onChunk: progressiveUpdate, orderBy: orderBy !== 'default' ? orderBy : undefined }
         );
         // Mark that initial favorites have been loaded only if we're in default view
         if (!this._searchQuery || this._searchQuery.trim() === '') {
@@ -1281,7 +1262,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this._getSearchResultsLimit());
+        const orderBy = this._getActiveSearchDisplaySortMode();
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, { ...searchParams, orderBy: orderBy !== 'default' ? orderBy : undefined }, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = false;
       }
 

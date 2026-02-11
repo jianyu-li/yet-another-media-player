@@ -1416,7 +1416,8 @@ var en = {
       "hide_search_chips": "Hide specific search filter chips for this entity",
       "follow_active_entity": "When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.",
       "search_limit_full": "Maximum number of search results to display (1-1000, default: 20)",
-      "result_sorting_full": "Choose how search results are ordered. Default keeps the source order.",
+      "default_search_filter_full": "Choose which filter is active by default when the search screen opens.",
+      "result_sorting_full": "Choose how results are ordered.",
       "card_height_full": "Leave blank for automatic height",
       "control_layout_full": "Choose between the legacy evenly sized controls or the modern Home Assistant layout.",
       "artwork_extend": "Let the artwork background continue underneath the chip and action rows.",
@@ -1451,6 +1452,7 @@ var en = {
       "dismiss_on_play": "Dismiss search on play",
       "pin_headers": "Pin search headers",
       "hide_search_headers_on_idle": "Hide search headers on idle",
+      "default_search_filter": "Default Search Filter",
       "disable_mass": "Disable Mass Queue",
       "match_theme": "Match Theme",
       "alt_progress": "Alternate Progress Bar",
@@ -1622,7 +1624,8 @@ var en = {
       "radio": "Radio",
       "music": "Music",
       "station": "Station",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Audiobook"
     },
     "search_artist": "Search for this artist"
   }
@@ -1721,6 +1724,7 @@ var de = {
       "search_within_filter": "Innerhalb des aktiven Filters suchen (Favoriten, etc.), anstatt ihn zu löschen.",
       "close_search_on_play": "Suchbildschirm beim Abspielen automatisch schließen.",
       "pin_search_headers": "Sucheingabe und Filter beim Scrollen oben fixieren.",
+      "hide_search_headers_on_idle": "Sucheingabe und Filter im Leerlauf ausblenden.",
       "disable_mass": "Optionale Mass Queue Integration deaktivieren, auch wenn sie installiert ist.",
       "swap_pause_stop": "Pause-Taste durch Stop-Taste im modernen Layout ersetzen.",
       "adaptive_controls": "Wiedergabetasten an verfügbaren Platz anpassen.",
@@ -1766,6 +1770,7 @@ var de = {
       "keep_filters": "Filter bei Suche beibehalten",
       "dismiss_on_play": "Suche beim Abspielen beenden",
       "pin_headers": "Such-Header fixieren",
+      "hide_search_headers_on_idle": "Such-Header im Leerlauf ausblenden",
       "disable_mass": "Mass Queue deaktivieren",
       "match_theme": "Theme anpassen",
       "alt_progress": "Alternativer Fortschrittsbalken",
@@ -2036,6 +2041,7 @@ var es = {
       "search_within_filter": "Buscar dentro del filtro activo (Favoritos, etc.).",
       "close_search_on_play": "Cerrar búsqueda al reproducir.",
       "pin_search_headers": "Fijar encabezados de búsqueda al hacer scroll.",
+      "hide_search_headers_on_idle": "Ocultar encabezados de búsqueda en inactividad.",
       "disable_mass": "Desactivar integración con Mass Queue.",
       "swap_pause_stop": "Cambiar pausa por stop en diseño moderno.",
       "adaptive_controls": "Permitir que los botones se adapten al espacio.",
@@ -2081,6 +2087,7 @@ var es = {
       "keep_filters": "Mantener filtros",
       "dismiss_on_play": "Cerrar al reproducir",
       "pin_headers": "Fijar encabezados",
+      "hide_search_headers_on_idle": "Ocultar encabezados en inactividad",
       "disable_mass": "Desactivar Mass Queue",
       "match_theme": "Seguir tema",
       "alt_progress": "Barra de progreso alternativa",
@@ -2351,6 +2358,7 @@ var fr = {
       "search_within_filter": "Rechercher dans le filtre actif actuel (Favoris, etc.).",
       "close_search_on_play": "Fermer automatiquement la recherche à la lecture.",
       "pin_search_headers": "Garder la recherche et les filtres fixes en haut.",
+      "hide_search_headers_on_idle": "Masquer la recherche et les filtres en mode veille.",
       "disable_mass": "Désactiver l'intégration Mass Queue.",
       "swap_pause_stop": "Remplacer le bouton pause par stop en mode moderne.",
       "adaptive_controls": "Laisser les boutons s'adapter à l'espace disponible.",
@@ -2396,6 +2404,7 @@ var fr = {
       "keep_filters": "Garder les filtres",
       "dismiss_on_play": "Fermer en lecture",
       "pin_headers": "Épingler les en-têtes",
+      "hide_search_headers_on_idle": "Masquer les en-têtes en veille",
       "disable_mass": "Désactiver Mass Queue",
       "match_theme": "Suivre le thème",
       "alt_progress": "Barre de progression alternative",
@@ -2666,6 +2675,7 @@ var it = {
       "search_within_filter": "Cerca nel filtro attivo (Preferiti, ecc.).",
       "close_search_on_play": "Chiudi ricerca alla riproduzione.",
       "pin_search_headers": "Fissa le intestazioni di ricerca durante lo scorrimento.",
+      "hide_search_headers_on_idle": "Nascondi la ricerca e i filtri quando inattivo.",
       "disable_mass": "Disabilita integrazione Mass Queue.",
       "swap_pause_stop": "Sostituisci pausa con stop nel design moderno.",
       "adaptive_controls": "Permetti ai pulsanti di adattarsi allo spazio.",
@@ -2711,6 +2721,7 @@ var it = {
       "keep_filters": "Mantieni filtri",
       "dismiss_on_play": "Chiudi alla riproduzione",
       "pin_headers": "Fissa intestazioni",
+      "hide_search_headers_on_idle": "Nascondi intestazioni in inattività",
       "disable_mass": "Disabilita Mass Queue",
       "match_theme": "Segui tema",
       "alt_progress": "Barra progresso alternativa",
@@ -2981,6 +2992,7 @@ var nl = {
       "search_within_filter": "Schakel dit in om te zoeken binnen het huidige actieve filter (Favorieten, Recent Afgespeeld, etc) in plaats van dit te wissen.",
       "close_search_on_play": "Sluit het zoekscherm automatisch wanneer een nummer wordt afgespeeld.",
       "pin_search_headers": "Houd de zoekinvoer en filters bovenaan vast tijdens het scrollen door resultaten.",
+      "hide_search_headers_on_idle": "Verberg zoekinvoer en filters wanneer inactief.",
       "disable_mass": "Schakel de optionele Mass Queue integratie uit, zelfs als deze is geïnstalleerd.",
       "swap_pause_stop": "Vervang de pauzeknop door stop bij gebruik van de moderne lay-out.",
       "adaptive_controls": "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
@@ -3026,6 +3038,7 @@ var nl = {
       "keep_filters": "Filters behouden bij zoeken",
       "dismiss_on_play": "Zoeken sluiten bij afspelen",
       "pin_headers": "Zoekkoppen vastzetten",
+      "hide_search_headers_on_idle": "Zoekkoppen verbergen bij inactiviteit",
       "disable_mass": "Mass Queue uitschakelen",
       "match_theme": "Thema matchen",
       "alt_progress": "Alternatieve Voortgangsbalk",
@@ -3296,6 +3309,7 @@ var pt = {
       "search_within_filter": "Procurar no filtro ativo (Favoritos, etc.).",
       "close_search_on_play": "Fechar procura ao reproduzir.",
       "pin_search_headers": "Fixar cabeçalhos de procura ao fazer scroll.",
+      "hide_search_headers_on_idle": "Ocultar pesquisa e filtros quando inativo.",
       "disable_mass": "Desativar integração Mass Queue.",
       "swap_pause_stop": "Substituir pausa por stop no design moderno.",
       "adaptive_controls": "Permitir que os botões se adaptem ao espaço.",
@@ -3341,6 +3355,7 @@ var pt = {
       "keep_filters": "Manter filtros",
       "dismiss_on_play": "Fechar ao reproduzir",
       "pin_headers": "Fixar cabeçalhos",
+      "hide_search_headers_on_idle": "Ocultar cabeçalhos em inatividade",
       "disable_mass": "Desativar Mass Queue",
       "match_theme": "Seguir tema",
       "alt_progress": "Barra de progresso alternativa",
@@ -3611,6 +3626,7 @@ var sk = {
       "search_within_filter": "Povoliť vyhľadávanie v rámci aktuálneho aktívneho filtra (Obľúbené, Nedávno prehrávané atď.) namiesto jeho vymazania.",
       "close_search_on_play": "Automaticky zatvoriť obrazovku vyhľadávania po spustení skladby.",
       "pin_search_headers": "Ponechať pole vyhľadávania a filtre pevne navrchu počas posúvania výsledkov.",
+      "hide_search_headers_on_idle": "Skryť vyhľadávanie a filtre, keď je prehrávač nečinný.",
       "disable_mass": "Deaktivovať voliteľnú integráciu Mass Queue, aj keď je nainštalovaná.",
       "swap_pause_stop": "Nahradiť tlačidlo pauzy tlačidlom zastavenia pri použití moderného rozloženia.",
       "adaptive_controls": "Umožniť tlačidlám prehrávania meniť veľkosť podľa dostupného priestoru.",
@@ -3656,6 +3672,7 @@ var sk = {
       "keep_filters": "Zachovať filtre pri hľadaní",
       "dismiss_on_play": "Zavrieť hľadanie po spustení",
       "pin_headers": "Pripnúť hlavičky hľadania",
+      "hide_search_headers_on_idle": "Skryť hlavičky pri nečinnosti",
       "disable_mass": "Deaktivovať Mass Queue",
       "match_theme": "Podľa témy",
       "alt_progress": "Alternatívny indikátor priebehu",
@@ -3926,6 +3943,7 @@ var sl = {
       "search_within_filter": "Išči znotraj trenutnega filtra.",
       "close_search_on_play": "Samodejno zapri iskanje ob predvajanju.",
       "pin_search_headers": "Pripni iskalno polje in filtre na vrh.",
+      "hide_search_headers_on_idle": "Skrij iskalno polje in filtre med mirovanjem.",
       "disable_mass": "Onemogoči integracijo Mass Queue.",
       "swap_pause_stop": "Zamenjaj gumb pavze z gumbom zaustavitve med uporabo moderne postavitve.",
       "adaptive_controls": "Prilagodi velikost gumbov glede na prostor.",
@@ -3954,7 +3972,9 @@ var sl = {
       "image_url_helper": "Vnesite neposredni URL do slike ali lokalno pot do datoteke",
       "selected_entity_helper": "Pomočnik za vnos besedila, ki bo posodobljen z ID-jem trenutno izbranega predvajalnika medijev.",
       "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena).",
-      "disable_auto_select": "Prepreči samodejno izbiro čipa te entitete ob začetku predvajanja."
+      "disable_auto_select": "Prepreči samodejno izbiro čipa te entitete ob začetku predvajanja.",
+      "search_view": "Izberite med standardnim seznamom ali mrežo kartic za rezultate iskanja.",
+      "search_card_columns": "Določite število stolpcev v pogledu kartic. Grafika se bo samodejno prilagodila."
     },
     "titles": {
       "edit_entity": "Uredi entiteto",
@@ -3969,6 +3989,7 @@ var sl = {
       "keep_filters": "Ohrani filtre",
       "dismiss_on_play": "Zapri iskanje ob predvajanju",
       "pin_headers": "Pripni glave iskanja",
+      "hide_search_headers_on_idle": "Skrij glave iskanja med mirovanjem",
       "disable_mass": "Onemogoči Mass Queue",
       "match_theme": "Ujemaj temo",
       "alt_progress": "Alternativna vrstica napredka",
@@ -4031,7 +4052,9 @@ var sl = {
       "selected_entity_helper": "Pomočnik izbrane entitete",
       "sync_entity_type": "Vrsta entitete za sinhronizacijo",
       "placement": "Namestitev",
-      "card_trigger": "Sprožilec kartice"
+      "card_trigger": "Sprožilec kartice",
+      "search_view": "Pogled rezultatov iskanja",
+      "search_card_columns": "Stolpci kartic"
     },
     "action_types": {
       "menu": "Odpri element menija kartice",
@@ -4061,6 +4084,10 @@ var sl = {
       "double_tap": "Dvojni dotik",
       "swipe_left": "Podrsaj levo",
       "swipe_right": "Podrsaj desno"
+    },
+    "search_view_options": {
+      "list": "Seznam",
+      "card": "Kartica"
     }
   },
   "card": {
@@ -8547,31 +8574,38 @@ async function searchMedia(hass, entityId, query) {
         const mediaTypes = mediaType && mediaType !== 'all' ? [mediaType] : ['artist', 'album', 'track', 'playlist', 'radio', 'audiobook', 'podcast'];
         const flatResultsFav = [];
         await Promise.all(mediaTypes.map(async mt => {
-          const message = {
-            type: "call_service",
-            domain: "music_assistant",
-            service: "get_library",
-            service_data: {
-              config_entry_id: configEntryId,
-              media_type: mt,
-              favorite: true,
-              search: query
-            },
-            return_response: true
-          };
-          const favoritesLimit = resolveLimitValue(searchResultsLimit);
-          if (favoritesLimit !== undefined) {
-            message.service_data.limit = favoritesLimit;
-          }
-          const favRes = await hass.connection.sendMessagePromise(message);
-          const favResponse = favRes === null || favRes === void 0 ? void 0 : favRes.response;
-          const items = (favResponse === null || favResponse === void 0 ? void 0 : favResponse.items) || [];
-          items.forEach(item => {
-            const transformedItem = transformMusicAssistantItem(item);
-            if (transformedItem) {
-              flatResultsFav.push(transformedItem);
+          try {
+            const message = {
+              type: "call_service",
+              domain: "music_assistant",
+              service: "get_library",
+              service_data: {
+                config_entry_id: configEntryId,
+                media_type: mt,
+                favorite: true,
+                search: query
+              },
+              return_response: true
+            };
+            const favoritesLimit = resolveLimitValue(searchResultsLimit);
+            if (favoritesLimit !== undefined) {
+              message.service_data.limit = favoritesLimit;
             }
-          });
+            if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+              message.service_data.order_by = searchParams.orderBy;
+            }
+            const favRes = await hass.connection.sendMessagePromise(message);
+            const favResponse = favRes === null || favRes === void 0 ? void 0 : favRes.response;
+            const items = (favResponse === null || favResponse === void 0 ? void 0 : favResponse.items) || [];
+            items.forEach(item => {
+              const transformedItem = transformMusicAssistantItem(item);
+              if (transformedItem) {
+                flatResultsFav.push(transformedItem);
+              }
+            });
+          } catch (error) {
+            console.error('yamp: Error searching favorites for type', mt, error);
+          }
         }));
         return {
           results: flatResultsFav,
@@ -8590,35 +8624,46 @@ async function searchMedia(hass, entityId, query) {
             usedMusicAssistant: true
           };
         }
-        const message = {
-          type: "call_service",
-          domain: "music_assistant",
-          service: "get_library",
-          service_data: {
-            config_entry_id: configEntryId,
-            media_type: mediaType
-            // favorite param omitted to get ALL items
-          },
-          return_response: true
-        };
-        const limit = resolveLimitValue(searchResultsLimit);
-        if (limit !== undefined) {
-          message.service_data.limit = limit;
-        }
-        const res = await hass.connection.sendMessagePromise(message);
-        const response = res === null || res === void 0 ? void 0 : res.response;
-        const items = (response === null || response === void 0 ? void 0 : response.items) || [];
-        const browseResults = [];
-        items.forEach(item => {
-          const transformedItem = transformMusicAssistantItem(item);
-          if (transformedItem) {
-            browseResults.push(transformedItem);
+        try {
+          const message = {
+            type: "call_service",
+            domain: "music_assistant",
+            service: "get_library",
+            service_data: {
+              config_entry_id: configEntryId,
+              media_type: mediaType
+              // favorite param omitted to get ALL items
+            },
+            return_response: true
+          };
+          const limit = resolveLimitValue(searchResultsLimit);
+          if (limit !== undefined) {
+            message.service_data.limit = limit;
           }
-        });
-        return {
-          results: browseResults,
-          usedMusicAssistant: true
-        };
+          if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+            message.service_data.order_by = searchParams.orderBy;
+          }
+          const res = await hass.connection.sendMessagePromise(message);
+          const response = res === null || res === void 0 ? void 0 : res.response;
+          const items = (response === null || response === void 0 ? void 0 : response.items) || [];
+          const browseResults = [];
+          items.forEach(item => {
+            const transformedItem = transformMusicAssistantItem(item);
+            if (transformedItem) {
+              browseResults.push(transformedItem);
+            }
+          });
+          return {
+            results: browseResults,
+            usedMusicAssistant: true
+          };
+        } catch (error) {
+          console.error('yamp: Error browsing library for type', mediaType, error);
+          return {
+            results: [],
+            usedMusicAssistant: true
+          };
+        }
       }
       const serviceData = {
         name: query,
@@ -8784,6 +8829,9 @@ async function getFavorites(hass, entityId) {
     });
     if (favoritesLimit !== undefined) {
       message.service_data.limit = favoritesLimit;
+    }
+    if (options.orderBy && options.orderBy !== 'default') {
+      message.service_data.order_by = options.orderBy;
     }
     try {
       const res = await hass.connection.sendMessagePromise(message);
@@ -16266,6 +16314,47 @@ class YetAnotherMediaPlayerEditor extends i$2 {
               @click=${() => this._updateConfig("search_results_limit", 20)}
             ></ha-icon>
           </div>
+
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+      select: {
+        mode: "dropdown",
+        options: [{
+          value: "all",
+          label: localize('search.filters.all')
+        }, {
+          value: "artist",
+          label: localize('search.filters.artist')
+        }, {
+          value: "album",
+          label: localize('search.filters.album')
+        }, {
+          value: "track",
+          label: localize('search.filters.track')
+        }, {
+          value: "playlist",
+          label: localize('search.filters.playlist')
+        }, {
+          value: "radio",
+          label: localize('search.filters.radio')
+        }, {
+          value: "podcast",
+          label: localize('search.filters.podcast')
+        }, {
+          value: "audiobook",
+          label: localize('search.filters.audiobook')
+        }]
+      }
+    }}
+              .value=${this._config.default_search_filter ?? "all"}
+              label="${localize('editor.labels.default_search_filter')}"
+              helper="${localize('editor.subtitles.default_search_filter_full')}"
+              @value-changed=${e => this._updateConfig("default_search_filter", e.detail.value)}
+            ></ha-selector>
+          </div>
+
           <div class="form-row">
             <ha-selector
               .hass=${this.hass}
@@ -16276,17 +16365,59 @@ class YetAnotherMediaPlayerEditor extends i$2 {
           value: "default",
           label: "Default"
         }, {
-          value: "title_asc",
-          label: "Title Ascending"
+          value: "name",
+          label: "Name (A→Z)"
         }, {
-          value: "title_desc",
-          label: "Title Descending"
+          value: "name_desc",
+          label: "Name (Z→A)"
         }, {
-          value: "artist_asc",
-          label: "Artist Ascending"
+          value: "sort_name",
+          label: "Sort Name (A→Z)"
         }, {
-          value: "artist_desc",
-          label: "Artist Descending"
+          value: "sort_name_desc",
+          label: "Sort Name (Z→A)"
+        }, {
+          value: "timestamp_added",
+          label: "Date Added (Oldest)"
+        }, {
+          value: "timestamp_added_desc",
+          label: "Date Added (Newest)"
+        }, {
+          value: "last_played",
+          label: "Last Played (Oldest)"
+        }, {
+          value: "last_played_desc",
+          label: "Last Played (Recent)"
+        }, {
+          value: "play_count",
+          label: "Play Count (Low→High)"
+        }, {
+          value: "play_count_desc",
+          label: "Play Count (High→Low)"
+        }, {
+          value: "year",
+          label: "Year (Oldest)"
+        }, {
+          value: "year_desc",
+          label: "Year (Newest)"
+        }, {
+          value: "position",
+          label: "Position (Asc)"
+        }, {
+          value: "position_desc",
+          label: "Position (Desc)"
+        }, {
+          value: "artist_name",
+          label: "Artist (A→Z)"
+        }, {
+          value: "artist_name_desc",
+          label: "Artist (Z→A)"
+        }, {
+          value: "random",
+          label: "Random"
+        }, {
+          value: "random_play_count",
+          label: "Random + Least Played"
         }]
       }
     }}
@@ -18434,7 +18565,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
           promise = this._toggleRecommendationsFilter(true);
           break;
         default:
-          promise = this._doSearch();
+          {
+            const defaultFilter = this.config.default_search_filter === 'all' ? null : this.config.default_search_filter;
+            promise = this._doSearch(defaultFilter);
+          }
           break;
       }
       if ((_promise = promise) !== null && _promise !== void 0 && _promise.catch) {
@@ -18570,70 +18704,48 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   _sortSearchResults(results) {
-    var _this$config;
     let sortModeOverride = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    const sortMode = sortModeOverride ?? ((_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_sort) ?? "default";
+    const sortMode = sortModeOverride ?? this._getConfiguredSearchResultsSortMode();
     const list = Array.isArray(results) ? [...results] : [];
-    if (sortMode === "default") {
+    if (sortMode === "random") {
+      // Fisher-Yates shuffle for an unbiased random order
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
       return list;
     }
-    const collator = new Intl.Collator(undefined, {
-      sensitivity: "base",
-      numeric: true
-    });
-    const normalize = val => typeof val === "string" ? val : (val ?? "").toString();
-    const getTitle = item => normalize((item === null || item === void 0 ? void 0 : item.title) ?? (item === null || item === void 0 ? void 0 : item.name) ?? "");
-    const getArtist = item => normalize((item === null || item === void 0 ? void 0 : item.artist) ?? (item === null || item === void 0 ? void 0 : item.artist_name) ?? "");
-    const compareWithFallback = function (primaryGetter, secondaryGetter) {
-      let direction = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-      return (a, b) => {
-        const primaryA = primaryGetter(a);
-        const primaryB = primaryGetter(b);
-        if (!primaryA && !primaryB) {
-          const secondaryA = secondaryGetter(a);
-          const secondaryB = secondaryGetter(b);
-          return direction * collator.compare(secondaryA, secondaryB);
-        }
-        if (!primaryA) return 1;
-        if (!primaryB) return -1;
-        const primaryCompare = collator.compare(primaryA, primaryB);
-        if (primaryCompare !== 0) {
-          return direction * primaryCompare;
-        }
-        const secondaryA = secondaryGetter(a);
-        const secondaryB = secondaryGetter(b);
-        return direction * collator.compare(secondaryA, secondaryB);
-      };
-    };
-    switch (sortMode) {
-      case "title_asc":
-        return list.sort(compareWithFallback(getTitle, getArtist, 1));
-      case "title_desc":
-        return list.sort(compareWithFallback(getTitle, getArtist, -1));
-      case "artist_asc":
-        return list.sort(compareWithFallback(getArtist, getTitle, 1));
-      case "artist_desc":
-        return list.sort(compareWithFallback(getArtist, getTitle, -1));
-      default:
-        return list;
-    }
+
+    // All other sorting is handled server-side via order_by parameter
+    return list;
   }
   _getConfiguredSearchResultsSortMode() {
-    var _this$config2;
-    const configured = (_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_sort;
-    return typeof configured === "string" ? configured : "default";
+    var _this$config;
+    const configured = (_this$config = this.config) === null || _this$config === void 0 ? void 0 : _this$config.search_results_sort;
+    const mode = typeof configured === "string" ? configured : "default";
+    return this._mapLegacySortOption(mode);
+  }
+  _mapLegacySortOption(mode) {
+    if (!mode) return "default";
+    const legacyMap = {
+      "title_asc": "name",
+      "title_desc": "name_desc",
+      "artist_asc": "artist_name",
+      "artist_desc": "artist_name_desc"
+    };
+    return legacyMap[mode] || mode;
   }
   _isSortableSearchMode(mode) {
-    return typeof mode === "string" && /^(title|artist)_(asc|desc)$/.test(mode);
+    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return false;
+    return true;
   }
   _getOppositeSearchSortMode(mode) {
-    const match = /^(title|artist)_(asc|desc)$/.exec(mode || "");
-    if (!match) {
-      return null;
+    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return null;
+    // Toggle between asc and desc variants
+    if (mode.endsWith("_desc")) {
+      return mode.replace(/_desc$/, "");
     }
-    const [, field, direction] = match;
-    const oppositeDirection = direction === "asc" ? "desc" : "asc";
-    return `${field}_${oppositeDirection}`;
+    return `${mode}_desc`;
   }
   _shouldShowSearchSortToggle() {
     return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
@@ -18654,6 +18766,12 @@ class YetAnotherMediaPlayerCard extends i$2 {
     } else {
       this._searchDisplaySortOverride = alternate;
     }
+    // Clear cached results so _doSearch re-fetches with the new order_by
+    this._searchResultsByType = {};
+    // Re-trigger search with new sort order
+    this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, {
+      orderBy: this._getActiveSearchDisplaySortMode()
+    });
     this.requestUpdate();
   }
   _getActiveSearchDisplaySortMode() {
@@ -18671,34 +18789,25 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (!this._isSortableSearchMode(mode)) {
       return "mdi:sort-variant";
     }
-    const [, direction] = mode.split("_");
-    return direction === "asc" ? "mdi:sort-alphabetical-ascending" : "mdi:sort-alphabetical-descending";
+    return mode.endsWith("_desc") ? "mdi:sort-descending" : "mdi:sort-ascending";
   }
   _getSearchSortToggleTitle() {
     const mode = this._getActiveSearchDisplaySortMode();
     if (!this._isSortableSearchMode(mode)) {
       return "Toggle search result order";
     }
-    const [field, direction] = mode.split("_");
-    const labelField = field === "artist" ? "artist" : "title";
-    const labelDirection = direction === "asc" ? "ascending" : "descending";
-    return `Sort ${labelField} ${labelDirection}`;
+    const isDesc = mode.endsWith("_desc");
+    const baseName = isDesc ? mode.replace(/_desc$/, "") : mode;
+    const label = baseName.replace(/_/g, " ");
+    return `Sort by ${label} ${isDesc ? "descending" : "ascending"}`;
   }
   _getDisplaySearchResults() {
     const baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
-    if (!this._shouldShowSearchSortToggle()) {
-      return baseResults;
-    }
-    const configured = this._getConfiguredSearchResultsSortMode();
-    const activeMode = this._getActiveSearchDisplaySortMode();
-    if (!this._isSortableSearchMode(activeMode) || activeMode === configured) {
-      return baseResults;
-    }
-    return this._sortSearchResults(baseResults, activeMode);
+    return baseResults;
   }
   _getSearchResultsLimit() {
-    var _this$config3;
-    const raw = Number((_this$config3 = this.config) === null || _this$config3 === void 0 ? void 0 : _this$config3.search_results_limit);
+    var _this$config2;
+    const raw = Number((_this$config2 = this.config) === null || _this$config2 === void 0 ? void 0 : _this$config2.search_results_limit);
     if (Number.isFinite(raw)) {
       if (raw === 0) {
         return 0; // Explicitly disable limit
@@ -18726,7 +18835,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return `${count} ${localize(key)}`;
   }
   async _doSearch() {
-    var _this$config4;
+    var _this$config3;
     let mediaType = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     let searchParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     this._searchAttempted = true;
@@ -18753,7 +18862,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
 
     // Use cached results if available for this media type and search params
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}`;
+    const sortMode = this._getActiveSearchDisplaySortMode();
+    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}_sort_${sortMode}`;
     if (this._searchResultsByType[cacheKey]) {
       if (this._searchTimeoutHandle) {
         clearTimeout(this._searchTimeoutHandle);
@@ -18782,7 +18892,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
         this._searchError = "Search timed out. Try again.";
         this.requestUpdate();
       }
-    }, (_this$config4 = this.config) !== null && _this$config4 !== void 0 && _this$config4.search_timeout_ms ? Number(this.config.search_timeout_ms) : 15000);
+    }, (_this$config3 = this.config) !== null && _this$config3 !== void 0 && _this$config3.search_timeout_ms ? Number(this.config.search_timeout_ms) : 15000);
     try {
       const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
       const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
@@ -18808,14 +18918,18 @@ class YetAnotherMediaPlayerCard extends i$2 {
       } else if (isFavorites) {
         // Ask backend (Music Assistant) to filter favorites at source with the current query
         this._initialFavoritesLoaded = false;
+        const orderBy = this._getActiveSearchDisplaySortMode();
         searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
           ...searchParams,
-          favorites: true
+          favorites: true,
+          orderBy: orderBy !== 'default' ? orderBy : undefined
         }, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = true;
       } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
+        const orderBy = this._getActiveSearchDisplaySortMode();
         searchResponse = await getFavorites(this.hass, searchEntityId, mediaType === 'favorites' ? null : mediaType, this._getSearchResultsLimit(), {
-          onChunk: progressiveUpdate
+          onChunk: progressiveUpdate,
+          orderBy: orderBy !== 'default' ? orderBy : undefined
         });
         // Mark that initial favorites have been loaded only if we're in default view
         if (!this._searchQuery || this._searchQuery.trim() === '') {
@@ -18825,7 +18939,11 @@ class YetAnotherMediaPlayerCard extends i$2 {
       } else {
         // Perform search - reset initial favorites flag since this is a user search
         this._initialFavoritesLoaded = false;
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, searchParams, this._getSearchResultsLimit());
+        const orderBy = this._getActiveSearchDisplaySortMode();
+        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, {
+          ...searchParams,
+          orderBy: orderBy !== 'default' ? orderBy : undefined
+        }, this._getSearchResultsLimit());
         this._lastSearchUsedServerFavorites = false;
       }
 
@@ -20596,9 +20714,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return Math.min(1.55, 1.2 + extra * 0.35);
   }
   _getAdaptiveBaselineHeight() {
-    var _this$config5;
+    var _this$config4;
     let collapsed = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    const raw = (_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.card_height;
+    const raw = (_this$config4 = this.config) === null || _this$config4 === void 0 ? void 0 : _this$config4.card_height;
     if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
       return raw;
     }
@@ -20633,10 +20751,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   _ensureArtworkOverrideIndexMap() {
-    var _this$config6;
+    var _this$config5;
     if (this._artworkOverrideIndexMap) return;
     this._artworkOverrideIndexMap = new WeakMap();
-    const overrides = Array.isArray((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.media_artwork_overrides) ? this.config.media_artwork_overrides : [];
+    const overrides = Array.isArray((_this$config5 = this.config) === null || _this$config5 === void 0 ? void 0 : _this$config5.media_artwork_overrides) ? this.config.media_artwork_overrides : [];
     overrides.forEach((item, idx) => {
       if (item && typeof item === "object") {
         this._artworkOverrideIndexMap.set(item, idx);
@@ -20713,18 +20831,18 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
   _getArtworkUrl(state) {
-    var _this$config7, _this$config8;
+    var _this$config6, _this$config7;
     if (!state || !state.attributes) return null;
     const attrs = state.attributes;
     const entityId = state.entity_id;
     attrs.app_id;
-    const prefix = ((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.artwork_hostname) || '';
+    const prefix = ((_this$config6 = this.config) === null || _this$config6 === void 0 ? void 0 : _this$config6.artwork_hostname) || '';
     let artworkUrl = null;
     let sizePercentage = null;
     let objectFit = null;
 
     // Check for media artwork overrides first
-    const overrides = Array.isArray((_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
+    const overrides = Array.isArray((_this$config7 = this.config) === null || _this$config7 === void 0 ? void 0 : _this$config7.media_artwork_overrides) ? this.config.media_artwork_overrides : null;
     if (overrides && overrides.length) {
       var _override, _override2;
       const findSpecificMatch = () => overrides.find(override => ARTWORK_OVERRIDE_MATCH_KEYS.some(key => {
@@ -20777,8 +20895,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // If still no artwork, check for configured fallback artwork
     if (!artworkUrl) {
-      var _this$config9;
-      const fallbackArtwork = (_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.fallback_artwork;
+      var _this$config8;
+      const fallbackArtwork = (_this$config8 = this.config) === null || _this$config8 === void 0 ? void 0 : _this$config8.fallback_artwork;
       if (fallbackArtwork) {
         // Check if it's a smart fallback (TV vs Music)
         if (fallbackArtwork === 'smart') {
@@ -21587,7 +21705,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     `;
   }
   _renderInlineChipRow(showChipsInline, chipsHiddenInline) {
-    var _this$config0, _this$config1, _this$config10;
+    var _this$config9, _this$config0, _this$config1;
     if (!showChipsInline) return E;
     return x`
       <div class="chip-row" style="${chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : ""}">
@@ -21599,9 +21717,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       holdToPin: this._holdToPin,
       getChipName: id => this.getChipName(id),
       getActualGroupMaster: group => this._getActualGroupMaster(group),
-      artworkHostname: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.fallback_artwork) || null,
+      artworkHostname: ((_this$config9 = this.config) === null || _this$config9 === void 0 ? void 0 : _this$config9.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config0 = this.config) === null || _this$config0 === void 0 ? void 0 : _this$config0.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config1 = this.config) === null || _this$config1 === void 0 ? void 0 : _this$config1.fallback_artwork) || null,
       getIsChipPlaying: (id, isSelected) => {
         var _this$hass19;
         const obj = this._findEntityObjByAnyId(id);
@@ -22213,8 +22331,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          var _this$config11;
-          const customHeight = Number((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.card_height);
+          var _this$config10;
+          const customHeight = Number((_this$config10 = this.config) === null || _this$config10 === void 0 ? void 0 : _this$config10.card_height);
           const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
           if (!hasCustomCardHeight) {
             this._collapsedBaselineHeight = measured;
@@ -23228,7 +23346,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
   }
   render() {
-    var _this$_optimisticPlay, _this$hass31, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass32, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot3, _this$currentVolumeSt3, _this$config14, _this$config15, _this$config16, _this$config17;
+    var _this$_optimisticPlay, _this$hass31, _this$_lastPlayingEnt4, _this$_lastPlayingEnt5, _this$_playbackLinger3, _this$config$entities, _this$_lastPlayingEnt6, _this$_maResolveCache5, _this$_playbackLinger4, _this$hass32, _finalPlaybackStateOb, _finalPlaybackStateOb2, _finalPlaybackStateOb3, _displaySource$attrib, _displaySource$attrib2, _displaySource$attrib3, _displaySource$attrib4, _displaySource$attrib5, _displaySource$attrib6, _displaySource$attrib8, _displaySource$attrib9, _this$currentVolumeSt2, _this$shadowRoot3, _this$currentVolumeSt3, _this$config13, _this$config14, _this$config15, _this$config16;
     if (!this.hass || !this.config) return E;
     const customCardHeightInput = this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string" ? customCardHeightInput : Number(customCardHeightInput);
@@ -23431,8 +23549,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
     if (prevMa === "playing" && this._lastMaState !== "playing") {
-      var _this$config12;
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.idle_timeout_ms) || 60000), 500);
+      var _this$config11;
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config11 = this.config) === null || _this$config11 === void 0 ? void 0 : _this$config11.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: actualResolvedMaId,
         until: Date.now() + ttl
@@ -23443,10 +23561,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
     const shouldSetLinger = prevMa === "playing" && this._lastMaState === "paused" && ((_this$_lastPlayingEnt4 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt4 === void 0 ? void 0 : _this$_lastPlayingEnt4[idx]) === actualResolvedMaId || prevMain === "playing" && this._lastMainState === "paused" && ((_this$_lastPlayingEnt5 = this._lastPlayingEntityIdByChip) === null || _this$_lastPlayingEnt5 === void 0 ? void 0 : _this$_lastPlayingEnt5[idx]) === (mainStateForPlayback === null || mainStateForPlayback === void 0 ? void 0 : mainStateForPlayback.entity_id);
     if (shouldSetLinger) {
-      var _this$config13;
+      var _this$config12;
       // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
       const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
-      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.idle_timeout_ms) || 60000), 500);
+      const ttl = Math.max(Number(this._idleTimeoutMs || ((_this$config12 = this.config) === null || _this$config12 === void 0 ? void 0 : _this$config12.idle_timeout_ms) || 60000), 500);
       this._playbackLingerByIdx[idx] = {
         entityId: lingerEntityId,
         // Use cached MA entity or last controlled entity
@@ -23908,9 +24026,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
       },
       isIdle: this._isIdle,
       hass: this.hass,
-      artworkHostname: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.artwork_hostname) || '',
-      mediaArtworkOverrides: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.media_artwork_overrides) || [],
-      fallbackArtwork: ((_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.fallback_artwork) || null,
+      artworkHostname: ((_this$config13 = this.config) === null || _this$config13 === void 0 ? void 0 : _this$config13.artwork_hostname) || '',
+      mediaArtworkOverrides: ((_this$config14 = this.config) === null || _this$config14 === void 0 ? void 0 : _this$config14.media_artwork_overrides) || [],
+      fallbackArtwork: ((_this$config15 = this.config) === null || _this$config15 === void 0 ? void 0 : _this$config15.fallback_artwork) || null,
       onChipClick: idx => this._onChipClick(idx),
       onIconClick: (idx, e) => {
         const entityId = this.entityIds[idx];
@@ -24428,7 +24546,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       loading: this._searchLoading,
       results: this._getDisplaySearchResults(),
       error: this._searchError,
-      matchTheme: (_this$config17 = this.config) === null || _this$config17 === void 0 ? void 0 : _this$config17.match_theme,
+      matchTheme: (_this$config16 = this.config) === null || _this$config16 === void 0 ? void 0 : _this$config16.match_theme,
       // Add matchTheme parameter
       onClose: () => this._searchCloseSheet(),
       onQueryInput: e => {
@@ -25248,8 +25366,8 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Sync selected entity to configured helpers via actions
   _updateSelectedEntityHelper() {
-    var _this$config18;
-    if (!this.hass || !((_this$config18 = this.config) !== null && _this$config18 !== void 0 && _this$config18.actions)) return;
+    var _this$config17;
+    if (!this.hass || !((_this$config17 = this.config) !== null && _this$config17 !== void 0 && _this$config17.actions)) return;
     const idx = this._selectedIndex;
     if (idx === undefined || idx === null || !this.entityObjs[idx]) return;
 

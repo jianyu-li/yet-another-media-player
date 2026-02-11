@@ -1289,6 +1289,32 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               @click=${() => this._updateConfig("search_results_limit", 20)}
             ></ha-icon>
           </div>
+
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "all", label: localize('search.filters.all') },
+            { value: "artist", label: localize('search.filters.artist') },
+            { value: "album", label: localize('search.filters.album') },
+            { value: "track", label: localize('search.filters.track') },
+            { value: "playlist", label: localize('search.filters.playlist') },
+            { value: "radio", label: localize('search.filters.radio') },
+            { value: "podcast", label: localize('search.filters.podcast') },
+            { value: "audiobook", label: localize('search.filters.audiobook') },
+          ]
+        }
+      }}
+              .value=${this._config.default_search_filter ?? "all"}
+              label="${localize('editor.labels.default_search_filter')}"
+              helper="${localize('editor.subtitles.default_search_filter_full')}"
+              @value-changed=${(e) => this._updateConfig("default_search_filter", e.detail.value)}
+            ></ha-selector>
+          </div>
+
           <div class="form-row">
             <ha-selector
               .hass=${this.hass}
@@ -1296,10 +1322,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         select: {
           mode: "dropdown", options: [
             { value: "default", label: "Default" },
-            { value: "title_asc", label: "Title Ascending" },
-            { value: "title_desc", label: "Title Descending" },
-            { value: "artist_asc", label: "Artist Ascending" },
-            { value: "artist_desc", label: "Artist Descending" },
+            { value: "name", label: "Name (A→Z)" },
+            { value: "name_desc", label: "Name (Z→A)" },
+            { value: "sort_name", label: "Sort Name (A→Z)" },
+            { value: "sort_name_desc", label: "Sort Name (Z→A)" },
+            { value: "timestamp_added", label: "Date Added (Oldest)" },
+            { value: "timestamp_added_desc", label: "Date Added (Newest)" },
+            { value: "last_played", label: "Last Played (Oldest)" },
+            { value: "last_played_desc", label: "Last Played (Recent)" },
+            { value: "play_count", label: "Play Count (Low→High)" },
+            { value: "play_count_desc", label: "Play Count (High→Low)" },
+            { value: "year", label: "Year (Oldest)" },
+            { value: "year_desc", label: "Year (Newest)" },
+            { value: "position", label: "Position (Asc)" },
+            { value: "position_desc", label: "Position (Desc)" },
+            { value: "artist_name", label: "Artist (A→Z)" },
+            { value: "artist_name_desc", label: "Artist (Z→A)" },
+            { value: "random", label: "Random" },
+            { value: "random_play_count", label: "Random + Least Played" },
           ]
         }
       }}
