@@ -42,6 +42,51 @@ export async function resolveTemplateAtActionTime(hass, templateString, fallback
 }
 
 /**
+ * Resolve a generic Jinja template string at runtime (no entity validation)
+ * @param {Object} hass - Home Assistant object
+ * @param {string} templateString - The template string to resolve
+ * @param {Object} context - Optional context variables to inject into the template
+ * @returns {Promise<string>} Resolved string
+ */
+export async function resolveStringTemplate(hass, templateString, context = {}) {
+  if (!templateString || typeof templateString !== 'string') return templateString;
+
+  // Not a template — return as-is
+  if (!templateString.includes('{{') && !templateString.includes('{%')) {
+    // Check for URL-encoded templates (%7B%7B or %7B%25)
+    if (/%7B%7B|%7B%25/i.test(templateString)) {
+      try {
+        templateString = decodeURIComponent(templateString);
+      } catch (e) {
+        // Ignore decode error
+      }
+    }
+
+    // Re-check after decoding
+    if (!templateString.includes('{{') && !templateString.includes('{%')) {
+      return templateString;
+    }
+  }
+
+  // Inject context variables
+  let finalTemplate = templateString;
+  if (context && Object.keys(context).length > 0) {
+    const setStatements = Object.entries(context)
+      .map(([key, value]) => `{% set ${key} = ${JSON.stringify(value)} %}`)
+      .join(' ');
+    finalTemplate = `${setStatements} ${templateString}`;
+  }
+
+  try {
+    const res = await hass.callApi('POST', 'template', { template: finalTemplate });
+    return (res || '').toString().trim();
+  } catch (error) {
+    console.warn('yamp: Error resolving template:', templateString, error);
+    return templateString; // Return original string on error
+  }
+}
+
+/**
  * Find button entities associated with a Music Assistant entity
  * @param {Object} hass - Home Assistant object
  * @param {string} maEntityId - Music Assistant entity ID

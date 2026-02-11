@@ -825,6 +825,54 @@ async function resolveTemplateAtActionTime(hass, templateString, fallbackEntityI
 }
 
 /**
+ * Resolve a generic Jinja template string at runtime (no entity validation)
+ * @param {Object} hass - Home Assistant object
+ * @param {string} templateString - The template string to resolve
+ * @param {Object} context - Optional context variables to inject into the template
+ * @returns {Promise<string>} Resolved string
+ */
+async function resolveStringTemplate(hass, templateString) {
+  let context = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  if (!templateString || typeof templateString !== 'string') return templateString;
+
+  // Not a template — return as-is
+  if (!templateString.includes('{{') && !templateString.includes('{%')) {
+    // Check for URL-encoded templates (%7B%7B or %7B%25)
+    if (/%7B%7B|%7B%25/i.test(templateString)) {
+      try {
+        templateString = decodeURIComponent(templateString);
+      } catch (e) {
+        // Ignore decode error
+      }
+    }
+
+    // Re-check after decoding
+    if (!templateString.includes('{{') && !templateString.includes('{%')) {
+      return templateString;
+    }
+  }
+
+  // Inject context variables
+  let finalTemplate = templateString;
+  if (context && Object.keys(context).length > 0) {
+    const setStatements = Object.entries(context).map(_ref => {
+      let [key, value] = _ref;
+      return `{% set ${key} = ${JSON.stringify(value)} %}`;
+    }).join(' ');
+    finalTemplate = `${setStatements} ${templateString}`;
+  }
+  try {
+    const res = await hass.callApi('POST', 'template', {
+      template: finalTemplate
+    });
+    return (res || '').toString().trim();
+  } catch (error) {
+    console.warn('yamp: Error resolving template:', templateString, error);
+    return templateString; // Return original string on error
+  }
+}
+
+/**
  * Find button entities associated with a Music Assistant entity
  * @param {Object} hass - Home Assistant object
  * @param {string} maEntityId - Music Assistant entity ID
@@ -1736,6 +1784,7 @@ var de = {
       "hide_search_chips": "Bestimmte Suchfilter-Chips für diese Entität ausblenden.",
       "follow_active_entity": "Lautstärke-Entität folgt automatisch der aktiven Wiedergabe-Entität.",
       "search_limit_full": "Maximale Anzahl an Suchergebnissen (1-1000, Standard: 20).",
+      "default_search_filter_full": "Wählen Sie den Filter, der beim Öffnen der Suche standardmäßig aktiv ist.",
       "result_sorting_full": "Sortierung der Suchergebnisse wählen. Standard behält die Quellreihenfolge bei.",
       "card_height_full": "Leer lassen für automatische Höhe.",
       "control_layout_full": "Wählen Sie zwischen manuellem oder modernem Home Assistant Layout.",
@@ -1769,6 +1818,7 @@ var de = {
       "disable_autofocus": "Such-Autofocus deaktivieren",
       "keep_filters": "Filter bei Suche beibehalten",
       "dismiss_on_play": "Suche beim Abspielen beenden",
+      "default_search_filter": "Standard-Suchfilter",
       "pin_headers": "Such-Header fixieren",
       "hide_search_headers_on_idle": "Such-Header im Leerlauf ausblenden",
       "disable_mass": "Mass Queue deaktivieren",
@@ -1942,7 +1992,8 @@ var de = {
       "radio": "Radio",
       "music": "Musik",
       "station": "Station",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Hörbuch"
     },
     "search_artist": "Nach diesem Künstler suchen"
   }
@@ -2053,6 +2104,7 @@ var es = {
       "hide_search_chips": "Ocultar chips de filtro de búsqueda.",
       "follow_active_entity": "La entidad de volumen seguirá a la activa.",
       "search_limit_full": "Máximo de resultados (1-1000, defecto: 20).",
+      "default_search_filter_full": "Elige qué filtro está activo por defecto cuando se abre la pantalla de búsqueda.",
       "result_sorting_full": "Elegir orden de resultados.",
       "card_height_full": "Dejar vacío para altura automática.",
       "control_layout_full": "Elegir entre diseño antiguo o moderno.",
@@ -2086,6 +2138,7 @@ var es = {
       "disable_autofocus": "Desactivar autofoco",
       "keep_filters": "Mantener filtros",
       "dismiss_on_play": "Cerrar al reproducir",
+      "default_search_filter": "Filtro de búsqueda predeterminado",
       "pin_headers": "Fijar encabezados",
       "hide_search_headers_on_idle": "Ocultar encabezados en inactividad",
       "disable_mass": "Desactivar Mass Queue",
@@ -2259,7 +2312,8 @@ var es = {
       "radio": "Radio",
       "music": "Música",
       "station": "Emisora",
-      "podcast": "Pódcast"
+      "podcast": "Pódcast",
+      "audiobook": "Audiolibro"
     },
     "search_artist": "Buscar este artista"
   }
@@ -2370,6 +2424,7 @@ var fr = {
       "hide_search_chips": "Masquer des jetons de filtrage spécifiques.",
       "follow_active_entity": "L'entité de volume suivra automatiquement l'entité active.",
       "search_limit_full": "Nombre maximum de résultats (1-1000, défaut: 20).",
+      "default_search_filter_full": "Choisissez quel filtre est actif par défaut à l'ouverture de la recherche.",
       "result_sorting_full": "Choisir l'ordre des résultats. Par défaut conserve l'ordre source.",
       "card_height_full": "Laisser vide pour une hauteur automatique.",
       "control_layout_full": "Choisir entre l'ancienne mise en page ou la moderne.",
@@ -2403,6 +2458,7 @@ var fr = {
       "disable_autofocus": "Désactiver l'autofocus",
       "keep_filters": "Garder les filtres",
       "dismiss_on_play": "Fermer en lecture",
+      "default_search_filter": "Filtre de recherche par défaut",
       "pin_headers": "Épingler les en-têtes",
       "hide_search_headers_on_idle": "Masquer les en-têtes en veille",
       "disable_mass": "Désactiver Mass Queue",
@@ -2576,7 +2632,8 @@ var fr = {
       "radio": "Radio",
       "music": "Musique",
       "station": "Station",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Livre audio"
     },
     "search_artist": "Chercher cet artiste"
   }
@@ -2687,6 +2744,7 @@ var it = {
       "hide_search_chips": "Nascondi chip di filtro ricerca.",
       "follow_active_entity": "L'entità volume seguirà quella attiva.",
       "search_limit_full": "Massimo risultati (1-1000, default: 20).",
+      "default_search_filter_full": "Scegli quale filtro è attivo per impostazione predefinita all'apertura della ricerca.",
       "result_sorting_full": "Scegli ordine risultati.",
       "card_height_full": "Lascia vuoto per altezza automatica.",
       "control_layout_full": "Scegli tra design vecchio o moderno.",
@@ -2720,6 +2778,7 @@ var it = {
       "disable_autofocus": "Disabilita autofocus",
       "keep_filters": "Mantieni filtri",
       "dismiss_on_play": "Chiudi alla riproduzione",
+      "default_search_filter": "Filtro di ricerca predefinito",
       "pin_headers": "Fissa intestazioni",
       "hide_search_headers_on_idle": "Nascondi intestazioni in inattività",
       "disable_mass": "Disabilita Mass Queue",
@@ -2893,7 +2952,8 @@ var it = {
       "radio": "Radio",
       "music": "Musica",
       "station": "Stazione",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Audiolibro"
     },
     "search_artist": "Cerca questo artista"
   }
@@ -3004,6 +3064,7 @@ var nl = {
       "hide_search_chips": "Verberg specifieke zoekfilterchips voor deze entiteit",
       "follow_active_entity": "Indien ingeschakeld, zal de volume-entiteit automatisch de actieve afspeel-entiteit volgen. Let op: dit overschrijft de geselecteerde volume-entiteit.",
       "search_limit_full": "Maximaal aantal zoekresultaten om weer te geven (1-1000, standaard: 20)",
+      "default_search_filter_full": "Kies welk filter standaard actief is wanneer het zoekscherm wordt geopend.",
       "result_sorting_full": "Kies hoe zoekresultaten worden gesorteerd. Standaard behoudt de bronvolgorde.",
       "card_height_full": "Laat leeg voor automatische hoogte",
       "control_layout_full": "Kies tussen de oude gelijkmatig verdeelde knoppen of de moderne Home Assistant lay-out.",
@@ -3037,6 +3098,7 @@ var nl = {
       "disable_autofocus": "Zoek-autofocus uitschakelen",
       "keep_filters": "Filters behouden bij zoeken",
       "dismiss_on_play": "Zoeken sluiten bij afspelen",
+      "default_search_filter": "Standaard zoekfilter",
       "pin_headers": "Zoekkoppen vastzetten",
       "hide_search_headers_on_idle": "Zoekkoppen verbergen bij inactiviteit",
       "disable_mass": "Mass Queue uitschakelen",
@@ -3210,7 +3272,8 @@ var nl = {
       "radio": "Radio",
       "music": "Muziek",
       "station": "Zender",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Luisterboek"
     },
     "search_artist": "Zoek naar deze artiest"
   }
@@ -3321,6 +3384,7 @@ var pt = {
       "hide_search_chips": "Ocultar chips de filtro de procura.",
       "follow_active_entity": "A entidade de volume seguirá a ativa.",
       "search_limit_full": "Máximo de resultados (1-1000, default: 20).",
+      "default_search_filter_full": "Escolha qual filtro está ativo por padrão quando a tela de pesquisa é aberta.",
       "result_sorting_full": "Escolher ordem dos resultados.",
       "card_height_full": "Deixar vazio para altura automática.",
       "control_layout_full": "Escolher entre design antigo ou moderno.",
@@ -3354,6 +3418,7 @@ var pt = {
       "disable_autofocus": "Desativar autofoco",
       "keep_filters": "Manter filtros",
       "dismiss_on_play": "Fechar ao reproduzir",
+      "default_search_filter": "Filtro de pesquisa padrão",
       "pin_headers": "Fixar cabeçalhos",
       "hide_search_headers_on_idle": "Ocultar cabeçalhos em inatividade",
       "disable_mass": "Desativar Mass Queue",
@@ -3527,7 +3592,8 @@ var pt = {
       "radio": "Rádio",
       "music": "Música",
       "station": "Estação",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Audiolivro"
     },
     "search_artist": "Procurar este artista"
   }
@@ -3638,6 +3704,7 @@ var sk = {
       "hide_search_chips": "Skryť konkrétne čipy filtra vyhľadávania pre túto entitu.",
       "follow_active_entity": "Ak je povolené, entita hlasitosti bude automaticky sledovať aktívny prehrávač. Poznámka: Toto prepíše vybranú entitu hlasitosti.",
       "search_limit_full": "Maximálny počet výsledkov vyhľadávania (1-1000, predvolené: 20).",
+      "default_search_filter_full": "Vyberte, ktorý filter bude predvolene aktívny pri otvorení vyhľadávania.",
       "result_sorting_full": "Vyberte spôsob zoradenia výsledkov. Predvolené ponecháva poradie zo zdroja.",
       "card_height_full": "Nechajte prázdne pre automatickú výšku.",
       "control_layout_full": "Vyberte si medzi starším (rovnako veľké prvky) alebo moderným rozložením Home Assistant.",
@@ -3671,6 +3738,7 @@ var sk = {
       "disable_autofocus": "Vypnúť automatické zameranie hľadania",
       "keep_filters": "Zachovať filtre pri hľadaní",
       "dismiss_on_play": "Zavrieť hľadanie po spustení",
+      "default_search_filter": "Predvolený filter vyhľadávania",
       "pin_headers": "Pripnúť hlavičky hľadania",
       "hide_search_headers_on_idle": "Skryť hlavičky pri nečinnosti",
       "disable_mass": "Deaktivovať Mass Queue",
@@ -3844,7 +3912,8 @@ var sk = {
       "radio": "Rádio",
       "music": "Hudba",
       "station": "Stanica",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Audiokniha"
     },
     "search_artist": "Hľadať tohto interpreta"
   }
@@ -3955,6 +4024,7 @@ var sl = {
       "hide_search_chips": "Skrij določene iskalne filtre.",
       "follow_active_entity": "Entiteta glasnosti sledi aktivni entiteti. Opomba: To prepiše izbrano entiteto za glasnost.",
       "search_limit_full": "Največje število rezultatov (1–1000, privzeto: 20).",
+      "default_search_filter_full": "Izberite, kateri filter je privzeto aktiven ob odprtju iskanja.",
       "result_sorting_full": "Izberi razvrščanje rezultatov.",
       "card_height_full": "Pustite prazno za samodejno višino.",
       "control_layout_full": "Izberi med staro in moderno postavitvijo.",
@@ -3988,6 +4058,7 @@ var sl = {
       "disable_autofocus": "Onemogoči samodejni fokus",
       "keep_filters": "Ohrani filtre",
       "dismiss_on_play": "Zapri iskanje ob predvajanju",
+      "default_search_filter": "Privzeti iskalni filter",
       "pin_headers": "Pripni glave iskanja",
       "hide_search_headers_on_idle": "Skrij glave iskanja med mirovanjem",
       "disable_mass": "Onemogoči Mass Queue",
@@ -4161,7 +4232,8 @@ var sl = {
       "radio": "Radio",
       "music": "Glasba",
       "station": "Postaja",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "audiobook": "Zvočna knjiga"
     },
     "search_artist": "Išči tega izvajalca"
   }
@@ -22564,7 +22636,13 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return;
     }
     if (typeof action.navigation_path === "string" && action.navigation_path.trim() !== "" || action.action === "navigate") {
-      const path = (typeof action.navigation_path === "string" ? action.navigation_path : action.path || "").trim();
+      let path = (typeof action.navigation_path === "string" ? action.navigation_path : action.path || "").trim();
+
+      // Create context for template resolution
+      const context = {
+        current: this.currentEntityId || ''
+      };
+      path = await resolveStringTemplate(this.hass, path, context);
       const openInNewTab = action.navigation_new_tab === true;
       this._handleNavigate(path, openInNewTab);
       return;
