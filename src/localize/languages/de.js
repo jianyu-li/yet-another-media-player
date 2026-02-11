@@ -103,6 +103,7 @@ export default {
             "hide_search_chips": "Bestimmte Suchfilter-Chips für diese Entität ausblenden.",
             "follow_active_entity": "Lautstärke-Entität folgt automatisch der aktiven Wiedergabe-Entität.",
             "search_limit_full": "Maximale Anzahl an Suchergebnissen (1-1000, Standard: 20).",
+            "default_search_filter_full": "Wählen Sie den Filter, der beim Öffnen der Suche standardmäßig aktiv ist.",
             "result_sorting_full": "Sortierung der Suchergebnisse wählen. Standard behält die Quellreihenfolge bei.",
             "card_height_full": "Leer lassen für automatische Höhe.",
             "control_layout_full": "Wählen Sie zwischen manuellem oder modernem Home Assistant Layout.",
@@ -136,6 +137,7 @@ export default {
             "disable_autofocus": "Such-Autofocus deaktivieren",
             "keep_filters": "Filter bei Suche beibehalten",
             "dismiss_on_play": "Suche beim Abspielen beenden",
+            "default_search_filter": "Standard-Suchfilter",
             "pin_headers": "Such-Header fixieren",
             "hide_search_headers_on_idle": "Such-Header im Leerlauf ausblenden",
             "disable_mass": "Mass Queue deaktivieren",
@@ -309,7 +311,8 @@ export default {
             "radio": "Radio",
             "music": "Musik",
             "station": "Station",
-            "podcast": "Podcast"
+            "podcast": "Podcast",
+            "audiobook": "Hörbuch"
         },
         "search_artist": "Nach diesem Künstler suchen"
     }

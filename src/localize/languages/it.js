@@ -103,6 +103,7 @@ export default {
             "hide_search_chips": "Nascondi chip di filtro ricerca.",
             "follow_active_entity": "L'entità volume seguirà quella attiva.",
             "search_limit_full": "Massimo risultati (1-1000, default: 20).",
+            "default_search_filter_full": "Scegli quale filtro è attivo per impostazione predefinita all'apertura della ricerca.",
             "result_sorting_full": "Scegli ordine risultati.",
             "card_height_full": "Lascia vuoto per altezza automatica.",
             "control_layout_full": "Scegli tra design vecchio o moderno.",
@@ -136,6 +137,7 @@ export default {
             "disable_autofocus": "Disabilita autofocus",
             "keep_filters": "Mantieni filtri",
             "dismiss_on_play": "Chiudi alla riproduzione",
+            "default_search_filter": "Filtro di ricerca predefinito",
             "pin_headers": "Fissa intestazioni",
             "hide_search_headers_on_idle": "Nascondi intestazioni in inattività",
             "disable_mass": "Disabilita Mass Queue",
@@ -309,7 +311,8 @@ export default {
             "radio": "Radio",
             "music": "Musica",
             "station": "Stazione",
-            "podcast": "Podcast"
+            "podcast": "Podcast",
+            "audiobook": "Audiolibro"
         },
         "search_artist": "Cerca questo artista"
     }

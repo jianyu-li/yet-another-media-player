@@ -103,6 +103,7 @@ export default {
             "hide_search_chips": "Skrij določene iskalne filtre.",
             "follow_active_entity": "Entiteta glasnosti sledi aktivni entiteti. Opomba: To prepiše izbrano entiteto za glasnost.",
             "search_limit_full": "Največje število rezultatov (1–1000, privzeto: 20).",
+            "default_search_filter_full": "Izberite, kateri filter je privzeto aktiven ob odprtju iskanja.",
             "result_sorting_full": "Izberi razvrščanje rezultatov.",
             "card_height_full": "Pustite prazno za samodejno višino.",
             "control_layout_full": "Izberi med staro in moderno postavitvijo.",
@@ -136,6 +137,7 @@ export default {
             "disable_autofocus": "Onemogoči samodejni fokus",
             "keep_filters": "Ohrani filtre",
             "dismiss_on_play": "Zapri iskanje ob predvajanju",
+            "default_search_filter": "Privzeti iskalni filter",
             "pin_headers": "Pripni glave iskanja",
             "hide_search_headers_on_idle": "Skrij glave iskanja med mirovanjem",
             "disable_mass": "Onemogoči Mass Queue",
@@ -309,7 +311,8 @@ export default {
             "radio": "Radio",
             "music": "Glasba",
             "station": "Postaja",
-            "podcast": "Podcast"
+            "podcast": "Podcast",
+            "audiobook": "Zvočna knjiga"
         },
         "search_artist": "Išči tega izvajalca"
     }
