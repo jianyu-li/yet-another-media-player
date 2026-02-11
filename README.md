@@ -573,7 +573,7 @@ actions:
 
 ### Dynamic Navigation (Jinja)
 
-You can use Jinja templates in `navigation_path` to create dynamic URLs based on the currently playing media. This is great for linking to external sites like IMDb, Genius, or YouTube.
+You can use Jinja templates in `navigation_path` to create dynamic URLs based on the currently playing media. This is great for linking to external sites like IMDb or Genius.
 
 The following variables are available in the template context:
 - `current`: The entity ID of the currently selected media player.

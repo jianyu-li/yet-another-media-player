@@ -857,7 +857,7 @@ async function resolveStringTemplate(hass, templateString) {
   if (context && Object.keys(context).length > 0) {
     const setStatements = Object.entries(context).map(_ref => {
       let [key, value] = _ref;
-      return `{% set ${key} = '${value}' %}`;
+      return `{% set ${key} = ${JSON.stringify(value)} %}`;
     }).join(' ');
     finalTemplate = `${setStatements} ${templateString}`;
   }
