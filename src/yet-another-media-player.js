@@ -1056,7 +1056,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Clear cached results so _doSearch re-fetches with the new order_by
     this._searchResultsByType = {};
     // Re-trigger search with new sort order
-    this._doSearch(this._activeMediaType || 'all', { orderBy: this._getActiveSearchDisplaySortMode() });
+    this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, { orderBy: this._getActiveSearchDisplaySortMode() });
     this.requestUpdate();
   }
 
