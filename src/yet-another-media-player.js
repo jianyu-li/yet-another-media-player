@@ -987,7 +987,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _sortSearchResults(results, sortModeOverride = null) {
-    const sortMode = sortModeOverride ?? this.config?.search_results_sort ?? "default";
+    const sortMode = sortModeOverride ?? this._getConfiguredSearchResultsSortMode();
     const list = Array.isArray(results) ? [...results] : [];
 
     if (sortMode === "random") {
@@ -1005,7 +1005,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getConfiguredSearchResultsSortMode() {
     const configured = this.config?.search_results_sort;
-    return typeof configured === "string" ? configured : "default";
+    const mode = typeof configured === "string" ? configured : "default";
+    return this._mapLegacySortOption(mode);
+  }
+
+  _mapLegacySortOption(mode) {
+    if (!mode) return "default";
+    const legacyMap = {
+      "title_asc": "name",
+      "title_desc": "name_desc",
+      "artist_asc": "artist_name",
+      "artist_desc": "artist_name_desc"
+    };
+    return legacyMap[mode] || mode;
   }
 
   _isSortableSearchMode(mode) {
@@ -1045,7 +1057,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Clear cached results so _doSearch re-fetches with the new order_by
     this._searchResultsByType = {};
     // Re-trigger search with new sort order
-    this._doSearch(this._activeMediaType || 'all', { orderBy: this._getActiveSearchDisplaySortMode() });
+    this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, { orderBy: this._getActiveSearchDisplaySortMode() });
     this.requestUpdate();
   }
 

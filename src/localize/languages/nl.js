@@ -103,6 +103,7 @@ export default {
             "hide_search_chips": "Verberg specifieke zoekfilterchips voor deze entiteit",
             "follow_active_entity": "Indien ingeschakeld, zal de volume-entiteit automatisch de actieve afspeel-entiteit volgen. Let op: dit overschrijft de geselecteerde volume-entiteit.",
             "search_limit_full": "Maximaal aantal zoekresultaten om weer te geven (1-1000, standaard: 20)",
+            "default_search_filter_full": "Kies welk filter standaard actief is wanneer het zoekscherm wordt geopend.",
             "result_sorting_full": "Kies hoe zoekresultaten worden gesorteerd. Standaard behoudt de bronvolgorde.",
             "card_height_full": "Laat leeg voor automatische hoogte",
             "control_layout_full": "Kies tussen de oude gelijkmatig verdeelde knoppen of de moderne Home Assistant lay-out.",
@@ -136,6 +137,7 @@ export default {
             "disable_autofocus": "Zoek-autofocus uitschakelen",
             "keep_filters": "Filters behouden bij zoeken",
             "dismiss_on_play": "Zoeken sluiten bij afspelen",
+            "default_search_filter": "Standaard zoekfilter",
             "pin_headers": "Zoekkoppen vastzetten",
             "hide_search_headers_on_idle": "Zoekkoppen verbergen bij inactiviteit",
             "disable_mass": "Mass Queue uitschakelen",
@@ -309,7 +311,8 @@ export default {
             "radio": "Radio",
             "music": "Muziek",
             "station": "Zender",
-            "podcast": "Podcast"
+            "podcast": "Podcast",
+            "audiobook": "Luisterboek"
         },
         "search_artist": "Zoek naar deze artiest"
     }
