@@ -120,7 +120,9 @@ export default {
             "image_url_helper": "Vnesite neposredni URL do slike ali lokalno pot do datoteke",
             "selected_entity_helper": "Pomočnik za vnos besedila, ki bo posodobljen z ID-jem trenutno izbranega predvajalnika medijev.",
             "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena).",
-            "disable_auto_select": "Prepreči samodejno izbiro čipa te entitete ob začetku predvajanja."
+            "disable_auto_select": "Prepreči samodejno izbiro čipa te entitete ob začetku predvajanja.",
+            "search_view": "Izberite med standardnim seznamom ali mrežo kartic za rezultate iskanja.",
+            "search_card_columns": "Določite število stolpcev v pogledu kartic. Grafika se bo samodejno prilagodila."
         },
         "titles": {
             "edit_entity": "Uredi entiteto",
@@ -198,7 +200,9 @@ export default {
             "selected_entity_helper": "Pomočnik izbrane entitete",
             "sync_entity_type": "Vrsta entitete za sinhronizacijo",
             "placement": "Namestitev",
-            "card_trigger": "Sprožilec kartice"
+            "card_trigger": "Sprožilec kartice",
+            "search_view": "Pogled rezultatov iskanja",
+            "search_card_columns": "Stolpci kartic"
         },
         "action_types": {
             "menu": "Odpri element menija kartice",
@@ -228,6 +232,10 @@ export default {
             "double_tap": "Dvojni dotik",
             "swipe_left": "Podrsaj levo",
             "swipe_right": "Podrsaj desno"
+        },
+        "search_view_options": {
+            "list": "Seznam",
+            "card": "Kartica"
         }
     },
     "card": {
