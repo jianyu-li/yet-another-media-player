@@ -986,7 +986,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _sortSearchResults(results, sortModeOverride = null) {
-    const sortMode = sortModeOverride ?? this.config?.search_results_sort ?? "default";
+    const sortMode = sortModeOverride ?? this._getConfiguredSearchResultsSortMode();
     const list = Array.isArray(results) ? [...results] : [];
 
     if (sortMode === "random") {
@@ -1004,7 +1004,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getConfiguredSearchResultsSortMode() {
     const configured = this.config?.search_results_sort;
-    return typeof configured === "string" ? configured : "default";
+    const mode = typeof configured === "string" ? configured : "default";
+    return this._mapLegacySortOption(mode);
+  }
+
+  _mapLegacySortOption(mode) {
+    if (!mode) return "default";
+    const legacyMap = {
+      "title_asc": "name",
+      "title_desc": "name_desc",
+      "artist_asc": "artist_name",
+      "artist_desc": "artist_name_desc"
+    };
+    return legacyMap[mode] || mode;
   }
 
   _isSortableSearchMode(mode) {
