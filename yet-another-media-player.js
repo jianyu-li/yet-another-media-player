@@ -838,7 +838,7 @@ async function resolveStringTemplate(hass, templateString) {
   // Not a template — return as-is
   if (!templateString.includes('{{') && !templateString.includes('{%')) {
     // Check for URL-encoded templates (%7B%7B or %7B%25)
-    if (templateString.includes('%7B%7B') || templateString.includes('%7B%25')) {
+    if (/%7B%7B|%7B%25/i.test(templateString)) {
       try {
         templateString = decodeURIComponent(templateString);
       } catch (e) {

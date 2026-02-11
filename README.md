@@ -527,7 +527,7 @@ actions:
     icon: mdi:music
     service_data:
       entity_id: current
-      media_id: apple_music://playlist/pl.5feba9fd5ea441a29aeb3597c8314384
+      media_id: apple_music://playlist/pl.8iqweuroqwjief209
       enqueue: replace
   - name: Play Bluey
     icon: mdi:television-play
@@ -910,7 +910,7 @@ actions:
     service: music_assistant.play_media
     service_data:
       entity_id: current
-      media_id: apple_music://playlist/pl.3cb881c4590341fabc374f003afaf2b4
+      media_id: apple_music://playlist/pl.23r98u32pqorijwaelkn
       enqueue: replace
     in_menu: true
   - name: Set the Mood
