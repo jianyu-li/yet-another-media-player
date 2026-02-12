@@ -22640,7 +22640,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
       // Create context for template resolution
       const context = {
-        current: this.currentEntityId || ''
+        current: this.currentActivePlaybackEntityId || this.currentEntityId || ''
       };
       path = await resolveStringTemplate(this.hass, path, context);
       const openInNewTab = action.navigation_new_tab === true;
