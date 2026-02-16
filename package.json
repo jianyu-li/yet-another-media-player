@@ -7,7 +7,7 @@
   "dependencies": {
     "js-yaml": "^4.1.1",
     "lit": "^3.3.2",
-    "sortablejs": "^1.15.0"
+    "sortablejs": "^1.15.7"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
