@@ -653,12 +653,35 @@ export const yampCardStyles = css`
   }
 
   .chip-pin:hover ha-icon,
-  .chip-pin-inside:hover ha-icon {
+  .chip-pin-inside:hover ha-icon,
+  .chip-quick-group:hover ha-icon {
     color: #fff;
   }
 
   .chip:hover .chip-pin ha-icon,
-  .chip:hover .chip-pin-inside ha-icon {
+  .chip:hover .chip-pin-inside ha-icon,
+  .chip:hover .chip-quick-group ha-icon {
+    color: #fff;
+  }
+
+  .chip-quick-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    background: transparent;
+    border-radius: 50%;
+    padding: 2px;
+    cursor: pointer;
+  }
+
+  .chip-quick-group ha-icon {
+    color: var(--custom-accent);
+    font-size: 17px;
+    margin: 0;
+  }
+
+  .chip[selected] .chip-quick-group ha-icon {
     color: #fff;
   }
 

@@ -123,6 +123,9 @@ export function renderChip({
   onPointerMove,
   onPointerUp,
   objectFit,
+  quickGroupingState,
+  onQuickGroupClick,
+  onDoubleClick
 }) {
   const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
   return html`
@@ -130,12 +133,13 @@ export function renderChip({
             ?selected=${selected}
             ?playing=${playing}
             ?ma-active=${maActive}
+            @dblclick=${onDoubleClick}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}
-            style="display:flex;align-items:center;justify-content:space-between;">
+            style="display:flex;align-items:center;justify-content:space-between;position:relative;">
       <span class="chip-icon">
         ${art
       ? html`<img class="chip-mini-art" src="${art}" style="${artStyle}" onerror="this.style.display='none'" />`
@@ -161,6 +165,14 @@ export function renderChip({
           `
       : html`<span class="chip-pin-spacer"></span>`
     }
+      ${quickGroupingState && quickGroupingState.isGroupable ? html`
+            <span class="chip-quick-group" @click=${e => {
+        e.stopPropagation();
+        if (onQuickGroupClick && !quickGroupingState.isBusy && !quickGroupingState.isPrimary) onQuickGroupClick(idx, e);
+      }} title=${quickGroupingState.isPrimary ? "Primary" : quickGroupingState.isBusy ? "Unavailable" : quickGroupingState.grouped ? "Unjoin" : "Join"} style="${quickGroupingState.isPrimary ? 'cursor:default;opacity:0.7;' : quickGroupingState.isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+              <ha-icon .icon=${quickGroupingState.isPrimary ? "mdi:star-circle-outline" : quickGroupingState.grouped ? "mdi:minus" : "mdi:plus"}></ha-icon>
+            </span>
+          ` : nothing}
     </button>
   `;
 }
@@ -183,18 +195,22 @@ export function renderGroupChip({
   onPointerMove,
   onPointerUp,
   objectFit,
+  quickGroupingState,
+  onQuickGroupClick,
+  onDoubleClick
 }) {
   const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
   return html`
     <button class="chip group"
             ?selected=${selected}
             ?ma-active=${maActive}
+            @dblclick=${onDoubleClick}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}
-            style="display:flex;align-items:center;justify-content:space-between;">
+            style="display:flex;align-items:center;justify-content:space-between;position:relative;">
       <span class="chip-icon"
             style="cursor:pointer;"
             @click=${e => {
@@ -245,6 +261,14 @@ export function renderGroupChip({
           `
       : html`<span class="chip-pin-spacer"></span>`
     }
+      ${quickGroupingState && quickGroupingState.isGroupable ? html`
+            <span class="chip-quick-group" @click=${e => {
+        e.stopPropagation();
+        if (onQuickGroupClick && !quickGroupingState.isBusy && !quickGroupingState.isPrimary) onQuickGroupClick(idx, e);
+      }} title=${quickGroupingState.isPrimary ? "Primary" : quickGroupingState.isBusy ? "Unavailable" : quickGroupingState.grouped ? "Unjoin" : "Join"} style="${quickGroupingState.isPrimary ? 'cursor:default;opacity:0.7;' : quickGroupingState.isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+              <ha-icon .icon=${quickGroupingState.isPrimary ? "mdi:star-circle-outline" : quickGroupingState.grouped ? "mdi:minus" : "mdi:plus"}></ha-icon>
+            </span>
+          ` : nothing}
     </button>
   `;
 }
@@ -308,10 +332,15 @@ export function renderChipRow({
   fallbackArtwork = null,
   onChipClick,
   onIconClick,
+  onPointerClick,
   onPinClick,
   onPointerDown,
   onPointerMove,
-  onPointerUp
+  onPointerUp,
+  quickGroupingMode,
+  getQuickGroupingState,
+  onQuickGroupClick,
+  onDoubleClick
 }) {
   if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return nothing;
 
@@ -350,6 +379,9 @@ export function renderChipRow({
         onPointerMove: (e) => onPointerMove(e, idx),
         onPointerUp: (e) => onPointerUp(e, idx),
         objectFit,
+        quickGroupingState: quickGroupingMode && typeof getQuickGroupingState === "function" ? getQuickGroupingState(id) : null,
+        onQuickGroupClick,
+        onDoubleClick
       });
     } else {
       // Single chip
@@ -384,6 +416,9 @@ export function renderChipRow({
         onPointerMove: (e) => onPointerMove(e, idx),
         onPointerUp: (e) => onPointerUp(e, idx),
         objectFit,
+        quickGroupingState: quickGroupingMode && typeof getQuickGroupingState === "function" ? getQuickGroupingState(id) : null,
+        onQuickGroupClick,
+        onDoubleClick
       });
     }
   })}

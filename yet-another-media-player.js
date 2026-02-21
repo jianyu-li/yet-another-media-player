@@ -1082,13 +1082,18 @@ function renderChip(_ref2) {
     art,
     icon,
     pinned,
+    holdToPin,
     maActive,
     onChipClick,
+    onIconClick,
     onPinClick,
     onPointerDown,
     onPointerMove,
     onPointerUp,
-    objectFit
+    objectFit,
+    quickGroupingState,
+    onQuickGroupClick,
+    onDoubleClick
   } = _ref2;
   const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
   return x`
@@ -1096,12 +1101,13 @@ function renderChip(_ref2) {
             ?selected=${selected}
             ?playing=${playing}
             ?ma-active=${maActive}
+            @dblclick=${onDoubleClick}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}
-            style="display:flex;align-items:center;justify-content:space-between;">
+            style="display:flex;align-items:center;justify-content:space-between;position:relative;">
       <span class="chip-icon">
         ${art ? x`<img class="chip-mini-art" src="${art}" style="${artStyle}" onerror="this.style.display='none'" />` : x`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
       </span>
@@ -1123,6 +1129,14 @@ function renderChip(_ref2) {
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           ` : x`<span class="chip-pin-spacer"></span>`}
+      ${quickGroupingState && quickGroupingState.isGroupable ? x`
+            <span class="chip-quick-group" @click=${e => {
+    e.stopPropagation();
+    if (onQuickGroupClick && !quickGroupingState.isBusy && !quickGroupingState.isPrimary) onQuickGroupClick(idx, e);
+  }} title=${quickGroupingState.isPrimary ? "Primary" : quickGroupingState.isBusy ? "Unavailable" : quickGroupingState.grouped ? "Unjoin" : "Join"} style="${quickGroupingState.isPrimary ? 'cursor:default;opacity:0.7;' : quickGroupingState.isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+              <ha-icon .icon=${quickGroupingState.isPrimary ? "mdi:star-circle-outline" : quickGroupingState.grouped ? "mdi:minus" : "mdi:plus"}></ha-icon>
+            </span>
+          ` : E}
     </button>
   `;
 }
@@ -1137,6 +1151,7 @@ function renderGroupChip(_ref3) {
     art,
     icon,
     pinned,
+    holdToPin,
     maActive,
     onChipClick,
     onIconClick,
@@ -1144,19 +1159,23 @@ function renderGroupChip(_ref3) {
     onPointerDown,
     onPointerMove,
     onPointerUp,
-    objectFit
+    objectFit,
+    quickGroupingState,
+    onQuickGroupClick,
+    onDoubleClick
   } = _ref3;
   const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
   return x`
     <button class="chip group"
             ?selected=${selected}
             ?ma-active=${maActive}
+            @dblclick=${onDoubleClick}
             @click=${() => onChipClick(idx)}
             @pointerdown=${onPointerDown}
             @pointermove=${onPointerMove}
             @pointerup=${onPointerUp}
             @pointerleave=${onPointerUp}
-            style="display:flex;align-items:center;justify-content:space-between;">
+            style="display:flex;align-items:center;justify-content:space-between;position:relative;">
       <span class="chip-icon"
             style="cursor:pointer;"
             @click=${e => {
@@ -1201,6 +1220,14 @@ function renderGroupChip(_ref3) {
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           ` : x`<span class="chip-pin-spacer"></span>`}
+      ${quickGroupingState && quickGroupingState.isGroupable ? x`
+            <span class="chip-quick-group" @click=${e => {
+    e.stopPropagation();
+    if (onQuickGroupClick && !quickGroupingState.isBusy && !quickGroupingState.isPrimary) onQuickGroupClick(idx, e);
+  }} title=${quickGroupingState.isPrimary ? "Primary" : quickGroupingState.isBusy ? "Unavailable" : quickGroupingState.grouped ? "Unjoin" : "Join"} style="${quickGroupingState.isPrimary ? 'cursor:default;opacity:0.7;' : quickGroupingState.isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+              <ha-icon .icon=${quickGroupingState.isPrimary ? "mdi:star-circle-outline" : quickGroupingState.grouped ? "mdi:minus" : "mdi:plus"}></ha-icon>
+            </span>
+          ` : E}
     </button>
   `;
 }
@@ -1269,10 +1296,15 @@ function renderChipRow(_ref5) {
     fallbackArtwork = null,
     onChipClick,
     onIconClick,
+    onPointerClick,
     onPinClick,
     onPointerDown,
     onPointerMove,
-    onPointerUp
+    onPointerUp,
+    quickGroupingMode,
+    getQuickGroupingState,
+    onQuickGroupClick,
+    onDoubleClick
   } = _ref5;
   if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return E;
   return x`
@@ -1297,6 +1329,7 @@ function renderChipRow(_ref5) {
         art,
         icon,
         pinned: pinnedIndex === idx,
+        holdToPin,
         maActive: isMaActive,
         onChipClick,
         onIconClick,
@@ -1304,7 +1337,10 @@ function renderChipRow(_ref5) {
         onPointerDown: e => onPointerDown(e, idx),
         onPointerMove: e => onPointerMove(e, idx),
         onPointerUp: e => onPointerUp(e, idx),
-        objectFit
+        objectFit,
+        quickGroupingState: quickGroupingMode && typeof getQuickGroupingState === "function" ? getQuickGroupingState(id) : null,
+        onQuickGroupClick,
+        onDoubleClick
       });
     } else {
       var _hass$states2, _state$attributes2;
@@ -1327,13 +1363,17 @@ function renderChipRow(_ref5) {
         art,
         icon,
         pinned: pinnedIndex === idx,
+        holdToPin,
         maActive: isMaActive,
         onChipClick,
         onPinClick,
         onPointerDown: e => onPointerDown(e, idx),
         onPointerMove: e => onPointerMove(e, idx),
         onPointerUp: e => onPointerUp(e, idx),
-        objectFit
+        objectFit,
+        quickGroupingState: quickGroupingMode && typeof getQuickGroupingState === "function" ? getQuickGroupingState(id) : null,
+        onQuickGroupClick,
+        onDoubleClick
       });
     }
   })}
@@ -5305,12 +5345,35 @@ const yampCardStyles = i$5`
   }
 
   .chip-pin:hover ha-icon,
-  .chip-pin-inside:hover ha-icon {
+  .chip-pin-inside:hover ha-icon,
+  .chip-quick-group:hover ha-icon {
     color: #fff;
   }
 
   .chip:hover .chip-pin ha-icon,
-  .chip:hover .chip-pin-inside ha-icon {
+  .chip:hover .chip-pin-inside ha-icon,
+  .chip:hover .chip-quick-group ha-icon {
+    color: #fff;
+  }
+
+  .chip-quick-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    background: transparent;
+    border-radius: 50%;
+    padding: 2px;
+    cursor: pointer;
+  }
+
+  .chip-quick-group ha-icon {
+    color: var(--custom-accent);
+    font-size: 17px;
+    margin: 0;
+  }
+
+  .chip[selected] .chip-quick-group ha-icon {
     color: #fff;
   }
 
@@ -18103,7 +18166,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     for (let i = 0; i < idList.length; i++) {
       const id = idList[i];
       let key = this._getGroupKey(id);
-      if (!idSet.has(key)) {
+      if (this._quickGroupingMode || !idSet.has(key)) {
         key = id;
       }
       if (!map[key]) map[key] = {
@@ -18126,6 +18189,9 @@ class YetAnotherMediaPlayerCard extends i$2 {
     return result;
   }
   static properties = {
+    _quickGroupingMode: {
+      state: true
+    },
     hass: {},
     config: {},
     _selectedIndex: {
@@ -21861,7 +21927,27 @@ class YetAnotherMediaPlayerCard extends i$2 {
       },
       onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
       onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
-      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
+      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx),
+      quickGroupingMode: this._quickGroupingMode,
+      getQuickGroupingState: id => {
+        const masterId = this.currentEntityId;
+        const masterIdx = this.entityIds.indexOf(masterId);
+        const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
+        const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+        const myGroupKey = this._getGroupKey(this.currentEntityId);
+        return this._getGroupPlayerState(id, masterId, null, masterState, myGroupKey);
+      },
+      onQuickGroupClick: (idx, e) => {
+        const id = this.entityIds[idx];
+        if (id) {
+          this._toggleGroup(id);
+        }
+      },
+      onDoubleClick: e => {
+        e.stopPropagation();
+        this._quickGroupingMode = !this._quickGroupingMode;
+        this.requestUpdate();
+      }
     })}
       </div>
     `;
@@ -21908,42 +21994,74 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
     return E;
   }
+
+  // Determine the grouping state of a player ID relative to an active ID
+  _getGroupPlayerState(targetId, activeId, activeGroupKey, masterState, myGroupKey) {
+    var _masterState$attribut, _st$attributes2;
+    const targetIdx = this.entityIds.indexOf(targetId);
+    if (targetIdx < 0) return {
+      isGroupable: false,
+      isBusy: false,
+      busyLabel: "",
+      grouped: false
+    };
+    const entityToCheck = this._getGroupingEntityId(targetIdx);
+    const st = this.hass.states[entityToCheck];
+    if (!st || !this._isGroupCapable(st)) {
+      return {
+        isGroupable: false,
+        isBusy: false,
+        busyLabel: "",
+        grouped: false
+      };
+    }
+    const playerGroupKey = this._getGroupKey(targetId);
+    let isBusy = false;
+    let busyLabel = "";
+
+    // Busy if joined to a DIFFERENT group
+    if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
+      isBusy = true;
+      busyLabel = localize('common.unavailable');
+    }
+    // Or if it IS a master of a different group
+    else if (playerGroupKey === targetId && playerGroupKey !== myGroupKey) {
+      var _st$attributes;
+      if (((_st$attributes = st.attributes) === null || _st$attributes === void 0 || (_st$attributes = _st$attributes.group_members) === null || _st$attributes === void 0 ? void 0 : _st$attributes.length) > 1) {
+        isBusy = true;
+        busyLabel = localize('common.unavailable');
+      }
+    }
+    const filteredMembers = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) ? masterState.attributes.group_members : [];
+    const grouped = filteredMembers.includes(entityToCheck);
+    const isPrimary = playerGroupKey === entityToCheck && playerGroupKey === myGroupKey && ((_st$attributes2 = st.attributes) === null || _st$attributes2 === void 0 || (_st$attributes2 = _st$attributes2.group_members) === null || _st$attributes2 === void 0 ? void 0 : _st$attributes2.length) > 1;
+    return {
+      isGroupable: true,
+      isBusy,
+      busyLabel,
+      grouped,
+      isPrimary,
+      entityToCheck
+    };
+  }
   _renderGroupingSheet() {
-    var _masterState$attribut;
+    var _masterState$attribut2;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
     const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
-    const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) && masterState.attributes.group_members.length > 1;
+    const groupedAny = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut2 = masterState.attributes) === null || _masterState$attribut2 === void 0 ? void 0 : _masterState$attribut2.group_members) && masterState.attributes.group_members.length > 1;
     const groupPlayerIds = [];
     this.entityIds.indexOf(this.currentEntityId);
     const myGroupKey = this._getGroupKey(this.currentEntityId);
-    this.entityIds.forEach((id, idx) => {
-      const entityToCheck = this._getGroupingEntityId(idx);
-      const st = this.hass.states[entityToCheck];
-      if (st && this._isGroupCapable(st)) {
-        const playerGroupKey = this._getGroupKey(id);
-        let isBusy = false;
-        let busyLabel = "";
-
-        // Busy if joined to a DIFFERENT group
-        if (playerGroupKey !== id && playerGroupKey !== myGroupKey) {
-          isBusy = true;
-          busyLabel = localize('common.unavailable');
-        }
-        // Or if it IS a master of a different group
-        else if (playerGroupKey === id && playerGroupKey !== myGroupKey) {
-          var _st$attributes;
-          if (((_st$attributes = st.attributes) === null || _st$attributes === void 0 || (_st$attributes = _st$attributes.group_members) === null || _st$attributes === void 0 ? void 0 : _st$attributes.length) > 1) {
-            isBusy = true;
-            busyLabel = localize('common.unavailable');
-          }
-        }
+    this.entityIds.forEach(id => {
+      const state = this._getGroupPlayerState(id, this.currentEntityId, null, masterState, myGroupKey);
+      if (state.isGroupable) {
         groupPlayerIds.push({
           id: id,
-          groupId: entityToCheck,
-          isBusy,
-          busyLabel
+          groupId: state.entityToCheck,
+          isBusy: state.isBusy,
+          busyLabel: state.busyLabel
         });
       }
     });
@@ -22020,10 +22138,10 @@ class YetAnotherMediaPlayerCard extends i$2 {
             ${localize('card.grouping.no_players')}
           </div>
         ` : sortedGroupIds.map(item => {
-      var _masterState$attribut2, _displayVolumeState$a;
+      var _masterState$attribut3, _displayVolumeState$a;
       const id = item.id;
       const actualGroupId = item.groupId;
-      const filteredMembers = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut2 = masterState.attributes) === null || _masterState$attribut2 === void 0 ? void 0 : _masterState$attribut2.group_members) ? masterState.attributes.group_members : [];
+      const filteredMembers = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut3 = masterState.attributes) === null || _masterState$attribut3 === void 0 ? void 0 : _masterState$attribut3.group_members) ? masterState.attributes.group_members : [];
       const grouped = filteredMembers.includes(actualGroupId);
       const name = this.getChipName(id);
       const isBusy = item.isBusy;
@@ -25263,7 +25381,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     // No requestUpdate here; overlay close will handle it.
   }
   async _toggleGroup(targetId) {
-    var _masterState$attribut3;
+    var _masterState$attribut4;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
@@ -25275,7 +25393,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     const targetGroupId = await this._resolveGroupingEntityId(targetObj, targetId);
     if (!targetGroupId) return;
     const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
-    const grouped = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut3 = masterState.attributes) === null || _masterState$attribut3 === void 0 ? void 0 : _masterState$attribut3.group_members) && masterState.attributes.group_members.includes(targetGroupId);
+    const grouped = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut4 = masterState.attributes) === null || _masterState$attribut4 === void 0 ? void 0 : _masterState$attribut4.group_members) && masterState.attributes.group_members.includes(targetGroupId);
     if (grouped) {
       await this.hass.callService("media_player", "unjoin", {
         entity_id: targetGroupId
@@ -25302,7 +25420,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Group all supported entities to current master
   async _groupAll() {
-    var _masterState$attribut4;
+    var _masterState$attribut5;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
@@ -25313,7 +25431,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (!this._isGroupCapable(masterState)) return;
 
     // Get all other entities that support grouping and are not already grouped with master
-    const alreadyGrouped = Array.isArray((_masterState$attribut4 = masterState.attributes) === null || _masterState$attribut4 === void 0 ? void 0 : _masterState$attribut4.group_members) ? masterState.attributes.group_members : [];
+    const alreadyGrouped = Array.isArray((_masterState$attribut5 = masterState.attributes) === null || _masterState$attribut5 === void 0 ? void 0 : _masterState$attribut5.group_members) ? masterState.attributes.group_members : [];
 
     // Build list of resolved MA entities to join
     const toJoin = [];
@@ -25341,7 +25459,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Ungroup all members from current master
   async _ungroupAll() {
-    var _masterState$attribut5;
+    var _masterState$attribut6;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
@@ -25350,7 +25468,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
     if (!this._isGroupCapable(masterState)) return;
-    const members = Array.isArray((_masterState$attribut5 = masterState.attributes) === null || _masterState$attribut5 === void 0 ? void 0 : _masterState$attribut5.group_members) ? masterState.attributes.group_members : [];
+    const members = Array.isArray((_masterState$attribut6 = masterState.attributes) === null || _masterState$attribut6 === void 0 ? void 0 : _masterState$attribut6.group_members) ? masterState.attributes.group_members : [];
     // Only unjoin those that support grouping
     const toUnjoin = members.filter(id => {
       const st = this.hass.states[id];

@@ -360,7 +360,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     for (let i = 0; i < idList.length; i++) {
       const id = idList[i];
       let key = this._getGroupKey(id);
-      if (!idSet.has(key)) {
+      if (this._quickGroupingMode || !idSet.has(key)) {
         key = id;
       }
 
@@ -383,6 +383,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return result;
   }
   static properties = {
+    _quickGroupingMode: { state: true },
     hass: {},
     config: {},
     _selectedIndex: { state: true },
@@ -4253,7 +4254,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
       onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
       onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
       onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
-      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
+      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx),
+      quickGroupingMode: this._quickGroupingMode,
+      getQuickGroupingState: id => {
+        const masterId = this.currentEntityId;
+        const masterIdx = this.entityIds.indexOf(masterId);
+        const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
+        const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+        const myGroupKey = this._getGroupKey(this.currentEntityId);
+        return this._getGroupPlayerState(id, masterId, null, masterState, myGroupKey);
+      },
+      onQuickGroupClick: (idx, e) => {
+        const id = this.entityIds[idx];
+        if (id) {
+          this._toggleGroup(id);
+        }
+      },
+      onDoubleClick: e => {
+        e.stopPropagation();
+        this._quickGroupingMode = !this._quickGroupingMode;
+        this.requestUpdate();
+      }
     })}
       </div>
     `;
@@ -4301,6 +4322,49 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return nothing;
   }
 
+  // Determine the grouping state of a player ID relative to an active ID
+  _getGroupPlayerState(targetId, activeId, activeGroupKey, masterState, myGroupKey) {
+    const targetIdx = this.entityIds.indexOf(targetId);
+    if (targetIdx < 0) return { isGroupable: false, isBusy: false, busyLabel: "", grouped: false };
+
+    const entityToCheck = this._getGroupingEntityId(targetIdx);
+    const st = this.hass.states[entityToCheck];
+
+    if (!st || !this._isGroupCapable(st)) {
+      return { isGroupable: false, isBusy: false, busyLabel: "", grouped: false };
+    }
+
+    const playerGroupKey = this._getGroupKey(targetId);
+    let isBusy = false;
+    let busyLabel = "";
+
+    // Busy if joined to a DIFFERENT group
+    if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
+      isBusy = true;
+      busyLabel = localize('common.unavailable');
+    }
+    // Or if it IS a master of a different group
+    else if (playerGroupKey === targetId && playerGroupKey !== myGroupKey) {
+      if (st.attributes?.group_members?.length > 1) {
+        isBusy = true;
+        busyLabel = localize('common.unavailable');
+      }
+    }
+
+    const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
+    const grouped = filteredMembers.includes(entityToCheck);
+    const isPrimary = playerGroupKey === entityToCheck && playerGroupKey === myGroupKey && st.attributes?.group_members?.length > 1;
+
+    return {
+      isGroupable: true,
+      isBusy,
+      busyLabel,
+      grouped,
+      isPrimary,
+      entityToCheck
+    };
+  }
+
   _renderGroupingSheet() {
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
@@ -4312,33 +4376,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const currentEntityIdx = this.entityIds.indexOf(this.currentEntityId);
     const myGroupKey = this._getGroupKey(this.currentEntityId);
 
-    this.entityIds.forEach((id, idx) => {
-      const entityToCheck = this._getGroupingEntityId(idx);
-      const st = this.hass.states[entityToCheck];
-
-      if (st && this._isGroupCapable(st)) {
-        const playerGroupKey = this._getGroupKey(id);
-        let isBusy = false;
-        let busyLabel = "";
-
-        // Busy if joined to a DIFFERENT group
-        if (playerGroupKey !== id && playerGroupKey !== myGroupKey) {
-          isBusy = true;
-          busyLabel = localize('common.unavailable');
-        }
-        // Or if it IS a master of a different group
-        else if (playerGroupKey === id && playerGroupKey !== myGroupKey) {
-          if (st.attributes?.group_members?.length > 1) {
-            isBusy = true;
-            busyLabel = localize('common.unavailable');
-          }
-        }
-
+    this.entityIds.forEach((id) => {
+      const state = this._getGroupPlayerState(id, this.currentEntityId, null, masterState, myGroupKey);
+      if (state.isGroupable) {
         groupPlayerIds.push({
           id: id,
-          groupId: entityToCheck,
-          isBusy,
-          busyLabel
+          groupId: state.entityToCheck,
+          isBusy: state.isBusy,
+          busyLabel: state.busyLabel
         });
       }
     });
