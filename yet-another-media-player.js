@@ -23207,7 +23207,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
     // Always use group_volume directly from obj
     const groupVolume = typeof obj.group_volume === "boolean" ? obj.group_volume : true;
-    if (!groupVolume) {
+    if (!groupVolume || this._quickGroupingMode) {
       this.hass.callService("media_player", "volume_set", {
         entity_id: this._getVolumeEntity(idx),
         volume_level: newVol

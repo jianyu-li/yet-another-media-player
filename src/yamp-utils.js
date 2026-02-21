@@ -103,12 +103,14 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
   // Common patterns: device_id matching, friendly_name similarity, or device_class
   const maDeviceId = maEntity.attributes?.device_id;
   const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
+  const strippedMaId = maEntityId.includes('.') ? maEntityId.split('.').slice(1).join('.') : maEntityId;
 
   // Search through all button entities
   for (const [entityId, state] of Object.entries(hass.states)) {
     if (entityId.startsWith('button.') && state.attributes) {
       const buttonDeviceId = state.attributes.device_id;
       const buttonFriendlyName = state.attributes.friendly_name || entityId;
+      const strippedButtonId = entityId.includes('.') ? entityId.split('.').slice(1).join('.') : entityId;
 
       // Check if this button is associated with the same device
       if (maDeviceId && buttonDeviceId === maDeviceId) {
@@ -127,6 +129,16 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
           friendly_name: buttonFriendlyName,
           device_class: state.attributes.device_class,
           reason: 'name_similarity'
+        });
+      }
+      // Check for entity_id similarity, ignoring domains (e.g. media_player.foo and button.foo_favorite)
+      else if (strippedButtonId.toLowerCase().includes(strippedMaId.toLowerCase()) ||
+        strippedMaId.toLowerCase().includes(strippedButtonId.toLowerCase())) {
+        buttonEntities.push({
+          entity_id: entityId,
+          friendly_name: buttonFriendlyName,
+          device_class: state.attributes.device_class,
+          reason: 'entity_id_similarity'
         });
       }
     }
