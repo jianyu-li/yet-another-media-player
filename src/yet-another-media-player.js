@@ -4353,7 +4353,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
     const grouped = filteredMembers.includes(entityToCheck);
-    const isPrimary = playerGroupKey === entityToCheck && playerGroupKey === myGroupKey && st.attributes?.group_members?.length > 1;
+    const isPrimary = targetId === myGroupKey;
 
     return {
       isGroupable: true,

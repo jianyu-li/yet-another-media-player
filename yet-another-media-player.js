@@ -21997,7 +21997,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
 
   // Determine the grouping state of a player ID relative to an active ID
   _getGroupPlayerState(targetId, activeId, activeGroupKey, masterState, myGroupKey) {
-    var _masterState$attribut, _st$attributes2;
+    var _masterState$attribut;
     const targetIdx = this.entityIds.indexOf(targetId);
     if (targetIdx < 0) return {
       isGroupable: false,
@@ -22034,7 +22034,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
     }
     const filteredMembers = Array.isArray(masterState === null || masterState === void 0 || (_masterState$attribut = masterState.attributes) === null || _masterState$attribut === void 0 ? void 0 : _masterState$attribut.group_members) ? masterState.attributes.group_members : [];
     const grouped = filteredMembers.includes(entityToCheck);
-    const isPrimary = playerGroupKey === entityToCheck && playerGroupKey === myGroupKey && ((_st$attributes2 = st.attributes) === null || _st$attributes2 === void 0 || (_st$attributes2 = _st$attributes2.group_members) === null || _st$attributes2 === void 0 ? void 0 : _st$attributes2.length) > 1;
+    const isPrimary = targetId === myGroupKey;
     return {
       isGroupable: true,
       isBusy,
