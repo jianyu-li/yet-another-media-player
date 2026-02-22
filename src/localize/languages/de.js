@@ -87,6 +87,7 @@ export default {
             "show_chip_row": "\"Auto\" blendet die Chip-Leiste bei nur einer Entität aus. \"Im Menü\" verschiebt sie ins Menü. \"Im Menü bei Inaktivität\" zeigt Chips inline wenn aktiv, verschiebt sie aber ins Menü bei Inaktivität.",
             "dim_chips": "Entitäts- und Aktions-Chips im Leerlauf mit Bild abdunkeln für einen sauberen Look.",
             "hold_to_pin": "Langes Drücken statt kurzem Drücken zum Anpinnen, um automatisches Umschalten zu verhindern.",
+            "always_show_group": "Schnellgruppierungs-Steuerelemente (+/-/Stern) sind standardmäßig beim Laden der Seite sichtbar. Sie können sie weiterhin manuell per Doppeltipp umschalten.",
             "disable_autofocus": "Suchfeld-Autofokus deaktivieren, damit Bildschirmtastaturen ausgeblendet bleiben.",
             "search_within_filter": "Innerhalb des aktiven Filters suchen (Favoriten, etc.), anstatt ihn zu löschen.",
             "close_search_on_play": "Suchbildschirm beim Abspielen automatisch schließen.",
@@ -134,6 +135,7 @@ export default {
         "labels": {
             "dim_chips": "Chips im Leerlauf abdunkeln",
             "hold_to_pin": "Gedrückt halten zum Anpinnen",
+            "always_show_group": "Schnellgruppierung standardmäßig aktivieren",
             "disable_autofocus": "Such-Autofocus deaktivieren",
             "keep_filters": "Filter bei Suche beibehalten",
             "dismiss_on_play": "Suche beim Abspielen beenden",
@@ -274,7 +276,9 @@ export default {
             "master": "Master",
             "joined": "Verbunden",
             "available": "Verfügbar",
-            "current": "Aktuell"
+            "current": "Aktuell",
+            "unjoin_from": "Von {master} trennen",
+            "join_with": "Mit {master} gruppieren"
         }
     },
     "search": {

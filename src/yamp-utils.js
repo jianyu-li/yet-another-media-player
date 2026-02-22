@@ -191,11 +191,13 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
   const maDeviceId = maEntity.attributes?.device_id;
   const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
 
+
   // Search through all button entities
   for (const [entityId, state] of Object.entries(hass.states)) {
     if (entityId.startsWith('button.') && state.attributes) {
       const buttonDeviceId = state.attributes.device_id;
       const buttonFriendlyName = state.attributes.friendly_name || entityId;
+
 
       // Check if this button is associated with the same device
       if (maDeviceId && buttonDeviceId === maDeviceId) {
@@ -216,6 +218,7 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
           reason: 'name_similarity'
         });
       }
+
     }
   }
 

@@ -82,6 +82,9 @@ window.customCards.push({
 class YetAnotherMediaPlayerCard extends LitElement {
 
   _handleChipPointerDown(e, idx) {
+    this._chipGestureStartX = e.clientX;
+    this._chipGestureStartY = e.clientY;
+
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerDown(e, idx);
     }
@@ -145,6 +148,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerUp(e, idx);
     }
+
+    // Rely on native @dblclick for mice/desktop. This manual tap logic is only needed for touch screens.
+    if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+
+    // Both @pointerup and @pointerleave trigger this method. We must ignore pointerleave to avoid fake double-clicks.
+    if (e.type !== 'pointerup') return;
+
+    const diffX = e.clientX - this._chipGestureStartX;
+    const diffY = e.clientY - this._chipGestureStartY;
+    const absDiffX = Math.abs(diffX);
+    const absDiffY = Math.abs(diffY);
+    if (absDiffX > GESTURE_MOVE_THRESHOLD || absDiffY > GESTURE_MOVE_THRESHOLD) return;
+
+    const now = Date.now();
+    const timeSinceLastTap = now - (this._lastChipTapTime || 0);
+    this._lastChipTapTime = now;
+
+    if (timeSinceLastTap < GESTURE_DOUBLE_TAP_MAX_DELAY && this._lastChipTapIdx === idx) {
+      this._lastChipTapTime = 0; // reset
+      this._quickGroupingMode = !this._quickGroupingMode;
+      this.requestUpdate();
+    }
+    this._lastChipTapIdx = idx;
   }
   _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
@@ -361,7 +387,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     for (let i = 0; i < idList.length; i++) {
       const id = idList[i];
       let key = this._getGroupKey(id);
-      if (!idSet.has(key)) {
+      if (this._quickGroupingMode || !idSet.has(key)) {
         key = id;
       }
 
@@ -384,6 +410,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return result;
   }
   static properties = {
+    _quickGroupingMode: { state: true },
     hass: {},
     config: {},
     _selectedIndex: { state: true },
@@ -3455,6 +3482,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
+    const oldConfig = this.config;
     this.config = { ...config };
     const layoutPref = typeof config.control_layout === "string" ? config.control_layout.toLowerCase() : "classic";
     this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
@@ -3521,6 +3549,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._adaptiveText = this._adaptiveTextTargets.size > 0;
     this._currentDetailsScale = null;
     this._updateAdaptiveTextObserverState();
+
+    // Set default quick grouping mode based on config
+    if (config.always_show_quick_group !== oldConfig?.always_show_quick_group) {
+      this._quickGroupingMode = !!config.always_show_quick_group;
+    }
     if (this._adaptiveText) {
       const initialScale = this._currentTextScale ?? 1;
       const initialDetailsScale = this._currentDetailsScale ?? 1;
@@ -4177,11 +4210,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     `;
   }
 
-  _renderInlineChipRow(showChipsInline, chipsHiddenInline) {
-    if (!showChipsInline) return nothing;
-    return html`
-      <div class="chip-row" style="${chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : ""}">
-        ${renderChipRow({
+  _getChipRowProps() {
+    return {
       groupedSortedEntityIds: this.groupedSortedEntityIds,
       entityIds: this.entityIds,
       selectedEntityId: this.currentEntityId,
@@ -4197,11 +4227,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const mainId = obj?.entity_id || id;
         const idx = this.entityIds.indexOf(mainId);
         if (idx < 0) return false;
-
-        // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = this.hass?.states?.[playbackEntityId];
-        // Return actual playing state - animation should only show when truly playing
         return this._isEntityPlaying(playbackState);
       },
       getChipArt: (id) => {
@@ -4209,13 +4236,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const mainId = obj?.entity_id || id;
         const idx = this.entityIds.indexOf(mainId);
         if (idx < 0) return null;
-
-        // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = this.hass?.states?.[playbackEntityId];
         const mainState = this.hass?.states?.[mainId];
-
-        // Prefer playback entity artwork, fallback to main entity
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
         return playbackArtwork || mainArtwork;
@@ -4225,30 +4248,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const mainId = obj?.entity_id || id;
         const idx = this.entityIds.indexOf(mainId);
         if (idx < 0) return false;
-
-        // Check if there's a configured MA entity
         const entityObj = this.entityObjs[idx];
         if (!entityObj?.music_assistant_entity) return false;
-
-        // Use the unified entity resolution system
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = this.hass?.states?.[playbackEntityId];
-
-        // Check if the playback entity is the MA entity and is playing
         return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) &&
           this._isEntityPlaying(playbackState);
       },
       isIdle: this._isIdle,
       hass: this.hass,
-      onChipClick: (idx) => {
-        this._onChipClick(idx);
-      },
+      onChipClick: (idx) => this._onChipClick(idx),
       onIconClick: (idx, e) => {
         const entityId = this.entityIds[idx];
         const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
         if (group && group.length > 1) {
           this._selectedIndex = idx;
-
           this._showEntityOptions = true;
           this._showGrouping = true;
           this.requestUpdate();
@@ -4257,8 +4271,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
       onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
       onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
       onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
-      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx)
-    })}
+      onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx),
+      quickGroupingMode: this._quickGroupingMode,
+      getQuickGroupingState: id => {
+        const masterId = this.currentEntityId;
+        const masterIdx = this.entityIds.indexOf(masterId);
+        const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
+        const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+        const myGroupKey = this._getGroupKey(this.currentEntityId);
+        return this._getGroupPlayerState(id, masterId, null, masterState, myGroupKey);
+      },
+      onQuickGroupClick: (idx, e) => {
+        const id = this.entityIds[idx];
+        if (id) {
+          this._toggleGroup(id);
+        }
+      },
+      onDoubleClick: e => {
+        e.stopPropagation();
+        this._quickGroupingMode = !this._quickGroupingMode;
+        this.requestUpdate();
+      }
+    };
+  }
+
+  _renderInlineChipRow(showChipsInline, chipsHiddenInline) {
+    if (!showChipsInline) return nothing;
+    return html`
+      <div class="chip-row" style="${chipsHiddenInline ? "visibility: hidden; pointer-events: none;" : ""}">
+        ${renderChipRow(this._getChipRowProps())}
       </div>
     `;
   }
@@ -4305,6 +4346,62 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return nothing;
   }
 
+  // Determine the grouping state of a player ID relative to an active ID
+  _getGroupPlayerState(targetId, activeId, activeGroupKey, masterState, myGroupKey) {
+    const targetIdx = this.entityIds.indexOf(targetId);
+    if (targetIdx < 0) return { isGroupable: false, isBusy: false, busyLabel: "", grouped: false };
+
+    const entityToCheck = this._getGroupingEntityId(targetIdx);
+    const st = this.hass.states[entityToCheck];
+
+    if (!st || !this._isGroupCapable(st)) {
+      return { isGroupable: false, isBusy: false, busyLabel: "", grouped: false };
+    }
+
+    const playerGroupKey = this._getGroupKey(targetId);
+    let isBusy = false;
+    let busyLabel = "";
+
+    // Busy if joined to a DIFFERENT group
+    if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
+      isBusy = true;
+      busyLabel = localize('common.unavailable');
+    }
+    // Or if it IS a master of a different group
+    else if (playerGroupKey === targetId && playerGroupKey !== myGroupKey) {
+      if (st.attributes?.group_members?.length > 1) {
+        isBusy = true;
+        busyLabel = localize('common.unavailable');
+      }
+    }
+
+    const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
+    const grouped = filteredMembers.includes(entityToCheck);
+    const isPrimary = targetId === myGroupKey;
+
+    const masterName = this.getChipName(activeId);
+    let tooltip = "";
+    if (isPrimary) {
+      tooltip = localize('card.grouping.master');
+    } else if (grouped) {
+      tooltip = localize('card.grouping.unjoin_from', '{master}', masterName);
+      if (tooltip === 'card.grouping.unjoin_from') tooltip = `Unjoin from ${masterName}`;
+    } else {
+      tooltip = localize('card.grouping.join_with', '{master}', masterName);
+      if (tooltip === 'card.grouping.join_with') tooltip = `Join with ${masterName}`;
+    }
+
+    return {
+      isGroupable: true,
+      isBusy,
+      busyLabel,
+      grouped,
+      isPrimary,
+      entityToCheck,
+      tooltip
+    };
+  }
+
   _renderGroupingSheet() {
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
@@ -4316,33 +4413,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const currentEntityIdx = this.entityIds.indexOf(this.currentEntityId);
     const myGroupKey = this._getGroupKey(this.currentEntityId);
 
-    this.entityIds.forEach((id, idx) => {
-      const entityToCheck = this._getGroupingEntityId(idx);
-      const st = this.hass.states[entityToCheck];
-
-      if (st && this._isGroupCapable(st)) {
-        const playerGroupKey = this._getGroupKey(id);
-        let isBusy = false;
-        let busyLabel = "";
-
-        // Busy if joined to a DIFFERENT group
-        if (playerGroupKey !== id && playerGroupKey !== myGroupKey) {
-          isBusy = true;
-          busyLabel = localize('common.unavailable');
-        }
-        // Or if it IS a master of a different group
-        else if (playerGroupKey === id && playerGroupKey !== myGroupKey) {
-          if (st.attributes?.group_members?.length > 1) {
-            isBusy = true;
-            busyLabel = localize('common.unavailable');
-          }
-        }
-
+    this.entityIds.forEach((id) => {
+      const state = this._getGroupPlayerState(id, this.currentEntityId, null, masterState, myGroupKey);
+      if (state.isGroupable) {
         groupPlayerIds.push({
           id: id,
-          groupId: entityToCheck,
-          isBusy,
-          busyLabel
+          groupId: state.entityToCheck,
+          isBusy: state.isBusy,
+          busyLabel: state.busyLabel
         });
       }
     });
@@ -4975,7 +5053,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    // Select the tapped chip.
+    // Select the tapped chip immediately
     this._selectedIndex = idx;
     // Reset last active entity when switching chips
     this._lastActiveEntityId = null;
@@ -5004,7 +5082,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._manualSelect = true;
       this._pinnedIndex = idx;
     }
-
     this.requestUpdate();
   }
 
@@ -5531,7 +5608,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Always use group_volume directly from obj
     const groupVolume = (typeof obj.group_volume === "boolean") ? obj.group_volume : true;
 
-    if (!groupVolume) {
+    if (!groupVolume || this._quickGroupingMode) {
       this.hass.callService("media_player", "volume_set", {
         entity_id: this._getVolumeEntity(idx),
         volume_level: newVol
@@ -6577,69 +6654,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             ${(showChipsInMenu || reserveChipSpaceInMenu) ? html`
                 <div class="entity-options-chips-wrapper" style="${reserveChipSpaceInMenu && !showChipsInMenu ? 'visibility:hidden;pointer-events:none;' : ''}" @click=${(e) => e.stopPropagation()}>
                 <div class="chip-row entity-options-chips-strip">
-                  ${renderChipRow({
-        groupedSortedEntityIds: this.groupedSortedEntityIds,
-        entityIds: this.entityIds,
-        selectedEntityId: this.currentEntityId,
-        pinnedIndex: this._pinnedIndex,
-        holdToPin: this._holdToPin,
-        getChipName: (id) => this.getChipName(id),
-        getActualGroupMaster: (group) => this._getActualGroupMaster(group),
-        getIsChipPlaying: (id, isSelected) => {
-          const obj = this._findEntityObjByAnyId(id);
-          const mainId = obj?.entity_id || id;
-          const idx = this.entityIds.indexOf(mainId);
-          if (idx < 0) return false;
-          const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-          const playbackState = this.hass?.states?.[playbackEntityId];
-          // Return actual playing state - animation should only show when truly playing
-          return this._isEntityPlaying(playbackState);
-        },
-        getChipArt: (id) => {
-          const obj = this._findEntityObjByAnyId(id);
-          const mainId = obj?.entity_id || id;
-          const idx = this.entityIds.indexOf(mainId);
-          if (idx < 0) return null;
-          const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-          const playbackState = this.hass?.states?.[playbackEntityId];
-          const mainState = this.hass?.states?.[mainId];
-          const playbackArtwork = this._getArtworkUrl(playbackState);
-          const mainArtwork = this._getArtworkUrl(mainState);
-          return playbackArtwork || mainArtwork;
-        },
-        getIsMaActive: (id) => {
-          const obj = this._findEntityObjByAnyId(id);
-          const mainId = obj?.entity_id || id;
-          const idx = this.entityIds.indexOf(mainId);
-          if (idx < 0) return false;
-          const entityObj = this.entityObjs[idx];
-          if (!entityObj?.music_assistant_entity) return false;
-          const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
-          const playbackState = this.hass?.states?.[playbackEntityId];
-          return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) &&
-            this._isEntityPlaying(playbackState);
-        },
-        isIdle: this._isIdle,
-        hass: this.hass,
-        artworkHostname: this.config?.artwork_hostname || '',
-        mediaArtworkOverrides: this.config?.media_artwork_overrides || [],
-        fallbackArtwork: this.config?.fallback_artwork || null,
-        onChipClick: (idx) => this._onChipClick(idx),
-        onIconClick: (idx, e) => {
-          const entityId = this.entityIds[idx];
-          const group = this.groupedSortedEntityIds.find(g => g.includes(entityId));
-          if (group && group.length > 1) {
-            this._selectedIndex = idx;
-            this._showEntityOptions = true;
-            this._showGrouping = true;
-            this.requestUpdate();
-          }
-        },
-        onPinClick: (idx, e) => { e.stopPropagation(); this._onPinClick(e); },
-        onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
-        onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
-        onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx),
-      })}
+                  ${renderChipRow(this._getChipRowProps())}
                 </div>
               </div>
             ` : nothing}

@@ -87,6 +87,7 @@ export default {
             "show_chip_row": "\"Auto\" hides the chip row when only one entity is configured. \"In Menu\" moves the chips into the menu overlay. \"In Menu on Idle\" shows chips inline when active but moves them to the menu when idle.",
             "dim_chips": "When the card enters idle mode with an image, dim the entity and action chips for a cleaner look.",
             "hold_to_pin": "Long press on entity chips instead of short press to pin them, preventing auto-switching during playback.",
+            "always_show_group": "Quick grouping controls (+/-/star) will be visible by default on page load. You can still toggle it manually via double-tap.",
             "disable_autofocus": "Keep the search box from stealing focus so on-screen keyboards stay hidden.",
             "search_within_filter": "Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.",
             "close_search_on_play": "Automatically close the search screen when a track is played.",
@@ -134,6 +135,7 @@ export default {
         "labels": {
             "dim_chips": "Dim Chips on Idle",
             "hold_to_pin": "Hold to Pin",
+            "always_show_group": "Quick Group by Default",
             "disable_autofocus": "Disable Search Autofocus",
             "keep_filters": "Keep Filters on Search",
             "dismiss_on_play": "Dismiss search on play",
@@ -274,7 +276,9 @@ export default {
             "master": "Master",
             "joined": "Joined",
             "available": "Available",
-            "current": "Current"
+            "current": "Current",
+            "unjoin_from": "Unjoin from {master}",
+            "join_with": "Join with {master}"
         }
     },
     "search": {

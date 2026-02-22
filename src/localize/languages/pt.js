@@ -87,6 +87,7 @@ export default {
             "show_chip_row": "\"Auto\" oculta a linha se houver apenas uma entidade. \"No menu\" move os chips. \"No menu em repouso\" mostra os chips em linha quando ativo mas move-os para o menu quando em repouso.",
             "dim_chips": "Escurecer chips em repouso para um aspeto mais limpo.",
             "hold_to_pin": "Manter premido para fixar em vez de toque curto.",
+            "always_show_group": "Os controles de agrupamento rápido (+/-/estrela) estarão visíveis por padrão ao carregar a página. Você ainda pode alterná-los manualmente através de um toque duplo.",
             "disable_autofocus": "Evitar que a procura tome o foco automaticamente.",
             "search_within_filter": "Procurar no filtro ativo (Favoritos, etc.).",
             "close_search_on_play": "Fechar procura ao reproduzir.",
@@ -134,6 +135,7 @@ export default {
         "labels": {
             "dim_chips": "Escurecer chips em repouso",
             "hold_to_pin": "Manter para fixar",
+            "always_show_group": "Grupo rápido por padrão",
             "disable_autofocus": "Desativar autofoco",
             "keep_filters": "Manter filtros",
             "dismiss_on_play": "Fechar ao reproduzir",
@@ -274,7 +276,9 @@ export default {
             "master": "Mestre",
             "joined": "Unido",
             "available": "Disponível",
-            "current": "Atual"
+            "current": "Atual",
+            "unjoin_from": "Desvincular de {master}",
+            "join_with": "Juntar-se a {master}"
         }
     },
     "search": {

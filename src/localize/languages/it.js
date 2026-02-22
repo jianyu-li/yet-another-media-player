@@ -87,6 +87,7 @@ export default {
             "show_chip_row": "\"Auto\" nasconde la riga se c'è una sola entità. \"Nel menu\" sposta i chip nel menu. \"Nel menu in inattività\" mostra i chip in linea quando attivo ma li sposta nel menu quando inattivo.",
             "dim_chips": "Appanna i chip in riposo per un aspetto più pulito.",
             "hold_to_pin": "Tieni premuto per fissare invece di un tocco breve.",
+            "always_show_group": "I controlli di raggruppamento rapido (+/-/stella) saranno visibili per impostazione predefinita al caricamento della pagina. Puoi comunque attivarli manualmente tramite doppio tocco.",
             "disable_autofocus": "Evita che la ricerca prenda il focus automaticamente.",
             "search_within_filter": "Cerca nel filtro attivo (Preferiti, ecc.).",
             "close_search_on_play": "Chiudi ricerca alla riproduzione.",
@@ -134,6 +135,7 @@ export default {
         "labels": {
             "dim_chips": "Appanna chip in riposo",
             "hold_to_pin": "Tieni premuto per fissare",
+            "always_show_group": "Gruppo rapido predefinito",
             "disable_autofocus": "Disabilita autofocus",
             "keep_filters": "Mantieni filtri",
             "dismiss_on_play": "Chiudi alla riproduzione",
@@ -274,7 +276,9 @@ export default {
             "master": "Master",
             "joined": "Unito",
             "available": "Disponibile",
-            "current": "Attuale"
+            "current": "Attuale",
+            "unjoin_from": "Scollegati da {master}",
+            "join_with": "Unisciti a {master}"
         }
     },
     "search": {

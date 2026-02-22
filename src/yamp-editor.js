@@ -1188,11 +1188,22 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
+                id="always-show-quick-group-toggle"
+                .checked=${this._config.always_show_quick_group ?? false}
+                @change=${(e) => this._updateConfig("always_show_quick_group", e.target.checked)}
+              ></ha-switch>
+              <label for="always-show-quick-group-toggle">${localize('editor.labels.always_show_group')}</label>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.always_show_group')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
                 id="hold-to-pin-toggle"
                 .checked=${this._config.hold_to_pin ?? false}
                 @change=${(e) => this._updateConfig("hold_to_pin", e.target.checked)}
               ></ha-switch>
-              <span>${localize('editor.labels.hold_to_pin')}</span>
+              <label for="hold-to-pin-toggle">${localize('editor.labels.hold_to_pin')}</label>
             </div>
             <div class="config-subtitle">${localize('editor.subtitles.hold_to_pin')}</div>
           </div>

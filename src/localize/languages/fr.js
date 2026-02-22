@@ -87,6 +87,7 @@ export default {
             "show_chip_row": "\"Auto\" masque la barre de jetons si une seule entité est configurée. \"Dans le Menu\" déplace les jetons. \"Dans le menu au repos\" affiche les jetons en ligne lorsque actif mais les déplace dans le menu au repos.",
             "dim_chips": "Assombrir les jetons en mode veille pour un look plus épuré.",
             "hold_to_pin": "Appui long pour épingler au lieu d'un appui court.",
+            "always_show_group": "Les contrôles de groupement rapide (+/-/étoile) seront visibles par défaut au chargement de la page. Vous pouvez toujours les basculer manuellement via un double appui.",
             "disable_autofocus": "Empêcher la recherche de prendre le focus automatiquement.",
             "search_within_filter": "Rechercher dans le filtre actif actuel (Favoris, etc.).",
             "close_search_on_play": "Fermer automatiquement la recherche à la lecture.",
@@ -134,6 +135,7 @@ export default {
         "labels": {
             "dim_chips": "Assombrir les jetons en veille",
             "hold_to_pin": "Maintenir pour épingler",
+            "always_show_group": "Groupe rapide par défaut",
             "disable_autofocus": "Désactiver l'autofocus",
             "keep_filters": "Garder les filtres",
             "dismiss_on_play": "Fermer en lecture",
@@ -274,7 +276,9 @@ export default {
             "master": "Maître",
             "joined": "Lié",
             "available": "Disponible",
-            "current": "Actuel"
+            "current": "Actuel",
+            "unjoin_from": "Se désolidariser de {master}",
+            "join_with": "Se joindre à {master}"
         }
     },
     "search": {

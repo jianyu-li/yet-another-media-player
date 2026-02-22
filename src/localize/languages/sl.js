@@ -87,6 +87,7 @@ export default {
             "show_chip_row": "\"Samodejno\" skrije čipe, če je nastavljena ena entiteta. \"V meniju\" jih premakne v meni. \"V meniju med nedejavnostjo\" prikaže čipe v vrstici, ko je aktivna, a jih premakne v meni med nedejavnostjo.",
             "dim_chips": "Ko kartica preide v mirovanje s sliko, se čipi zatemnijo.",
             "hold_to_pin": "Dolgi pritisk za pripenjanje entitet namesto kratkega.",
+            "always_show_group": "Kontrolni elementi za hitro združevanje (+/-/zvezda) bodo privzeto vidni ob nalaganju strani. Še vedno jih lahko ročno preklopite z dvojnim tapom.",
             "disable_autofocus": "Prepreči samodejni fokus iskalnega polja.",
             "search_within_filter": "Išči znotraj trenutnega filtra.",
             "close_search_on_play": "Samodejno zapri iskanje ob predvajanju.",
@@ -134,6 +135,7 @@ export default {
         "labels": {
             "dim_chips": "Zatemni čipe v mirovanju",
             "hold_to_pin": "Drži za pripenjanje",
+            "always_show_group": "Hitro združevanje kot privzeto",
             "disable_autofocus": "Onemogoči samodejni fokus",
             "keep_filters": "Ohrani filtre",
             "dismiss_on_play": "Zapri iskanje ob predvajanju",
@@ -274,7 +276,9 @@ export default {
             "master": "Glavni",
             "joined": "Pridružen",
             "available": "Na voljo",
-            "current": "Trenutni"
+            "current": "Trenutni",
+            "unjoin_from": "Odslopi od {master}",
+            "join_with": "Pridruži se {master}"
         }
     },
     "search": {

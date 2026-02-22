@@ -87,6 +87,7 @@ export default {
             "show_chip_row": "\"Auto\" skryje riadok čipov, ak je nakonfigurovaná len jedna entita. \"V menu\" presunie čipy do ponuky menu. \"V menu pri nečinnosti\" zobrazí čipy v riadku keď je aktívne, ale presunie ich do menu pri nečinnosti.",
             "dim_chips": "Keď karta prejde do režimu nečinnosti s obrázkom, stlmte čipy entít a akcií pre čistejší vzhľad.",
             "hold_to_pin": "Dlhým stlačením čipov entít ich pripnete, čím zabránite automatickému prepínaniu počas prehrávania.",
+            "always_show_group": "Ovládacie prvky rýchleho zoskupovania (+/-/hviezdička) budú predvolene viditeľné pri načítaní stránky. Stále ich môžete manuálne prepínať dvojitým klepnutím.",
             "disable_autofocus": "Zabráni vyhľadávaciemu poľu prebrať zameranie, aby zostali klávesnice na obrazovke skryté.",
             "search_within_filter": "Povoliť vyhľadávanie v rámci aktuálneho aktívneho filtra (Obľúbené, Nedávno prehrávané atď.) namiesto jeho vymazania.",
             "close_search_on_play": "Automaticky zatvoriť obrazovku vyhľadávania po spustení skladby.",
@@ -134,6 +135,7 @@ export default {
         "labels": {
             "dim_chips": "Stlmiť čipy pri nečinnosti",
             "hold_to_pin": "Podržať pre pripnutie",
+            "always_show_group": "Rýchle zoskupovanie ako predvolené",
             "disable_autofocus": "Vypnúť automatické zameranie hľadania",
             "keep_filters": "Zachovať filtre pri hľadaní",
             "dismiss_on_play": "Zavrieť hľadanie po spustení",
@@ -274,7 +276,9 @@ export default {
             "master": "Hlavný (Master)",
             "joined": "Pripojený",
             "available": "Dostupný",
-            "current": "Aktuálny"
+            "current": "Aktuálny",
+            "unjoin_from": "Odpojiť od {master}",
+            "join_with": "Pripojiť k {master}"
         }
     },
     "search": {
