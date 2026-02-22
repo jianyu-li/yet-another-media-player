@@ -4391,13 +4391,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const grouped = filteredMembers.includes(entityToCheck);
     const isPrimary = targetId === myGroupKey;
 
+    const masterName = this.getChipName(activeId);
+    let tooltip = "";
+    if (isPrimary) {
+      tooltip = localize('card.grouping.master');
+    } else if (grouped) {
+      tooltip = localize('card.grouping.unjoin_from', '{master}', masterName);
+      if (tooltip === 'card.grouping.unjoin_from') tooltip = `Unjoin from ${masterName}`;
+    } else {
+      tooltip = localize('card.grouping.join_with', '{master}', masterName);
+      if (tooltip === 'card.grouping.join_with') tooltip = `Join with ${masterName}`;
+    }
+
     return {
       isGroupable: true,
       isBusy,
       busyLabel,
       grouped,
       isPrimary,
-      entityToCheck
+      entityToCheck,
+      tooltip
     };
   }
 

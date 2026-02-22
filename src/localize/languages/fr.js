@@ -276,7 +276,9 @@ export default {
             "master": "Maître",
             "joined": "Lié",
             "available": "Disponible",
-            "current": "Actuel"
+            "current": "Actuel",
+            "unjoin_from": "Se désolidariser de {master}",
+            "join_with": "Se joindre à {master}"
         }
     },
     "search": {

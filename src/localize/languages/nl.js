@@ -276,7 +276,9 @@ export default {
             "master": "Master",
             "joined": "Gekoppeld",
             "available": "Beschikbaar",
-            "current": "Huidig"
+            "current": "Huidig",
+            "unjoin_from": "Loskoppelen van {master}",
+            "join_with": "Koppelen met {master}"
         }
     },
     "search": {

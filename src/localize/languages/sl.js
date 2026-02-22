@@ -276,7 +276,9 @@ export default {
             "master": "Glavni",
             "joined": "Pridružen",
             "available": "Na voljo",
-            "current": "Trenutni"
+            "current": "Trenutni",
+            "unjoin_from": "Odslopi od {master}",
+            "join_with": "Pridruži se {master}"
         }
     },
     "search": {

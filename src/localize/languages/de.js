@@ -276,7 +276,9 @@ export default {
             "master": "Master",
             "joined": "Verbunden",
             "available": "Verfügbar",
-            "current": "Aktuell"
+            "current": "Aktuell",
+            "unjoin_from": "Von {master} trennen",
+            "join_with": "Mit {master} gruppieren"
         }
     },
     "search": {

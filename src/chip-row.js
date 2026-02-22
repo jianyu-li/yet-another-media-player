@@ -169,7 +169,7 @@ export function renderChip({
             <span class="chip-quick-group" @click=${e => {
         e.stopPropagation();
         if (onQuickGroupClick && !quickGroupingState.isBusy && !quickGroupingState.isPrimary) onQuickGroupClick(idx, e);
-      }} title=${quickGroupingState.isPrimary ? "Primary" : quickGroupingState.isBusy ? "Unavailable" : quickGroupingState.grouped ? "Unjoin" : "Join"} style="${quickGroupingState.isPrimary ? 'cursor:default;opacity:0.7;' : quickGroupingState.isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+      }} title=${quickGroupingState.tooltip || (quickGroupingState.isPrimary ? "Primary" : quickGroupingState.isBusy ? "Unavailable" : quickGroupingState.grouped ? "Unjoin" : "Join")} style="${quickGroupingState.isPrimary ? 'cursor:default;opacity:0.7;' : quickGroupingState.isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
               <ha-icon .icon=${quickGroupingState.isPrimary ? "mdi:star-circle-outline" : quickGroupingState.grouped ? "mdi:minus" : "mdi:plus"}></ha-icon>
             </span>
           ` : nothing}

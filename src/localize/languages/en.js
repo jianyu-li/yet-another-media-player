@@ -276,7 +276,9 @@ export default {
             "master": "Master",
             "joined": "Joined",
             "available": "Available",
-            "current": "Current"
+            "current": "Current",
+            "unjoin_from": "Unjoin from {master}",
+            "join_with": "Join with {master}"
         }
     },
     "search": {

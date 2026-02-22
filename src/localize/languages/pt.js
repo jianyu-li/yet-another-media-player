@@ -276,7 +276,9 @@ export default {
             "master": "Mestre",
             "joined": "Unido",
             "available": "Disponível",
-            "current": "Atual"
+            "current": "Atual",
+            "unjoin_from": "Desvincular de {master}",
+            "join_with": "Juntar-se a {master}"
         }
     },
     "search": {

@@ -276,7 +276,9 @@ export default {
             "master": "Hlavný (Master)",
             "joined": "Pripojený",
             "available": "Dostupný",
-            "current": "Aktuálny"
+            "current": "Aktuálny",
+            "unjoin_from": "Odpojiť od {master}",
+            "join_with": "Pripojiť k {master}"
         }
     },
     "search": {
