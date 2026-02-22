@@ -12,6 +12,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ## Features
 
 - **Multi-Player Control** — Switch between media players in a single card with chip-based selection. Control volume individually or as a group
+- **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
 - **Music Assistant Integration** — Full search, queue management, and transfer between compatible players without leaving the card
 - **mass_queue Support** — Have even more control over your queue with the optional [mass_queue](https://github.com/droans/mass_queue) integration
@@ -195,7 +196,19 @@ Player entities can be grouped together for supported entities. Access the hambu
 - Grouped entities will increase and decrease proportionately with the main entity. 
   - If only one entity is configured, and it is part of a group, only the volume for that entity will change. See `group_volume` for additional configuration options.
 - Use the Grouped Players menu to adjust individual player volume or to sync the volume percentage across all grouped players to the main entity
-    
+
+### Quick Grouping Mode
+
+For a faster workflow, you can use **Quick Grouping Mode** to manage your group directly from the chip row:
+
+1.  **Enter Mode**: Double-click any entity chip.
+2.  **Visual Indicators**:
+    *   **Star Icon**: Identifies the primary (master) player of the group.
+    *   **Plus (+)**: Tap to join this player to the active group.
+    *   **Minus (-)**: Tap to remove this player from the active group.
+3.  **Volume Sensitivity**: While in Quick Grouping Mode, the main volume slider adjusts only the currently selected player's volume (similar to the Group Players menu).
+4.  **Exit Mode**: Double-click/tap any chip again to return to normal operation.
+
 ### Transfer Queue
 
 The card can surface a **Transfer Queue** menu option for Music Assistant players. When the active entity supports queue transfers, selecting *Transfer Queue* opens a list of compatible targets and the queue moves instantly to the chosen player. The option only appears when a Music Assistant entity with a queue is selected.
