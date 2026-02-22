@@ -87,6 +87,93 @@ export async function resolveStringTemplate(hass, templateString, context = {}) 
 }
 
 /**
+ * Attempt to resolve a simple Jinja template string synchronously to bypass mobile WebView popup blockers.
+ * Supports basic {{ state_attr(entity, attr) }}, {{ states(entity) }} and {{ variable }} patterns.
+ * @param {Object} hass - Home Assistant object
+ * @param {string} templateString - The template string to resolve
+ * @param {Object} context - Optional context variables to inject into the template
+ * @returns {string|null} Resolved string, or null if it cannot be resolved synchronously
+ */
+export function resolveStringTemplateSync(hass, templateString, context = {}) {
+  if (!templateString || typeof templateString !== 'string') return templateString;
+
+  let decoded = templateString;
+  if (/%7B%7B|%7B%25/i.test(decoded)) {
+    try {
+      decoded = decodeURIComponent(decoded);
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  if (!decoded.includes('{{') && !decoded.includes('{%')) {
+    return decoded;
+  }
+
+  let result = decoded;
+  let success = true;
+
+  result = result.replace(/\{\{\s*(.*?)\s*\}\}/g, (match, expression) => {
+    let expr = expression.trim();
+
+    // Check for urlencode filter
+    let useUrlEncode = false;
+    if (expr.endsWith('| urlencode')) {
+      useUrlEncode = true;
+      expr = expr.replace(/\|\s*urlencode$/, '').trim();
+    } else if (expr.endsWith('|urlencode')) {
+      useUrlEncode = true;
+      expr = expr.replace(/\|urlencode$/, '').trim();
+    }
+
+    // 1. Check for state_attr(...)
+    let stateAttrMatch = expr.match(/^state_attr\(\s*(['"]?)([\w.]+)\1\s*,\s*(['"]?)([\w_]+)\3\s*\)$/);
+    if (stateAttrMatch) {
+      let entityArg = stateAttrMatch[2];
+      let entityId = (context[entityArg] !== undefined && !stateAttrMatch[1]) ? context[entityArg] : entityArg;
+      let attrName = stateAttrMatch[4];
+
+      const state = hass?.states?.[entityId];
+      if (state && state.attributes && state.attributes[attrName] !== undefined) {
+        let val = String(state.attributes[attrName]);
+        return useUrlEncode ? encodeURIComponent(val) : val;
+      }
+      return '';
+    }
+
+    // 2. Check for states(...)
+    let statesMatch = expr.match(/^states\(\s*(['"]?)([\w.]+)\1\s*\)$/);
+    if (statesMatch) {
+      let entityArg = statesMatch[2];
+      let entityId = (context[entityArg] !== undefined && !statesMatch[1]) ? context[entityArg] : entityArg;
+
+      const state = hass?.states?.[entityId];
+      if (state && state.state !== undefined) {
+        let val = String(state.state);
+        return useUrlEncode ? encodeURIComponent(val) : val;
+      }
+      return '';
+    }
+
+    // 3. direct context variable matching
+    if (/^[\w_]+$/.test(expr) && context[expr] !== undefined) {
+      let val = String(context[expr]);
+      return useUrlEncode ? encodeURIComponent(val) : val;
+    }
+
+    // If it's something complex we can't parse synchronously
+    success = false;
+    return match;
+  });
+
+  if (!success || result.includes('{%')) {
+    return null;
+  }
+
+  return result;
+}
+
+/**
  * Find button entities associated with a Music Assistant entity
  * @param {Object} hass - Home Assistant object
  * @param {string} maEntityId - Music Assistant entity ID
