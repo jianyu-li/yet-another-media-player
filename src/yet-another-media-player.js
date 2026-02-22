@@ -24,6 +24,7 @@ import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
 import {
   resolveTemplateAtActionTime,
   resolveStringTemplate,
+  resolveStringTemplateSync,
   findAssociatedButtonEntities,
   getMusicAssistantState,
   getSearchResultClickTitle,
@@ -888,9 +889,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _handleNavigate(path, openInNewTab = false) {
-    if (typeof path !== "string") return;
+    if (typeof path !== "string" || !path.trim()) {
+      return;
+    }
     const target = path.trim();
-    if (!target) return;
 
     const navEvent = new CustomEvent("hass-navigate", {
       detail: { path: target },
@@ -899,7 +901,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     });
     this.dispatchEvent(navEvent);
 
-    if (navEvent.defaultPrevented) return;
+    if (navEvent.defaultPrevented) {
+      return;
+    }
 
     let handled = false;
     if (target.startsWith("#")) {
@@ -5080,15 +5084,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
       action.action === "navigate"
     ) {
       let path = (typeof action.navigation_path === "string" ? action.navigation_path : action.path || "").trim();
+      const openInNewTab = action.navigation_new_tab === true;
 
       // Create context for template resolution
       const context = {
         current: this.currentActivePlaybackEntityId || this.currentEntityId || ''
       };
 
-      path = await resolveStringTemplate(this.hass, path, context);
-      const openInNewTab = action.navigation_new_tab === true;
-      this._handleNavigate(path, openInNewTab);
+      // For new tabs in mobile WebViews, we MUST resolve synchronously to preserve user-activation tokens.
+      let syncResolved = null;
+      if (openInNewTab) {
+        syncResolved = resolveStringTemplateSync(this.hass, path, context);
+      }
+
+      if (syncResolved !== null && syncResolved !== undefined) {
+        this._handleNavigate(syncResolved, openInNewTab);
+      } else {
+        path = await resolveStringTemplate(this.hass, path, context);
+        this._handleNavigate(path, openInNewTab);
+      }
       return;
     }
     if (!action.service) return;
