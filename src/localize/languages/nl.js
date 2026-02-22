@@ -87,6 +87,7 @@ export default {
             "show_chip_row": "\"Auto\" verbergt de chiprij wanneer er slechts één entiteit is geconfigureerd. \"In Menu\" verplaatst de chips naar het menu-overlay. \"In menu bij inactiviteit\" toont chips inline wanneer actief maar verplaatst ze naar het menu wanneer inactief.",
             "dim_chips": "Wanneer de kaart inactief wordt met een afbeelding, dim dan de entiteits- en actiechips voor een strakker uiterlijk.",
             "hold_to_pin": "Houd entiteitschips lang ingedrukt in plaats van kort om ze vast te zetten, om automatisch schakelen tijdens afspelen te voorkomen.",
+            "always_show_group": "Snelgroeperingsknoppen (+/-/ster) zijn standaard zichtbaar bij het laden van de pagina. Je kunt ze nog steeds handmatig in- of uitschakelen via dubbeltikken.",
             "disable_autofocus": "Voorkom dat het zoekveld de focus steelt, zodat onscreen toetsenborden verborgen blijven.",
             "search_within_filter": "Schakel dit in om te zoeken binnen het huidige actieve filter (Favorieten, Recent Afgespeeld, etc) in plaats van dit te wissen.",
             "close_search_on_play": "Sluit het zoekscherm automatisch wanneer een nummer wordt afgespeeld.",
@@ -134,6 +135,7 @@ export default {
         "labels": {
             "dim_chips": "Chips dimmen bij inactiviteit",
             "hold_to_pin": "Ingedrukt houden om vast te zetten",
+            "always_show_group": "Snelgroepering standaard aan",
             "disable_autofocus": "Zoek-autofocus uitschakelen",
             "keep_filters": "Filters behouden bij zoeken",
             "dismiss_on_play": "Zoeken sluiten bij afspelen",

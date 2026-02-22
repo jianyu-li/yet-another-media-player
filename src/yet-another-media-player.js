@@ -3482,6 +3482,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
+    const oldConfig = this.config;
     this.config = { ...config };
     const layoutPref = typeof config.control_layout === "string" ? config.control_layout.toLowerCase() : "classic";
     this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
@@ -3548,6 +3549,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._adaptiveText = this._adaptiveTextTargets.size > 0;
     this._currentDetailsScale = null;
     this._updateAdaptiveTextObserverState();
+
+    // Set default quick grouping mode based on config
+    if (config.always_show_quick_group !== oldConfig?.always_show_quick_group) {
+      this._quickGroupingMode = !!config.always_show_quick_group;
+    }
     if (this._adaptiveText) {
       const initialScale = this._currentTextScale ?? 1;
       const initialDetailsScale = this._currentDetailsScale ?? 1;

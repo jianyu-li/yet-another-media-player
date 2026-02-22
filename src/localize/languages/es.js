@@ -87,6 +87,7 @@ export default {
             "show_chip_row": "\"Auto\" oculta la fila si solo hay una entidad. \"En menú\" mueve los chips. \"En menú en reposo\" muestra los chips en línea cuando está activo pero los mueve al menú cuando está en reposo.",
             "dim_chips": "Atenuar los chips en reposo para un aspecto más limpio.",
             "hold_to_pin": "Mantener pulsado para fijar en vez de pulsación corta.",
+            "always_show_group": "Los controles de agrupación rápida (+/-/estrella) estarán visibles por defecto al cargar la página. Todavía puedes cambiarlos manualmente mediante doble pulsación.",
             "disable_autofocus": "Evitar que la búsqueda tome el foco automáticamente.",
             "search_within_filter": "Buscar dentro del filtro activo (Favoritos, etc.).",
             "close_search_on_play": "Cerrar búsqueda al reproducir.",
@@ -134,6 +135,7 @@ export default {
         "labels": {
             "dim_chips": "Atenuar chips en reposo",
             "hold_to_pin": "Mantener para fijar",
+            "always_show_group": "Grupo rápido por defecto",
             "disable_autofocus": "Desactivar autofoco",
             "keep_filters": "Mantener filtros",
             "dismiss_on_play": "Cerrar al reproducir",

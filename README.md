@@ -65,6 +65,7 @@ Below you will find a list of all configuration options.
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
+| `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
 |                                                                                                 |
 | **Search**                 |              |              |             |                                                                                                 |
 | `search_results_limit`     | number       | No           | `20`        | Maximum number of results to request per media category (artist/album/track/etc.) across favorites, recently played, and standard searches; set to `0` to fall back to Music Assistant’s own limits |
@@ -208,6 +209,7 @@ You can use **Quick Grouping Mode** to manage your group directly from the chip 
     *   **Minus (-)**: Tap to remove this player from the active group.
 3.  **Volume Sensitivity**: While in Quick Grouping Mode, the main volume slider adjusts only the currently selected player's volume (similar to the Group Players menu).
 4.  **Exit Mode**: Double-click/tap any chip again to return to normal operation.
+5.  **Persistence**: Enable `always_show_quick_group` in the card configuration to have the mode active by default.
 
 ### Transfer Queue
 
