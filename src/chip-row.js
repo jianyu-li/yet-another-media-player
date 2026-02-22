@@ -165,14 +165,7 @@ export function renderChip({
           `
       : html`<span class="chip-pin-spacer"></span>`
     }
-      ${quickGroupingState && quickGroupingState.isGroupable ? html`
-            <span class="chip-quick-group" @click=${e => {
-        e.stopPropagation();
-        if (onQuickGroupClick && !quickGroupingState.isBusy && !quickGroupingState.isPrimary) onQuickGroupClick(idx, e);
-      }} title=${quickGroupingState.tooltip || (quickGroupingState.isPrimary ? "Primary" : quickGroupingState.isBusy ? "Unavailable" : quickGroupingState.grouped ? "Unjoin" : "Join")} style="${quickGroupingState.isPrimary ? 'cursor:default;opacity:0.7;' : quickGroupingState.isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
-              <ha-icon .icon=${quickGroupingState.isPrimary ? "mdi:star-circle-outline" : quickGroupingState.grouped ? "mdi:minus" : "mdi:plus"}></ha-icon>
-            </span>
-          ` : nothing}
+      ${renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick })}
     </button>
   `;
 }
@@ -261,15 +254,29 @@ export function renderGroupChip({
           `
       : html`<span class="chip-pin-spacer"></span>`
     }
-      ${quickGroupingState && quickGroupingState.isGroupable ? html`
-            <span class="chip-quick-group" @click=${e => {
-        e.stopPropagation();
-        if (onQuickGroupClick && !quickGroupingState.isBusy && !quickGroupingState.isPrimary) onQuickGroupClick(idx, e);
-      }} title=${quickGroupingState.isPrimary ? "Primary" : quickGroupingState.isBusy ? "Unavailable" : quickGroupingState.grouped ? "Unjoin" : "Join"} style="${quickGroupingState.isPrimary ? 'cursor:default;opacity:0.7;' : quickGroupingState.isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
-              <ha-icon .icon=${quickGroupingState.isPrimary ? "mdi:star-circle-outline" : quickGroupingState.grouped ? "mdi:minus" : "mdi:plus"}></ha-icon>
-            </span>
-          ` : nothing}
+      ${renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick })}
     </button>
+  `;
+}
+
+// Helper to render the quick grouping icon (+/-/star) used by both renderChip and renderGroupChip
+export function renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick }) {
+  if (!quickGroupingState || !quickGroupingState.isGroupable) return nothing;
+
+  const { isPrimary, isBusy, grouped, tooltip } = quickGroupingState;
+  const title = tooltip || (isPrimary ? "Primary" : isBusy ? "Unavailable" : grouped ? "Unjoin" : "Join");
+  const icon = isPrimary ? "mdi:star-circle-outline" : grouped ? "mdi:minus" : "mdi:plus";
+
+  return html`
+    <span class="chip-quick-group" 
+          @click=${e => {
+      e.stopPropagation();
+      if (onQuickGroupClick && !isBusy && !isPrimary) onQuickGroupClick(idx, e);
+    }} 
+          title=${title} 
+          style="${isPrimary ? 'cursor:default;opacity:0.7;' : isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+      <ha-icon .icon=${icon}></ha-icon>
+    </span>
   `;
 }
 
