@@ -6715,6 +6715,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
         onPointerDown: (e, idx) => this._handleChipPointerDown(e, idx),
         onPointerMove: (e, idx) => this._handleChipPointerMove(e, idx),
         onPointerUp: (e, idx) => this._handleChipPointerUp(e, idx),
+        quickGroupingMode: this._quickGroupingMode,
+        getQuickGroupingState: id => {
+          const masterId = this.currentEntityId;
+          const masterIdx = this.entityIds.indexOf(masterId);
+          const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
+          const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+          const myGroupKey = this._getGroupKey(this.currentEntityId);
+          return this._getGroupPlayerState(id, masterId, null, masterState, myGroupKey);
+        },
+        onQuickGroupClick: (idx, e) => {
+          const id = this.entityIds[idx];
+          if (id) {
+            this._toggleGroup(id);
+          }
+        },
+        onDoubleClick: e => {
+          e.stopPropagation();
+          this._quickGroupingMode = !this._quickGroupingMode;
+          this.requestUpdate();
+        }
       })}
                 </div>
               </div>
