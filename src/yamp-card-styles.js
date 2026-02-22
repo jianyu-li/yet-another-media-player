@@ -687,8 +687,8 @@ export const yampCardStyles = css`
 
   .chip-pin-spacer {
     display: flex;
-    width: 24px;
-    min-width: 24px;
+    width: 10px;
+    min-width: 10px;
     height: 1px;
   }
 

@@ -199,7 +199,7 @@ Player entities can be grouped together for supported entities. Access the hambu
 
 ### Quick Grouping Mode
 
-For a faster workflow, you can use **Quick Grouping Mode** to manage your group directly from the chip row:
+You can use **Quick Grouping Mode** to manage your group directly from the chip row:
 
 1.  **Enter Mode**: Double-click any entity chip.
 2.  **Visual Indicators**:
