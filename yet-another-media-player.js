@@ -17895,6 +17895,8 @@ window.customCards.push({
 });
 class YetAnotherMediaPlayerCard extends i$2 {
   _handleChipPointerDown(e, idx) {
+    this._chipGestureStartX = e.clientX;
+    this._chipGestureStartY = e.clientY;
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerDown(e, idx);
     }
@@ -17954,6 +17956,26 @@ class YetAnotherMediaPlayerCard extends i$2 {
     if (this._holdToPin && this._holdHandler) {
       this._holdHandler.pointerUp(e, idx);
     }
+
+    // Rely on native @dblclick for mice/desktop. This manual tap logic is only needed for touch screens.
+    if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+
+    // Both @pointerup and @pointerleave trigger this method. We must ignore pointerleave to avoid fake double-clicks.
+    if (e.type !== 'pointerup') return;
+    const diffX = e.clientX - this._chipGestureStartX;
+    const diffY = e.clientY - this._chipGestureStartY;
+    const absDiffX = Math.abs(diffX);
+    const absDiffY = Math.abs(diffY);
+    if (absDiffX > GESTURE_MOVE_THRESHOLD || absDiffY > GESTURE_MOVE_THRESHOLD) return;
+    const now = Date.now();
+    const timeSinceLastTap = now - (this._lastChipTapTime || 0);
+    this._lastChipTapTime = now;
+    if (timeSinceLastTap < GESTURE_DOUBLE_TAP_MAX_DELAY && this._lastChipTapIdx === idx) {
+      this._lastChipTapTime = 0; // reset
+      this._quickGroupingMode = !this._quickGroupingMode;
+      this.requestUpdate();
+    }
+    this._lastChipTapIdx = idx;
   }
   _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
@@ -22659,7 +22681,7 @@ class YetAnotherMediaPlayerCard extends i$2 {
       return;
     }
 
-    // Select the tapped chip.
+    // Select the tapped chip immediately
     this._selectedIndex = idx;
     // Reset last active entity when switching chips
     this._lastActiveEntityId = null;
