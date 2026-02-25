@@ -141,7 +141,7 @@ export default {
             "keep_filters": "Mantieni filtri",
             "dismiss_on_play": "Chiudi alla riproduzione",
             "default_search_filter": "Filtro di ricerca predefinito",
-            "default_search_favorites": "Default to Favorites Filter",
+            "default_search_favorites": "Filtro preferiti predefinito",
             "pin_headers": "Fissa intestazioni",
             "hide_search_headers_on_idle": "Nascondi intestazioni in inattività",
             "disable_mass": "Disabilita Mass Queue",
