@@ -6708,7 +6708,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     <div class="entity-options-divider"></div>
                   ` : nothing
                   }
-                  ${(showSearchHeaders && this._searchBreadcrumb) ? html`
+                  ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
@@ -6791,8 +6791,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     `;
                   })() : nothing
                   }
-                  ${showSearchHeaders && this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
-                  ${showSearchHeaders && this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
+                  ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
+                  ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   
                   ${showSearchHeaders && this._usingMusicAssistant && !this._searchLoading ? html`
                     <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">

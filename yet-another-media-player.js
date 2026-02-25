@@ -5962,7 +5962,7 @@
                     </button>
                     <div class="entity-options-divider"></div>
                   `:b}
-                  ${l&&this._searchBreadcrumb?m`
+                  ${this._searchBreadcrumb?m`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
@@ -6026,8 +6026,8 @@
                         `)}
                       </div>
                     `})():b}
-                  ${l&&this._searchLoading?m`<div class="entity-options-search-loading">${h("common.loading")}</div>`:b}
-                  ${l&&this._searchError?m`<div class="entity-options-search-error">${this._searchError}</div>`:b}
+                  ${this._searchLoading?m`<div class="entity-options-search-loading">${h("common.loading")}</div>`:b}
+                  ${this._searchError?m`<div class="entity-options-search-error">${this._searchError}</div>`:b}
                   
                   ${l&&this._usingMusicAssistant&&!this._searchLoading?m`
                     <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
