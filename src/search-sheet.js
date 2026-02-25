@@ -11,6 +11,8 @@ const playOptions = [
   { mode: 'add', icon: 'mdi:playlist-plus', label: localize('search.add_queue') },
 ];
 
+export const ALLOWED_MEDIA_TYPES = ['artist', 'album', 'track', 'playlist', 'radio', 'podcast', 'audiobook'];
+
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
   const numericLimit = Number(limit);
   if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
@@ -397,7 +399,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
       if (searchParams.favorites) {
         const mediaTypes = (mediaType && mediaType !== 'all')
           ? [mediaType]
-          : ['artist', 'album', 'track', 'playlist', 'radio', 'audiobook', 'podcast'];
+          : ALLOWED_MEDIA_TYPES;
         const flatResultsFav = [];
         await Promise.all(
           mediaTypes.map(async (mt) => {
@@ -441,8 +443,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
       // If query is empty and we have a specific media type (not 'all'), treat as browsing the library
       if ((!query || query.trim() === '') && mediaType && mediaType !== 'all' && !searchParams.favorites) {
         // Validate media type strictly
-        const allowedMediaTypes = ['artist', 'album', 'track', 'playlist', 'radio', 'audiobook', 'podcast'];
-        if (!allowedMediaTypes.includes(mediaType)) {
+        if (!ALLOWED_MEDIA_TYPES.includes(mediaType)) {
           console.warn(`yamp: Unsupported media type for browsing: ${mediaType}. Skipping get_library call.`);
           return { results: [], usedMusicAssistant: true };
         }
@@ -591,10 +592,9 @@ export async function getRecentlyPlayed(hass, entityId, mediaType = null, search
 
   try {
     if (mediaType === 'all') {
-      const mediaTypes = ['track', 'album', 'artist', 'playlist'];
       const allResults = [];
       await Promise.all(
-        mediaTypes.map(async (mt) => {
+        ALLOWED_MEDIA_TYPES.map(async (mt) => {
           const chunk = await fetchMediaType(mt, { cap: 5 });
           if (chunk.length) {
             allResults.push(...chunk);
@@ -669,10 +669,9 @@ export async function getFavorites(hass, entityId, mediaType = null, searchResul
       return { results: chunk, usedMusicAssistant: true };
     }
 
-    const mediaTypes = ['artist', 'album', 'track', 'playlist', 'radio', 'podcast', 'audiobook'];
     const flatResults = [];
     await Promise.all(
-      mediaTypes.map(async (type) => {
+      ALLOWED_MEDIA_TYPES.map(async (type) => {
         const chunk = await fetchFavoritesForType(type);
         if (chunk.length) {
           flatResults.push(...chunk);
