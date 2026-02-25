@@ -6163,7 +6163,7 @@
 
             <div class="entity-options-search-results ${this.config.search_view==="card"?"search-results-card-view":"list-view"}" 
                  style="${this.config.search_view==="card"?`--search-card-columns: ${this.config.search_card_columns||4};`:""}">
-              ${(()=>{this._searchMediaClassFilter;const v=this._getDisplaySearchResults(),j=Math.max(15,this._searchTotalRows||v.length),H=[...v,...Array.from({length:Math.max(0,j-v.length)},()=>null)];return this._searchAttempted&&v.length===0&&!this._searchLoading?m`<div class="entity-options-search-empty" style="color: white;">${h("common.no_results")}</div>`:H.map(L=>L?m`
+              ${(()=>{this._searchMediaClassFilter;const v=this._getDisplaySearchResults(),j=Math.max(15,this._searchTotalRows||v.length),H=[...v,...Array.from({length:Math.max(0,j-v.length)},()=>null)];return this._searchAttempted&&v.length===0&&!this._searchLoading?m`<div class="entity-options-search-empty">${h("common.no_results")}</div>`:H.map(L=>L?m`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${this.config.search_view==="card"?"search-result-card":""} ${L._justMoved?"just-moved":""} ${L.media_content_id!=null&&this._activeSearchRowMenuId===L.media_content_id?"menu-active":""}">
                                <div class="search-sheet-thumb-container"

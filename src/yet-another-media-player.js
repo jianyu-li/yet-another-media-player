@@ -6945,7 +6945,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     ];
                     // Always render paddedResults, even before first search
                     return (this._searchAttempted && currentResults.length === 0 && !this._searchLoading)
-                      ? html`<div class="entity-options-search-empty" style="color: white;">${localize('common.no_results')}</div>`
+                      ? html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`
                       : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
