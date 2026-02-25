@@ -141,7 +141,7 @@ export default {
             "keep_filters": "Zachovať filtre pri hľadaní",
             "dismiss_on_play": "Zavrieť hľadanie po spustení",
             "default_search_filter": "Predvolený filter vyhľadávania",
-            "default_search_favorites": "Default to Favorites Filter",
+            "default_search_favorites": "Predvolený filter obľúbených",
             "pin_headers": "Pripnúť hlavičky hľadania",
             "hide_search_headers_on_idle": "Skryť hlavičky pri nečinnosti",
             "disable_mass": "Deaktivovať Mass Queue",
