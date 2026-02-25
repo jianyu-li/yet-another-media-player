@@ -6702,7 +6702,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 this._showSearchInSheet ? html`
               <div class="entity-options-search" style = "margin-top:12px;" >
                 ${this._searchHierarchy.length > 0 ? html`
-                    <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._goBackInSearch(); } }}>
+                    <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
                       Back
                     </button>
                     <div class="entity-options-divider"></div>

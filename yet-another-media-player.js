@@ -5957,7 +5957,7 @@
               ${!this._showGrouping&&!this._showSourceList&&!this._showSearchInSheet&&!this._showResolvedEntities&&!this._showTransferQueue?this._renderMainMenu(oe,x,d):this._showGrouping?this._renderGroupingSheet():this._showTransferQueue?this._renderTransferQueueSheet():this._showResolvedEntities?this._renderResolvedEntitiesSheet():this._showSearchInSheet?m`
               <div class="entity-options-search" style = "margin-top:12px;" >
                 ${this._searchHierarchy.length>0?m`
-                    <button class="entity-options-item close-item" @click=${()=>{this._quickMenuInvoke?this._dismissWithAnimation():this._goBackInSearch()}}>
+                    <button class="entity-options-item close-item" @click=${()=>this._goBackInSearch()}>
                       Back
                     </button>
                     <div class="entity-options-divider"></div>
