@@ -105,7 +105,7 @@ export default {
             "follow_active_entity": "Indien ingeschakeld, zal de volume-entiteit automatisch de actieve afspeel-entiteit volgen. Let op: dit overschrijft de geselecteerde volume-entiteit.",
             "search_limit_full": "Maximaal aantal zoekresultaten om weer te geven (1-1000, standaard: 20)",
             "default_search_filter_full": "Kies welk filter standaard actief is wanneer het zoekscherm wordt geopend.",
-            "default_search_favorites": "Start search with favorites active",
+            "default_search_favorites": "Start zoekopdracht met favorieten actief",
             "result_sorting_full": "Kies hoe zoekresultaten worden gesorteerd. Standaard behoudt de bronvolgorde.",
             "card_height_full": "Laat leeg voor automatische hoogte",
             "control_layout_full": "Kies tussen de oude gelijkmatig verdeelde knoppen of de moderne Home Assistant lay-out.",
