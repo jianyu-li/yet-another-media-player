@@ -18,7 +18,8 @@ import {
   getMusicAssistantConfigEntryId,
   getMassQueueConfigEntryId,
   renderSearchResultActions,
-  renderSearchResultSlideOut
+  renderSearchResultSlideOut,
+  ALLOWED_MEDIA_TYPES
 } from "./search-sheet.js";
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
 import {
@@ -1390,25 +1391,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Derive the list of visible search filter chips based on cached results and entity visibility settings
   _getVisibleSearchFilterClasses() {
-    const classes = new Set();
-    const cacheValues = Object.values(this._searchResultsByType || {});
-    cacheValues.forEach(results => {
-      const items = Array.isArray(results)
-        ? results
-        : Array.isArray(results?.results)
-          ? results.results
-          : [];
-      items.forEach(item => {
-        const mediaClass = item?.media_class;
-        if (mediaClass) {
-          classes.add(mediaClass);
-        }
-      });
-    });
-
     const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
     const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
-    return Array.from(classes).filter(c => !hiddenSet.has(c));
+
+    return ALLOWED_MEDIA_TYPES.filter(c => !hiddenSet.has(c));
   }
 
   async _playMediaFromSearch(item) {
@@ -6959,7 +6945,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     ];
                     // Always render paddedResults, even before first search
                     return (this._searchAttempted && currentResults.length === 0 && !this._searchLoading)
-                      ? html`<div class="entity-options-search-empty" style="color: white;">No results.</div>`
+                      ? html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`
                       : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
                             <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
