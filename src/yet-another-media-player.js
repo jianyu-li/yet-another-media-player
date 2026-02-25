@@ -2876,82 +2876,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
 
     // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
-    try {
-      const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
-      if (hasMassQueue) {
-        const configEntryId = await getMassQueueConfigEntryId(this.hass);
-        let tracks = [];
-
-        // Strategy A: User provided syntax (config_entry_id)
-        if (configEntryId && albumUri) {
-          try {
-
-            const message = {
-              type: "call_service",
-              domain: "mass_queue",
-              service: "get_album_tracks",
-              service_data: {
-                config_entry_id: configEntryId,
-                uri: albumUri
-              },
-              return_response: true,
-            };
-            const responseData = await this.hass.connection.sendMessagePromise(message);
-            if (responseData?.response?.tracks) {
-              tracks = responseData.response.tracks;
-            }
-          } catch (firstError) {
-            console.warn("yamp: mass_queue.get_album_tracks failed with config_entry_id, trying fallback with entity_id", firstError);
-
-            // Strategy B: Fallback using entity (like get_queue_items)
-            const maState = this._getMusicAssistantState();
-            const maEntityId = maState?.entity_id;
-
-            if (maEntityId) {
-              const messageFallback = {
-                type: "call_service",
-                domain: "mass_queue",
-                service: "get_album_tracks",
-                service_data: {
-                  entity: maEntityId,
-                  uri: albumUri
-                },
-                return_response: true,
-              };
-              const responseDataFallback = await this.hass.connection.sendMessagePromise(messageFallback);
-              if (responseDataFallback?.response?.tracks) {
-                tracks = responseDataFallback.response.tracks;
-              }
-            } else {
-              throw firstError;
-            }
-          }
-        }
-
-        if (tracks.length > 0) {
-          this._searchResults = tracks.map(track => ({
-            media_content_id: track.media_content_id,
-            media_content_type: 'track',
-            media_class: 'track',
-            title: track.media_title,
-            artist: track.media_artist,
-            album: track.media_album_name,
-            thumbnail: track.media_image,
-            duration: track.duration,
-            is_browsable: false,
-            favorite: track.favorite
-          }));
-
-          this._searchQuery = albumName;
-          this._searchTotalRows = Math.max(15, tracks.length);
-          this._searchLoading = false;
-          this.requestUpdate();
-          return;
-        }
-      }
-    } catch (e) {
-      console.error("yamp: Error fetching album tracks via mass_queue:", e);
-      // Fallback to other methods
+    const mqTracks = await this._fetchMassQueueTracks(albumUri, "get_album_tracks");
+    if (mqTracks && mqTracks.length > 0) {
+      this._setSearchResultsFromMassQueue(mqTracks, albumName);
+      return;
     }
 
     // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
@@ -3026,20 +2954,36 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchLoading = true;
     this.requestUpdate();
 
+    const mqTracks = await this._fetchMassQueueTracks(playlistUri, "get_playlist_tracks");
+    if (mqTracks && mqTracks.length > 0) {
+      this._setSearchResultsFromMassQueue(mqTracks, playlistName);
+      return;
+    }
+
+    // Handled user request to not fall back to browse_media for playlists
+    this._searchQuery = playlistName;
+    this._searchResults = [];
+    this._searchLoading = false;
+    this.requestUpdate();
+  }
+
+  async _fetchMassQueueTracks(uri, serviceName) {
     try {
       const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
-      if (hasMassQueue) {
-        const configEntryId = await getMassQueueConfigEntryId(this.hass);
-        let tracks = [];
+      if (!hasMassQueue) return null;
 
-        if (configEntryId && playlistUri) {
+      const configEntryId = await getMassQueueConfigEntryId(this.hass);
+      let tracks = [];
+
+      if (configEntryId && uri) {
+        try {
           const message = {
             type: "call_service",
             domain: "mass_queue",
-            service: "get_playlist_tracks",
+            service: serviceName,
             service_data: {
               config_entry_id: configEntryId,
-              uri: playlistUri
+              uri: uri
             },
             return_response: true,
           };
@@ -3047,36 +2991,53 @@ class YetAnotherMediaPlayerCard extends LitElement {
           if (responseData?.response?.tracks) {
             tracks = responseData.response.tracks;
           }
-        }
+        } catch (firstError) {
+          console.warn(`yamp: mass_queue.${serviceName} failed with config_entry_id, trying fallback with entity_id`, firstError);
+          const maState = this._getMusicAssistantState();
+          const maEntityId = maState?.entity_id;
 
-        if (tracks.length > 0) {
-          this._searchResults = tracks.map(track => ({
-            media_content_id: track.media_content_id,
-            media_content_type: 'track',
-            media_class: 'track',
-            title: track.media_title,
-            artist: track.media_artist,
-            album: track.media_album_name,
-            thumbnail: track.media_image,
-            duration: track.duration,
-            is_browsable: false,
-            favorite: track.favorite
-          }));
-
-          this._searchQuery = playlistName;
-          this._searchTotalRows = Math.max(15, tracks.length);
-          this._searchLoading = false;
-          this.requestUpdate();
-          return;
+          if (maEntityId) {
+            const messageFallback = {
+              type: "call_service",
+              domain: "mass_queue",
+              service: serviceName,
+              service_data: {
+                entity: maEntityId,
+                uri: uri
+              },
+              return_response: true,
+            };
+            const responseDataFallback = await this.hass.connection.sendMessagePromise(messageFallback);
+            if (responseDataFallback?.response?.tracks) {
+              tracks = responseDataFallback.response.tracks;
+            }
+          } else {
+            throw firstError;
+          }
         }
       }
+      return tracks;
     } catch (e) {
-      console.error("yamp: Error fetching playlist tracks via mass_queue:", e);
+      console.error(`yamp: Error fetching ${serviceName} via mass_queue:`, e);
+      return null;
     }
+  }
 
-    // Handled user request to not fall back to browse_media for playlists
-    this._searchQuery = playlistName;
-    this._searchResults = [];
+  _setSearchResultsFromMassQueue(tracks, queryName) {
+    this._searchResults = tracks.map(track => ({
+      media_content_id: track.media_content_id,
+      media_content_type: 'track',
+      media_class: 'track',
+      title: track.media_title,
+      artist: track.media_artist,
+      album: track.media_album_name,
+      thumbnail: track.media_image,
+      duration: track.duration,
+      is_browsable: false,
+      favorite: track.favorite
+    }));
+    this._searchQuery = queryName;
+    this._searchTotalRows = Math.max(15, tracks.length);
     this._searchLoading = false;
     this.requestUpdate();
   }

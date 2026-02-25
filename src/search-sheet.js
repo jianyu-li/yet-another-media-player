@@ -266,6 +266,7 @@ export function renderSearchSheet({
       : (results || []).map(
         (item) => {
           const isMA = isMusicAssistantEntity(item.media_content_id);
+          const isClickable = item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable);
           // For now we assume massQueue functionality is available if it's MA 
           // (matching simplified search-sheet logic)
           return html`
@@ -301,15 +302,15 @@ export function renderSearchSheet({
                   </div>
                   <div class="search-sheet-info">
                     <span 
-                      class="search-sheet-title ${item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable) ? 'browsable' : ''}" 
-                      @click=${() => item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable) && onResultClick && onResultClick(item)}
+                      class="search-sheet-title ${isClickable ? 'browsable' : ''}" 
+                      @click=${() => isClickable && onResultClick && onResultClick(item)}
                     >
                       ${item.title}
                     </span>
                     ${item.artist ? html`
                       <span 
-                        class="search-sheet-subtitle ${item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable) ? 'browsable' : ''}" 
-                        @click=${() => item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable) && onResultClick && onResultClick(item)}
+                        class="search-sheet-subtitle ${isClickable ? 'browsable' : ''}" 
+                        @click=${() => isClickable && onResultClick && onResultClick(item)}
                       >
                         ${item.artist}
                       </span>
