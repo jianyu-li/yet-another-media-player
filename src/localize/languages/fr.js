@@ -105,7 +105,7 @@ export default {
             "follow_active_entity": "L'entité de volume suivra automatiquement l'entité active.",
             "search_limit_full": "Nombre maximum de résultats (1-1000, défaut: 20).",
             "default_search_filter_full": "Choisissez quel filtre est actif par défaut à l'ouverture de la recherche.",
-            "default_search_favorites": "Start search with favorites active",
+            "default_search_favorites": "Démarrer la recherche avec les favoris actifs",
             "result_sorting_full": "Choisir l'ordre des résultats. Par défaut conserve l'ordre source.",
             "card_height_full": "Laisser vide pour une hauteur automatique.",
             "control_layout_full": "Choisir entre l'ancienne mise en page ou la moderne.",
