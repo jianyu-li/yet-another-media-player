@@ -380,7 +380,7 @@ entities:
 
 ### Optional: Music Assistant Queue Actions (mass_queue)
 
-For enhanced queue controls in the Search sheet (e.g., viewing and reordering the upcoming queue, moving items up/down/next, and removing items), you can optionally install the community integration that adds Music Assistant queue services.
+For enhanced queue controls in the Search sheet (e.g., viewing and reordering the upcoming queue, moving items up/down/next, and removing items), you can optionally install the community integration that adds Music Assistant queue services. This greatly enhances the functionality of the card.
 
 - Integration: `mass_queue` — Actions to control player queues for Music Assistant
 - Install via HACS or manual install as described in the integration’s README
@@ -388,6 +388,7 @@ For enhanced queue controls in the Search sheet (e.g., viewing and reordering th
 
 Once installed and configured, YAMP will automatically detect the integration and enable:
 - Fetching the upcoming queue with `mass_queue.get_queue_items` (the existing ```search_results_limit``` will be used for this)
+- Browsing playlist tracks
 - Queue item reordering: move up, move down, move next
 - Queue item removal
 
