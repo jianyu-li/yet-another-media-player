@@ -1220,6 +1220,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
+                id="default-search-favorites-toggle"
+                .checked=${this._config.default_search_favorites ?? false}
+                @change=${(e) => this._updateConfig("default_search_favorites", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.default_search_favorites')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.default_search_favorites')}</div>
+          </div>
+
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
                 .checked=${this._config.keep_filters_on_search ?? false}
                 @change=${(e) => this._updateConfig("keep_filters_on_search", e.target.checked)}
               ></ha-switch>

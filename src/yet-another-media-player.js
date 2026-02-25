@@ -853,11 +853,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
     this._usingMusicAssistant = false; // Track if we're using Music Assistant search
-    this._favoritesFilterActive = false; // Track if favorites filter is active
+    this._favoritesFilterActive = this.config.default_search_favorites === true; // Track if favorites filter is active
     this._recentlyPlayedFilterActive = false; // Track if recently played filter is active
     this._upcomingFilterActive = false; // Track if upcoming queue filter is active
     this._recommendationsFilterActive = false; // Track if recommendations filter is active
     this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
+
     this.requestUpdate();
 
     // Trigger selected search mode after sheet opens
@@ -1788,7 +1789,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
   async _toggleFavoritesFilter() {
-    this._favoritesFilterActive = !this._favoritesFilterActive;
+    const wasActive = this._favoritesFilterActive || this._initialFavoritesLoaded;
+    this._favoritesFilterActive = !wasActive;
 
     // Make mutually exclusive with other filters
     if (this._favoritesFilterActive) {
