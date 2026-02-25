@@ -105,7 +105,7 @@ export default {
             "follow_active_entity": "Lautstärke-Entität folgt automatisch der aktiven Wiedergabe-Entität.",
             "search_limit_full": "Maximale Anzahl an Suchergebnissen (1-1000, Standard: 20).",
             "default_search_filter_full": "Wählen Sie den Filter, der beim Öffnen der Suche standardmäßig aktiv ist.",
-            "default_search_favorites": "Start search with favorites active",
+            "default_search_favorites": "Suche mit aktiven Favoriten starten",
             "result_sorting_full": "Sortierung der Suchergebnisse wählen. Standard behält die Quellreihenfolge bei.",
             "card_height_full": "Leer lassen für automatische Höhe.",
             "control_layout_full": "Wählen Sie zwischen manuellem oder modernem Home Assistant Layout.",
