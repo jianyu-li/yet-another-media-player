@@ -141,7 +141,7 @@ export default {
             "keep_filters": "Filter bei Suche beibehalten",
             "dismiss_on_play": "Suche beim Abspielen beenden",
             "default_search_filter": "Standard-Suchfilter",
-            "default_search_favorites": "Default to Favorites Filter",
+            "default_search_favorites": "Standardmäßig Favoritenfilter verwenden",
             "pin_headers": "Such-Header fixieren",
             "hide_search_headers_on_idle": "Such-Header im Leerlauf ausblenden",
             "disable_mass": "Mass Queue deaktivieren",
