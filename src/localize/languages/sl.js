@@ -105,7 +105,7 @@ export default {
             "follow_active_entity": "Entiteta glasnosti sledi aktivni entiteti. Opomba: To prepiše izbrano entiteto za glasnost.",
             "search_limit_full": "Največje število rezultatov (1–1000, privzeto: 20).",
             "default_search_filter_full": "Izberite, kateri filter je privzeto aktiven ob odprtju iskanja.",
-            "default_search_favorites": "Start search with favorites active",
+            "default_search_favorites": "Začni iskanje z aktivnimi priljubljenimi",
             "result_sorting_full": "Izberi razvrščanje rezultatov.",
             "card_height_full": "Pustite prazno za samodejno višino.",
             "control_layout_full": "Izberi med staro in moderno postavitvijo.",
