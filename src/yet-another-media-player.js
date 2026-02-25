@@ -1645,7 +1645,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Handle hierarchical search - search for albums by artist
   async _searchArtistAlbums(artistName) {
-    this._searchHierarchy.push({ type: 'artist', name: artistName, query: this._searchQuery });
+    this._searchHierarchy.push({ type: 'artist', name: artistName, query: this._searchQuery, filter: this._searchMediaClassFilter });
     this._searchBreadcrumb = `Albums by ${artistName}`;
     this._searchQuery = artistName;
     this._searchResultsByType = {}; // Clear cache for new search
@@ -1680,10 +1680,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._currentSearchQuery = previousLevel.query;
     this._searchResultsByType = {}; // Clear cache for new search
 
+    // Restore filter state
+    this._searchMediaClassFilter = previousLevel.filter || 'all';
+
     if (this._searchHierarchy.length === 0) {
       this._searchBreadcrumb = "";
-      this._searchMediaClassFilter = 'all';
-      this._doSearch();
+      this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
     } else {
       const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
       if (currentLevel.type === 'artist') {
@@ -1710,7 +1712,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._searchMediaClassFilter = 'track';
         if (currentLevel.uri && this._isMusicAssistantEntity()) {
           this._searchQuery = currentLevel.name;
-          this._showPlaylistTracks({ title: currentLevel.name, media_content_id: currentLevel.uri });
+          // _searchPlaylistTracks pushes to the hierarchy, so we just call _fetchMassQueueTracks directly
+          this._currentSearchQuery = currentLevel.name;
+          this._searchResults = [];
+          this._searchLoading = true;
+          this.requestUpdate();
+          this._fetchMassQueueTracks(currentLevel.uri, "get_playlist_tracks").then(mqTracks => {
+            this._searchResultsByType['track'] = mqTracks;
+            this._searchResults = [...mqTracks];
+            this._searchLoading = false;
+            this.requestUpdate();
+            this._scrollToTop();
+          });
           return;
         }
         this._doSearch('track');
@@ -2852,7 +2865,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Handle hierarchical search - search for tracks by album
   async _searchAlbumTracks(albumName, artistName, albumUri = null) {
-    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri });
+    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri, filter: this._searchMediaClassFilter });
     this._searchBreadcrumb = `Tracks from ${albumName}`;
     this._searchResultsByType = {}; // Clear cache for new search
     this._currentSearchQuery = albumName;
@@ -2931,7 +2944,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Handle hierarchical search - search for tracks in a playlist
   async _searchPlaylistTracks(playlistName, playlistUri) {
-    this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery, uri: playlistUri });
+    this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery, uri: playlistUri, filter: this._searchMediaClassFilter });
     this._searchBreadcrumb = `Tracks from ${playlistName}`;
     this._searchResultsByType = {}; // Clear cache for new search
     this._currentSearchQuery = playlistName;
@@ -6689,13 +6702,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 this._showSearchInSheet ? html`
               <div class="entity-options-search" style = "margin-top:12px;" >
                 ${this._searchHierarchy.length > 0 ? html`
-                    <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._goBackInSearch(); } }}>
+                    <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
                       Back
                     </button>
                     <div class="entity-options-divider"></div>
                   ` : nothing
                   }
-                  ${(showSearchHeaders && this._searchBreadcrumb) ? html`
+                  ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
                     </div>
@@ -6778,8 +6791,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     `;
                   })() : nothing
                   }
-                  ${showSearchHeaders && this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
-                  ${showSearchHeaders && this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
+                  ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
+                  ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
                   
                   ${showSearchHeaders && this._usingMusicAssistant && !this._searchLoading ? html`
                     <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
