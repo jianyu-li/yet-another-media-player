@@ -81,7 +81,7 @@ function transformMusicAssistantItem(item) {
     thumbnail: item.image,
     ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
     ...(item.album && { album: item.album.name }),
-    is_browsable: item.media_type === 'artist' || item.media_type === 'album'
+    is_browsable: item.media_type === 'artist' || item.media_type === 'album' || item.media_type === 'playlist'
   };
 }
 
@@ -301,15 +301,15 @@ export function renderSearchSheet({
                   </div>
                   <div class="search-sheet-info">
                     <span 
-                      class="search-sheet-title ${item.is_browsable ? 'browsable' : ''}" 
-                      @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
+                      class="search-sheet-title ${item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable) ? 'browsable' : ''}" 
+                      @click=${() => item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable) && onResultClick && onResultClick(item)}
                     >
                       ${item.title}
                     </span>
                     ${item.artist ? html`
                       <span 
-                        class="search-sheet-subtitle ${item.is_browsable ? 'browsable' : ''}" 
-                        @click=${() => item.is_browsable && onResultClick && onResultClick(item)}
+                        class="search-sheet-subtitle ${item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable) ? 'browsable' : ''}" 
+                        @click=${() => item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable) && onResultClick && onResultClick(item)}
                       >
                         ${item.artist}
                       </span>

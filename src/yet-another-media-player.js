@@ -2857,6 +2857,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         artistName = item.artist;
       }
       await this._searchAlbumTracks(item.title, artistName, item.media_content_id);
+    } else if (item.media_class === 'playlist') {
+      await this._searchPlaylistTracks(item.title, item.media_content_id);
     }
   }
 
@@ -3009,6 +3011,74 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Use Music Assistant search with specific parameters for tracks
     await this._doSearch('track', searchParams);
+  }
+
+  // Handle hierarchical search - search for tracks in a playlist
+  async _searchPlaylistTracks(playlistName, playlistUri) {
+    this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery, uri: playlistUri });
+    this._searchBreadcrumb = `Tracks from ${playlistName}`;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = playlistName;
+    this._searchMediaClassFilter = 'track';
+
+    // Immediate loading state
+    this._searchResults = [];
+    this._searchLoading = true;
+    this.requestUpdate();
+
+    try {
+      const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
+      if (hasMassQueue) {
+        const configEntryId = await getMassQueueConfigEntryId(this.hass);
+        let tracks = [];
+
+        if (configEntryId && playlistUri) {
+          const message = {
+            type: "call_service",
+            domain: "mass_queue",
+            service: "get_playlist_tracks",
+            service_data: {
+              config_entry_id: configEntryId,
+              uri: playlistUri
+            },
+            return_response: true,
+          };
+          const responseData = await this.hass.connection.sendMessagePromise(message);
+          if (responseData?.response?.tracks) {
+            tracks = responseData.response.tracks;
+          }
+        }
+
+        if (tracks.length > 0) {
+          this._searchResults = tracks.map(track => ({
+            media_content_id: track.media_content_id,
+            media_content_type: 'track',
+            media_class: 'track',
+            title: track.media_title,
+            artist: track.media_artist,
+            album: track.media_album_name,
+            thumbnail: track.media_image,
+            duration: track.duration,
+            is_browsable: false,
+            favorite: track.favorite
+          }));
+
+          this._searchQuery = playlistName;
+          this._searchTotalRows = Math.max(15, tracks.length);
+          this._searchLoading = false;
+          this.requestUpdate();
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("yamp: Error fetching playlist tracks via mass_queue:", e);
+    }
+
+    // Handled user request to not fall back to browse_media for playlists
+    this._searchQuery = playlistName;
+    this._searchResults = [];
+    this._searchLoading = false;
+    this.requestUpdate();
   }
 
 
