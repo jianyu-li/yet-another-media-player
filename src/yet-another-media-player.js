@@ -2997,19 +2997,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const maEntityId = maState?.entity_id;
 
           if (maEntityId) {
-            const messageFallback = {
-              type: "call_service",
-              domain: "mass_queue",
-              service: serviceName,
-              service_data: {
-                entity: maEntityId,
-                uri: uri
-              },
-              return_response: true,
-            };
-            const responseDataFallback = await this.hass.connection.sendMessagePromise(messageFallback);
-            if (responseDataFallback?.response?.tracks) {
-              tracks = responseDataFallback.response.tracks;
+            try {
+              const messageFallback = {
+                type: "call_service",
+                domain: "mass_queue",
+                service: serviceName,
+                service_data: {
+                  entity: maEntityId,
+                  uri: uri
+                },
+                return_response: true,
+              };
+              const responseDataFallback = await this.hass.connection.sendMessagePromise(messageFallback);
+              if (responseDataFallback?.response?.tracks) {
+                tracks = responseDataFallback.response.tracks;
+              }
+            } catch (fallbackError) {
+              console.warn(`yamp: mass_queue.${serviceName} fallback with entity_id also failed.`, fallbackError);
+              throw firstError;
             }
           } else {
             throw firstError;
