@@ -105,7 +105,7 @@ export default {
             "follow_active_entity": "Ak je povolené, entita hlasitosti bude automaticky sledovať aktívny prehrávač. Poznámka: Toto prepíše vybranú entitu hlasitosti.",
             "search_limit_full": "Maximálny počet výsledkov vyhľadávania (1-1000, predvolené: 20).",
             "default_search_filter_full": "Vyberte, ktorý filter bude predvolene aktívny pri otvorení vyhľadávania.",
-            "default_search_favorites": "Start search with favorites active",
+            "default_search_favorites": "Spustiť vyhľadávanie s aktívnymi obľúbenými",
             "result_sorting_full": "Vyberte spôsob zoradenia výsledkov. Predvolené ponecháva poradie zo zdroja.",
             "card_height_full": "Nechajte prázdne pre automatickú výšku.",
             "control_layout_full": "Vyberte si medzi starším (rovnako veľké prvky) alebo moderným rozložením Home Assistant.",
