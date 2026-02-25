@@ -141,7 +141,7 @@ export default {
             "keep_filters": "Filters behouden bij zoeken",
             "dismiss_on_play": "Zoeken sluiten bij afspelen",
             "default_search_filter": "Standaard zoekfilter",
-            "default_search_favorites": "Default to Favorites Filter",
+            "default_search_favorites": "Standaard naar favorietenfilter",
             "pin_headers": "Zoekkoppen vastzetten",
             "hide_search_headers_on_idle": "Zoekkoppen verbergen bij inactiviteit",
             "disable_mass": "Mass Queue uitschakelen",
