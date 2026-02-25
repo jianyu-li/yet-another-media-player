@@ -141,7 +141,7 @@ export default {
             "keep_filters": "Garder les filtres",
             "dismiss_on_play": "Fermer en lecture",
             "default_search_filter": "Filtre de recherche par défaut",
-            "default_search_favorites": "Default to Favorites Filter",
+            "default_search_favorites": "Filtre des favoris par défaut",
             "pin_headers": "Épingler les en-têtes",
             "hide_search_headers_on_idle": "Masquer les en-têtes en veille",
             "disable_mass": "Désactiver Mass Queue",
