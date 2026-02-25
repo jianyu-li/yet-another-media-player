@@ -1278,7 +1278,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._getSearchResultsLimit()
         );
         this._lastSearchUsedServerFavorites = true;
-      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
+      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && !isUpcoming && !isRecommendations) {
         const orderBy = this._getActiveSearchDisplaySortMode();
         searchResponse = await getFavorites(
           this.hass,
