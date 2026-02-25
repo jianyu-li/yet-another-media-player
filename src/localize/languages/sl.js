@@ -141,7 +141,7 @@ export default {
             "keep_filters": "Ohrani filtre",
             "dismiss_on_play": "Zapri iskanje ob predvajanju",
             "default_search_filter": "Privzeti iskalni filter",
-            "default_search_favorites": "Default to Favorites Filter",
+            "default_search_favorites": "Privzeti filter priljubljenih",
             "pin_headers": "Pripni glave iskanja",
             "hide_search_headers_on_idle": "Skrij glave iskanja med mirovanjem",
             "disable_mass": "Onemogoči Mass Queue",
