@@ -73,6 +73,7 @@ Below you will find a list of all configuration options.
 | `disable_autofocus`        | boolean      | No           | `false`     | Prevent the search box from auto-focusing so on-screen keyboards stay hidden when opening search sheets |
 | `keep_filters_on_search`   | boolean      | No           | `false`     | Enable this to search within the current active filter (Favorites, etc) instead of clearing it |
 | `default_search_filter`    | choice       | No           | `all`       | Initial filter type when the search screen opens (`all`, `artist`, `album`, `track`, `playlist`, `radio`, `podcast`, `audiobook`) |
+| `default_search_favorites` | boolean      | No           | `false`     | Automatically activate the Favorites filter when the search screen first opens |
 | `pin_search_headers`       | boolean      | No           | `false`     | Always keep search and menu headers pinned at the top while scrolling through results           |
 | `hide_search_headers_on_idle` | boolean    | No           | `false`     | Hide search input and filters when the player is idle                                           |
 | `disable_mass_queue`       | boolean      | No           | `false`     | Disable the optional mass_queue integration even if it is installed |
