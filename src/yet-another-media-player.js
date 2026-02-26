@@ -808,7 +808,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
    * launch the search immediately (only when media_artist is present).
    */
   _searchArtistFromNowPlaying() {
-    const artist = (this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj)?.attributes?.media_artist || "";
+    const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    const artist = stateObj?.attributes?.media_artist || "";
     if (!artist) return;                // nothing to search
 
     // Open overlay + search sheet
@@ -832,6 +833,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._upcomingFilterActive = false;
     this._recommendationsFilterActive = false;
     this._initialFavoritesLoaded = false;
+
+    if (stateObj?.attributes?.media_content_type === "music") {
+      this._searchMediaClassFilter = "artist";
+    }
 
     // Render, then run search
     this.requestUpdate();
