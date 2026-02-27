@@ -214,6 +214,8 @@ export default {
             "menu": "Abrir um item do menu",
             "service": "Chamar um serviço",
             "navigate": "Navegar",
+            "prev_entity": "Chip da entidade anterior",
+            "next_entity": "Chip da próxima entidade",
             "sync_selected_entity": "Sincronizar entidade selecionada"
         },
         "action_helpers": {

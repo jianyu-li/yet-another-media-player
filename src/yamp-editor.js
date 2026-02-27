@@ -383,6 +383,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _deriveActionMode(action) {
     if (!action) return "service";
+    if (action.action === "prev_entity") return "prev_entity";
+    if (action.action === "next_entity") return "next_entity";
     if (action.action === "sync_selected_entity" || action.sync_entity_helper) return "sync_selected_entity";
     if (typeof action.menu_item === "string" && action.menu_item.trim() !== "") return "menu";
     const navPath = typeof action.navigation_path === "string" ? action.navigation_path.trim() : "";
@@ -2143,7 +2145,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             { value: "menu", label: localize('editor.action_types.menu') },
             { value: "service", label: localize('editor.action_types.service') },
             { value: "navigate", label: localize('editor.action_types.navigate') },
-            { value: "sync_selected_entity", label: localize('editor.action_types.sync_selected_entity') }
+            { value: "sync_selected_entity", label: localize('editor.action_types.sync_selected_entity') },
+            { value: "prev_entity", label: localize('editor.action_types.prev_entity') || "Previous Entity Chip" },
+            { value: "next_entity", label: localize('editor.action_types.next_entity') || "Next Entity Chip" }
           ]
         }
       }}
@@ -2189,6 +2193,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           if (!action?.sync_entity_type) {
             this._updateActionProperty("sync_entity_type", "yamp_entity");
           }
+        } else if (mode === "prev_entity" || mode === "next_entity") {
+          this._updateActionProperty("menu_item", undefined);
+          this._updateActionProperty("service", undefined);
+          this._updateActionProperty("service_data", undefined);
+          this._updateActionProperty("script_variable", undefined);
+          this._updateActionProperty("navigation_path", undefined);
+          this._updateActionProperty("navigation_new_tab", undefined);
+          this._updateActionProperty("action", mode);
         }
       }}
           ></ha-selector>
@@ -2438,6 +2450,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     if (act?.action === "sync_selected_entity") {
       return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}${placementText}${triggerText}`;
+    }
+    if (act?.action === "prev_entity") {
+      return `${localize('editor.action_types.prev_entity') || "Previous Entity Chip"}${placementText}${triggerText}`;
+    }
+    if (act?.action === "next_entity") {
+      return `${localize('editor.action_types.next_entity') || "Next Entity Chip"}${placementText}${triggerText}`;
     }
     if (act?.menu_item) {
       return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;
