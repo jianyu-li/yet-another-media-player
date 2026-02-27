@@ -213,7 +213,9 @@ export default {
         "action_types": {
             "menu": "Kartenmenüpunkt öffnen",
             "service": "Dienst aufrufen",
-            "navigate": "Navigieren",
+             "navigate": "Navigieren",
+            "prev_entity": "Previous Entity Chip",
+            "next_entity": "Next Entity Chip",
             "sync_selected_entity": "Ausgewählte Entität synchronisieren"
         },
         "action_helpers": {

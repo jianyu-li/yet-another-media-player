@@ -213,7 +213,9 @@ export default {
         "action_types": {
             "menu": "Open a Card Menu Item",
             "service": "Call a Service",
-            "navigate": "Navigate",
+             "navigate": "Navigate",
+            "prev_entity": "Previous Entity Chip",
+            "next_entity": "Next Entity Chip",
             "sync_selected_entity": "Sync Selected Entity"
         },
         "action_helpers": {

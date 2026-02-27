@@ -213,7 +213,9 @@ export default {
         "action_types": {
             "menu": "Otvoriť položku menu karty",
             "service": "Zavolať službu",
-            "navigate": "Navigovať",
+             "navigate": "Navigovať",
+            "prev_entity": "Previous Entity Chip",
+            "next_entity": "Next Entity Chip",
             "sync_selected_entity": "Synchronizovať vybranú entitu"
         },
         "action_helpers": {

@@ -213,7 +213,9 @@ export default {
         "action_types": {
             "menu": "Open een kaartmenu-item",
             "service": "Roep een service aan",
-            "navigate": "Navigeren",
+             "navigate": "Navigeren",
+            "prev_entity": "Previous Entity Chip",
+            "next_entity": "Next Entity Chip",
             "sync_selected_entity": "Synchroniseer geselecteerde entiteit"
         },
         "action_helpers": {

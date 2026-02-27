@@ -5219,6 +5219,33 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       return;
     }
+
+    if (action.action === "prev_entity" || action.action === "next_entity") {
+      const sortedIds = this.sortedEntityIds;
+      if (sortedIds && sortedIds.length > 0) {
+        const currentId = this.entityIds[this._selectedIndex];
+        const currentIndex = sortedIds.indexOf(currentId);
+
+        if (currentIndex !== -1) {
+          let newIndex = currentIndex;
+          if (action.action === "prev_entity") {
+            newIndex = Math.max(0, currentIndex - 1);
+          } else {
+            newIndex = Math.min(sortedIds.length - 1, currentIndex + 1);
+          }
+
+          if (newIndex !== currentIndex) {
+            const nextId = sortedIds[newIndex];
+            const originalIndex = this.entityIds.indexOf(nextId);
+            if (originalIndex !== -1 && originalIndex !== this._selectedIndex) {
+              this._onChipClick(originalIndex);
+            }
+          }
+        }
+      }
+      return;
+    }
+
     if (!action.service) return;
     const [domain, service] = action.service.split(".");
     let data = { ...(action.service_data || {}) };

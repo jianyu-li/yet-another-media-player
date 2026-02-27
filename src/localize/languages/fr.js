@@ -213,7 +213,9 @@ export default {
         "action_types": {
             "menu": "Ouvrir un élément de menu",
             "service": "Appeler un service",
-            "navigate": "Naviguer",
+             "navigate": "Naviguer",
+            "prev_entity": "Previous Entity Chip",
+            "next_entity": "Next Entity Chip",
             "sync_selected_entity": "Synchroniser l'entité sélectionnée"
         },
         "action_helpers": {
