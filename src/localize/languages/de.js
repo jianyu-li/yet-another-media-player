@@ -213,9 +213,9 @@ export default {
         "action_types": {
             "menu": "Kartenmenüpunkt öffnen",
             "service": "Dienst aufrufen",
-             "navigate": "Navigieren",
-            "prev_entity": "Previous Entity Chip",
-            "next_entity": "Next Entity Chip",
+            "navigate": "Navigieren",
+            "prev_entity": "Vorheriger Entitäts-Chip",
+            "next_entity": "Nächster Entitäts-Chip",
             "sync_selected_entity": "Ausgewählte Entität synchronisieren"
         },
         "action_helpers": {

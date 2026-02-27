@@ -213,9 +213,9 @@ export default {
         "action_types": {
             "menu": "Odpri element menija kartice",
             "service": "Pokliči storitev",
-             "navigate": "Navigiraj",
-            "prev_entity": "Previous Entity Chip",
-            "next_entity": "Next Entity Chip",
+            "navigate": "Navigiraj",
+            "prev_entity": "Prejšnji čip entitete",
+            "next_entity": "Naslednji čip entitete",
             "sync_selected_entity": "Sinhroniziraj izbrano entiteto"
         },
         "action_helpers": {
