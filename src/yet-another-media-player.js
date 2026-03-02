@@ -69,6 +69,7 @@ const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
 const GESTURE_HOLD_TIMEOUT = 500;
 const GESTURE_MOVE_THRESHOLD = 15;
 const GESTURE_DOUBLE_TAP_MAX_DELAY = 300;
+const GESTURE_DOUBLE_TAP_IGNORE_NATIVE_DELAY = 500;
 const GESTURE_TAP_DELAY = 300;
 const GESTURE_SWIPE_THRESHOLD = 50;
 
@@ -4330,7 +4331,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         e.stopPropagation();
         const now = Date.now();
         // Ignore native dblclick if we just processed a touch double tap
-        if (now - this._lastChipDoubleTapTime < 500) return;
+        if (now - this._lastChipDoubleTapTime < GESTURE_DOUBLE_TAP_IGNORE_NATIVE_DELAY) return;
         this._quickGroupingMode = !this._quickGroupingMode;
         this.requestUpdate();
       }
