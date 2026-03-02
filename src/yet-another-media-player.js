@@ -69,6 +69,7 @@ const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
 const GESTURE_HOLD_TIMEOUT = 500;
 const GESTURE_MOVE_THRESHOLD = 15;
 const GESTURE_DOUBLE_TAP_MAX_DELAY = 300;
+const GESTURE_DOUBLE_TAP_IGNORE_NATIVE_DELAY = 500;
 const GESTURE_TAP_DELAY = 300;
 const GESTURE_SWIPE_THRESHOLD = 50;
 
@@ -168,11 +169,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     if (timeSinceLastTap < GESTURE_DOUBLE_TAP_MAX_DELAY && this._lastChipTapIdx === idx) {
       this._lastChipTapTime = 0; // reset
+      this._lastChipDoubleTapTime = now;
       this._quickGroupingMode = !this._quickGroupingMode;
       this.requestUpdate();
     }
     this._lastChipTapIdx = idx;
   }
+  _lastChipDoubleTapTime = 0;
   _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
   _lastGroupingMasterId = null;
@@ -4326,6 +4329,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       },
       onDoubleClick: e => {
         e.stopPropagation();
+        const now = Date.now();
+        // Ignore native dblclick if we just processed a touch double tap
+        if (now - this._lastChipDoubleTapTime < GESTURE_DOUBLE_TAP_IGNORE_NATIVE_DELAY) return;
         this._quickGroupingMode = !this._quickGroupingMode;
         this.requestUpdate();
       }
