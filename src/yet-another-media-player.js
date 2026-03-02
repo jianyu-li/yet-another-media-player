@@ -168,11 +168,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     if (timeSinceLastTap < GESTURE_DOUBLE_TAP_MAX_DELAY && this._lastChipTapIdx === idx) {
       this._lastChipTapTime = 0; // reset
+      this._lastChipDoubleTapTime = now;
       this._quickGroupingMode = !this._quickGroupingMode;
       this.requestUpdate();
     }
     this._lastChipTapIdx = idx;
   }
+  _lastChipDoubleTapTime = 0;
   _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
   _lastGroupingMasterId = null;
@@ -4326,6 +4328,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       },
       onDoubleClick: e => {
         e.stopPropagation();
+        const now = Date.now();
+        // Ignore native dblclick if we just processed a touch double tap
+        if (now - this._lastChipDoubleTapTime < 500) return;
         this._quickGroupingMode = !this._quickGroupingMode;
         this.requestUpdate();
       }
