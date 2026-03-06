@@ -432,7 +432,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _showGrouping: { state: true },
     _showTransferQueue: { state: true },
     _showResolvedEntities: { state: true },
-    _showSearchInSheet: { state: true }
+    _showSearchInSheet: { state: true },
+    _addToPlaylistTarget: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -450,6 +451,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._shouldDropdownOpenUp = false;
     this._collapsedArtDominantColor = "#444";
     this._lastArtworkUrl = null;
+    this._addToPlaylistTarget = null;
     // Timer for progress updates
     this._progressTimer = null;
     this._progressValue = null;
@@ -1543,6 +1545,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   async _performSearchOptionAction(item, mode) {
+    if (mode === 'add_to_playlist') {
+      this._addToPlaylistTarget = item;
+      this._searchHierarchy.push({
+        type: 'select_playlist',
+        name: localize('search.add_to_playlist'),
+        query: this._searchQuery,
+        filter: this._searchMediaClassFilter
+      });
+      // Set a special breadcrumb for context
+      this._searchBreadcrumb = localize('search.select_playlist').replace('{track}', item.title);
+      this._searchQuery = '';
+      this._currentSearchQuery = '';
+      this._searchMediaClassFilter = 'playlist';
+      this._searchResultsByType = {}; // Clear cache
+
+      // Clear filter states
+      this._favoritesFilterActive = false;
+      this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
+      this._recommendationsFilterActive = false;
+      this._initialFavoritesLoaded = false;
+
+      this._removeSearchSwipeHandlers();
+
+      // Fetch playlists
+      await this._doSearch('playlist', { clearFilters: true });
+      return;
+    }
+
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
 
@@ -1679,6 +1710,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
 
     const previousLevel = this._searchHierarchy.pop();
+    if (previousLevel.type === 'select_playlist') {
+      this._addToPlaylistTarget = null;
+    }
+
     this._searchQuery = previousLevel.query;
     this._currentSearchQuery = previousLevel.query;
     this._searchResultsByType = {}; // Clear cache for new search
@@ -1784,6 +1819,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Get the tooltip title for clickable search results
   _getSearchResultClickTitle(item) {
     if (!this._isClickableSearchResult(item)) return "";
+
+    if (this._addToPlaylistTarget && item.media_class === 'playlist') {
+      return localize('search.add_to_playlist');
+    }
 
     return getSearchResultClickTitle(item);
   }
@@ -2847,6 +2886,38 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // If this is a touch device and we have a touch event, ignore the click
     // (touch events are handled by _handleSearchResultTouch)
     if ('ontouchstart' in window && event && event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents) {
+      return;
+    }
+
+    if (this._addToPlaylistTarget && item.media_class === 'playlist') {
+      try {
+        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+        if (mqConfigEntryId) {
+          const playlistId = item.media_content_id.split('/').pop();
+          console.log("YAMP: Sending add_playlist_tracks command.", {
+            playlistId: playlistId,
+            trackUri: this._addToPlaylistTarget.media_content_id
+          });
+          await this.hass.callService("mass_queue", "send_command", {
+            command: "music/playlists/add_playlist_tracks",
+            data: {
+              db_playlist_id: playlistId,
+              uris: [this._addToPlaylistTarget.media_content_id]
+            },
+            config_entry_id: mqConfigEntryId
+          });
+
+          this._showQueueSuccessMessage = true;
+          setTimeout(() => {
+            this._showQueueSuccessMessage = false;
+            this.requestUpdate();
+          }, 3000);
+        }
+      } catch (e) {
+        console.error("Failed to add to playlist:", e);
+      }
+      this._addToPlaylistTarget = null;
+      this._goBackInSearch();
       return;
     }
 

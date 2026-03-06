@@ -213,7 +213,7 @@ export default {
         "action_types": {
             "menu": "Open a Card Menu Item",
             "service": "Call a Service",
-             "navigate": "Navigate",
+            "navigate": "Navigate",
             "prev_entity": "Previous Entity Chip",
             "next_entity": "Next Entity Chip",
             "sync_selected_entity": "Sync Selected Entity"
@@ -302,11 +302,15 @@ export default {
         "move_next": "Move to Next",
         "remove": "Remove from Queue",
         "added": "Added to queue!",
+        "added_to_playlist": "Added to playlist!",
+        "select_playlist": "Select Playlist for '{track}'",
+        "add_to_playlist": "Add to playlist",
         "labels": {
             "replace": "Replace",
             "next": "Next",
             "replace_next": "Replace Next",
-            "add": "Add"
+            "add": "Add",
+            "add_to_playlist": "Add to Playlist"
         },
         "results": "results",
         "result": "result",

@@ -9,6 +9,7 @@ const playOptions = [
   { mode: 'next', icon: 'mdi:playlist-play', label: localize('search.play_next') },
   { mode: 'replace_next', icon: 'mdi:playlist-music', label: localize('search.replace_play') },
   { mode: 'add', icon: 'mdi:playlist-plus', label: localize('search.add_queue') },
+  { mode: 'add_to_playlist', icon: 'mdi:plus', label: localize('search.add_to_playlist') },
 ];
 
 export const ALLOWED_MEDIA_TYPES = ['artist', 'album', 'track', 'playlist', 'radio', 'podcast', 'audiobook'];
@@ -203,6 +204,11 @@ export function renderSearchResultSlideOut({
         <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
           ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
         </button>
+        ${item.media_class === 'track' || item.media_content_type === 'track' ? html`
+          <button class="slide-out-button" @click=${() => onPlayOption(item, 'add_to_playlist')} title="${localize('search.labels.add_to_playlist')}">
+            ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize('search.labels.add_to_playlist')}
+          </button>
+        ` : nothing}
       `}
       <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); onOptionsToggle(null); }}>
         <ha-icon icon="mdi:close"></ha-icon>
@@ -369,12 +375,17 @@ export function renderSearchOptionsOverlay({ item, onClose, onPlayOption }) {
         <div class="entity-options-sheet">
           <div class="entity-options-title">${item.title}</div>
           
-          ${playOptions.map(option => html`
-            <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
-              <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
-              <span class="menu-action-label">${option.label}</span>
-            </button>
-          `)}
+          ${playOptions.map(option => {
+    if (option.mode === 'add_to_playlist' && item.media_class !== 'track' && item.media_content_type !== 'track') {
+      return nothing;
+    }
+    return html`
+              <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
+                <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
+                <span class="menu-action-label">${option.label}</span>
+              </button>
+            `;
+  })}
           
           <div class="entity-options-divider"></div>
           
