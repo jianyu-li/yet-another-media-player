@@ -74,7 +74,7 @@ export async function getMassQueueConfigEntryId(hass) {
   }
 }
 
-function transformMusicAssistantItem(item) {
+export function transformMusicAssistantItem(item) {
   if (!item) return null;
   return {
     title: item.name,
@@ -84,7 +84,8 @@ function transformMusicAssistantItem(item) {
     thumbnail: item.image,
     ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
     ...(item.album && { album: item.album.name }),
-    is_browsable: item.media_type === 'artist' || item.media_type === 'album' || item.media_type === 'playlist'
+    is_browsable: item.media_type === 'artist' || item.media_type === 'album' || item.media_type === 'playlist',
+    is_editable: item.is_editable === true
   };
 }
 

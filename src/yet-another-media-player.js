@@ -19,7 +19,8 @@ import {
   getMassQueueConfigEntryId,
   renderSearchResultActions,
   renderSearchResultSlideOut,
-  ALLOWED_MEDIA_TYPES
+  ALLOWED_MEDIA_TYPES,
+  transformMusicAssistantItem
 } from "./search-sheet.js";
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
 import {
@@ -1132,7 +1133,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _getDisplaySearchResults() {
-    const baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
+    let baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
+    if (this._addToPlaylistTarget) {
+      baseResults = baseResults.filter(item => item.media_class !== 'playlist' || item.is_editable);
+    }
     return baseResults;
   }
 
@@ -1247,8 +1251,75 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       let searchResponse;
 
-      // Check for recently played first (highest priority)
-      if (isRecentlyPlayed) {
+      // Special case: "Add to Playlist" directly reads unstripped MA library playlists with mass_queue.send_command
+      if (this._addToPlaylistTarget && mediaType === 'playlist' && this._massQueueAvailable) {
+        this._initialFavoritesLoaded = false;
+        try {
+          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+          if (mqConfigEntryId) {
+            // Fetch a generous amount so we don't truncate before filtering
+            const apiData = { limit: 500 };
+            if (this._searchQuery && this._searchQuery.trim().length > 0) {
+              apiData.search = this._searchQuery.trim();
+            }
+            const orderBy = this._getActiveSearchDisplaySortMode();
+            if (orderBy && orderBy !== 'default') {
+              apiData.order_by = orderBy;
+            }
+
+            const message = {
+              type: "call_service",
+              domain: "mass_queue",
+              service: "send_command",
+              service_data: {
+                config_entry_id: mqConfigEntryId,
+                command: "music/playlists/library_items",
+                data: apiData
+              },
+              return_response: true
+            };
+
+            const res = await this.hass.connection.sendMessagePromise(message);
+
+            let rawPlaylists = res?.response || [];
+
+            // The Music Assistant API send_command wrapper wraps the response deeply.
+            // e.g. res.response = { id: "xxx", response: [...] }
+            if (res?.response && Array.isArray(res.response.response)) {
+              rawPlaylists = res.response.response;
+            } else if (res?.response && Array.isArray(res.response.items)) {
+              rawPlaylists = res.response.items;
+            } else if (res?.response && res.response.results) {
+              rawPlaylists = res.response.results;
+            }
+
+            if (Array.isArray(rawPlaylists)) {
+              const displayLimit = this._getSearchResultsLimit() || 30;
+              const mappedPlaylists = rawPlaylists
+                .filter(p => {
+                  return p.is_editable === true;
+                })
+                .map(p => {
+                  const mapped = transformMusicAssistantItem(p);
+                  if (mapped) mapped.is_editable = true;
+                  return mapped;
+                })
+                .filter(Boolean)
+                // only return up to the configured display limit
+                .slice(0, displayLimit);
+
+              searchResponse = { results: mappedPlaylists, usedMusicAssistant: true };
+            }
+          }
+        } catch (e) {
+          console.warn("yamp: error fetching direct native playlists for add-to-target logic", e);
+        }
+
+        if (!searchResponse) {
+          searchResponse = { results: [], usedMusicAssistant: true };
+        }
+        this._lastSearchUsedServerFavorites = false;
+      } else if (isRecentlyPlayed) {
         // Load recently played items
         this._initialFavoritesLoaded = false;
         searchResponse = await getRecentlyPlayed(
@@ -1322,9 +1393,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       // Handle the new response format
-      const arr = searchResponse.results || [];
+      let arr = searchResponse.results || [];
       this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
-
 
       // Initialize/Reset internal states when config changes is a completely new search (not just switching filters)
       const isNewSearch = this._currentSearchQuery !== this._searchQuery;
