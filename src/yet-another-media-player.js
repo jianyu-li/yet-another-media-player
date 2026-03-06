@@ -7219,6 +7219,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
                           searchView: this.config.search_view,
                           isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
+                          massQueueAvailable: this._massQueueAvailable,
                           onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
                           onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
                           onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
@@ -7337,7 +7338,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._searchActiveOptionsItem = null;
           this.requestUpdate();
         },
-        onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode)
+        onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
+        massQueueAvailable: this._massQueueAvailable
       }) : nothing
       }
           ${this._searchOpen

@@ -170,6 +170,7 @@ export function renderSearchResultSlideOut({
   onOptionsToggle,
   searchView = 'list',
   isQueueItem = false,
+  massQueueAvailable = false,
   onMoveUp,
   onMoveDown,
   onMoveNext,
@@ -206,7 +207,7 @@ export function renderSearchResultSlideOut({
         <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
           ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
         </button>
-        ${item.media_class === 'track' || item.media_content_type === 'track' ? html`
+        ${(item.media_class === 'track' || item.media_content_type === 'track') && massQueueAvailable ? html`
           <button class="slide-out-button" @click=${() => onPlayOption(item, 'add_to_playlist')} title="${localize('search.labels.add_to_playlist')}">
             ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize('search.labels.add_to_playlist')}
           </button>
@@ -356,6 +357,7 @@ export function renderSearchSheet({
             onOptionsToggle,
             searchView,
             isQueueItem: isMA && item.queue_item_id && upcomingFilterActive && massQueueAvailable,
+            massQueueAvailable,
             onMoveUp,
             onMoveDown,
             onMoveNext,
@@ -370,7 +372,7 @@ export function renderSearchSheet({
   `;
 }
 
-export function renderSearchOptionsOverlay({ item, onClose, onPlayOption }) {
+export function renderSearchOptionsOverlay({ item, onClose, onPlayOption, massQueueAvailable = false }) {
   if (!item) return nothing;
 
   return html`
@@ -380,8 +382,11 @@ export function renderSearchOptionsOverlay({ item, onClose, onPlayOption }) {
           <div class="entity-options-title">${item.title}</div>
           
           ${playOptions.map(option => {
-    if (option.mode === 'add_to_playlist' && item.media_class !== 'track' && item.media_content_type !== 'track') {
-      return nothing;
+    if (option.mode === 'add_to_playlist') {
+      const isTrack = item.media_class === 'track' || item.media_content_type === 'track';
+      if (!isTrack || !massQueueAvailable) {
+        return nothing;
+      }
     }
     return html`
               <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
