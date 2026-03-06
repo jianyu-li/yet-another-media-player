@@ -302,11 +302,15 @@ export default {
         "move_next": "Presunúť na nasledujúce",
         "remove": "Odstrániť z fronty",
         "added": "Pridané do fronty!",
+        "added_to_playlist": "Pridané do playlistu!",
+        "select_playlist": "Vybrať playlist pre '{track}'",
+        "add_to_playlist": "Pridať do playlistu",
         "labels": {
             "replace": "Nahradiť",
             "next": "Nasledujúce",
             "replace_next": "Nahradiť nasledujúce",
-            "add": "Pridať"
+            "add": "Pridať",
+            "add_to_playlist": "Pridať do playlistu"
         },
         "results": "výsledkov",
         "result": "výsledok",
