@@ -164,6 +164,7 @@ export function renderSearchResultSlideOut({
   item,
   activeSearchRowMenuId,
   successSearchRowMenuId,
+  successSearchRowType,
   onPlayOption,
   onOptionsToggle,
   searchView = 'list',
@@ -217,7 +218,7 @@ export function renderSearchResultSlideOut({
       ${isSuccess ? html`
         <div class="search-row-success-overlay">
           <span>✅</span>
-          <span>${localize('search.added')}</span>
+          <span>${successSearchRowType === 'playlist' ? localize('search.added_to_playlist') : localize('search.added')}</span>
         </div>
       ` : nothing}
     </div>
@@ -241,6 +242,7 @@ export function renderSearchSheet({
   disableAutofocus = false,
   activeSearchRowMenuId,
   successSearchRowMenuId,
+  successSearchRowType,
   onOptionsToggle,
   onPlayOption,
   onResultClick,
@@ -348,6 +350,7 @@ export function renderSearchSheet({
             item,
             activeSearchRowMenuId,
             successSearchRowMenuId,
+            successSearchRowType,
             onPlayOption,
             onOptionsToggle,
             searchView,

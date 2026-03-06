@@ -427,6 +427,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _searchActiveOptionsItem: { state: true },
     _activeSearchRowMenuId: { state: true },
     _successSearchRowMenuId: { state: true },
+    _successSearchRowType: { state: true },
     _radioModeActive: { state: true },
     _showEntityOptions: { state: true },
     _showGrouping: { state: true },
@@ -512,6 +513,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchActiveOptionsItem = null;
     this._activeSearchRowMenuId = null;
     this._successSearchRowMenuId = null;
+    this._successSearchRowType = null;
     // Search filter toggles
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
@@ -2894,10 +2896,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
         if (mqConfigEntryId) {
           const playlistId = item.media_content_id.split('/').pop();
-          console.log("YAMP: Sending add_playlist_tracks command.", {
-            playlistId: playlistId,
-            trackUri: this._addToPlaylistTarget.media_content_id
-          });
           await this.hass.callService("mass_queue", "send_command", {
             command: "music/playlists/add_playlist_tracks",
             data: {
@@ -2908,8 +2906,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
           });
 
           this._showQueueSuccessMessage = true;
+          this._successSearchRowMenuId = this._addToPlaylistTarget.media_content_id;
+          this._successSearchRowType = 'playlist';
+
           setTimeout(() => {
             this._showQueueSuccessMessage = false;
+            this._successSearchRowMenuId = null;
+            this._successSearchRowType = null;
             this.requestUpdate();
           }, 3000);
         }
@@ -7141,6 +7144,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           item,
                           activeSearchRowMenuId: this._activeSearchRowMenuId,
                           successSearchRowMenuId: this._successSearchRowMenuId,
+                          successSearchRowType: this._successSearchRowType,
                           onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
                           onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
                           searchView: this.config.search_view,
@@ -7292,6 +7296,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           onResultClick: (item) => this._handleSearchResultClick(item),
           activeSearchRowMenuId: this._activeSearchRowMenuId,
           successSearchRowMenuId: this._successSearchRowMenuId,
+          successSearchRowType: this._successSearchRowType,
           onOptionsToggle: (item) => {
             this._activeSearchRowMenuId = item ? item.media_content_id : null;
             this.requestUpdate();
