@@ -53,6 +53,9 @@ import {
   SUPPORT_REPEAT_SET
 } from "./constants.js";
 
+const PLAYLIST_FETCH_LIMIT = 500;
+const SUCCESS_MESSAGE_TIMEOUT_MS = 3000;
+
 const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
 const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
@@ -1133,11 +1136,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _getDisplaySearchResults() {
-    let baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
-    if (this._addToPlaylistTarget) {
-      baseResults = baseResults.filter(item => item.media_class !== 'playlist' || item.is_editable);
-    }
-    return baseResults;
+    return Array.isArray(this._searchResults) ? this._searchResults : [];
   }
 
   _getSearchResultsLimit() {
@@ -1258,7 +1257,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
           if (mqConfigEntryId) {
             // Fetch a generous amount so we don't truncate before filtering
-            const apiData = { limit: 500 };
+            const apiData = { limit: PLAYLIST_FETCH_LIMIT };
             if (this._searchQuery && this._searchQuery.trim().length > 0) {
               apiData.search = this._searchQuery.trim();
             }
@@ -1285,12 +1284,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
             // The Music Assistant API send_command wrapper wraps the response deeply.
             // e.g. res.response = { id: "xxx", response: [...] }
-            if (res?.response && Array.isArray(res.response.response)) {
-              rawPlaylists = res.response.response;
-            } else if (res?.response && Array.isArray(res.response.items)) {
-              rawPlaylists = res.response.items;
-            } else if (res?.response && Array.isArray(res.response.results)) {
-              rawPlaylists = res.response.results;
+            if (res?.response) {
+              const potentialArrays = [res.response.response, res.response.items, res.response.results, res.response];
+              rawPlaylists = potentialArrays.find(Array.isArray) || [];
             }
 
             if (Array.isArray(rawPlaylists)) {
@@ -1736,11 +1732,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showQueueSuccessMessage = true;
     this.requestUpdate();
 
-    // Show message for 3 seconds but keep search sheet open
+    // Show message for duration but keep search sheet open
     setTimeout(() => {
       this._showQueueSuccessMessage = false;
       this.requestUpdate();
-    }, 3000);
+    }, SUCCESS_MESSAGE_TIMEOUT_MS);
   }
 
   // Handle hierarchical search - search for albums by artist
@@ -2978,7 +2974,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             this._successSearchRowMenuId = null;
             this._successSearchRowType = null;
             this.requestUpdate();
-          }, 3000);
+          }, SUCCESS_MESSAGE_TIMEOUT_MS);
         }
       } catch (e) {
         console.error("Failed to add to playlist:", e);
