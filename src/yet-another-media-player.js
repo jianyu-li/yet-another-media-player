@@ -1289,21 +1289,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
               rawPlaylists = res.response.response;
             } else if (res?.response && Array.isArray(res.response.items)) {
               rawPlaylists = res.response.items;
-            } else if (res?.response && res.response.results) {
+            } else if (res?.response && Array.isArray(res.response.results)) {
               rawPlaylists = res.response.results;
             }
 
             if (Array.isArray(rawPlaylists)) {
               const displayLimit = this._getSearchResultsLimit() || 30;
               const mappedPlaylists = rawPlaylists
-                .filter(p => {
-                  return p.is_editable === true;
-                })
-                .map(p => {
-                  const mapped = transformMusicAssistantItem(p);
-                  if (mapped) mapped.is_editable = true;
-                  return mapped;
-                })
+                .filter(p => p.is_editable === true)
+                .map(p => transformMusicAssistantItem(p))
                 .filter(Boolean)
                 // only return up to the configured display limit
                 .slice(0, displayLimit);

@@ -381,20 +381,18 @@ export function renderSearchOptionsOverlay({ item, onClose, onPlayOption, massQu
         <div class="entity-options-sheet">
           <div class="entity-options-title">${item.title}</div>
           
-          ${playOptions.map(option => {
+          ${playOptions.filter(option => {
     if (option.mode === 'add_to_playlist') {
       const isTrack = item.media_class === 'track' || item.media_content_type === 'track';
-      if (!isTrack || !massQueueAvailable) {
-        return nothing;
-      }
+      return isTrack && massQueueAvailable;
     }
-    return html`
-              <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
-                <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
-                <span class="menu-action-label">${option.label}</span>
-              </button>
-            `;
-  })}
+    return true;
+  }).map(option => html`
+            <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
+              <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
+              <span class="menu-action-label">${option.label}</span>
+            </button>
+          `)}
           
           <div class="entity-options-divider"></div>
           
