@@ -19,7 +19,8 @@ import {
   getMassQueueConfigEntryId,
   renderSearchResultActions,
   renderSearchResultSlideOut,
-  ALLOWED_MEDIA_TYPES
+  ALLOWED_MEDIA_TYPES,
+  transformMusicAssistantItem
 } from "./search-sheet.js";
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
 import {
@@ -51,6 +52,9 @@ import {
   SUPPORT_GROUPING,
   SUPPORT_REPEAT_SET
 } from "./constants.js";
+
+const PLAYLIST_FETCH_LIMIT = 500;
+const SUCCESS_MESSAGE_TIMEOUT_MS = 3000;
 
 const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
@@ -427,12 +431,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _searchActiveOptionsItem: { state: true },
     _activeSearchRowMenuId: { state: true },
     _successSearchRowMenuId: { state: true },
+    _successSearchRowType: { state: true },
     _radioModeActive: { state: true },
     _showEntityOptions: { state: true },
     _showGrouping: { state: true },
     _showTransferQueue: { state: true },
     _showResolvedEntities: { state: true },
-    _showSearchInSheet: { state: true }
+    _showSearchInSheet: { state: true },
+    _addToPlaylistTarget: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -450,6 +456,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._shouldDropdownOpenUp = false;
     this._collapsedArtDominantColor = "#444";
     this._lastArtworkUrl = null;
+    this._addToPlaylistTarget = null;
     // Timer for progress updates
     this._progressTimer = null;
     this._progressValue = null;
@@ -510,6 +517,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchActiveOptionsItem = null;
     this._activeSearchRowMenuId = null;
     this._successSearchRowMenuId = null;
+    this._successSearchRowType = null;
     // Search filter toggles
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
@@ -1128,8 +1136,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _getDisplaySearchResults() {
-    const baseResults = Array.isArray(this._searchResults) ? this._searchResults : [];
-    return baseResults;
+    return Array.isArray(this._searchResults) ? this._searchResults : [];
   }
 
   _getSearchResultsLimit() {
@@ -1243,8 +1250,71 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       let searchResponse;
 
-      // Check for recently played first (highest priority)
-      if (isRecentlyPlayed) {
+      // Special case: "Add to Playlist" directly reads unstripped MA library playlists with mass_queue.send_command
+      if (this._addToPlaylistTarget && mediaType === 'playlist' && this._massQueueAvailable) {
+        this._initialFavoritesLoaded = false;
+        try {
+          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+          if (mqConfigEntryId) {
+            // Fetch a generous amount so we don't truncate before filtering
+            const apiData = { limit: PLAYLIST_FETCH_LIMIT };
+            if (this._searchQuery && this._searchQuery.trim().length > 0) {
+              apiData.search = this._searchQuery.trim();
+            }
+            const orderBy = this._getActiveSearchDisplaySortMode();
+            if (orderBy && orderBy !== 'default') {
+              apiData.order_by = orderBy;
+            }
+
+            const message = {
+              type: "call_service",
+              domain: "mass_queue",
+              service: "send_command",
+              service_data: {
+                config_entry_id: mqConfigEntryId,
+                command: "music/playlists/library_items",
+                data: apiData
+              },
+              return_response: true
+            };
+
+            const res = await this.hass.connection.sendMessagePromise(message);
+
+            let rawPlaylists = [];
+
+            // The Music Assistant API send_command wrapper wraps the response deeply.
+            // e.g. res.response = { id: "xxx", response: [...] }
+            if (Array.isArray(res?.response)) {
+              rawPlaylists = res.response;
+            } else if (Array.isArray(res?.response?.response)) {
+              rawPlaylists = res.response.response;
+            } else if (Array.isArray(res?.response?.items)) {
+              rawPlaylists = res.response.items;
+            } else if (Array.isArray(res?.response?.results)) {
+              rawPlaylists = res.response.results;
+            }
+
+            if (Array.isArray(rawPlaylists)) {
+              const displayLimit = this._getSearchResultsLimit() || 30;
+              const mappedPlaylists = rawPlaylists
+                .filter(p => p.is_editable === true)
+                .map(p => transformMusicAssistantItem(p))
+                .filter(Boolean)
+                // only return up to the configured display limit
+                .slice(0, displayLimit);
+
+              searchResponse = { results: mappedPlaylists, usedMusicAssistant: true };
+            }
+          }
+        } catch (e) {
+          console.warn("yamp: error fetching direct native playlists for add-to-target logic", e);
+        }
+
+        if (!searchResponse) {
+          searchResponse = { results: [], usedMusicAssistant: true };
+        }
+        this._lastSearchUsedServerFavorites = false;
+      } else if (isRecentlyPlayed) {
         // Load recently played items
         this._initialFavoritesLoaded = false;
         searchResponse = await getRecentlyPlayed(
@@ -1318,9 +1388,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       // Handle the new response format
-      const arr = searchResponse.results || [];
+      let arr = searchResponse.results || [];
       this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
-
 
       // Initialize/Reset internal states when config changes is a completely new search (not just switching filters)
       const isNewSearch = this._currentSearchQuery !== this._searchQuery;
@@ -1543,6 +1612,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   async _performSearchOptionAction(item, mode) {
+    if (mode === 'add_to_playlist') {
+      this._addToPlaylistTarget = item;
+      this._searchHierarchy.push({
+        type: 'select_playlist',
+        name: localize('search.add_to_playlist'),
+        query: this._searchQuery,
+        filter: this._searchMediaClassFilter
+      });
+      // Set a special breadcrumb for context
+      this._searchBreadcrumb = localize('search.select_playlist').replace('{track}', item.title);
+      this._searchQuery = '';
+      this._currentSearchQuery = '';
+      this._searchMediaClassFilter = 'playlist';
+      this._searchResultsByType = {}; // Clear cache
+
+      // Clear filter states
+      this._favoritesFilterActive = false;
+      this._recentlyPlayedFilterActive = false;
+      this._upcomingFilterActive = false;
+      this._recommendationsFilterActive = false;
+      this._initialFavoritesLoaded = false;
+
+      this._removeSearchSwipeHandlers();
+
+      // Fetch playlists
+      await this._doSearch('playlist', { clearFilters: true });
+      return;
+    }
+
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
 
@@ -1639,11 +1737,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showQueueSuccessMessage = true;
     this.requestUpdate();
 
-    // Show message for 3 seconds but keep search sheet open
+    // Show message for duration but keep search sheet open
     setTimeout(() => {
       this._showQueueSuccessMessage = false;
       this.requestUpdate();
-    }, 3000);
+    }, SUCCESS_MESSAGE_TIMEOUT_MS);
   }
 
   // Handle hierarchical search - search for albums by artist
@@ -1679,6 +1777,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
 
     const previousLevel = this._searchHierarchy.pop();
+    if (previousLevel.type === 'select_playlist') {
+      this._addToPlaylistTarget = null;
+    }
+
     this._searchQuery = previousLevel.query;
     this._currentSearchQuery = previousLevel.query;
     this._searchResultsByType = {}; // Clear cache for new search
@@ -1784,6 +1886,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Get the tooltip title for clickable search results
   _getSearchResultClickTitle(item) {
     if (!this._isClickableSearchResult(item)) return "";
+
+    if (this._addToPlaylistTarget && item.media_class === 'playlist') {
+      return localize('search.add_to_playlist');
+    }
 
     return getSearchResultClickTitle(item);
   }
@@ -2847,6 +2953,39 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // If this is a touch device and we have a touch event, ignore the click
     // (touch events are handled by _handleSearchResultTouch)
     if ('ontouchstart' in window && event && event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents) {
+      return;
+    }
+
+    if (this._addToPlaylistTarget && item.media_class === 'playlist') {
+      try {
+        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+        if (mqConfigEntryId) {
+          const playlistId = item.item_id || item.media_content_id?.split('/').pop();
+          await this.hass.callService("mass_queue", "send_command", {
+            command: "music/playlists/add_playlist_tracks",
+            data: {
+              db_playlist_id: playlistId,
+              uris: [this._addToPlaylistTarget.media_content_id]
+            },
+            config_entry_id: mqConfigEntryId
+          });
+
+          this._showQueueSuccessMessage = true;
+          this._successSearchRowMenuId = this._addToPlaylistTarget.media_content_id;
+          this._successSearchRowType = 'playlist';
+
+          setTimeout(() => {
+            this._showQueueSuccessMessage = false;
+            this._successSearchRowMenuId = null;
+            this._successSearchRowType = null;
+            this.requestUpdate();
+          }, SUCCESS_MESSAGE_TIMEOUT_MS);
+        }
+      } catch (e) {
+        console.error("Failed to add to playlist:", e);
+      }
+      this._addToPlaylistTarget = null;
+      this._goBackInSearch();
       return;
     }
 
@@ -7070,10 +7209,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           item,
                           activeSearchRowMenuId: this._activeSearchRowMenuId,
                           successSearchRowMenuId: this._successSearchRowMenuId,
+                          successSearchRowType: this._successSearchRowType,
                           onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
                           onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
                           searchView: this.config.search_view,
                           isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
+                          massQueueAvailable: this._massQueueAvailable,
                           onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
                           onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
                           onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
@@ -7192,7 +7333,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._searchActiveOptionsItem = null;
           this.requestUpdate();
         },
-        onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode)
+        onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
+        massQueueAvailable: this._massQueueAvailable
       }) : nothing
       }
           ${this._searchOpen
@@ -7221,6 +7363,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           onResultClick: (item) => this._handleSearchResultClick(item),
           activeSearchRowMenuId: this._activeSearchRowMenuId,
           successSearchRowMenuId: this._successSearchRowMenuId,
+          successSearchRowType: this._successSearchRowType,
           onOptionsToggle: (item) => {
             this._activeSearchRowMenuId = item ? item.media_content_id : null;
             this.requestUpdate();

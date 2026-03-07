@@ -395,6 +395,15 @@ Once installed and configured, YAMP will automatically detect the integration an
 
 These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
 
+### Add to Playlist (mass_queue)
+
+You can add tracks to your Music Assistant playlists directly from the search results.
+
+- **Requirement**: This feature requires the [mass_queue](https://github.com/droans/mass_queue) integration to be installed.
+- **Smart Filtering**: The card automatically fetches your library and filters the list to show **only editable playlists**, ensuring you only see those you can actually modify.
+- **How to Use**: Click the 3-dot menu on any track in the search results and select **Add to Playlist**. You will be prompted to select a destination playlist.
+
+
 
 # Look and Feel
 

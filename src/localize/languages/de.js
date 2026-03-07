@@ -302,11 +302,15 @@ export default {
         "move_next": "Als Nächstes verschieben",
         "remove": "Aus Warteschlange entfernen",
         "added": "Zur Warteschlange hinzugefügt!",
+        "added_to_playlist": "Zur Playlist hinzugefügt!",
+        "select_playlist": "Playlist für '{track}' auswählen",
+        "add_to_playlist": "Zur Playlist hinzufügen",
         "labels": {
             "replace": "Ersetzen",
             "next": "Weiter",
             "replace_next": "Weiter ersetzen",
-            "add": "Hinzufügen"
+            "add": "Hinzufügen",
+            "add_to_playlist": "Zur Playlist hinzufügen"
         },
         "results": "Ergebnisse",
         "result": "Ergebnis",

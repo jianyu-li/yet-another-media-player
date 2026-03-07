@@ -302,11 +302,15 @@ export default {
         "move_next": "Passa al successivo",
         "remove": "Rimuovi da coda",
         "added": "Aggiunto!",
+        "added_to_playlist": "Aggiunto alla playlist!",
+        "select_playlist": "Seleziona playlist per '{track}'",
+        "add_to_playlist": "Aggiungi alla playlist",
         "labels": {
             "replace": "Sostituisci",
             "next": "Successivo",
             "replace_next": "Sost. succ.",
-            "add": "Aggiungi"
+            "add": "Aggiungi",
+            "add_to_playlist": "Aggiungi alla playlist"
         },
         "results": "risultati",
         "result": "risultato",
