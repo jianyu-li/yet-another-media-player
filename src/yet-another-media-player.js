@@ -1280,12 +1280,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
             const res = await this.hass.connection.sendMessagePromise(message);
 
-            let rawPlaylists = res?.response || [];
+            let rawPlaylists = [];
 
             // The Music Assistant API send_command wrapper wraps the response deeply.
             // e.g. res.response = { id: "xxx", response: [...] }
-            if (res?.response?.response && Array.isArray(res.response.response)) {
+            if (Array.isArray(res?.response)) {
+              rawPlaylists = res.response;
+            } else if (Array.isArray(res?.response?.response)) {
               rawPlaylists = res.response.response;
+            } else if (Array.isArray(res?.response?.items)) {
+              rawPlaylists = res.response.items;
+            } else if (Array.isArray(res?.response?.results)) {
+              rawPlaylists = res.response.results;
             }
 
             if (Array.isArray(rawPlaylists)) {
@@ -2954,7 +2960,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       try {
         const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
         if (mqConfigEntryId) {
-          const playlistId = item.item_id || item.media_content_id.split('/').pop();
+          const playlistId = item.item_id || item.media_content_id?.split('/').pop();
           await this.hass.callService("mass_queue", "send_command", {
             command: "music/playlists/add_playlist_tracks",
             data: {
