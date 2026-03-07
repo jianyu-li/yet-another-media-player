@@ -14,6 +14,10 @@ const playOptions = [
 
 export const ALLOWED_MEDIA_TYPES = ['artist', 'album', 'track', 'playlist', 'radio', 'podcast', 'audiobook'];
 
+export function isTrack(item) {
+  return item && (item.media_class === 'track' || item.media_content_type === 'track');
+}
+
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
   const numericLimit = Number(limit);
   if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
@@ -81,6 +85,7 @@ export function transformMusicAssistantItem(item) {
     media_content_id: item.uri,
     media_content_type: item.media_type,
     media_class: item.media_type,
+    item_id: item.item_id,
     thumbnail: item.image,
     ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
     ...(item.album && { album: item.album.name }),
@@ -207,7 +212,7 @@ export function renderSearchResultSlideOut({
         <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
           ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
         </button>
-        ${(item.media_class === 'track' || item.media_content_type === 'track') && massQueueAvailable ? html`
+        ${isTrack(item) && massQueueAvailable ? html`
           <button class="slide-out-button" @click=${() => onPlayOption(item, 'add_to_playlist')} title="${localize('search.labels.add_to_playlist')}">
             ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize('search.labels.add_to_playlist')}
           </button>
@@ -383,8 +388,7 @@ export function renderSearchOptionsOverlay({ item, onClose, onPlayOption, massQu
           
           ${playOptions.filter(option => {
     if (option.mode === 'add_to_playlist') {
-      const isTrack = item.media_class === 'track' || item.media_content_type === 'track';
-      return isTrack && massQueueAvailable;
+      return isTrack(item) && massQueueAvailable;
     }
     return true;
   }).map(option => html`
