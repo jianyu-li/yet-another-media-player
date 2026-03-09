@@ -1625,14 +1625,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._searchQuery = '';
       this._currentSearchQuery = '';
       this._searchMediaClassFilter = 'playlist';
-      this._searchResultsByType = {}; // Clear cache
-
-      // Clear filter states
-      this._favoritesFilterActive = false;
-      this._recentlyPlayedFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._recommendationsFilterActive = false;
-      this._initialFavoritesLoaded = false;
+      this._resetSearchContext();
 
       this._removeSearchSwipeHandlers();
 
@@ -1732,16 +1725,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Invalidate the "Next Up" cache
     this._invalidateUpcomingCache();
-
-    // Show success message
-    this._showQueueSuccessMessage = true;
-    this.requestUpdate();
-
-    // Show message for duration but keep search sheet open
-    setTimeout(() => {
-      this._showQueueSuccessMessage = false;
-      this.requestUpdate();
-    }, SUCCESS_MESSAGE_TIMEOUT_MS);
+    this._showSearchSuccessToast();
   }
 
   // Handle hierarchical search - search for albums by artist
@@ -2970,16 +2954,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             config_entry_id: mqConfigEntryId
           });
 
-          this._showQueueSuccessMessage = true;
-          this._successSearchRowMenuId = this._addToPlaylistTarget.media_content_id;
-          this._successSearchRowType = 'playlist';
-
-          setTimeout(() => {
-            this._showQueueSuccessMessage = false;
-            this._successSearchRowMenuId = null;
-            this._successSearchRowType = null;
-            this.requestUpdate();
-          }, SUCCESS_MESSAGE_TIMEOUT_MS);
+          this._showSearchSuccessToast(this._addToPlaylistTarget.media_content_id, 'playlist');
         }
       } catch (e) {
         console.error("Failed to add to playlist:", e);
@@ -6167,6 +6142,34 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } catch (err) {
       console.error("YAMP: Error in _onProgressBarClick", err);
     }
+  }
+
+  _resetSearchContext() {
+    this._searchResultsByType = {}; // Clear cache
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._upcomingFilterActive = false;
+    this._recommendationsFilterActive = false;
+    this._initialFavoritesLoaded = false;
+  }
+
+  _showSearchSuccessToast(menuId = null, type = null) {
+    this._showQueueSuccessMessage = true;
+    if (menuId) this._successSearchRowMenuId = menuId;
+    if (type) this._successSearchRowType = type;
+    this.requestUpdate();
+
+    if (this._successToastHandle) {
+      clearTimeout(this._successToastHandle);
+    }
+
+    this._successToastHandle = setTimeout(() => {
+      this._showQueueSuccessMessage = false;
+      this._successSearchRowMenuId = null;
+      this._successSearchRowType = null;
+      this._successToastHandle = null;
+      this.requestUpdate();
+    }, SUCCESS_MESSAGE_TIMEOUT_MS);
   }
 
   render() {
