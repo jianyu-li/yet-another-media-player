@@ -169,8 +169,6 @@ export function renderSearchResultActions({
 export function renderSearchResultSlideOut({
   item,
   activeSearchRowMenuId,
-  successSearchRowMenuId,
-  successSearchRowType,
   onPlayOption,
   onOptionsToggle,
   searchView = 'list',
@@ -182,7 +180,6 @@ export function renderSearchResultSlideOut({
   onRemove,
 }) {
   const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
-  const isSuccess = successSearchRowMenuId === item.media_content_id;
 
   return html`
     <div class="search-row-slide-out ${isActive ? 'active' : ''}">
@@ -222,12 +219,6 @@ export function renderSearchResultSlideOut({
         <ha-icon icon="mdi:close"></ha-icon>
       </div>
 
-      ${isSuccess ? html`
-        <div class="search-row-success-overlay">
-          <span>✅</span>
-          <span>${successSearchRowType === 'playlist' ? localize('search.added_to_playlist') : localize('search.added')}</span>
-        </div>
-      ` : nothing}
     </div>
   `;
 }
@@ -356,8 +347,6 @@ export function renderSearchSheet({
                   ${renderSearchResultSlideOut({
             item,
             activeSearchRowMenuId,
-            successSearchRowMenuId,
-            successSearchRowType,
             onPlayOption,
             onOptionsToggle,
             searchView,
@@ -368,6 +357,13 @@ export function renderSearchSheet({
             onMoveNext,
             onRemove,
           })}
+
+                  ${successSearchRowMenuId === item.media_content_id ? html`
+                    <div class="search-row-success-overlay">
+                      <span>✅</span>
+                      <span>${successSearchRowType === 'playlist' ? localize('search.added_to_playlist') : localize('search.added')}</span>
+                    </div>
+                  ` : nothing}
                 </div>
               `;
         }

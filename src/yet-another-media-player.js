@@ -2954,13 +2954,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
             config_entry_id: mqConfigEntryId
           });
 
-          this._showSearchSuccessToast(this._addToPlaylistTarget.media_content_id, 'playlist');
+          this._showSearchSuccessToast(item.media_content_id, 'playlist');
         }
       } catch (e) {
         console.error("Failed to add to playlist:", e);
       }
       this._addToPlaylistTarget = null;
-      this._goBackInSearch();
+      setTimeout(() => {
+        this._goBackInSearch();
+      }, SUCCESS_MESSAGE_TIMEOUT_MS);
       return;
     }
 
@@ -7211,8 +7213,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 ${renderSearchResultSlideOut({
                           item,
                           activeSearchRowMenuId: this._activeSearchRowMenuId,
-                          successSearchRowMenuId: this._successSearchRowMenuId,
-                          successSearchRowType: this._successSearchRowType,
                           onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
                           onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
                           searchView: this.config.search_view,
@@ -7223,6 +7223,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
                           onRemove: (it) => this._removeQueueItem(it.queue_item_id)
                         })}
+
+                        ${this._successSearchRowMenuId === item.media_content_id ? html`
+                          <div class="search-row-success-overlay">
+                            <span>✅</span>
+                            <span>${this._successSearchRowType === 'playlist' ? localize('search.added_to_playlist') : localize('search.added')}</span>
+                          </div>
+                        ` : nothing}
                             </div>
                           ` : html`
                             <!-- placeholder row keeps height -->

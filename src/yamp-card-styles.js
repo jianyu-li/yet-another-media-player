@@ -2960,6 +2960,8 @@ export const yampCardStyles = css`
 
 
   .search-sheet-result {
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
     gap: 15px;
