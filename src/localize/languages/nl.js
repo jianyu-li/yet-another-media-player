@@ -326,6 +326,7 @@ export default {
             "podcast": "Podcast",
             "audiobook": "Luisterboek"
         },
-        "search_artist": "Zoek naar deze artiest"
+        "search_artist": "Zoek naar deze artiest",
+        "play_collection": "Speel deze collectie af"
     }
 };

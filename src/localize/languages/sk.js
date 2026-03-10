@@ -326,6 +326,7 @@ export default {
             "podcast": "Podcast",
             "audiobook": "Audiokniha"
         },
-        "search_artist": "Hľadať tohto interpreta"
+        "search_artist": "Hľadať tohto interpreta",
+        "play_collection": "Prehrať túto kolekciu"
     }
 };

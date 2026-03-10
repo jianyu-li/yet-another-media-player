@@ -326,6 +326,7 @@ export default {
             "podcast": "Podcast",
             "audiobook": "Audiobook"
         },
-        "search_artist": "Search for this artist"
+        "search_artist": "Search for this artist",
+        "play_collection": "Play this collection"
     }
 };
