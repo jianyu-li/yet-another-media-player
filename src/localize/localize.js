@@ -22,7 +22,7 @@ const languages = {
 };
 
 export function localize(string, search = '', replace = '') {
-    const rawLang = (localStorage.getItem('selectedLanguage') || 'en').replace(/['"]+/g, '').replace('-', '_');
+    const rawLang = (localStorage.getItem('selectedLanguage') || document.querySelector("home-assistant")?.hass?.language || 'en').replace(/['"]+/g, '').replace('-', '_');
     const lang = languages[rawLang] ? rawLang : rawLang.split('_')[0];
 
     let translated;
