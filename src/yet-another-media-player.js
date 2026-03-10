@@ -606,9 +606,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._maResolveTtlMs = 7000; // refresh every ~7s
     // Manual select timeout for hold-to-pin functionality
     this._manualSelectTimeout = null;
+    // Track active websocket template subscriptions
+    this._templateSubscriptions = {}; // { [idx_type]: unsubscribeFunction }
+    this._maTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
+    this._volTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
+    // Cache resolved MA entity per index
+    this._maResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
+    this._maResolveTtlMs = 7000;
     // Cache resolved Volume entity per index (template or static)
     this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
-    this._volResolveTtlMs = 7000; // refresh every ~7s
+    this._volResolveTtlMs = 7000; // Used for static caching now
     // Track the last entity that was playing for better pause/resume behavior
     this._lastPlayingEntityId = null;
     // Control focus lock to prefer most-recently controlled entity in brief paused window
@@ -619,6 +626,80 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._playerStateCache = {};
   }
 
+  // Subscribe to a template and update properties reactively
+  _subscribeToTemplate(idx, type, templateString) {
+    if (!this.hass || !this.hass.connection) return;
+
+    const subKey = `${idx}_${type}`;
+
+    // Check if there's already an active subscription for this exact template
+    const currentCache = type === 'ma' ? this._maTemplateValues[idx] : this._volTemplateValues[idx];
+    if (this._templateSubscriptions[subKey] && currentCache?.template === templateString) {
+      return;
+    }
+
+    // Unsubscribe from old template if it changed
+    this._unsubscribeFromTemplate(idx, type);
+
+    // Save current template to state
+    if (type === 'ma') {
+      this._maTemplateValues[idx] = { template: templateString, resolved: null };
+    } else {
+      this._volTemplateValues[idx] = { template: templateString, resolved: null };
+    }
+
+    // Subscribe to template rendering
+    try {
+      this.hass.connection.subscribeMessage((msg) => {
+        const resolved = (msg.result || '').toString().trim();
+        const isValid = resolved && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(resolved);
+
+        let shouldUpdate = false;
+
+        if (type === 'ma') {
+          if (this._maTemplateValues[idx]) {
+            this._maTemplateValues[idx].resolved = isValid ? resolved : null;
+          }
+          const currentCached = this._maResolveCache[idx]?.id;
+          if (isValid && currentCached !== resolved) {
+            this._maResolveCache[idx] = { id: resolved, ts: Date.now() };
+            shouldUpdate = true;
+          }
+        } else if (type === 'vol') {
+          if (this._volTemplateValues[idx]) {
+            this._volTemplateValues[idx].resolved = isValid ? resolved : null;
+          }
+          const currentCached = this._volResolveCache[idx]?.id;
+          if (isValid && currentCached !== resolved) {
+            this._volResolveCache[idx] = { id: resolved, ts: Date.now() };
+            shouldUpdate = true;
+          }
+        }
+
+        if (shouldUpdate) {
+          this.requestUpdate();
+        }
+      }, {
+        type: 'render_template',
+        template: templateString
+      }).then((unsub) => {
+        this._templateSubscriptions[subKey] = unsub;
+      });
+    } catch (err) {
+      console.warn('yamp: failed to subscribe to template:', err);
+    }
+  }
+
+  _unsubscribeFromTemplate(idx, type) {
+    const subKey = `${idx}_${type}`;
+    if (this._templateSubscriptions[subKey]) {
+      try {
+        this._templateSubscriptions[subKey]();
+      } catch (e) { /* ignore */ }
+      delete this._templateSubscriptions[subKey];
+    }
+  }
+
   // Resolve and cache the MA entity for a given chip index (template or static)
   async _ensureResolvedMaForIndex(idx) {
     const obj = this.entityObjs?.[idx];
@@ -627,30 +708,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!raw || typeof raw !== 'string') {
       // Clear cache if no MA or not a string
       delete this._maResolveCache[idx];
+      this._unsubscribeFromTemplate(idx, 'ma');
+      if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
       return;
     }
     const looksTemplate = raw.includes('{{') || raw.includes('{%');
     const now = Date.now();
-    const cached = this._maResolveCache[idx];
+
     if (!looksTemplate) {
       // Static MA — always cache for consistency
+      this._unsubscribeFromTemplate(idx, 'ma');
+      if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
       this._maResolveCache[idx] = { id: raw, ts: now };
       return;
     }
-    // For templates, respect TTL to avoid spamming /api/template
-    if (cached && (now - cached.ts) < this._maResolveTtlMs && cached.id) return;
-    try {
-      const resolved = await this._resolveTemplateAtActionTime(raw, obj.entity_id);
-      if (resolved && typeof resolved === 'string') {
-        // Always cache the resolved entity for service calls
-        // The rendering logic will handle validation separately
-        this._maResolveCache[idx] = { id: resolved, ts: now };
-        // Trigger re-render so artwork/state can use the resolved id
-        this.requestUpdate();
-      }
-    } catch (_) {
-      // Leave existing cache (if any); do not throw
-    }
+
+    // Setup subscription for reactivity instead of polling via API
+    this._subscribeToTemplate(idx, 'ma', raw);
   }
 
   // Resolve and cache the Volume entity for a given chip index (template or static)
@@ -662,6 +736,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // as it will be determined dynamically based on the active entity
     if (obj.follow_active_volume) {
       delete this._volResolveCache[idx];
+      this._unsubscribeFromTemplate(idx, 'vol');
+      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
       return;
     }
 
@@ -669,27 +745,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!raw || typeof raw !== 'string') {
       // Clear cache if no volume entity or not a string
       delete this._volResolveCache[idx];
+      this._unsubscribeFromTemplate(idx, 'vol');
+      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
       return;
     }
     const looksTemplate = raw.includes('{{') || raw.includes('{%');
     const now = Date.now();
-    const cached = this._volResolveCache[idx];
+
     if (!looksTemplate) {
       // Static volume entity — always cache for consistency
+      this._unsubscribeFromTemplate(idx, 'vol');
+      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
       this._volResolveCache[idx] = { id: raw, ts: now };
       return;
     }
-    // For templates, respect TTL to avoid spamming /api/template
-    if (cached && (now - cached.ts) < this._volResolveTtlMs && cached.id) return;
-    try {
-      const resolved = await this._resolveTemplateAtActionTime(raw, obj.entity_id);
-      if (resolved && typeof resolved === 'string') {
-        this._volResolveCache[idx] = { id: resolved, ts: now };
-        this.requestUpdate();
-      }
-    } catch (_) {
-      // Leave existing cache (if any); do not throw
-    }
+
+    // Setup subscription for reactivity
+    this._subscribeToTemplate(idx, 'vol', raw);
   }
 
   // Get the resolved playback entity id for a chip index, preferring cache
@@ -7894,6 +7966,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._removeSearchSwipeHandlers();
     window.removeEventListener("scroll", this._handleGlobalScroll);
     window.removeEventListener("resize", this._handleViewportResize);
+    this._cleanupTextResizeObserver();
+
+    // Cleanup all websocket subscriptions
+    Object.keys(this._templateSubscriptions).forEach(key => {
+      try {
+        this._templateSubscriptions[key]();
+      } catch (e) { /* ignore */ }
+    });
+    this._templateSubscriptions = {};
+
     if (this._adaptiveScrollTimer) {
       clearTimeout(this._adaptiveScrollTimer);
       this._adaptiveScrollTimer = null;
