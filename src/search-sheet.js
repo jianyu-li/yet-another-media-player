@@ -268,6 +268,14 @@ export function renderSearchSheet({
         <button @click=${onSearch} ?disabled=${loading || !query}>${localize('common.search')}</button>
         <button @click=${onClose} title="${localize('search.close')}">✕</button>
       </div>
+      ${breadcrumb ? html`
+        <div class="entity-options-search-breadcrumb">
+          <div class="entity-options-search-breadcrumb-text">${breadcrumb}</div>
+          <button class="entity-options-search-breadcrumb-play" @click=${onPlayCollection} title="${localize('search.play_collection')}">
+            <ha-icon icon="mdi:play"></ha-icon>
+          </button>
+        </div>
+      ` : nothing}
       ${loading ? html`<div class="search-sheet-loading">${localize('common.loading')}</div>` : nothing}
       ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
       <div class="search-sheet-results ${searchView === 'card' ? 'search-results-card-view' : 'list-view'}">

@@ -2857,12 +2857,50 @@ export const yampCardStyles = css`
     margin-bottom: 12px;
     padding-bottom: 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .entity-options-search-breadcrumb-text {
     font-size: 0.9em;
     color: #fff;
     font-style: italic;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .entity-options-search-breadcrumb-play {
+    background: none;
+    border: none;
+    color: var(--custom-accent);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    margin-left: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .entity-options-search-breadcrumb-play:hover {
+    background-color: var(--custom-accent);
+    color: #fff;
+  }
+
+  .entity-options-search-breadcrumb-play ha-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Search sheet styles */
