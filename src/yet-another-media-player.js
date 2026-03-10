@@ -1439,14 +1439,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._searchHierarchy.length === 0) return;
     const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
     if (!currentLevel || !currentLevel.uri) {
-      this._searchError = "Unable to play this collection directly.";
+      this._searchError = localize('search.play_collection_error');
       this.requestUpdate();
       return;
     }
 
     const item = {
       media_content_id: currentLevel.uri,
-      media_content_type: currentLevel.type === 'artist' ? 'artist' : (currentLevel.type === 'album' ? 'album' : 'playlist')
+      media_content_type: currentLevel.type
     };
 
     await this._playMediaFromSearch(item);

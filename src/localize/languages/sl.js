@@ -327,6 +327,7 @@ export default {
             "audiobook": "Zvočna knjiga"
         },
         "search_artist": "Išči tega izvajalca",
-        "play_collection": "Predvajaj to zbirko"
+        "play_collection": "Predvajaj to zbirko",
+        "play_collection_error": "Te zbirke ni mogoče predvajati neposredno"
     }
 };

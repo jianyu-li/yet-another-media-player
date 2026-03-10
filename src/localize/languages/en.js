@@ -327,6 +327,7 @@ export default {
             "audiobook": "Audiobook"
         },
         "search_artist": "Search for this artist",
-        "play_collection": "Play this collection"
+        "play_collection": "Play this collection",
+        "play_collection_error": "Unable to play this collection directly"
     }
 };
