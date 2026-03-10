@@ -430,6 +430,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _showQueueSuccessMessage: { state: true },
     _searchActiveOptionsItem: { state: true },
     _activeSearchRowMenuId: { state: true },
+    _loadingSearchRowMenuId: { state: true },
     _successSearchRowMenuId: { state: true },
     _successSearchRowType: { state: true },
     _radioModeActive: { state: true },
@@ -516,6 +517,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showQueueSuccessMessage = false;
     this._searchActiveOptionsItem = null;
     this._activeSearchRowMenuId = null;
+    this._loadingSearchRowMenuId = null;
     this._successSearchRowMenuId = null;
     this._successSearchRowType = null;
     // Search filter toggles
@@ -2941,6 +2943,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     if (this._addToPlaylistTarget && item.media_class === 'playlist') {
+      this._loadingSearchRowMenuId = item.media_content_id;
+      this.requestUpdate();
+
       try {
         const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
         if (mqConfigEntryId) {
@@ -2958,6 +2963,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       } catch (e) {
         console.error("Failed to add to playlist:", e);
+      } finally {
+        this._loadingSearchRowMenuId = null;
+        this.requestUpdate();
       }
       this._addToPlaylistTarget = null;
       setTimeout(() => {
@@ -6153,6 +6161,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._upcomingFilterActive = false;
     this._recommendationsFilterActive = false;
     this._initialFavoritesLoaded = false;
+    this._loadingSearchRowMenuId = null;
   }
 
   _showSearchSuccessToast(menuId = null, type = null) {
@@ -7213,6 +7222,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                 ${renderSearchResultSlideOut({
                           item,
                           activeSearchRowMenuId: this._activeSearchRowMenuId,
+                          loadingSearchRowMenuId: this._loadingSearchRowMenuId,
                           onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
                           onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
                           searchView: this.config.search_view,
@@ -7223,6 +7233,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
                           onRemove: (it) => this._removeQueueItem(it.queue_item_id)
                         })}
+
+                        ${this._loadingSearchRowMenuId === item.media_content_id ? html`
+                          <div class="search-row-loading-overlay">
+                            <ha-icon icon="mdi:loading" class="spin"></ha-icon>
+                            <span>${localize('common.loading')}</span>
+                          </div>
+                        ` : nothing}
 
                         ${this._successSearchRowMenuId === item.media_content_id ? html`
                           <div class="search-row-success-overlay">
@@ -7372,6 +7389,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
           onResultClick: (item) => this._handleSearchResultClick(item),
           activeSearchRowMenuId: this._activeSearchRowMenuId,
+          loadingSearchRowMenuId: this._loadingSearchRowMenuId,
           successSearchRowMenuId: this._successSearchRowMenuId,
           successSearchRowType: this._successSearchRowType,
           onOptionsToggle: (item) => {
