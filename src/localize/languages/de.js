@@ -326,6 +326,8 @@ export default {
             "podcast": "Podcast",
             "audiobook": "Hörbuch"
         },
-        "search_artist": "Nach diesem Künstler suchen"
+        "search_artist": "Nach diesem Künstler suchen",
+        "play_collection": "Diese Sammlung abspielen",
+        "play_collection_error": "Diese Sammlung kann nicht direkt abgespielt werden"
     }
 };

@@ -1507,6 +1507,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
   }
 
+  async _playCurrentCollection() {
+    if (this._searchHierarchy.length === 0) return;
+    const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
+    if (!currentLevel || !currentLevel.uri) {
+      this._searchError = localize('search.play_collection_error');
+      this.requestUpdate();
+      return;
+    }
+
+    const item = {
+      media_content_id: currentLevel.uri,
+      media_content_type: currentLevel.type
+    };
+
+    await this._playMediaFromSearch(item);
+  }
+
   // Handle explicit search submission from UI (Enter key or Search Button)
   _handleSearchSubmit() {
     const keepFilters = this._keepFiltersOnSearch;
@@ -1805,8 +1822,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Handle hierarchical search - search for albums by artist
-  async _searchArtistAlbums(artistName) {
-    this._searchHierarchy.push({ type: 'artist', name: artistName, query: this._searchQuery, filter: this._searchMediaClassFilter });
+  async _searchArtistAlbums(artistName, artistUri = null) {
+    this._searchHierarchy.push({ type: 'artist', name: artistName, query: this._searchQuery, uri: artistUri, filter: this._searchMediaClassFilter });
     this._searchBreadcrumb = `Albums by ${artistName}`;
     this._searchQuery = artistName;
     this._searchResultsByType = {}; // Clear cache for new search
@@ -3055,7 +3072,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     if (item.media_class === 'artist') {
-      await this._searchArtistAlbums(item.title);
+      await this._searchArtistAlbums(item.title, item.media_content_id);
     } else if (item.media_class === 'album') {
       // Get artist name from hierarchy if we're viewing artist albums, or from item metadata if available
       let artistName = null;
@@ -6978,6 +6995,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
+                      <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
+                        <ha-icon icon="mdi:play"></ha-icon>
+                      </button>
                     </div>
                   ` : (showSearchHeaders ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
                   }
@@ -7494,6 +7514,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
           onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
           onRemove: (it) => this._removeQueueItem(it.queue_item_id),
+          breadcrumb: this._searchBreadcrumb,
+          onPlayCollection: () => this._playCurrentCollection(),
         })
         : nothing
       }
