@@ -9,9 +9,14 @@ const playOptions = [
   { mode: 'next', icon: 'mdi:playlist-play', label: localize('search.play_next') },
   { mode: 'replace_next', icon: 'mdi:playlist-music', label: localize('search.replace_play') },
   { mode: 'add', icon: 'mdi:playlist-plus', label: localize('search.add_queue') },
+  { mode: 'add_to_playlist', icon: 'mdi:plus', label: localize('search.add_to_playlist') },
 ];
 
 export const ALLOWED_MEDIA_TYPES = ['artist', 'album', 'track', 'playlist', 'radio', 'podcast', 'audiobook'];
+
+export function isTrack(item) {
+  return item && (item.media_class === 'track' || item.media_content_type === 'track');
+}
 
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
   const numericLimit = Number(limit);
@@ -73,17 +78,19 @@ export async function getMassQueueConfigEntryId(hass) {
   }
 }
 
-function transformMusicAssistantItem(item) {
+export function transformMusicAssistantItem(item) {
   if (!item) return null;
   return {
     title: item.name,
     media_content_id: item.uri,
     media_content_type: item.media_type,
     media_class: item.media_type,
+    item_id: item.item_id,
     thumbnail: item.image,
     ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
     ...(item.album && { album: item.album.name }),
-    is_browsable: item.media_type === 'artist' || item.media_type === 'album' || item.media_type === 'playlist'
+    is_browsable: item.media_type === 'artist' || item.media_type === 'album' || item.media_type === 'playlist',
+    is_editable: item.is_editable === true
   };
 }
 
@@ -162,18 +169,17 @@ export function renderSearchResultActions({
 export function renderSearchResultSlideOut({
   item,
   activeSearchRowMenuId,
-  successSearchRowMenuId,
   onPlayOption,
   onOptionsToggle,
   searchView = 'list',
   isQueueItem = false,
+  massQueueAvailable = false,
   onMoveUp,
   onMoveDown,
   onMoveNext,
   onRemove,
 }) {
   const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
-  const isSuccess = successSearchRowMenuId === item.media_content_id;
 
   return html`
     <div class="search-row-slide-out ${isActive ? 'active' : ''}">
@@ -203,17 +209,16 @@ export function renderSearchResultSlideOut({
         <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
           ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
         </button>
+        ${isTrack(item) && massQueueAvailable ? html`
+          <button class="slide-out-button" @click=${() => onPlayOption(item, 'add_to_playlist')} title="${localize('search.labels.add_to_playlist')}">
+            ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize('search.labels.add_to_playlist')}
+          </button>
+        ` : nothing}
       `}
       <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); onOptionsToggle(null); }}>
         <ha-icon icon="mdi:close"></ha-icon>
       </div>
 
-      ${isSuccess ? html`
-        <div class="search-row-success-overlay">
-          <span>✅</span>
-          <span>${localize('search.added')}</span>
-        </div>
-      ` : nothing}
     </div>
   `;
 }
@@ -233,8 +238,11 @@ export function renderSearchSheet({
   matchTheme = false, // Add matchTheme parameter
   upcomingFilterActive = false, // Add upcoming filter parameter
   disableAutofocus = false,
+  loadingSearchRowMenuId,
+  errorSearchRowMenuId,
   activeSearchRowMenuId,
   successSearchRowMenuId,
+  successSearchRowType,
   onOptionsToggle,
   onPlayOption,
   onResultClick,
@@ -341,16 +349,37 @@ export function renderSearchSheet({
                   ${renderSearchResultSlideOut({
             item,
             activeSearchRowMenuId,
-            successSearchRowMenuId,
             onPlayOption,
             onOptionsToggle,
             searchView,
             isQueueItem: isMA && item.queue_item_id && upcomingFilterActive && massQueueAvailable,
+            massQueueAvailable,
             onMoveUp,
             onMoveDown,
             onMoveNext,
             onRemove,
           })}
+
+                  ${loadingSearchRowMenuId === item.media_content_id ? html`
+                    <div class="search-row-loading-overlay">
+                      <ha-icon icon="mdi:loading" class="spin"></ha-icon>
+                      <span>${localize('common.loading')}</span>
+                    </div>
+                  ` : nothing}
+                  
+                  ${errorSearchRowMenuId === item.media_content_id ? html`
+                    <div class="search-row-error-overlay">
+                      <ha-icon icon="mdi:alert-circle" class="error-icon"></ha-icon>
+                      <span>${localize('common.error') || 'Error'}</span>
+                    </div>
+                  ` : nothing}
+
+                  ${successSearchRowMenuId === item.media_content_id ? html`
+                    <div class="search-row-success-overlay">
+                      <span>✅</span>
+                      <span>${successSearchRowType === 'playlist' ? localize('search.added_to_playlist') : localize('search.added')}</span>
+                    </div>
+                  ` : nothing}
                 </div>
               `;
         }
@@ -360,7 +389,7 @@ export function renderSearchSheet({
   `;
 }
 
-export function renderSearchOptionsOverlay({ item, onClose, onPlayOption }) {
+export function renderSearchOptionsOverlay({ item, onClose, onPlayOption, massQueueAvailable = false }) {
   if (!item) return nothing;
 
   return html`
@@ -369,7 +398,12 @@ export function renderSearchOptionsOverlay({ item, onClose, onPlayOption }) {
         <div class="entity-options-sheet">
           <div class="entity-options-title">${item.title}</div>
           
-          ${playOptions.map(option => html`
+          ${playOptions.filter(option => {
+    if (option.mode === 'add_to_playlist') {
+      return isTrack(item) && massQueueAvailable;
+    }
+    return true;
+  }).map(option => html`
             <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
               <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
               <span class="menu-action-label">${option.label}</span>

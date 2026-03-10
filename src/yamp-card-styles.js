@@ -2342,7 +2342,9 @@ export const yampCardStyles = css`
     left: 0;
   }
 
-  .search-row-success-overlay {
+  .search-row-success-overlay,
+  .search-row-loading-overlay,
+  .search-row-error-overlay {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.7);
@@ -2364,8 +2366,22 @@ export const yampCardStyles = css`
     animation: success-fade-in 0.3s ease;
   }
 
-  .search-row-success-overlay span:first-child {
+  .search-row-error-overlay {
+    background: rgba(244, 67, 54, 0.8);
+  }
+
+  .search-row-success-overlay span:first-child,
+  .search-row-loading-overlay ha-icon,
+  .search-row-error-overlay ha-icon {
     font-size: 1.5em;
+  }
+  
+  .search-row-loading-overlay ha-icon {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
   }
 
   @keyframes success-fade-in {
@@ -2960,6 +2976,8 @@ export const yampCardStyles = css`
 
 
   .search-sheet-result {
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
     gap: 15px;

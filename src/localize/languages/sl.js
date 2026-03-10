@@ -302,11 +302,15 @@ export default {
         "move_next": "Premakni na naslednje",
         "remove": "Odstrani iz čakalne vrste",
         "added": "Dodano v čakalno vrsto!",
+        "added_to_playlist": "Dodano na seznam predvajanja!",
+        "select_playlist": "Izberite seznam predvajanja za '{track}'",
+        "add_to_playlist": "Dodaj na seznam predvajanja",
         "labels": {
             "replace": "Zamenjaj",
             "next": "Naslednje",
             "replace_next": "Zamenjaj naslednje",
-            "add": "Dodaj"
+            "add": "Dodaj",
+            "add_to_playlist": "Dodaj na seznam predvajanja"
         },
         "results": "rezultati",
         "result": "rezultat",

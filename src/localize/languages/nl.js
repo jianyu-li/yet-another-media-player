@@ -302,11 +302,15 @@ export default {
         "move_next": "Als volgende afspelen",
         "remove": "Verwijderen uit wachtrij",
         "added": "Toegevoegd aan wachtrij!",
+        "added_to_playlist": "Toegevoegd aan afspeellijst!",
+        "select_playlist": "Selecteer afspeellijst voor '{track}'",
+        "add_to_playlist": "Toevoegen aan afspeellijst",
         "labels": {
             "replace": "Vervangen",
             "next": "Volgende",
             "replace_next": "Vervang Volgende",
-            "add": "Toevoegen"
+            "add": "Toevoegen",
+            "add_to_playlist": "Toevoegen aan afspeellijst"
         },
         "results": "resultaten",
         "result": "resultaat",
