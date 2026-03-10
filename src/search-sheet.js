@@ -239,6 +239,7 @@ export function renderSearchSheet({
   upcomingFilterActive = false, // Add upcoming filter parameter
   disableAutofocus = false,
   loadingSearchRowMenuId,
+  errorSearchRowMenuId,
   activeSearchRowMenuId,
   successSearchRowMenuId,
   successSearchRowType,
@@ -363,6 +364,13 @@ export function renderSearchSheet({
                     <div class="search-row-loading-overlay">
                       <ha-icon icon="mdi:loading" class="spin"></ha-icon>
                       <span>${localize('common.loading')}</span>
+                    </div>
+                  ` : nothing}
+                  
+                  ${errorSearchRowMenuId === item.media_content_id ? html`
+                    <div class="search-row-error-overlay">
+                      <ha-icon icon="mdi:alert-circle" class="error-icon"></ha-icon>
+                      <span>${localize('common.error') || 'Error'}</span>
                     </div>
                   ` : nothing}
 

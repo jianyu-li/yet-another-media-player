@@ -2343,7 +2343,8 @@ export const yampCardStyles = css`
   }
 
   .search-row-success-overlay,
-  .search-row-loading-overlay {
+  .search-row-loading-overlay,
+  .search-row-error-overlay {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.7);
@@ -2365,8 +2366,13 @@ export const yampCardStyles = css`
     animation: success-fade-in 0.3s ease;
   }
 
+  .search-row-error-overlay {
+    background: rgba(244, 67, 54, 0.8);
+  }
+
   .search-row-success-overlay span:first-child,
-  .search-row-loading-overlay ha-icon {
+  .search-row-loading-overlay ha-icon,
+  .search-row-error-overlay ha-icon {
     font-size: 1.5em;
   }
   

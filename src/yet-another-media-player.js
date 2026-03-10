@@ -431,6 +431,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _searchActiveOptionsItem: { state: true },
     _activeSearchRowMenuId: { state: true },
     _loadingSearchRowMenuId: { state: true },
+    _errorSearchRowMenuId: { state: true },
     _successSearchRowMenuId: { state: true },
     _successSearchRowType: { state: true },
     _radioModeActive: { state: true },
@@ -518,6 +519,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchActiveOptionsItem = null;
     this._activeSearchRowMenuId = null;
     this._loadingSearchRowMenuId = null;
+    this._errorSearchRowMenuId = null;
     this._successSearchRowMenuId = null;
     this._successSearchRowType = null;
     // Search filter toggles
@@ -2963,6 +2965,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       } catch (e) {
         console.error("Failed to add to playlist:", e);
+        this._errorSearchRowMenuId = item.media_content_id;
+        this.requestUpdate();
+        setTimeout(() => {
+          this._errorSearchRowMenuId = null;
+          this.requestUpdate();
+        }, 3000);
       } finally {
         this._loadingSearchRowMenuId = null;
         this.requestUpdate();
@@ -6162,6 +6170,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._recommendationsFilterActive = false;
     this._initialFavoritesLoaded = false;
     this._loadingSearchRowMenuId = null;
+    this._errorSearchRowMenuId = null;
   }
 
   _showSearchSuccessToast(menuId = null, type = null) {
@@ -7241,6 +7250,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           </div>
                         ` : nothing}
 
+                        ${this._errorSearchRowMenuId === item.media_content_id ? html`
+                          <div class="search-row-error-overlay">
+                            <ha-icon icon="mdi:alert-circle" class="error-icon"></ha-icon>
+                            <span>${localize('common.error') || 'Error'}</span>
+                          </div>
+                        ` : nothing}
+
                         ${this._successSearchRowMenuId === item.media_content_id ? html`
                           <div class="search-row-success-overlay">
                             <span>✅</span>
@@ -7390,6 +7406,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           onResultClick: (item) => this._handleSearchResultClick(item),
           activeSearchRowMenuId: this._activeSearchRowMenuId,
           loadingSearchRowMenuId: this._loadingSearchRowMenuId,
+          errorSearchRowMenuId: this._errorSearchRowMenuId,
           successSearchRowMenuId: this._successSearchRowMenuId,
           successSearchRowType: this._successSearchRowType,
           onOptionsToggle: (item) => {
