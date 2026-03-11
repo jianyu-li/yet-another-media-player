@@ -652,7 +652,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     try {
       this.hass.connection.subscribeMessage((msg) => {
         const resolved = (msg.result || '').toString().trim();
-        const isValid = resolved && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(resolved);
+        const isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
 
         let shouldUpdate = false;
 
