@@ -132,10 +132,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _resetIdleScreen() {
     if (!this._idleScreenApplied) return;
+
+    // Respect dismiss_search_on_play if configured
+    const shouldDismiss = this.config.dismiss_search_on_play !== false;
+
     switch (this._idleScreen) {
       case "search":
       case "search-recently-played":
       case "search-next-up":
+        if (!shouldDismiss) {
+          this._idleScreenApplied = false;
+          return;
+        }
         this._hideSearchSheetInOptions();
         this._showEntityOptions = false;
         break;

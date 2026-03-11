@@ -76,6 +76,7 @@ Below you will find a list of all configuration options.
 | `default_search_favorites` | boolean      | No           | `false`     | Automatically activate the Favorites filter when the search screen first opens |
 | `pin_search_headers`       | boolean      | No           | `false`     | Always keep search and menu headers pinned at the top while scrolling through results           |
 | `hide_search_headers_on_idle` | boolean    | No           | `false`     | Hide search input and filters when the player is idle                                           |
+| `dismiss_search_on_play`   | boolean      | No           | `true`      | When `false`, prevents the search screen from dismissing automatically when an item starts playing |
 | `disable_mass_queue`       | boolean      | No           | `false`     | Disable the optional mass_queue integration even if it is installed |
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
