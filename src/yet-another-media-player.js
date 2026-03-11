@@ -610,9 +610,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._templateSubscriptions = {}; // { [idx_type]: unsubscribeFunction }
     this._maTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     this._volTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
-    // Cache resolved MA entity per index
-    this._maResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
-    this._maResolveTtlMs = 7000;
     // Cache resolved Volume entity per index (template or static)
     this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
     this._volResolveTtlMs = 7000; // Used for static caching now
@@ -642,11 +639,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._unsubscribeFromTemplate(idx, type);
 
     // Save current template to state
-    if (type === 'ma') {
-      this._maTemplateValues[idx] = { template: templateString, resolved: null };
-    } else {
-      this._volTemplateValues[idx] = { template: templateString, resolved: null };
-    }
+    const templateVals = type === 'ma' ? this._maTemplateValues : this._volTemplateValues;
+    templateVals[idx] = { template: templateString, resolved: null };
 
     // Subscribe to template rendering
     try {
@@ -656,24 +650,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
         let shouldUpdate = false;
 
-        if (type === 'ma') {
-          if (this._maTemplateValues[idx]) {
-            this._maTemplateValues[idx].resolved = isValid ? resolved : null;
-          }
-          const currentCached = this._maResolveCache[idx]?.id;
-          if (isValid && currentCached !== resolved) {
-            this._maResolveCache[idx] = { id: resolved, ts: Date.now() };
-            shouldUpdate = true;
-          }
-        } else if (type === 'vol') {
-          if (this._volTemplateValues[idx]) {
-            this._volTemplateValues[idx].resolved = isValid ? resolved : null;
-          }
-          const currentCached = this._volResolveCache[idx]?.id;
-          if (isValid && currentCached !== resolved) {
-            this._volResolveCache[idx] = { id: resolved, ts: Date.now() };
-            shouldUpdate = true;
-          }
+        if (templateVals[idx]) {
+          templateVals[idx].resolved = isValid ? resolved : null;
+        }
+
+        const cache = type === 'ma' ? this._maResolveCache : this._volResolveCache;
+        const currentCached = cache[idx]?.id;
+
+        if (isValid && currentCached !== resolved) {
+          cache[idx] = { id: resolved, ts: Date.now() };
+          shouldUpdate = true;
         }
 
         if (shouldUpdate) {
@@ -7991,10 +7977,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._cleanupTextResizeObserver();
 
     // Cleanup all websocket subscriptions
-    Object.keys(this._templateSubscriptions).forEach(key => {
+    Object.values(this._templateSubscriptions).forEach(unsub => {
       try {
-        this._templateSubscriptions[key]();
-      } catch (e) { /* ignore */ }
+        if (typeof unsub === 'function') unsub();
+      } catch (e) {
+        console.warn('yamp: Error during template unsubscription:', e);
+      }
     });
     this._templateSubscriptions = {};
 
