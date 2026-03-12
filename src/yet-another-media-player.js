@@ -574,17 +574,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this._isSearchCardMode) {
         // Dedicated search mode: auto-open search as the primary view
         this._showEntityOptions = true;
-        this._showSearchInSheet = true;
-        this._searchInputAutoFocused = false;
         this._isIdle = false;
+        this._showSearchSheetInOptions();
         this.requestUpdate();
-        // Trigger initial search after render
-        setTimeout(() => {
-          const defaultFilter = this.config?.default_search_filter === 'all' ? null : this.config?.default_search_filter;
-          this._doSearch(defaultFilter).catch((err) => {
-            console.error("yamp: search card init failed:", err);
-          });
-        }, 100);
         return;
       }
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
