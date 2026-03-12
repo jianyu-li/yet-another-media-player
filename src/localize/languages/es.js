@@ -125,7 +125,8 @@ export default {
             "sync_entity_type": "Elija qué ID de entidad sincronizar con el helper (por defecto la entidad de Music Assistant si está configurada).",
             "disable_auto_select": "Evita que el chip de esta entidad se seleccione automáticamente cuando comienza la reproducción.",
             "search_view": "Elegir entre una lista estándar o una cuadrícula de tarjetas para los resultados de la búsqueda.",
-            "search_card_columns": "Especifica cuántas columnas usar en la vista de tarjetas. El artwork se adaptará automáticamente."
+            "search_card_columns": "Especifica cuántas columnas usar en la vista de tarjetas. El artwork se adaptará automáticamente.",
+            "card_type": "Elija el modo de tarjeta. 'Por defecto' es el reproductor de medios estándar. 'Búsqueda dedicada' convierte la tarjeta en una interfaz de búsqueda permanente."
         },
         "titles": {
             "edit_entity": "Editar entidad",
@@ -161,7 +162,8 @@ export default {
             "follow_active_entity": "Volumen sigue a entidad activa",
             "use_url_path": "Usar URL o ruta",
             "adaptive_text_elements": "Elementos de texto adaptativo",
-            "disable_auto_select": "Desactivar selección automática"
+            "disable_auto_select": "Desactivar selección automática",
+            "card_type": "Tipo de tarjeta"
         },
         "fields": {
             "artwork_fit": "Ajuste",
@@ -244,6 +246,10 @@ export default {
         "search_view_options": {
             "list": "Lista",
             "card": "Tarjeta"
+        },
+        "card_type_options": {
+            "default": "Por defecto",
+            "search": "Búsqueda dedicada"
         }
     },
     "card": {

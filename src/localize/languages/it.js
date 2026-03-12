@@ -125,7 +125,8 @@ export default {
             "sync_entity_type": "Scegli quale ID entità sincronizzare con l'helper (predefinito l'entità Music Assistant se configurata).",
             "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione.",
             "search_view": "Scegli tra una lista standard o una griglia di schede per i risultati della ricerca.",
-            "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente."
+            "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente.",
+            "card_type": "Scegli la modalità della scheda. 'Predefinito' è il lettore multimediale standard. 'Ricerca dedicata' rende la scheda un'interfaccia di ricerca permanente."
         },
         "titles": {
             "edit_entity": "Modifica entità",
@@ -161,7 +162,8 @@ export default {
             "follow_active_entity": "Volume segue entità attiva",
             "use_url_path": "Usa URL o percorso",
             "adaptive_text_elements": "Elementi testo adattativo",
-            "disable_auto_select": "Disattiva selezione automatica"
+            "disable_auto_select": "Disattiva selezione automatica",
+            "card_type": "Tipo di scheda"
         },
         "fields": {
             "artwork_fit": "Adattamento",
@@ -244,6 +246,10 @@ export default {
         "search_view_options": {
             "list": "Lista",
             "card": "Scheda"
+        },
+        "card_type_options": {
+            "default": "Predefinito",
+            "search": "Ricerca dedicata"
         }
     },
     "card": {

@@ -125,7 +125,8 @@ export default {
             "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert).",
             "disable_auto_select": "Verhindert, dass der Chip dieser Entität automatisch ausgewählt wird, wenn die Wiedergabe startet.",
             "search_view": "Wählen Sie zwischen einer Standardliste oder einem kartenbasierten Raster für Suchergebnisse.",
-            "search_card_columns": "Geben Sie an, wie viele Spalten in der Kartenansicht verwendet werden sollen. Das Artwork wird automatisch skaliert."
+            "search_card_columns": "Geben Sie an, wie viele Spalten in der Kartenansicht verwendet werden sollen. Das Artwork wird automatisch skaliert.",
+            "card_type": "Wählen Sie den Kartenmodus. 'Standard' ist der normale Mediaplayer. 'Dedizierte Suche' macht die Karte zu einer permanenten Suchoberfläche."
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",
@@ -161,7 +162,8 @@ export default {
             "follow_active_entity": "Lautstärke folgt aktiver Entität",
             "use_url_path": "URL oder Pfad verwenden",
             "adaptive_text_elements": "Elemente für adaptive Textgröße",
-            "disable_auto_select": "Auto-Auswahl deaktivieren"
+            "disable_auto_select": "Auto-Auswahl deaktivieren",
+            "card_type": "Kartentyp"
         },
         "fields": {
             "artwork_fit": "Artwork-Anpassung",
@@ -244,6 +246,10 @@ export default {
         "search_view_options": {
             "list": "Liste",
             "card": "Karte"
+        },
+        "card_type_options": {
+            "default": "Standard",
+            "search": "Dedizierte Suche"
         }
     },
     "card": {

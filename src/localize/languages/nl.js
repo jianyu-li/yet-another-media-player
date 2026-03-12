@@ -125,7 +125,8 @@ export default {
             "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd).",
             "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen.",
             "search_view": "Kies tussen een standaardlijst of een raster van kaarten voor zoekresultaten.",
-            "search_card_columns": "Geef aan hoeveel kolommen er gebruikt moeten worden in de kaartweergave. De afbeelding wordt automatisch aangepast."
+            "search_card_columns": "Geef aan hoeveel kolommen er gebruikt moeten worden in de kaartweergave. De afbeelding wordt automatisch aangepast.",
+            "card_type": "Kies de kaartmodus. 'Standaard' is de standaard mediaspeler. 'Speciale zoekopdracht' maakt van de kaart een permanente zoekinterface."
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",
@@ -161,7 +162,8 @@ export default {
             "follow_active_entity": "Volume Entiteit volgt Actieve Entiteit",
             "use_url_path": "URL of Pad gebruiken",
             "adaptive_text_elements": "Elementen voor Adaptieve Tekstgrootte",
-            "disable_auto_select": "Auto-selectie uitschakelen"
+            "disable_auto_select": "Auto-selectie uitschakelen",
+            "card_type": "Kaarttype"
         },
         "fields": {
             "artwork_fit": "Artwork Passend Maken",
@@ -244,6 +246,10 @@ export default {
         "search_view_options": {
             "list": "Lijst",
             "card": "Kaart"
+        },
+        "card_type_options": {
+            "default": "Standaard",
+            "search": "Speciale zoekopdracht"
         }
     },
     "card": {
