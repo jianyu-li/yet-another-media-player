@@ -2200,7 +2200,7 @@ export const yampCardStyles = css`
   .floating-source-index .source-index-letter {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     font-size: 0.9em;
     cursor: pointer;
     margin: 1px 0;
@@ -2238,7 +2238,7 @@ export const yampCardStyles = css`
 
   .floating-source-index .source-index-letter:hover,
   .floating-source-index .source-index-letter:focus {
-    color: #fff;
+    color: var(--yamp-overlay-text);
   }
 
   .floating-source-index .source-index-letter[disabled] {
