@@ -6026,7 +6026,7 @@
                       ${this._searchQuery?m`
                         <button
                           class="search-input-clear"
-                          @click=${()=>{this._searchQuery="",this.requestUpdate();const b=this.renderRoot.querySelector("#search-input-box");b&&b.focus()}}
+                          @click=${()=>{this._showSearchSheetInOptions()}}
                           title="Clear">
                           <ha-icon icon="mdi:close"></ha-icon>
                         </button>

@@ -7012,7 +7012,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       ${this._searchQuery ? html`
                         <button
                           class="search-input-clear"
-                          @click=${() => { this._searchQuery = ''; this.requestUpdate(); const inp = this.renderRoot.querySelector('#search-input-box'); if (inp) inp.focus(); }}
+                          @click=${() => { this._showSearchSheetInOptions(); }}
                           title="Clear">
                           <ha-icon icon="mdi:close"></ha-icon>
                         </button>
