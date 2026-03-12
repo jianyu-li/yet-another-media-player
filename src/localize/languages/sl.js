@@ -125,7 +125,8 @@ export default {
             "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena).",
             "disable_auto_select": "Prepreči samodejno izbiro čipa te entitete ob začetku predvajanja.",
             "search_view": "Izberite med standardnim seznamom ali mrežo kartic za rezultate iskanja.",
-            "search_card_columns": "Določite število stolpcev v pogledu kartic. Grafika se bo samodejno prilagodila."
+            "search_card_columns": "Določite število stolpcev v pogledu kartic. Grafika se bo samodejno prilagodila.",
+            "card_type": "Izberite način kartice. 'Privzeto' je standardni medijski predvajalnik. 'Namensko iskanje' spremeni kartico v trajen iskalni vmesnik."
         },
         "titles": {
             "edit_entity": "Uredi entiteto",
@@ -161,7 +162,8 @@ export default {
             "follow_active_entity": "Glasnost sledi aktivni entiteti",
             "use_url_path": "Uporabi URL ali pot",
             "adaptive_text_elements": "Elementi prilagodljive velikosti besedila",
-            "disable_auto_select": "Onemogoči samodejno izbiro"
+            "disable_auto_select": "Onemogoči samodejno izbiro",
+            "card_type": "Vrsta kartice"
         },
         "fields": {
             "artwork_fit": "Prileganje grafike",
@@ -244,6 +246,10 @@ export default {
         "search_view_options": {
             "list": "Seznam",
             "card": "Kartica"
+        },
+        "card_type_options": {
+            "default": "Privzeto",
+            "search": "Namensko iskanje"
         }
     },
     "card": {

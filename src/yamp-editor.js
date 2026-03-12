@@ -823,7 +823,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             { value: "fill", label: "Fill" },
             { value: "scale-down", label: "Scale Down" },
             { value: "scaled-contain", label: "Scaled Contain" },
-            { value: "none", label: "None" }
+            { value: "none", label: "None" },
+            { value: "no_artwork", label: localize('editor.fields.no_artwork_option') }
           ]
         }
       }}
@@ -1012,7 +1013,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 { value: "fill", label: "Fill" },
                 { value: "scale-down", label: "Scale Down" },
                 { value: "scaled-contain", label: "Scaled Contain" },
-                { value: "none", label: "None" }
+                { value: "none", label: "None" },
+                { value: "no_artwork", label: localize('editor.fields.no_artwork_option') }
               ]
             }
           }}
@@ -1125,6 +1127,27 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   _renderBehaviorTab() {
     const searchLimitWarningActive = Number(this._config.search_results_limit) > 100;
     return html`
+        <div class="config-section">
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "default", label: localize('editor.card_type_options.default') },
+            { value: "search", label: localize('editor.card_type_options.search') },
+          ]
+        }
+      }}
+              .value=${this._config.card_type ?? "default"}
+              label="${localize('editor.fields.card_type')}"
+              @value-changed=${(e) => this._updateConfig("card_type", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">${localize('editor.subtitles.card_type')}</div>
+          </div>
+        </div>
+
         <div class="config-section">
           <div class="section-header">
             <div class="section-title">${localize('editor.sections.behavior.idle_chips.title')}</div>

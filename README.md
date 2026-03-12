@@ -48,6 +48,7 @@ Below you will find a list of all configuration options.
 |----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
 | **Entities**               |              |              |             |                                                                                                 |
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
+| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for the standard player, or `search` for a dedicated, permanent search card |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume) (supports Jinja templates) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
@@ -76,6 +77,7 @@ Below you will find a list of all configuration options.
 | `default_search_favorites` | boolean      | No           | `false`     | Automatically activate the Favorites filter when the search screen first opens |
 | `pin_search_headers`       | boolean      | No           | `false`     | Always keep search and menu headers pinned at the top while scrolling through results           |
 | `hide_search_headers_on_idle` | boolean    | No           | `false`     | Hide search input and filters when the player is idle                                           |
+| `dismiss_search_on_play`   | boolean      | No           | `true`      | When `false`, prevents the search screen from dismissing automatically when an item starts playing |
 | `disable_mass_queue`       | boolean      | No           | `false`     | Disable the optional mass_queue integration even if it is installed |
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
@@ -94,7 +96,7 @@ Below you will find a list of all configuration options.
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
 | `artwork_hostname`         | string       | No           | —           | Hostname URL (e.g., `http://192.168.1.50:8123`) prepended to relative artwork URLs; required when Casting to external devices |
-| `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `scaled-contain`, `fill`, `scale-down`, or `none` |
+| `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `scaled-contain`, `fill`, `scale-down`, `none`, or `no_artwork` |
 | `artwork_position`         | choice       | No           | `top center`| Control artwork alignment: `top center`, `center center`, or `bottom center`                     |
 | `extend_artwork`           | boolean      | No           | `false`     | When `true`, extends the artwork background up behind the chip and action rows for a full-bleed look |
 | `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` and `object_fit` can be used to style the replacement (defaults to global `artwork_object_fit`). `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
@@ -403,7 +405,19 @@ You can add tracks to your Music Assistant playlists directly from the search re
 - **Smart Filtering**: The card automatically fetches your library and filters the list to show **only editable playlists**, ensuring you only see those you can actually modify.
 - **How to Use**: Click the 3-dot menu on any track in the search results and select **Add to Playlist**. You will be prompted to select a destination playlist.
 
+### Dedicated Search Mode
 
+Set `card_type: search` to turn YAMP into a permanent search interface for your dashboard. Configure two YAMPs side by side for maximum flexibility.
+
+![Dedicated search preview](preview/dedicated_search_preview.png)
+
+**Use-Cases:**
+- **Dedicated Search Page**: Create a full-page dashboard view solely for browsing your Music Assistant library.
+- **Sidebar Search**: Configured next to another YAMP card to Keep a search card always available in a sidebar.
+
+**Dedicated Mode Behavior:**
+- **Permanent View**: The search interface is always visible and cannot be dismissed.
+- **Persistent Controls**: The bottom playback/volume bar respects the `hide_menu_player` setting, allowing for browse only or browse and control experiences.
 
 # Look and Feel
 
@@ -515,7 +529,7 @@ Use `media_artwork_overrides` to replace missing or low-resolution art with high
 
 The following optional parameters can be used to style individual overrides:
 - **`size_percentage`**: Scale the artwork relative to its container (e.g. `50`).
-- **`object_fit`**: Control scaling behavior for this specific override: `cover`, `contain`, `scaled-contain`, `fill`, `scale-down`, or `none`. If omitted (or set to `default` in the editor), it inherits the global `artwork_object_fit` setting.
+- **`object_fit`**: Control scaling behavior for this specific override: `cover`, `contain`, `scaled-contain`, `fill`, `scale-down`, `none`, or `no_artwork`. If omitted (or set to `default` in the editor), it inherits the global `artwork_object_fit` setting.
 
 ```yaml
 media_artwork_overrides:

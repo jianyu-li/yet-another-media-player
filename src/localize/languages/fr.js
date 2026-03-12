@@ -125,7 +125,8 @@ export default {
             "sync_entity_type": "Choisissez quel ID d'entité synchroniser avec le helper (par défaut l'entité Music Assistant si configurée).",
             "disable_auto_select": "Empêche le jeton de cette entité d'être automatiquement sélectionné au début de la lecture.",
             "search_view": "Choisissez entre une liste standard ou une grille de cartes pour les résultats de recherche.",
-            "search_card_columns": "Spécifiez le nombre de colonnes à utiliser dans la vue carte. L'illustration s'adaptera automatiquement."
+            "search_card_columns": "Spécifiez le nombre de colonnes à utiliser dans la vue carte. L'illustration s'adaptera automatiquement.",
+            "card_type": "Choisissez le mode de carte. 'Par défaut' est le lecteur multimédia standard. 'Recherche dédiée' fait de la carte une interface de recherche permanente."
         },
         "titles": {
             "edit_entity": "Modifier l'entité",
@@ -208,7 +209,9 @@ export default {
             "placement": "Placement",
             "card_trigger": "Déclencheur de carte",
             "search_view": "Vue des résultats de recherche",
-            "search_card_columns": "Colonnes de cartes"
+            "search_card_columns": "Nombre de colonnes",
+            "card_type": "Type de carte",
+            "no_artwork_option": "Pas d'image de couverture"
         },
         "action_types": {
             "menu": "Ouvrir un élément de menu",
@@ -244,6 +247,10 @@ export default {
         "search_view_options": {
             "list": "Liste",
             "card": "Carte"
+        },
+        "card_type_options": {
+            "default": "Par défaut",
+            "search": "Recherche dédiée"
         }
     },
     "card": {

@@ -2581,7 +2581,7 @@ export const yampCardStyles = css`
   }
 
   .entity-options-search-row .entity-options-search-input {
-    padding: 4px 10px;
+    padding: 4px 34px 4px 10px; /* Increased right padding for clear button */
     height: 32px;
     min-height: 32px;
     line-height: 1.18;
@@ -2591,6 +2591,41 @@ export const yampCardStyles = css`
     color: #fff;
     transition: border var(--transition-fast), background var(--transition-fast);
     outline: none;
+    width: 100%;
+  }
+
+  .search-input-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-input-clear {
+    position: absolute;
+    right: 18px; /* Adjusted to 18px for better balance */
+    top: 50%;
+    transform: translateY(-68%); /* Adjusted to -68% to fix "too high" issue */
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-fast);
+    z-index: 2;
+  }
+
+  .search-input-clear:hover {
+    color: var(--custom-accent);
+  }
+
+  .search-input-clear ha-icon {
+    width: 16px; /* Slightly smaller icon (was 18px) */
+    height: 16px;
   }
 
   .entity-options-search-input:focus {

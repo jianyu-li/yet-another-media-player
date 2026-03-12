@@ -8,7 +8,6 @@ import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles, Z_LAYERS } from "./yamp-card-styles.js";
 import {
-  renderSearchSheet,
   renderSearchOptionsOverlay,
   searchMedia,
   playSearchedMedia,
@@ -130,14 +129,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._idleScreenApplied = true;
   }
 
+  _getSearchDismissBehavior() {
+    const cardDismissSetting = this.config.dismiss_search_on_play !== false;
+    return {
+      shouldDismiss: !this._isSearchCardMode && cardDismissSetting,
+      shouldReset: this._isSearchCardMode && cardDismissSetting,
+    };
+  }
+
   _resetIdleScreen() {
     if (!this._idleScreenApplied) return;
+
+    const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
+
     switch (this._idleScreen) {
       case "search":
       case "search-recently-played":
       case "search-next-up":
-        this._hideSearchSheetInOptions();
-        this._showEntityOptions = false;
+        if (shouldDismiss) {
+          this._hideSearchSheetInOptions();
+          this._showEntityOptions = false;
+        } else if (shouldReset) {
+          this._showSearchSheetInOptions();
+        } else {
+          this._idleScreenApplied = false;
+          return;
+        }
         break;
       default:
         break;
@@ -487,7 +504,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Group base volume for group gain logic
     this._groupBaseVolume = null;
     // Search sheet state variables
-    this._searchOpen = false;
     this._searchQuery = "";
     this._searchLoading = false;
     this._searchResults = [];
@@ -563,7 +579,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._isNarrowViewport = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
+    // In search card mode, skip idle and auto-open search instead
     setTimeout(() => {
+      if (this._isSearchCardMode) {
+        // Dedicated search mode: auto-open search as the primary view
+        this._showEntityOptions = true;
+        this._isIdle = false;
+        this._showSearchSheetInOptions();
+        this.requestUpdate();
+        return;
+      }
       if (this.hass && this.entityIds && this.entityIds.length > 0) {
         const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
         // Don't go idle if there's an active linger or if idle_timeout_ms is 0
@@ -1034,6 +1059,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
   _hideSearchSheetInOptions() {
+    // In dedicated search mode, never close the search
+    if (this._isSearchCardMode) return;
     this._showSearchInSheet = false;
     this._searchError = "";
     this._searchResults = [];
@@ -1058,33 +1085,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }, 0);
   }
   // Search sheet methods
-  _searchOpenSheet() {
-    this._searchOpen = true;
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this.requestUpdate();
-  }
-  _searchCloseSheet() {
-    this._searchOpen = false;
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this._searchDisplaySortOverride = null;
-    this._searchLoading = false;
-    this._searchInputAutoFocused = false;
-    this._searchResultsByType = {}; // Clear cache when closing
-    this._currentSearchQuery = ""; // Reset current search query
-    this._searchHierarchy = []; // Clear search hierarchy
-    this._searchBreadcrumb = ""; // Clear breadcrumb
-    this._recommendationsFilterActive = false;
-    if (this._quickMenuInvoke) {
-      this._showEntityOptions = false;
-      this._showSearchInSheet = false;
-      this._quickMenuInvoke = false;
-    }
-    this.requestUpdate();
-  }
+
 
   _closeMenuIfOpen() {
     if (this._queueActionsMenuOpenId) {
@@ -1561,15 +1562,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    // Default to true if config option is missing (backward compatibility)
-    const shouldDismiss = this.config.dismiss_search_on_play !== false;
-
+    const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
+    
     if (shouldDismiss) {
       if (this._showSearchInSheet) {
         this._closeEntityOptions();
         this._showSearchInSheet = false;
       }
-      this._searchCloseSheet();
+      this._hideSearchSheetInOptions();
+    } else if (shouldReset) {
+      this._showSearchSheetInOptions();
     } else {
       // If staying open, force a repaint to reflect playing state if needed
       this.requestUpdate();
@@ -1733,9 +1735,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // For 'replace' mode, we dismiss according to settings and don't show success overlay
       if (mode === 'replace') {
-        const shouldDismiss = this.config.dismiss_search_on_play !== false;
+        const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
+
         if (shouldDismiss) {
           this._closeEntityOptions();
+        } else if (shouldReset) {
+          this._showSearchSheetInOptions();
         }
         this._activeSearchRowMenuId = null;
       } else {
@@ -3521,6 +3526,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let sizePercentage = null;
     let objectFit = null;
 
+    // If no_artwork is selected, we don't want to fetch or show any artwork
+    if (this._artworkObjectFit === "no_artwork") {
+      return { url: null, sizePercentage: null, objectFit: "no_artwork" };
+    }
+
     // Check for media artwork overrides first
     const overrides = Array.isArray(this.config?.media_artwork_overrides)
       ? this.config.media_artwork_overrides
@@ -3736,6 +3746,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
     this._disableSearchAutofocus = config.disable_autofocus === true;
+    // Dedicated search card mode
+    this._isSearchCardMode = config.card_type === "search";
     if (this._holdToPin) {
       this._holdHandler = createHoldToPinHandler({
         onPin: (idx) => this._pinChip(idx),
@@ -3757,7 +3769,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._customAccent = "#ff9800";
     }
-    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain"]);
+    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain", "no_artwork"]);
     this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
       ? config.artwork_object_fit
       : "cover";
@@ -4395,7 +4407,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._showGrouping ||
       this._showSourceList ||
       this._showTransferQueue ||
-      this._searchOpen ||
+      this._showSearchInSheet ||
       this._showSourceMenu ||
       !!this._searchActiveOptionsItem ||
       !!this._activeSearchRowMenuId ||
@@ -5122,7 +5134,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Notify HA if collapsed state changes
     // If expand on search is enabled and search is open, force expanded state
-    if (this._alwaysCollapsed && this._expandOnSearch && (this._searchOpen || this._showSearchInSheet)) {
+    if (this._alwaysCollapsed && this._expandOnSearch && (this._showSearchInSheet)) {
       const collapsedNow = false;
       if (this._prevCollapsed !== collapsedNow) {
         this._prevCollapsed = collapsedNow;
@@ -6288,6 +6300,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
+      this.shadowRoot.host.setAttribute("data-card-type", this.config.card_type || "default");
       const forceHideMenuPlayer = this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true;
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
@@ -6426,7 +6439,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const maStateForPlayback = this.currentPlaybackStateObj;
     const optimisticEntityId = this._optimisticPlayback?.entity_id || null;
 
-    // --- Fix 2: priority rule for entity selection ---
+    // --- Priority rule for entity selection ---
     // Keep the currently‑selected entity (even if paused)
     // unless some other entity is *playing*.
     // Use cached resolved MA ID instead of raw template string
@@ -6597,7 +6610,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Collapse artwork/details on idle if configured and/or always_collapsed
     // If expand on search is enabled and search is open, force expanded state
     let collapsed;
-    if (this._alwaysCollapsed && this._expandOnSearch && (this._searchOpen || this._showSearchInSheet)) {
+    if (this._alwaysCollapsed && this._expandOnSearch && (this._showSearchInSheet)) {
       collapsed = false;
     } else {
       collapsed = this._alwaysCollapsed
@@ -6989,6 +7002,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   }
                   ${showSearchHeaders ? html`
                   <div class="entity-options-search-row">
+                    <div class="search-input-wrapper">
                       <input
                         type="text"
                         id="search-input-box"
@@ -7004,8 +7018,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
                     }}
                         placeholder="${localize('editor.placeholders.search')}"
-                        style="flex:1; min-width:0; font-size:1.1em;"
                       />
+                      ${this._searchQuery ? html`
+                        <button
+                          class="search-input-clear"
+                          @click=${() => { this._showSearchSheetInOptions(); }}
+                          title="Clear">
+                          <ha-icon icon="mdi:close"></ha-icon>
+                        </button>
+                      ` : nothing}
+                    </div>
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
@@ -7013,12 +7035,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       ?disabled=${this._searchLoading}>
                       ${localize('common.search')}
                     </button>
+                    ${!this._isSearchCardMode ? html`
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
                       @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
-              ${localize('common.cancel')}
+                ${localize('common.cancel')}
                     </button>
+                    ` : nothing}
                   </div>
                   ` : nothing}
                   <!--FILTER CHIPS-->
@@ -7458,53 +7482,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         massQueueAvailable: this._massQueueAvailable
       }) : nothing
       }
-          ${this._searchOpen
-        ? renderSearchSheet({
-          open: this._searchOpen,
-          query: this._searchQuery,
-          loading: this._searchLoading,
-          results: this._getDisplaySearchResults(),
-          error: this._searchError,
-          matchTheme: this.config?.match_theme, // Add matchTheme parameter
-          onClose: () => this._searchCloseSheet(),
-          onQueryInput: e => {
-            this._searchQuery = e.target.value;
-            this.requestUpdate();
-          },
-          onSearch: () => {
-            // Clear recently played filter when user initiates search
-            this._recentlyPlayedFilterActive = false;
-            this._upcomingFilterActive = false;
-            this._recommendationsFilterActive = false;
-            this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
-          },
-          onPlay: item => this._playMediaFromSearch(item),
-          onQueue: item => this._queueMediaFromSearch(item),
-          onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
-          onResultClick: (item) => this._handleSearchResultClick(item),
-          activeSearchRowMenuId: this._activeSearchRowMenuId,
-          loadingSearchRowMenuId: this._loadingSearchRowMenuId,
-          errorSearchRowMenuId: this._errorSearchRowMenuId,
-          successSearchRowMenuId: this._successSearchRowMenuId,
-          successSearchRowType: this._successSearchRowType,
-          onOptionsToggle: (item) => {
-            this._activeSearchRowMenuId = item ? item.media_content_id : null;
-            this.requestUpdate();
-          },
-          upcomingFilterActive: this._upcomingFilterActive,
-          disableAutofocus: this._disableSearchAutofocus,
-          searchView: this.config.search_view || 'list',
-          searchCardColumns: this.config.search_card_columns || 4,
-          massQueueAvailable: this._massQueueAvailable,
-          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-          onRemove: (it) => this._removeQueueItem(it.queue_item_id),
-          breadcrumb: this._searchBreadcrumb,
-          onPlayCollection: () => this._playCurrentCollection(),
-        })
-        : nothing
-      }
+
           </div>
     </ha-card>
   `;
@@ -7567,6 +7545,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Or nothing is playing at all. In both cases, we wait for the timeout.
       if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
         this._idleTimeout = setTimeout(() => {
+          // In search card mode: reset drill-down instead of going idle
+          if (this._isSearchCardMode) {
+            this._idleTimeout = null;
+            if (this._searchHierarchy.length > 0) {
+              this._searchHierarchy = [];
+              this._searchBreadcrumb = "";
+              this._searchResultsByType = {};
+              const defaultFilter = this.config?.default_search_filter === 'all' ? null : this.config?.default_search_filter;
+              this._doSearch(defaultFilter).catch(() => { });
+              this.requestUpdate();
+            }
+            return;
+          }
           this._isIdle = true;
           this._idleTimeout = null;
           this._idleScreenApplied = false;
@@ -7596,7 +7587,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   getGridOptions() {
     // Use the same logic as in render() to know if the card is collapsed.
     let collapsed;
-    if (this._alwaysCollapsed && this._expandOnSearch && (this._searchOpen || this._showSearchInSheet)) {
+    if (this._alwaysCollapsed && this._expandOnSearch && (this._showSearchInSheet)) {
       collapsed = false;
     } else {
       collapsed = this._alwaysCollapsed
@@ -8017,6 +8008,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Helper method for immediate dismissals with animation
   _dismissWithAnimation() {
+    // In dedicated search mode, don't dismiss the search — just close other menus
+    if (this._isSearchCardMode) {
+      this._showGrouping = false;
+      this._showSourceList = false;
+      this._showResolvedEntities = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
+      // Keep search open — re-show it
+      this._showEntityOptions = true;
+      this._showSearchInSheet = true;
+      this._quickMenuInvoke = false;
+      this.requestUpdate();
+      return;
+    }
     this._applyClosingAnimations();
     if (this._transferQueueAutoCloseTimer) {
       clearTimeout(this._transferQueueAutoCloseTimer);
@@ -8038,6 +8044,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Entity options overlay handlers
   _closeEntityOptions() {
+    // In dedicated search mode, don't close the entity options / search
+    if (this._isSearchCardMode) {
+      // Just close any sub-menus that might be open
+      this._showGrouping = false;
+      this._showSourceList = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
+      this._showResolvedEntities = false;
+      this.requestUpdate();
+      return;
+    }
     // Apply closing animations
     this._applyClosingAnimations();
     if (this._transferQueueAutoCloseTimer) {
