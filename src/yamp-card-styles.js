@@ -1042,7 +1042,7 @@ export const yampCardStyles = css`
     display: flex;
     justify-content: space-between;
     font-size: 10px;
-    margin-top: -4px;
+    margin-top: -1px;
     margin-bottom: 4px;
     color: rgba(255, 255, 255, 0.9);
     padding: 0 2px;
@@ -1897,11 +1897,6 @@ export const yampCardStyles = css`
     transform: scale(0.95);
   }
 
-  .chip[playing] {
-    background: var(--custom-accent);
-    color: #fff;
-    border-color: var(--custom-accent);
-  }
 
   .persistent-control-btn ha-icon {
     font-size: 16px;
@@ -2293,6 +2288,12 @@ export const yampCardStyles = css`
   .entity-options-sheet,
   .entity-options-sheet * {
     color: var(--yamp-overlay-text);
+  }
+
+  /* Specific override to ensure selected chips keep their white text regardless of the global sheet rule above */
+  .entity-options-sheet .chip[selected],
+  .entity-options-sheet .chip[selected] * {
+    color: var(--yamp-chip-selected-text) !important;
   }
 
   /* Search functionality */
