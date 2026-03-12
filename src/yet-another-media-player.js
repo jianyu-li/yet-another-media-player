@@ -4788,7 +4788,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ${isBusy ? "opacity: 0.5;" : ""}
             ">
               <div style="flex:1; min-width:120px;">
-                <div style="font-weight:600; text-align:left;">${name}</div>
+                <div style="text-align:left;">${name}</div>
                 <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
               </div>
               <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">

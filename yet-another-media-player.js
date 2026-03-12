@@ -2216,7 +2216,6 @@
     color: var(--yamp-overlay-text);
     opacity: 0.78;
     pointer-events: none;
-    text-shadow: var(--yamp-overlay-text-shadow);
   }
 
   /* When always collapsed is enabled, keep menu at top */
@@ -2327,12 +2326,11 @@
 
   .entity-options-title {
     font-size: 1.1em;
-    font-weight: bold;
+    font-weight: 500;
     margin-bottom: 18px;
     text-align: center;
     color: var(--yamp-overlay-text);
     background: none;
-    text-shadow: var(--yamp-overlay-text-shadow);
   }
 
   .entity-options-item {
@@ -2341,13 +2339,12 @@
     border: none;
     border-radius: 10px;
     font-size: 1.12em;
-    font-weight: 500;
+    font-weight: 400;
     margin: 4px 0;
     padding: 6px 0 8px 0;
     cursor: pointer;
-    transition: color var(--transition-fast), text-shadow var(--transition-fast);
+    transition: color var(--transition-fast);
     text-align: center;
-    text-shadow: var(--yamp-overlay-text-shadow);
   }
 
   .entity-options-item.menu-action-item {
@@ -2373,12 +2370,11 @@
 
   .entity-options-item:hover {
     color: var(--custom-accent, #ff9800);
-    text-shadow: none;
     background: none;
   }
 
   .entity-options-item.close-item {
-    font-weight: 600;
+    font-weight: 500;
     margin: 1px 0;
     padding: 4px 0 5px 0;
     display: block;
@@ -2642,7 +2638,6 @@
     color: var(--yamp-overlay-text);
     font-weight: 600;
     font-size: 0.95em;
-    text-shadow: var(--yamp-overlay-text-shadow);
     z-index: ${z.SEARCH_SUCCESS};
     border-radius: inherit;
     box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
@@ -3159,13 +3154,12 @@
     border: none;
     border-radius: 10px;
     font-size: 1.12em;
-    font-weight: 500;
+    font-weight: 400;
     margin: 4px 0;
     padding: 6px 0 8px 0;
     cursor: pointer;
-    transition: color var(--transition-fast), text-shadow var(--transition-fast);
+    transition: color var(--transition-fast);
     text-align: left;
-    text-shadow: 0 2px 8px #0009;
     width: 100%;
     display: flex;
     align-items: center;
@@ -3175,7 +3169,6 @@
   .entity-options-resolved-entities .entity-options-item:hover,
   .entity-options-resolved-entities .entity-options-item:focus {
     color: var(--custom-accent) ;
-    text-shadow: none ;
     background: none ;
   }
 
@@ -5801,7 +5794,7 @@
               ${E?"opacity: 0.5;":""}
             ">
               <div style="flex:1; min-width:120px;">
-                <div style="font-weight:600; text-align:left;">${M}</div>
+                <div style="text-align:left;">${M}</div>
                 <div style="font-size:0.8em; opacity:0.7; text-align:left;">${B}</div>
               </div>
               <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
