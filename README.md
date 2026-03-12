@@ -48,6 +48,7 @@ Below you will find a list of all configuration options.
 |----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
 | **Entities**               |              |              |             |                                                                                                 |
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
+| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for the standard player, or `search` for a dedicated, permanent search card |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume) (supports Jinja templates) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
@@ -404,7 +405,19 @@ You can add tracks to your Music Assistant playlists directly from the search re
 - **Smart Filtering**: The card automatically fetches your library and filters the list to show **only editable playlists**, ensuring you only see those you can actually modify.
 - **How to Use**: Click the 3-dot menu on any track in the search results and select **Add to Playlist**. You will be prompted to select a destination playlist.
 
+### Dedicated Search Mode
 
+Set `card_type: search` to turn YAMP into a permanent search interface for your dashboard. Configure two YAMPs side by side for maximum flexibility.
+
+![Dedicated search preview](preview/dedicated_search_preview.png)
+
+**Use-Cases:**
+- **Dedicated Search Page**: Create a full-page dashboard view solely for browsing your Music Assistant library.
+- **Sidebar Search**: Configured next to another YAMP card to Keep a search card always available in a sidebar.
+
+**Dedicated Mode Behavior:**
+- **Permanent View**: The search interface is always visible and cannot be dismissed.
+- **Persistent Controls**: The bottom playback/volume bar respects the `hide_menu_player` setting, allowing for browse only or browse and control experiences.
 
 # Look and Feel
 

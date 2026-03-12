@@ -132,19 +132,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _resetIdleScreen() {
     if (!this._idleScreenApplied) return;
 
-    // Respect dismiss_search_on_play if configured, but never dismiss in search card mode
-    const shouldDismiss = !this._isSearchCardMode && this.config.dismiss_search_on_play !== false;
+    // Respect dismiss_search_on_play if configured
+    const cardDismissSetting = this.config.dismiss_search_on_play !== false;
+    const shouldDismiss = !this._isSearchCardMode && cardDismissSetting;
+    const shouldReset = this._isSearchCardMode && cardDismissSetting;
 
     switch (this._idleScreen) {
       case "search":
       case "search-recently-played":
       case "search-next-up":
-        if (!shouldDismiss) {
+        if (shouldDismiss) {
+          this._hideSearchSheetInOptions();
+          this._showEntityOptions = false;
+        } else if (shouldReset) {
+          this._showSearchSheetInOptions();
+        } else {
           this._idleScreenApplied = false;
           return;
         }
-        this._hideSearchSheetInOptions();
-        this._showEntityOptions = false;
         break;
       default:
         break;
@@ -1553,7 +1558,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // Default to true if config option is missing (backward compatibility)
-    const shouldDismiss = !this._isSearchCardMode && this.config.dismiss_search_on_play !== false;
+    const cardDismissSetting = this.config.dismiss_search_on_play !== false;
+    const shouldDismiss = !this._isSearchCardMode && cardDismissSetting;
+    const shouldReset = this._isSearchCardMode && cardDismissSetting;
 
     if (shouldDismiss) {
       if (this._showSearchInSheet) {
@@ -1561,6 +1568,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._showSearchInSheet = false;
       }
       this._hideSearchSheetInOptions();
+    } else if (shouldReset) {
+      this._showSearchSheetInOptions();
     } else {
       // If staying open, force a repaint to reflect playing state if needed
       this.requestUpdate();
@@ -1724,9 +1733,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // For 'replace' mode, we dismiss according to settings and don't show success overlay
       if (mode === 'replace') {
-        const shouldDismiss = !this._isSearchCardMode && this.config.dismiss_search_on_play !== false;
+        const cardDismissSetting = this.config.dismiss_search_on_play !== false;
+        const shouldDismiss = !this._isSearchCardMode && cardDismissSetting;
+        const shouldReset = this._isSearchCardMode && cardDismissSetting;
+
         if (shouldDismiss) {
           this._closeEntityOptions();
+        } else if (shouldReset) {
+          this._showSearchSheetInOptions();
         }
         this._activeSearchRowMenuId = null;
       } else {
@@ -6277,7 +6291,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const hasSingleEntity = this.entityObjs.length === 1;
     const isMinHeight = hasSingleEntity && this.config.always_collapsed === true && this.config.expand_on_search !== true;
     const effectivePinHeaders = this.config.pin_search_headers === true && !isMinHeight;
-    const showSearchHeaders = this._isSearchCardMode || !(this.config.hide_search_headers_on_idle === true && this._isIdle);
+    const showSearchHeaders = !(this.config.hide_search_headers_on_idle === true && this._isIdle);
 
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
