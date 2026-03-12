@@ -210,7 +210,8 @@ export default {
             "card_trigger": "Card Trigger",
             "search_view": "Search Result View",
             "search_card_columns": "Card Columns",
-            "card_type": "Card Type"
+            "card_type": "Card Type",
+            "no_artwork_option": "No Artwork"
         },
         "action_types": {
             "menu": "Open a Card Menu Item",

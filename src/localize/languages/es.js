@@ -163,7 +163,8 @@ export default {
             "use_url_path": "Usar URL o ruta",
             "adaptive_text_elements": "Elementos de texto adaptativo",
             "disable_auto_select": "Desactivar selección automática",
-            "card_type": "Tipo de tarjeta"
+            "card_type": "Tipo de tarjeta",
+            "no_artwork_option": "Sin imagen de portada"
         },
         "fields": {
             "artwork_fit": "Ajuste",

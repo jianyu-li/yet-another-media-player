@@ -3526,6 +3526,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let sizePercentage = null;
     let objectFit = null;
 
+    // If no_artwork is selected, we don't want to fetch or show any artwork
+    if (this._artworkObjectFit === "no_artwork") {
+      return { url: null, sizePercentage: null, objectFit: "no_artwork" };
+    }
+
     // Check for media artwork overrides first
     const overrides = Array.isArray(this.config?.media_artwork_overrides)
       ? this.config.media_artwork_overrides
@@ -3764,7 +3769,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       this._customAccent = "#ff9800";
     }
-    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain"]);
+    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain", "no_artwork"]);
     this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
       ? config.artwork_object_fit
       : "cover";

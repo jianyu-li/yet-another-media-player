@@ -96,7 +96,7 @@ Below you will find a list of all configuration options.
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
 | `artwork_hostname`         | string       | No           | —           | Hostname URL (e.g., `http://192.168.1.50:8123`) prepended to relative artwork URLs; required when Casting to external devices |
-| `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `scaled-contain`, `fill`, `scale-down`, or `none` |
+| `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `scaled-contain`, `fill`, `scale-down`, `none`, or `no_artwork` |
 | `artwork_position`         | choice       | No           | `top center`| Control artwork alignment: `top center`, `center center`, or `bottom center`                     |
 | `extend_artwork`           | boolean      | No           | `false`     | When `true`, extends the artwork background up behind the chip and action rows for a full-bleed look |
 | `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` and `object_fit` can be used to style the replacement (defaults to global `artwork_object_fit`). `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
@@ -529,7 +529,7 @@ Use `media_artwork_overrides` to replace missing or low-resolution art with high
 
 The following optional parameters can be used to style individual overrides:
 - **`size_percentage`**: Scale the artwork relative to its container (e.g. `50`).
-- **`object_fit`**: Control scaling behavior for this specific override: `cover`, `contain`, `scaled-contain`, `fill`, `scale-down`, or `none`. If omitted (or set to `default` in the editor), it inherits the global `artwork_object_fit` setting.
+- **`object_fit`**: Control scaling behavior for this specific override: `cover`, `contain`, `scaled-contain`, `fill`, `scale-down`, `none`, or `no_artwork`. If omitted (or set to `default` in the editor), it inherits the global `artwork_object_fit` setting.
 
 ```yaml
 media_artwork_overrides:

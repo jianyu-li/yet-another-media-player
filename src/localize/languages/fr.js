@@ -162,8 +162,7 @@ export default {
             "follow_active_entity": "Le volume suit l'entité active",
             "use_url_path": "Utiliser URL ou chemin",
             "adaptive_text_elements": "Éléments de texte adaptatif",
-            "disable_auto_select": "Désactiver la sélection automatique",
-            "card_type": "Type de carte"
+            "disable_auto_select": "Désactiver la sélection automatique"
         },
         "fields": {
             "artwork_fit": "Ajustement",
@@ -210,7 +209,9 @@ export default {
             "placement": "Placement",
             "card_trigger": "Déclencheur de carte",
             "search_view": "Vue des résultats de recherche",
-            "search_card_columns": "Colonnes de cartes"
+            "search_card_columns": "Nombre de colonnes",
+            "card_type": "Type de carte",
+            "no_artwork_option": "Pas d'image de couverture"
         },
         "action_types": {
             "menu": "Ouvrir un élément de menu",

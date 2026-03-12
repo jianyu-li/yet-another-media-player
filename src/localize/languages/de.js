@@ -162,8 +162,7 @@ export default {
             "follow_active_entity": "Lautstärke folgt aktiver Entität",
             "use_url_path": "URL oder Pfad verwenden",
             "adaptive_text_elements": "Elemente für adaptive Textgröße",
-            "disable_auto_select": "Auto-Auswahl deaktivieren",
-            "card_type": "Kartentyp"
+            "disable_auto_select": "Auto-Auswahl deaktivieren"
         },
         "fields": {
             "artwork_fit": "Artwork-Anpassung",
@@ -210,7 +209,9 @@ export default {
             "placement": "Platzierung",
             "card_trigger": "Karten-Trigger",
             "search_view": "Suchergebnis-Ansicht",
-            "search_card_columns": "Kartenspalten"
+            "search_card_columns": "Spaltenanzahl",
+            "card_type": "Kartentyp",
+            "no_artwork_option": "Kein Coverbild"
         },
         "action_types": {
             "menu": "Kartenmenüpunkt öffnen",

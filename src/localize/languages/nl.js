@@ -162,8 +162,7 @@ export default {
             "follow_active_entity": "Volume Entiteit volgt Actieve Entiteit",
             "use_url_path": "URL of Pad gebruiken",
             "adaptive_text_elements": "Elementen voor Adaptieve Tekstgrootte",
-            "disable_auto_select": "Auto-selectie uitschakelen",
-            "card_type": "Kaarttype"
+            "disable_auto_select": "Auto-selectie uitschakelen"
         },
         "fields": {
             "artwork_fit": "Artwork Passend Maken",
@@ -210,7 +209,9 @@ export default {
             "placement": "Plaatsing",
             "card_trigger": "Kaart trigger",
             "search_view": "Zoekresultaten weergave",
-            "search_card_columns": "Kaart kolommen"
+            "search_card_columns": "Aantal kolommen",
+            "card_type": "Kaarttype",
+            "no_artwork_option": "Geen artwork"
         },
         "action_types": {
             "menu": "Open een kaartmenu-item",
