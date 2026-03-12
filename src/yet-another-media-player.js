@@ -129,13 +129,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._idleScreenApplied = true;
   }
 
+  _getSearchDismissBehavior() {
+    const cardDismissSetting = this.config.dismiss_search_on_play !== false;
+    return {
+      shouldDismiss: !this._isSearchCardMode && cardDismissSetting,
+      shouldReset: this._isSearchCardMode && cardDismissSetting,
+    };
+  }
+
   _resetIdleScreen() {
     if (!this._idleScreenApplied) return;
 
-    // Respect dismiss_search_on_play if configured
-    const cardDismissSetting = this.config.dismiss_search_on_play !== false;
-    const shouldDismiss = !this._isSearchCardMode && cardDismissSetting;
-    const shouldReset = this._isSearchCardMode && cardDismissSetting;
+    const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
 
     switch (this._idleScreen) {
       case "search":
@@ -1557,11 +1562,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    // Default to true if config option is missing (backward compatibility)
-    const cardDismissSetting = this.config.dismiss_search_on_play !== false;
-    const shouldDismiss = !this._isSearchCardMode && cardDismissSetting;
-    const shouldReset = this._isSearchCardMode && cardDismissSetting;
-
+    const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
+    
     if (shouldDismiss) {
       if (this._showSearchInSheet) {
         this._closeEntityOptions();
@@ -1733,9 +1735,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // For 'replace' mode, we dismiss according to settings and don't show success overlay
       if (mode === 'replace') {
-        const cardDismissSetting = this.config.dismiss_search_on_play !== false;
-        const shouldDismiss = !this._isSearchCardMode && cardDismissSetting;
-        const shouldReset = this._isSearchCardMode && cardDismissSetting;
+        const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
 
         if (shouldDismiss) {
           this._closeEntityOptions();
@@ -3787,7 +3787,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const forceHideMenuPlayer = this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true;
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this._extendArtwork));
-      this.shadowRoot.host.setAttribute("data-card-type", config.card_type || "default");
     }
     // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
@@ -7044,7 +7043,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 ${localize('common.cancel')}
                     </button>
                     ` : nothing}
-                  </div>
                   </div>
                   ` : nothing}
                   <!--FILTER CHIPS-->
