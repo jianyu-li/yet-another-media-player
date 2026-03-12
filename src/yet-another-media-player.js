@@ -6992,6 +6992,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   }
                   ${showSearchHeaders ? html`
                   <div class="entity-options-search-row">
+                    <div class="search-input-wrapper">
                       <input
                         type="text"
                         id="search-input-box"
@@ -7007,8 +7008,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
                     }}
                         placeholder="${localize('editor.placeholders.search')}"
-                        style="flex:1; min-width:0; font-size:1.1em;"
                       />
+                      ${this._searchQuery ? html`
+                        <button
+                          class="search-input-clear"
+                          @click=${() => { this._searchQuery = ''; this.requestUpdate(); const inp = this.renderRoot.querySelector('#search-input-box'); if (inp) inp.focus(); }}
+                          title="Clear">
+                          <ha-icon icon="mdi:close"></ha-icon>
+                        </button>
+                      ` : nothing}
+                    </div>
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
@@ -7016,12 +7025,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       ?disabled=${this._searchLoading}>
                       ${localize('common.search')}
                     </button>
+                    ${!this._isSearchCardMode ? html`
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
                       @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
-              ${localize('common.cancel')}
+                ${localize('common.cancel')}
                     </button>
+                    ` : nothing}
+                  </div>
                   </div>
                   ` : nothing}
                   <!--FILTER CHIPS-->
