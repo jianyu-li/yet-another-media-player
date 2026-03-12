@@ -6283,7 +6283,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
       this.shadowRoot.host.setAttribute("data-card-type", this.config.card_type || "default");
-      const forceHideMenuPlayer = (this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true) || this._isSearchCardMode === true;
+      const forceHideMenuPlayer = this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true;
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
       this.shadowRoot.host.setAttribute("data-control-layout", this._controlLayout);
@@ -6626,7 +6626,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ? (hasCustomCardHeight ? customCardHeight : (this._collapsedBaselineHeight || 220))
       : expandedHeightBaseline;
     const meetsPersistentHeight = resolvedCollapsedHeight >= expandedHeightBaseline;
-    const shouldShowPersistentControls = (this.config.hide_menu_player === true || this._isSearchCardMode === true)
+    const shouldShowPersistentControls = this.config.hide_menu_player === true
       ? false
       : (!collapsed || meetsPersistentHeight);
     const releaseControlsRow = controlSpacerSize >= 48;
