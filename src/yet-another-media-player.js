@@ -6306,6 +6306,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
       this.shadowRoot.host.setAttribute("data-control-layout", this._controlLayout);
       this.shadowRoot.host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
+      
       if (hasCustomCardHeight) {
         this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
       } else {
@@ -7058,32 +7059,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
                     return html`
                       <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
-                        <button
-                          class="chip"
-                          style="
-                            width: 72px;
-                            background: ${filter === 'all' ? this._customAccent : '#282828'};
-                            opacity: ${filter === 'all' ? '1' : '0.8'};
-                            font-weight: ${filter === 'all' ? 'bold' : 'normal'};
-                          "
-                          ?selected=${filter === 'all'}
-                          @click=${() => this._doSearch()}
-                        >${localize('search.filters.all')}</button>
-                        ${classes.map(c => html`
                           <button
                             class="chip"
-                            style="
-                              width: 72px;
-                              background: ${filter === c ? this._customAccent : '#282828'};
-                              opacity: ${filter === c ? '1' : '0.8'};
-                              font-weight: ${filter === c ? 'bold' : 'normal'};
-                            "
-                            ?selected=${filter === c}
-                            @click=${() => this._doSearch(c)}
-                          >
-                            ${localize(`search.filters.${c}`)}
-                          </button>
-                        `)}
+                            ?selected=${filter === 'all'}
+                            @click=${() => this._doSearch()}
+                          >${localize('search.filters.all')}</button>
+                          ${classes.map(c => html`
+                            <button
+                              class="chip"
+                              ?selected=${filter === c}
+                              @click=${() => this._doSearch(c)}
+                            >
+                              ${localize(`search.filters.${c}`)}
+                            </button>
+                          `)}
                       </div>
                     `;
                   })() : nothing
@@ -7097,7 +7086,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         <button
                           class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
                           style="
-                            background: none;
                             border: none;
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
@@ -7116,7 +7104,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         >
                                                   <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
                           ${this._initialFavoritesLoaded || this._favoritesFilterActive ? html`
-                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
                               ${localize('search.favorites')}
                             </span>
                           ` : nothing}
@@ -7124,7 +7112,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       <button
                           class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
                           style="
-                            background: none;
                             border: none;
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};
@@ -7143,7 +7130,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         >
                           <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
                           ${this._recentlyPlayedFilterActive ? html`
-                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                            <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
                               ${localize('search.recently_played')}
                             </span>
                           ` : nothing}
@@ -7152,7 +7139,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         <button
                             class="button${this._upcomingFilterActive ? ' active' : ''}"
                             style="
-                              background: none;
                               border: none;
                               font-size: 1.2em;
                               cursor: ${this._searchAttempted ? 'pointer' : 'default'};
@@ -7171,7 +7157,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           >
                             <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
                             ${this._upcomingFilterActive ? html`
-                              <span style="margin-left:6px;font-size:0.82em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                              <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
                                 ${localize('search.next_up')}
                               </span>
                             ` : nothing}
@@ -7180,7 +7166,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           <button
                               class="button${this._recommendationsFilterActive ? ' active' : ''}"
                               style="
-                                background: none;
                                 border: none;
                                 font-size: 1.2em;
                                 cursor: ${this._searchAttempted ? 'pointer' : 'default'};
@@ -7199,7 +7184,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             >
                               <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'}></ha-icon>
                               ${this._recommendationsFilterActive ? html`
-                                <span style="margin-left:6px;font-size:0.81em;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;">
+                                <span style="margin-left:6px;font-size:0.81em;font-weight:600;white-space:nowrap;">
                                   ${localize('search.recommendations')}
                                 </span>
                               ` : nothing}
@@ -7217,7 +7202,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         <button
                           class="button"
                           style="
-                            background: none;
                             border: none;
                             font-size: 1.2em;
                             cursor: ${this._searchAttempted ? 'pointer' : 'default'};

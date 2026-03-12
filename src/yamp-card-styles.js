@@ -48,6 +48,30 @@ export const yampCardStyles = css`
     --yamp-section-title-weight: 600;
     --yamp-section-description-size: 0.9em;
     --yamp-section-description-color: var(--secondary-text-color, #888);
+
+    /* Universal theme-aware variables (default to dark) */
+    --yamp-overlay-bg: rgba(0, 0, 0, 0.82);
+    --yamp-overlay-text: #fff;
+    --yamp-overlay-text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    --yamp-overlay-divider: rgba(255, 255, 255, 0.2);
+    --yamp-icon-color: #fff;
+    --yamp-button-bg: rgba(255, 255, 255, 0.1);
+    --yamp-button-border: rgba(255, 255, 255, 0.2);
+    --yamp-overlay-text-secondary: rgba(255, 255, 255, 0.7);
+    --yamp-success-color: #4caf50;
+    --yamp-error-color: #f44336;
+    --yamp-success-bg-light: rgba(76, 175, 80, 0.2);
+    --yamp-success-bg-medium: rgba(76, 175, 80, 0.4);
+    --yamp-chip-bg: var(--chip-background, #333);
+    --yamp-chip-text: #fff;
+    --yamp-chip-selected-bg: var(--custom-accent);
+    --yamp-chip-selected-text: #fff;
+    --search-text-secondary: #bbb;
+    --search-error-bg: rgba(244, 67, 54, 0.8);
+    --search-card-bg: rgba(255, 255, 255, 0.05);
+    --search-thumb-placeholder-bg: rgba(255, 255, 255, 0.1);
+    --search-thumb-placeholder-icon: rgba(255, 255, 255, 0.6);
+    --search-success-text: #fff;
   }
 
   :host([data-match-theme="false"]) {
@@ -75,8 +99,8 @@ export const yampCardStyles = css`
     --custom-accent: var(--accent-color, #ff9800);
     
     /* Search sheet theme-aware variables */
-    --search-overlay-bg: var(--ha-card-background, rgba(0, 0, 0, 0.8));
-    --search-input-bg: var(--ha-card-background, #333);
+    --search-overlay-bg: var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8)));
+    --search-input-bg: var(--ha-card-background, var(--secondary-background-color, #333));
     --search-input-text: var(--primary-text-color, #fff);
     --search-text: var(--primary-text-color, #fff);
     --search-error: var(--error-color, #ff6b6b);
@@ -85,11 +109,40 @@ export const yampCardStyles = css`
     --search-border: var(--divider-color, rgba(255, 255, 255, 0.1));
     --search-hover-bg: var(--divider-color, rgba(255, 255, 255, 0.1));
     --search-play-hover: var(--accent-color, #e68900);
-    --search-queue-bg: var(--ha-card-background, #4a4a4a);
+    --search-queue-bg: var(--ha-card-background, var(--card-background-color, #4a4a4a));
     --search-queue-border: var(--divider-color, #666);
     --search-queue-hover: var(--secondary-background-color, #5a5a5a);
     --search-queue-hover-border: var(--divider-color, #777);
+
+    /* Universal theme-aware variables mapped to HA theme */
+    --yamp-overlay-bg: color-mix(in srgb, var(--ha-card-background, var(--card-background-color, #000)), transparent 18%);
+    --yamp-overlay-text: var(--primary-text-color, #fff);
+    --yamp-overlay-text-shadow: none;
+    --yamp-overlay-divider: var(--divider-color, rgba(255, 255, 255, 0.1));
+    --yamp-icon-color: var(--primary-text-color, #fff);
+    --yamp-button-bg: var(--secondary-background-color, rgba(255, 255, 255, 0.1));
+    --yamp-button-border: var(--divider-color, rgba(255, 255, 255, 0.2));
+    --yamp-overlay-text-secondary: var(--secondary-text-color, #888);
+    --yamp-success-color: var(--success-color, #4caf50);
+    --yamp-error-color: var(--error-color, #f44336);
+    --yamp-success-bg-light: var(--success-color, rgba(76, 175, 80, 0.2));
+    --yamp-success-bg-medium: var(--success-color, rgba(76, 175, 80, 0.4));
+    --yamp-chip-selected-text: #fff;
+    --search-text-secondary: var(--secondary-text-color, #aaa);
+
+    /* Mode-aware chip defaults when match_theme is true */
+    --yamp-chip-bg: var(--search-card-bg);
+    --yamp-chip-text: var(--search-text);
+    --yamp-chip-selected-bg: var(--custom-accent);
+    --yamp-chip-border: var(--divider-color, rgba(0, 0, 0, 0.1));
+    --search-error-bg: var(--error-color, rgba(244, 67, 54, 0.8));
+    --search-card-bg: var(--ha-card-background, var(--card-background-color, rgba(255, 255, 255, 0.05)));
+    --search-thumb-placeholder-bg: var(--secondary-background-color, rgba(255, 255, 255, 0.1));
+    --search-thumb-placeholder-icon: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
+    --search-success-text: var(--primary-text-color, #fff);
   }
+
+
 
   /* Base card styles - set once, inherit everywhere */
   :host {
@@ -208,7 +261,7 @@ export const yampCardStyles = css`
     vertical-align: middle;
     position: relative;
     margin: 0 0 2px 0;
-    color: #fff;
+    color: var(--yamp-icon-color, #fff);
     transition: color var(--transition-normal, 0.2s);
   }
 
@@ -219,7 +272,7 @@ export const yampCardStyles = css`
   .more-info-icon {
     font-size: 1.7em;
     line-height: 1;
-    color: #fff;
+    color: #fff !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -313,7 +366,7 @@ export const yampCardStyles = css`
     min-width: 110px;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     margin-top: 2px;
-    border: 1px solid #444;
+    border: 1px solid var(--yamp-overlay-divider);
     overflow: hidden;
     max-height: 220px;
     overflow-y: auto;
@@ -334,7 +387,7 @@ export const yampCardStyles = css`
 
   .source-option:hover,
   .source-option:focus {
-    background: var(--accent-color, #1976d2);
+    background: var(--custom-accent);
     color: #fff;
   }
 
@@ -520,12 +573,13 @@ export const yampCardStyles = css`
     align-items: center;
     border-radius: var(--chip-border-radius);
     padding: 6px 6px 6px 8px;
-    background: var(--chip-bg);
-    color: var(--primary-text);
+    background: var(--yamp-chip-bg);
+    color: var(--yamp-chip-text);
     cursor: pointer;
+    font-size: 0.9em;
     font-weight: 500;
     opacity: 0.85;
-    border: none;
+    border: 1px solid var(--yamp-chip-border, transparent);
     outline: none;
     transition: background var(--transition-normal), opacity var(--transition-normal);
     flex: 0 0 auto;
@@ -534,13 +588,13 @@ export const yampCardStyles = css`
   }
 
   .chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
+    background: var(--yamp-chip-selected-bg);
+    color: var(--yamp-chip-selected-text);
   }
 
   .chip[selected] {
-    background: var(--custom-accent);
-    color: #fff;
+    background: var(--yamp-chip-selected-bg);
+    color: var(--yamp-chip-selected-text);
     opacity: 1;
   }
 
@@ -969,13 +1023,12 @@ export const yampCardStyles = css`
 
   .progress-bar {
     width: 100%;
-    height: 6px;
-    background: rgba(255,255,255,0.22);
-    border-radius: 3px;
-    margin: 8px 0;
-    cursor: pointer;
+    height: 4px;
+    background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.2));
+    border-radius: 2px;
+    overflow: hidden;
     position: relative;
-    box-shadow: var(--shadow-heavy);
+    cursor: pointer;
   }
 
   .progress-inner {
@@ -1275,81 +1328,22 @@ export const yampCardStyles = css`
     opacity: 0.9;
   }
 
-  /* Light mode styles */
+  /* Light mode overrides (optional fallback if match_theme is not explicitly used) */
   @media (prefers-color-scheme: light) {
     :host {
-      background: var(--card-background-color, #fff);
+      --card-bg: var(--card-background-color, #fff);
     }
 
-    .chip {
-      background: #f0f0f0;
-      color: #222;
-    }
-
-    :host([data-match-theme="true"]) .chip[selected] {
-      background: var(--accent-color, #1976d2);
-      color: #fff;
-    }
-
-    .artwork {
-      background: #eee;
-    }
-
-    .progress-bar {
-      background: #eee;
-    }
-
-    .source-menu-btn {
-      color: #222;
-    }
 
     .source-dropdown {
-      background: #fff;
-      color: #222;
-      border: 1px solid #bbb;
-    }
-
-    .source-option {
-      color: #222;
-      background: #fff;
-      transition: background var(--transition-fast), color var(--transition-fast);
-    }
-
-    .source-option:hover,
-    .source-option:focus {
-      background: var(--custom-accent);
-      color: #222;
-    }
-
-    .source-select {
-      background: #fff;
-      color: #222;
-      border: 1px solid #aaa;
+      background: var(--card-bg, #fff);
+      color: var(--primary-text, #222);
+      border: 1px solid var(--yamp-overlay-divider, #bbb);
     }
 
     .action-chip {
-      background: var(--card-background-color, #fff);
-      opacity: 1;
-      border-radius: var(--button-border-radius);
-      color: var(--primary-text-color, #222);
-      box-shadow: none;
-      text-shadow: none;
-      border: none;
-      outline: none;
-    }
-
-    .action-chip:active {
-      background: var(--accent-color, #1976d2);
-      color: #fff;
-      opacity: 1;
-      transform: scale(0.98);
-      box-shadow: none;
-      text-shadow: none;
-    }
-
-    .card-lower-content:not(.collapsed) .source-menu-btn,
-    .card-lower-content:not(.collapsed) .source-selected {
-      color: #fff;
+      background: var(--card-bg, #fff);
+      color: var(--primary-text, #222);
     }
   }
 
@@ -1447,6 +1441,8 @@ export const yampCardStyles = css`
     min-height: 0;
   }
 
+  .card-lower-content .source-menu-btn,
+  .card-lower-content .source-selected,
   .details,
   .title,
   .artist,
@@ -1611,7 +1607,7 @@ export const yampCardStyles = css`
     top: 0;
     bottom: 0;
     z-index: ${Z_LAYERS.OVERLAY_BASE};
-    background: var(--ha-entity-menu-overlay, rgba(0,0,0,0.82));
+    background: var(--yamp-overlay-bg);
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -1745,7 +1741,9 @@ export const yampCardStyles = css`
     gap: 10px;
     padding: 14px 22px 18px 22px;
     margin: 0;
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--yamp-overlay-bg);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     border-radius: 0;
     border: none;
     flex-shrink: 0;
@@ -1797,6 +1795,13 @@ export const yampCardStyles = css`
     font-size: 16px;
   }
 
+  .artist,
+  .vol-label,
+  .vol-value {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 400;
+  }
+
   .persistent-controls-buttons {
     grid-column: 2;
     justify-self: center;
@@ -1816,7 +1821,7 @@ export const yampCardStyles = css`
   .persistent-volume-stepper .stepper-btn {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     font-size: 20px;
     width: 36px;
     height: 36px;
@@ -1840,8 +1845,15 @@ export const yampCardStyles = css`
     opacity: 0.85;
     min-width: 48px;
     text-align: center;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     padding-left: 6px;
+  }
+
+  .entity-options-search-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--yamp-button-bg);
+    border: 1px solid var(--yamp-button-border);
   }
 
   .persistent-control-btn {
@@ -1855,7 +1867,7 @@ export const yampCardStyles = css`
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    color: #fff;
+    color: var(--yamp-overlay-text);
   }
 
   @container (max-width: 450px) {
@@ -1885,6 +1897,12 @@ export const yampCardStyles = css`
     transform: scale(0.95);
   }
 
+  .chip[playing] {
+    background: var(--custom-accent);
+    color: #fff;
+    border-color: var(--custom-accent);
+  }
+
   .persistent-control-btn ha-icon {
     font-size: 16px;
     color: inherit;
@@ -1910,6 +1928,7 @@ export const yampCardStyles = css`
     font-size: calc(1em * var(--yamp-text-scale-menu, 1));
     position: relative;
     box-sizing: border-box;
+    color: var(--yamp-overlay-text);
   }
 
   /* Main menu specific styling - move options down, adapt to card height */
@@ -1926,9 +1945,10 @@ export const yampCardStyles = css`
     font-size: 0.78em;
     font-weight: 500;
     letter-spacing: 0.05em;
-    color: rgba(255, 255, 255, 0.78);
+    color: var(--yamp-overlay-text);
+    opacity: 0.78;
     pointer-events: none;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+    text-shadow: var(--yamp-overlay-text-shadow);
   }
 
   /* When always collapsed is enabled, keep menu at top */
@@ -1966,18 +1986,7 @@ export const yampCardStyles = css`
   }
 
   .entity-options-chips-strip .chip {
-    background: var(--chip-bg);
-    color: var(--primary-text);
-  }
-
-  .entity-options-chips-strip .chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
-  }
-
-  .entity-options-chips-strip .chip[selected] {
-    background: var(--custom-accent);
-    color: #fff;
+    /* Uses centralized .chip styling */
   }
 
   .entity-options-chips-strip::-webkit-scrollbar {
@@ -2053,14 +2062,14 @@ export const yampCardStyles = css`
     font-weight: bold;
     margin-bottom: 18px;
     text-align: center;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     background: none;
-    text-shadow: 0 2px 8px #0009;
+    text-shadow: var(--yamp-overlay-text-shadow);
   }
 
   .entity-options-item {
     background: none;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     border: none;
     border-radius: 10px;
     font-size: 1.12em;
@@ -2070,7 +2079,7 @@ export const yampCardStyles = css`
     cursor: pointer;
     transition: color var(--transition-fast), text-shadow var(--transition-fast);
     text-align: center;
-    text-shadow: 0 2px 8px #0009;
+    text-shadow: var(--yamp-overlay-text-shadow);
   }
 
   .entity-options-item.menu-action-item {
@@ -2110,7 +2119,7 @@ export const yampCardStyles = css`
 
   .entity-options-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.28);
+    background: var(--yamp-overlay-divider);
     margin: 1px 0 8px 0;
     width: 100%;
     display: block;
@@ -2260,7 +2269,7 @@ export const yampCardStyles = css`
     margin-right: 10px;
     cursor: pointer;
     transition: background 0.15s ease;
-    color: #fff;
+    color: var(--yamp-overlay-text);
   }
 
   .group-toggle-btn ha-icon {
@@ -2280,10 +2289,10 @@ export const yampCardStyles = css`
     background: none;
   }
 
-  /* Force white text in grouping sheet */
+  /* Force theme-aware text in grouping sheet */
   .entity-options-sheet,
   .entity-options-sheet * {
-    color: #fff;
+    color: var(--yamp-overlay-text);
   }
 
   /* Search functionality */
@@ -2311,7 +2320,7 @@ export const yampCardStyles = css`
     align-items: center;
     gap: 12px;
     padding: 9px 0;
-    border-bottom: 1px solid #2227;
+    border-bottom: 1px solid var(--search-border);
     font-size: 1.10em;
     color: var(--primary-text);
     background: none;
@@ -2320,7 +2329,7 @@ export const yampCardStyles = css`
     position: absolute;
     inset: 0;
     left: 100%;
-    background: rgba(0, 0, 0, 0.01) ;
+    background: var(--search-overlay-bg) ;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: ${Z_LAYERS.SEARCH_SLIDE_OUT};
@@ -2347,7 +2356,7 @@ export const yampCardStyles = css`
   .search-row-error-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--search-overlay-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
@@ -2356,10 +2365,10 @@ export const yampCardStyles = css`
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     font-weight: 600;
     font-size: 0.95em;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    text-shadow: var(--yamp-overlay-text-shadow);
     z-index: ${Z_LAYERS.SEARCH_SUCCESS};
     border-radius: inherit;
     box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
@@ -2367,7 +2376,7 @@ export const yampCardStyles = css`
   }
 
   .search-row-error-overlay {
-    background: rgba(244, 67, 54, 0.8);
+    background: var(--search-error-bg);
   }
 
   .search-row-success-overlay span:first-child,
@@ -2393,16 +2402,17 @@ export const yampCardStyles = css`
     flex: 0 0 auto;
     background: transparent;
     border: none;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     padding: 6px 10px;
     border-radius: 18px;
     cursor: pointer;
     font-size: 0.88em;
     font-weight: 500;
     white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  }
+
+  /* Redundant .chip removed - now uses base styling at line 571 */
+  .slide-out-button {
     transition: background 0.2s, color 0.2s;
   }
 
@@ -2418,7 +2428,7 @@ export const yampCardStyles = css`
 
   .slide-out-close {
     margin-left: auto;
-    color: #888;
+    color: var(--yamp-overlay-text);
     padding: 4px;
     cursor: pointer;
     display: flex;
@@ -2427,7 +2437,7 @@ export const yampCardStyles = css`
   }
 
   .slide-out-close:hover {
-    color: #fff;
+    color: var(--custom-accent);
   }
 
   .entity-options-search-result:last-child {
@@ -2463,7 +2473,7 @@ export const yampCardStyles = css`
     font-size: 1.13em;
     border: none;
     background: transparent;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     border-radius: 10px;
     padding: 6px 10px;
     cursor: pointer;
@@ -2491,7 +2501,7 @@ export const yampCardStyles = css`
   }
 
   .entity-options-search-queue {
-    color: #666;
+    color: var(--yamp-overlay-text-secondary);
     padding-right: 20px; /* Add right padding to prevent cutoff on mobile */
   }
 
@@ -2516,7 +2526,7 @@ export const yampCardStyles = css`
     font-size: 0.9em;
     border: none;
     background: transparent;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     border-radius: 6px;
     padding: 4px;
     cursor: pointer;
@@ -2535,13 +2545,13 @@ export const yampCardStyles = css`
   .queue-btn-up:hover,
   .queue-btn-up:focus {
     background: transparent;
-    color: #4caf50;
+    color: var(--yamp-success-color);
   }
 
   .queue-btn-down:hover,
   .queue-btn-down:focus {
     background: transparent;
-    color: #4caf50;
+    color: var(--yamp-success-color);
   }
 
   .queue-btn-next:hover,
@@ -2553,26 +2563,26 @@ export const yampCardStyles = css`
   .queue-btn-remove:hover,
   .queue-btn-remove:focus {
     background: transparent;
-    color: #f44336;
+    color: var(--yamp-error-color);
   }
 
   /* Visual feedback for moved queue items */
   .entity-options-search-result.just-moved {
-    background: rgba(76, 175, 80, 0.2) ;
-    border-left: 3px solid #4caf50 ;
+    background: var(--yamp-success-bg-light) ;
+    border-left: 3px solid var(--yamp-success-color) ;
     animation: queueMoveHighlight 1s ease-out;
   }
 
   @keyframes queueMoveHighlight {
-    0% { background: rgba(76, 175, 80, 0.4); transform: scale(1.02); }
-    100% { background: rgba(76, 175, 80, 0.2); transform: scale(1); }
+    0% { background: var(--yamp-success-bg-medium); transform: scale(1.02); }
+    100% { background: var(--yamp-success-bg-light); transform: scale(1); }
   }
 
   .entity-options-search-input {
-    border: 1px solid #333;
+    border: 1px solid var(--search-border);
     border-radius: var(--button-border-radius);
-    background: var(--card-bg);
-    color: var(--primary-text);
+    background: var(--search-input-bg);
+    color: var(--search-input-text);
     font-size: 1.12em;
     outline: none;
     transition: border var(--transition-fast);
@@ -2587,8 +2597,8 @@ export const yampCardStyles = css`
     line-height: 1.18;
     box-sizing: border-box;
     border: 1.5px solid var(--custom-accent);
-    background: #232323;
-    color: #fff;
+    background: var(--search-input-bg);
+    color: var(--search-input-text);
     transition: border var(--transition-fast), background var(--transition-fast);
     outline: none;
     width: 100%;
@@ -2609,7 +2619,7 @@ export const yampCardStyles = css`
     transform: translateY(-68%); /* Adjusted to -68% to fix "too high" issue */
     background: none;
     border: none;
-    color: #999;
+    color: var(--yamp-overlay-text-secondary);
     cursor: pointer;
     padding: 0;
     display: flex;
@@ -2630,8 +2640,8 @@ export const yampCardStyles = css`
 
   .entity-options-search-input:focus {
     border: 1.5px solid var(--custom-accent);
-    background: #232323;
-    color: #fff;
+    background: var(--search-input-bg);
+    color: var(--search-input-text);
     outline: none;
   }
 
@@ -2647,16 +2657,16 @@ export const yampCardStyles = css`
   }
 
   .entity-options-search-loading {
-    color: #fff;
+    color: var(--yamp-overlay-text);
   }
 
   .entity-options-search-error {
-    color: #e44747;
+    color: var(--yamp-error-color);
     font-weight: 500;
   }
 
   .entity-options-search-empty {
-    color: #999;
+    color: var(--yamp-overlay-text-secondary);
     font-style: italic;
   }
 
@@ -2677,21 +2687,15 @@ export const yampCardStyles = css`
 
   /* Search filter chips */
   .search-filter-chips .chip {
-    color: #fff;
+    width: 72px;
+    justify-content: center;
   }
 
-  .search-filter-chips .chip[selected],
-  .search-filter-chips .chip[style*="background: var(--customAccent"],
-  .search-filter-chips .chip[style*="background: var(--custom-accent"] {
-    color: #111;
-  }
-
-  .entity-options-sheet .search-filter-chips .chip:not([selected]) {
-    color: #fff;
-  }
-
-  .entity-options-sheet .search-filter-chips .chip[selected] {
-    color: #fff;
+  .search-filter-chips .chip[selected] {
+    background: var(--yamp-chip-selected-bg) !important;
+    color: var(--yamp-chip-selected-text) !important;
+    font-weight: bold;
+    opacity: 1;
   }
 
   .entity-options-sheet .search-filter-chips .chip {
@@ -2700,7 +2704,7 @@ export const yampCardStyles = css`
 
   .entity-options-sheet .search-filter-chips .chip:hover {
     background: var(--custom-accent) !important;
-    color: #fff ;
+    color: var(--yamp-chip-selected-text) !important;
     opacity: 1;
   }
 
@@ -2715,7 +2719,7 @@ export const yampCardStyles = css`
     padding-right: 15px;
     font-size: 0.85em;
     font-style: italic;
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--yamp-overlay-text-secondary);
     white-space: nowrap;
     text-align: right;
     flex-shrink: 0;
@@ -2731,6 +2735,35 @@ export const yampCardStyles = css`
   .entity-options-sheet .search-filter-chips,
   .entity-options-sheet .search-sub-filters {
     flex: 0 0 auto;
+  }
+
+  .search-sub-filters .button {
+    background: none;
+    transition: all 0.2s ease;
+    color: var(--yamp-overlay-text);
+  }
+
+  .search-sub-filters .button ha-icon {
+    color: var(--yamp-icon-color);
+    transition: color 0.2s ease;
+  }
+
+  .search-sub-filters .button:hover {
+    color: var(--custom-accent) !important;
+    opacity: 1 !important;
+  }
+
+  .search-sub-filters .button.active {
+    color: var(--custom-accent) !important;
+    opacity: 1 !important;
+  }
+
+  .search-sub-filters .button.active ha-icon {
+    color: var(--custom-accent) !important;
+  }
+
+  .search-sub-filters .radio-mode-button:hover {
+    color: var(--custom-accent);
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] {
@@ -2836,9 +2869,19 @@ export const yampCardStyles = css`
     display: none;
   }
 
+  .entity-options-resolved-entities  .entity-options-search-input {
+    flex: 1;
+    background: var(--search-input-bg);
+    color: var(--search-input-text);
+    border: 1px solid var(--search-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 1em;
+    outline: none;
+  }
   .entity-options-resolved-entities .entity-options-item {
     background: none;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     border: none;
     border-radius: 10px;
     font-size: 1.12em;
@@ -2884,14 +2927,14 @@ export const yampCardStyles = css`
 
   .clickable-search-result:hover {
     text-decoration: underline;
-    color: #fff;
+    color: var(--yamp-overlay-text);
   }
 
   /* Search breadcrumb */
   .entity-options-search-breadcrumb {
     margin-bottom: 12px;
     padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--search-border);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2899,7 +2942,7 @@ export const yampCardStyles = css`
 
   .entity-options-search-breadcrumb-text {
     font-size: 0.9em;
-    color: #fff;
+    color: var(--yamp-overlay-text);
     font-style: italic;
     flex: 1;
     min-width: 0;
@@ -2927,7 +2970,7 @@ export const yampCardStyles = css`
 
   .entity-options-search-breadcrumb-play:hover {
     background-color: var(--custom-accent);
-    color: #fff;
+    color: var(--yamp-overlay-text);
   }
 
   .entity-options-search-breadcrumb-play ha-icon {
@@ -2945,7 +2988,7 @@ export const yampCardStyles = css`
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
+    background: var(--search-overlay-bg);
     z-index: ${Z_LAYERS.MODAL_BACKDROP};
     display: flex;
     flex-direction: column;
@@ -2963,8 +3006,8 @@ export const yampCardStyles = css`
     padding: 12px;
     border: none;
     border-radius: 8px;
-    background: #333;
-    color: #fff;
+    background: var(--search-input-bg);
+    color: var(--search-input-text);
     font-size: 16px;
   }
 
@@ -2973,7 +3016,7 @@ export const yampCardStyles = css`
     border: none;
     border-radius: 8px;
     background: var(--custom-accent);
-    color: #fff;
+    color: var(--yamp-overlay-text);
     cursor: pointer;
     font-size: 16px;
   }
@@ -2989,19 +3032,19 @@ export const yampCardStyles = css`
   .search-sheet-empty {
     text-align: center;
     padding: 40px;
-    color: #fff;
+    color: var(--search-text);
     font-size: 18px;
   }
 
   .search-sheet-error {
-    color: #ff6b6b;
+    color: var(--search-error);
   }
 
   .priority-toast-success {
-    color: #fff;
+    color: var(--search-success-text);
     font-weight: 600;
-    background: rgba(76, 175, 80, 0.95);
-    border: 2px solid #4caf50;
+    background: var(--search-success-bg);
+    border: 2px solid var(--search-success);
     border-radius: 8px;
     padding: 20px;
     margin: 20px;
@@ -3055,7 +3098,7 @@ export const yampCardStyles = css`
     align-items: center;
     gap: 15px;
     padding: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--search-border);
     cursor: pointer;
     transition: background-color 0.2s;
   }
@@ -3066,7 +3109,7 @@ export const yampCardStyles = css`
     padding: 8px;
     border-bottom: none;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--search-card-bg);
     align-items: center;
     gap: 8px;
     height: min-content;
@@ -3098,7 +3141,7 @@ export const yampCardStyles = css`
     bottom: 0;
     justify-content: flex-start;
     overflow-y: auto;
-    background: rgba(0, 0, 0, 0.85);
+    background: var(--search-overlay-bg);
     padding: 12px 8px;
     border-radius: 12px;
     transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -3129,7 +3172,7 @@ export const yampCardStyles = css`
   }
 
   .search-sheet-result:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--search-hover-bg);
   }
 
   .search-sheet-thumb,
@@ -3160,7 +3203,7 @@ export const yampCardStyles = css`
   }
 
   .search-sheet-thumb-placeholder {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--search-thumb-placeholder-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3196,7 +3239,7 @@ export const yampCardStyles = css`
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--search-overlay-bg);
     opacity: 0;
     transition: opacity 0.2s;
     border-radius: 8px;
@@ -3224,14 +3267,14 @@ export const yampCardStyles = css`
   }
 
   .entity-options-search-thumb-placeholder {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--search-thumb-placeholder-bg);
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
   .entity-options-search-thumb-placeholder ha-icon {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--search-thumb-placeholder-icon);
     font-size: 16px;
   }
 
@@ -3251,7 +3294,7 @@ export const yampCardStyles = css`
 
   .search-sheet-title {
     flex: 1;
-    color: #fff;
+    color: var(--search-text);
     font-size: 16px;
     display: block;
     white-space: nowrap;
@@ -3271,10 +3314,14 @@ export const yampCardStyles = css`
 
   .entity-options-search-result:not(.search-result-card) .search-sheet-subtitle {
     font-size: 0.86em;
-    color: #bbb;
+    color: var(--search-text-secondary);
     line-height: 1.16;
   }
 
+  .entity-options-search-subtitle {
+    font-size: 0.9em;
+    color: var(--secondary-text);
+  }
 
   .search-result-card .search-sheet-info {
     text-align: center;
@@ -3337,7 +3384,7 @@ export const yampCardStyles = css`
     border: none;
     border-radius: 8px;
     background: var(--custom-accent);
-    color: #fff;
+    color: var(--yamp-overlay-text);
     cursor: pointer;
     font-size: 18px;
     display: flex;
@@ -3354,17 +3401,17 @@ export const yampCardStyles = css`
 
   .search-sheet-play:hover,
   .search-sheet-queue:hover {
-    background: #e68900;
+    background: var(--search-play-hover);
   }
 
   .search-sheet-queue {
-    background: #4a4a4a;
-    border: 1px solid #666;
+    background: var(--search-queue-bg);
+    border: 1px solid var(--search-queue-border);
   }
 
   .search-sheet-queue:hover {
-    background: #5a5a5a;
-    border-color: #777;
+    background: var(--search-queue-hover);
+    border-color: var(--search-queue-hover-border);
   }
 
   /* Override styles when match_theme is false - force default colors */
@@ -3377,8 +3424,11 @@ export const yampCardStyles = css`
     --search-input-bg: #333 ;
     --search-input-text: #fff ;
     --search-text: #fff ;
+    --search-text-secondary: #bbb;
     --search-error: #ff6b6b ;
+    --search-error-bg: rgba(244, 67, 54, 0.8);
     --search-success: #4caf50 ;
+    --search-success-text: #fff;
     --search-success-bg: rgba(76, 175, 80, 0.95) ;
     --search-border: rgba(255, 255, 255, 0.1) ;
     --search-hover-bg: rgba(255, 255, 255, 0.1) ;
@@ -3387,6 +3437,9 @@ export const yampCardStyles = css`
     --search-queue-border: #666 ;
     --search-queue-hover: #5a5a5a ;
     --search-queue-hover-border: #777 ;
+    --search-card-bg: rgba(255, 255, 255, 0.05);
+    --search-thumb-placeholder-bg: rgba(255, 255, 255, 0.1);
+    --search-thumb-placeholder-icon: rgba(255, 255, 255, 0.6);
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-header input {
@@ -3477,9 +3530,9 @@ export const yampCardStyles = css`
     color: #ff9800 ;
   }
 
-  .search-sheet[data-match-theme="false"] .search-sheet-play,
-  .search-sheet[data-match-theme="false"] .search-sheet-queue {
-    color: #fff ;
+  .search-sheet[data-match-theme="false"]  .search-sheet-buttons .search-sheet-play,
+  .search-sheet-buttons .search-sheet-queue {
+    color: var(--yamp-overlay-text);
   }
 
   /* Force all text to be white when match_theme is false */
