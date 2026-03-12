@@ -125,7 +125,8 @@ export default {
             "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
             "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing.",
             "search_view": "Choose between a standard list or a card-based grid for search results.",
-            "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically."
+            "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically.",
+            "card_type": "Choose the card mode. 'Default' is the standard media player. 'Dedicated Search' makes the card a permanent search interface."
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -208,7 +209,8 @@ export default {
             "placement": "Placement",
             "card_trigger": "Card Trigger",
             "search_view": "Search Result View",
-            "search_card_columns": "Card Columns"
+            "search_card_columns": "Card Columns",
+            "card_type": "Card Type"
         },
         "action_types": {
             "menu": "Open a Card Menu Item",
@@ -244,6 +246,10 @@ export default {
         "search_view_options": {
             "list": "List",
             "card": "Card"
+        },
+        "card_type_options": {
+            "default": "Default",
+            "search": "Dedicated Search"
         }
     },
     "card": {
