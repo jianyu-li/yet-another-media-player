@@ -1563,7 +1563,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
-    
+
     if (shouldDismiss) {
       if (this._showSearchInSheet) {
         this._closeEntityOptions();
@@ -6302,7 +6302,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
       this.shadowRoot.host.setAttribute("data-control-layout", this._controlLayout);
       this.shadowRoot.host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
-      
+
       if (hasCustomCardHeight) {
         this.shadowRoot.host.setAttribute("data-has-custom-height", "true");
       } else {
@@ -6319,7 +6319,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Hide chips visually (but keep space) when in_menu_on_idle mode is active and card is idle
     const chipsHiddenInline = showChipRow === "in_menu_on_idle" && this._isIdle && hasMultipleEntities;
     // Always reserve space in menu for chips when in_menu_on_idle, even when playing (to prevent menu jump)
-    const reserveChipSpaceInMenu = showChipRow === "in_menu_on_idle" && hasMultipleEntities;
+    const reserveChipSpaceInMenu = showChipRow === "in_menu_on_idle" && hasMultipleEntities && !this._showSearchInSheet;
     const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
     // Filter out sync_selected_entity actions entirely - they don't render as chips
     const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity");
