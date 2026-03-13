@@ -1331,7 +1331,6 @@ export const yampCardStyles = css`
   }
 
   /* Light mode overrides */
-  /* Light mode overrides */
   :host([data-appearance="light"]) {
     --card-bg: var(--card-background-color, #fff);
     --primary-text: var(--primary-text-color, #222);
