@@ -211,6 +211,7 @@ export default {
             "search_view": "Search Result View",
             "search_card_columns": "Card Columns",
             "card_type": "Card Type",
+            "appearance": "Appearance",
             "no_artwork_option": "No Artwork"
         },
         "action_types": {
@@ -251,6 +252,11 @@ export default {
         "card_type_options": {
             "default": "Default",
             "search": "Dedicated Search"
+        },
+        "appearance_options": {
+            "automatic": "Automatic",
+            "light": "Light",
+            "dark": "Dark"
         }
     },
     "card": {

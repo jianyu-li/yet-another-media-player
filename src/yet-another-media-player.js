@@ -3777,12 +3777,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._idleScreen = config.idle_screen || "default";
     this._idleScreenApplied = false;
     this._hasSeenPlayback = false;
+    this._idleScreenApplied = false;
+    this._hasSeenPlayback = false;
+    this._appearance = config.appearance || "automatic";
     if (this._isIdle) {
       this._applyIdleScreen();
     }
 
     if (this.shadowRoot && this.shadowRoot.host) {
       this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
+      this.shadowRoot.host.setAttribute("data-appearance", this._appearance);
       this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
       const forceHideMenuPlayer = this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true;
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
@@ -4943,6 +4947,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   updated(changedProps) {
+    if (this.shadowRoot && this.shadowRoot.host) {
+      this.shadowRoot.host.setAttribute("data-match-theme", String(this.config.match_theme === true));
+      this.shadowRoot.host.setAttribute("data-appearance", this._appearance || "automatic");
+      this.shadowRoot.host.setAttribute("data-always-collapsed", String(this.config.always_collapsed === true));
+      const forceHideMenuPlayer = this.config.always_collapsed === true && this.config.pin_search_headers === true && this.config.expand_on_search === true;
+      this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
+      this.shadowRoot.host.setAttribute("data-extend-artwork", String(this._extendArtwork));
+    }
     if (this._idleImageTemplate && changedProps.has("hass")) {
       this._idleImageTemplateNeedsResolve = true;
     }
