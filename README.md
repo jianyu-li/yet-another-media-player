@@ -82,6 +82,7 @@ Below you will find a list of all configuration options.
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
+| `appearance`               | choice       | No           | `automatic` | Force the card into `light` or `dark` mode, or use `automatic` to follow system/theme settings |
 | `display_timestamps`       | boolean      | No           | `false`     | Display timestamps on the progress bar                                                          |
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu, `in_menu_on_idle`: shows chips inline when active but moves them to the menu when idle |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
@@ -425,6 +426,7 @@ Set `card_type: search` to turn YAMP into a permanent search interface for your 
 > Match dashboard styling and control the overall footprint.
 
 - **Match Theme**: Updates card accent colors to match your Home Assistant theme.
+- **Appearance**: Force the card into `light` or `dark` mode, or use `automatic` to follow your system or Home Assistant theme preferences.
 - **Display Timestamps**: Display timestamps on the progress bar.
 - **Alternate Progress Bar**: Uses the collapsed progress bar when expanded.
 - **Card Height**: Override the card height (in px); leave unset to use the default layout.
