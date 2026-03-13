@@ -15,6 +15,35 @@ export const Z_LAYERS = Object.freeze({
   SEARCH_SUCCESS: 1
 });
 
+const lightModeVariables = css`
+  --card-bg: var(--card-background-color, #fff);
+  --primary-text: var(--primary-text-color, #222);
+  --secondary-text: var(--secondary-text-color, #666);
+  --yamp-overlay-bg: rgba(255, 255, 255, 0.95);
+  --yamp-overlay-text: #222;
+  --yamp-overlay-divider: rgba(0, 0, 0, 0.1);
+  --yamp-icon-color: #444;
+  --yamp-button-bg: rgba(0, 0, 0, 0.05);
+  --yamp-button-border: rgba(0, 0, 0, 0.1);
+  --yamp-overlay-text-secondary: rgba(0, 0, 0, 0.6);
+  --yamp-chip-bg: rgba(255, 255, 255, 0.8);
+  --yamp-chip-text: #222;
+  --yamp-chip-border: rgba(0, 0, 0, 0.1);
+  --search-card-bg: rgba(0, 0, 0, 0.03);
+  --search-text-secondary: #666;
+  --search-thumb-placeholder-bg: rgba(0, 0, 0, 0.05);
+  --search-thumb-placeholder-icon: rgba(0, 0, 0, 0.4);
+  --search-success-text: #222;
+  --search-input-bg: rgba(0, 0, 0, 0.05);
+  --search-input-text: #222;
+`;
+
+const lightModeDropdown = css`
+  background: var(--card-bg, #fff);
+  color: var(--primary-text, #222);
+  border: 1px solid var(--yamp-overlay-divider, #bbb);
+`;
+
 export const yampCardStyles = css`
   /* CSS Custom Properties for consistency */
   :host {
@@ -62,7 +91,7 @@ export const yampCardStyles = css`
     --yamp-error-color: #f44336;
     --yamp-success-bg-light: rgba(76, 175, 80, 0.2);
     --yamp-success-bg-medium: rgba(76, 175, 80, 0.4);
-    --yamp-chip-bg: var(--chip-background, #333);
+    --yamp-chip-bg: rgba(0, 0, 0, 0.8);
     --yamp-chip-text: #fff;
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-selected-text: #fff;
@@ -95,10 +124,12 @@ export const yampCardStyles = css`
   }
   
   :host([data-match-theme="true"]) {
-    /* Override custom-accent to use theme accent when match_theme is true */
+    /* Always override custom-accent to use theme accent when match_theme is true, regardless of light/dark mode */
     --custom-accent: var(--accent-color, #ff9800);
-    
-    /* Search sheet theme-aware variables */
+  }
+
+  :host([data-appearance="automatic"]) {
+    /* Search sheet theme-aware variables - used when appearance is automatic to follow HA theme colors */
     --search-overlay-bg: var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8)));
     --search-input-bg: var(--ha-card-background, var(--secondary-background-color, #333));
     --search-input-text: var(--primary-text-color, #fff);
@@ -114,7 +145,7 @@ export const yampCardStyles = css`
     --search-queue-hover: var(--secondary-background-color, #5a5a5a);
     --search-queue-hover-border: var(--divider-color, #777);
 
-    /* Universal theme-aware variables mapped to HA theme */
+    /* Universal theme-aware variables mapped to HA theme - used when appearance is automatic */
     --yamp-overlay-bg: color-mix(in srgb, var(--ha-card-background, var(--card-background-color, #000)), transparent 18%);
     --yamp-overlay-text: var(--primary-text-color, #fff);
     --yamp-overlay-text-shadow: none;
@@ -130,13 +161,13 @@ export const yampCardStyles = css`
     --yamp-chip-selected-text: #fff;
     --search-text-secondary: var(--secondary-text-color, #aaa);
 
-    /* Mode-aware chip defaults when match_theme is true */
-    --yamp-chip-bg: var(--search-card-bg);
+    /* Mode-aware chip defaults - used when appearance is automatic */
+    --yamp-chip-bg: rgba(0, 0, 0, 0.8);
     --yamp-chip-text: var(--search-text);
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-border: var(--divider-color, rgba(0, 0, 0, 0.1));
     --search-error-bg: var(--error-color, rgba(244, 67, 54, 0.8));
-    --search-card-bg: var(--ha-card-background, var(--card-background-color, rgba(255, 255, 255, 0.05)));
+    --search-card-bg: rgba(0, 0, 0, 0.8);
     --search-thumb-placeholder-bg: var(--secondary-background-color, rgba(255, 255, 255, 0.1));
     --search-thumb-placeholder-icon: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
     --search-success-text: var(--primary-text-color, #fff);
@@ -525,13 +556,13 @@ export const yampCardStyles = css`
 
   /* Action chips */
   .action-chip {
-    background: transparent;
+    background: var(--yamp-chip-bg, transparent);
     opacity: 1;
     border-radius: var(--button-border-radius);
-    color: var(--primary-text);
+    color: var(--yamp-chip-text, var(--primary-text));
     box-shadow: none;
     text-shadow: none;
-    border: none;
+    border: 1px solid var(--yamp-chip-border, transparent);
     outline: none;
     padding: 4px 12px;
     font-weight: 500;
@@ -578,7 +609,7 @@ export const yampCardStyles = css`
     cursor: pointer;
     font-size: 0.9em;
     font-weight: 500;
-    opacity: 0.85;
+    opacity: 1;
     border: 1px solid var(--yamp-chip-border, transparent);
     outline: none;
     transition: background var(--transition-normal), opacity var(--transition-normal);
@@ -1328,22 +1359,22 @@ export const yampCardStyles = css`
     opacity: 0.9;
   }
 
-  /* Light mode overrides (optional fallback if match_theme is not explicitly used) */
+  /* Light mode overrides */
+  :host([data-appearance="light"]) {
+    ${lightModeVariables}
+  }
+
+  :host([data-appearance="light"]) .source-dropdown {
+    ${lightModeDropdown}
+  }
+
   @media (prefers-color-scheme: light) {
-    :host {
-      --card-bg: var(--card-background-color, #fff);
+    :host([data-appearance="automatic"]) {
+      ${lightModeVariables}
     }
 
-
-    .source-dropdown {
-      background: var(--card-bg, #fff);
-      color: var(--primary-text, #222);
-      border: 1px solid var(--yamp-overlay-divider, #bbb);
-    }
-
-    .action-chip {
-      background: var(--card-bg, #fff);
-      color: var(--primary-text, #222);
+    :host([data-appearance="automatic"]) .source-dropdown {
+      ${lightModeDropdown}
     }
   }
 
@@ -1608,6 +1639,8 @@ export const yampCardStyles = css`
     bottom: 0;
     z-index: ${Z_LAYERS.OVERLAY_BASE};
     background: var(--yamp-overlay-bg);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -1741,9 +1774,7 @@ export const yampCardStyles = css`
     gap: 10px;
     padding: 14px 22px 18px 22px;
     margin: 0;
-    background: var(--yamp-overlay-bg);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    background: transparent;
     border-radius: 0;
     border: none;
     flex-shrink: 0;
@@ -1940,7 +1971,7 @@ export const yampCardStyles = css`
     font-size: 0.78em;
     font-weight: 500;
     letter-spacing: 0.05em;
-    color: var(--yamp-overlay-text);
+    color: #fff;
     opacity: 0.78;
     pointer-events: none;
   }

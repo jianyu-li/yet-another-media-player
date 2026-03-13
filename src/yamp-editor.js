@@ -1448,6 +1448,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               <span>${localize('editor.labels.alt_progress')}</span>
             </div>
           </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+                select: {
+                  mode: "dropdown",
+                  options: [
+                    { value: "automatic", label: localize('editor.appearance_options.automatic') },
+                    { value: "light", label: localize('editor.appearance_options.light') },
+                    { value: "dark", label: localize('editor.appearance_options.dark') },
+                  ]
+                }
+              }}
+              .value=${this._config.appearance ?? "automatic"}
+              label="${localize('editor.fields.appearance')}"
+              @value-changed=${(e) => this._updateConfig("appearance", e.detail.value)}
+            ></ha-selector>
+          </div>
           <div class="form-row form-row-multi-column">
             <div title=${(this._config.alternate_progress_bar || this._config.always_collapsed) ? localize('editor.subtitles.not_available_alt_collapsed') : ""}>
               <ha-switch
