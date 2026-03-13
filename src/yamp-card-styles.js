@@ -15,6 +15,35 @@ export const Z_LAYERS = Object.freeze({
   SEARCH_SUCCESS: 1
 });
 
+const lightModeVariables = css`
+  --card-bg: var(--card-background-color, #fff);
+  --primary-text: var(--primary-text-color, #222);
+  --secondary-text: var(--secondary-text-color, #666);
+  --yamp-overlay-bg: rgba(255, 255, 255, 0.95);
+  --yamp-overlay-text: #222;
+  --yamp-overlay-divider: rgba(0, 0, 0, 0.1);
+  --yamp-icon-color: #444;
+  --yamp-button-bg: rgba(0, 0, 0, 0.05);
+  --yamp-button-border: rgba(0, 0, 0, 0.1);
+  --yamp-overlay-text-secondary: rgba(0, 0, 0, 0.6);
+  --yamp-chip-bg: rgba(255, 255, 255, 0.8);
+  --yamp-chip-text: #222;
+  --yamp-chip-border: rgba(0, 0, 0, 0.1);
+  --search-card-bg: rgba(0, 0, 0, 0.03);
+  --search-text-secondary: #666;
+  --search-thumb-placeholder-bg: rgba(0, 0, 0, 0.05);
+  --search-thumb-placeholder-icon: rgba(0, 0, 0, 0.4);
+  --search-success-text: #222;
+  --search-input-bg: rgba(0, 0, 0, 0.05);
+  --search-input-text: #222;
+`;
+
+const lightModeDropdown = css`
+  background: var(--card-bg, #fff);
+  color: var(--primary-text, #222);
+  border: 1px solid var(--yamp-overlay-divider, #bbb);
+`;
+
 export const yampCardStyles = css`
   /* CSS Custom Properties for consistency */
   :host {
@@ -1332,62 +1361,20 @@ export const yampCardStyles = css`
 
   /* Light mode overrides */
   :host([data-appearance="light"]) {
-    --card-bg: var(--card-background-color, #fff);
-    --primary-text: var(--primary-text-color, #222);
-    --secondary-text: var(--secondary-text-color, #666);
-    --yamp-overlay-bg: rgba(255, 255, 255, 0.95);
-    --yamp-overlay-text: #222;
-    --yamp-overlay-divider: rgba(0, 0, 0, 0.1);
-    --yamp-icon-color: #444;
-    --yamp-button-bg: rgba(0, 0, 0, 0.05);
-    --yamp-button-border: rgba(0, 0, 0, 0.1);
-    --yamp-overlay-text-secondary: rgba(0, 0, 0, 0.6);
-    --yamp-chip-bg: rgba(255, 255, 255, 0.8);
-    --yamp-chip-text: #222;
-    --yamp-chip-border: rgba(0, 0, 0, 0.1);
-    --search-card-bg: rgba(0, 0, 0, 0.03);
-    --search-text-secondary: #666;
-    --search-thumb-placeholder-bg: rgba(0, 0, 0, 0.05);
-    --search-thumb-placeholder-icon: rgba(0, 0, 0, 0.4);
-    --search-success-text: #222;
-    --search-input-bg: rgba(0, 0, 0, 0.05);
-    --search-input-text: #222;
+    ${lightModeVariables}
   }
 
   :host([data-appearance="light"]) .source-dropdown {
-    background: var(--card-bg, #fff);
-    color: var(--primary-text, #222);
-    border: 1px solid var(--yamp-overlay-divider, #bbb);
+    ${lightModeDropdown}
   }
 
   @media (prefers-color-scheme: light) {
     :host([data-appearance="automatic"]) {
-      --card-bg: var(--card-background-color, #fff);
-      --primary-text: var(--primary-text-color, #222);
-      --secondary-text: var(--secondary-text-color, #666);
-      --yamp-overlay-bg: rgba(255, 255, 255, 0.95);
-      --yamp-overlay-text: #222;
-      --yamp-overlay-divider: rgba(0, 0, 0, 0.1);
-      --yamp-icon-color: #444;
-      --yamp-button-bg: rgba(0, 0, 0, 0.05);
-      --yamp-button-border: rgba(0, 0, 0, 0.1);
-      --yamp-overlay-text-secondary: rgba(0, 0, 0, 0.6);
-      --yamp-chip-bg: rgba(255, 255, 255, 0.8);
-      --yamp-chip-text: #222;
-      --yamp-chip-border: rgba(0, 0, 0, 0.1);
-      --search-card-bg: rgba(0, 0, 0, 0.03);
-      --search-text-secondary: #666;
-      --search-thumb-placeholder-bg: rgba(0, 0, 0, 0.05);
-      --search-thumb-placeholder-icon: rgba(0, 0, 0, 0.4);
-      --search-success-text: #222;
-      --search-input-bg: rgba(0, 0, 0, 0.05);
-      --search-input-text: #222;
+      ${lightModeVariables}
     }
 
     :host([data-appearance="automatic"]) .source-dropdown {
-      background: var(--card-bg, #fff);
-      color: var(--primary-text, #222);
-      border: 1px solid var(--yamp-overlay-divider, #bbb);
+      ${lightModeDropdown}
     }
   }
 
