@@ -62,7 +62,7 @@ export const yampCardStyles = css`
     --yamp-error-color: #f44336;
     --yamp-success-bg-light: rgba(76, 175, 80, 0.2);
     --yamp-success-bg-medium: rgba(76, 175, 80, 0.4);
-    --yamp-chip-bg: var(--chip-background, #333);
+    --yamp-chip-bg: rgba(0, 0, 0, 0.8);
     --yamp-chip-text: #fff;
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-selected-text: #fff;
@@ -133,12 +133,12 @@ export const yampCardStyles = css`
     --search-text-secondary: var(--secondary-text-color, #aaa);
 
     /* Mode-aware chip defaults - used when appearance is automatic */
-    --yamp-chip-bg: var(--search-card-bg);
+    --yamp-chip-bg: rgba(0, 0, 0, 0.8);
     --yamp-chip-text: var(--search-text);
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-border: var(--divider-color, rgba(0, 0, 0, 0.1));
     --search-error-bg: var(--error-color, rgba(244, 67, 54, 0.8));
-    --search-card-bg: var(--ha-card-background, var(--card-background-color, rgba(255, 255, 255, 0.05)));
+    --search-card-bg: rgba(0, 0, 0, 0.8);
     --search-thumb-placeholder-bg: var(--secondary-background-color, rgba(255, 255, 255, 0.1));
     --search-thumb-placeholder-icon: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
     --search-success-text: var(--primary-text-color, #fff);
@@ -527,13 +527,13 @@ export const yampCardStyles = css`
 
   /* Action chips */
   .action-chip {
-    background: transparent;
+    background: var(--yamp-chip-bg, transparent);
     opacity: 1;
     border-radius: var(--button-border-radius);
-    color: var(--primary-text);
+    color: var(--yamp-chip-text, var(--primary-text));
     box-shadow: none;
     text-shadow: none;
-    border: none;
+    border: 1px solid var(--yamp-chip-border, transparent);
     outline: none;
     padding: 4px 12px;
     font-weight: 500;
@@ -580,7 +580,7 @@ export const yampCardStyles = css`
     cursor: pointer;
     font-size: 0.9em;
     font-weight: 500;
-    opacity: 0.85;
+    opacity: 1;
     border: 1px solid var(--yamp-chip-border, transparent);
     outline: none;
     transition: background var(--transition-normal), opacity var(--transition-normal);
@@ -1343,7 +1343,7 @@ export const yampCardStyles = css`
     --yamp-button-bg: rgba(0, 0, 0, 0.05);
     --yamp-button-border: rgba(0, 0, 0, 0.1);
     --yamp-overlay-text-secondary: rgba(0, 0, 0, 0.6);
-    --yamp-chip-bg: rgba(0, 0, 0, 0.05);
+    --yamp-chip-bg: rgba(255, 255, 255, 0.8);
     --yamp-chip-text: #222;
     --yamp-chip-border: rgba(0, 0, 0, 0.1);
     --search-card-bg: rgba(0, 0, 0, 0.03);
@@ -1361,11 +1361,6 @@ export const yampCardStyles = css`
     border: 1px solid var(--yamp-overlay-divider, #bbb);
   }
 
-  :host([data-appearance="light"]) .action-chip {
-    background: rgba(0, 0, 0, 0.05);
-    color: var(--primary-text, #222);
-  }
-
   @media (prefers-color-scheme: light) {
     :host([data-appearance="automatic"]) {
       --card-bg: var(--card-background-color, #fff);
@@ -1378,7 +1373,7 @@ export const yampCardStyles = css`
       --yamp-button-bg: rgba(0, 0, 0, 0.05);
       --yamp-button-border: rgba(0, 0, 0, 0.1);
       --yamp-overlay-text-secondary: rgba(0, 0, 0, 0.6);
-      --yamp-chip-bg: rgba(0, 0, 0, 0.05);
+      --yamp-chip-bg: rgba(255, 255, 255, 0.8);
       --yamp-chip-text: #222;
       --yamp-chip-border: rgba(0, 0, 0, 0.1);
       --search-card-bg: rgba(0, 0, 0, 0.03);
@@ -1394,11 +1389,6 @@ export const yampCardStyles = css`
       background: var(--card-bg, #fff);
       color: var(--primary-text, #222);
       border: 1px solid var(--yamp-overlay-divider, #bbb);
-    }
-
-    :host([data-appearance="automatic"]) .action-chip {
-      background: rgba(0, 0, 0, 0.05);
-      color: var(--primary-text, #222);
     }
   }
 
@@ -1663,6 +1653,8 @@ export const yampCardStyles = css`
     bottom: 0;
     z-index: ${Z_LAYERS.OVERLAY_BASE};
     background: var(--yamp-overlay-bg);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -1796,9 +1788,7 @@ export const yampCardStyles = css`
     gap: 10px;
     padding: 14px 22px 18px 22px;
     margin: 0;
-    background: var(--yamp-overlay-bg);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    background: transparent;
     border-radius: 0;
     border: none;
     flex-shrink: 0;
