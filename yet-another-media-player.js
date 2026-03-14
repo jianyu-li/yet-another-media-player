@@ -6025,7 +6025,7 @@
                     `:g}
                   </div>
                 `:g}
-                <div class="details" style="${(()=>{const b=[];return this._showEntityOptions&&b.push("visibility:hidden"),b.push(`min-height:${Sn}px`),Re||b.push("opacity:0"),b.join(";")})()}">
+                <div class="details" style="${(()=>{const b=[];return this._showEntityOptions&&(b.push("visibility:hidden"),b.push("opacity:0")),b.push(`min-height:${Sn}px`),Re||b.push("opacity:0"),b.join(";")})()}">
                   <div class="title">
                     ${Re&&Xt?Xt:m`&nbsp;`}
                   </div>
@@ -6035,12 +6035,12 @@
                       title=${Re&&L.attributes.media_artist?h("search.search_artist"):""}
                     >${Re&&La?La:m`&nbsp;`}</div>
                 </div>
-                ${!V&&!this._alternateProgressBar?oi(Ye&&St?{progress:qa,seekEnabled:!0,onSeek:b=>this._onProgressBarClick(b),collapsed:!1,accent:this._customAccent,style:this._showEntityOptions?"visibility:hidden":"",displayTimestamps:this._displayTimestamps,currentTime:rt,duration:St}:{progress:0,seekEnabled:!1,collapsed:!1,accent:this._customAccent,style:"visibility:hidden",displayTimestamps:this._displayTimestamps,currentTime:0,duration:0}):g}
-                ${V||this._alternateProgressBar?oi(Ye&&St?{progress:qa,collapsed:!0,accent:this._customAccent,style:this._showEntityOptions?"visibility:hidden":""}:{progress:0,collapsed:!0,accent:this._customAccent,style:"visibility:hidden"}):g}
+                ${!V&&!this._alternateProgressBar?oi(Ye&&St?{progress:qa,seekEnabled:!0,onSeek:b=>this._onProgressBarClick(b),collapsed:!1,accent:this._customAccent,style:this._showEntityOptions?"visibility:hidden; opacity:0":"",displayTimestamps:this._displayTimestamps,currentTime:rt,duration:St}:{progress:0,seekEnabled:!1,collapsed:!1,accent:this._customAccent,style:"visibility:hidden; opacity:0",displayTimestamps:this._displayTimestamps,currentTime:0,duration:0}):g}
+                ${V||this._alternateProgressBar?oi(Ye&&St?{progress:qa,collapsed:!0,accent:this._customAccent,style:this._showEntityOptions?"visibility:hidden; opacity:0":""}:{progress:0,collapsed:!0,accent:this._customAccent,style:"visibility:hidden; opacity:0"}):g}
                 ${!Qe&&Di>0?m`
                   <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(Di)}px;"></div>
                 `:g}
-                <div style="${Qe||this._showEntityOptions?"visibility:hidden; pointer-events:none;":""}">
+                <div style="${Qe||this._showEntityOptions?"visibility:hidden; opacity:0; pointer-events:none;":""}">
                     ${So({stateObj:We,showStop:this._shouldShowStopButton(We),shuffleActive:fn,repeatActive:vn,onControlClick:b=>this._onControlClick(b),supportsFeature:(b,q)=>this._supportsFeature(b,q),showFavorite:C,favoriteActive:N,hiddenControls:U,adaptiveControls:this._adaptiveControls,controlLayout:this._controlLayout,swapPauseForStop:this._controlLayout==="modern"&&this._swapPauseForStop})}
 
                     ${$o({isRemoteVolumeEntity:yn,showSlider:xn,vol:bn,isMuted:this.currentVolumeStateObj?.attributes?.is_volume_muted??!1,supportsMute:this.currentVolumeStateObj?this._supportsFeature(this.currentVolumeStateObj,pa):!1,onVolumeDragStart:b=>this._onVolumeDragStart(b),onVolumeDragEnd:b=>this._onVolumeDragEnd(b),onVolumeChange:b=>this._onVolumeChange(b),onVolumeStep:b=>this._onVolumeStep(b),onMuteToggle:()=>this._onMuteToggle(),leadingControlTemplate:Z,reserveLeadingControlSpace:this._controlLayout==="modern",showRightPlaceholder:this._controlLayout==="modern",rightSlotTemplate:ne,hideVolume:this.config.volume_mode==="hidden",moreInfoMenu:m`

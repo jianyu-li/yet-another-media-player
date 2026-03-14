@@ -6846,7 +6846,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 ` : nothing}
                 <div class="details" style="${(() => {
         const detailStyleParts = [];
-        if (this._showEntityOptions) detailStyleParts.push('visibility:hidden');
+        if (this._showEntityOptions) {
+          detailStyleParts.push('visibility:hidden');
+          detailStyleParts.push('opacity:0');
+        }
         detailStyleParts.push(`min-height:${detailsMinHeight}px`);
         if (!shouldShowDetails) detailStyleParts.push('opacity:0');
         return detailStyleParts.join(';');
@@ -6870,7 +6873,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             onSeek: (e) => this._onProgressBarClick(e),
             collapsed: false,
             accent: this._customAccent,
-            style: this._showEntityOptions ? "visibility:hidden" : "",
+            style: this._showEntityOptions ? "visibility:hidden; opacity:0" : "",
             displayTimestamps: this._displayTimestamps,
             currentTime: pos,
             duration: duration
@@ -6880,7 +6883,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             seekEnabled: false,
             collapsed: false,
             accent: this._customAccent,
-            style: "visibility:hidden",
+            style: "visibility:hidden; opacity:0",
             displayTimestamps: this._displayTimestamps,
             currentTime: 0,
             duration: 0
@@ -6894,13 +6897,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
             progress,
             collapsed: true,
             accent: this._customAccent,
-            style: this._showEntityOptions ? "visibility:hidden" : ""
+            style: this._showEntityOptions ? "visibility:hidden; opacity:0" : ""
           })
           : renderProgressBar({
             progress: 0,
             collapsed: true,
             accent: this._customAccent,
-            style: "visibility:hidden"
+            style: "visibility:hidden; opacity:0"
           })
         )
         : nothing
@@ -6908,7 +6911,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 ${(!hideControlsNow && controlSpacerSize > 0) ? html`
                   <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
                 ` : nothing}
-                <div style="${hideControlsNow || this._showEntityOptions ? 'visibility:hidden; pointer-events:none;' : ''}">
+                <div style="${hideControlsNow || this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">
                     ${renderControlsRow({
         stateObj: playbackStateObj,
         showStop: this._shouldShowStopButton(playbackStateObj),
