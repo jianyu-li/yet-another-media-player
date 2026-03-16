@@ -941,7 +941,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     this._showMediaTitleOptions = false;
     this._radioModeActive = true;
-    
+
     this._playMediaFromSearch(mockItem);
   }
 
@@ -1835,7 +1835,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         setTimeout(() => {
           this._successSearchRowMenuId = null;
           this._activeSearchRowMenuId = null; // Also dismiss the slide-out after message fades
-          
+
           if (shouldDismissMenu) {
             this._closeEntityOptions();
             this._dismissMenuAfterPlaylistAdd = false;
@@ -2741,7 +2741,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Update both cache and active results
     this._searchResultsByType[cacheKey] = currentResults;
-    this._searchResults = [...currentResults];
+    this._searchResults = currentResults;
 
     // Invalidate any in-flight background fetches so they don't overwrite this manual UI shift
     this._latestSearchToken = Date.now();
@@ -2762,7 +2762,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Remove item from array
     const updatedResults = currentResults.filter(item => item.queue_item_id !== queueItemId);
     this._searchResultsByType[cacheKey] = updatedResults;
-    this._searchResults = [...updatedResults];
+    this._searchResults = updatedResults;
 
     // Trigger UI update
     this.requestUpdate();
@@ -3065,15 +3065,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       this._queueRefreshTimer = setTimeout(() => {
         this._queueRefreshTimer = null;
-        
+
         // Capture a new token to protect against stale results from entry/heartbeat fetches
         const searchToken = Date.now();
         this._latestSearchToken = searchToken;
 
-        this._doSearch('all', { 
-          isUpcoming: true, 
-          clearFilters: true, 
-          silent: true, 
+        this._doSearch('all', {
+          isUpcoming: true,
+          clearFilters: true,
+          silent: true,
           force: true,
           token: searchToken
         }).catch(error => {
@@ -3166,7 +3166,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
-  // Apply favorites filter to current results (called when switching filter chips)
   // Apply favorites filter to current results (called when switching filter chips)
   async _applyLocalFavoritesFilter(results = []) {
     if (!this._favoritesFilterActive) return results;
@@ -5162,7 +5161,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               const now = Date.now();
               // Increase tolerance to 4s to handle slow HA updates
               const wasManualShift = this._latestManualShiftTime && (now - this._latestManualShiftTime < 4000);
-              
+
               if (!wasManualShift) {
                 this._advanceQueueInUI(null, false); // Automatic advance
               }
