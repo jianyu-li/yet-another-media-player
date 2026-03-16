@@ -251,7 +251,8 @@ export default {
         },
         "card_type_options": {
             "default": "Default",
-            "search": "Dedicated Search"
+            "search": "Search",
+            "group_players": "Group Players"
         },
         "appearance_options": {
             "automatic": "Automatic",

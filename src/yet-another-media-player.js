@@ -131,9 +131,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getSearchDismissBehavior() {
     const cardDismissSetting = this.config.dismiss_search_on_play !== false;
+    const isSearchMode = this._cardType === "search";
     return {
-      shouldDismiss: !this._isSearchCardMode && cardDismissSetting,
-      shouldReset: this._isSearchCardMode && cardDismissSetting,
+      shouldDismiss: !isSearchMode && cardDismissSetting,
+      shouldReset: isSearchMode && cardDismissSetting,
     };
   }
 
@@ -462,6 +463,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   static styles = yampCardStyles;
 
+  get _cardType() {
+    return this.config?.card_type || "default";
+  }
+
+  get _isSpecializedCard() {
+    return this._cardType !== "default";
+  }
+
   constructor() {
     super();
     this._selectedIndex = 0;
@@ -579,13 +588,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._isNarrowViewport = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
-    // In search card mode, skip idle and auto-open search instead
+    // In specialized card modes, skip idle and auto-open dedicated view
     setTimeout(() => {
-      if (this._isSearchCardMode) {
+      if (this._cardType === "search") {
         // Dedicated search mode: auto-open search as the primary view
         this._showEntityOptions = true;
         this._isIdle = false;
         this._showSearchSheetInOptions();
+        this.requestUpdate();
+        return;
+      }
+      if (this._cardType === "group_players") {
+        // Dedicated group players mode: auto-open grouping as the primary view
+        this._showEntityOptions = true;
+        this._isIdle = false;
+        this._showGrouping = true;
         this.requestUpdate();
         return;
       }
@@ -1060,7 +1077,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _hideSearchSheetInOptions() {
     // In dedicated search mode, never close the search
-    if (this._isSearchCardMode) return;
+    if (this._cardType === "search") return;
     this._showSearchInSheet = false;
     this._searchError = "";
     this._searchResults = [];
@@ -3746,8 +3763,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
     this._disableSearchAutofocus = config.disable_autofocus === true;
-    // Dedicated search card mode
-    this._isSearchCardMode = config.card_type === "search";
     if (this._holdToPin) {
       this._holdHandler = createHoldToPinHandler({
         onPin: (idx) => this._pinChip(idx),
@@ -4695,9 +4710,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
       return html`
         <div class="entity-options-header">
-          <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
-            ${localize('common.back')}
-          </button>
+          ${this._cardType !== "group_players" ? html`
+            <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
+              ${localize('common.back')}
+            </button>
+          ` : nothing}
           <div class="entity-options-divider"></div>
         </div>
         <div class="entity-options-title" style="margin-bottom:8px;">${localize('card.grouping.title')}</div>
@@ -4721,9 +4738,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     return html`
       <div class="grouping-header group-list-header">
-        <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
-          ${localize('common.back')}
-        </button>
+        ${this._cardType !== "group_players" ? html`
+          <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
+            ${localize('common.back')}
+          </button>
+        ` : nothing}
       </div>
       <div class="entity-options-title" style="margin-bottom:8px; margin-top:8px;">${localize('card.grouping.title')}</div>
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
@@ -7035,7 +7054,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       ?disabled=${this._searchLoading}>
                       ${localize('common.search')}
                     </button>
-                    ${!this._isSearchCardMode ? html`
+                    ${this._cardType !== "search" ? html`
                     <button
                       class="entity-options-item"
                       style="min-width:80px;"
@@ -7548,7 +7567,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
         this._idleTimeout = setTimeout(() => {
           // In search card mode: reset drill-down instead of going idle
-          if (this._isSearchCardMode) {
+          if (this._cardType === "search") {
             this._idleTimeout = null;
             if (this._searchHierarchy.length > 0) {
               this._searchHierarchy = [];
@@ -8011,7 +8030,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Helper method for immediate dismissals with animation
   _dismissWithAnimation() {
     // In dedicated search mode, don't dismiss the search — just close other menus
-    if (this._isSearchCardMode) {
+    if (this._cardType === "search") {
       this._showGrouping = false;
       this._showSourceList = false;
       this._showResolvedEntities = false;
@@ -8047,7 +8066,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Entity options overlay handlers
   _closeEntityOptions() {
     // In dedicated search mode, don't close the entity options / search
-    if (this._isSearchCardMode) {
+    if (this._cardType === "search") {
       // Just close any sub-menus that might be open
       this._showGrouping = false;
       this._showSourceList = false;
