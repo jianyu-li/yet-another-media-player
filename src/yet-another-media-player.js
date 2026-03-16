@@ -1364,7 +1364,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._searchResults = [];
       this.requestUpdate();
     }
-    const searchToken = Date.now();
+    const searchToken = searchParams.token || Date.now();
     this._latestSearchToken = searchToken;
     const progressiveUpdate = (chunk) => this._handleProgressiveSearchResults(chunk, cacheKey, searchToken);
     if (this._searchTimeoutHandle) {
@@ -1508,18 +1508,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._lastSearchUsedServerFavorites = false;
       }
 
-      // Client-side filtering for lists that don't support server-side search (Recent, Upcoming, Recommendations)
-      if ((isRecentlyPlayed || isUpcoming || isRecommendations) && this._searchQuery && this._searchQuery.trim() !== '') {
-        const query = this._searchQuery.trim().toLowerCase();
-        if (searchResponse && searchResponse.results) {
-          searchResponse.results = searchResponse.results.filter(item => {
-            const title = (item.title || "").toLowerCase();
-            const artist = (item.artist || "").toLowerCase();
-            const album = (item.album || "").toLowerCase();
-            return title.includes(query) || artist.includes(query) || album.includes(query);
-          });
-        }
-      }
+
 
       // Handle the new response format
       let arr = searchResponse.results || [];
@@ -1535,18 +1524,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._initialFavoritesLoaded = false;
       }
 
-      const normalizedResults = Array.isArray(arr) ? arr : [];
+      let normalizedResults = Array.isArray(arr) ? arr : [];
       // Check search token *after* await to discard stale background fetches
-      // if the user manually shifted the UI in the meantime
       if (this._latestSearchToken !== searchToken) {
         return;
       }
 
-      // Apply local favorites filter ONLY when needed (e.g., switching filter chips with cached results)
-      if (!isNewSearch && this._favoritesFilterActive && !this._lastSearchUsedServerFavorites) {
-        await this._applyFavoritesFilterIfActive();
+      // 1. Client-side filtering for search query (Recent, Upcoming, Recommendations)
+      if ((isRecentlyPlayed || isUpcoming || isRecommendations) && this._searchQuery && this._searchQuery.trim() !== '') {
+        const query = this._searchQuery.trim().toLowerCase();
+        normalizedResults = normalizedResults.filter(item => {
+          const title = (item.title || "").toLowerCase();
+          const artist = (item.artist || "").toLowerCase();
+          const album = (item.album || "").toLowerCase();
+          return title.includes(query) || artist.includes(query) || album.includes(query);
+        });
+      }
 
-        // Check token again after another await
+      // 2. Apply local favorites filter ONLY when needed
+      if (!isNewSearch && this._favoritesFilterActive && !this._lastSearchUsedServerFavorites) {
+        normalizedResults = await this._applyLocalFavoritesFilter(normalizedResults);
+
+        // Check token again after await
         if (this._latestSearchToken !== searchToken) {
           return;
         }
@@ -3168,8 +3167,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Apply favorites filter to current results (called when switching filter chips)
-  async _applyFavoritesFilterIfActive() {
-    if (!this._favoritesFilterActive) return;
+  // Apply favorites filter to current results (called when switching filter chips)
+  async _applyLocalFavoritesFilter(results = []) {
+    if (!this._favoritesFilterActive) return results;
 
     const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
@@ -3182,10 +3182,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
 
       // Filter current results to only show favorites
-      const currentResults = this._searchResults || [];
-      this._searchResults = this._sortSearchResults(currentResults.filter(item => favoriteUris.has(item.media_content_id)));
+      return results.filter(item => favoriteUris.has(item.media_content_id));
     } catch (error) {
       // If favorites loading fails, just show current results
+      return results;
     }
   }
 
