@@ -2056,8 +2056,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Force a reload of the queue to reflect server-side changes
       if (this._upcomingFilterActive) {
         this._refreshQueue();
+      } else {
+        this.requestUpdate();
       }
-      this.requestUpdate();
     }
   }
 
