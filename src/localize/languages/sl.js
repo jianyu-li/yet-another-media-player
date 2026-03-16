@@ -298,6 +298,7 @@ export default {
         "next_up": "Naslednje",
         "recommendations": "Priporočila",
         "radio_mode": "Radijski način",
+        "play_similar": "Predvajaj Podobne Pesmi",
         "close": "Zapri iskanje",
         "no_results": "Ni rezultatov.",
         "play_next": "Predvajaj naslednje",
