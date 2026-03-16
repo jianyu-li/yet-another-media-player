@@ -922,15 +922,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     };
   }
 
-  _handlePlaySimilar() {
+  _getMockItemFromCurrentTrack() {
     const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj || !stateObj.attributes || !stateObj.attributes.media_title) return;
+    if (!stateObj || !stateObj.attributes || !stateObj.attributes.media_title) return null;
 
-    this._showMediaTitleOptions = false;
-    this._radioModeActive = true;
-    
-    // Create mock item representing current track
-    const mockItem = {
+    return {
       title: stateObj.attributes.media_title,
       media_title: stateObj.attributes.media_title,
       media_content_id: stateObj.attributes.media_content_id || stateObj.attributes.media_title,
@@ -938,25 +934,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
       media_content_type: 'track',
       media_type: 'track'
     };
+  }
+
+  _handlePlaySimilar() {
+    const mockItem = this._getMockItemFromCurrentTrack();
+    if (!mockItem) return;
+
+    this._showMediaTitleOptions = false;
+    this._radioModeActive = true;
     
     this._playMediaFromSearch(mockItem);
   }
 
   _handleAddCurrentToPlaylist() {
-    const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj || !stateObj.attributes || !stateObj.attributes.media_title) return;
+    const mockItem = this._getMockItemFromCurrentTrack();
+    if (!mockItem) return;
 
     this._showMediaTitleOptions = false;
-
-    // Create mock item representing current track
-    const mockItem = {
-      title: stateObj.attributes.media_title,
-      media_title: stateObj.attributes.media_title,
-      media_content_id: stateObj.attributes.media_content_id || stateObj.attributes.media_title,
-      media_artist: stateObj.attributes.media_artist || "",
-      media_content_type: 'track',
-      media_type: 'track'
-    };
 
     // Open options sheet menu to show playlist search sheet
     this._showEntityOptions = true;
@@ -1910,6 +1904,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Go back in search hierarchy
   _goBackInSearch() {
+    if (this._dismissMenuAfterPlaylistAdd) {
+      this._closeEntityOptions();
+      this._dismissMenuAfterPlaylistAdd = false;
+      return;
+    }
+
     if (this._searchHierarchy.length === 0) return;
 
     // Immediate loading state
@@ -6937,21 +6937,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${this._showMediaTitleOptions ? html`
                     <div class="title track-options-row" style="display: flex; gap: 16px; justify-content: flex-start; align-items: center; cursor: pointer;">
                       ${this._massQueueAvailable ? html`
-                        <div @click=${(e) => { e.stopPropagation(); this._handleAddCurrentToPlaylist(); }} title="${localize('search.labels.add_to_playlist')}" style="display: flex; align-items: center; gap: 4px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'; this.style.textDecoration='underline'" onmouseout="this.style.opacity='1'; this.style.textDecoration='none'">
-                          <ha-icon icon="mdi:playlist-plus" style="--mdc-icon-size: 1.1rem; margin-top: -2px;"></ha-icon>
+                        <div class="track-options-btn" @click=${(e) => { e.stopPropagation(); this._handleAddCurrentToPlaylist(); }} title="${localize('search.labels.add_to_playlist')}">
+                          <ha-icon icon="mdi:playlist-plus"></ha-icon>
                           <span>${localize('search.add_to_playlist')}</span>
                         </div>
                       ` : nothing}
-                      <div @click=${(e) => { e.stopPropagation(); this._handlePlaySimilar(); }} title="${localize('search.play_similar')}" style="display: flex; align-items: center; gap: 4px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'; this.style.textDecoration='underline'" onmouseout="this.style.opacity='1'; this.style.textDecoration='none'">
-                        <ha-icon icon="mdi:radio" style="--mdc-icon-size: 1.1rem; margin-top: -2px;"></ha-icon>
+                      <div class="track-options-btn" @click=${(e) => { e.stopPropagation(); this._handlePlaySimilar(); }} title="${localize('search.play_similar')}">
+                        <ha-icon icon="mdi:radio"></ha-icon>
                         <span>${localize('search.play_similar')}</span>
                       </div>
-                      <div @click=${(e) => { e.stopPropagation(); this._showMediaTitleOptions = false; }} title="${localize('common.close')}" style="display: flex; align-items: center; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
-                        <ha-icon icon="mdi:close" style="--mdc-icon-size: 1.3rem;"></ha-icon>
+                      <div class="track-options-btn track-options-close" @click=${(e) => { e.stopPropagation(); this._showMediaTitleOptions = false; }} title="${localize('common.close')}">
+                        <ha-icon icon="mdi:close"></ha-icon>
                       </div>
                     </div>
                   ` : html`
-                    <div class="title" @click=${(e) => { if (shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer; transition: text-decoration 0.2s;' : ''}" onmouseover="${shouldShowDetails && title ? "this.style.textDecoration='underline'" : ""}" onmouseout="${shouldShowDetails && title ? "this.style.textDecoration='none'" : ""}" title="${shouldShowDetails && title ? 'Show track options' : ''}">
+                    <div class="title track-options-title" @click=${(e) => { if (shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? 'Show track options' : ''}">
                       ${shouldShowDetails && title ? title : html`&nbsp;`}
                     </div>
                   `}
