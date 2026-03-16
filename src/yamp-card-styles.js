@@ -847,6 +847,44 @@ export const yampCardStyles = css`
     line-height: var(--yamp-details-line-height, 1.2);
   }
 
+  .track-options-row {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-start;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .track-options-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: opacity 0.2s, text-decoration 0.2s;
+  }
+
+  .track-options-btn ha-icon {
+    --mdc-icon-size: 1.1rem;
+    margin-top: -2px;
+  }
+
+  .track-options-close ha-icon {
+    --mdc-icon-size: 1.3rem;
+  }
+
+  .track-options-btn:hover {
+    opacity: 0.7;
+    text-decoration: underline;
+  }
+
+  .track-options-title {
+    cursor: pointer;
+    transition: text-decoration 0.2s;
+  }
+
+  .track-options-title:hover {
+    text-decoration: underline;
+  }
+
   .title {
     font-size: 1.1em;
     font-weight: 600;

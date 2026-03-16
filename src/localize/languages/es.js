@@ -299,6 +299,7 @@ export default {
         "next_up": "A continuación",
         "recommendations": "Recomendaciones",
         "radio_mode": "Modo Radio",
+        "play_similar": "Reproducir canciones similares",
         "close": "Cerrar",
         "no_results": "Sin resultados.",
         "play_next": "Reprod. siguiente",
