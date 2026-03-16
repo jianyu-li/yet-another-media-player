@@ -298,7 +298,7 @@ export default {
         "next_up": "Nasledujúce",
         "recommendations": "Odporúčania",
         "radio_mode": "Režim rádio",
-        "play_similar": "Prehrať Podobné Skladby",
+        "play_similar": "Prehrať podobné skladby",
         "close": "Zatvoriť vyhľadávanie",
         "no_results": "Žiadne výsledky.",
         "play_next": "Prehrať ako nasledujúce",
