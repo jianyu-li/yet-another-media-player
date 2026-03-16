@@ -528,8 +528,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Track the current search query for cache invalidation
     this._currentSearchQuery = "";
     this._latestSearchToken = 0;
-    this._searchTimeoutHandle = null;
-    this._latestSearchToken = 0;
+    this._latestManualShiftTime = 0;
     this._searchTimeoutHandle = null;
     this._swapPauseForStop = false;
     this._controlLayout = "classic";
@@ -1342,7 +1341,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Use cached results if available for this media type and search params
     const sortMode = this._getActiveSearchDisplaySortMode();
     const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}_sort_${sortMode}`;
-    if (this._searchResultsByType[cacheKey]) {
+    const forceFetch = !!searchParams.force;
+
+    if (this._searchResultsByType[cacheKey] && !forceFetch) {
       if (this._searchTimeoutHandle) {
         clearTimeout(this._searchTimeoutHandle);
         this._searchTimeoutHandle = null;
@@ -1535,15 +1536,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       const normalizedResults = Array.isArray(arr) ? arr : [];
-      this._searchResults = this._sortSearchResults(normalizedResults);
+      // Check search token *after* await to discard stale background fetches
+      // if the user manually shifted the UI in the meantime
+      if (this._latestSearchToken !== searchToken) {
+        return;
+      }
 
       // Apply local favorites filter ONLY when needed (e.g., switching filter chips with cached results)
       if (!isNewSearch && this._favoritesFilterActive && !this._lastSearchUsedServerFavorites) {
         await this._applyFavoritesFilterIfActive();
+
+        // Check token again after another await
+        if (this._latestSearchToken !== searchToken) {
+          return;
+        }
       }
 
       // Cache the results for this media type and search params
       this._searchResultsByType[cacheKey] = normalizedResults;
+
+      // Update active UI results
+      this._searchResults = this._sortSearchResults(normalizedResults);
 
       // remember how many rows exist in the full ("All") set, but keep at least 15 for layout
       const rows = Array.isArray(this._searchResults) ? this._searchResults.length : 0;
@@ -1662,7 +1675,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             entity: maEntityId,
             queue_item_id: item.queue_item_id
           });
-          this._invalidateUpcomingCache();
+          this._advanceQueueInUI(item.queue_item_id, true); // Manual advance
           return true;
         }
       } catch (error) {
@@ -2049,16 +2062,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Force-invalidate the "Next Up" results cache
   _invalidateUpcomingCache() {
-    const classFilter = this._searchMediaClassFilter || 'all';
-    const cacheKey = `${classFilter}_upcoming_sort_default`;
-    if (this._searchResultsByType) {
-      delete this._searchResultsByType[cacheKey];
-      // Force a reload of the queue to reflect server-side changes
-      if (this._upcomingFilterActive) {
-        this._refreshQueue();
-      } else {
-        this.requestUpdate();
+    // Force a reload of the queue to reflect server-side changes
+    if (this._upcomingFilterActive) {
+      // In strictly optimistic mode, we don't force a fetch here.
+      // The local UI is already updated. The 20s heartbeat will eventually sync.
+    } else {
+      // If not active, just clear it so its fresh next time it opens
+      const classFilter = this._searchMediaClassFilter || 'all';
+      const cacheKey = `${classFilter}_upcoming_sort_default`;
+      if (this._searchResultsByType) {
+        delete this._searchResultsByType[cacheKey];
       }
+      this.requestUpdate();
     }
   }
 
@@ -2470,7 +2485,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         service: "get_queue_items",
         service_data: {
           entity: entityId,
-          limit_before: 5  // Get items before current track to include current track
+          limit_before: 0  // Start list at the currently active item
         },
         return_response: true,
       };
@@ -2489,7 +2504,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       // Find the currently playing track's index in the queue
-      const currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
+      // 1. Prioritize Music Assistant's native "active" or playback state (near-instant)
+      let currentTrackIndex = queueItems.findIndex(item => item.active === true || item.state === 'playing');
+
+      // 2. Fallback to Home Assistant's media_content_id (slower sync)
+      if (currentTrackIndex === -1 && currentTrackId) {
+        currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
+      }
+
+      // 3. Last resort: since we requested limit_before: 0, the first item SHOULD be the one
+      if (currentTrackIndex === -1 && queueItems.length > 0) {
+        currentTrackIndex = 0;
+      }
 
       // Get upcoming items (items after the current track)
       const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
@@ -2680,9 +2706,49 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this.requestUpdate();
     }, 1000);
 
+    // Invalidate any in-flight background fetches so they don't overwrite this manual UI shift
+    this._latestSearchToken = Date.now();
+
     // Trigger UI update
     this.requestUpdate();
 
+  }
+
+  // Advance the queue in UI immediately (e.g. on track skip)
+  _advanceQueueInUI(queueItemId = null, isManual = false) {
+    if (!this._upcomingFilterActive) return;
+
+    if (isManual) {
+      this._latestManualShiftTime = Date.now();
+    }
+
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
+    let currentResults = this._searchResultsByType[cacheKey];
+
+    if (!Array.isArray(currentResults) || currentResults.length === 0) {
+      return;
+    }
+
+    if (queueItemId) {
+      // Remove the specific item and all items before it
+      const itemIndex = currentResults.findIndex(it => it.queue_item_id === queueItemId);
+      if (itemIndex >= 0) {
+        currentResults = currentResults.slice(itemIndex + 1);
+      }
+    } else {
+      // Just remove the first item
+      currentResults = currentResults.slice(1);
+    }
+
+    // Update both cache and active results
+    this._searchResultsByType[cacheKey] = currentResults;
+    this._searchResults = [...currentResults];
+
+    // Invalidate any in-flight background fetches so they don't overwrite this manual UI shift
+    this._latestSearchToken = Date.now();
+
+    // Trigger UI update
+    this.requestUpdate();
   }
 
   // Remove queue item from UI immediately
@@ -2990,16 +3056,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return payload;
   }
 
-  // Refresh the queue display
-  _refreshQueue() {
+  // Refresh the queue display (used for heartbeat and entry)
+  _refreshQueue({ delayMs = 50 } = {}) {
     if (this._upcomingFilterActive) {
-      // Clear cache to force fresh fetch
-      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
-      delete this._searchResultsByType[cacheKey];
-      // Reload upcoming queue items silently to avoid UI flicker
-      this._doSearch('all', { isUpcoming: true, clearFilters: true, silent: true }).catch(error => {
-        console.error('yamp: Error refreshing queue:', error);
-      });
+      // Clear existing timer for simple debounce
+      if (this._queueRefreshTimer) {
+        clearTimeout(this._queueRefreshTimer);
+      }
+
+      this._queueRefreshTimer = setTimeout(() => {
+        this._queueRefreshTimer = null;
+        
+        // Capture a new token to protect against stale results from entry/heartbeat fetches
+        const searchToken = Date.now();
+        this._latestSearchToken = searchToken;
+
+        this._doSearch('all', { 
+          isUpcoming: true, 
+          clearFilters: true, 
+          silent: true, 
+          force: true,
+          token: searchToken
+        }).catch(error => {
+          console.error('yamp: Error refreshing queue:', error);
+        });
+      }, delayMs);
     }
   }
 
@@ -3011,8 +3092,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._queueEventSubscription = await this.hass.connection.subscribeEvents((event) => {
         const eventData = event.data;
         if (eventData.type === "queue_updated") {
-          // Refresh queue when it's updated
-          this._refreshQueue();
+          // NO-OP: In strictly optimistic mode, we ignore background updates 
+          // while the sheet is open to prevent flicker. Heartbeat handles sync.
         }
       }, "mass_queue");
     } catch (error) {
@@ -5075,15 +5156,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const currentMediaTitle = currentState?.attributes?.media_title;
           if (currentMediaTitle && currentMediaTitle !== this._lastMediaTitle) {
             this._lastMediaTitle = currentMediaTitle;
-            // Show loading state immediately
-            this._searchLoading = true;
-            this.requestUpdate();
-            // Clear cache and refresh with 4 second delay
-            const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
-            delete this._searchResultsByType[cacheKey];
-            setTimeout(() => {
-              this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
-            }, 4000);
+            // Shift UI immediately if we're looking at the queue and haven't already
+            if (this._upcomingFilterActive) {
+              // Check if we already advanced the UI manually (indicated by _latestManualShiftTime)
+              const now = Date.now();
+              // Increase tolerance to 4s to handle slow HA updates
+              const wasManualShift = this._latestManualShiftTime && (now - this._latestManualShiftTime < 4000);
+              
+              if (!wasManualShift) {
+                this._advanceQueueInUI(null, false); // Automatic advance
+              }
+
+              // Start/Extend heartbeat timer (20s)
+              this._refreshQueue({ delayMs: 20000 });
+            }
           }
         }
       }
@@ -5839,6 +5925,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
         break;
       case "next":
+        this._advanceQueueInUI(null, true); // Manual advance
         this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
         break;
       case "prev":
