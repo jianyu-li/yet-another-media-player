@@ -1152,6 +1152,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _sortSearchResults(results, sortModeOverride = null) {
+    // Upcoming queue items should never be sorted
+    if (this._upcomingFilterActive) {
+      return Array.isArray(results) ? [...results] : [];
+    }
     const sortMode = sortModeOverride ?? this._getConfiguredSearchResultsSortMode();
     const list = Array.isArray(results) ? [...results] : [];
 
@@ -1200,6 +1204,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _shouldShowSearchSortToggle() {
+    if (this._upcomingFilterActive) return false;
     return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
   }
 
@@ -1227,6 +1232,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _getActiveSearchDisplaySortMode() {
+    if (this._upcomingFilterActive) {
+      return "default";
+    }
     if (!this._shouldShowSearchSortToggle()) {
       return this._getConfiguredSearchResultsSortMode();
     }
@@ -1347,10 +1355,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    this._searchLoading = true;
-    this._searchError = "";
-    this._searchResults = [];
-    this.requestUpdate();
+    const isSilent = !!searchParams.silent;
+
+    if (!isSilent) {
+      this._searchLoading = true;
+      this._searchError = "";
+      this._searchResults = [];
+      this.requestUpdate();
+    }
     const searchToken = Date.now();
     this._latestSearchToken = searchToken;
     const progressiveUpdate = (chunk) => this._handleProgressiveSearchResults(chunk, cacheKey, searchToken);
@@ -2038,10 +2050,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Force-invalidate the "Next Up" results cache
   _invalidateUpcomingCache() {
     const classFilter = this._searchMediaClassFilter || 'all';
-    const cacheKey = `${classFilter}_upcoming`;
+    const cacheKey = `${classFilter}_upcoming_sort_default`;
     if (this._searchResultsByType) {
       delete this._searchResultsByType[cacheKey];
-      this.requestUpdate();
+      // Force a reload of the queue to reflect server-side changes
+      if (this._upcomingFilterActive) {
+        this._refreshQueue();
+      } else {
+        this.requestUpdate();
+      }
     }
   }
 
@@ -2153,7 +2170,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Clear search box since it's not used in upcoming mode
       this._searchQuery = '';
       // Clear cache to force fresh fetch
-      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
       delete this._searchResultsByType[cacheKey];
       // Subscribe to queue update events
       await this._subscribeToQueueUpdates();
@@ -2617,14 +2634,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Update queue items in UI immediately (like companion card does)
   _moveQueueItemInUI(queueItemId, direction) {
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
     const currentResults = this._searchResultsByType[cacheKey];
 
-    if (!currentResults || !Array.isArray(currentResults.results)) {
+    if (!Array.isArray(currentResults)) {
       return;
     }
 
-    const itemIndex = currentResults.results.findIndex(item => item.queue_item_id === queueItemId);
+    const itemIndex = currentResults.findIndex(item => item.queue_item_id === queueItemId);
     if (itemIndex === -1) return;
 
     let newIndex;
@@ -2633,7 +2650,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         newIndex = Math.max(0, itemIndex - 1);
         break;
       case 'down':
-        newIndex = Math.min(currentResults.results.length - 1, itemIndex + 1);
+        newIndex = Math.min(currentResults.length - 1, itemIndex + 1);
         break;
       case 'next':
         newIndex = 0; // Move to next position (first in upcoming queue)
@@ -2642,15 +2659,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
         return;
     }
 
-    // Get the item being moved
-    const item = currentResults.results[itemIndex];
+    if (newIndex === itemIndex) return;
 
     // Move item in array (like companion card's moveQueueItem)
-    const movedItem = currentResults.results.splice(itemIndex, 1)[0];
-    currentResults.results.splice(newIndex, 0, movedItem);
+    const movedItem = currentResults.splice(itemIndex, 1)[0];
+    currentResults.splice(newIndex, 0, movedItem);
+
+    // Update the active search results too
+    this._searchResults = [...currentResults];
 
     // Update position numbers for visual feedback
-    currentResults.results.forEach((item, index) => {
+    currentResults.forEach((item, index) => {
       item.position = index + 1;
     });
 
@@ -2668,15 +2687,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Remove queue item from UI immediately
   _removeQueueItemFromUI(queueItemId) {
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
     const currentResults = this._searchResultsByType[cacheKey];
 
-    if (!currentResults || !Array.isArray(currentResults.results)) {
+    if (!Array.isArray(currentResults)) {
       return;
     }
 
     // Remove item from array
-    currentResults.results = currentResults.results.filter(item => item.queue_item_id !== queueItemId);
+    const updatedResults = currentResults.filter(item => item.queue_item_id !== queueItemId);
+    this._searchResultsByType[cacheKey] = updatedResults;
+    this._searchResults = [...updatedResults];
 
     // Trigger UI update
     this.requestUpdate();
@@ -2693,7 +2714,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       maState.attributes?.mass_player_id ||
       maState.attributes?.active_queue ||
       // If we're in upcoming mode and getting queue items, assume it's MA
-      (this._upcomingFilterActive && this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming`]?.results?.some(item => item.queue_item_id));
+      (this._upcomingFilterActive && this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`]?.some(item => item.queue_item_id));
 
     return hasMassAttributes;
   }
@@ -2777,9 +2798,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     // Fall back to cached upcoming results if we've loaded them
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
     const cached = this._searchResultsByType?.[cacheKey];
-    if (cached && Array.isArray(cached.results) && cached.results.length > 0) {
+    if (Array.isArray(cached) && cached.length > 0) {
       return true;
     }
 
@@ -2973,10 +2994,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _refreshQueue() {
     if (this._upcomingFilterActive) {
       // Clear cache to force fresh fetch
-      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
       delete this._searchResultsByType[cacheKey];
-      // Reload upcoming queue items
-      this._doSearch('all', { isUpcoming: true }).catch(error => {
+      // Reload upcoming queue items silently to avoid UI flicker
+      this._doSearch('all', { isUpcoming: true, clearFilters: true, silent: true }).catch(error => {
         console.error('yamp: Error refreshing queue:', error);
       });
     }
@@ -5058,7 +5079,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             this._searchLoading = true;
             this.requestUpdate();
             // Clear cache and refresh with 4 second delay
-            const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming`;
+            const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
             delete this._searchResultsByType[cacheKey];
             setTimeout(() => {
               this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
