@@ -249,7 +249,8 @@ export default {
         },
         "card_type_options": {
             "default": "Privzeto",
-            "search": "Namensko iskanje"
+            "search": "Išči",
+            "group_players": "Združi predvajalnike"
         }
     },
     "card": {

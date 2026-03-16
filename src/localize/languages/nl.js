@@ -250,7 +250,8 @@ export default {
         },
         "card_type_options": {
             "default": "Standaard",
-            "search": "Speciale zoekopdracht"
+            "search": "Zoeken",
+            "group_players": "Spelers Groeperen"
         }
     },
     "card": {

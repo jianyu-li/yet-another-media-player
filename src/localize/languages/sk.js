@@ -249,7 +249,8 @@ export default {
         },
         "card_type_options": {
             "default": "Predvolené",
-            "search": "Vyhradené vyhľadávanie"
+            "search": "Hľadať",
+            "group_players": "Zoskupiť prehrávače"
         }
     },
     "card": {

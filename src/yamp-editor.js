@@ -1137,6 +1137,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           options: [
             { value: "default", label: localize('editor.card_type_options.default') },
             { value: "search", label: localize('editor.card_type_options.search') },
+            { value: "group_players", label: localize('editor.card_type_options.group_players') },
           ]
         }
       }}

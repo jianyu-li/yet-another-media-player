@@ -250,7 +250,8 @@ export default {
         },
         "card_type_options": {
             "default": "Por defecto",
-            "search": "Búsqueda dedicada"
+            "search": "Buscar",
+            "group_players": "Agrupar"
         }
     },
     "card": {
