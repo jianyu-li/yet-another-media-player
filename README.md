@@ -48,7 +48,7 @@ Below you will find a list of all configuration options.
 |----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
 | **Entities**               |              |              |             |                                                                                                 |
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
-| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for the standard player, or `search` for a dedicated, permanent search card |
+| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for the standard player, `search` for a dedicated search card, or `group_players` for a dedicated group management card |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume) (supports Jinja templates) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
@@ -332,7 +332,13 @@ Initiate a search using the hamburger menu and selecting `search`. Press Enter o
   - **Next**: Adds the selection to the queue immediately after the currently playing track.
   - **Replace Next**: Replaces all upcoming items in the queue with the selection, starting after the current track.
   - **Add to Queue**: Adds the selection to the very end of the queue.
-- Bonus Tip: Click or tap the artist name on a currently playing track to initiate a search on that artist!
+### Media Title Options
+
+You can click or tap the **current media title** in the card to reveal quick actions for the playing track:
+- **Add to Playlist**: Quick-add the current song to any editable Music Assistant playlist. (Requires [mass_queue](#optional-music-assistant-queue-actions-mass_queue))
+- **Play Similar Songs**: Instantly starts a Radio Mode/Similar Songs stream based on the current track. NOTE: This will restart the currently playing song with a new radio queue. 
+
+- **Bonus Tip**: You can also click or tap the **artist name** on a currently playing track to initiate a search for that artist!
 ![preview Image Search](preview/search.png)
 
 ### Search Results Limit Configuration
@@ -419,6 +425,14 @@ Set `card_type: search` to turn YAMP into a permanent search interface for your 
 **Dedicated Mode Behavior:**
 - **Permanent View**: The search interface is always visible and cannot be dismissed.
 - **Persistent Controls**: The bottom playback/volume bar respects the `hide_menu_player` setting, allowing for browse only or browse and control experiences.
+
+### Dedicated Group Players Mode
+
+Set `card_type: group_players` to lock YAMP to the group players menu. 
+
+**Dedicated Mode Behavior:**
+- **Permanent View**: The Group Players menu is always visible as the primary view.
+- **Auto-Sync**: Quickly join or unjoin players and adjust individual volumes from a single, persistent screen.
 
 # Look and Feel
 
