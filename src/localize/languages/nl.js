@@ -299,7 +299,7 @@ export default {
         "next_up": "Volgende",
         "recommendations": "Aanbevelingen",
         "radio_mode": "Radiomodus",
-        "play_similar": "Vergelijkbare Nummers Afspelen",
+        "play_similar": "Vergelijkbare nummers afspelen",
         "close": "Zoeken Sluiten",
         "no_results": "Geen resultaten.",
         "play_next": "Volgende afspelen",
