@@ -3252,6 +3252,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         artistName = item.artist;
       }
       await this._searchAlbumTracks(item.title, artistName, item.media_content_id);
+    } else if (item.media_class === 'track') {
+      // Navigate to the album this track belongs to
+      if (item.album) {
+        await this._searchAlbumTracks(item.album, item.artist, item.album_uri);
+      }
     } else if (item.media_class === 'playlist') {
       await this._searchPlaylistTracks(item.title, item.media_content_id);
     }
@@ -7481,13 +7486,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                       title=${this._getSearchResultClickTitle(item)}>
                                   ${item.title}
                                 </span>
-                                 <span class="search-sheet-subtitle">
+                                 <span class="search-sheet-subtitle ${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
+                                       @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
+                                       @click=${() => this._handleSearchResultClick(item)}>
                                   ${(() => {
-                          // Prefer artist when available for tracks/albums and special filters
+                          const isTrack = item.media_class === 'track';
                           const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
                           const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
                           const isUpcoming = !!this._upcomingFilterActive;
                           const isRecommendations = !!this._recommendationsFilterActive;
+                          
+                          if (isTrack && item.artist && item.album) {
+                            return `${item.artist} - ${item.album}`;
+                          }
                           if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
                             return item.artist;
                           }

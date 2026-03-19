@@ -1,4 +1,5 @@
 // Utility functions for Yet Another Media Player (YAMP)
+import { localize } from "./localize/localize.js";
 
 /**
  * Get a valid artwork attribute value (non-empty string with content)
@@ -283,14 +284,18 @@ export function getSearchResultClickTitle(item) {
     item.media_artist ||
     'Unknown Artist';
 
-  // For tracks, show "Track Name - Artist"
+  // For tracks, show "Browse tracks from [Album]"
   if (mediaType === 'track') {
+    const albumName = item.album || item.media_album_name;
+    if (albumName) {
+      return localize('search.browse_album', '{album}', albumName);
+    }
     return `${title} - ${artist}`;
   }
 
   // For albums, show "Album Name - Artist"
   if (mediaType === 'album') {
-    return `${title} - ${artist}`;
+    return localize('search.browse_album', '{album}', title);
   }
 
   // For artists, just show the name

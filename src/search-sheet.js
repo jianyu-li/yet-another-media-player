@@ -88,8 +88,8 @@ export function transformMusicAssistantItem(item) {
     item_id: item.item_id,
     thumbnail: item.image,
     ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
-    ...(item.album && { album: item.album.name }),
-    is_browsable: item.media_type === 'artist' || item.media_type === 'album' || item.media_type === 'playlist',
+    ...(item.album && { album: item.album.name, album_uri: item.album.uri }),
+    is_browsable: item.media_type === 'artist' || item.media_type === 'album' || item.media_type === 'playlist' || item.media_type === 'track',
     is_editable: item.is_editable === true
   };
 }
@@ -325,12 +325,12 @@ export function renderSearchSheet({
                     >
                       ${item.title}
                     </span>
-                    ${item.artist ? html`
+                    ${(item.artist || (item.media_class === 'track' && item.album)) ? html`
                       <span 
                         class="search-sheet-subtitle ${isClickable ? 'browsable' : ''}" 
                         @click=${() => isClickable && onResultClick && onResultClick(item)}
                       >
-                        ${item.artist}
+                        ${(item.media_class === 'track' && item.artist && item.album) ? `${item.artist} - ${item.album}` : item.artist}
                       </span>
                     ` : nothing}
                     ${searchView === 'card' ? html`
