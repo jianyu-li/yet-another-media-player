@@ -3945,9 +3945,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Set accent color
 
     if (this.config.match_theme === true) {
-      // Try to get CSS var --accent-color
-      const cssAccent = getComputedStyle(document.documentElement).getPropertyValue("--accent-color").trim();
-      this._customAccent = cssAccent || "#ff9800";
+      const styles = getComputedStyle(document.documentElement);
+      const activeStateColor = styles.getPropertyValue("--state-media_player-active-color").trim();
+      const stateActiveColor = styles.getPropertyValue("--state-active-color").trim();
+      const primaryColor = styles.getPropertyValue("--primary-color").trim();
+      const accentColor = styles.getPropertyValue("--accent-color").trim();
+      
+      this._customAccent = activeStateColor || stateActiveColor || primaryColor || accentColor || "#ff9800";
     } else {
       this._customAccent = "#ff9800";
     }

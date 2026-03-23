@@ -125,11 +125,12 @@ export const yampCardStyles = css`
   
   :host([data-match-theme="true"]) {
     /* Always override custom-accent to use theme accent when match_theme is true, regardless of light/dark mode */
-    --custom-accent: var(--accent-color, #ff9800);
+    --custom-accent: var(--state-media_player-active-color, var(--state-active-color, var(--primary-color, var(--accent-color, #ff9800))));
   }
 
-  :host([data-appearance="automatic"]) {
-    /* Search sheet theme-aware variables - used when appearance is automatic to follow HA theme colors */
+  :host([data-appearance="automatic"]),
+  :host([data-match-theme="true"]) {
+    /* Search sheet theme-aware variables - used when appearance is automatic or match_theme is true to follow HA theme colors */
     --search-overlay-bg: var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8)));
     --search-input-bg: var(--ha-card-background, var(--secondary-background-color, #333));
     --search-input-text: var(--primary-text-color, #fff);
@@ -162,12 +163,12 @@ export const yampCardStyles = css`
     --search-text-secondary: var(--secondary-text-color, #aaa);
 
     /* Mode-aware chip defaults - used when appearance is automatic */
-    --yamp-chip-bg: rgba(0, 0, 0, 0.8);
+    --yamp-chip-bg: color-mix(in srgb, var(--primary-text-color, #fff) 8%, var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8))));
     --yamp-chip-text: var(--search-text);
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-border: var(--divider-color, rgba(0, 0, 0, 0.1));
     --search-error-bg: var(--error-color, rgba(244, 67, 54, 0.8));
-    --search-card-bg: rgba(0, 0, 0, 0.8);
+    --search-card-bg: color-mix(in srgb, var(--primary-text-color, #fff) 4%, var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8))));
     --search-thumb-placeholder-bg: var(--secondary-background-color, rgba(255, 255, 255, 0.1));
     --search-thumb-placeholder-icon: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
     --search-success-text: var(--primary-text-color, #fff);
@@ -1398,20 +1399,20 @@ export const yampCardStyles = css`
   }
 
   /* Light mode overrides */
-  :host([data-appearance="light"]) {
+  :host([data-appearance="light"]:not([data-match-theme="true"])) {
     ${lightModeVariables}
   }
 
-  :host([data-appearance="light"]) .source-dropdown {
+  :host([data-appearance="light"]:not([data-match-theme="true"])) .source-dropdown {
     ${lightModeDropdown}
   }
 
   @media (prefers-color-scheme: light) {
-    :host([data-appearance="automatic"]) {
+    :host([data-appearance="automatic"]:not([data-match-theme="true"])) {
       ${lightModeVariables}
     }
 
-    :host([data-appearance="automatic"]) .source-dropdown {
+    :host([data-appearance="automatic"]:not([data-match-theme="true"])) .source-dropdown {
       ${lightModeDropdown}
     }
   }
