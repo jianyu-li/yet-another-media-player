@@ -336,6 +336,7 @@ export default {
         },
         "search_artist": "Hľadať tohto interpreta",
         "play_collection": "Prehrať túto kolekciu",
-        "play_collection_error": "Túto kolekciu nie je možné prehrať priamo"
+        "play_collection_error": "Túto kolekciu nie je možné prehrať priamo",
+        "browse_album": "Prehľadávať skladby z {album}"
     }
 };

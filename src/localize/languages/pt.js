@@ -336,6 +336,7 @@ export default {
         },
         "search_artist": "Procurar este artista",
         "play_collection": "Reproduzir esta coleção",
-        "play_collection_error": "Não é possível reproduzir esta coleção diretamente"
+        "play_collection_error": "Não é possível reproduzir esta coleção diretamente",
+        "browse_album": "Explorar faixas de {album}"
     }
 };

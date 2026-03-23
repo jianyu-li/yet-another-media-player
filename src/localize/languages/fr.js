@@ -337,6 +337,7 @@ export default {
         },
         "search_artist": "Chercher cet artiste",
         "play_collection": "Lire cette collection",
-        "play_collection_error": "Impossible de lire cette collection directement"
+        "play_collection_error": "Impossible de lire cette collection directement",
+        "browse_album": "Parcourir les titres de {album}"
     }
 };
