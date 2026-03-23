@@ -91,7 +91,7 @@ export const yampCardStyles = css`
     --yamp-error-color: #f44336;
     --yamp-success-bg-light: rgba(76, 175, 80, 0.2);
     --yamp-success-bg-medium: rgba(76, 175, 80, 0.4);
-    --yamp-chip-bg: rgba(0, 0, 0, 0.8);
+    --yamp-chip-bg: rgba(255, 255, 255, 0.15);
     --yamp-chip-text: #fff;
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-selected-text: #fff;
@@ -128,16 +128,15 @@ export const yampCardStyles = css`
     --custom-accent: var(--state-media_player-active-color, var(--state-active-color, var(--primary-color, var(--accent-color, #ff9800))));
   }
 
-  :host([data-appearance="automatic"]),
   :host([data-match-theme="true"]) {
-    /* Search sheet theme-aware variables - used when appearance is automatic or match_theme is true to follow HA theme colors */
+    /* Search sheet theme-aware variables - used when match_theme is true to follow HA theme colors dynamically */
     --search-overlay-bg: var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8)));
     --search-input-bg: var(--ha-card-background, var(--secondary-background-color, #333));
     --search-input-text: var(--primary-text-color, #fff);
     --search-text: var(--primary-text-color, #fff);
     --search-error: var(--error-color, #ff6b6b);
     --search-success: var(--success-color, #4caf50);
-    --search-success-bg: var(--success-color, rgba(76, 175, 80, 0.95));
+    --search-success-bg: color-mix(in srgb, var(--success-color, #4caf50) 95%, transparent);
     --search-border: var(--divider-color, rgba(255, 255, 255, 0.1));
     --search-hover-bg: var(--divider-color, rgba(255, 255, 255, 0.1));
     --search-play-hover: var(--accent-color, #e68900);
@@ -152,14 +151,14 @@ export const yampCardStyles = css`
     --yamp-overlay-text-shadow: none;
     --yamp-overlay-divider: var(--divider-color, rgba(255, 255, 255, 0.1));
     --yamp-icon-color: var(--primary-text-color, #fff);
-    --yamp-button-bg: var(--secondary-background-color, rgba(255, 255, 255, 0.1));
+    --yamp-button-bg: color-mix(in srgb, var(--primary-text-color, #fff) 10%, transparent);
     --yamp-button-border: var(--divider-color, rgba(255, 255, 255, 0.2));
     --yamp-overlay-text-secondary: var(--secondary-text-color, #888);
     --yamp-success-color: var(--success-color, #4caf50);
     --yamp-error-color: var(--error-color, #f44336);
-    --yamp-success-bg-light: var(--success-color, rgba(76, 175, 80, 0.2));
-    --yamp-success-bg-medium: var(--success-color, rgba(76, 175, 80, 0.4));
-    --yamp-chip-selected-text: #fff;
+    --yamp-success-bg-light: color-mix(in srgb, var(--success-color, #4caf50) 20%, transparent);
+    --yamp-success-bg-medium: color-mix(in srgb, var(--success-color, #4caf50) 40%, transparent);
+    --yamp-chip-selected-text: var(--text-primary-color, #fff);
     --search-text-secondary: var(--secondary-text-color, #aaa);
 
     /* Mode-aware chip defaults - used when appearance is automatic */
@@ -167,9 +166,9 @@ export const yampCardStyles = css`
     --yamp-chip-text: var(--search-text);
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-border: var(--divider-color, rgba(0, 0, 0, 0.1));
-    --search-error-bg: var(--error-color, rgba(244, 67, 54, 0.8));
+    --search-error-bg: color-mix(in srgb, var(--error-color, #f44336) 80%, transparent);
     --search-card-bg: color-mix(in srgb, var(--primary-text-color, #fff) 4%, var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8))));
-    --search-thumb-placeholder-bg: var(--secondary-background-color, rgba(255, 255, 255, 0.1));
+    --search-thumb-placeholder-bg: color-mix(in srgb, var(--primary-text-color, #fff) 10%, transparent);
     --search-thumb-placeholder-icon: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
     --search-success-text: var(--primary-text-color, #fff);
   }
@@ -3096,7 +3095,7 @@ export const yampCardStyles = css`
   .search-sheet-empty {
     text-align: center;
     padding: 40px;
-    color: var(--search-text);
+    color: var(--yamp-chip-text);
     font-size: 18px;
   }
 
@@ -3358,7 +3357,7 @@ export const yampCardStyles = css`
 
   .search-sheet-title {
     flex: 1;
-    color: var(--search-text);
+    color: var(--yamp-chip-text);
     font-size: 16px;
     display: block;
     white-space: nowrap;
