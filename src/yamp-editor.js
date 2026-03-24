@@ -545,16 +545,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 6px;
-          margin: 0px;
+          padding: 6px 0px 6px 6px;
+          margin: 0px -14px 0px 0px;
         }
         /* wraps the action icon, name textbox and edit button */
         .action-row-inner {
           display: flex;
           align-items: flex-start;
           gap: 8px;
-          padding: 6px;
-          margin: 0px;
+          padding: 6px 0px 6px 6px;
+          margin: 0px -14px 0px 0px;
         }
         .action-row-inner > ha-icon {
           margin-right: 5px;
@@ -564,6 +564,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         .grow-children {
           flex: 1;
           display: flex;
+          min-width: 0;
         }
         .grow-children > * {
           flex: 1;
@@ -597,13 +598,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           display: flex;
           align-items: center;
         }
-        entity-row-actions {
+        .entity-row-actions {
           display: flex;
           align-items: center;
+          flex-shrink: 0;
         }
         .action-row-actions {
           display: flex;
           align-items: flex-start;
+          flex-shrink: 0;
         }
         .handle {
           display: flex;
@@ -715,6 +718,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
         .icon-button-compact {
           padding: 6px;
+        }
+        .icon-button-compact:last-child {
+          padding-right: 10px;
         }
         .icon-button:hover {
           color: var(--primary-color, #2196f3);
