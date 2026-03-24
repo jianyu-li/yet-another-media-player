@@ -3951,7 +3951,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const primaryColor = styles.getPropertyValue("--primary-color").trim();
       const accentColor = styles.getPropertyValue("--accent-color").trim();
       
-      this._customAccent = activeStateColor || stateActiveColor || primaryColor || accentColor || "#ff9800";
+      this._customAccent = accentColor || primaryColor || activeStateColor || stateActiveColor || "#ff9800";
     } else {
       this._customAccent = "#ff9800";
     }
