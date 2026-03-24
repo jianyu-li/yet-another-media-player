@@ -305,7 +305,7 @@ export default {
         "next_up": "Next Up",
         "recommendations": "Recommendations",
         "radio_mode": "Radio Mode",
-        "play_similar": "Play Similar Songs",
+        "play_similar": "Play similar songs",
         "close": "Close Search",
         "no_results": "No results.",
         "play_next": "Play next",
