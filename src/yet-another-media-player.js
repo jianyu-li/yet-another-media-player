@@ -493,7 +493,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastProgressEntityId = null;
     this._pinnedIndex = null;
     // Accent color, updated in setConfig
-    this._customAccent = "#ff9800";
     // Outside click handler for source dropdown
     this._sourceDropdownOutsideHandler = null;
     this._isIdle = false;
@@ -3942,19 +3941,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._selectedIndex = (newSelectedIndex < this.entityIds.length) ? newSelectedIndex : 0;
     this._lastPlaying = null;
     this._lastActiveEntityId = null;
-    // Set accent color
-
-    if (this.config.match_theme === true) {
-      const styles = getComputedStyle(document.documentElement);
-      const activeStateColor = styles.getPropertyValue("--state-media_player-active-color").trim();
-      const stateActiveColor = styles.getPropertyValue("--state-active-color").trim();
-      const primaryColor = styles.getPropertyValue("--primary-color").trim();
-      const accentColor = styles.getPropertyValue("--accent-color").trim();
-      
-      this._customAccent = accentColor || primaryColor || activeStateColor || stateActiveColor || "#ff9800";
-    } else {
-      this._customAccent = "#ff9800";
-    }
     const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain", "no_artwork"]);
     this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
       ? config.artwork_object_fit
@@ -7029,7 +7015,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       <div class="media-artwork-placeholder">
                         <svg
                           viewBox="0 0 184 184"
-                          style="${this.config.match_theme === true ? 'color:#fff;' : `color:${this._customAccent};`}"
+                          style="${this.config.match_theme === true ? 'color:#fff;' : 'color: var(--custom-accent, #ff9800);'}"
                           xmlns="http://www.w3.org/2000/svg">
                           <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"></rect>
                           <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"></rect>
@@ -7086,7 +7072,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
             seekEnabled: true,
             onSeek: (e) => this._onProgressBarClick(e),
             collapsed: false,
-            accent: this._customAccent,
             style: this._showEntityOptions ? "visibility:hidden; opacity:0" : "",
             displayTimestamps: this._displayTimestamps,
             currentTime: pos,
@@ -7096,7 +7081,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
             progress: 0,
             seekEnabled: false,
             collapsed: false,
-            accent: this._customAccent,
             style: "visibility:hidden; opacity:0",
             displayTimestamps: this._displayTimestamps,
             currentTime: 0,
@@ -7110,13 +7094,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ? renderProgressBar({
             progress,
             collapsed: true,
-            accent: this._customAccent,
             style: this._showEntityOptions ? "visibility:hidden; opacity:0" : ""
           })
           : renderProgressBar({
             progress: 0,
             collapsed: true,
-            accent: this._customAccent,
             style: "visibility:hidden; opacity:0"
           })
         )

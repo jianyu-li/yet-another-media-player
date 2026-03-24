@@ -135,9 +135,7 @@ export const yampCardStyles = css`
     --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));
     --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));
     --yamp-section-description-color: var(--secondary-text-color, #888);
-  }
 
-  :host([data-match-theme="true"]) {
     /* Search sheet theme-aware variables - used when match_theme is true to follow HA theme colors dynamically */
     --search-overlay-bg: var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8)));
     --search-input-bg: var(--ha-card-background, var(--secondary-background-color, #333));
