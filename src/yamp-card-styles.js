@@ -16,9 +16,9 @@ export const Z_LAYERS = Object.freeze({
 });
 
 const lightModeVariables = css`
-  --card-bg: var(--card-background-color, #fff);
-  --primary-text: var(--primary-text-color, #222);
-  --secondary-text: var(--secondary-text-color, #666);
+  --card-bg: #fff;
+  --primary-text: #222;
+  --secondary-text: #666;
   --yamp-overlay-bg: rgba(255, 255, 255, 0.95);
   --yamp-overlay-text: #222;
   --yamp-overlay-divider: rgba(0, 0, 0, 0.1);
@@ -48,10 +48,10 @@ export const yampCardStyles = css`
   /* CSS Custom Properties for consistency */
   :host {
     --custom-accent: #ff9800;
-    --card-bg: var(--card-background-color, #222);
-    --primary-text: var(--primary-text-color, #fff);
-    --secondary-text: var(--secondary-text-color, #aaa);
-    --chip-bg: var(--chip-background, #333);
+    --card-bg: #222;
+    --primary-text: #fff;
+    --secondary-text: #aaa;
+    --chip-bg: #333;
     --transition-fast: 0.13s;
     --transition-normal: 0.2s;
     --transition-slow: 0.4s;
@@ -69,14 +69,14 @@ export const yampCardStyles = css`
     --yamp-details-scale: var(--yamp-text-scale-details, 1);
     --yamp-details-line-height: 1.2;
     --yamp-details-max-lines: 3;
-    --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));
-    --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));
+    --yamp-section-bg: rgba(255,255,255,0.02);
+    --yamp-section-border: rgba(255,255,255,0.1);
     --yamp-section-radius: 12px;
     --yamp-section-divider: rgba(255,255,255,0.06);
     --yamp-section-title-size: 1em;
     --yamp-section-title-weight: 600;
     --yamp-section-description-size: 0.9em;
-    --yamp-section-description-color: var(--secondary-text-color, #888);
+    --yamp-section-description-color: #888;
 
     /* Universal theme-aware variables (default to dark) */
     --yamp-overlay-bg: rgba(0, 0, 0, 0.82);
@@ -91,7 +91,7 @@ export const yampCardStyles = css`
     --yamp-error-color: #f44336;
     --yamp-success-bg-light: rgba(76, 175, 80, 0.2);
     --yamp-success-bg-medium: rgba(76, 175, 80, 0.4);
-    --yamp-chip-bg: rgba(0, 0, 0, 0.8);
+    --yamp-chip-bg: rgba(255, 255, 255, 0.15);
     --yamp-chip-text: #fff;
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-selected-text: #fff;
@@ -125,21 +125,28 @@ export const yampCardStyles = css`
   
   :host([data-match-theme="true"]) {
     /* Always override custom-accent to use theme accent when match_theme is true, regardless of light/dark mode */
-    --custom-accent: var(--accent-color, #ff9800);
-  }
+    --custom-accent: var(--accent-color, var(--primary-color, var(--state-media_player-active-color, var(--state-active-color, #ff9800))));
+    
+    /* Dynamically assign base components to theme variants */
+    --card-bg: var(--ha-card-background, var(--card-background-color, #222));
+    --primary-text: var(--primary-text-color, #fff);
+    --secondary-text: var(--secondary-text-color, #aaa);
+    --chip-bg: var(--chip-background, #333);
+    --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));
+    --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));
+    --yamp-section-description-color: var(--secondary-text-color, #888);
 
-  :host([data-appearance="automatic"]) {
-    /* Search sheet theme-aware variables - used when appearance is automatic to follow HA theme colors */
+    /* Search sheet theme-aware variables - used when match_theme is true to follow HA theme colors dynamically */
     --search-overlay-bg: var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8)));
     --search-input-bg: var(--ha-card-background, var(--secondary-background-color, #333));
     --search-input-text: var(--primary-text-color, #fff);
     --search-text: var(--primary-text-color, #fff);
     --search-error: var(--error-color, #ff6b6b);
     --search-success: var(--success-color, #4caf50);
-    --search-success-bg: var(--success-color, rgba(76, 175, 80, 0.95));
+    --search-success-bg: color-mix(in srgb, var(--success-color, #4caf50) 95%, transparent);
     --search-border: var(--divider-color, rgba(255, 255, 255, 0.1));
     --search-hover-bg: var(--divider-color, rgba(255, 255, 255, 0.1));
-    --search-play-hover: var(--accent-color, #e68900);
+    --search-play-hover: var(--custom-accent);
     --search-queue-bg: var(--ha-card-background, var(--card-background-color, #4a4a4a));
     --search-queue-border: var(--divider-color, #666);
     --search-queue-hover: var(--secondary-background-color, #5a5a5a);
@@ -151,24 +158,24 @@ export const yampCardStyles = css`
     --yamp-overlay-text-shadow: none;
     --yamp-overlay-divider: var(--divider-color, rgba(255, 255, 255, 0.1));
     --yamp-icon-color: var(--primary-text-color, #fff);
-    --yamp-button-bg: var(--secondary-background-color, rgba(255, 255, 255, 0.1));
+    --yamp-button-bg: color-mix(in srgb, var(--primary-text-color, #fff) 10%, transparent);
     --yamp-button-border: var(--divider-color, rgba(255, 255, 255, 0.2));
     --yamp-overlay-text-secondary: var(--secondary-text-color, #888);
     --yamp-success-color: var(--success-color, #4caf50);
     --yamp-error-color: var(--error-color, #f44336);
-    --yamp-success-bg-light: var(--success-color, rgba(76, 175, 80, 0.2));
-    --yamp-success-bg-medium: var(--success-color, rgba(76, 175, 80, 0.4));
-    --yamp-chip-selected-text: #fff;
+    --yamp-success-bg-light: color-mix(in srgb, var(--success-color, #4caf50) 20%, transparent);
+    --yamp-success-bg-medium: color-mix(in srgb, var(--success-color, #4caf50) 40%, transparent);
+    --yamp-chip-selected-text: var(--text-primary-color, #fff);
     --search-text-secondary: var(--secondary-text-color, #aaa);
 
     /* Mode-aware chip defaults - used when appearance is automatic */
-    --yamp-chip-bg: rgba(0, 0, 0, 0.8);
+    --yamp-chip-bg: color-mix(in srgb, var(--primary-text-color, #fff) 8%, var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8))));
     --yamp-chip-text: var(--search-text);
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-border: var(--divider-color, rgba(0, 0, 0, 0.1));
-    --search-error-bg: var(--error-color, rgba(244, 67, 54, 0.8));
-    --search-card-bg: rgba(0, 0, 0, 0.8);
-    --search-thumb-placeholder-bg: var(--secondary-background-color, rgba(255, 255, 255, 0.1));
+    --search-error-bg: color-mix(in srgb, var(--error-color, #f44336) 80%, transparent);
+    --search-card-bg: color-mix(in srgb, var(--primary-text-color, #fff) 4%, var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8))));
+    --search-thumb-placeholder-bg: color-mix(in srgb, var(--primary-text-color, #fff) 10%, transparent);
     --search-thumb-placeholder-icon: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
     --search-success-text: var(--primary-text-color, #fff);
   }
@@ -1398,20 +1405,20 @@ export const yampCardStyles = css`
   }
 
   /* Light mode overrides */
-  :host([data-appearance="light"]) {
+  :host([data-appearance="light"]:not([data-match-theme="true"])) {
     ${lightModeVariables}
   }
 
-  :host([data-appearance="light"]) .source-dropdown {
+  :host([data-appearance="light"]:not([data-match-theme="true"])) .source-dropdown {
     ${lightModeDropdown}
   }
 
   @media (prefers-color-scheme: light) {
-    :host([data-appearance="automatic"]) {
+    :host([data-appearance="automatic"]:not([data-match-theme="true"])) {
       ${lightModeVariables}
     }
 
-    :host([data-appearance="automatic"]) .source-dropdown {
+    :host([data-appearance="automatic"]:not([data-match-theme="true"])) .source-dropdown {
       ${lightModeDropdown}
     }
   }
@@ -1973,7 +1980,6 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet {
-    --custom-accent: var(--accent-color, #ff9800);
     background: none;
     border-radius: var(--border-radius);
     box-shadow: none;
@@ -2065,13 +2071,7 @@ export const yampCardStyles = css`
   }
 
 
-  /* Ensure entity-options-sheet honors match_theme for accent color */
-  :host([data-match-theme="false"]) .entity-options-sheet {
-    --custom-accent: #ff9800 ;
-  }
-  :host([data-match-theme="true"]) .entity-options-sheet {
-    --custom-accent: var(--accent-color, #ff9800) ;
-  }
+
 
   .entity-options-sheet::-webkit-scrollbar {
     display: none;
@@ -2198,7 +2198,7 @@ export const yampCardStyles = css`
   /* Source index */
   .source-index-letter:focus {
     background: rgba(255,255,255,0.11);
-    outline: 1px solid #ff9800;
+    outline: 1px solid var(--custom-accent);
   }
 
   .source-list-centering-wrapper {
@@ -2915,7 +2915,6 @@ export const yampCardStyles = css`
   }
 
   .entity-options-resolved-entities {
-    --custom-accent: var(--accent-color, #ff9800);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -2984,7 +2983,6 @@ export const yampCardStyles = css`
   /* Clickable search results */
   .clickable-search-result {
     cursor: pointer;
-    color: var(--custom-accent);
     transition: color var(--transition-fast);
   }
 
@@ -3095,7 +3093,7 @@ export const yampCardStyles = css`
   .search-sheet-empty {
     text-align: center;
     padding: 40px;
-    color: var(--search-text);
+    color: var(--yamp-chip-text);
     font-size: 18px;
   }
 
@@ -3357,8 +3355,9 @@ export const yampCardStyles = css`
 
   .search-sheet-title {
     flex: 1;
-    color: var(--search-text);
-    font-size: 16px;
+    color: var(--yamp-chip-text);
+    font-size: 0.9em;
+    font-weight: 500;
     display: block;
     white-space: nowrap;
     overflow: hidden;
@@ -3541,74 +3540,21 @@ export const yampCardStyles = css`
     background: rgba(255, 255, 255, 0.1) ;
   }
 
-  .search-sheet[data-match-theme="false"] .search-sheet-title {
-    color: #fff ;
-  }
+
 
   .search-sheet[data-match-theme="false"] .search-sheet-play {
     background: var(--custom-accent) ;
     color: #fff ;
   }
 
-  .search-sheet[data-match-theme="false"] .search-sheet-play:hover {
-    background: #e68900 ;
-  }
 
-  .search-sheet[data-match-theme="false"] .search-sheet-queue {
-    background: #4a4a4a ;
-    color: #fff ;
-    border: 1px solid #666 ;
-  }
-
-  .search-sheet[data-match-theme="false"] .search-sheet-queue:hover {
-    background: #5a5a5a ;
-    border-color: #777 ;
-  }
-
-  /* Additional overrides for search sheet elements that might inherit theme colors */
-  .search-sheet[data-match-theme="false"] .clickable-search-result {
-    color: #ff9800 ;
-  }
-
-  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
-    color: #fff ;
-  }
-
-  /* Override the base clickable-search-result styles when match_theme is false */
-  .search-sheet[data-match-theme="false"] .clickable-search-result,
-  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
-    color: #ff9800 ;
-  }
-
-  .search-sheet[data-match-theme="false"] .clickable-search-result:hover {
-    color: #fff ;
-  }
-
-  /* Override any other elements that might be using theme variables */
-  .search-sheet[data-match-theme="false"] * {
-    color: #fff ;
-  }
-
-  .search-sheet[data-match-theme="false"] .clickable-search-result {
-    color: #ff9800 ;
-  }
-
-  .search-sheet[data-match-theme="false"]  .search-sheet-buttons .search-sheet-play,
   .search-sheet-buttons .search-sheet-queue {
     color: var(--yamp-overlay-text);
   }
 
-  /* Force all text to be white when match_theme is false */
-  .search-sheet[data-match-theme="false"] .search-sheet-title,
-  .search-sheet[data-match-theme="false"] .search-sheet-loading,
-  .search-sheet[data-match-theme="false"] .search-sheet-empty {
-    color: #fff ;
-  }
 
-  /* Nuclear option: Override ALL elements that might be using --custom-accent or theme colors */
-  .search-sheet[data-match-theme="false"] *[style*="color"] {
-    color: #fff ;
-  }
+
+
 
   .search-sheet[data-match-theme="false"] *[style*="background"] {
     background: rgba(0, 0, 0, 0.8) ;
