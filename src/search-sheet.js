@@ -155,7 +155,7 @@ export function renderSearchResultActions({
               title="${localize('common.play_now')}">
         <ha-icon icon="mdi:play"></ha-icon>
       </button>
-      ${!isQueueItem ? html`
+      ${!isQueueItem && item.media_class !== 'radio' && item.media_content_type !== 'radio' ? html`
         <button class="${queueClass}" 
                 @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} 
                 title="${localize('common.more_options')}">
@@ -333,7 +333,7 @@ export function renderSearchSheet({
                         ${(item.media_class === 'track' && item.artist && item.album) ? `${item.artist} - ${item.album}` : item.artist}
                       </span>
                     ` : nothing}
-                    ${searchView === 'card' ? html`
+                    ${searchView === 'card' && item.media_class !== 'radio' && item.media_content_type !== 'radio' ? html`
                       <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }}>
                         <ha-icon icon="mdi:dots-vertical"></ha-icon>
                       </div>

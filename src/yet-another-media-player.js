@@ -7494,7 +7494,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             : "";
                         })()}
                                 </span>
-                                ${this.config.search_view === 'card' ? html`
+                                ${this.config.search_view === 'card' && item.media_class !== 'radio' && item.media_content_type !== 'radio' ? html`
                                   <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }}>
                                     <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                   </div>
