@@ -246,7 +246,8 @@ export default {
         },
         "search_view_options": {
             "list": "Liste",
-            "card": "Carte"
+            "card": "Carte",
+            "card_minimal": "Carte minimale"
         },
         "card_type_options": {
             "default": "Par défaut",
@@ -338,6 +339,7 @@ export default {
         "search_artist": "Chercher cet artiste",
         "play_collection": "Lire cette collection",
         "play_collection_error": "Impossible de lire cette collection directement",
-        "browse_album": "Parcourir les titres de {album}"
+        "browse_album": "Parcourir les titres de {album}",
+        "play_item": "Lire {item}"
     }
 };

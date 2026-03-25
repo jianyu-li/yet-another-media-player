@@ -246,7 +246,8 @@ export default {
         },
         "search_view_options": {
             "list": "Liste",
-            "card": "Karte"
+            "card": "Karte",
+            "card_minimal": "Minimal-Karte"
         },
         "card_type_options": {
             "default": "Standard",
@@ -338,6 +339,7 @@ export default {
         "search_artist": "Nach diesem Künstler suchen",
         "play_collection": "Diese Sammlung abspielen",
         "play_collection_error": "Diese Sammlung kann nicht direkt abgespielt werden",
-        "browse_album": "Albentitel von {album} durchsuchen"
+        "browse_album": "Albentitel von {album} durchsuchen",
+        "play_item": "{item} abspielen"
     }
 };

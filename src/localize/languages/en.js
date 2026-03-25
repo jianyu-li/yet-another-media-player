@@ -247,7 +247,8 @@ export default {
         },
         "search_view_options": {
             "list": "List",
-            "card": "Card"
+            "card": "Card",
+            "card_minimal": "Minimal Card"
         },
         "card_type_options": {
             "default": "Default",
@@ -344,6 +345,7 @@ export default {
         "search_artist": "Search for this artist",
         "browse_album": "Browse tracks from {album}",
         "play_collection": "Play this collection",
-        "play_collection_error": "Unable to play this collection directly"
+        "play_collection_error": "Unable to play this collection directly",
+        "play_item": "Play {item}"
     }
 };

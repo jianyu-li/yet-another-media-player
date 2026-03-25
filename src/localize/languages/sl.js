@@ -245,7 +245,8 @@ export default {
         },
         "search_view_options": {
             "list": "Seznam",
-            "card": "Kartica"
+            "card": "Kartica",
+            "card_minimal": "Minimalna kartica"
         },
         "card_type_options": {
             "default": "Privzeto",
@@ -337,6 +338,7 @@ export default {
         "search_artist": "Išči tega izvajalca",
         "play_collection": "Predvajaj to zbirko",
         "play_collection_error": "Te zbirke ni mogoče predvajati neposredno",
-        "browse_album": "Prebrskaj skladbe iz {album}"
+        "browse_album": "Prebrskaj skladbe iz {album}",
+        "play_item": "Predvajaj {item}"
     }
 };

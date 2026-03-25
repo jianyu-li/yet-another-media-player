@@ -245,7 +245,8 @@ export default {
         },
         "search_view_options": {
             "list": "Lista",
-            "card": "Cartão"
+            "card": "Cartão",
+            "card_minimal": "Cartão minimalista"
         },
         "card_type_options": {
             "default": "Padrão",
@@ -337,6 +338,7 @@ export default {
         "search_artist": "Procurar este artista",
         "play_collection": "Reproduzir esta coleção",
         "play_collection_error": "Não é possível reproduzir esta coleção diretamente",
-        "browse_album": "Explorar faixas de {album}"
+        "browse_album": "Explorar faixas de {album}",
+        "play_item": "Reproduzir {item}"
     }
 };

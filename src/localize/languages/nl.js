@@ -246,7 +246,8 @@ export default {
         },
         "search_view_options": {
             "list": "Lijst",
-            "card": "Kaart"
+            "card": "Kaart",
+            "card_minimal": "Minimale kaart"
         },
         "card_type_options": {
             "default": "Standaard",
@@ -338,6 +339,7 @@ export default {
         "search_artist": "Zoek naar deze artiest",
         "play_collection": "Speel deze collectie af",
         "play_collection_error": "Kan deze collectie niet direct afspelen",
-        "browse_album": "Tracks van {album} doorzoeken"
+        "browse_album": "Tracks van {album} doorzoeken",
+        "play_item": "{item} afspelen"
     }
 };

@@ -1520,6 +1520,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           mode: "dropdown", options: [
             { value: "list", label: localize('editor.search_view_options.list') },
             { value: "card", label: localize('editor.search_view_options.card') },
+            { value: "card_minimal", label: localize('editor.search_view_options.card_minimal') },
           ]
         }
       }}
@@ -1529,7 +1530,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @value-changed=${(e) => this._updateConfig("search_view", e.detail.value)}
               ></ha-selector>
             </div>
-            ${this._config.search_view === 'card' ? html`
+            ${(this._config.search_view === 'card' || this._config.search_view === 'card_minimal') ? html`
               <div class="form-row">
                 <ha-selector
                   .hass=${this.hass}
