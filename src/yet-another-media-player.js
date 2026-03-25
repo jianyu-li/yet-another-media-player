@@ -7377,7 +7377,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         } : () => { }}
                               title="${localize('search.recommendations')}"
                             >
-                              <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'}></ha-icon>
+                              <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:creation' : 'mdi:creation-outline'}></ha-icon>
                               ${this._recommendationsFilterActive ? html`
                                 <span style="margin-left:6px;font-size:0.81em;font-weight:600;white-space:nowrap;">
                                   ${localize('search.recommendations')}
@@ -7481,7 +7481,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
                           const isUpcoming = !!this._upcomingFilterActive;
                           const isRecommendations = !!this._recommendationsFilterActive;
-                          
+
                           if (isTrack && item.artist && item.album) {
                             return `${item.artist} - ${item.album}`;
                           }

@@ -6260,7 +6260,7 @@
                               @click=${this._searchAttempted?()=>{this._toggleRecommendationsFilter()}:()=>{}}
                               title="${h("search.recommendations")}"
                             >
-                              <ha-icon .icon=${this._recommendationsFilterActive?"mdi:thumb-up":"mdi:thumb-up-outline"}></ha-icon>
+                              <ha-icon .icon=${this._recommendationsFilterActive?"mdi:creation":"mdi:creation-outline"}></ha-icon>
                               ${this._recommendationsFilterActive?_`
                                 <span style="margin-left:6px;font-size:0.81em;font-weight:600;white-space:nowrap;">
                                   ${h("search.recommendations")}
