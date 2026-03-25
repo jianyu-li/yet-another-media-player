@@ -338,6 +338,7 @@ export default {
         "search_artist": "Cerca questo artista",
         "play_collection": "Riproduci questa collezione",
         "play_collection_error": "Impossibile riprodurre direttamente questa collezione",
-        "browse_album": "Sfoglia i brani di {album}"
+        "browse_album": "Sfoglia i brani di {album}",
+        "play_item": "Riproduci {item}"
     }
 };

@@ -157,7 +157,7 @@ export function renderSearchResultActions({
       ` : nothing}
       <button class="${playClass}" 
               @click=${() => onPlay(item)} 
-              title="${localize('common.play_now')}">
+              title="${localize('search.play_item', '{item}', item.title)}">
         <ha-icon icon="mdi:play"></ha-icon>
       </button>
       ${!isQueueItem && !isRadio(item) && !minimal ? html`
