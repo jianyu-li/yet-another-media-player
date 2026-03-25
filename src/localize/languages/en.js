@@ -122,6 +122,7 @@ export default {
             "only_available_modern": "Only available with Modern layout",
             "image_url_helper": "Enter a direct URL to an image or a local file path",
             "selected_entity_helper": "Input text helper that will be updated with the currently selected media player entity ID.",
+            "select_entity_helper": "Input text helper to read the entity ID from. The card will automatically select the matching chip.",
             "sync_entity_type": "Choose which entity ID to sync to the helper (defaults to Music Assistant entity if configured).",
             "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing.",
             "search_view": "Choose between a standard list or a card-based grid for search results.",
@@ -220,10 +221,12 @@ export default {
             "navigate": "Navigate",
             "prev_entity": "Previous Entity Chip",
             "next_entity": "Next Entity Chip",
-            "sync_selected_entity": "Sync Selected Entity"
+            "sync_selected_entity": "Sync Selected Entity",
+            "select_entity": "Select Entity from Helper"
         },
         "action_helpers": {
             "sync_selected_entity": "Sync Selected Entity →",
+            "select_entity": "Select Entity ←",
             "select_helper": "(select helper)"
         },
         "sync_entity_options": {

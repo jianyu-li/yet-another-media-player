@@ -122,6 +122,7 @@ export default {
             "only_available_modern": "Alleen beschikbaar met de Moderne lay-out",
             "image_url_helper": "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
             "selected_entity_helper": "Invoerteksthelper die wordt bijgewerkt met de momenteel geselecteerde media player-entiteits-ID.",
+            "select_entity_helper": "Invoerteksthelper waaruit het entiteits-ID wordt gelezen. De kaart selecteert automatisch de bijbehorende chip.",
             "sync_entity_type": "Kies welk entiteits-ID moet worden gesynchroniseerd met de helper (standaard Music Assistant-entiteit indien geconfigureerd).",
             "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen.",
             "search_view": "Kies tussen een standaardlijst of een raster van kaarten voor zoekresultaten.",
@@ -219,10 +220,12 @@ export default {
             "navigate": "Navigeren",
             "prev_entity": "Vorige entiteit chip",
             "next_entity": "Volgende entiteit chip",
-            "sync_selected_entity": "Synchroniseer geselecteerde entiteit"
+            "sync_selected_entity": "Synchroniseer geselecteerde entiteit",
+            "select_entity": "Selecteer entiteit uit helper"
         },
         "action_helpers": {
             "sync_selected_entity": "Geselecteerde entiteit synchroniseren →",
+            "select_entity": "Entiteit selecteren ←",
             "select_helper": "(selecteer helper)"
         },
         "sync_entity_options": {

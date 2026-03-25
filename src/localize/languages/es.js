@@ -122,6 +122,7 @@ export default {
             "only_available_modern": "Solo disponible con diseño Moderno.",
             "image_url_helper": "Ingrese una URL directa a una imagen o una ruta de archivo local",
             "selected_entity_helper": "Helper de texto de entrada que se actualizará con el ID de la entidad del reproductor de medios seleccionado actualmente.",
+            "select_entity_helper": "Helper de texto de entrada del que leer el ID de la entidad. La tarjeta seleccionará automáticamente el chip correspondiente.",
             "sync_entity_type": "Elija qué ID de entidad sincronizar con el helper (por defecto la entidad de Music Assistant si está configurada).",
             "disable_auto_select": "Evita que el chip de esta entidad se seleccione automáticamente cuando comienza la reproducción.",
             "search_view": "Elegir entre una lista estándar o una cuadrícula de tarjetas para los resultados de la búsqueda.",
@@ -219,10 +220,12 @@ export default {
             "navigate": "Navegar",
             "prev_entity": "Chip de entidad anterior",
             "next_entity": "Chip de entidad siguiente",
-            "sync_selected_entity": "Sincronizar entidad seleccionada"
+            "sync_selected_entity": "Sincronizar entidad seleccionada",
+            "select_entity": "Seleccionar entidad desde helper"
         },
         "action_helpers": {
             "sync_selected_entity": "Sincronizar entidad seleccionada →",
+            "select_entity": "Seleccionar entidad ←",
             "select_helper": "(seleccionar helper)"
         },
         "sync_entity_options": {

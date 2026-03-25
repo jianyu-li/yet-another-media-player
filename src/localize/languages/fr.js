@@ -122,6 +122,7 @@ export default {
             "only_available_modern": "Uniquement disponible avec la mise en page Moderne.",
             "image_url_helper": "Entrez une URL directe vers une image ou un chemin de fichier local",
             "selected_entity_helper": "Helper de texte d'entrée qui sera mis à jour avec l'ID de l'entité du lecteur multimédia actuellement sélectionné.",
+            "select_entity_helper": "Helper de texte d'entrée à partir duquel lire l'ID de l'entité. La carte sélectionnera automatiquement le jeton correspondant.",
             "sync_entity_type": "Choisissez quel ID d'entité synchroniser avec le helper (par défaut l'entité Music Assistant si configurée).",
             "disable_auto_select": "Empêche le jeton de cette entité d'être automatiquement sélectionné au début de la lecture.",
             "search_view": "Choisissez entre une liste standard ou une grille de cartes pour les résultats de recherche.",
@@ -219,10 +220,12 @@ export default {
             "navigate": "Naviguer",
             "prev_entity": "Puce de l'entité précédente",
             "next_entity": "Puce de l'entité suivante",
-            "sync_selected_entity": "Synchroniser l'entité sélectionnée"
+            "sync_selected_entity": "Synchroniser l'entité sélectionnée",
+            "select_entity": "Sélectionner l'entité depuis le helper"
         },
         "action_helpers": {
             "sync_selected_entity": "Synchroniser l'entité sélectionnée →",
+            "select_entity": "Sélectionner l'entité ←",
             "select_helper": "(sélectionner helper)"
         },
         "sync_entity_options": {

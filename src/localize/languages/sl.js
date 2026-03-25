@@ -122,6 +122,7 @@ export default {
             "only_available_modern": "Na voljo le v moderni postavitvi.",
             "image_url_helper": "Vnesite neposredni URL do slike ali lokalno pot do datoteke",
             "selected_entity_helper": "Pomočnik za vnos besedila, ki bo posodobljen z ID-jem trenutno izbranega predvajalnika medijev.",
+            "select_entity_helper": "Pomočnik za vnos besedila, iz katerega se bere ID entitete. Kartica bo samodejno izbrala ustrezni čip.",
             "sync_entity_type": "Izberite, kateri ID entitete želite sinhronizirati s pomočnikom (privzeto entiteto Music Assistant, če je nastavljena).",
             "disable_auto_select": "Prepreči samodejno izbiro čipa te entitete ob začetku predvajanja.",
             "search_view": "Izberite med standardnim seznamom ali mrežo kartic za rezultate iskanja.",
@@ -218,10 +219,12 @@ export default {
             "navigate": "Navigiraj",
             "prev_entity": "Prejšnji čip entitete",
             "next_entity": "Naslednji čip entitete",
-            "sync_selected_entity": "Sinhroniziraj izbrano entiteto"
+            "sync_selected_entity": "Sinhroniziraj izbrano entiteto",
+            "select_entity": "Izberi entiteto iz pomočnika"
         },
         "action_helpers": {
             "sync_selected_entity": "Sinhroniziraj izbrano entiteto →",
+            "select_entity": "Izberi entiteto ←",
             "select_helper": "(izberite pomočnika)"
         },
         "sync_entity_options": {
