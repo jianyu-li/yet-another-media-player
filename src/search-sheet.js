@@ -296,7 +296,7 @@ export function renderSearchSheet({
           // For now we assume massQueue functionality is available if it's MA 
           // (matching simplified search-sheet logic)
           return html`
-                <div class="search-sheet-result ${isCard ? 'search-result-card' : ''}">
+                <div class="search-sheet-result ${isCard ? 'search-result-card' : ''} ${isMinimal ? 'minimal' : ''}">
                   <div class="search-sheet-thumb-container" 
                        data-clickable="${isCard}"
                        @click=${isCard ? () => onPlay(item) : null}>

@@ -3178,6 +3178,11 @@ export const yampCardStyles = css`
     overflow: hidden;
   }
 
+  .search-result-card.minimal {
+    background: none !important;
+    padding: 0;
+  }
+
   .card-menu-button {
     position: absolute;
     bottom: 5px;

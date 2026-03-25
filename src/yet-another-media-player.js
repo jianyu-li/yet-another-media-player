@@ -7442,7 +7442,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       ? html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`
                       : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
-                            <div class="entity-options-search-result ${isCard ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
+                            <div class="entity-options-search-result ${isCard ? 'search-result-card' : ''} ${isMinimal ? 'minimal' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
                                <div class="search-sheet-thumb-container"
                                     data-clickable="${isCard}"
                                     @click=${isCard ? () => this._playMediaFromSearch(item) : null}>
