@@ -129,6 +129,7 @@ export function renderSearchResultActions({
   onMoveDown,
   onMoveNext,
   onRemove,
+  minimal = false,
 }) {
   const isQueueItem = !!(upcomingFilterActive && item.queue_item_id && isMusicAssistant && massQueueAvailable);
 
@@ -159,7 +160,7 @@ export function renderSearchResultActions({
               title="${localize('common.play_now')}">
         <ha-icon icon="mdi:play"></ha-icon>
       </button>
-      ${!isQueueItem && !isRadio(item) ? html`
+      ${!isQueueItem && !isRadio(item) && !minimal ? html`
         <button class="${queueClass}" 
                 @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} 
                 title="${localize('common.more_options')}">
@@ -259,8 +260,11 @@ export function renderSearchSheet({
   onRemove,
 }) {
   if (!open) return nothing;
+  const isCard = searchView === 'card' || searchView === 'card_minimal';
+  const isMinimal = searchView === 'card_minimal';
+
   return html`
-    <div class="search-sheet" data-match-theme="${matchTheme}" data-card-view="${searchView === 'card'}">
+    <div class="search-sheet" data-match-theme="${matchTheme}" data-card-view="${isCard}">
       <div class="search-sheet-header">
         <input
           type="text"
@@ -282,7 +286,7 @@ export function renderSearchSheet({
       ` : nothing}
       ${loading ? html`<div class="search-sheet-loading">${localize('common.loading')}</div>` : nothing}
       ${error ? html`<div class="search-sheet-error">${error}</div>` : nothing}
-      <div class="search-sheet-results ${searchView === 'card' ? 'search-results-card-view' : 'list-view'}">
+      <div class="search-sheet-results ${isCard ? 'search-results-card-view' : 'list-view'}">
         ${(results || []).length === 0 && !loading
       ? html`<div class="search-sheet-empty">${localize('common.no_results')}</div>`
       : (results || []).map(
@@ -292,10 +296,10 @@ export function renderSearchSheet({
           // For now we assume massQueue functionality is available if it's MA 
           // (matching simplified search-sheet logic)
           return html`
-                <div class="search-sheet-result ${searchView === 'card' ? 'search-result-card' : ''}">
+                <div class="search-sheet-result ${isCard ? 'search-result-card' : ''}">
                   <div class="search-sheet-thumb-container" 
-                       data-clickable="${searchView === 'card'}"
-                       @click=${searchView === 'card' ? () => onPlay(item) : null}>
+                       data-clickable="${isCard}"
+                       @click=${isCard ? () => onPlay(item) : null}>
                     ${item.thumbnail && !String(item.thumbnail).includes('imageproxy') ? html`
                       <img
                         class="search-sheet-thumb"
@@ -308,7 +312,7 @@ export function renderSearchSheet({
                         <ha-icon icon="mdi:music"></ha-icon>
                       </div>
                     `}
-                    ${searchView === 'card' ? renderSearchResultActions({
+                    ${isCard ? renderSearchResultActions({
             item,
             onPlay,
             onOptionsToggle,
@@ -320,30 +324,33 @@ export function renderSearchSheet({
             onMoveDown,
             onMoveNext,
             onRemove,
+            minimal: isMinimal,
           }) : nothing}
                   </div>
-                  <div class="search-sheet-info">
-                    <span 
-                      class="search-sheet-title ${isClickable ? 'browsable' : ''}" 
-                      @click=${() => isClickable && onResultClick && onResultClick(item)}
-                    >
-                      ${item.title}
-                    </span>
-                    ${(item.artist || (item.media_class === 'track' && item.album)) ? html`
+                    ${!isMinimal ? html`
+                    <div class="search-sheet-info">
                       <span 
-                        class="search-sheet-subtitle ${isClickable ? 'browsable' : ''}" 
+                        class="search-sheet-title ${isClickable ? 'browsable' : ''}" 
                         @click=${() => isClickable && onResultClick && onResultClick(item)}
                       >
-                        ${(item.media_class === 'track' && item.artist && item.album) ? `${item.artist} - ${item.album}` : item.artist}
+                        ${item.title}
                       </span>
-                    ` : nothing}
-                    ${searchView === 'card' && !isRadio(item) ? html`
-                      <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }}>
-                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
-                      </div>
-                    ` : nothing}
-                  </div>
-                  ${searchView !== 'card' ? renderSearchResultActions({
+                      ${(item.artist || (item.media_class === 'track' && item.album)) ? html`
+                        <span 
+                          class="search-sheet-subtitle ${isClickable ? 'browsable' : ''}" 
+                          @click=${() => isClickable && onResultClick && onResultClick(item)}
+                        >
+                          ${(item.media_class === 'track' && item.artist && item.album) ? `${item.artist} - ${item.album}` : item.artist}
+                        </span>
+                      ` : nothing}
+                      ${isCard && !isRadio(item) ? html`
+                        <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }}>
+                          <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                        </div>
+                      ` : nothing}
+                    </div>
+                  ` : nothing}
+                  ${!isCard ? renderSearchResultActions({
             item,
             onPlay,
             onOptionsToggle,

@@ -245,7 +245,8 @@ export default {
         },
         "search_view_options": {
             "list": "Zoznam",
-            "card": "Karta"
+            "card": "Karta",
+            "card_minimal": "Minimálna karta"
         },
         "card_type_options": {
             "default": "Predvolené",

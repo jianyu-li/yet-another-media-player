@@ -7424,11 +7424,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ` : nothing
                   }
 
-            <div class="entity-options-search-results ${this.config.search_view === 'card' ? 'search-results-card-view' : 'list-view'}" 
-                 style="${this.config.search_view === 'card' ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
+            <div class="entity-options-search-results ${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? 'search-results-card-view' : 'list-view'}" 
+                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
               ${(() => {
                     const filter = this._searchMediaClassFilter || "all";
                     const currentResults = this._getDisplaySearchResults();
+                    const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
+                    const isMinimal = this.config.search_view === 'card_minimal';
                     // Build padded array so row‑count stays constant
                     const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
                     const paddedResults = [
@@ -7440,10 +7442,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       ? html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`
                       : paddedResults.map(item => item ? html`
                             <!-- EXISTING non‑placeholder row markup -->
-                            <div class="entity-options-search-result ${this.config.search_view === 'card' ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
+                            <div class="entity-options-search-result ${isCard ? 'search-result-card' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
                                <div class="search-sheet-thumb-container"
-                                    data-clickable="${this.config.search_view === 'card'}"
-                                    @click=${this.config.search_view === 'card' ? () => this._playMediaFromSearch(item) : null}>
+                                    data-clickable="${isCard}"
+                                    @click=${isCard ? () => this._playMediaFromSearch(item) : null}>
                                 ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
                                    <img
                                      class="entity-options-search-thumb"
@@ -7456,52 +7458,55 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                      <ha-icon icon="mdi:music"></ha-icon>
                                    </div>
                                 `}
-                                ${this.config.search_view === 'card' ? renderSearchResultActions({
+                                ${isCard ? renderSearchResultActions({
                         item,
                         onPlay: (it) => this._playMediaFromSearch(it),
                         onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
                         upcomingFilterActive: !!this._upcomingFilterActive,
                         isMusicAssistant: this._isMusicAssistantEntity(),
                         massQueueAvailable: this._massQueueAvailable,
-                        searchView: 'card'
+                        searchView: 'card',
+                        minimal: isMinimal
                       }) : nothing}
                                </div>
-                               <div class="search-sheet-info">
-                                <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''} ${this.config.search_view === 'card' ? 'search-sheet-title' : ''}"
-                                      @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
-                                      @click=${() => this._handleSearchResultClick(item)}
-                                      title=${this._getSearchResultClickTitle(item)}>
-                                  ${item.title}
-                                </span>
-                                 <span class="search-sheet-subtitle ${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
+                                ${!isMinimal ? html`
+                                <div class="search-sheet-info">
+                                 <span class="${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''} ${isCard ? 'search-sheet-title' : ''}"
                                        @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
-                                       @click=${() => this._handleSearchResultClick(item)}>
-                                  ${(() => {
-                          const isTrack = item.media_class === 'track';
-                          const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
-                          const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
-                          const isUpcoming = !!this._upcomingFilterActive;
-                          const isRecommendations = !!this._recommendationsFilterActive;
+                                       @click=${() => this._handleSearchResultClick(item)}
+                                       title=${this._getSearchResultClickTitle(item)}>
+                                   ${item.title}
+                                 </span>
+                                  <span class="search-sheet-subtitle ${this._isClickableSearchResult(item) ? 'clickable-search-result' : ''}"
+                                        @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
+                                        @click=${() => this._handleSearchResultClick(item)}>
+                                   ${(() => {
+                           const isTrack = item.media_class === 'track';
+                           const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
+                           const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
+                           const isUpcoming = !!this._upcomingFilterActive;
+                           const isRecommendations = !!this._recommendationsFilterActive;
 
-                          if (isTrack && item.artist && item.album) {
-                            return `${item.artist} - ${item.album}`;
-                          }
-                          if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
-                            return item.artist;
-                          }
-                          // Otherwise show media class as before
-                          return item.media_class
-                            ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
-                            : "";
-                        })()}
-                                </span>
-                                ${this.config.search_view === 'card' && !isRadio(item) ? html`
-                                  <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }}>
-                                    <ha-icon icon="mdi:dots-vertical"></ha-icon>
-                                  </div>
-                                ` : nothing}
-                              </div>
-                              ${this.config.search_view !== 'card' ? renderSearchResultActions({
+                           if (isTrack && item.artist && item.album) {
+                             return `${item.artist} - ${item.album}`;
+                           }
+                           if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
+                             return item.artist;
+                           }
+                           // Otherwise show media class as before
+                           return item.media_class
+                             ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
+                             : "";
+                         })()}
+                                 </span>
+                                 ${isCard && !isRadio(item) ? html`
+                                   <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }}>
+                                     <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                                   </div>
+                                 ` : nothing}
+                               </div>
+                               ` : nothing}
+                              ${!isCard ? renderSearchResultActions({
                           item,
                           onPlay: (it) => this._playMediaFromSearch(it),
                           onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },

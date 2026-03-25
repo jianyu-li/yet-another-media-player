@@ -245,7 +245,8 @@ export default {
         },
         "search_view_options": {
             "list": "Seznam",
-            "card": "Kartica"
+            "card": "Kartica",
+            "card_minimal": "Minimalna kartica"
         },
         "card_type_options": {
             "default": "Privzeto",

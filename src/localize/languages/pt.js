@@ -245,7 +245,8 @@ export default {
         },
         "search_view_options": {
             "list": "Lista",
-            "card": "Cartão"
+            "card": "Cartão",
+            "card_minimal": "Cartão minimalista"
         },
         "card_type_options": {
             "default": "Padrão",

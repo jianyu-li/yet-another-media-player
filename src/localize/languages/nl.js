@@ -246,7 +246,8 @@ export default {
         },
         "search_view_options": {
             "list": "Lijst",
-            "card": "Kaart"
+            "card": "Kaart",
+            "card_minimal": "Minimale kaart"
         },
         "card_type_options": {
             "default": "Standaard",

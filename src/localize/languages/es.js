@@ -246,7 +246,8 @@ export default {
         },
         "search_view_options": {
             "list": "Lista",
-            "card": "Tarjeta"
+            "card": "Tarjeta",
+            "card_minimal": "Tarjeta reducida"
         },
         "card_type_options": {
             "default": "Por defecto",

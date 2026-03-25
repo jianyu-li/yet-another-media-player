@@ -245,7 +245,8 @@ export default {
         },
         "search_view_options": {
             "list": "Lista",
-            "card": "Scheda"
+            "card": "Scheda",
+            "card_minimal": "Scheda minima"
         },
         "card_type_options": {
             "default": "Predefinito",
