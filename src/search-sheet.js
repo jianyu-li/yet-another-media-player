@@ -18,6 +18,10 @@ export function isTrack(item) {
   return item && (item.media_class === 'track' || item.media_content_type === 'track');
 }
 
+export function isRadio(item) {
+  return item && (item.media_class === 'radio' || item.media_content_type === 'radio');
+}
+
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
   const numericLimit = Number(limit);
   if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
@@ -155,7 +159,7 @@ export function renderSearchResultActions({
               title="${localize('common.play_now')}">
         <ha-icon icon="mdi:play"></ha-icon>
       </button>
-      ${!isQueueItem && item.media_class !== 'radio' && item.media_content_type !== 'radio' ? html`
+      ${!isQueueItem && !isRadio(item) ? html`
         <button class="${queueClass}" 
                 @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} 
                 title="${localize('common.more_options')}">
@@ -333,7 +337,7 @@ export function renderSearchSheet({
                         ${(item.media_class === 'track' && item.artist && item.album) ? `${item.artist} - ${item.album}` : item.artist}
                       </span>
                     ` : nothing}
-                    ${searchView === 'card' && item.media_class !== 'radio' && item.media_content_type !== 'radio' ? html`
+                    ${searchView === 'card' && !isRadio(item) ? html`
                       <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }}>
                         <ha-icon icon="mdi:dots-vertical"></ha-icon>
                       </div>

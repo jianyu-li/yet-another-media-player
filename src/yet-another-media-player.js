@@ -19,7 +19,8 @@ import {
   renderSearchResultActions,
   renderSearchResultSlideOut,
   ALLOWED_MEDIA_TYPES,
-  transformMusicAssistantItem
+  transformMusicAssistantItem,
+  isRadio
 } from "./search-sheet.js";
 import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
 import {
@@ -7494,7 +7495,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             : "";
                         })()}
                                 </span>
-                                ${this.config.search_view === 'card' && item.media_class !== 'radio' && item.media_content_type !== 'radio' ? html`
+                                ${this.config.search_view === 'card' && !isRadio(item) ? html`
                                   <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }}>
                                     <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                   </div>
