@@ -110,7 +110,7 @@ Below you will find a list of all configuration options.
 | `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
-| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, or `prev_entity`/`next_entity` to navigate chips |
+| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, or `prev_entity`/`next_entity` to navigate chips |
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue` |
@@ -808,6 +808,78 @@ action:
             data:
               brightness_pct: 75
 ```
+
+### Select Entity from Helper
+
+Use the **Select Entity from Helper** action to read an `input_text` helper and automatically activate the matching entity chip. This is the inverse of **Sync Selected Entity** — while sync *writes* to the helper, select entity *reads* from it.
+
+This action is passive: it monitors the helper state and switches chips automatically whenever the value changes. No card trigger or user interaction is needed.
+
+#### Example Configuration
+
+```yaml
+actions:
+  - action: select_entity
+    sync_entity_helper: input_text.current_yamp_entity
+    sync_entity_type: yamp_playback_entity
+    in_menu: hidden
+```
+
+> [!NOTE]
+> Like **Sync Selected Entity**, placement is automatically set to `hidden` and triggers are disabled — this action runs in the background.
+
+### Syncing Two YAMP Cards
+
+By combining `sync_selected_entity` and `select_entity` on both cards, you can keep two YAMP instances perfectly in sync. When you select a chip on either card, the other card follows automatically.
+
+First, create an `input_text` helper in Home Assistant (e.g., `input_text.current_yamp_entity`). Then add both actions to each card:
+
+#### Main YAMP Card
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.office_homepod_2
+  - entity_id: media_player.kitchen_homepod_2
+actions:
+  - action: sync_selected_entity
+    in_menu: hidden
+    card_trigger: none
+    sync_entity_type: yamp_playback_entity
+    sync_entity_helper: input_text.current_yamp_entity
+  - action: select_entity
+    in_menu: hidden
+    card_trigger: none
+    sync_entity_type: yamp_playback_entity
+    sync_entity_helper: input_text.current_yamp_entity
+```
+
+#### Dedicated Search Card
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.office_homepod_2
+  - entity_id: media_player.kitchen_homepod_2
+control_layout: modern
+card_type: search
+search_view: card_minimal
+idle_screen: search
+actions:
+  - action: select_entity
+    in_menu: hidden
+    card_trigger: none
+    sync_entity_type: yamp_playback_entity
+    sync_entity_helper: input_text.current_yamp_entity
+  - action: sync_selected_entity
+    in_menu: hidden
+    card_trigger: none
+    sync_entity_type: yamp_playback_entity
+    sync_entity_helper: input_text.current_yamp_entity
+```
+
+This configuration:
+- **Main card** syncs its selected chip to the helper and listens for changes from the search card
+- **Search card** syncs its selected chip to the helper and listens for changes from the main card
+- Selecting a chip on either card instantly updates the other
 
 ### Passing Current Entity to a Script
 

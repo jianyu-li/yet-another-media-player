@@ -122,6 +122,7 @@ export default {
             "only_available_modern": "Nur verfügbar im modernen Layout.",
             "image_url_helper": "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
             "selected_entity_helper": "Input-Text-Helper, der mit der aktuell ausgewählten Mediaplayer-Entitäts-ID aktualisiert wird.",
+            "select_entity_helper": "Input-Text-Helper, aus dem die Entitäts-ID gelesen wird. Die Karte wählt automatisch den passenden Chip aus.",
             "sync_entity_type": "Wählen Sie, welche Entitäts-ID mit dem Helper synchronisiert werden soll (Standard: Music Assistant Entität, falls konfiguriert).",
             "disable_auto_select": "Verhindert, dass der Chip dieser Entität automatisch ausgewählt wird, wenn die Wiedergabe startet.",
             "search_view": "Wählen Sie zwischen einer Standardliste oder einem kartenbasierten Raster für Suchergebnisse.",
@@ -219,10 +220,12 @@ export default {
             "navigate": "Navigieren",
             "prev_entity": "Vorheriger Entitäts-Chip",
             "next_entity": "Nächster Entitäts-Chip",
-            "sync_selected_entity": "Ausgewählte Entität synchronisieren"
+            "sync_selected_entity": "Ausgewählte Entität synchronisieren",
+            "select_entity": "Entität aus Helper auswählen"
         },
         "action_helpers": {
             "sync_selected_entity": "Entität synchronisieren →",
+            "select_entity": "Entität auswählen ←",
             "select_helper": "(Helper auswählen)"
         },
         "sync_entity_options": {

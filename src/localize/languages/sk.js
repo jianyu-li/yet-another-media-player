@@ -122,6 +122,7 @@ export default {
             "only_available_modern": "Dostupné len s moderným rozložením.",
             "image_url_helper": "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
             "selected_entity_helper": "Pomocník pre vstupný text, ktorý bude aktualizovaný o ID aktuálne vybranej entity prehrávača médií.",
+            "select_entity_helper": "Pomocník pre vstupný text, z ktorého sa číta ID entity. Karta automaticky vyberie zodpovedajúci čip.",
             "sync_entity_type": "Vyberte, ktoré ID entity sa má synchronizovať s pomocníkom (predvolene entita Music Assistant, ak je nakonfigurovaná).",
             "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania.",
             "search_view": "Vyberte si medzi štandardným zoznamom alebo mriežkou kariet pre výsledky vyhľadávania.",
@@ -218,10 +219,12 @@ export default {
             "navigate": "Navigovať",
             "prev_entity": "Predošlý čip entity",
             "next_entity": "Ďalší čip entity",
-            "sync_selected_entity": "Synchronizovať vybranú entitu"
+            "sync_selected_entity": "Synchronizovať vybranú entitu",
+            "select_entity": "Vybrať entitu z pomocníka"
         },
         "action_helpers": {
             "sync_selected_entity": "Synchronizovať vybranú entitu →",
+            "select_entity": "Vybrať entitu ←",
             "select_helper": "(vybrať pomocníka)"
         },
         "sync_entity_options": {

@@ -5291,6 +5291,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // Sync selected entity to helper if configured
       this._updateSelectedEntityHelper();
+      this._handleSelectEntityFromHelper();
     }
 
     // Restart progress timer
@@ -6504,8 +6505,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Always reserve space in menu for chips when in_menu_on_idle, even when playing (to prevent menu jump)
     const reserveChipSpaceInMenu = showChipRow === "in_menu_on_idle" && hasMultipleEntities && !this._showSearchInSheet;
     const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
-    // Filter out sync_selected_entity actions entirely - they don't render as chips
-    const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity");
+    // Filter out sync_selected_entity / select_entity actions entirely - they don't render as chips
+    const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity" && action?.action !== "select_entity");
 
     // Action placement logic
     const getPlacement = (act) => {
@@ -8571,6 +8572,56 @@ class YetAnotherMediaPlayerCard extends LitElement {
       bubbles: true,
       composed: true,
     }));
+  }
+
+  // Read helper and select matching entity chip via select_entity actions
+  _handleSelectEntityFromHelper() {
+    if (!this.hass || !this.config?.actions) return;
+
+    if (!this._lastSelectEntityValues) {
+      this._lastSelectEntityValues = new Map();
+    }
+
+    const selectActions = this.config.actions.filter(
+      a => a.action === "select_entity" && a.sync_entity_helper
+    );
+
+    if (selectActions.length === 0) return;
+
+    for (const action of selectActions) {
+      const helperId = action.sync_entity_helper;
+      const syncType = action.sync_entity_type || "yamp_entity";
+      const helperValue = this.hass.states[helperId]?.state;
+
+      if (!helperValue || helperValue === "unknown" || helperValue === "unavailable") continue;
+
+      // Dedup: skip if we already processed this exact value
+      const cacheKey = `${helperId}-${syncType}`;
+      if (this._lastSelectEntityValues.get(cacheKey) === helperValue) continue;
+      this._lastSelectEntityValues.set(cacheKey, helperValue);
+
+      // Find the matching entity index
+      let matchIdx = -1;
+      for (let i = 0; i < this.entityIds.length; i++) {
+        let candidateId;
+        if (syncType === "yamp_main_entity") {
+          candidateId = this.entityIds[i];
+        } else if (syncType === "yamp_playback_entity") {
+          candidateId = this._getActivePlaybackEntityId(i);
+        } else {
+          // yamp_entity: MA entity if configured, otherwise main entity
+          candidateId = this._getActualResolvedMaEntityForState(i) || this.entityIds[i];
+        }
+        if (candidateId === helperValue) {
+          matchIdx = i;
+          break;
+        }
+      }
+
+      if (matchIdx >= 0 && matchIdx !== this._selectedIndex) {
+        this._onChipClick(matchIdx);
+      }
+    }
   }
 
   // Sync selected entity to configured helpers via actions
