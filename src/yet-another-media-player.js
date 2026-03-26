@@ -935,6 +935,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     };
   }
 
+  _isCurrentlyPlayingRadio() {
+    const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    if (!stateObj?.attributes) return false;
+    const ct = (stateObj.attributes.media_content_type || "").toLowerCase();
+    const cid = (stateObj.attributes.media_content_id || "").toLowerCase();
+    return ct === "radio" || cid.startsWith("library://radio/");
+  }
+
   _handlePlaySimilar() {
     const mockItem = this._getMockItemFromCurrentTrack();
     if (!mockItem) return;
@@ -945,7 +953,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._playMediaFromSearch(mockItem);
   }
 
-  _handleAddCurrentToPlaylist() {
+  async _handleAddCurrentToPlaylist() {
     const mockItem = this._getMockItemFromCurrentTrack();
     if (!mockItem) return;
 
@@ -955,6 +963,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showEntityOptions = true;
     this._showSearchInSheet = true;
     this._dismissMenuAfterPlaylistAdd = true;
+
+    if (this._isCurrentlyPlayingRadio()) {
+      // Radio streams don't have a valid MA track URI, so we need the user
+      // to pick the correct track from a search first.
+      const searchTerm = [mockItem.title, mockItem.media_artist].filter(Boolean).join(" ");
+      this._addToPlaylistTarget = null; // will be set when user picks a track
+      this._searchHierarchy.push({
+        type: 'select_track_for_playlist',
+        name: localize('search.select_track_for_playlist'),
+        query: this._searchQuery,
+        filter: this._searchMediaClassFilter
+      });
+      this._searchBreadcrumb = localize('search.select_track_for_playlist');
+      this._searchQuery = searchTerm;
+      this._currentSearchQuery = searchTerm;
+      this._searchMediaClassFilter = 'track';
+      this._resetSearchContext();
+      this._removeSearchSwipeHandlers();
+      await this._doSearch('track', { clearFilters: true });
+      return;
+    }
+
     this._performSearchOptionAction(mockItem, 'add_to_playlist');
   }
 
@@ -1942,7 +1972,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
 
     const previousLevel = this._searchHierarchy.pop();
-    if (previousLevel.type === 'select_playlist') {
+    if (previousLevel.type === 'select_playlist' || previousLevel.type === 'select_track_for_playlist') {
       this._addToPlaylistTarget = null;
     }
 
@@ -2054,6 +2084,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     if (this._addToPlaylistTarget && item.media_class === 'playlist') {
       return localize('search.add_to_playlist');
+    }
+
+    // Track selection step for radio add-to-playlist
+    const currentHierarchy = this._searchHierarchy[this._searchHierarchy.length - 1];
+    if (currentHierarchy?.type === 'select_track_for_playlist' && (item.media_class === 'track' || item.media_content_type === 'track')) {
+      return localize('search.select_track_for_playlist');
     }
 
     return getSearchResultClickTitle(item);
@@ -3195,6 +3231,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // If this is a touch device and we have a touch event, ignore the click
     // (touch events are handled by _handleSearchResultTouch)
     if ('ontouchstart' in window && event && event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents) {
+      return;
+    }
+
+    // Radio flow: user is picking a track to resolve from search results
+    const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
+    if (currentHierarchyLevel?.type === 'select_track_for_playlist' && (item.media_class === 'track' || item.media_content_type === 'track')) {
+      // Use the selected real MA track and continue to playlist selection
+      this._performSearchOptionAction(item, 'add_to_playlist');
       return;
     }
 

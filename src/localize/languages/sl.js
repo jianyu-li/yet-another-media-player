@@ -317,6 +317,7 @@ export default {
         "added_to_playlist": "Dodano na seznam predvajanja!",
         "select_playlist": "Izberite seznam predvajanja za '{track}'",
         "add_to_playlist": "Dodaj na seznam predvajanja",
+        "select_track_for_playlist": "Izberite skladbo za dodajanje",
         "labels": {
             "replace": "Zamenjaj",
             "next": "Naslednje",

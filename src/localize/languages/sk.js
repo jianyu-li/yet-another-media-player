@@ -317,6 +317,7 @@ export default {
         "added_to_playlist": "Pridané do playlistu!",
         "select_playlist": "Vybrať playlist pre '{track}'",
         "add_to_playlist": "Pridať do playlistu",
+        "select_track_for_playlist": "Vybrať skladbu na pridanie",
         "labels": {
             "replace": "Nahradiť",
             "next": "Nasledujúce",
