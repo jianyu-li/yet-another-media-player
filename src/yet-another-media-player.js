@@ -8220,7 +8220,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._removeSearchSwipeHandlers();
     window.removeEventListener("scroll", this._handleGlobalScroll);
     window.removeEventListener("resize", this._handleViewportResize);
-    this._cleanupTextResizeObserver();
+    if (typeof this._cleanupTextResizeObserver === 'function') this._cleanupTextResizeObserver();
 
     // Cleanup all websocket subscriptions
     Object.values(this._templateSubscriptions).forEach(unsub => {
