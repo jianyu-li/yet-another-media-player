@@ -186,25 +186,25 @@ export const yampCardStyles = css`
   :host {
     display: block;
     border-radius: var(--border-radius);
-    box-shadow: none;
+    box-shadow: var(--ha-card-box-shadow, none);
     background: transparent;
     color: var(--primary-text);
     transition: background var(--transition-normal);
-    overflow: hidden;
-    clip-path: inset(0 round var(--border-radius));
+    overflow: visible;
+    clip-path: none;
   }
 
   ha-card.yamp-card {
     display: block;
     border-radius: var(--border-radius);
-    box-shadow: none;
+    box-shadow: var(--ha-card-box-shadow, none);
     background: transparent;
     color: var(--primary-text);
     transition: background var(--transition-normal);
-    overflow: hidden;
+    overflow: visible;
     font-size: inherit;
     position: relative;
-    clip-path: inset(0 round var(--border-radius));
+    clip-path: none;
     transform: translateZ(0);
   }
 
@@ -515,8 +515,8 @@ export const yampCardStyles = css`
   .chip-row {
     display: flex;
     gap: 8px;
-    padding: 8px 12px 0 12px;
-    margin-bottom: 12px;
+    padding: 8px 12px 8px 12px;
+    margin-bottom: 4px;
     position: relative;
     z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
@@ -546,8 +546,8 @@ export const yampCardStyles = css`
   .action-chip-row {
     display: flex;
     gap: 8px;
-    padding: 2px 12px 0 12px;
-    margin-bottom: 8px;
+    padding: 2px 12px 6px 12px;
+    margin-bottom: 4px;
     position: relative;
     z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
@@ -567,7 +567,7 @@ export const yampCardStyles = css`
     opacity: 1;
     border-radius: var(--button-border-radius);
     color: var(--yamp-chip-text, var(--primary-text));
-    box-shadow: none;
+    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
     text-shadow: none;
     border: 1px solid var(--yamp-chip-border, transparent);
     outline: none;
@@ -576,7 +576,7 @@ export const yampCardStyles = css`
     font-size: 0.95em;
     cursor: pointer;
     margin: 4px 0;
-    transition: background var(--transition-normal) ease, transform 0.1s ease;
+    transition: background var(--transition-normal) ease, transform 0.1s ease, box-shadow var(--transition-normal) ease;
     flex: 0 0 auto;
     white-space: nowrap;
     display: inline-flex;
@@ -587,7 +587,7 @@ export const yampCardStyles = css`
   .action-chip:hover {
     background: var(--custom-accent);
     color: #fff;
-    box-shadow: none;
+    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
     text-shadow: none;
   }
 
@@ -595,7 +595,7 @@ export const yampCardStyles = css`
     background: var(--custom-accent);
     color: #fff;
     transform: scale(0.96);
-    box-shadow: none;
+    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
     text-shadow: none;
   }
 
@@ -613,13 +613,14 @@ export const yampCardStyles = css`
     padding: 6px 6px 6px 8px;
     background: var(--yamp-chip-bg);
     color: var(--yamp-chip-text);
+    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
     cursor: pointer;
     font-size: 0.9em;
     font-weight: 500;
     opacity: 1;
     border: 1px solid var(--yamp-chip-border, transparent);
     outline: none;
-    transition: background var(--transition-normal), opacity var(--transition-normal);
+    transition: background var(--transition-normal), opacity var(--transition-normal), box-shadow var(--transition-normal);
     flex: 0 0 auto;
     white-space: nowrap;
     position: relative;
