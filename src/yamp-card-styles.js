@@ -3172,6 +3172,7 @@ export const yampCardStyles = css`
     border-bottom: none;
     border-radius: 12px;
     background: var(--search-card-bg);
+    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
     align-items: center;
     gap: 8px;
     height: min-content;
