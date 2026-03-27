@@ -262,7 +262,6 @@ export function renderSearchSheet({
   onMoveDown,
   onMoveNext,
   onRemove,
-  hideActions = false,
 }) {
   if (!open) return nothing;
   const isCard = searchView === 'card' || searchView === 'card_minimal';
@@ -284,11 +283,9 @@ export function renderSearchSheet({
       ${breadcrumb ? html`
         <div class="entity-options-search-breadcrumb">
           <div class="entity-options-search-breadcrumb-text">${breadcrumb}</div>
-          ${!hideActions ? html`
-            <button class="entity-options-search-breadcrumb-play" @click=${onPlayCollection} title="${localize('search.play_collection')}">
-              <ha-icon icon="mdi:play"></ha-icon>
-            </button>
-          ` : nothing}
+          <button class="entity-options-search-breadcrumb-play" @click=${onPlayCollection} title="${localize('search.play_collection')}">
+            <ha-icon icon="mdi:play"></ha-icon>
+          </button>
         </div>
       ` : nothing}
       ${loading ? html`<div class="search-sheet-loading">${localize('common.loading')}</div>` : nothing}

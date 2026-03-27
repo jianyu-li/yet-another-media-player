@@ -1165,6 +1165,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
     this._addToPlaylistTarget = null; // Clear playlist target
+    this._dismissMenuAfterPlaylistAdd = false; // Clear dismiss flag
     this._recommendationsFilterActive = false;
     if (this._quickMenuInvoke) {
       this._showEntityOptions = false;
@@ -4633,12 +4634,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._showGrouping ||
       this._showSourceList ||
       this._showTransferQueue ||
+      this._showResolvedEntities ||
       this._showSearchInSheet ||
       this._showSourceMenu ||
       !!this._searchActiveOptionsItem ||
       !!this._activeSearchRowMenuId ||
       !!this._queueActionsMenuOpenId
     );
+  }
+
+  get _isSelectionFlow() {
+    return !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
   }
 
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
@@ -7250,7 +7256,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
-                      ${!(!!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist')) ? html`
+                      ${!this._isSelectionFlow ? html`
                         <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
                           <ha-icon icon="mdi:play"></ha-icon>
                         </button>
@@ -7506,7 +7512,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             <div class="entity-options-search-result ${isCard ? 'search-result-card' : ''} ${isMinimal ? 'minimal' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
                                <div class="search-sheet-thumb-container"
                                     data-clickable="${isCard}"
-                                    @click=${isCard ? () => this._playMediaFromSearch(item) : null}>
+                                    @click=${isCard ? (e) => (this._isSelectionFlow ? this._handleSearchResultClick(item, e) : this._playMediaFromSearch(item)) : null}>
                                 ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
                                    <img
                                      class="entity-options-search-thumb"
@@ -7520,7 +7526,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                    </div>
                                  `}
                                  ${(() => {
-                          const hideActions = !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
+                          const hideActions = this._isSelectionFlow;
                           return isCard ? renderSearchResultActions({
                             item,
                             onPlay: (it) => this._playMediaFromSearch(it),
@@ -7565,7 +7571,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                           })()}
                                  </span>
                                  ${(() => {
-                            const hideActions = !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
+                            const hideActions = this._isSelectionFlow;
                             return isCard && !isRadio(item) && !hideActions ? html`
                                    <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }}>
                                      <ha-icon icon="mdi:dots-vertical"></ha-icon>
@@ -7575,7 +7581,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                </div>
                                 ` : nothing}
                               ${(() => {
-                          const hideActions = !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
+                          const hideActions = this._isSelectionFlow;
                           return !isCard ? renderSearchResultActions({
                             item,
                             onPlay: (it) => this._playMediaFromSearch(it),
@@ -7594,7 +7600,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         })()}
 
                                  ${(() => {
-                          const hideActions = !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
+                          const hideActions = this._isSelectionFlow;
                           return renderSearchResultSlideOut({
                             item,
                             activeSearchRowMenuId: this._activeSearchRowMenuId,
@@ -8251,7 +8257,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._removeSearchSwipeHandlers();
     window.removeEventListener("scroll", this._handleGlobalScroll);
     window.removeEventListener("resize", this._handleViewportResize);
-    if (typeof this._cleanupTextResizeObserver === 'function') this._cleanupTextResizeObserver();
+    if (typeof this._teardownAdaptiveTextObserver === 'function') this._teardownAdaptiveTextObserver();
 
     // Cleanup all websocket subscriptions
     Object.values(this._templateSubscriptions).forEach(unsub => {
