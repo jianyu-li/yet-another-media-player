@@ -2038,6 +2038,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Check if a search result is clickable for hierarchical navigation
   _isClickableSearchResult(item) {
     if (!item) return false;
+    // Always clickable if we are in a selection flow
+    if (this._addToPlaylistTarget) return true;
+    const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
+    if (currentHierarchyLevel?.type === 'select_track_for_playlist') return true;
+
     return !!item.is_browsable;
   }
 
@@ -2093,7 +2098,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Track selection step for radio add-to-playlist
     const currentHierarchy = this._searchHierarchy[this._searchHierarchy.length - 1];
     if (currentHierarchy?.type === 'select_track_for_playlist' && (item.media_class === 'track' || item.media_content_type === 'track')) {
-      return localize('search.select_track_for_playlist');
+      const mockItem = this._getMockItemFromCurrentTrack();
+      return localize('search.select_track_for_playlist', { 
+        '{track}': mockItem?.title || "", 
+        '{artist}': mockItem?.media_artist || "" 
+      });
     }
 
     return getSearchResultClickTitle(item);
@@ -7240,9 +7249,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
-                      <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
-                        <ha-icon icon="mdi:play"></ha-icon>
-                      </button>
+                      ${!(!!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist')) ? html`
+                        <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
+                          <ha-icon icon="mdi:play"></ha-icon>
+                        </button>
+                      ` : nothing}
                     </div>
                   ` : (showSearchHeaders ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
                   }
@@ -7506,17 +7517,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                    <div class="entity-options-search-thumb-placeholder">
                                      <ha-icon icon="mdi:music"></ha-icon>
                                    </div>
-                                `}
-                                ${isCard ? renderSearchResultActions({
-                        item,
-                        onPlay: (it) => this._playMediaFromSearch(it),
-                        onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-                        upcomingFilterActive: !!this._upcomingFilterActive,
-                        isMusicAssistant: this._isMusicAssistantEntity(),
-                        massQueueAvailable: this._massQueueAvailable,
-                        searchView: 'card',
-                        minimal: isMinimal
-                      }) : nothing}
+                                 `}
+                                 ${(() => {
+                          const hideActions = !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
+                          return isCard ? renderSearchResultActions({
+                            item,
+                            onPlay: (it) => this._playMediaFromSearch(it),
+                            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+                            upcomingFilterActive: !!this._upcomingFilterActive,
+                            isMusicAssistant: this._isMusicAssistantEntity(),
+                            massQueueAvailable: this._massQueueAvailable,
+                            searchView: 'card',
+                            minimal: isMinimal,
+                            hideActions: hideActions
+                          }) : nothing;
+                        })()}
                                </div>
                                 ${!isMinimal ? html`
                                 <div class="search-sheet-info">
@@ -7530,60 +7545,71 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                         @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
                                         @click=${() => this._handleSearchResultClick(item)}>
                                    ${(() => {
-                           const isTrack = item.media_class === 'track';
-                           const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
-                           const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
-                           const isUpcoming = !!this._upcomingFilterActive;
-                           const isRecommendations = !!this._recommendationsFilterActive;
+                            const isTrack = item.media_class === 'track';
+                            const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
+                            const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
+                            const isUpcoming = !!this._upcomingFilterActive;
+                            const isRecommendations = !!this._recommendationsFilterActive;
 
-                           if (isTrack && item.artist && item.album) {
-                             return `${item.artist} - ${item.album}`;
-                           }
-                           if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
-                             return item.artist;
-                           }
-                           // Otherwise show media class as before
-                           return item.media_class
-                             ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
-                             : "";
-                         })()}
+                            if (isTrack && item.artist && item.album) {
+                              return `${item.artist} - ${item.album}`;
+                            }
+                            if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
+                              return item.artist;
+                            }
+                            // Otherwise show media class as before
+                            return item.media_class
+                              ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
+                              : "";
+                          })()}
                                  </span>
-                                 ${isCard && !isRadio(item) ? html`
+                                 ${(() => {
+                            const hideActions = !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
+                            return isCard && !isRadio(item) && !hideActions ? html`
                                    <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }}>
                                      <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                    </div>
-                                 ` : nothing}
+                                 ` : nothing;
+                          })()}
                                </div>
-                               ` : nothing}
-                              ${!isCard ? renderSearchResultActions({
-                          item,
-                          onPlay: (it) => this._playMediaFromSearch(it),
-                          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-                          upcomingFilterActive: !!this._upcomingFilterActive,
-                          isMusicAssistant: this._isMusicAssistantEntity(),
-                          massQueueAvailable: this._massQueueAvailable,
-                          searchView: 'list',
-                          isInline: true,
-                          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-                          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-                          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-                          onRemove: (it) => this._removeQueueItem(it.queue_item_id)
-                        }) : nothing}
+                                ` : nothing}
+                              ${(() => {
+                          const hideActions = !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
+                          return !isCard ? renderSearchResultActions({
+                            item,
+                            onPlay: (it) => this._playMediaFromSearch(it),
+                            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+                            upcomingFilterActive: !!this._upcomingFilterActive,
+                            isMusicAssistant: this._isMusicAssistantEntity(),
+                            massQueueAvailable: this._massQueueAvailable,
+                            searchView: 'list',
+                            isInline: true,
+                            onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+                            onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+                            onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+                            onRemove: (it) => this._removeQueueItem(it.queue_item_id),
+                            hideActions: hideActions
+                          }) : nothing;
+                        })()}
 
-                                ${renderSearchResultSlideOut({
-                          item,
-                          activeSearchRowMenuId: this._activeSearchRowMenuId,
-                          loadingSearchRowMenuId: this._loadingSearchRowMenuId,
-                          onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
-                          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-                          searchView: this.config.search_view,
-                          isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
-                          massQueueAvailable: this._massQueueAvailable,
-                          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-                          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-                          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-                          onRemove: (it) => this._removeQueueItem(it.queue_item_id)
-                        })}
+                                 ${(() => {
+                          const hideActions = !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
+                          return renderSearchResultSlideOut({
+                            item,
+                            activeSearchRowMenuId: this._activeSearchRowMenuId,
+                            loadingSearchRowMenuId: this._loadingSearchRowMenuId,
+                            onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
+                            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+                            searchView: this.config.search_view,
+                            isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
+                            massQueueAvailable: this._massQueueAvailable,
+                            onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+                            onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+                            onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+                            onRemove: (it) => this._removeQueueItem(it.queue_item_id),
+                            hideActions: hideActions
+                          });
+                        })()}
 
                         ${this._loadingSearchRowMenuId === item.media_content_id ? html`
                           <div class="search-row-loading-overlay">
