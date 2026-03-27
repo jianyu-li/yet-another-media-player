@@ -130,7 +130,9 @@ export function renderSearchResultActions({
   onMoveNext,
   onRemove,
   minimal = false,
+  hideActions = false,
 }) {
+  if (hideActions) return nothing;
   const isQueueItem = !!(upcomingFilterActive && item.queue_item_id && isMusicAssistant && massQueueAvailable);
 
   const containerClass = isInline ? 'entity-options-search-buttons' : (searchView === 'card' ? 'card-overlay-buttons' : 'search-sheet-buttons');
@@ -183,7 +185,9 @@ export function renderSearchResultSlideOut({
   onMoveDown,
   onMoveNext,
   onRemove,
+  hideActions = false,
 }) {
+  if (hideActions) return nothing;
   const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
 
   return html`

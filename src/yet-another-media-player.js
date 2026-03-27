@@ -935,6 +935,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     };
   }
 
+  _isCurrentlyPlayingRadio() {
+    const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    if (!stateObj?.attributes) return false;
+    const ct = (stateObj.attributes.media_content_type || "").toLowerCase();
+    const cid = (stateObj.attributes.media_content_id || "").toLowerCase();
+    return ct === "radio" || cid.startsWith("library://radio/");
+  }
+
   _handlePlaySimilar() {
     const mockItem = this._getMockItemFromCurrentTrack();
     if (!mockItem) return;
@@ -945,7 +953,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._playMediaFromSearch(mockItem);
   }
 
-  _handleAddCurrentToPlaylist() {
+  async _handleAddCurrentToPlaylist() {
     const mockItem = this._getMockItemFromCurrentTrack();
     if (!mockItem) return;
 
@@ -955,6 +963,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showEntityOptions = true;
     this._showSearchInSheet = true;
     this._dismissMenuAfterPlaylistAdd = true;
+
+    if (this._isCurrentlyPlayingRadio()) {
+      // Radio streams don't have a valid MA track URI, so we need the user
+      // to pick the correct track from a search first.
+      // Use the track title as the primary query and artist/album as filters for precision.
+      const searchTerm = mockItem.title;
+      this._addToPlaylistTarget = null; // will be set when user picks a track
+      this._searchHierarchy.push({
+        type: 'select_track_for_playlist',
+        name: localize('search.select_track_for_playlist', { '{track}': mockItem.title, '{artist}': mockItem.media_artist }),
+        query: this._searchQuery,
+        filter: this._searchMediaClassFilter
+      });
+      this._searchBreadcrumb = localize('search.select_track_for_playlist', { '{track}': mockItem.title, '{artist}': mockItem.media_artist });
+      this._searchQuery = searchTerm;
+      this._currentSearchQuery = searchTerm;
+      this._searchMediaClassFilter = 'track';
+      this._resetSearchContext();
+      this._removeSearchSwipeHandlers();
+      await this._doSearch('track', { 
+        clearFilters: true, 
+        artist: mockItem.media_artist
+      });
+      return;
+    }
+
     this._performSearchOptionAction(mockItem, 'add_to_playlist');
   }
 
@@ -1130,6 +1164,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    this._addToPlaylistTarget = null; // Clear playlist target
+    this._dismissMenuAfterPlaylistAdd = false; // Clear dismiss flag
     this._recommendationsFilterActive = false;
     if (this._quickMenuInvoke) {
       this._showEntityOptions = false;
@@ -1942,7 +1978,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
 
     const previousLevel = this._searchHierarchy.pop();
-    if (previousLevel.type === 'select_playlist') {
+    if (previousLevel.type === 'select_playlist' || previousLevel.type === 'select_track_for_playlist') {
       this._addToPlaylistTarget = null;
     }
 
@@ -2004,6 +2040,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Check if a search result is clickable for hierarchical navigation
   _isClickableSearchResult(item) {
     if (!item) return false;
+    // Always clickable if we are in a selection flow
+    if (this._addToPlaylistTarget) return true;
+    const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
+    if (currentHierarchyLevel?.type === 'select_track_for_playlist') return true;
+
     return !!item.is_browsable;
   }
 
@@ -2054,6 +2095,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     if (this._addToPlaylistTarget && item.media_class === 'playlist') {
       return localize('search.add_to_playlist');
+    }
+
+    // Track selection step for radio add-to-playlist
+    const currentHierarchy = this._searchHierarchy[this._searchHierarchy.length - 1];
+    if (currentHierarchy?.type === 'select_track_for_playlist' && (item.media_class === 'track' || item.media_content_type === 'track')) {
+      const mockItem = this._getMockItemFromCurrentTrack();
+      return localize('search.select_track_for_playlist', { 
+        '{track}': mockItem?.title || "", 
+        '{artist}': mockItem?.media_artist || "" 
+      });
     }
 
     return getSearchResultClickTitle(item);
@@ -3195,6 +3246,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // If this is a touch device and we have a touch event, ignore the click
     // (touch events are handled by _handleSearchResultTouch)
     if ('ontouchstart' in window && event && event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents) {
+      return;
+    }
+
+    // Radio flow: user is picking a track to resolve from search results
+    const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
+    if (currentHierarchyLevel?.type === 'select_track_for_playlist' && (item.media_class === 'track' || item.media_content_type === 'track')) {
+      // Use the selected real MA track and continue to playlist selection
+      this._performSearchOptionAction(item, 'add_to_playlist');
       return;
     }
 
@@ -4575,12 +4634,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._showGrouping ||
       this._showSourceList ||
       this._showTransferQueue ||
+      this._showResolvedEntities ||
       this._showSearchInSheet ||
       this._showSourceMenu ||
       !!this._searchActiveOptionsItem ||
       !!this._activeSearchRowMenuId ||
       !!this._queueActionsMenuOpenId
     );
+  }
+
+  get _isSelectionFlow() {
+    return !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
   }
 
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
@@ -7192,9 +7256,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${this._searchBreadcrumb ? html`
                     <div class="entity-options-search-breadcrumb">
                       <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
-                      <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
-                        <ha-icon icon="mdi:play"></ha-icon>
-                      </button>
+                      ${!this._isSelectionFlow ? html`
+                        <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
+                          <ha-icon icon="mdi:play"></ha-icon>
+                        </button>
+                      ` : nothing}
                     </div>
                   ` : (showSearchHeaders ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
                   }
@@ -7446,7 +7512,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                             <div class="entity-options-search-result ${isCard ? 'search-result-card' : ''} ${isMinimal ? 'minimal' : ''} ${item._justMoved ? 'just-moved' : ''} ${item.media_content_id != null && this._activeSearchRowMenuId === item.media_content_id ? 'menu-active' : ''}">
                                <div class="search-sheet-thumb-container"
                                     data-clickable="${isCard}"
-                                    @click=${isCard ? () => this._playMediaFromSearch(item) : null}>
+                                    @click=${isCard ? (e) => (this._isSelectionFlow ? this._handleSearchResultClick(item, e) : this._playMediaFromSearch(item)) : null}>
                                 ${item.thumbnail && this._isValidArtworkUrl(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
                                    <img
                                      class="entity-options-search-thumb"
@@ -7458,17 +7524,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                    <div class="entity-options-search-thumb-placeholder">
                                      <ha-icon icon="mdi:music"></ha-icon>
                                    </div>
-                                `}
-                                ${isCard ? renderSearchResultActions({
-                        item,
-                        onPlay: (it) => this._playMediaFromSearch(it),
-                        onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-                        upcomingFilterActive: !!this._upcomingFilterActive,
-                        isMusicAssistant: this._isMusicAssistantEntity(),
-                        massQueueAvailable: this._massQueueAvailable,
-                        searchView: 'card',
-                        minimal: isMinimal
-                      }) : nothing}
+                                 `}
+                                 ${(() => {
+                          const hideActions = this._isSelectionFlow;
+                          return isCard ? renderSearchResultActions({
+                            item,
+                            onPlay: (it) => this._playMediaFromSearch(it),
+                            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+                            upcomingFilterActive: !!this._upcomingFilterActive,
+                            isMusicAssistant: this._isMusicAssistantEntity(),
+                            massQueueAvailable: this._massQueueAvailable,
+                            searchView: 'card',
+                            minimal: isMinimal,
+                            hideActions: hideActions
+                          }) : nothing;
+                        })()}
                                </div>
                                 ${!isMinimal ? html`
                                 <div class="search-sheet-info">
@@ -7482,60 +7552,71 @@ class YetAnotherMediaPlayerCard extends LitElement {
                                         @touchstart=${(e) => this._handleSearchResultTouch(item, e)}
                                         @click=${() => this._handleSearchResultClick(item)}>
                                    ${(() => {
-                           const isTrack = item.media_class === 'track';
-                           const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
-                           const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
-                           const isUpcoming = !!this._upcomingFilterActive;
-                           const isRecommendations = !!this._recommendationsFilterActive;
+                            const isTrack = item.media_class === 'track';
+                            const isTrackOrAlbum = (this._searchMediaClassFilter === 'track' || this._searchMediaClassFilter === 'album');
+                            const isRecentlyPlayed = !!this._recentlyPlayedFilterActive;
+                            const isUpcoming = !!this._upcomingFilterActive;
+                            const isRecommendations = !!this._recommendationsFilterActive;
 
-                           if (isTrack && item.artist && item.album) {
-                             return `${item.artist} - ${item.album}`;
-                           }
-                           if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
-                             return item.artist;
-                           }
-                           // Otherwise show media class as before
-                           return item.media_class
-                             ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
-                             : "";
-                         })()}
+                            if (isTrack && item.artist && item.album) {
+                              return `${item.artist} - ${item.album}`;
+                            }
+                            if ((isTrackOrAlbum || isRecentlyPlayed || isUpcoming || isRecommendations) && item.artist) {
+                              return item.artist;
+                            }
+                            // Otherwise show media class as before
+                            return item.media_class
+                              ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
+                              : "";
+                          })()}
                                  </span>
-                                 ${isCard && !isRadio(item) ? html`
+                                 ${(() => {
+                            const hideActions = this._isSelectionFlow;
+                            return isCard && !isRadio(item) && !hideActions ? html`
                                    <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); this._activeSearchRowMenuId = item.media_content_id; this.requestUpdate(); }}>
                                      <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                    </div>
-                                 ` : nothing}
+                                 ` : nothing;
+                          })()}
                                </div>
-                               ` : nothing}
-                              ${!isCard ? renderSearchResultActions({
-                          item,
-                          onPlay: (it) => this._playMediaFromSearch(it),
-                          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-                          upcomingFilterActive: !!this._upcomingFilterActive,
-                          isMusicAssistant: this._isMusicAssistantEntity(),
-                          massQueueAvailable: this._massQueueAvailable,
-                          searchView: 'list',
-                          isInline: true,
-                          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-                          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-                          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-                          onRemove: (it) => this._removeQueueItem(it.queue_item_id)
-                        }) : nothing}
+                                ` : nothing}
+                              ${(() => {
+                          const hideActions = this._isSelectionFlow;
+                          return !isCard ? renderSearchResultActions({
+                            item,
+                            onPlay: (it) => this._playMediaFromSearch(it),
+                            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+                            upcomingFilterActive: !!this._upcomingFilterActive,
+                            isMusicAssistant: this._isMusicAssistantEntity(),
+                            massQueueAvailable: this._massQueueAvailable,
+                            searchView: 'list',
+                            isInline: true,
+                            onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+                            onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+                            onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+                            onRemove: (it) => this._removeQueueItem(it.queue_item_id),
+                            hideActions: hideActions
+                          }) : nothing;
+                        })()}
 
-                                ${renderSearchResultSlideOut({
-                          item,
-                          activeSearchRowMenuId: this._activeSearchRowMenuId,
-                          loadingSearchRowMenuId: this._loadingSearchRowMenuId,
-                          onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
-                          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-                          searchView: this.config.search_view,
-                          isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
-                          massQueueAvailable: this._massQueueAvailable,
-                          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-                          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-                          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-                          onRemove: (it) => this._removeQueueItem(it.queue_item_id)
-                        })}
+                                 ${(() => {
+                          const hideActions = this._isSelectionFlow;
+                          return renderSearchResultSlideOut({
+                            item,
+                            activeSearchRowMenuId: this._activeSearchRowMenuId,
+                            loadingSearchRowMenuId: this._loadingSearchRowMenuId,
+                            onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
+                            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+                            searchView: this.config.search_view,
+                            isQueueItem: this._isMusicAssistantEntity() && item.queue_item_id && !!this._upcomingFilterActive && this._massQueueAvailable,
+                            massQueueAvailable: this._massQueueAvailable,
+                            onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+                            onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+                            onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+                            onRemove: (it) => this._removeQueueItem(it.queue_item_id),
+                            hideActions: hideActions
+                          });
+                        })()}
 
                         ${this._loadingSearchRowMenuId === item.media_content_id ? html`
                           <div class="search-row-loading-overlay">
@@ -8176,7 +8257,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._removeSearchSwipeHandlers();
     window.removeEventListener("scroll", this._handleGlobalScroll);
     window.removeEventListener("resize", this._handleViewportResize);
-    this._cleanupTextResizeObserver();
+    if (typeof this._teardownAdaptiveTextObserver === 'function') this._teardownAdaptiveTextObserver();
 
     // Cleanup all websocket subscriptions
     Object.values(this._templateSubscriptions).forEach(unsub => {
@@ -8300,6 +8381,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._showSearchInSheet = false;
         this._showResolvedEntities = false;
         this._searchInputAutoFocused = false;
+        this._searchHierarchy = [];
+        this._searchBreadcrumb = "";
+        this._addToPlaylistTarget = null;
         this.requestUpdate();
       }
       // Clear quick menu flag on any overlay close

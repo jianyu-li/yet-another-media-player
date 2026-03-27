@@ -318,6 +318,7 @@ export default {
         "added_to_playlist": "¡Añadido a la lista de reproducción!",
         "select_playlist": "Seleccionar lista de reproducción para '{track}'",
         "add_to_playlist": "Añadir a la lista de reproducción",
+        "select_track_for_playlist": "Seleccionar la canción a añadir para '{track}' de {artist}",
         "labels": {
             "replace": "Remplazar",
             "next": "Siguiente",

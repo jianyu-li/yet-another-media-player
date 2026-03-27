@@ -48,8 +48,12 @@ export function localize(string, search = '', replace = '') {
         translated = string;
     }
 
-    if (search !== '' && replace !== '') {
-        translated = translated.replace(search, replace);
+    if (typeof search === 'object' && search !== null) {
+        for (const [s, r] of Object.entries(search)) {
+            translated = translated.replaceAll(s, r);
+        }
+    } else if (search !== '' && replace !== '') {
+        translated = translated.replaceAll(search, replace);
     }
     return translated;
 }
