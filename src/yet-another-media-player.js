@@ -1164,6 +1164,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._currentSearchQuery = ""; // Reset current search query
     this._searchHierarchy = []; // Clear search hierarchy
     this._searchBreadcrumb = ""; // Clear breadcrumb
+    this._addToPlaylistTarget = null; // Clear playlist target
     this._recommendationsFilterActive = false;
     if (this._quickMenuInvoke) {
       this._showEntityOptions = false;
@@ -8374,6 +8375,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._showSearchInSheet = false;
         this._showResolvedEntities = false;
         this._searchInputAutoFocused = false;
+        this._searchHierarchy = [];
+        this._searchBreadcrumb = "";
+        this._addToPlaylistTarget = null;
         this.requestUpdate();
       }
       // Clear quick menu flag on any overlay close
