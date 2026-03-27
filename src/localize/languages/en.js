@@ -324,7 +324,7 @@ export default {
         "added_to_playlist": "Added to playlist!",
         "select_playlist": "Select Playlist for '{track}'",
         "add_to_playlist": "Add to playlist",
-        "select_track_for_playlist": "Select the track to add",
+        "select_track_for_playlist": "Select the track to add for '{track}' by {artist}",
         "labels": {
             "replace": "Replace",
             "next": "Next",

@@ -967,21 +967,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._isCurrentlyPlayingRadio()) {
       // Radio streams don't have a valid MA track URI, so we need the user
       // to pick the correct track from a search first.
-      const searchTerm = [mockItem.title, mockItem.media_artist].filter(Boolean).join(" ");
+      // Use the track title as the primary query and artist/album as filters for precision.
+      const searchTerm = mockItem.title;
       this._addToPlaylistTarget = null; // will be set when user picks a track
       this._searchHierarchy.push({
         type: 'select_track_for_playlist',
-        name: localize('search.select_track_for_playlist'),
+        name: localize('search.select_track_for_playlist', { '{track}': mockItem.title, '{artist}': mockItem.media_artist }),
         query: this._searchQuery,
         filter: this._searchMediaClassFilter
       });
-      this._searchBreadcrumb = localize('search.select_track_for_playlist');
+      this._searchBreadcrumb = localize('search.select_track_for_playlist', { '{track}': mockItem.title, '{artist}': mockItem.media_artist });
       this._searchQuery = searchTerm;
       this._currentSearchQuery = searchTerm;
       this._searchMediaClassFilter = 'track';
       this._resetSearchContext();
       this._removeSearchSwipeHandlers();
-      await this._doSearch('track', { clearFilters: true });
+      await this._doSearch('track', { 
+        clearFilters: true, 
+        artist: mockItem.media_artist
+      });
       return;
     }
 

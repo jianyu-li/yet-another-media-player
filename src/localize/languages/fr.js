@@ -318,7 +318,7 @@ export default {
         "added_to_playlist": "Ajouté à la playlist !",
         "select_playlist": "Sélectionner une playlist pour '{track}'",
         "add_to_playlist": "Ajouter à la playlist",
-        "select_track_for_playlist": "Sélectionner le titre à ajouter",
+        "select_track_for_playlist": "Sélectionner le titre à ajouter pour '{track}' par {artist}",
         "labels": {
             "replace": "Remplacer",
             "next": "Suivant",

@@ -318,7 +318,7 @@ export default {
         "added_to_playlist": "Toegevoegd aan afspeellijst!",
         "select_playlist": "Selecteer afspeellijst voor '{track}'",
         "add_to_playlist": "Toevoegen aan afspeellijst",
-        "select_track_for_playlist": "Selecteer het nummer om toe te voegen",
+        "select_track_for_playlist": "Selecteer het nummer om toe te voegen voor '{track}' van {artist}",
         "labels": {
             "replace": "Vervangen",
             "next": "Volgende",
