@@ -4003,9 +4003,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastPlaying = null;
     this._lastActiveEntityId = null;
     const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain", "scaled-contain-alternate", "no_artwork"]);
-    this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
-      ? config.artwork_object_fit
-      : "cover";
+    let fit = allowedFits.has(config.artwork_object_fit) ? config.artwork_object_fit : "cover";
+    if (fit === "scaled-contain-alternate" && config.always_collapsed === true) {
+      fit = "scaled-contain";
+    }
+    this._artworkObjectFit = fit;
     this._extendArtwork = config.extend_artwork === true;
     this._idleScreen = config.idle_screen || "default";
     this._idleScreenApplied = false;

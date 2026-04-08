@@ -261,7 +261,7 @@ export default {
             "cover": "Capa (padrão)",
             "contain": "Conter",
             "fill": "Preencher",
-            "scale-down": "Reducir",
+            "scale-down": "Reduzir",
             "scaled-contain": "Conter dimensionado",
             "scaled-contain-alternate": "Conter dimensionado alternativo",
             "none": "Nenhum"
