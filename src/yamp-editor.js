@@ -825,13 +825,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         select: {
           mode: "dropdown",
           options: [
-            { value: "cover", label: "Cover (default)" },
-            { value: "contain", label: "Contain" },
-            { value: "fill", label: "Fill" },
-            { value: "scale-down", label: "Scale Down" },
-            { value: "scaled-contain", label: "Scaled Contain" },
-            { value: "scaled-contain-alternate", label: "Scaled Contain Alternate" },
-            { value: "none", label: "None" },
+            { value: "cover", label: localize('editor.artwork_fit.cover') },
+            { value: "contain", label: localize('editor.artwork_fit.contain') },
+            { value: "fill", label: localize('editor.artwork_fit.fill') },
+            { value: "scale-down", label: localize('editor.artwork_fit.scale-down') },
+            { value: "scaled-contain", label: localize('editor.artwork_fit.scaled-contain') },
+            { value: "scaled-contain-alternate", label: localize('editor.artwork_fit.scaled-contain-alternate') },
+            { value: "none", label: localize('editor.artwork_fit.none') },
             { value: "no_artwork", label: localize('editor.fields.no_artwork_option') }
           ]
         }
@@ -1015,14 +1015,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             select: {
               mode: "dropdown",
               options: [
-                { value: "default", label: "Default" },
-                { value: "cover", label: "Cover" },
-                { value: "contain", label: "Contain" },
-                { value: "fill", label: "Fill" },
-                { value: "scale-down", label: "Scale Down" },
-                { value: "scaled-contain", label: "Scaled Contain" },
-                { value: "scaled-contain-alternate", label: "Scaled Contain Alternate" },
-                { value: "none", label: "None" },
+                { value: "default", label: localize('editor.artwork_fit.default') },
+                { value: "cover", label: localize('editor.artwork_fit.cover') },
+                { value: "contain", label: localize('editor.artwork_fit.contain') },
+                { value: "fill", label: localize('editor.artwork_fit.fill') },
+                { value: "scale-down", label: localize('editor.artwork_fit.scale-down') },
+                { value: "scaled-contain", label: localize('editor.artwork_fit.scaled-contain') },
+                { value: "scaled-contain-alternate", label: localize('editor.artwork_fit.scaled-contain-alternate') },
+                { value: "none", label: localize('editor.artwork_fit.none') },
                 { value: "no_artwork", label: localize('editor.fields.no_artwork_option') }
               ]
             }

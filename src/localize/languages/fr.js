@@ -256,6 +256,16 @@ export default {
             "default": "Par défaut",
             "search": "Rechercher",
             "group_players": "Grouper les lecteurs"
+        },
+        "artwork_fit": {
+            "default": "Par défaut",
+            "cover": "Couverture (par défaut)",
+            "contain": "Contenir",
+            "fill": "Remplir",
+            "scale-down": "Réduire",
+            "scaled-contain": "Contenir mis à l'échelle",
+            "scaled-contain-alternate": "Contenir mis à l'échelle alternatif",
+            "none": "Aucun"
         }
     },
     "card": {

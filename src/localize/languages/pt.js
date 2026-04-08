@@ -255,6 +255,16 @@ export default {
             "default": "Padrão",
             "search": "Procurar",
             "group_players": "Agrupar"
+        },
+        "artwork_fit": {
+            "default": "Padrão",
+            "cover": "Capa (padrão)",
+            "contain": "Conter",
+            "fill": "Preencher",
+            "scale-down": "Reducir",
+            "scaled-contain": "Conter dimensionado",
+            "scaled-contain-alternate": "Conter dimensionado alternativo",
+            "none": "Nenhum"
         }
     },
     "card": {

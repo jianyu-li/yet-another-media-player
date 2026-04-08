@@ -254,7 +254,17 @@ export default {
         "card_type_options": {
             "default": "Predefinito",
             "search": "Cerca",
-            "group_players": "Raggruppa"
+            "group_players": "Raggruppa i lettori"
+        },
+        "artwork_fit": {
+            "default": "Predefinito",
+            "cover": "Copertina (predefinito)",
+            "contain": "Contieni",
+            "fill": "Riempi",
+            "scale-down": "Ridimensiona",
+            "scaled-contain": "Contieni scalato",
+            "scaled-contain-alternate": "Contieni scalato alternativo",
+            "none": "Nessuno"
         }
     },
     "card": {

@@ -255,6 +255,16 @@ export default {
             "default": "Predvolené",
             "search": "Hľadať",
             "group_players": "Zoskupiť prehrávače"
+        },
+        "artwork_fit": {
+            "default": "Predvolené",
+            "cover": "Obal (predvolené)",
+            "contain": "Prispôsobiť",
+            "fill": "Vyplniť",
+            "scale-down": "Zmenšiť",
+            "scaled-contain": "Škálované prispôsobenie",
+            "scaled-contain-alternate": "Škálované prispôsobenie alternatívne",
+            "none": "Žiadne"
         }
     },
     "card": {

@@ -255,7 +255,17 @@ export default {
         "card_type_options": {
             "default": "Standaard",
             "search": "Zoeken",
-            "group_players": "Spelers Groeperen"
+            "group_players": "Spelers groeperen"
+        },
+        "artwork_fit": {
+            "default": "Standaard",
+            "cover": "Cover (standaard)",
+            "contain": "Bevatten",
+            "fill": "Vullen",
+            "scale-down": "Verkleinen",
+            "scaled-contain": "Geschaalde contain",
+            "scaled-contain-alternate": "Geschaalde contain alternatief",
+            "none": "Geen"
         }
     },
     "card": {

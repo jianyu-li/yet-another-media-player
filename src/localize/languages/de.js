@@ -256,6 +256,16 @@ export default {
             "default": "Standard",
             "search": "Suche",
             "group_players": "Player gruppieren"
+        },
+        "artwork_fit": {
+            "default": "Standard",
+            "cover": "Cover (Standard)",
+            "contain": "Einpassen",
+            "fill": "Füllen",
+            "scale-down": "Verkleinern",
+            "scaled-contain": "Skaliertes Einpassen",
+            "scaled-contain-alternate": "Skaliertes Einpassen (Alternativ)",
+            "none": "Keine"
         }
     },
     "card": {
