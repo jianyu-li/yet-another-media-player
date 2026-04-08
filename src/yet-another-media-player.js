@@ -3898,6 +3898,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       case "none":
         return "auto";
       case "scaled-contain":
+      case "scaled-contain-alternate":
         return "80%";
       case "cover":
       default:
@@ -4001,7 +4002,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._selectedIndex = (newSelectedIndex < this.entityIds.length) ? newSelectedIndex : 0;
     this._lastPlaying = null;
     this._lastActiveEntityId = null;
-    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain", "no_artwork"]);
+    const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain", "scaled-contain-alternate", "no_artwork"]);
     this._artworkObjectFit = allowedFits.has(config.artwork_object_fit)
       ? config.artwork_object_fit
       : "cover";
@@ -6675,7 +6676,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Calculate useInsetArtwork early for artworkFullBleed unification
     // Note: collapsed and _alwaysCollapsed will be defined/checked later, so we can't use them here.
     // We'll set useInsetArtwork again later with full collapsed context for rendering.
-    const preCalcInsetArtwork = this._artworkObjectFit === "scaled-contain";
+    const preCalcInsetArtwork = this._artworkObjectFit === "scaled-contain" || this._artworkObjectFit === "scaled-contain-alternate";
     // Extend artwork when configured, when chips are hidden inline (in_menu_on_idle + idle), or when using scaled-contain
     const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork;
 
@@ -6964,9 +6965,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastRenderedHideControls = hideControlsNow;
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
-    const useInsetArtwork = activeArtworkFit === "scaled-contain" && !collapsed && !this._alwaysCollapsed;
+    const isAlternateFit = activeArtworkFit === "scaled-contain-alternate";
+    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed;
     // Add top padding to artwork spacer when scaled-contain and chips are not shown inline
-    const needsArtworkTopPadding = activeArtworkFit === "scaled-contain" &&
+    const needsArtworkTopPadding = (activeArtworkFit === "scaled-contain" || isAlternateFit) &&
       (showChipRow === "in_menu" || (hasSingleEntity && showChipRow !== "always"));
     const fitBehavior = this._getBackgroundSizeForFit(activeArtworkFit);
     let backgroundSize = fitBehavior;
@@ -6975,13 +6977,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       backgroundSize = `${artworkSizePercentage}%`;
     }
 
-    const backgroundImageValue = idleImageUrl
-      ? `url('${idleImageUrl}')`
+    const backgroundImageValue = (idleImageUrl || isAlternateFit)
+      ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
       : artworkUrl
         ? `url('${artworkUrl}')`
         : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
-    const backgroundFilter = (artworkUrl && (collapsed || useInsetArtwork))
+    const backgroundFilter = (artworkUrl && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
     const sharedBackgroundStyle = [
@@ -7001,6 +7003,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         <ha-card class="yamp-card" style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
+            data-artwork-fit="${activeArtworkFit}"
             class=${classMap({
       "yamp-card-inner": true,
       "dim-idle": shouldDimIdle,
@@ -7009,7 +7012,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           >
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!dimIdleFrame ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!(dimIdleFrame || isAlternateFit) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${chipsHiddenInline
         ? html`${this._renderInlineActionRow(rowActions)}${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}`
@@ -7030,7 +7033,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!dimIdleFrame ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!(dimIdleFrame || isAlternateFit) ? html`<div class="card-lower-fade"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -7072,6 +7075,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     ${useInsetArtwork && artworkUrl ? html`
                       <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none;">
                         <img 
+                          class="inset-artwork"
                           src="${artworkUrl}" 
                           style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;" 
                         />

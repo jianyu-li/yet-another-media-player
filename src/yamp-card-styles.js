@@ -1530,6 +1530,52 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
+  /* Scaled Contain Alternate mode - use theme colors since background is transparent */
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .details,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .title,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .artist,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .source-menu-btn,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .source-selected,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .controls-row,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-stepper span,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-label,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-btn ha-icon,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-icon-btn,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-icon-btn ha-icon,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .radio-mode-button,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-slider-icon {
+    color: var(--primary-text);
+  }
+
+  /* Hamburger icon (span) uses !important in base styles, so we override it here */
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-icon {
+    color: var(--primary-text) !important;
+  }
+
+  /* Ensure active buttons still use the accent color */
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button.active,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button.active ha-icon {
+    color: var(--custom-accent);
+  }
+
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
+    border-radius: var(--ha-card-border-radius, 12px);
+    border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color, #e0e0e0));
+  }
+
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider {
+    background: color-mix(in srgb, var(--primary-text), transparent 80%);
+  }
+
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider::-webkit-slider-thumb {
+    border-color: var(--primary-text);
+  }
+
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider::-moz-range-thumb {
+    border-color: var(--primary-text);
+  }
+
   .vol-stepper span {
     width: 42px;
     text-align: center;

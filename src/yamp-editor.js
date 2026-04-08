@@ -830,6 +830,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             { value: "fill", label: "Fill" },
             { value: "scale-down", label: "Scale Down" },
             { value: "scaled-contain", label: "Scaled Contain" },
+            { value: "scaled-contain-alternate", label: "Scaled Contain Alternate" },
             { value: "none", label: "None" },
             { value: "no_artwork", label: localize('editor.fields.no_artwork_option') }
           ]
@@ -1020,6 +1021,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 { value: "fill", label: "Fill" },
                 { value: "scale-down", label: "Scale Down" },
                 { value: "scaled-contain", label: "Scaled Contain" },
+                { value: "scaled-contain-alternate", label: "Scaled Contain Alternate" },
                 { value: "none", label: "None" },
                 { value: "no_artwork", label: localize('editor.fields.no_artwork_option') }
               ]
