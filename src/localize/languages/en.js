@@ -262,6 +262,16 @@ export default {
             "automatic": "Automatic",
             "light": "Light",
             "dark": "Dark"
+        },
+        "artwork_fit": {
+            "default": "Default",
+            "cover": "Cover (default)",
+            "contain": "Contain",
+            "fill": "Fill",
+            "scale-down": "Scale Down",
+            "scaled-contain": "Scaled Contain",
+            "scaled-contain-alternate": "Scaled Contain Alternate",
+            "none": "None"
         }
     },
     "card": {

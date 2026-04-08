@@ -256,6 +256,16 @@ export default {
             "default": "Por defecto",
             "search": "Buscar",
             "group_players": "Agrupar"
+        },
+        "artwork_fit": {
+            "default": "Por defecto",
+            "cover": "Portada (por defecto)",
+            "contain": "Contener",
+            "fill": "Rellenar",
+            "scale-down": "Reducir",
+            "scaled-contain": "Contenido escalado",
+            "scaled-contain-alternate": "Contenido escalado alternativo",
+            "none": "Ninguno"
         }
     },
     "card": {

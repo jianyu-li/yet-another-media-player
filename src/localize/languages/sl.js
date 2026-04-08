@@ -253,8 +253,18 @@ export default {
         },
         "card_type_options": {
             "default": "Privzeto",
-            "search": "Išči",
-            "group_players": "Združi predvajalnike"
+            "search": "Iskanje",
+            "group_players": "Zoskupi predvajalnike"
+        },
+        "artwork_fit": {
+            "default": "Privzeto",
+            "cover": "Ovitek (privzeto)",
+            "contain": "Prilagodi",
+            "fill": "Zapolni",
+            "scale-down": "Pomanjšaj",
+            "scaled-contain": "Pomanjšano prilagodi",
+            "scaled-contain-alternate": "Pomanjšano prilagodi alternativno",
+            "none": "Brez"
         }
     },
     "card": {
