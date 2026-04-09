@@ -915,6 +915,24 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
+  :host([data-details-alignment="center"]) .details {
+    align-items: center;
+    text-align: center;
+  }
+
+  :host([data-details-alignment="right"]) .details {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  :host([data-details-alignment="center"]) .track-options-row {
+    justify-content: center;
+  }
+
+  :host([data-details-alignment="right"]) .track-options-row {
+    justify-content: flex-end;
+  }
+
   /* Controls */
   .controls-row {
     display: flex;

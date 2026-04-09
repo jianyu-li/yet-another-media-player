@@ -1628,6 +1628,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               .selector=${{
         select: {
           mode: "dropdown", options: [
+            { value: "left", label: "Left" },
+            { value: "center", label: "Center" },
+            { value: "right", label: "Right" },
+            { value: "none", label: "None" },
+          ]
+        }
+      }}
+              .value=${this._config.details_alignment ?? "left"}
+              label="${localize('editor.fields.details_alignment')}"
+              @value-changed=${(e) => this._updateConfig("details_alignment", e.detail.value)}
+            ></ha-selector>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+        select: {
+          mode: "dropdown", options: [
             { value: "slider", label: "Slider" },
             { value: "stepper", label: "Stepper" },
             { value: "hidden", label: "Hidden" },
