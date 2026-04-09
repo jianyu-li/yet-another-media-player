@@ -212,7 +212,8 @@ export default {
             "search_view": "Zoekresultaten weergave",
             "search_card_columns": "Aantal kolommen",
             "card_type": "Kaarttype",
-            "no_artwork_option": "Geen artwork"
+            "no_artwork_option": "Geen artwork",
+            "details_alignment": "Details uitlijning"
         },
         "action_types": {
             "menu": "Open een kaartmenu-item",

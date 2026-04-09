@@ -213,7 +213,8 @@ export default {
             "search_card_columns": "Card Columns",
             "card_type": "Card Type",
             "appearance": "Appearance",
-            "no_artwork_option": "No Artwork"
+            "no_artwork_option": "No Artwork",
+            "details_alignment": "Details Alignment"
         },
         "action_types": {
             "menu": "Open a Card Menu Item",

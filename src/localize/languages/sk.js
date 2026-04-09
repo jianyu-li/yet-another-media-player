@@ -211,7 +211,8 @@ export default {
             "placement": "Umiestnenie",
             "card_trigger": "Spúšťač karty",
             "search_view": "Zobrazenie výsledkov vyhľadávania",
-            "search_card_columns": "Stĺpce karty"
+            "search_card_columns": "Stĺpce karty",
+            "details_alignment": "Zarovnanie detailov"
         },
         "action_types": {
             "menu": "Otvoriť položku menu karty",

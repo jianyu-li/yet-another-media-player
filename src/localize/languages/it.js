@@ -211,7 +211,8 @@ export default {
             "placement": "Posizionamento",
             "card_trigger": "Trigger della scheda",
             "search_view": "Vista risultati ricerca",
-            "search_card_columns": "Colonne schede"
+            "search_card_columns": "Colonne schede",
+            "details_alignment": "Allineamento dei dettagli"
         },
         "action_types": {
             "menu": "Apri un elemento del menu",

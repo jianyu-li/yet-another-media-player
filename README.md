@@ -91,6 +91,7 @@ Below you will find a list of all configuration options.
 | `swap_pause_for_stop`      | boolean      | No           | `false`     | Only for `control_layout: modern`; when `true`, the center pause button is replaced with a stop button |
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
+| `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
 | `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
 | `search_card_columns`      | number       | No           | `4`         | Number of columns for search results when `search_view` is set to `card` or `card_minimal` |

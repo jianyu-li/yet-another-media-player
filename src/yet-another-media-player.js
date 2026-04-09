@@ -6552,6 +6552,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this.shadowRoot.host.setAttribute("data-hide-menu-player", String(this.config.hide_menu_player === true || forceHideMenuPlayer));
       this.shadowRoot.host.setAttribute("data-extend-artwork", String(this.config.extend_artwork === true));
       this.shadowRoot.host.setAttribute("data-control-layout", this._controlLayout);
+      this.shadowRoot.host.setAttribute("data-details-alignment", this.config.details_alignment || "left");
       this.shadowRoot.host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
 
       if (hasCustomCardHeight) {
@@ -7098,45 +7099,47 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     ` : nothing}
                   </div>
                 ` : nothing}
-                <div class="details" style="${(() => {
-        const detailStyleParts = [];
-        if (this._showEntityOptions) {
-          detailStyleParts.push('visibility:hidden');
-          detailStyleParts.push('opacity:0');
-        }
-        detailStyleParts.push(`min-height:${detailsMinHeight}px`);
-        if (!shouldShowDetails) detailStyleParts.push('opacity:0');
-        return detailStyleParts.join(';');
-      })()}">
-                  ${this._showMediaTitleOptions ? html`
-                    <div class="title track-options-row" style="display: flex; gap: 16px; justify-content: flex-start; align-items: center; cursor: pointer;">
-                      ${this._massQueueAvailable ? html`
-                        <div class="track-options-btn" @click=${(e) => { e.stopPropagation(); this._handleAddCurrentToPlaylist(); }} title="${localize('search.labels.add_to_playlist')}">
-                          <ha-icon icon="mdi:playlist-plus"></ha-icon>
-                          <span>${localize('search.add_to_playlist')}</span>
+                ${this.config.details_alignment !== 'none' ? html`
+                  <div class="details" style="${(() => {
+          const detailStyleParts = [];
+          if (this._showEntityOptions) {
+            detailStyleParts.push('visibility:hidden');
+            detailStyleParts.push('opacity:0');
+          }
+          detailStyleParts.push(`min-height:${detailsMinHeight}px`);
+          if (!shouldShowDetails) detailStyleParts.push('opacity:0');
+          return detailStyleParts.join(';');
+        })()}">
+                    ${this._showMediaTitleOptions ? html`
+                      <div class="title track-options-row" style="display: flex; gap: 16px; align-items: center; cursor: pointer;">
+                        ${this._massQueueAvailable ? html`
+                          <div class="track-options-btn" @click=${(e) => { e.stopPropagation(); this._handleAddCurrentToPlaylist(); }} title="${localize('search.labels.add_to_playlist')}">
+                            <ha-icon icon="mdi:playlist-plus"></ha-icon>
+                            <span>${localize('search.add_to_playlist')}</span>
+                          </div>
+                        ` : nothing}
+                        <div class="track-options-btn" @click=${(e) => { e.stopPropagation(); this._handlePlaySimilar(); }} title="${localize('search.play_similar')}">
+                          <ha-icon icon="mdi:radio"></ha-icon>
+                          <span>${localize('search.play_similar')}</span>
                         </div>
-                      ` : nothing}
-                      <div class="track-options-btn" @click=${(e) => { e.stopPropagation(); this._handlePlaySimilar(); }} title="${localize('search.play_similar')}">
-                        <ha-icon icon="mdi:radio"></ha-icon>
-                        <span>${localize('search.play_similar')}</span>
+                        <div class="track-options-btn track-options-close" @click=${(e) => { e.stopPropagation(); this._showMediaTitleOptions = false; }} title="${localize('common.close')}">
+                          <ha-icon icon="mdi:close"></ha-icon>
+                        </div>
                       </div>
-                      <div class="track-options-btn track-options-close" @click=${(e) => { e.stopPropagation(); this._showMediaTitleOptions = false; }} title="${localize('common.close')}">
-                        <ha-icon icon="mdi:close"></ha-icon>
+                    ` : html`
+                      <div class="title track-options-title" @click=${(e) => { if (shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? 'Show track options' : ''}">
+                        ${shouldShowDetails && title ? title : html`&nbsp;`}
                       </div>
-                    </div>
-                  ` : html`
-                    <div class="title track-options-title" @click=${(e) => { if (shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? 'Show track options' : ''}">
-                      ${shouldShowDetails && title ? title : html`&nbsp;`}
-                    </div>
-                  `}
-                  <div
-                      class="artist ${shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
-                      @click=${() => {
-        if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-      }}
-                      title=${shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
-                    >${shouldShowDetails && artist ? artist : html`&nbsp;`}</div>
-                </div>
+                    `}
+                    <div
+                        class="artist ${shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
+                        @click=${() => {
+          if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
+        }}
+                        title=${shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
+                      >${shouldShowDetails && artist ? artist : html`&nbsp;`}</div>
+                  </div>
+                ` : nothing}
                 ${(!collapsed && !this._alternateProgressBar)
         ? (isPlaying && duration
           ? renderProgressBar({
