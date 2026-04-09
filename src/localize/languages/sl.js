@@ -211,7 +211,8 @@ export default {
             "placement": "Namestitev",
             "card_trigger": "Sprožilec kartice",
             "search_view": "Pogled rezultatov iskanja",
-            "search_card_columns": "Stolpci kartic"
+            "search_card_columns": "Stolpci kartic",
+            "details_alignment": "Poravnava podrobnosti"
         },
         "action_types": {
             "menu": "Odpri element menija kartice",

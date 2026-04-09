@@ -212,7 +212,8 @@ export default {
             "search_view": "Suchergebnis-Ansicht",
             "search_card_columns": "Spaltenanzahl",
             "card_type": "Kartentyp",
-            "no_artwork_option": "Kein Coverbild"
+            "no_artwork_option": "Kein Coverbild",
+            "details_alignment": "Detail-Ausrichtung"
         },
         "action_types": {
             "menu": "Kartenmenüpunkt öffnen",

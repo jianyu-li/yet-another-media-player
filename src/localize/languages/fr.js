@@ -212,7 +212,8 @@ export default {
             "search_view": "Vue des résultats de recherche",
             "search_card_columns": "Nombre de colonnes",
             "card_type": "Type de carte",
-            "no_artwork_option": "Pas d'image de couverture"
+            "no_artwork_option": "Pas d'image de couverture",
+            "details_alignment": "Alignement des détails"
         },
         "action_types": {
             "menu": "Ouvrir un élément de menu",

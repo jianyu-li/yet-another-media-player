@@ -211,7 +211,8 @@ export default {
             "placement": "Posicionamento",
             "card_trigger": "Gatilho do cartão",
             "search_view": "Vista de resultados de pesquisa",
-            "search_card_columns": "Colunas de cartões"
+            "search_card_columns": "Colunas de cartões",
+            "details_alignment": "Alinhamento de detalhes"
         },
         "action_types": {
             "menu": "Abrir um item do menu",

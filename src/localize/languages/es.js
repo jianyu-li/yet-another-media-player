@@ -212,7 +212,8 @@ export default {
             "placement": "Colocación",
             "card_trigger": "Activador de la tarjeta",
             "search_view": "Vista de resultados de búsqueda",
-            "search_card_columns": "Columnas de tarjetas"
+            "search_card_columns": "Columnas de tarjetas",
+            "details_alignment": "Alineación de detalles"
         },
         "action_types": {
             "menu": "Abrir un elemento del menú",
