@@ -6130,7 +6130,7 @@
                 ${this.config.details_alignment!=="none"?_`
                   <div class="details" style="${(()=>{const b=[];return this._showEntityOptions&&(b.push("visibility:hidden"),b.push("opacity:0")),b.push(`min-height:${Mn}px`),Ee||b.push("opacity:0"),b.join(";")})()}">
                     ${this._showMediaTitleOptions?_`
-                      <div class="title track-options-row" style="display: flex; gap: 16px; justify-content: flex-start; align-items: center; cursor: pointer;">
+                      <div class="title track-options-row" style="display: flex; gap: 16px; align-items: center; cursor: pointer;">
                         ${this._massQueueAvailable?_`
                           <div class="track-options-btn" @click=${b=>{b.stopPropagation(),this._handleAddCurrentToPlaylist()}} title="${d("search.labels.add_to_playlist")}">
                             <ha-icon icon="mdi:playlist-plus"></ha-icon>

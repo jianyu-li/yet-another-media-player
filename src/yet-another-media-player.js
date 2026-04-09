@@ -7111,7 +7111,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           return detailStyleParts.join(';');
         })()}">
                     ${this._showMediaTitleOptions ? html`
-                      <div class="title track-options-row" style="display: flex; gap: 16px; justify-content: flex-start; align-items: center; cursor: pointer;">
+                      <div class="title track-options-row" style="display: flex; gap: 16px; align-items: center; cursor: pointer;">
                         ${this._massQueueAvailable ? html`
                           <div class="track-options-btn" @click=${(e) => { e.stopPropagation(); this._handleAddCurrentToPlaylist(); }} title="${localize('search.labels.add_to_playlist')}">
                             <ha-icon icon="mdi:playlist-plus"></ha-icon>
