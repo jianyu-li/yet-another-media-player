@@ -515,8 +515,8 @@ export const yampCardStyles = css`
   .chip-row {
     display: flex;
     gap: 8px;
-    padding: 8px 12px 8px 12px;
-    margin-bottom: 4px;
+    padding: 8px 12px 18px 12px;
+    margin-bottom: -6px;
     position: relative;
     z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
@@ -528,6 +528,8 @@ export const yampCardStyles = css`
     touch-action: pan-x;
     max-width: 100vw;
     background: transparent;
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%);
+    mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%);
   }
 
   .chip-row::-webkit-scrollbar {
@@ -546,8 +548,8 @@ export const yampCardStyles = css`
   .action-chip-row {
     display: flex;
     gap: 8px;
-    padding: 2px 12px 6px 12px;
-    margin-bottom: 4px;
+    padding: 2px 12px 16px 12px;
+    margin-bottom: -6px;
     position: relative;
     z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
@@ -555,6 +557,8 @@ export const yampCardStyles = css`
     scrollbar-width: none;
     font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));
     background: transparent;
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%);
+    mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%);
   }
 
   .action-chip-row::-webkit-scrollbar {
@@ -2143,6 +2147,8 @@ export const yampCardStyles = css`
     overflow-x: auto;
     padding: 2px 8px 2px 8px;
     background: var(--ha-menu-chip-row-background, transparent);
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   .entity-options-chips-strip .chip {
