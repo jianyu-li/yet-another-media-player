@@ -1239,7 +1239,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _shouldShowSearchSortToggle() {
-    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive) return false;
+    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive || this._recommendationsFilterActive) return false;
     return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
   }
 
