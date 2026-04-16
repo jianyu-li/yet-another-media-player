@@ -1187,8 +1187,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _sortSearchResults(results, sortModeOverride = null) {
-    // Upcoming queue items and Recently Played items should never be sorted
-    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive) {
+    // Upcoming queue items, Recently Played items, and Recommendations should never be sorted
+    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive || this._recommendationsFilterActive) {
       return Array.isArray(results) ? [...results] : [];
     }
     const sortMode = sortModeOverride ?? this._getConfiguredSearchResultsSortMode();
