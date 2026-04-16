@@ -1187,8 +1187,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _sortSearchResults(results, sortModeOverride = null) {
-    // Upcoming queue items should never be sorted
-    if (this._upcomingFilterActive) {
+    // Upcoming queue items and Recently Played items should never be sorted
+    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive) {
       return Array.isArray(results) ? [...results] : [];
     }
     const sortMode = sortModeOverride ?? this._getConfiguredSearchResultsSortMode();
@@ -1239,7 +1239,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _shouldShowSearchSortToggle() {
-    if (this._upcomingFilterActive) return false;
+    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive) return false;
     return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
   }
 
@@ -1267,7 +1267,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _getActiveSearchDisplaySortMode() {
-    if (this._upcomingFilterActive) {
+    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive) {
       return "default";
     }
     if (!this._shouldShowSearchSortToggle()) {
