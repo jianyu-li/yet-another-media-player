@@ -1267,7 +1267,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _getActiveSearchDisplaySortMode() {
-    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive) {
+    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive || this._recommendationsFilterActive) {
       return "default";
     }
     if (!this._shouldShowSearchSortToggle()) {
