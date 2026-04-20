@@ -5306,9 +5306,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
           const res = await promise;
           if (this._currentFetchToken !== fetchToken) return null;
           if (res && res.length > 0) {
+            const isPreferred = (name === "mass" && isMassPreferred) || (name === "lrclib" && !isMassPreferred);
             // Only perform interim update if the other source hasn't finished or we are the preferred source
-            if (!this._massLyrics || this._massLyrics.length === 0 || (name === "mass" && isMassPreferred)) {
-              this._massLyrics = res;
+            if (!this._massLyrics || this._massLyrics.length === 0 || isPreferred) {
+              this._massLyrics = res || [];
+              // Immediately hide fetching state as we now have results to show
+              this._fetchingLyrics = false;
               this.requestUpdate();
             }
           }
@@ -5341,8 +5344,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
             this._lyricsCache.delete(oldestKey);
           }
           this._lyricsCache.set(cacheKey, lyrics);
-        } else if (lyrics === null) {
-          // Explicit null means fetch failed or no lyrics found
+        } else if (lyrics === null || (Array.isArray(lyrics) && lyrics.length === 0)) {
+          // Explicit null or empty means fetch failed or no lyrics found
+          // Only set error if we truly found nothing after all sources finished
           this._lyricsError = true;
         }
         this._fetchingLyrics = false;
@@ -5364,10 +5368,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
    * Internal helper to fetch lyrics from Music Assistant.
    */
   async _getMassLyrics(activeState, fetchToken) {
+    // Use the already-resolved integration status if available
+    if (this._hasMassQueueIntegration === false) return [];
+
     if (!this._massQueueAvailable) {
-      if (typeof this._isMassQueueIntegrationAvailable === "function") {
-        this._massQueueAvailable = await this._isMassQueueIntegrationAvailable(this.hass);
-      }
+      this._massQueueAvailable = await this._isMassQueueIntegrationAvailable(this.hass);
+      this._hasMassQueueIntegration = this._massQueueAvailable;
       if (!this._massQueueAvailable) return [];
     }
 

@@ -3853,7 +3853,7 @@ export const lyricsStyles = css`
     overflow: hidden;
     pointer-events: auto;
     background: rgba(0, 0, 0, 0.3);
-    // backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
   }
 
@@ -3870,8 +3870,6 @@ export const lyricsStyles = css`
     display: flex;
     flex-direction: column;
     align-items: center;
-    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
   }
 
   .lyrics-scroll-container::-webkit-scrollbar {
@@ -3934,7 +3932,7 @@ export const lyricsStyles = css`
     text-align: center;
     padding: 24px;
     color: rgba(255, 255, 255, 0.8);
-    background: rgba(0, 0, 0, 0.4);
+    background: transparent;
     border-radius: inherit;
   }
 
