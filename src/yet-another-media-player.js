@@ -5293,17 +5293,41 @@ class YetAnotherMediaPlayerCard extends LitElement {
         lyrics = await this._getMassLyrics(activeState, fetchToken);
       } else if (configSource === "lrclib") {
         lyrics = await this._getLrclibLyrics(artist, title, album, duration, fetchToken);
-      } else if (configSource === "mass_lrclib") {
-        lyrics = await this._getMassLyrics(activeState, fetchToken);
+      } else {
+        // Parallel fetching for mass_lrclib and lrclib_mass modes
+        const massPromise = this._getMassLyrics(activeState, fetchToken);
+        const lrclibPromise = this._getLrclibLyrics(artist, title, album, duration, fetchToken);
+
+        // Define preferred and fallback based on config
+        const isMassPreferred = configSource === "mass_lrclib";
+        
+        // Setup interim update handler
+        const handleInterim = async (promise, name) => {
+          const res = await promise;
+          if (this._currentFetchToken !== fetchToken) return null;
+          if (res && res.length > 0) {
+            // Only perform interim update if the other source hasn't finished or we are the preferred source
+            if (!this._massLyrics || this._massLyrics.length === 0 || (name === "mass" && isMassPreferred)) {
+              this._massLyrics = res;
+              this.requestUpdate();
+            }
+          }
+          return res;
+        };
+
+        // Fire both and await the preferred one (or first available)
+        const [massResults, lrclibResults] = await Promise.all([
+          handleInterim(massPromise, "mass"),
+          handleInterim(lrclibPromise, "lrclib")
+        ]);
+
         if (this._currentFetchToken !== fetchToken) return;
-        if (!lyrics || lyrics.length === 0) {
-          lyrics = await this._getLrclibLyrics(artist, title, album, duration, fetchToken);
-        }
-      } else if (configSource === "lrclib_mass") {
-        lyrics = await this._getLrclibLyrics(artist, title, album, duration, fetchToken);
-        if (this._currentFetchToken !== fetchToken) return;
-        if (!lyrics || lyrics.length === 0) {
-          lyrics = await this._getMassLyrics(activeState, fetchToken);
+        
+        // Final selection: Prefer MA in mass_lrclib, LRCLIB in lrclib_mass
+        if (isMassPreferred) {
+          lyrics = (massResults && massResults.length > 0) ? massResults : lrclibResults;
+        } else {
+          lyrics = (lrclibResults && lrclibResults.length > 0) ? lrclibResults : massResults;
         }
       }
 
@@ -5670,7 +5694,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._lyricsFetchTimeout = setTimeout(() => {
           this._fetchLyrics();
           this._lyricsFetchTimeout = null;
-        }, 1000);
+        }, 500);
       } else if (!hasMetadata && metadataChanged) {
         // Clear trackers
         this._lastLyricsTrackId = null;
