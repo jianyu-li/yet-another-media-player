@@ -6042,26 +6042,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.hass.callService(domain, service, data);
   }
 
-  _onLyricSeek(time) {
-    if (time === null || time === undefined) return;
-    
-    // Seek to the selected time
-    // We update the optimistic seek anchor so the lyrics respond instantly
-    const activeState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    const trackId = activeState?.attributes?.media_content_id || activeState?.attributes?.media_title;
-    
-    // Set optimistic seek anchor for the UI
-    this._seekAnchor = {
-      timestamp: Date.now(),
-      position: time,
-      trackId: trackId
-    };
-    // Lock backend updates out for a moment to prevent rubber-banding
-    this._seekConvergenceLock = Date.now() + 4000;
-    
-    this.requestUpdate();
-    
-  }
 
 
   _onTapAreaPointerDown(e) {
@@ -7413,7 +7393,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         .activeThemeColor=${this.config.match_theme === true ? "var(--state-media_player-active-color, var(--primary-color, #ffffff))" : "var(--custom-accent, #ffffff)"}
                         .mode=${this.config.lyrics_mode || 'default'}
                         .preRoll=${this.config.lyrics_pre_roll ?? 1}
-                        @seek-lyric=${(e) => this._onLyricSeek(e.detail.time)}
                       ></yamp-lyrics-view>
                     ` : nothing}
                   </div>

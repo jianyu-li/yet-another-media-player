@@ -27,7 +27,7 @@ export function parseLrc(lrcString) {
     let text = line.replace(timeRegex, '').trim();
 
     // Find all time tags in the line (some lines have multiple tags for repeated sections)
-    const timeTages = [];
+    const timeTags = [];
     timeRegex.lastIndex = 0; // Reset regex state
     while ((match = timeRegex.exec(line)) !== null) {
       const minutes = parseInt(match[1], 10);
@@ -37,11 +37,11 @@ export function parseLrc(lrcString) {
       // Calculate fraction modifier based on length (xx vs xxx)
       const fractionModifier = match[3] ? (match[3].length === 3 ? 1000 : 100) : 1000;
       const timeInSeconds = (minutes * 60) + seconds + (fractions / fractionModifier);
-      timeTages.push(timeInSeconds);
+      timeTags.push(timeInSeconds);
     }
 
-    if (timeTages.length > 0) {
-      timeTages.forEach(time => {
+    if (timeTags.length > 0) {
+      timeTags.forEach(time => {
         parsedLyrics.push({ time, text });
       });
     } else {
