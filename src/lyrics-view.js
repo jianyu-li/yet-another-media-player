@@ -46,6 +46,7 @@ export class YampLyricsView extends LitElement {
     super.updated(changedProps);
 
     if (changedProps.has("lyrics")) {
+      this._activeIndex = -1;
       // Re-scroll when lyrics change (new spacers or lines may have changed height)
       requestAnimationFrame(() => this._scrollToActive("auto"));
     }
@@ -74,11 +75,13 @@ export class YampLyricsView extends LitElement {
       }
     }
 
-    if (newActiveIndex !== this._activeIndex && newActiveIndex !== -1) {
+    if (newActiveIndex !== this._activeIndex) {
       this._activeIndex = newActiveIndex;
       this.requestUpdate();
       // Wait for Lit to finish rendering the active class before scrolling
-      this.updateComplete.then(() => this._scrollToActive());
+      if (newActiveIndex !== -1) {
+        this.updateComplete.then(() => this._scrollToActive());
+      }
     }
   }
 
