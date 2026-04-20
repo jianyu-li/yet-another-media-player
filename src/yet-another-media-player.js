@@ -57,6 +57,7 @@ import {
 
 const PLAYLIST_FETCH_LIMIT = 500;
 const SUCCESS_MESSAGE_TIMEOUT_MS = 3000;
+const MAX_LYRICS_CACHE_SIZE = 30;
 
 const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
@@ -586,6 +587,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._massQueueAvailable = false;
     this._hasMassQueueIntegration = null;
     this._checkingMassQueueIntegration = false;
+    this._lyricsCache = new Map();
     // Quick-dismiss mode for action-triggered menu items
     this._quickMenuInvoke = false;
     // Track collapsed layout height for idle mode
@@ -612,7 +614,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     // Lyrics state
     this._massLyrics = []; // Array of parsed lyric objects { time, text }
-    this._lyricsCache = {}; // Cache for lyrics { [key]: parsedLyrics }
     this._lastLyricsTrackId = null; // Track ID of currently loaded lyrics
     this._lastLyricsEntityId = null; // Entity ID of currently loaded lyrics
     this._lyricsActive = false; // Is the lyrics view open?
@@ -5254,8 +5255,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // 1. Check Internal Cache
     const cacheKey = trackId || `${artist}:${title}`;
-    if (this._lyricsCache && this._lyricsCache[cacheKey]) {
-      this._massLyrics = this._lyricsCache[cacheKey];
+    if (this._lyricsCache.has(cacheKey)) {
+      const cachedLyrics = this._lyricsCache.get(cacheKey);
+      // Move to end to track as "most recently used"
+      this._lyricsCache.delete(cacheKey);
+      this._lyricsCache.set(cacheKey, cachedLyrics);
+
+      this._massLyrics = cachedLyrics;
       this._fetchingLyrics = false;
       this.requestUpdate();
       return;
@@ -5293,7 +5299,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this._currentFetchToken === fetchToken) {
         this._massLyrics = lyrics || [];
         if (lyrics && lyrics.length > 0) {
-          this._lyricsCache[cacheKey] = lyrics;
+          // Add to cache with LRU eviction
+          if (this._lyricsCache.size >= MAX_LYRICS_CACHE_SIZE) {
+            // Remove the oldest (first) entry
+            const oldestKey = this._lyricsCache.keys().next().value;
+            this._lyricsCache.delete(oldestKey);
+          }
+          this._lyricsCache.set(cacheKey, lyrics);
         } else if (lyrics === null) {
           // Explicit null means fetch failed or no lyrics found
           this._lyricsError = true;
