@@ -488,6 +488,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _fetchingLyrics: { state: true },
     _lyricsError: { state: true },
     _lastLyricsTrackId: { state: true },
+    _lastLyricsArtist: { state: true },
+    _lastLyricsTitle: { state: true },
     _lastLyricsEntityId: { state: true }
   };
 
@@ -615,6 +617,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Lyrics state
     this._massLyrics = []; // Array of parsed lyric objects { time, text }
     this._lastLyricsTrackId = null; // Track ID of currently loaded lyrics
+    this._lastLyricsArtist = null; // Artist of currently loaded lyrics
+    this._lastLyricsTitle = null; // Title of currently loaded lyrics
     this._lastLyricsEntityId = null; // Entity ID of currently loaded lyrics
     this._lyricsActive = false; // Is the lyrics view open?
     this._fetchingLyrics = false;
@@ -622,6 +626,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._suspendAdaptiveScaling = false;
     this._pendingAdaptiveScaleUpdate = false;
     this._adaptiveScrollTimer = null;
+    this._lyricsFetchTimeout = null;
     this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
     this._handleViewportResize = this._handleViewportResize.bind(this);
     this._isNarrowViewport = false;
@@ -5630,16 +5635,38 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._lyricsActive) {
       const activeState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
       const trackId = activeState?.attributes?.media_content_id;
+      const artist = activeState?.attributes?.media_artist;
+      const title = activeState?.attributes?.media_title;
       const activeEntityId = this.currentActivePlaybackEntityId || this.currentEntityId;
 
-      if (trackId && (trackId !== this._lastLyricsTrackId || activeEntityId !== this._lastLyricsEntityId)) {
+      const hasMetadata = !!(trackId || artist || title);
+      const metadataChanged =
+        trackId !== this._lastLyricsTrackId ||
+        artist !== this._lastLyricsArtist ||
+        title !== this._lastLyricsTitle ||
+        activeEntityId !== this._lastLyricsEntityId;
+
+      if (hasMetadata && metadataChanged) {
+        // Update trackers immediately to avoid multiple triggers
         this._lastLyricsTrackId = trackId;
+        this._lastLyricsArtist = artist;
+        this._lastLyricsTitle = title;
         this._lastLyricsEntityId = activeEntityId;
-        this._fetchLyrics();
-      } else if (!trackId && (this._lastLyricsTrackId !== null || activeEntityId !== this._lastLyricsEntityId)) {
-        // Clear lyrics if the new entity has no track ID
+
+        // Debounce fetch to handle rapid metadata updates (e.g. radio streams)
+        if (this._lyricsFetchTimeout) clearTimeout(this._lyricsFetchTimeout);
+        this._lyricsFetchTimeout = setTimeout(() => {
+          this._fetchLyrics();
+          this._lyricsFetchTimeout = null;
+        }, 1000);
+      } else if (!hasMetadata && metadataChanged) {
+        // Clear trackers
         this._lastLyricsTrackId = null;
+        this._lastLyricsArtist = null;
+        this._lastLyricsTitle = null;
         this._lastLyricsEntityId = activeEntityId;
+
+        if (this._lyricsFetchTimeout) clearTimeout(this._lyricsFetchTimeout);
         this._massLyrics = [];
         this._fetchingLyrics = false;
         this._lyricsError = false;
@@ -7394,7 +7421,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       </div>
                     ` : nothing}
 
-                    ${this._lyricsActive ? html`
+                    ${(this._lyricsActive && !this._isIdle) ? html`
                       <yamp-lyrics-view
                         class="lyrics-embedded"
                         .hass=${this.hass}
