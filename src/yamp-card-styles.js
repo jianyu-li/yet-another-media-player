@@ -3897,7 +3897,7 @@ export const lyricsStyles = css`
     color: #ffffff;
     width: 100%;
     max-width: 95%;
-    filter: blur(1.5px);
+    filter: blur(1px);
     text-align: center;
     transform: scale(0.9);
   }
