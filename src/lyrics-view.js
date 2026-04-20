@@ -29,23 +29,25 @@ export class YampLyricsView extends LitElement {
     this.error = false;
     this.activeThemeColor = "#ffffff";
     this.mode = "default";
-    this.preRoll = 1;
+    this.preRoll = 0;
     this._activeIndex = -1;
     this._isScrolling = false;
     this._scrollTimeout = null;
   }
 
   firstUpdated() {
-    // Set the correct JS-based padding once we have real dimensions
-    this._applyScrollPadding();
+    // Initial scroll position
+    if (this._activeIndex !== -1) {
+      this._scrollToActive("auto");
+    }
   }
 
   updated(changedProps) {
     super.updated(changedProps);
 
     if (changedProps.has("lyrics")) {
-      // Re-apply padding when lyrics change (container may have reflowed)
-      requestAnimationFrame(() => this._applyScrollPadding());
+      // Re-scroll when lyrics change (new spacers or lines may have changed height)
+      requestAnimationFrame(() => this._scrollToActive("auto"));
     }
 
     if (changedProps.has("position") || changedProps.has("lyrics")) {
@@ -53,18 +55,6 @@ export class YampLyricsView extends LitElement {
     }
   }
 
-  /**
-   * Sets the scroll container's top/bottom padding to exactly half the container's
-   * clientHeight (in px). This is the only reliable way to center any line — CSS
-   * percentage padding is always relative to WIDTH, not height.
-   */
-  _applyScrollPadding() {
-    const container = this.renderRoot.querySelector(".lyrics-scroll-container");
-    if (!container) return;
-    const halfHeight = Math.round(container.clientHeight / 2);
-    container.style.paddingTop = `${halfHeight}px`;
-    container.style.paddingBottom = `${halfHeight}px`;
-  }
 
   _updateActiveLyric() {
     if (!this.lyrics || this.lyrics.length === 0 || this.mode === 'text') return;
@@ -92,16 +82,14 @@ export class YampLyricsView extends LitElement {
     }
   }
 
-  _scrollToActive() {
-    if (this._isScrolling) return;
+  _scrollToActive(behavior = "smooth") {
+    if (this._isScrolling && behavior === "smooth") return;
 
     const container = this.renderRoot.querySelector(".lyrics-scroll-container");
     const allLines = this.renderRoot.querySelectorAll(".lyric-line");
     const activeEl = allLines[this._activeIndex];
 
     if (container && activeEl) {
-      // Center the active element within the visible portion of the container.
-      // offsetTop is relative to the scroll content, so (elCenter - viewportCenter) = target scrollTop.
       const containerCenter = container.clientHeight / 2;
       const elTop = activeEl.offsetTop;
       const elHeight = activeEl.clientHeight;
@@ -109,7 +97,7 @@ export class YampLyricsView extends LitElement {
 
       container.scrollTo({
         top: targetScrollTop,
-        behavior: "smooth"
+        behavior: behavior
       });
     }
   }
@@ -159,6 +147,7 @@ export class YampLyricsView extends LitElement {
 
     return html`
       <div class="lyrics-scroll-container" @scroll=${this._handleScroll} style="--yamp-primary-color: ${this.activeThemeColor}">
+        <div class="scroll-spacer"></div>
         ${this.lyrics.map((lyric, index) => {
       const isActive = index === this._activeIndex;
       const isUnsyncedMode = this.mode === 'text';
@@ -179,6 +168,7 @@ export class YampLyricsView extends LitElement {
             </div>
           `;
     })}
+        <div class="scroll-spacer"></div>
       </div>
     `;
   }

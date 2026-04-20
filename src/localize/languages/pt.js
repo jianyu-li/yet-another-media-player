@@ -133,7 +133,7 @@ export default {
             "search_card_columns": "Especifique quantas colunas usar na visualização de cartões. A capa será redimensionada automaticamente.",
             "card_type": "Escolha o modo do cartão. 'Padrão' é o reprodutor de mídia padrão. 'Busca dedicada' torna o cartão uma interface de busca permanente.",
             "always_show_lyrics": "Abrir automaticamente a visualização de letras quando a página for atualizada.",
-            "lyrics_pre_roll": "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 1.0)."
+            "lyrics_pre_roll": "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 0)."
         },
         "titles": {
             "edit_entity": "Editar entidade",

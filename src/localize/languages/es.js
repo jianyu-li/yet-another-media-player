@@ -133,7 +133,7 @@ export default {
             "search_card_columns": "Especifica cuántas columnas usar en la vista de tarjetas. El artwork se adaptará automáticamente.",
             "card_type": "Elija el modo de tarjeta. 'Por defecto' es el reproductor de medios estándar. 'Búsqueda dedicada' convierte la tarjeta en una interfaz de búsqueda permanente.",
             "always_show_lyrics": "Abrir automáticamente la vista de letras al actualizar la página.",
-            "lyrics_pre_roll": "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 1.0)."
+            "lyrics_pre_roll": "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 0)."
         },
         "titles": {
             "edit_entity": "Editar entidad",

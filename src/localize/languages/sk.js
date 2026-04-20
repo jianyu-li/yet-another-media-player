@@ -133,7 +133,7 @@ export default {
             "search_card_columns": "Zadajte, koľko stĺpcov sa má použiť v zobrazení karty. Grafika sa automaticky prispôsobí.",
             "card_type": "Vyberte režim karty. 'Predvolené' je štandardný prehrávač médií. 'Vyhradené vyhľadávanie' urobí z karty trvalé rozhranie na vyhľadávanie.",
             "always_show_lyrics": "Automaticky otvoriť zobrazenie textov piesní pri obnovení stránky.",
-            "lyrics_pre_roll": "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 1.0)."
+            "lyrics_pre_roll": "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0)."
         },
         "titles": {
             "edit_entity": "Upraviť entitu",

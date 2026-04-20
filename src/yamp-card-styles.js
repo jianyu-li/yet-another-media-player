@@ -3863,7 +3863,6 @@ export const lyricsStyles = css`
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
-    /* padding-top / padding-bottom are set in JS to container.clientHeight / 2 */
     padding-left: 12px;
     padding-right: 12px;
     scroll-behavior: smooth;
@@ -3877,6 +3876,13 @@ export const lyricsStyles = css`
 
   .lyrics-scroll-container::-webkit-scrollbar {
     display: none; /* Chrome/Safari */
+  }
+  
+  .scroll-spacer {
+    flex: 0 0 50%;
+    width: 100%;
+    min-height: 50%;
+    pointer-events: none;
   }
 
   .lyric-line {

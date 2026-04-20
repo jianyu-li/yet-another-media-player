@@ -70,7 +70,7 @@ Below you will find a list of all configuration options.
 | `always_show_lyrics`      | boolean      | No           | `false`     | Automatically open the lyrics view when the page is refreshed |
 | `lyrics_mode`             | choice       | No           | `default`   | Choose the lyrics display mode: `default` (sync + highlight), `scroll` (sync + no highlight), or `text` (plain text) |
 | `lyrics_source`           | choice       | No           | `mass_lrclib` | Choose where to fetch lyrics: `mass_lrclib` (MA with LRCLIB fallback), `mass` (MA only), `lrclib` (LRCLIB only), or `lrclib_mass` (LRCLIB with MA fallback). Note: MA sources require [mass_queue](#native-synced-lyrics-mass_queue) |
-| `lyrics_pre_roll`         | number       | No           | `1.0`       | Adjust the timing of lyric highlighting in seconds (positive to advance, negative to delay) |
+| `lyrics_pre_roll`         | number       | No           | `0`       | Adjust the timing of lyric highlighting in seconds (positive to advance, negative to delay) |
 |                                                                                                 |
 | **Search**                 |              |              |             |                                                                                                 |
 | `search_results_limit`     | number       | No           | `20`        | Maximum number of results to request per media category (artist/album/track/etc.) across favorites, recently played, and standard searches; set to `0` to fall back to Music Assistant’s own limits |

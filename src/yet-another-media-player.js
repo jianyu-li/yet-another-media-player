@@ -7470,7 +7470,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         .error=${this._lyricsError}
                         .activeThemeColor=${this.config.match_theme === true ? "var(--state-media_player-active-color, var(--primary-color, #ffffff))" : "var(--custom-accent, #ffffff)"}
                         .mode=${this.config.lyrics_mode || 'default'}
-                        .preRoll=${this.config.lyrics_pre_roll ?? 1}
+                        .preRoll=${this.config.lyrics_pre_roll ?? 0}
                       ></yamp-lyrics-view>
                     ` : nothing}
                   </div>

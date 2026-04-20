@@ -133,7 +133,7 @@ export default {
             "search_card_columns": "Geef aan hoeveel kolommen er gebruikt moeten worden in de kaartweergave. De afbeelding wordt automatisch aangepast.",
             "card_type": "Kies de kaartmodus. 'Standaard' is de standaard mediaspeler. 'Speciale zoekopdracht' maakt van de kaart een permanente zoekinterface.",
             "always_show_lyrics": "Open automatisch de songtekstweergave wanneer de pagina wordt vernieuwd.",
-            "lyrics_pre_roll": "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 1.0)."
+            "lyrics_pre_roll": "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0)."
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",

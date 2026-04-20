@@ -12,7 +12,8 @@ export function parseLrc(lrcString) {
   const parsedLyrics = [];
 
   // Regex to match [mm:ss.xx] or [mm:ss:xx]
-  const timeRegex = /\[(\d{2,}):(\d{2})(?:[.:](\d{2,3}))?\]/g;
+  // Strict seconds range [0-5]\d (00-59)
+  const timeRegex = /\[(\d+):([0-5]\d)(?:[.:](\d{2,3}))?\]/g;
 
   lines.forEach(line => {
     line = line.trim();

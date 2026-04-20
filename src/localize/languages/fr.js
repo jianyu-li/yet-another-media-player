@@ -133,7 +133,7 @@ export default {
             "search_card_columns": "Spécifiez le nombre de colonnes à utiliser dans la vue carte. L'illustration s'adaptera automatiquement.",
             "card_type": "Choisissez le mode de la carte. 'Par défaut' est le lecteur multimédia standard. 'Recherche dédiée' fait de la carte une interface de recherche permanente.",
             "always_show_lyrics": "Ouvrir automatiquement la vue des paroles lors du rafraîchissement de la page.",
-            "lyrics_pre_roll": "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 1.0)."
+            "lyrics_pre_roll": "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0)."
         },
         "titles": {
             "edit_entity": "Modifier l'entité",

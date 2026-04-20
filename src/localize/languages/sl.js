@@ -133,7 +133,7 @@ export default {
             "search_card_columns": "Določite število stolpcev v pogledu kartic. Grafika se bo samodejno prilagodila.",
             "card_type": "Izberite način kartice. 'Privzeto' je standardni medijski predvajalnik. 'Namensko iskanje' spremeni kartico v trajen iskalni vmesnik.",
             "always_show_lyrics": "Samodejno odprite pogled besedila, ko se stran osveži.",
-            "lyrics_pre_roll": "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 1.0)."
+            "lyrics_pre_roll": "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0)."
         },
         "titles": {
             "edit_entity": "Uredi entiteto",

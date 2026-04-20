@@ -1467,7 +1467,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               <ha-selector
                 .hass=${this.hass}
                 .selector=${{ number: { min: -5, max: 5, step: 0.1, unit_of_measurement: "s", mode: "box" } }}
-                .value=${this._config.lyrics_pre_roll ?? 1}
+                .value=${this._config.lyrics_pre_roll ?? 0}
                 label="${localize('editor.labels.lyrics_pre_roll')}"
                 helper="${localize('editor.subtitles.lyrics_pre_roll')}"
                 @value-changed=${(e) => this._updateConfig("lyrics_pre_roll", e.detail.value)}
@@ -1477,7 +1477,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               class="icon-button"
               icon="mdi:restore"
               title="${localize('common.reset_default')}"
-              @click=${() => this._updateConfig("lyrics_pre_roll", 1)}
+              @click=${() => this._updateConfig("lyrics_pre_roll", 0)}
             ></ha-icon>
           </div>
         </div>

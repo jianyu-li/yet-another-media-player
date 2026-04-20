@@ -133,7 +133,7 @@ export default {
             "search_card_columns": "Geben Sie an, wie viele Spalten in der Kartenansicht verwendet werden sollen. Das Artwork wird automatisch skaliert.",
             "card_type": "Wählen Sie den Kartenmodus. 'Standard' ist der normale Mediaplayer. 'Dedizierte Suche' macht die Karte zu einer permanenten Suchoberfläche.",
             "always_show_lyrics": "Liedtextansicht bei Seitenaktualisierung automatisch öffnen.",
-            "lyrics_pre_roll": "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 1.0)."
+            "lyrics_pre_roll": "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0)."
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",

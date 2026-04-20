@@ -133,7 +133,7 @@ export default {
             "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente.",
             "card_type": "Scegli la modalità della scheda. 'Predefinito' è il lettore multimediale standard. 'Ricerca dedicata' rende la scheda un'interfaccia di ricerca permanente.",
             "always_show_lyrics": "Apri automaticamente la visualizzazione dei testi quando la pagina viene aggiornata.",
-            "lyrics_pre_roll": "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 1.0)."
+            "lyrics_pre_roll": "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0)."
         },
         "titles": {
             "edit_entity": "Modifica entità",
