@@ -61,6 +61,10 @@ export default {
                 "interactions_search": {
                     "title": "Interakcie a hľadanie",
                     "description": "Doladenie pripínania entít a počtu zobrazených výsledkov."
+                },
+                "lyrics": {
+                    "title": "Texty piesní",
+                    "description": "Nastavte, ako sa majú texty piesní zobrazovať a kedy sa majú objaviť."
                 }
             },
             "look_and_feel": {
@@ -127,7 +131,9 @@ export default {
             "disable_auto_select": "Zabráni automatickému výberu čipu tejto entity pri spustení prehrávania.",
             "search_view": "Vyberte si medzi štandardným zoznamom alebo mriežkou kariet pre výsledky vyhľadávania.",
             "search_card_columns": "Zadajte, koľko stĺpcov sa má použiť v zobrazení karty. Grafika sa automaticky prispôsobí.",
-            "card_type": "Vyberte režim karty. 'Predvolené' je štandardný prehrávač médií. 'Vyhradené vyhľadávanie' urobí z karty trvalé rozhranie na vyhľadávanie."
+            "card_type": "Vyberte režim karty. 'Predvolené' je štandardný prehrávač médií. 'Vyhradené vyhľadávanie' urobí z karty trvalé rozhranie na vyhľadávanie.",
+            "always_show_lyrics": "Automaticky otvoriť zobrazenie textov piesní pri obnovení stránky.",
+            "lyrics_pre_roll": "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 1.0)."
         },
         "titles": {
             "edit_entity": "Upraviť entitu",
@@ -164,6 +170,9 @@ export default {
             "use_url_path": "Použiť URL alebo cestu",
             "adaptive_text_elements": "Prvky s adaptívnou veľkosťou textu",
             "disable_auto_select": "Zakázať automatický výber",
+            "always_show_lyrics": "Vždy zobraziť texty piesní",
+            "lyrics_mode": "Režim textov piesní",
+            "lyrics_pre_roll": "Pre-roll textu piesne (sekundy)",
             "card_type": "Typ karty"
         },
         "fields": {
@@ -221,7 +230,8 @@ export default {
             "prev_entity": "Predošlý čip entity",
             "next_entity": "Ďalší čip entity",
             "sync_selected_entity": "Synchronizovať vybranú entitu",
-            "select_entity": "Vybrať entitu z pomocníka"
+            "select_entity": "Vybrať entitu z pomocníka",
+            "toggle_lyrics": "Prepnúť prekrytie textov piesní"
         },
         "action_helpers": {
             "sync_selected_entity": "Synchronizovať vybranú entitu →",
@@ -286,6 +296,8 @@ export default {
             "more_info": "Viac informácií",
             "search": "Hľadať",
             "source": "Zdroj",
+            "show_lyrics": "Zobraziť text piesne",
+            "hide_lyrics": "Skryť text piesne",
             "transfer_queue": "Presunúť frontu",
             "group_players": "Zoskupiť prehrávače",
             "select_entity": "Vyberte entitu pre viac info",
@@ -355,5 +367,15 @@ export default {
         "play_collection_error": "Túto kolekciu nie je možné prehrať priamo",
         "browse_album": "Prehľadávať skladby z {album}",
         "play_item": "Prehrať {item}"
+    },
+    "lyrics": {
+        "finding": "Hľadanie textu piesne...",
+        "none_found": "Žiadny text piesne sa nenašiel",
+        "not_available": "Text piesne nie je k dispozícii"
+    },
+    "lyrics_modes": {
+        "default": "Predvolené (Zvýrazniť a posúvať)",
+        "scroll": "Len posúvať",
+        "text": "Len text"
     }
 };

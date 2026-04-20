@@ -4,6 +4,7 @@ import { css } from "lit";
 export const Z_LAYERS = Object.freeze({
   MEDIA_BACKGROUND: 0,
   MEDIA_OVERLAY: 0,
+  LYRICS_OVERLAY: 1,
   FLOATING_ELEMENT: 1,
   STICKY_CHIPS: 1,
   ACCENT_FOREGROUND: 1,
@@ -3840,5 +3841,108 @@ export const yampCardStyles = css`
     background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.8) 100%);
     animation: gestureSwipeRight 0.35s ease-out forwards;
     transform-origin: left center;
+  }
+`;
+
+export const lyricsStyles = css`
+  :host {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.LYRICS_OVERLAY};
+    overflow: hidden;
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.3);
+    // backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    mask-image: 
+
+    -webkit-mask-composite: source-in;
+  }
+
+  .lyrics-scroll-container {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* padding-top / padding-bottom are set in JS to container.clientHeight / 2 */
+    padding-left: 12px;
+    padding-right: 12px;
+    scroll-behavior: smooth;
+    scrollbar-width: none; /* Firefox */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+  }
+
+  .lyrics-scroll-container::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  .lyric-line {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 24px;
+    opacity: 0.3;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    cursor: default;
+    pointer-events: none;
+    color: #ffffff;
+    width: 100%;
+    max-width: 95%;
+    filter: blur(1.5px);
+    text-align: center;
+    transform: scale(0.9);
+  }
+
+  .lyric-line.active {
+    opacity: 1;
+    font-size: 1.8rem;
+    filter: blur(0);
+    transform: scale(1);
+    color:  #ffffff;
+    text-shadow: 0 0 25px rgba(0,0,0,0.5);
+  }
+
+  .lyric-line.scroll-mode {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    margin-bottom: 18px;
+  }
+
+  .lyric-line.unsynced {
+    font-size: 1.1rem;
+    opacity: 0.8;
+    margin-bottom: 12px;
+    filter: none;
+  }
+
+  .lyrics-loading, .lyrics-error, .lyrics-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: inherit;
+  }
+
+  .lyrics-loading ha-circular-progress {
+    margin-bottom: 12px;
+    --md-sys-color-primary: white;
+  }
+
+  .lyrics-error ha-icon, .lyrics-empty ha-icon {
+    --mdc-icon-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.6;
   }
 `;

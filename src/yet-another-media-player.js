@@ -7,6 +7,8 @@ import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles, Z_LAYERS } from "./yamp-card-styles.js";
+import { parseLrc } from "./lyrics-parser.js";
+import "./lyrics-view.js";
 import {
   renderSearchOptionsOverlay,
   searchMedia,
@@ -227,6 +229,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Find button entities associated with a Music Assistant entity
   _findAssociatedButtonEntities(maEntityId) {
     return findAssociatedButtonEntities(this.hass, maEntityId);
+  }
+
+  /**
+   * Cleans track/artist names for better matching with external APIs like LRCLIB.
+   * Strips common suffixes like "- Remastered", "(feat. ...)", etc.
+   */
+  _cleanTrackMetadata(text) {
+    if (!text || typeof text !== 'string') return '';
+    return text
+      .split(" - ")[0] // Often "Track Name - Extra Info"
+      .replace(/\(feat\..*?\)/gi, "")
+      .replace(/\(with.*?\)/gi, "")
+      .replace(/\[.*?\]/g, "")
+      .replace(/\(.*?\)/g, "")
+      .replace(/- \d{4} Remaster.*/gi, "")
+      .replace(/- Remastered.*/gi, "")
+      .replace(/- Single.*/gi, "")
+      .trim();
   }
 
   // Get the favorite button entity for the current Music Assistant entity
@@ -461,7 +481,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _showSearchInSheet: { state: true },
     _addToPlaylistTarget: { state: true },
     _showMediaTitleOptions: { state: true },
-    _dismissMenuAfterPlaylistAdd: { state: false }
+    _dismissMenuAfterPlaylistAdd: { state: false },
+    _lyricsActive: { state: true },
+    _massLyrics: { state: true },
+    _fetchingLyrics: { state: true },
+    _lyricsError: { state: true },
+    _lastLyricsTrackId: { state: true },
+    _lastLyricsEntityId: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -583,6 +609,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._hideActiveEntityLabel = false;
     this._currentDetailsScale = null;
     this._lastTitleLength = 0;
+    
+    // Lyrics state
+    this._massLyrics = []; // Array of parsed lyric objects { time, text }
+    this._lyricsCache = {}; // Cache for lyrics { [key]: parsedLyrics }
+    this._lastLyricsTrackId = null; // Track ID of currently loaded lyrics
+    this._lastLyricsEntityId = null; // Entity ID of currently loaded lyrics
+    this._lyricsActive = false; // Is the lyrics view open?
+    this._fetchingLyrics = false;
+    this._lyricsError = false;
     this._suspendAdaptiveScaling = false;
     this._pendingAdaptiveScaleUpdate = false;
     this._adaptiveScrollTimer = null;
@@ -4102,6 +4137,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     }
     this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
+    if (config.always_show_lyrics === true) {
+      this._lyricsActive = true;
+    }
   }
 
   // Returns array of entity config objects, including group_volume if present in user config.
@@ -4681,6 +4719,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
         
         ${this._renderGroupingMenuOption()}
         
+        ${this._massQueueAvailable && !this.config.always_collapsed ? html`
+          <button class="entity-options-item" @click=${() => {
+          this._lyricsActive = !this._lyricsActive;
+          if (!this._lyricsActive) {
+            this._lastLyricsTrackId = null;
+            this._lastLyricsEntityId = null;
+          }
+          this._showEntityOptions = false;
+          this.requestUpdate();
+        }}>${localize(this._lyricsActive ? 'card.menu.hide_lyrics' : 'card.menu.show_lyrics')}</button>
+        ` : nothing}
+        
+        
         ${menuOnlyActions.length ? html`
           ${menuOnlyActions.map(({ action, idx }) => {
         const label = this._getActionLabel(action);
@@ -5180,6 +5231,208 @@ class YetAnotherMediaPlayerCard extends LitElement {
       </div>
     `;
   }
+  /**
+   * Universal lyrics fetcher that supports both Music Assistant and LRCLIB.
+   * Logic is guided by the 'lyrics_source' configuration.
+   */
+  async _fetchLyrics() {
+    this._lyricsError = false;
+    const configSource = this.config.lyrics_source || "mass_lrclib";
+
+    const activeState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    if (!activeState) {
+      this._massLyrics = [];
+      this.requestUpdate();
+      return;
+    }
+
+    const artist = activeState.attributes.media_artist;
+    const title = activeState.attributes.media_title;
+    const album = activeState.attributes.media_album_name;
+    const duration = activeState.attributes.media_duration;
+    const trackId = activeState.attributes.media_content_id;
+
+    // 1. Check Internal Cache
+    const cacheKey = trackId || `${artist}:${title}`;
+    if (this._lyricsCache && this._lyricsCache[cacheKey]) {
+      this._massLyrics = this._lyricsCache[cacheKey];
+      this._fetchingLyrics = false;
+      this.requestUpdate();
+      return;
+    }
+
+    // Generate token to prevent race conditions
+    const fetchToken = Symbol();
+    this._currentFetchToken = fetchToken;
+
+    this._fetchingLyrics = true;
+    this._massLyrics = [];
+    this.requestUpdate();
+
+    let lyrics = [];
+
+    try {
+      if (configSource === "mass") {
+        lyrics = await this._getMassLyrics(activeState, fetchToken);
+      } else if (configSource === "lrclib") {
+        lyrics = await this._getLrclibLyrics(artist, title, album, duration, fetchToken);
+      } else if (configSource === "mass_lrclib") {
+        lyrics = await this._getMassLyrics(activeState, fetchToken);
+        if (this._currentFetchToken !== fetchToken) return;
+        if (!lyrics || lyrics.length === 0) {
+          lyrics = await this._getLrclibLyrics(artist, title, album, duration, fetchToken);
+        }
+      } else if (configSource === "lrclib_mass") {
+        lyrics = await this._getLrclibLyrics(artist, title, album, duration, fetchToken);
+        if (this._currentFetchToken !== fetchToken) return;
+        if (!lyrics || lyrics.length === 0) {
+          lyrics = await this._getMassLyrics(activeState, fetchToken);
+        }
+      }
+
+      if (this._currentFetchToken === fetchToken) {
+        this._massLyrics = lyrics || [];
+        if (lyrics && lyrics.length > 0) {
+          this._lyricsCache[cacheKey] = lyrics;
+        } else if (lyrics === null) {
+          // Explicit null means fetch failed or no lyrics found
+          this._lyricsError = true;
+        }
+        this._fetchingLyrics = false;
+        this.requestUpdate();
+      }
+    } catch (e) {
+      if (this._currentFetchToken === fetchToken) {
+        console.error("YAMP: Failed to fetch lyrics:", e);
+        this._lyricsError = true;
+        this._fetchingLyrics = false;
+        this.requestUpdate();
+      }
+    }
+  }
+
+  /**
+   * Internal helper to fetch lyrics from Music Assistant.
+   */
+  async _getMassLyrics(activeState, fetchToken) {
+    if (!this._massQueueAvailable) {
+      if (typeof this._isMassQueueIntegrationAvailable === "function") {
+        this._massQueueAvailable = await this._isMassQueueIntegrationAvailable(this.hass);
+      }
+      if (!this._massQueueAvailable) return [];
+    }
+
+    try {
+      const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+      if (!mqConfigEntryId) return [];
+
+      const trackUri = activeState.attributes.media_content_id;
+      if (!trackUri || !trackUri.includes("://")) return [];
+
+      const trackMsg = {
+        type: "call_service",
+        domain: "mass_queue",
+        service: "send_command",
+        service_data: {
+          command: "music/item_by_uri",
+          data: { uri: trackUri },
+          config_entry_id: mqConfigEntryId
+        },
+        return_response: true
+      };
+
+      const trackRes = await this.hass.connection.sendMessagePromise(trackMsg);
+      if (this._currentFetchToken !== fetchToken) return [];
+
+      const validTrack = trackRes?.response?.response || trackRes?.response || trackRes?.result;
+      if (!validTrack) return [];
+
+      const lyricsMsg = {
+        type: "call_service",
+        domain: "mass_queue",
+        service: "send_command",
+        service_data: {
+          command: "metadata/get_track_lyrics",
+          data: { track: validTrack },
+          config_entry_id: mqConfigEntryId
+        },
+        return_response: true
+      };
+
+      const lyricsRes = await this.hass.connection.sendMessagePromise(lyricsMsg);
+      if (this._currentFetchToken !== fetchToken) return [];
+
+      const lyricsArray = lyricsRes?.response?.response || lyricsRes?.response || lyricsRes?.result;
+      if (lyricsArray) {
+        let lrcString = "";
+        if (Array.isArray(lyricsArray)) {
+          lrcString = lyricsArray[1] || lyricsArray[0] || "";
+        } else if (typeof lyricsArray === "string") {
+          lrcString = lyricsArray;
+        } else if (typeof lyricsArray === "object") {
+          lrcString = lyricsArray.lyrics || lyricsArray.text || "";
+        }
+        return lrcString ? parseLrc(lrcString) : [];
+      }
+    } catch (e) {
+      console.warn("YAMP: MA Lyrics fetch failed:", e);
+    }
+    return [];
+  }
+
+  /**
+   * Internal helper to fetch lyrics from LRCLIB.
+   */
+  async _getLrclibLyrics(artist, title, album, duration, fetchToken) {
+    if (!artist || !title) return [];
+
+    const cleanArtist = this._cleanTrackMetadata(artist);
+    const cleanTitle = this._cleanTrackMetadata(title);
+    const cleanAlbum = album ? this._cleanTrackMetadata(album) : "";
+
+    try {
+      // 1. Try precise get first
+      let url = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
+      if (cleanAlbum) url += `&album_name=${encodeURIComponent(cleanAlbum)}`;
+      if (duration) url += `&duration=${Math.round(duration)}`;
+
+      let response = await fetch(url);
+      if (this._currentFetchToken !== fetchToken) return [];
+
+      if (!response.ok && response.status !== 404) {
+        throw new Error(`LRCLIB error: ${response.status}`);
+      }
+
+      let data = null;
+      if (response.ok) {
+        data = await response.json();
+      } else {
+        // 2. Try search fallback if precise get failed
+        const searchUrl = `https://lrclib.net/api/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
+        const searchRes = await fetch(searchUrl);
+        if (this._currentFetchToken !== fetchToken) return [];
+
+        if (searchRes.ok) {
+          const results = await searchRes.json();
+          if (results && results.length > 0) {
+            data = results[0]; // Take the first result
+          }
+        }
+      }
+
+      if (data) {
+        if (data.instrumental) {
+          return [{ time: null, text: localize("lyrics.instrumental") || "Instrumental Track" }];
+        }
+        const lrcString = data.syncedLyrics || data.plainLyrics || "";
+        return lrcString ? parseLrc(lrcString) : [];
+      }
+    } catch (e) {
+      console.warn("YAMP: LRCLIB Lyrics fetch failed:", e);
+    }
+    return [];
+  }
+
 
   updated(changedProps) {
     this._updateHostAttributes();
@@ -5359,6 +5612,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Sync selected entity to helper if configured
       this._updateSelectedEntityHelper();
       this._handleSelectEntityFromHelper();
+    }
+    
+    // Lyrics fetch trigger
+    if (this._lyricsActive) {
+      const activeState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+      const trackId = activeState?.attributes?.media_content_id;
+      const activeEntityId = this.currentActivePlaybackEntityId || this.currentEntityId;
+
+      if (trackId && (trackId !== this._lastLyricsTrackId || activeEntityId !== this._lastLyricsEntityId)) {
+        this._lastLyricsTrackId = trackId;
+        this._lastLyricsEntityId = activeEntityId;
+        this._fetchLyrics();
+      } else if (!trackId && (this._lastLyricsTrackId !== null || activeEntityId !== this._lastLyricsEntityId)) {
+        // Clear lyrics if the new entity has no track ID
+        this._lastLyricsTrackId = null;
+        this._lastLyricsEntityId = activeEntityId;
+        this._massLyrics = [];
+        this._fetchingLyrics = false;
+        this._lyricsError = false;
+        this.requestUpdate();
+      }
     }
 
     // Restart progress timer
@@ -5690,6 +5964,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
       return;
     }
+    
+    if (action.action === "toggle_lyrics") {
+      this._lyricsActive = !this._lyricsActive;
+      this.requestUpdate();
+      return;
+    }
 
     if (action.action === "prev_entity" || action.action === "next_entity") {
       const sortedIds = this.sortedEntityIds;
@@ -5762,6 +6042,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.hass.callService(domain, service, data);
   }
 
+  _onLyricSeek(time) {
+    if (time === null || time === undefined) return;
+    
+    // Seek to the selected time
+    // We update the optimistic seek anchor so the lyrics respond instantly
+    const activeState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    const trackId = activeState?.attributes?.media_content_id || activeState?.attributes?.media_title;
+    
+    // Set optimistic seek anchor for the UI
+    this._seekAnchor = {
+      timestamp: Date.now(),
+      position: time,
+      trackId: trackId
+    };
+    // Lock backend updates out for a moment to prevent rubber-banding
+    this._seekConvergenceLock = Date.now() + 4000;
+    
+    this.requestUpdate();
+    
+  }
+
+
   _onTapAreaPointerDown(e) {
     if (this.isAnyMenuOpen) return;
 
@@ -5797,6 +6099,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _onTapAreaPointerMove(e) {
+    if (this.isAnyMenuOpen) return;
     if (!this._gestureActive) return;
     const diffX = Math.abs(e.clientX - this._gestureStartX);
     const diffY = Math.abs(e.clientY - this._gestureStartY);
@@ -5807,6 +6110,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _onTapAreaPointerUp(e) {
+    if (this.isAnyMenuOpen) return;
     if (!this._gestureActive) return;
     this._gestureActive = false;
     clearTimeout(this._gestureHoldTimer);
@@ -7097,6 +7401,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
                         </svg>
                       </div>
                     ` : nothing}
+
+                    ${this._lyricsActive ? html`
+                      <yamp-lyrics-view
+                        class="lyrics-embedded"
+                        .hass=${this.hass}
+                        .lyrics=${this._massLyrics}
+                        .position=${pos}
+                        .loading=${this._fetchingLyrics}
+                        .error=${this._lyricsError}
+                        .activeThemeColor=${this.config.match_theme === true ? "var(--state-media_player-active-color, var(--primary-color, #ffffff))" : "var(--custom-accent, #ffffff)"}
+                        .mode=${this.config.lyrics_mode || 'default'}
+                        .preRoll=${this.config.lyrics_pre_roll ?? 1}
+                        @seek-lyric=${(e) => this._onLyricSeek(e.detail.time)}
+                      ></yamp-lyrics-view>
+                    ` : nothing}
                   </div>
                 ` : nothing}
                 ${this.config.details_alignment !== 'none' ? html`
@@ -7764,7 +8083,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         massQueueAvailable: this._massQueueAvailable
       }) : nothing
       }
-
           </div>
     </ha-card>
   `;

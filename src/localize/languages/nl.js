@@ -61,6 +61,10 @@ export default {
                 "interactions_search": {
                     "title": "Interacties & Zoeken",
                     "description": "Verfijn hoe entiteiten worden vastgezet en hoeveel resultaten er tegelijk worden getoond."
+                },
+                "lyrics": {
+                    "title": "Songteksten",
+                    "description": "Configureer hoe songteksten worden weergegeven en wanneer ze verschijnen."
                 }
             },
             "look_and_feel": {
@@ -127,7 +131,9 @@ export default {
             "disable_auto_select": "Voorkomt dat de chip van deze entiteit automatisch wordt geselecteerd wanneer deze begint af te spelen.",
             "search_view": "Kies tussen een standaardlijst of een raster van kaarten voor zoekresultaten.",
             "search_card_columns": "Geef aan hoeveel kolommen er gebruikt moeten worden in de kaartweergave. De afbeelding wordt automatisch aangepast.",
-            "card_type": "Kies de kaartmodus. 'Standaard' is de standaard mediaspeler. 'Speciale zoekopdracht' maakt van de kaart een permanente zoekinterface."
+            "card_type": "Kies de kaartmodus. 'Standaard' is de standaard mediaspeler. 'Speciale zoekopdracht' maakt van de kaart een permanente zoekinterface.",
+            "always_show_lyrics": "Open automatisch de songtekstweergave wanneer de pagina wordt vernieuwd.",
+            "lyrics_pre_roll": "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 1.0)."
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",
@@ -162,8 +168,11 @@ export default {
             "use_vol_template": "Sjabloon gebruiken voor Volume Entiteit",
             "follow_active_entity": "Volume Entiteit volgt Actieve Entiteit",
             "use_url_path": "URL of Pad gebruiken",
-            "adaptive_text_elements": "Elementen voor Adaptieve Tekstgrootte",
-            "disable_auto_select": "Auto-selectie uitschakelen"
+            "adaptive_text_elements": "Elementen voor adaptieve tekstgrootte",
+            "disable_auto_select": "Automatische selectie uitschakelen",
+            "always_show_lyrics": "Toon altijd songteksten",
+            "lyrics_mode": "Songtekstmodus",
+            "lyrics_pre_roll": "Songtekst Pre-Roll (seconden)"
         },
         "fields": {
             "artwork_fit": "Artwork Passend Maken",
@@ -225,8 +234,9 @@ export default {
             "select_entity": "Selecteer entiteit uit helper"
         },
         "action_helpers": {
-            "sync_selected_entity": "Geselecteerde entiteit synchroniseren →",
-            "select_entity": "Entiteit selecteren ←",
+            "sync_selected_entity": "Geselecteerde entiteit synchroniseren",
+            "select_entity": "Entiteit selecteren uit helper",
+            "toggle_lyrics": "Wisselen tussen songtekst-overlay",
             "select_helper": "(selecteer helper)"
         },
         "sync_entity_options": {
@@ -287,6 +297,8 @@ export default {
             "more_info": "Meer Info",
             "search": "Zoeken",
             "source": "Bron",
+            "show_lyrics": "Songtekst weergeven",
+            "hide_lyrics": "Songtekst verbergen",
             "transfer_queue": "Wachtrij Overdragen",
             "group_players": "Spelers Groeperen",
             "select_entity": "Selecteer Entiteit voor Meer Info",
@@ -356,5 +368,15 @@ export default {
         "play_collection_error": "Kan deze collectie niet direct afspelen",
         "browse_album": "Tracks van {album} doorzoeken",
         "play_item": "{item} afspelen"
+    },
+    "lyrics": {
+        "finding": "Songteksten zoeken...",
+        "none_found": "Geen songteksten gevonden",
+        "not_available": "Songtekst niet beschikbaar"
+    },
+    "lyrics_modes": {
+        "default": "Standaard (Markeren & scrollen)",
+        "scroll": "Alleen scrollen",
+        "text": "Alleen tekst"
     }
 };

@@ -61,6 +61,10 @@ export default {
                 "interactions_search": {
                     "title": "Interaktionen & Suche",
                     "description": "Feineinstellung des Anpinnens von Entitäten und der Anzahl der Suchergebnisse."
+                },
+                "lyrics": {
+                    "title": "Liedtexte",
+                    "description": "Konfigurieren Sie, wie Liedtexte angezeigt werden und wann sie erscheinen."
                 }
             },
             "look_and_feel": {
@@ -127,7 +131,9 @@ export default {
             "disable_auto_select": "Verhindert, dass der Chip dieser Entität automatisch ausgewählt wird, wenn die Wiedergabe startet.",
             "search_view": "Wählen Sie zwischen einer Standardliste oder einem kartenbasierten Raster für Suchergebnisse.",
             "search_card_columns": "Geben Sie an, wie viele Spalten in der Kartenansicht verwendet werden sollen. Das Artwork wird automatisch skaliert.",
-            "card_type": "Wählen Sie den Kartenmodus. 'Standard' ist der normale Mediaplayer. 'Dedizierte Suche' macht die Karte zu einer permanenten Suchoberfläche."
+            "card_type": "Wählen Sie den Kartenmodus. 'Standard' ist der normale Mediaplayer. 'Dedizierte Suche' macht die Karte zu einer permanenten Suchoberfläche.",
+            "always_show_lyrics": "Liedtextansicht bei Seitenaktualisierung automatisch öffnen.",
+            "lyrics_pre_roll": "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 1.0)."
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",
@@ -163,7 +169,10 @@ export default {
             "follow_active_entity": "Lautstärke folgt aktiver Entität",
             "use_url_path": "URL oder Pfad verwenden",
             "adaptive_text_elements": "Elemente für adaptive Textgröße",
-            "disable_auto_select": "Auto-Auswahl deaktivieren"
+            "disable_auto_select": "Auto-Auswahl deaktivieren",
+            "always_show_lyrics": "Liedtexte immer anzeigen",
+            "lyrics_mode": "Liedtext-Modus",
+            "lyrics_pre_roll": "Liedtext Pre-Roll (Sekunden)"
         },
         "fields": {
             "artwork_fit": "Artwork-Anpassung",
@@ -222,7 +231,8 @@ export default {
             "prev_entity": "Vorheriger Entitäts-Chip",
             "next_entity": "Nächster Entitäts-Chip",
             "sync_selected_entity": "Ausgewählte Entität synchronisieren",
-            "select_entity": "Entität aus Helper auswählen"
+            "select_entity": "Entität aus Helper auswählen",
+            "toggle_lyrics": "Liedtext-Overlay ein-/ausschalten"
         },
         "action_helpers": {
             "sync_selected_entity": "Entität synchronisieren →",
@@ -287,6 +297,8 @@ export default {
             "more_info": "Mehr Info",
             "search": "Suche",
             "source": "Quelle",
+            "show_lyrics": "Songtext anzeigen",
+            "hide_lyrics": "Songtext ausblenden",
             "transfer_queue": "Warteschlange übertragen",
             "group_players": "Player gruppieren",
             "select_entity": "Entität für mehr Info wählen",
@@ -356,5 +368,15 @@ export default {
         "play_collection_error": "Diese Sammlung kann nicht direkt abgespielt werden",
         "browse_album": "Albentitel von {album} durchsuchen",
         "play_item": "{item} abspielen"
+    },
+    "lyrics": {
+        "finding": "Suche Songtext...",
+        "none_found": "Kein Songtext gefunden",
+        "not_available": "Songtext nicht verfügbar"
+    },
+    "lyrics_modes": {
+        "default": "Standard (Hervorheben & Scrollen)",
+        "scroll": "Nur Scrollen",
+        "text": "Nur Text"
     }
 };

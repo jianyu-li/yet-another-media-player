@@ -14,8 +14,8 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 - **Multi-Player Control** — Switch between media players in a single card with chip-based selection. Control volume individually or as a group
 - **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
-- **Music Assistant Integration** — Full search, queue management, and transfer between compatible players without leaving the card
-- **mass_queue Support** — Have even more control over your queue with the optional [mass_queue](https://github.com/droans/mass_queue) integration
+- **Music Assistant Integration** — Full search, queue management, and synced lyrics without leaving the card
+- **mass_queue Support** — Advanced queue controls and integrated Music Assistant lyrics with the optional [mass_queue](https://github.com/droans/mass_queue) integration
 - **Adaptive Visual Theming** — Customize artwork scaling with various fit modes and add custom artwork overrides
 - **Many Layouts** — Collapse the card when idle or keep it compact while playing, change text sizing, and more to match your dashboard style
 - **Custom Actions** — Add action chips or menu items that call any Home Assistant action or script, with full access to the currently selected entity
@@ -67,6 +67,10 @@ Below you will find a list of all configuration options.
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
+| `always_show_lyrics`      | boolean      | No           | `false`     | Automatically open the lyrics view when the page is refreshed |
+| `lyrics_mode`             | choice       | No           | `default`   | Choose the lyrics display mode: `default` (sync + highlight), `scroll` (sync + no highlight), or `text` (plain text) |
+| `lyrics_source`           | choice       | No           | `mass_lrclib` | Choose where to fetch lyrics: `mass_lrclib` (MA with LRCLIB fallback), `mass` (MA only), `lrclib` (LRCLIB only), or `lrclib_mass` (LRCLIB with MA fallback). Note: MA sources require [mass_queue](#native-synced-lyrics-mass_queue) |
+| `lyrics_pre_roll`         | number       | No           | `1.0`       | Adjust the timing of lyric highlighting in seconds (positive to advance, negative to delay) |
 |                                                                                                 |
 | **Search**                 |              |              |             |                                                                                                 |
 | `search_results_limit`     | number       | No           | `20`        | Maximum number of results to request per media category (artist/album/track/etc.) across favorites, recently played, and standard searches; set to `0` to fall back to Music Assistant’s own limits |
@@ -404,6 +408,27 @@ Once installed and configured, YAMP will automatically detect the integration an
 - Queue item removal
 
 These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
+
+### Synced Lyrics (Music Assistant & LRCLIB)
+
+Experience synchronized, real-time lyrics directly within the card. YAMP supports fetching lyrics from **Music Assistant** and **LRCLIB**.
+
+- **Requirement**: Using Music Assistant as a source (e.g., `mass` or `mass_lrclib`) requires the [mass_queue](https://github.com/droans/mass_queue) integration to be installed and enabled. LRCLIB sources work universally for any media player with artist/title metadata.
+- **How to Use**: When playing a track, open the hamburger menu and select **Show Lyrics** (or **Hide Lyrics**). 
+- **Configuration Options**:
+  - `always_show_lyrics`: Enable this to have the lyrics overlay open automatically whenever the page is loaded or refreshed and media is playing.
+  - `lyrics_source`: 
+    - `mass_lrclib`: (Default) Attempts to fetch from Music Assistant first, with a cloud fallback to LRCLIB.
+    - `mass`: Only fetch from Music Assistant (requires `mass_queue`).
+    - `lrclib`: Only fetch from LRCLIB (universal; no extra integration required).
+    - `lrclib_mass`: Attempts to fetch from LRCLIB first, with a fallback to Music Assistant.
+  - `lyrics_mode`: 
+    - `default`: Full synchronized experience with auto-scrolling and highlighting the current line.
+    - `scroll`: Synchronized auto-scrolling without line highlighting.
+    - `text`: Displays the full lyrics as plain text. No auto-scrolling or highlighting.
+  - `lyrics_pre_roll`: Fine-tune the highlighting sync. A value of `1.5` will highlight the line 1.5 seconds before the vocal starts, while `-0.5` will delay it.
+- **Toggle Action**: You can assign the `toggle_lyrics` action to a chip or gesture to quickly show/hide the lyrics without opening the menu.
+- **Constraints**: The lyrics viewer is automatically disabled when the card is in `always_collapsed: true` mode to maintain layout performance.
 
 ### Add to Playlist (mass_queue)
 

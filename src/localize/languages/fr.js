@@ -61,6 +61,10 @@ export default {
                 "interactions_search": {
                     "title": "Interactions & Recherche",
                     "description": "Affinez la façon dont les entités sont épinglées et le nombre de résultats."
+                },
+                "lyrics": {
+                    "title": "Paroles",
+                    "description": "Configurez la façon dont les paroles sont affichées et quand elles apparaissent."
                 }
             },
             "look_and_feel": {
@@ -127,7 +131,9 @@ export default {
             "disable_auto_select": "Empêche le jeton de cette entité d'être automatiquement sélectionné au début de la lecture.",
             "search_view": "Choisissez entre une liste standard ou une grille de cartes pour les résultats de recherche.",
             "search_card_columns": "Spécifiez le nombre de colonnes à utiliser dans la vue carte. L'illustration s'adaptera automatiquement.",
-            "card_type": "Choisissez le mode de carte. 'Par défaut' est le lecteur multimédia standard. 'Recherche dédiée' fait de la carte une interface de recherche permanente."
+            "card_type": "Choisissez le mode de la carte. 'Par défaut' est le lecteur multimédia standard. 'Recherche dédiée' fait de la carte une interface de recherche permanente.",
+            "always_show_lyrics": "Ouvrir automatiquement la vue des paroles lors du rafraîchissement de la page.",
+            "lyrics_pre_roll": "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 1.0)."
         },
         "titles": {
             "edit_entity": "Modifier l'entité",
@@ -163,7 +169,10 @@ export default {
             "follow_active_entity": "Le volume suit l'entité active",
             "use_url_path": "Utiliser URL ou chemin",
             "adaptive_text_elements": "Éléments de texte adaptatif",
-            "disable_auto_select": "Désactiver la sélection automatique"
+            "disable_auto_select": "Désactiver la sélection automatique",
+            "always_show_lyrics": "Toujours afficher les paroles",
+            "lyrics_mode": "Mode des paroles",
+            "lyrics_pre_roll": "Pré-roll des paroles (secondes)"
         },
         "fields": {
             "artwork_fit": "Ajustement",
@@ -222,7 +231,8 @@ export default {
             "prev_entity": "Puce de l'entité précédente",
             "next_entity": "Puce de l'entité suivante",
             "sync_selected_entity": "Synchroniser l'entité sélectionnée",
-            "select_entity": "Sélectionner l'entité depuis le helper"
+            "select_entity": "Sélectionner l'entité depuis le helper",
+            "toggle_lyrics": "Activer/Désactiver la superposition des paroles"
         },
         "action_helpers": {
             "sync_selected_entity": "Synchroniser l'entité sélectionnée →",
@@ -287,6 +297,8 @@ export default {
             "more_info": "Plus d'infos",
             "search": "Rechercher",
             "source": "Source",
+            "show_lyrics": "Afficher les paroles",
+            "hide_lyrics": "Masquer les paroles",
             "transfer_queue": "Transférer la file",
             "group_players": "Grouper les lecteurs",
             "select_entity": "Choisir pour plus d'infos",
@@ -356,5 +368,15 @@ export default {
         "play_collection_error": "Impossible de lire cette collection directement",
         "browse_album": "Parcourir les titres de {album}",
         "play_item": "Lire {item}"
+    },
+    "lyrics": {
+        "finding": "Recherche des paroles...",
+        "none_found": "Aucune parole trouvée",
+        "not_available": "Paroles non disponibles"
+    },
+    "lyrics_modes": {
+        "default": "Par défaut (Surligner et faire défiler)",
+        "scroll": "Défilement uniquement",
+        "text": "Texte uniquement"
     }
 };

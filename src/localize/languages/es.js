@@ -61,6 +61,10 @@ export default {
                 "interactions_search": {
                     "title": "Interacciones y búsqueda",
                     "description": "Ajuste el fijado de entidades y límite de resultados."
+                },
+                "lyrics": {
+                    "title": "Letras",
+                    "description": "Configure cómo se muestran las letras y cuándo aparecen."
                 }
             },
             "look_and_feel": {
@@ -127,7 +131,9 @@ export default {
             "disable_auto_select": "Evita que el chip de esta entidad se seleccione automáticamente cuando comienza la reproducción.",
             "search_view": "Elegir entre una lista estándar o una cuadrícula de tarjetas para los resultados de la búsqueda.",
             "search_card_columns": "Especifica cuántas columnas usar en la vista de tarjetas. El artwork se adaptará automáticamente.",
-            "card_type": "Elija el modo de tarjeta. 'Por defecto' es el reproductor de medios estándar. 'Búsqueda dedicada' convierte la tarjeta en una interfaz de búsqueda permanente."
+            "card_type": "Elija el modo de tarjeta. 'Por defecto' es el reproductor de medios estándar. 'Búsqueda dedicada' convierte la tarjeta en una interfaz de búsqueda permanente.",
+            "always_show_lyrics": "Abrir automáticamente la vista de letras al actualizar la página.",
+            "lyrics_pre_roll": "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 1.0)."
         },
         "titles": {
             "edit_entity": "Editar entidad",
@@ -162,8 +168,11 @@ export default {
             "use_vol_template": "Usar plantilla Volumen",
             "follow_active_entity": "Volumen sigue a entidad activa",
             "use_url_path": "Usar URL o ruta",
-            "adaptive_text_elements": "Elementos de texto adaptativo",
+            "adaptive_text_elements": "Elementos para tamaño de texto adaptativo",
             "disable_auto_select": "Desactivar selección automática",
+            "always_show_lyrics": "Mostrar siempre las letras",
+            "lyrics_mode": "Modo de letras",
+            "lyrics_pre_roll": "Anticipo de letra (segundos)",
             "card_type": "Tipo de tarjeta",
             "no_artwork_option": "Sin imagen de portada"
         },
@@ -222,7 +231,8 @@ export default {
             "prev_entity": "Chip de entidad anterior",
             "next_entity": "Chip de entidad siguiente",
             "sync_selected_entity": "Sincronizar entidad seleccionada",
-            "select_entity": "Seleccionar entidad desde helper"
+            "select_entity": "Seleccionar entidad desde helper",
+            "toggle_lyrics": "Alternar superposición de letras"
         },
         "action_helpers": {
             "sync_selected_entity": "Sincronizar entidad seleccionada →",
@@ -287,6 +297,8 @@ export default {
             "more_info": "Más info",
             "search": "Buscar",
             "source": "Fuente",
+            "show_lyrics": "Mostrar letra",
+            "hide_lyrics": "Ocultar letra",
             "transfer_queue": "Transferir cola",
             "group_players": "Agrupar",
             "select_entity": "Seleccionar",
@@ -356,5 +368,15 @@ export default {
         "play_collection_error": "No se puede reproducir esta colección directamente",
         "browse_album": "Explorar pistas de {album}",
         "play_item": "Reproducir {item}"
+    },
+    "lyrics": {
+        "finding": "Buscando letra...",
+        "none_found": "No se encontró letra",
+        "not_available": "Letra no disponible"
+    },
+    "lyrics_modes": {
+        "default": "Predeterminado (Resaltar y desplazarse)",
+        "scroll": "Solo desplazarse",
+        "text": "Solo texto"
     }
 };
