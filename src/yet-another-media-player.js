@@ -622,6 +622,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastLyricsEntityId = null; // Entity ID of currently loaded lyrics
     this._lyricsActive = false; // Is the lyrics view open?
     this._fetchingLyrics = false;
+    this._fetchingCacheKey = null;
     this._lyricsError = false;
     this._suspendAdaptiveScaling = false;
     this._pendingAdaptiveScaleUpdate = false;
@@ -5260,6 +5261,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // 1. Check Internal Cache
     const cacheKey = trackId || `${artist}:${title}`;
+    
+    // Prevent redundant fetches if already in progress for this same key
+    if (this._fetchingLyrics && this._fetchingCacheKey === cacheKey) return;
+
     if (this._lyricsCache.has(cacheKey)) {
       const cachedLyrics = this._lyricsCache.get(cacheKey);
       // Move to end to track as "most recently used"
@@ -5277,6 +5282,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._currentFetchToken = fetchToken;
 
     this._fetchingLyrics = true;
+    this._fetchingCacheKey = cacheKey;
     this._massLyrics = [];
     this.requestUpdate();
 
@@ -5316,6 +5322,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._lyricsError = true;
         }
         this._fetchingLyrics = false;
+        this._fetchingCacheKey = null;
         this.requestUpdate();
       }
     } catch (e) {
@@ -5323,6 +5330,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         console.error("YAMP: Failed to fetch lyrics:", e);
         this._lyricsError = true;
         this._fetchingLyrics = false;
+        this._fetchingCacheKey = null;
         this.requestUpdate();
       }
     }
@@ -5634,10 +5642,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Lyrics fetch trigger
     if (this._lyricsActive) {
       const activeState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-      const trackId = activeState?.attributes?.media_content_id;
-      const artist = activeState?.attributes?.media_artist;
-      const title = activeState?.attributes?.media_title;
-      const activeEntityId = this.currentActivePlaybackEntityId || this.currentEntityId;
+      const trackId = activeState?.attributes?.media_content_id || null;
+      const artist = activeState?.attributes?.media_artist || null;
+      const title = activeState?.attributes?.media_title || null;
+      const activeEntityId = this.currentActivePlaybackEntityId || this.currentEntityId || null;
 
       const hasMetadata = !!(trackId || artist || title);
       const metadataChanged =
@@ -5652,6 +5660,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._lastLyricsArtist = artist;
         this._lastLyricsTitle = title;
         this._lastLyricsEntityId = activeEntityId;
+
+        // Set loading state immediately to avoid UI flicker during debounce
+        this._fetchingLyrics = true;
+        this._lyricsError = false;
 
         // Debounce fetch to handle rapid metadata updates (e.g. radio streams)
         if (this._lyricsFetchTimeout) clearTimeout(this._lyricsFetchTimeout);
@@ -6006,6 +6018,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     if (action.action === "toggle_lyrics") {
       this._lyricsActive = !this._lyricsActive;
+      if (this._lyricsActive && (!this._massLyrics || this._massLyrics.length === 0)) {
+        this._fetchLyrics();
+      }
       this.requestUpdate();
       return;
     }
