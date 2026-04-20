@@ -3855,9 +3855,6 @@ export const lyricsStyles = css`
     background: rgba(0, 0, 0, 0.3);
     // backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
-    mask-image: 
-
-    -webkit-mask-composite: source-in;
   }
 
   .lyrics-scroll-container {
