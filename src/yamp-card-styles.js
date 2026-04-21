@@ -16,6 +16,8 @@ export const Z_LAYERS = Object.freeze({
   SEARCH_SUCCESS: 1
 });
 
+const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent)`;
+
 const lightModeVariables = css`
   --card-bg: #fff;
   --primary-text: #222;
@@ -82,7 +84,7 @@ export const yampCardStyles = css`
     /* Universal theme-aware variables (default to dark) */
     --yamp-overlay-bg: rgba(0, 0, 0, 0.82);
     --yamp-overlay-text: #fff;
-    --yamp-overlay-text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    --yamp-overlay-text-shadow: none;
     --yamp-overlay-divider: rgba(255, 255, 255, 0.2);
     --yamp-icon-color: #fff;
     --yamp-button-bg: rgba(255, 255, 255, 0.1);
@@ -3854,16 +3856,18 @@ export const lyricsStyles = css`
     pointer-events: auto;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+    color: var(--yamp-overlay-text, #fff);
   }
 
-  :host([data-artwork-fit="scaled-contain"]),
   :host([data-artwork-fit="scaled-contain-alternate"]) {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--yamp-overlay-bg, rgba(0, 0, 0, 0.82));
   }
 
-  :host(:not([data-artwork-fit="scaled-contain"]):not([data-artwork-fit="scaled-contain-alternate"])) {
-    mask-image: linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent);
+  :host(:not([data-artwork-fit="scaled-contain-alternate"])) {
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    mask-image: ${LYRICS_MASK_GRADIENT};
+    -webkit-mask-image: ${LYRICS_MASK_GRADIENT};
   }
 
   .lyrics-scroll-container {
@@ -3901,7 +3905,7 @@ export const lyricsStyles = css`
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     cursor: default;
     pointer-events: none;
-    color: #ffffff;
+    color: inherit;
     width: 100%;
     max-width: 95%;
     filter: blur(1px);
@@ -3911,8 +3915,8 @@ export const lyricsStyles = css`
   .lyric-line.active {
     opacity: 1;
     filter: blur(0);
-    color:  #ffffff;
-    text-shadow: 0 0 25px rgba(0,0,0,0.5);
+    color:  inherit;
+    text-shadow: var(--yamp-overlay-text-shadow, none);
   }
 
   .lyric-line.scroll-mode {
@@ -3937,14 +3941,14 @@ export const lyricsStyles = css`
     justify-content: center;
     text-align: center;
     padding: 24px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--yamp-overlay-text-secondary, rgba(255, 255, 255, 0.8));
     background: transparent;
     border-radius: inherit;
   }
 
   .lyrics-loading ha-circular-progress {
     margin-bottom: 12px;
-    --md-sys-color-primary: white;
+    --md-sys-color-primary: var(--yamp-overlay-text, white);
   }
 
   .lyrics-error ha-icon, .lyrics-empty ha-icon {
