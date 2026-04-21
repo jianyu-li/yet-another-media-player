@@ -4150,7 +4150,7 @@
   }
 
   .lyric-line {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     font-weight: 700;
     line-height: 1.3;
     margin-bottom: 24px;
@@ -4163,14 +4163,11 @@
     max-width: 95%;
     filter: blur(1px);
     text-align: center;
-    transform: scale(0.9);
   }
 
   .lyric-line.active {
     opacity: 1;
-    font-size: 1.8rem;
     filter: blur(0);
-    transform: scale(1);
     color:  #ffffff;
     text-shadow: 0 0 25px rgba(0,0,0,0.5);
   }
