@@ -18,6 +18,31 @@ export const Z_LAYERS = Object.freeze({
 
 const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent)`;
 
+const HIDE_SCROLLBAR = css`
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+`;
+
+const BLUR_5 = css`blur(5px)`;
+const BLUR_10 = css`blur(10px)`;
+const BLUR_20 = css`blur(20px)`;
+
+const CHIP_ROW_MASK = css`linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%)`;
+
+const LINE_CLAMP_2 = css`
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+`;
+
+const LINE_CLAMP_3 = css`
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+`;
+
 const lightModeVariables = css`
   --card-bg: #fff;
   --primary-text: #222;
@@ -525,19 +550,17 @@ export const yampCardStyles = css`
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
-    scrollbar-width: none;
+    ${HIDE_SCROLLBAR}
     scrollbar-color: var(--accent-color, #1976d2) #222;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     max-width: 100vw;
     background: transparent;
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%);
-    mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%);
+    -webkit-mask-image: ${CHIP_ROW_MASK};
+    mask-image: ${CHIP_ROW_MASK};
   }
 
-  .chip-row::-webkit-scrollbar {
-    display: none;
-  }
+
 
   .chip-row::-webkit-scrollbar-thumb {
     background: var(--accent-color, #1976d2);
@@ -557,16 +580,14 @@ export const yampCardStyles = css`
     z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
     white-space: nowrap;
-    scrollbar-width: none;
+    ${HIDE_SCROLLBAR}
     font-size: calc(1em * var(--yamp-text-scale-action-chips, 1));
     background: transparent;
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%);
-    mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%);
+    -webkit-mask-image: ${CHIP_ROW_MASK};
+    mask-image: ${CHIP_ROW_MASK};
   }
 
-  .action-chip-row::-webkit-scrollbar {
-    display: none;
-  }
+
 
   /* Action chips */
   .action-chip {
@@ -1782,8 +1803,8 @@ export const yampCardStyles = css`
     bottom: 0;
     z-index: ${Z_LAYERS.OVERLAY_BASE};
     background: var(--yamp-overlay-bg);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: ${BLUR_5};
+    -webkit-backdrop-filter: ${BLUR_5};
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -1883,8 +1904,7 @@ export const yampCardStyles = css`
     box-sizing: border-box;
     padding: 0;
     margin: 2% auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    ${HIDE_SCROLLBAR}
     display: flex;
     flex-direction: column;
     max-height: calc(96% - 70px);
@@ -1901,12 +1921,10 @@ export const yampCardStyles = css`
   :host([data-hide-persistent-controls="true"]) .entity-options-container,
   :host([data-pin-search-headers="true"]) .entity-options-container {
     max-height: 96%;
-    scrollbar-width: none;
+    ${HIDE_SCROLLBAR}
   }
 
-  .entity-options-container::-webkit-scrollbar {
-    display: none;
-  }
+
 
   /* Persistent Media Controls */
   /* Persistent Media Controls */
@@ -2091,8 +2109,7 @@ export const yampCardStyles = css`
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    ${HIDE_SCROLLBAR}
     font-size: calc(1em * var(--yamp-text-scale-menu, 1));
     position: relative;
     box-sizing: border-box;
@@ -2158,9 +2175,7 @@ export const yampCardStyles = css`
     /* Uses centralized .chip styling */
   }
 
-  .entity-options-chips-strip::-webkit-scrollbar {
-    display: none;
-  }
+
 
   .entity-options-menu.chips-in-menu {
     margin-top: 4px;
@@ -2173,24 +2188,18 @@ export const yampCardStyles = css`
 
 
 
-  .entity-options-sheet::-webkit-scrollbar {
-    display: none;
-  }
+
 
   .entity-options-sheet {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    ${HIDE_SCROLLBAR}
   }
 
   /* Hide scrollbar for group list scroll container */
   .group-list-scroll {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    ${HIDE_SCROLLBAR}
   }
 
-  .group-list-scroll::-webkit-scrollbar {
-    display: none;
-  }
+
 
   /* Seamless grouping header and scrolling list */
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-header {
@@ -2319,7 +2328,7 @@ export const yampCardStyles = css`
   .source-list-scroll {
     overflow-y: auto;
     max-height: 340px;
-    scrollbar-width: none;
+    ${HIDE_SCROLLBAR}
     width: 100%;
   }
 
@@ -2327,9 +2336,7 @@ export const yampCardStyles = css`
     width: 100%;
   }
 
-  .source-list-scroll::-webkit-scrollbar {
-    display: none;
-  }
+
 
   .floating-source-index.grab-scroll-active,
   .floating-source-index.grab-scroll-active * {
@@ -2353,8 +2360,7 @@ export const yampCardStyles = css`
     overflow-y: auto;
     max-height: calc(100% - 75px);
     min-width: 38px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    ${HIDE_SCROLLBAR}
   }
 
   .entity-options-sheet.chips-mode .floating-source-index {
@@ -2362,9 +2368,7 @@ export const yampCardStyles = css`
     height: calc(100% - clamp(72px, 15vh, 120px));
   }
 
-  .floating-source-index::-webkit-scrollbar {
-    display: none;
-  }
+
 
   .floating-source-index .source-index-letter {
     background: none;
@@ -2496,8 +2500,8 @@ export const yampCardStyles = css`
     inset: 0;
     left: 100%;
     background: var(--search-overlay-bg) ;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: ${BLUR_10};
+    -webkit-backdrop-filter: ${BLUR_10};
     z-index: ${Z_LAYERS.SEARCH_SLIDE_OUT};
     display: flex;
     align-items: center;
@@ -2505,13 +2509,11 @@ export const yampCardStyles = css`
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 15px 0 0 15px;
     overflow-x: auto;
-    scrollbar-width: none;
+    ${HIDE_SCROLLBAR}
     gap: 4px;
   }
 
-  .search-row-slide-out::-webkit-scrollbar {
-    display: none;
-  }
+
 
   .search-row-slide-out.active {
     left: 0;
@@ -2523,8 +2525,8 @@ export const yampCardStyles = css`
     position: absolute;
     inset: 0;
     background: var(--search-overlay-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: ${BLUR_20};
+    -webkit-backdrop-filter: ${BLUR_20};
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -2966,13 +2968,10 @@ export const yampCardStyles = css`
     flex: 1;
     overflow-y: auto;
     min-height: 0;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    ${HIDE_SCROLLBAR}
   }
 
-  .entity-options-scroll::-webkit-scrollbar {
-    display: none;
-  }
+
 
   /* Reserved space for persistent media controls when pinning is active */
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
@@ -3005,14 +3004,11 @@ export const yampCardStyles = css`
     margin: 12px 0;
     padding-bottom: 0px;
     /* Hide scrollbars */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    ${HIDE_SCROLLBAR}
   }
 
   /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
-  .entity-options-sheet .entity-options-search-results::-webkit-scrollbar {
-    display: none;
-  }
+
 
   .entity-options-resolved-entities {
     display: flex;
@@ -3025,13 +3021,10 @@ export const yampCardStyles = css`
     overflow-y: auto;
     margin: 12px 0;
     /* Hide scrollbars */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    ${HIDE_SCROLLBAR}
   }
 
-  .entity-options-resolved-entities-list::-webkit-scrollbar {
-    display: none;
-  }
+
 
   .entity-options-resolved-entities  .entity-options-search-input {
     flex: 1;
@@ -3243,13 +3236,10 @@ export const yampCardStyles = css`
     flex: 1;
     overflow-y: auto;
     /* Hide scrollbars */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    ${HIDE_SCROLLBAR}
   }
 
-  .search-sheet-results::-webkit-scrollbar {
-    display: none;
-  }
+
 
 
   .search-sheet-result {
@@ -3500,10 +3490,7 @@ export const yampCardStyles = css`
     text-align: center;
     width: 100%;
     /* 2-line clamping with word-level breaks */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    ${LINE_CLAMP_2}
     white-space: normal;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -3516,10 +3503,7 @@ export const yampCardStyles = css`
     text-align: center;
     width: 100%;
     /* 2-line clamping with word-level breaks */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    ${LINE_CLAMP_2}
     white-space: normal;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -3844,6 +3828,23 @@ export const yampCardStyles = css`
     animation: gestureSwipeRight 0.35s ease-out forwards;
     transform-origin: left center;
   }
+  /* Consolidated scrollbar hiding for Webkit browsers */
+  .chip-row::-webkit-scrollbar,
+  .action-chip-row::-webkit-scrollbar,
+  .entity-options-container::-webkit-scrollbar,
+  .entity-options-chips-strip::-webkit-scrollbar,
+  .entity-options-sheet::-webkit-scrollbar,
+  .group-list-scroll::-webkit-scrollbar,
+  .source-list-scroll::-webkit-scrollbar,
+  .floating-source-index::-webkit-scrollbar,
+  .search-row-slide-out::-webkit-scrollbar,
+  .entity-options-scroll::-webkit-scrollbar,
+  .entity-options-sheet .entity-options-search-results::-webkit-scrollbar,
+  .entity-options-resolved-entities-list::-webkit-scrollbar,
+  .search-sheet-results::-webkit-scrollbar,
+  .lyrics-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 export const lyricsStyles = css`
@@ -3854,8 +3855,8 @@ export const lyricsStyles = css`
     z-index: ${Z_LAYERS.LYRICS_OVERLAY};
     overflow: hidden;
     pointer-events: auto;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: ${BLUR_5};
+    -webkit-backdrop-filter: ${BLUR_5};
     color: var(--yamp-overlay-text, #fff);
   }
 
@@ -3879,14 +3880,10 @@ export const lyricsStyles = css`
     padding-left: 12px;
     padding-right: 12px;
     scroll-behavior: smooth;
-    scrollbar-width: none; /* Firefox */
+    ${HIDE_SCROLLBAR}
     display: flex;
     flex-direction: column;
     align-items: center;
-  }
-
-  .lyrics-scroll-container::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
   }
   
   .scroll-spacer {
