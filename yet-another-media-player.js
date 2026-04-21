@@ -4127,6 +4127,11 @@
     background: rgba(0, 0, 0, 0.3);
   }
 
+  :host(:not([data-artwork-fit="scaled-contain"]):not([data-artwork-fit="scaled-contain-alternate"])) {
+    mask-image: linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent);
+  }
+
   .lyrics-scroll-container {
     height: 100%;
     width: 100%;
