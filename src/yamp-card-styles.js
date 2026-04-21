@@ -3852,9 +3852,13 @@ export const lyricsStyles = css`
     z-index: ${Z_LAYERS.LYRICS_OVERLAY};
     overflow: hidden;
     pointer-events: auto;
-    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+  }
+
+  :host([data-artwork-fit="scaled-contain"]),
+  :host([data-artwork-fit="scaled-contain-alternate"]) {
+    background: rgba(0, 0, 0, 0.3);
   }
 
   .lyrics-scroll-container {

@@ -7469,6 +7469,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     ${(this._lyricsActive && !this._isIdle) ? html`
                       <yamp-lyrics-view
                         class="lyrics-embedded"
+                        data-artwork-fit="${activeArtworkFit}"
                         .hass=${this.hass}
                         .lyrics=${this._massLyrics}
                         .position=${pos}
