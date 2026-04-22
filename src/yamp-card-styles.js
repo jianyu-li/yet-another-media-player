@@ -3851,7 +3851,10 @@ export const lyricsStyles = css`
   :host {
     display: block;
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: -1px;
     z-index: ${Z_LAYERS.LYRICS_OVERLAY};
     overflow: hidden;
     pointer-events: auto;
