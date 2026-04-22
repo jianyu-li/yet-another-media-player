@@ -16,7 +16,7 @@ export const Z_LAYERS = Object.freeze({
   SEARCH_SUCCESS: 1
 });
 
-const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent)`;
+const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent, rgba(0,0,0,0.5) 10px, black 50px, black calc(100% - 50px), rgba(0,0,0,0.5) calc(100% - 10px), transparent)`;
 
 const HIDE_SCROLLBAR = css`
   scrollbar-width: none;

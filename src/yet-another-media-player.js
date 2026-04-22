@@ -5243,6 +5243,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
    * Logic is guided by the 'lyrics_source' configuration.
    */
   async _fetchLyrics() {
+    // Safety guard: ensure lyrics are still active and card is visible/active
+    if (!this._lyricsActive || this._isIdle || this.isAnyMenuOpen) {
+      this._fetchingLyrics = false;
+      this.requestUpdate();
+      return;
+    }
+
     this._lyricsError = false;
     const configSource = this.config.lyrics_source || "mass_lrclib";
 
@@ -5684,7 +5691,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         title !== this._lastLyricsTitle ||
         activeEntityId !== this._lastLyricsEntityId;
 
-      if (hasMetadata && metadataChanged) {
+      if (hasMetadata && metadataChanged && !this._isIdle && !this.isAnyMenuOpen) {
         // Update trackers immediately to avoid multiple triggers
         this._lastLyricsTrackId = trackId;
         this._lastLyricsArtist = artist;
@@ -6048,9 +6055,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     if (action.action === "toggle_lyrics") {
       this._lyricsActive = !this._lyricsActive;
-      if (this._lyricsActive && (!this._massLyrics || this._massLyrics.length === 0)) {
-        this._fetchLyrics();
-      }
+      // No explicit fetch call here - updated() will handle it lazily if appropriate
       this.requestUpdate();
       return;
     }
