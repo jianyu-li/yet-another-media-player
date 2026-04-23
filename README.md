@@ -28,6 +28,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ## Screenshots
 
 ![Card overview](preview/layouts.png)
+![Lyrics view](preview/lyrics-light-mode.png)
 ![Modern Controls Preview](preview/modern_controls_preview.png)
 ![Collapsed card](preview/collapsed.png)
 ![Scaled Contain Preview](preview/scale-contain-artwork-preview.png)
