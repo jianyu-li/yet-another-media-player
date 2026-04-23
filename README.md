@@ -510,6 +510,20 @@ card_mod:
     .details .artist {
       font-size: 1.2em !important;      # optional: artist only
     }
+
+#### Style lyrics view
+You can customize the background and font sizes of the lyrics view using CSS variables. These can be applied at the card level via `card_mod`:
+```yaml
+card_mod:
+  style: |
+    ha-card {
+      --yamp-lyrics-bg: #1a1a1a;
+      --yamp-lyrics-mask: none;
+      --yamp-lyrics-color: #ffffff;
+      --yamp-lyrics-active-color: #ff9800;
+      --yamp-lyrics-font-size: 1.4rem;
+      --yamp-lyrics-active-font-size: 2rem;
+    } 
 ```
 
 ## Collapsed & Idle States
