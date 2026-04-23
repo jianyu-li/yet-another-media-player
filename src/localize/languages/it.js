@@ -61,6 +61,10 @@ export default {
                 "interactions_search": {
                     "title": "Interazioni e ricerca",
                     "description": "Ajusta il fissaggio delle entità."
+                },
+                "lyrics": {
+                    "title": "Testi",
+                    "description": "Configura come vengono visualizzati i testi e quando appaiono."
                 }
             },
             "look_and_feel": {
@@ -127,7 +131,9 @@ export default {
             "disable_auto_select": "Evita che il chip di questa entità venga selezionato automaticamente all'inizio della riproduzione.",
             "search_view": "Scegli tra una lista standard o una griglia di schede per i risultati della ricerca.",
             "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente.",
-            "card_type": "Scegli la modalità della scheda. 'Predefinito' è il lettore multimediale standard. 'Ricerca dedicata' rende la scheda un'interfaccia di ricerca permanente."
+            "card_type": "Scegli la modalità della scheda. 'Predefinito' è il lettore multimediale standard. 'Ricerca dedicata' rende la scheda un'interfaccia di ricerca permanente.",
+            "always_show_lyrics": "Apri automaticamente la visualizzazione dei testi quando la pagina viene aggiornata.",
+            "lyrics_pre_roll": "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0)."
         },
         "titles": {
             "edit_entity": "Modifica entità",
@@ -162,8 +168,11 @@ export default {
             "use_vol_template": "Usa modello Volume",
             "follow_active_entity": "Volume segue entità attiva",
             "use_url_path": "Usa URL o percorso",
-            "adaptive_text_elements": "Elementi testo adattativo",
-            "disable_auto_select": "Disattiva selezione automatica",
+            "adaptive_text_elements": "Elementi per dimensione testo adattiva",
+            "disable_auto_select": "Disabilita selezione automatica",
+            "always_show_lyrics": "Mostra sempre i testi",
+            "lyrics_mode": "Modalità testi",
+            "lyrics_pre_roll": "Pre-roll testi (secondi)",
             "card_type": "Tipo di scheda"
         },
         "fields": {
@@ -221,7 +230,8 @@ export default {
             "prev_entity": "Chip entità precedente",
             "next_entity": "Chip entità successiva",
             "sync_selected_entity": "Sincronizza entità selezionata",
-            "select_entity": "Seleziona entità dall'helper"
+            "select_entity": "Seleziona entità da helper",
+            "toggle_lyrics": "Attiva/disattiva sovrapposizione testi"
         },
         "action_helpers": {
             "sync_selected_entity": "Sincronizza entità selezionata →",
@@ -286,6 +296,8 @@ export default {
             "more_info": "Più info",
             "search": "Cerca",
             "source": "Sorgente",
+            "show_lyrics": "Mostra testi",
+            "hide_lyrics": "Nascondi testi",
             "transfer_queue": "Trasferisci coda",
             "group_players": "Raggruppa",
             "select_entity": "Seleziona",
@@ -355,5 +367,15 @@ export default {
         "play_collection_error": "Impossibile riprodurre direttamente questa collezione",
         "browse_album": "Sfoglia i brani di {album}",
         "play_item": "Riproduci {item}"
+    },
+    "lyrics": {
+        "finding": "Ricerca testi...",
+        "none_found": "Nessun testo trovato",
+        "not_available": "Testi non disponibili"
+    },
+    "lyrics_modes": {
+        "default": "Predefinito (Evidenzia e scorri)",
+        "scroll": "Solo scorrimento",
+        "text": "Solo testo"
     }
 };

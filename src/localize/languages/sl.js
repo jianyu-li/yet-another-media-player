@@ -61,6 +61,10 @@ export default {
                 "interactions_search": {
                     "title": "Interakcije in iskanje",
                     "description": "Nastavite pripenjanje entitet in število prikazanih rezultatov."
+                },
+                "lyrics": {
+                    "title": "Besedila",
+                    "description": "Konfigurirajte, kako so besedila prikazana in kdaj se pojavijo."
                 }
             },
             "look_and_feel": {
@@ -127,7 +131,9 @@ export default {
             "disable_auto_select": "Prepreči samodejno izbiro čipa te entitete ob začetku predvajanja.",
             "search_view": "Izberite med standardnim seznamom ali mrežo kartic za rezultate iskanja.",
             "search_card_columns": "Določite število stolpcev v pogledu kartic. Grafika se bo samodejno prilagodila.",
-            "card_type": "Izberite način kartice. 'Privzeto' je standardni medijski predvajalnik. 'Namensko iskanje' spremeni kartico v trajen iskalni vmesnik."
+            "card_type": "Izberite način kartice. 'Privzeto' je standardni medijski predvajalnik. 'Namensko iskanje' spremeni kartico v trajen iskalni vmesnik.",
+            "always_show_lyrics": "Samodejno odprite pogled besedila, ko se stran osveži.",
+            "lyrics_pre_roll": "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0)."
         },
         "titles": {
             "edit_entity": "Uredi entiteto",
@@ -162,8 +168,11 @@ export default {
             "use_vol_template": "Uporabi predlogo za glasnost",
             "follow_active_entity": "Glasnost sledi aktivni entiteti",
             "use_url_path": "Uporabi URL ali pot",
-            "adaptive_text_elements": "Elementi prilagodljive velikosti besedila",
+            "adaptive_text_elements": "Elementi za prilagajanje velikosti besedila",
             "disable_auto_select": "Onemogoči samodejno izbiro",
+            "always_show_lyrics": "Vedno prikaži besedilo",
+            "lyrics_mode": "Način besedila",
+            "lyrics_pre_roll": "Pre-roll besedila (sekunde)",
             "card_type": "Vrsta kartice"
         },
         "fields": {
@@ -221,7 +230,8 @@ export default {
             "prev_entity": "Prejšnji čip entitete",
             "next_entity": "Naslednji čip entitete",
             "sync_selected_entity": "Sinhroniziraj izbrano entiteto",
-            "select_entity": "Izberi entiteto iz pomočnika"
+            "select_entity": "Izberi entiteto iz pomočnika",
+            "toggle_lyrics": "Preklopi prekrivanje besedila"
         },
         "action_helpers": {
             "sync_selected_entity": "Sinhroniziraj izbrano entiteto →",
@@ -286,6 +296,8 @@ export default {
             "more_info": "Več informacij",
             "search": "Išči",
             "source": "Vir",
+            "show_lyrics": "Pokaži besedilo",
+            "hide_lyrics": "Skrij besedilo",
             "transfer_queue": "Prenesi čakalno vrsto",
             "group_players": "Združi predvajalnike",
             "select_entity": "Izberi entiteto za več informacij",
@@ -355,5 +367,15 @@ export default {
         "play_collection_error": "Te zbirke ni mogoče predvajati neposredno",
         "browse_album": "Prebrskaj skladbe iz {album}",
         "play_item": "Predvajaj {item}"
+    },
+    "lyrics": {
+        "finding": "Iskanje besedila...",
+        "none_found": "Besedila ni bilo mogoče najti",
+        "not_available": "Besedilo ni na voljo"
+    },
+    "lyrics_modes": {
+        "default": "Privzeto (Označi in pomakni)",
+        "scroll": "Samo pomikanje",
+        "text": "Samo besedilo"
     }
 };

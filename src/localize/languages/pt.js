@@ -61,6 +61,10 @@ export default {
                 "interactions_search": {
                     "title": "Interações e procura",
                     "description": "Ajuste a fixação de entidades."
+                },
+                "lyrics": {
+                    "title": "Letras",
+                    "description": "Configure como as letras são exibidas e quando aparecem."
                 }
             },
             "look_and_feel": {
@@ -127,7 +131,9 @@ export default {
             "disable_auto_select": "Impede que o chip desta entidade seja selecionado automaticamente quando a reprodução é iniciada.",
             "search_view": "Escolha entre uma lista padrão ou uma grade de cartões para os resultados da pesquisa.",
             "search_card_columns": "Especifique quantas colunas usar na visualização de cartões. A capa será redimensionada automaticamente.",
-            "card_type": "Escolha o modo do cartão. 'Padrão' é o reprodutor de mídia padrão. 'Busca dedicada' torna o cartão uma interface de busca permanente."
+            "card_type": "Escolha o modo do cartão. 'Padrão' é o reprodutor de mídia padrão. 'Busca dedicada' torna o cartão uma interface de busca permanente.",
+            "always_show_lyrics": "Abrir automaticamente a visualização de letras quando a página for atualizada.",
+            "lyrics_pre_roll": "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 0)."
         },
         "titles": {
             "edit_entity": "Editar entidade",
@@ -164,6 +170,9 @@ export default {
             "use_url_path": "Usar URL ou caminho",
             "adaptive_text_elements": "Elementos de texto adaptativo",
             "disable_auto_select": "Desativar seleção automática",
+            "always_show_lyrics": "Mostrar sempre as letras",
+            "lyrics_mode": "Modo de letras",
+            "lyrics_pre_roll": "Antecipação de letra (segundos)",
             "card_type": "Tipo de cartão"
         },
         "fields": {
@@ -221,7 +230,8 @@ export default {
             "prev_entity": "Chip da entidade anterior",
             "next_entity": "Chip da próxima entidade",
             "sync_selected_entity": "Sincronizar entidade selecionada",
-            "select_entity": "Selecionar entidade do helper"
+            "select_entity": "Selecionar entidade do helper",
+            "toggle_lyrics": "Alternar sobreposição de letras"
         },
         "action_helpers": {
             "sync_selected_entity": "Sincronizar entidade selecionada →",
@@ -286,6 +296,8 @@ export default {
             "more_info": "Mais info",
             "search": "Procurar",
             "source": "Fonte",
+            "show_lyrics": "Mostrar letras",
+            "hide_lyrics": "Ocultar letras",
             "transfer_queue": "Transferir fila",
             "group_players": "Agrupar",
             "select_entity": "Selecionar",
@@ -355,5 +367,15 @@ export default {
         "play_collection_error": "Não é possível reproduzir esta coleção diretamente",
         "browse_album": "Explorar faixas de {album}",
         "play_item": "Reproduzir {item}"
+    },
+    "lyrics": {
+        "finding": "Procurando letra...",
+        "none_found": "Nenhuma letra encontrada",
+        "not_available": "Letra não disponível"
+    },
+    "lyrics_modes": {
+        "default": "Padrão (Destacar e rolar)",
+        "scroll": "Apenas rolar",
+        "text": "Apenas texto"
     }
 };

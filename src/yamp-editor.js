@@ -390,6 +390,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (typeof action.menu_item === "string" && action.menu_item.trim() !== "") return "menu";
     const navPath = typeof action.navigation_path === "string" ? action.navigation_path.trim() : "";
     if (action.action === "navigate" || navPath) return "navigate";
+    if (action.action === "toggle_lyrics") return "toggle_lyrics";
     return "service";
   }
 
@@ -1408,6 +1409,78 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-selector>
           </div>
         </div>
+
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize('editor.sections.behavior.lyrics.title')}</div>
+            <div class="section-description">${localize('editor.sections.behavior.lyrics.description')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="always-show-lyrics-toggle"
+                .checked=${this._config.always_show_lyrics ?? false}
+                @change=${(e) => this._updateConfig("always_show_lyrics", e.target.checked)}
+              ></ha-switch>
+              <label for="always-show-lyrics-toggle">${localize('editor.labels.always_show_lyrics')}</label>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.always_show_lyrics')}</div>
+          </div>
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "default", label: localize('lyrics_modes.default') },
+            { value: "scroll", label: localize('lyrics_modes.scroll') },
+            { value: "text", label: localize('lyrics_modes.text') },
+          ]
+        }
+      }}
+              .value=${this._config.lyrics_mode ?? "default"}
+              label="${localize('editor.labels.lyrics_mode')}"
+              @value-changed=${(e) => this._updateConfig("lyrics_mode", e.detail.value)}
+            ></ha-selector>
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+    select: {
+      mode: "dropdown",
+      options: [
+        { value: "mass_lrclib", label: localize('lyrics_sources.mass_lrclib') },
+        { value: "mass", label: localize('lyrics_sources.mass') },
+        { value: "lrclib", label: localize('lyrics_sources.lrclib') },
+        { value: "lrclib_mass", label: localize('lyrics_sources.lrclib_mass') },
+      ]
+    }
+  }}
+              .value=${this._config.lyrics_source ?? "mass_lrclib"}
+              label="${localize('editor.labels.lyrics_source')}"
+              @value-changed=${(e) => this._updateConfig("lyrics_source", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle">${localize('editor.subtitles.lyrics_source')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{ number: { min: -5, max: 5, step: 0.1, unit_of_measurement: "s", mode: "box" } }}
+                .value=${this._config.lyrics_pre_roll ?? 0}
+                label="${localize('editor.labels.lyrics_pre_roll')}"
+                helper="${localize('editor.subtitles.lyrics_pre_roll')}"
+                @value-changed=${(e) => this._updateConfig("lyrics_pre_roll", e.detail.value)}
+              ></ha-selector>
+            </div>
+            <ha-icon
+              class="icon-button"
+              icon="mdi:restore"
+              title="${localize('common.reset_default')}"
+              @click=${() => this._updateConfig("lyrics_pre_roll", 0)}
+            ></ha-icon>
+          </div>
+        </div>
       `;
   }
 
@@ -2218,7 +2291,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             { value: "sync_selected_entity", label: localize('editor.action_types.sync_selected_entity') },
             { value: "select_entity", label: localize('editor.action_types.select_entity') },
             { value: "prev_entity", label: localize('editor.action_types.prev_entity') || "Previous Entity Chip" },
-            { value: "next_entity", label: localize('editor.action_types.next_entity') || "Next Entity Chip" }
+            { value: "next_entity", label: localize('editor.action_types.next_entity') || "Next Entity Chip" },
+            { value: "toggle_lyrics", label: localize('editor.action_types.toggle_lyrics') || "Toggle Lyrics Overlay" }
           ]
         }
       }}
@@ -2285,6 +2359,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           this._updateActionProperty("navigation_path", undefined);
           this._updateActionProperty("navigation_new_tab", undefined);
           this._updateActionProperty("action", mode);
+        } else if (mode === "toggle_lyrics") {
+          this._updateActionProperty("menu_item", undefined);
+          this._updateActionProperty("service", undefined);
+          this._updateActionProperty("service_data", undefined);
+          this._updateActionProperty("script_variable", undefined);
+          this._updateActionProperty("navigation_path", undefined);
+          this._updateActionProperty("navigation_new_tab", undefined);
+          this._updateActionProperty("action", "toggle_lyrics");
         }
       }}
           ></ha-selector>

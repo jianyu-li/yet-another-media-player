@@ -61,6 +61,10 @@ export default {
                 "interactions_search": {
                     "title": "Interactions & Search",
                     "description": "Fine-tune how entities are pinned and how many results show at once."
+                },
+                "lyrics": {
+                    "title": "Lyrics",
+                    "description": "Configure how lyrics are displayed and when they appear."
                 }
             },
             "look_and_feel": {
@@ -127,7 +131,10 @@ export default {
             "disable_auto_select": "Prevent this entity's chip from automatically being selected when it starts playing.",
             "search_view": "Choose between a standard list or a card-based grid for search results.",
             "search_card_columns": "Specify how many columns to use in the card view. Artwork will scale automatically.",
-            "card_type": "Choose the card mode. 'Default' is the standard media player. 'Dedicated Search' makes the card a permanent search interface."
+            "card_type": "Choose the card mode. 'Default' is the standard media player. 'Dedicated Search' makes the card a permanent search interface.",
+            "always_show_lyrics": "Automatically open the lyrics view when the page is refreshed.",
+            "lyrics_source": "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
+            "lyrics_pre_roll": "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0)."
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -163,7 +170,11 @@ export default {
             "follow_active_entity": "Volume Entity Follows Active Entity",
             "use_url_path": "Use URL or Path",
             "adaptive_text_elements": "Adaptive Text Size Elements",
-            "disable_auto_select": "Disable Auto-Select"
+            "disable_auto_select": "Disable Auto-Select",
+            "always_show_lyrics": "Always Show Lyrics",
+            "lyrics_mode": "Lyrics Mode",
+            "lyrics_source": "Lyrics Source",
+            "lyrics_pre_roll": "Lyrics Pre-Roll (seconds)"
         },
         "fields": {
             "artwork_fit": "Artwork Fit",
@@ -223,7 +234,8 @@ export default {
             "prev_entity": "Previous Entity Chip",
             "next_entity": "Next Entity Chip",
             "sync_selected_entity": "Sync Selected Entity",
-            "select_entity": "Select Entity from Helper"
+            "select_entity": "Select Entity from Helper",
+            "toggle_lyrics": "Toggle Lyrics Overlay"
         },
         "action_helpers": {
             "sync_selected_entity": "Sync Selected Entity →",
@@ -293,6 +305,8 @@ export default {
             "more_info": "More Info",
             "search": "Search",
             "source": "Source",
+            "show_lyrics": "Show Lyrics",
+            "hide_lyrics": "Hide Lyrics",
             "transfer_queue": "Transfer Queue",
             "group_players": "Group Players",
             "select_entity": "Select Entity for More Info",
@@ -362,5 +376,22 @@ export default {
         "play_collection": "Play this collection",
         "play_collection_error": "Unable to play this collection directly",
         "play_item": "Play {item}"
+    },
+    "lyrics": {
+        "finding": "Finding Lyrics...",
+        "none_found": "No lyrics found",
+        "not_available": "Lyrics not available",
+        "instrumental": "Instrumental Track"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Fallback to LRCLIB)",
+        "mass": "Music Assistant Only",
+        "lrclib": "LRCLIB Only",
+        "lrclib_mass": "LRCLIB (Fallback to Music Assistant)"
+    },
+    "lyrics_modes": {
+        "default": "Default (Highlight & Scroll)",
+        "scroll": "Scroll Only",
+        "text": "Text Only"
     }
 };
