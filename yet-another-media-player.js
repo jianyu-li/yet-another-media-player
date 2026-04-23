@@ -6325,7 +6325,7 @@
                         .loading=${this._fetchingLyrics}
                         .error=${this._lyricsError}
                         .activeThemeColor=${this.config.match_theme===!0?"var(--state-media_player-active-color, var(--primary-color, #ffffff))":"var(--custom-accent, #ffffff)"}
-                        .mode=${this.config.lyrics_mode||"default"}
+                        .mode=${this._isCurrentlyPlayingRadio()?"text":this.config.lyrics_mode||"default"}
                         .preRoll=${this.config.lyrics_pre_roll??0}
                       ></yamp-lyrics-view>
                     `:v}
