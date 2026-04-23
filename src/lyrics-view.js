@@ -35,6 +35,14 @@ export class YampLyricsView extends LitElement {
     this._scrollTimeout = null;
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._scrollTimeout) {
+      clearTimeout(this._scrollTimeout);
+      this._scrollTimeout = null;
+    }
+  }
+
   firstUpdated() {
     // Initial scroll position
     if (this._activeIndex !== -1) {
@@ -65,7 +73,7 @@ export class YampLyricsView extends LitElement {
     if (isUnsynced) return;
 
     let newActiveIndex = -1;
-    const adjustedPos = this.position + (this.preRoll ?? 1);
+    const adjustedPos = this.position + this.preRoll;
 
     for (let i = 0; i < this.lyrics.length; i++) {
       if (this.lyrics[i].time !== null && this.lyrics[i].time <= adjustedPos) {
@@ -89,8 +97,7 @@ export class YampLyricsView extends LitElement {
     if (this._isScrolling && behavior === "smooth") return;
 
     const container = this.renderRoot.querySelector(".lyrics-scroll-container");
-    const allLines = this.renderRoot.querySelectorAll(".lyric-line");
-    const activeEl = allLines[this._activeIndex];
+    const activeEl = container?.querySelector(".lyric-line.active");
 
     if (container && activeEl) {
       const containerCenter = container.clientHeight / 2;

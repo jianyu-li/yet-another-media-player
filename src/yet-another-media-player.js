@@ -488,8 +488,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _fetchingLyrics: { state: true },
     _lyricsError: { state: true },
     _lastLyricsTrackId: { state: true },
-    _lastLyricsArtist: { state: true },
-    _lastLyricsTitle: { state: true },
     _lastLyricsEntityId: { state: true }
   };
 
@@ -4726,12 +4724,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
         
         ${this._renderGroupingMenuOption()}
         
-        ${this._massQueueAvailable && !this.config.always_collapsed ? html`
+        ${!this.config.always_collapsed ? html`
           <button class="entity-options-item" @click=${() => {
           this._lyricsActive = !this._lyricsActive;
           if (!this._lyricsActive) {
             this._lastLyricsTrackId = null;
             this._lastLyricsEntityId = null;
+            this._lastLyricsArtist = null;
+            this._lastLyricsTitle = null;
           }
           this._showEntityOptions = false;
           this.requestUpdate();
@@ -5382,6 +5382,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._massQueueAvailable = await this._isMassQueueIntegrationAvailable(this.hass);
       this._hasMassQueueIntegration = this._massQueueAvailable;
       if (!this._massQueueAvailable) return [];
+      if (this._currentFetchToken !== fetchToken) return [];
     }
 
     try {
@@ -6130,9 +6131,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     this.hass.callService(domain, service, data);
   }
-
-
-
   _onTapAreaPointerDown(e) {
     if (this.isAnyMenuOpen) return;
 
@@ -7473,7 +7471,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
                     ${(this._lyricsActive && !this._isIdle) ? html`
                       <yamp-lyrics-view
-                        class="lyrics-embedded"
                         data-artwork-fit="${activeArtworkFit}"
                         .hass=${this.hass}
                         .lyrics=${this._massLyrics}
@@ -8628,6 +8625,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
     // Unsubscribe from queue update events
     this._unsubscribeFromQueueUpdates();
+    if (this._lyricsFetchTimeout) {
+      clearTimeout(this._lyricsFetchTimeout);
+      this._lyricsFetchTimeout = null;
+    }
     super.disconnectedCallback?.();
     if (this._progressTimer) {
       clearInterval(this._progressTimer);
