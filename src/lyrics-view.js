@@ -166,7 +166,7 @@ export class YampLyricsView extends LitElement {
 
       const classes = {
         "lyric-line": true,
-        "active": isActive && !isUnsynced && isDefaultMode,
+        "active": isActive && !isUnsynced,
         "unsynced": isUnsynced || isUnsyncedMode,
         "scroll-mode": isScrollMode && !isUnsynced
       };

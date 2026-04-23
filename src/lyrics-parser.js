@@ -8,7 +8,7 @@
 export function parseLrc(lrcString) {
   if (!lrcString || typeof lrcString !== 'string') return [];
 
-  const lines = lrcString.split('\n');
+  const lines = lrcString.split(/\r?\n/);
   const parsedLyrics = [];
 
   // Regex to match [mm:ss.xx] or [mm:ss:xx]

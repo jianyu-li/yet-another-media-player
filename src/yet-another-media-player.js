@@ -5267,7 +5267,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const trackId = activeState.attributes.media_content_id;
 
     // 1. Check Internal Cache
-    const cacheKey = trackId || `${artist}:${title}`;
+    const cacheKey = trackId ? `${trackId}:${artist}:${title}` : `${artist}:${title}`;
     
     // Prevent redundant fetches if already in progress for this same key
     if (this._fetchingLyrics && this._fetchingCacheKey === cacheKey) return;
@@ -5351,9 +5351,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             this._lyricsCache.delete(oldestKey);
           }
           this._lyricsCache.set(cacheKey, lyrics);
-        } else if (lyrics === null || (Array.isArray(lyrics) && lyrics.length === 0)) {
-          // Explicit null or empty means fetch failed or no lyrics found
-          // Only set error if we truly found nothing after all sources finished
+        } else if (lyrics === null) {
+          // Explicit null means fetch failed
           this._lyricsError = true;
         }
         this._fetchingLyrics = false;
