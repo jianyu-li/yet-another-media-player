@@ -1,6 +1,6 @@
 # Yet Another Media Player
 
-YAMP is a full-featured Home Assistant media card for controlling multiple entities with customizable actions, music assistant support, and various layout options.
+YAMP is a full-featured Home Assistant media card for controlling multiple entities with customizable actions, music assistant support, lyrics, and various layout options.
 
 
 ## Installation via HACS
@@ -14,7 +14,8 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 - **Multi-Player Control** — Switch between media players in a single card with chip-based selection. Control volume individually or as a group
 - **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
-- **Music Assistant Integration** — Full search, queue management, and synced lyrics without leaving the card
+- **Music Assistant Integration** — Full search and queue management
+- **Lyrics** - Synced lyric support
 - **mass_queue Support** — Advanced queue controls and integrated Music Assistant lyrics with the optional [mass_queue](https://github.com/droans/mass_queue) integration
 - **Adaptive Visual Theming** — Customize artwork scaling with various fit modes and add custom artwork overrides
 - **Many Layouts** — Collapse the card when idle or keep it compact while playing, change text sizing, and more to match your dashboard style
