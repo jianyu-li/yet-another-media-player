@@ -7504,7 +7504,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     return html`
-        <ha-card class="yamp-card" style=${hasCustomCardHeight ? `height:${customCardHeight}px;` : nothing}>
+        <ha-card class="yamp-card" style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
             data-artwork-fit="${activeArtworkFit}"
