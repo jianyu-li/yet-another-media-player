@@ -408,12 +408,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const idList = this.entityIds;
     // Map with metadata for O(n log n) sorting
     const meta = idList.map((id, idx) => {
-      const ts = this._isAutoSelectDisabled(idx) ? 0 : (this._playTimestamps[id] || 0);
-      return { id, idx, ts };
+      const disabled = this._isAutoSelectDisabled(idx);
+      const ts = disabled ? 0 : (this._playTimestamps[id] || 0);
+      return { id, idx, ts, disabled };
     });
 
     return meta
       .sort((a, b) => {
+        // Disabled entities always sort to the end
+        if (a.disabled !== b.disabled) return a.disabled ? 1 : -1;
         if (a.ts === b.ts) return a.idx - b.idx;
         return b.ts - a.ts;
       })
@@ -439,15 +442,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
         key = id;
       }
 
-      if (!map[key]) map[key] = { ids: [], ts: 0, minIdx: i };
+      if (!map[key]) map[key] = { ids: [], ts: 0, minIdx: i, allDisabled: true };
       map[key].ids.push(id);
 
-      const effectiveTs = this._isAutoSelectDisabled(i) ? 0 : (this._playTimestamps[id] || 0);
+      const disabled = this._isAutoSelectDisabled(i);
+      const effectiveTs = disabled ? 0 : (this._playTimestamps[id] || 0);
 
+      if (!disabled) map[key].allDisabled = false;
       map[key].ts = Math.max(map[key].ts, effectiveTs);
     }
     const result = Object.values(map)
       .sort((a, b) => {
+        // Groups where all members are disabled sort to the end
+        if (a.allDisabled !== b.allDisabled) return a.allDisabled ? 1 : -1;
         if (b.ts === a.ts) return a.minIdx - b.minIdx;
         return b.ts - a.ts;
       })   // sort groups by recency
@@ -535,6 +542,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showSourceList = false;
     // Overlay state for transfer queue sheet
     this._showTransferQueue = false;
+    this._cardHeightTemplate = null;
+    this._cardHeightTemplateResult = null;
+    this._cardHeightTemplateNeedsResolve = false;
+    this._resolvingCardHeightTemplate = false;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
     this._hasTransferQueueForCurrent = false;
@@ -654,8 +665,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
         // Don't go idle if there's an active linger or if idle_timeout_ms is 0
         const hasActiveLinger = this._playbackLingerByIdx?.[this._selectedIndex] &&
           this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
-        const isPlaying = this._isEntityPlaying(stateObj);
-        if (stateObj && !isPlaying && !hasActiveLinger && this._idleTimeoutMs > 0) {
+        const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
+          if (this._isAutoSelectDisabled(idx)) return false;
+          const stateObj = this.hass.states[id];
+          return this._isEntityPlaying(stateObj);
+        });
+        const isCurrentDisabled = this._isAutoSelectDisabled(this._selectedIndex);
+        const isCurrentPlaying = this._isEntityPlaying(stateObj) && (!isCurrentDisabled || this._manualSelect);
+
+        if (stateObj && !isCurrentPlaying && !isAnyUnrestrictedPlaying && !hasActiveLinger && this._idleTimeoutMs > 0) {
           this._isIdle = true;
           this.requestUpdate();
         }
@@ -3677,7 +3695,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _getAdaptiveBaselineHeight(collapsed = false) {
-    const raw = this.config?.card_height;
+    const raw = this._cardHeightTemplate
+      ? this._cardHeightTemplateResult
+      : this.config?.card_height;
     if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
       return raw;
     }
@@ -3707,6 +3727,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } finally {
       this._resolvingIdleImageTemplate = false;
       this._idleImageTemplateNeedsResolve = false;
+      this.requestUpdate();
+    }
+  }
+
+  async _resolveCardHeightTemplate() {
+    if (!this._cardHeightTemplate || this._resolvingCardHeightTemplate || !this.hass) return;
+    this._resolvingCardHeightTemplate = true;
+    try {
+      const context = {
+        is_idle: this._isIdle,
+        is_playing: this._isCurrentEntityPlaying(),
+      };
+      const result = await resolveStringTemplate(this.hass, this._cardHeightTemplate, context);
+      const parsed = Number(result);
+      this._cardHeightTemplateResult = (Number.isFinite(parsed) && parsed > 0) ? parsed : null;
+    } catch (error) {
+      this._cardHeightTemplateResult = null;
+    } finally {
+      this._resolvingCardHeightTemplate = false;
+      this._cardHeightTemplateNeedsResolve = false;
       this.requestUpdate();
     }
   }
@@ -4127,6 +4167,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._idleImageTemplate = null;
       this._idleImageTemplateResult = "";
       this._idleImageTemplateNeedsResolve = false;
+    }
+    // Handle card_height templates (similar to idle_image)
+    if (typeof config.card_height === "string" &&
+      (config.card_height.includes("{{") || config.card_height.includes("{%"))) {
+      this._cardHeightTemplate = config.card_height;
+      this._cardHeightTemplateResult = null; // null = not yet resolved
+      this._cardHeightTemplateNeedsResolve = true;
+    } else {
+      this._cardHeightTemplate = null;
+      this._cardHeightTemplateResult = null;
+      this._cardHeightTemplateNeedsResolve = false;
     }
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
@@ -5501,6 +5552,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._idleImageTemplate && changedProps.has("hass")) {
       this._idleImageTemplateNeedsResolve = true;
     }
+    if (this._cardHeightTemplate && (changedProps.has("hass") || this._cardHeightTemplateNeedsResolve)) {
+      this._resolveCardHeightTemplate();
+    }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
@@ -5615,7 +5669,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Auto-switch unless manually pinned or a menu is open
       // Update idle state before checking for auto-switch
       // This ensures we respect the idle timeout if the current entity just stopped
-      this._updateIdleState();
+      this._updateIdleState(changedProps);
 
       if (!this._manualSelect && !this.isAnyMenuOpen) {
         // Switch to most recent if applicable
@@ -5640,12 +5694,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
             ? this.hass.states[mostRecentActiveEntity]
             : null;
           const isCurrentPlaying = this._isCurrentEntityPlaying();
+          const isCurrentDisabled = this.entityObjs[this._selectedIndex]?.disable_auto_select;
+          const isCurrentUnrestrictedPlaying = isCurrentPlaying && !isCurrentDisabled;
 
           if (
-            this._isEntityPlaying(mostRecentActiveState) &&
+            (this._isEntityPlaying(mostRecentActiveState) || isCurrentDisabled) &&
             this.entityIds[this._selectedIndex] !== mostRecentId &&
             (!this._idleTimeout || !this._hasSeenPlayback) &&
-            !isCurrentPlaying &&
+            !isCurrentUnrestrictedPlaying &&
             !this.entityObjs[mostRecentIdx]?.disable_auto_select
           ) {
             this._selectedIndex = mostRecentIdx;
@@ -5774,7 +5830,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          const customHeight = Number(this.config?.card_height);
+          const customHeight = Number(
+            this._cardHeightTemplate
+              ? this._cardHeightTemplateResult
+              : this.config?.card_height
+          );
           const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
           if (!hasCustomCardHeight) {
             this._collapsedBaselineHeight = measured;
@@ -5925,6 +5985,23 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Select the tapped chip immediately
     this._selectedIndex = idx;
+
+    // Wake from idle if the selected entity is actually playing
+    if (this._isIdle) {
+      const entityId = this.entityIds[idx];
+      const activeId = this._getEntityForPurpose(idx, 'sorting');
+      const state = this.hass?.states?.[activeId] || this.hass?.states?.[entityId];
+      if (this._isEntityPlaying(state)) {
+        this._isIdle = false;
+        this._hasSeenPlayback = true;
+        if (this._idleTimeout) {
+          clearTimeout(this._idleTimeout);
+          this._idleTimeout = null;
+        }
+        this._resetIdleScreen();
+      }
+    }
+
     // Reset last active entity when switching chips
     this._lastActiveEntityId = null;
 
@@ -6901,7 +6978,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
 
-    const customCardHeightInput = this.config.card_height;
+    const customCardHeightInput = this._cardHeightTemplate
+      ? this._cardHeightTemplateResult
+      : this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string"
       ? customCardHeightInput
       : Number(customCardHeightInput);
@@ -8172,7 +8251,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     host.setAttribute("data-extend-artwork", String(this._extendArtwork));
   }
 
-  _updateIdleState() {
+  _updateIdleState(changedProps) {
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
@@ -8183,17 +8262,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
     });
 
     const isCurrentPlaying = this._isCurrentEntityPlaying();
+    const isCurrentDisabled = this._isAutoSelectDisabled(this._selectedIndex);
 
     // Condition to wake up or stay active immediately:
     // Only wake up (from idle or initial load) if an UNRESTRICTED player is active.
-    // If already active, we only stay active immediately if the CURRENT player is playing.
-    // Otherwise, we allow the idle timer to run (even if others are playing) so that
-    // the manual select state can eventually be cleared, allowing an auto-switch.
+    // If already active, we only stay active immediately if the CURRENT player is playing
+    // AND it's either an unrestricted entity OR the user manually selected it.
+    const isCurrentPlayingValidForActive = isCurrentPlaying && (!isCurrentDisabled || this._manualSelect);
+
     let shouldBeActiveImmediately = false;
     if (this._isIdle || !this._hasSeenPlayback) {
       shouldBeActiveImmediately = isAnyUnrestrictedPlaying;
     } else {
-      shouldBeActiveImmediately = isCurrentPlaying;
+      shouldBeActiveImmediately = isAnyUnrestrictedPlaying || isCurrentPlayingValidForActive;
     }
 
     if (shouldBeActiveImmediately) {
@@ -8203,6 +8284,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._hasSeenPlayback = true;
       if (this._isIdle) {
         this._isIdle = false;
+        if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
         this._resetIdleScreen();
         this.requestUpdate();
       }
@@ -8213,12 +8295,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (this._idleTimeoutMs > 0) {
           if (!this._isIdle) {
             this._isIdle = true;
+            if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
             this._idleScreenApplied = false;
             this._applyIdleScreen();
             this.requestUpdate();
           }
         } else if (this._isIdle) {
           this._isIdle = false;
+          if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
           this._resetIdleScreen();
           this.requestUpdate();
         }
@@ -8227,27 +8311,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // Check for grace period: something is playing somewhere, but not the current choice.
       // Or nothing is playing at all. In both cases, we wait for the timeout.
-      if (!this._isIdle && !this._idleTimeout && this._idleTimeoutMs > 0) {
-        this._idleTimeout = setTimeout(() => {
-          // In search card mode: reset drill-down instead of going idle
-          if (this._cardType === "search") {
+      if (!this._isIdle && this._idleTimeoutMs > 0) {
+        const isTabChange = changedProps && changedProps.has("_selectedIndex");
+
+        if (isTabChange && !isAnyUnrestrictedPlaying) {
+          // Bypass grace period if we just switched away from the only thing keeping the card awake (a playing disabled entity)
+          if (this._idleTimeout) {
+            clearTimeout(this._idleTimeout);
             this._idleTimeout = null;
-            if (this._searchHierarchy.length > 0) {
-              this._searchHierarchy = [];
-              this._searchBreadcrumb = "";
-              this._searchResultsByType = {};
-              const defaultFilter = this.config?.default_search_filter === 'all' ? null : this.config?.default_search_filter;
-              this._doSearch(defaultFilter).catch(() => { });
-              this.requestUpdate();
-            }
-            return;
           }
           this._isIdle = true;
-          this._idleTimeout = null;
+          if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
           this._idleScreenApplied = false;
 
-          // If not explicitly pinned, clear manual select on idle timeout
-          // so we can switch to other playing entities if needed
           if (this._pinnedIndex === null) {
             this._manualSelect = false;
             this._manualSelectPlayingSet = null;
@@ -8255,12 +8331,43 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
           this._applyIdleScreen();
           this.requestUpdate();
-        }, this._idleTimeoutMs);
+        } else if (!this._idleTimeout) {
+          this._idleTimeout = setTimeout(() => {
+            // In search card mode: reset drill-down instead of going idle
+            if (this._cardType === "search") {
+              this._idleTimeout = null;
+              if (this._searchHierarchy.length > 0) {
+                this._searchHierarchy = [];
+                this._searchBreadcrumb = "";
+                this._searchResultsByType = {};
+                const defaultFilter = this.config?.default_search_filter === 'all' ? null : this.config?.default_search_filter;
+                this._doSearch(defaultFilter).catch(() => { });
+                this.requestUpdate();
+              }
+              return;
+            }
+            this._isIdle = true;
+            if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
+            this._idleTimeout = null;
+            this._idleScreenApplied = false;
+
+            // If not explicitly pinned, clear manual select on idle timeout
+            // so we can switch to other playing entities if needed
+            if (this._pinnedIndex === null) {
+              this._manualSelect = false;
+              this._manualSelectPlayingSet = null;
+            }
+
+            this._applyIdleScreen();
+            this.requestUpdate();
+          }, this._idleTimeoutMs);
+        }
       }
 
       // If idle_timeout_ms is 0, ensure we're never idle
       if (this._idleTimeoutMs === 0 && this._isIdle) {
         this._isIdle = false;
+        if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
         this._resetIdleScreen();
         this.requestUpdate();
       }

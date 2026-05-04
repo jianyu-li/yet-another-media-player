@@ -471,7 +471,23 @@ Set `card_type: group_players` to lock YAMP to the group players menu.
 - **Appearance**: Force the card into `light` or `dark` mode, or use `automatic` to follow your system or Home Assistant theme preferences.
 - **Display Timestamps**: Display timestamps on the progress bar.
 - **Alternate Progress Bar**: Uses the collapsed progress bar when expanded.
-- **Card Height**: Override the card height (in px); leave unset to use the default layout.
+- **Card Height**: Override the card height (in px); leave unset to use the default layout. 
+
+You can use Jinja templates for `card_height` to dynamically adjust the height of the card based on its current state.
+
+The following variables are available in the template context:
+- `is_idle`: Boolean value indicating if the card is currently in idle mode.
+- `is_playing`: Boolean value indicating if the currently selected entity is playing.
+
+#### Example: Taller Card when Active
+```yaml
+card_height: "{{ 250 if is_idle else 600 }}"
+```
+
+#### Example: Compact when Paused
+```yaml
+card_height: "{{ 600 if is_playing else 300 }}"
+```
 
 ## Controls & Typography
 > Tune button sizing, entity labels, and adaptive text.
