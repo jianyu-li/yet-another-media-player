@@ -363,7 +363,7 @@ export const yampCardStyles = css`
   }
 
   :host([data-has-custom-height="true"]) .card-artwork-spacer {
-    min-height: 0;
+    min-height: 48px;
   }
 
   /* Media background */
@@ -538,6 +538,7 @@ export const yampCardStyles = css`
   .action-chip-row,
   .search-filter-chips {
     cursor: grab;
+    flex-shrink: 0;
   }
 
   .chip-row {
