@@ -52,9 +52,9 @@ Below you will find a list of all configuration options.
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
 | `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for the standard player, `search` for a dedicated search card, or `group_players` for a dedicated group management card |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
-| `volume_entity`            | string       | No           | —           | Separate entity for volume control (e.g., a remote for CEC TV volume) (supports Jinja templates) |
+| `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Jinja2](#jinja2-template-support)) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
-| `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping (supports Jinja templates)                            |
+| `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping ([Supports Jinja2](#jinja2-template-support)) |
 | `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array        | No           | `[]`        | Array of control names to hide for this specific entity         |
@@ -98,7 +98,7 @@ Below you will find a list of all configuration options.
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
-| `card_height`              | number       | No           | —           | Override the card height (in px); leave unset to use the default layout                          |
+| `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Jinja2](#jinja2-template-support)) |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
 | `search_card_columns`      | number       | No           | `4`         | Number of columns for search results when `search_view` is set to `card` or `card_minimal` |
 |                                                                                                 |
@@ -108,7 +108,7 @@ Below you will find a list of all configuration options.
 | `artwork_position`         | choice       | No           | `top center`| Control artwork alignment: `top center`, `center center`, or `bottom center`                     |
 | `extend_artwork`           | boolean      | No           | `false`     | When `true`, extends the artwork background up behind the chip and action rows for a full-bleed look |
 | `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` and `object_fit` can be used to style the replacement (defaults to global `artwork_object_fit`). `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
-| `idle_image`               | image/camera/url/template | No           | —           | Background image when player is idle (supports local files, cameras, URLs, or templates that return either)                   |
+| `idle_image`               | image/camera/url/string | No           | —           | Background image when player is idle ([Supports Jinja2](#jinja2-template-support)) |
 | `idle_timeout_ms`          | number       | No           | `60000`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
 |                                                                                                 |
 | **Actions**                |              |              |             | (Each chip/action can have any/all of the below)                                                |
@@ -471,7 +471,78 @@ Set `card_type: group_players` to lock YAMP to the group players menu.
 - **Appearance**: Force the card into `light` or `dark` mode, or use `automatic` to follow your system or Home Assistant theme preferences.
 - **Display Timestamps**: Display timestamps on the progress bar.
 - **Alternate Progress Bar**: Uses the collapsed progress bar when expanded.
-- **Card Height**: Override the card height (in px); leave unset to use the default layout.
+- **Card Height**: Override the card height (in px); leave unset to use the default layout. 
+
+# Jinja2 Template Support
+
+YAMP provides powerful Jinja2 template support for many configuration options, allowing you to create a dynamic interface that adapts to your needs.
+
+## Supported Options
+
+The following configuration keys support Jinja2 templates:
+
+- **`card_height`**: Dynamically adjust the total height of the card.
+- **`idle_image`**: Change the background image shown when the player is idle.
+- **`navigation_path`**: Create dynamic navigation URLs (e.g., search IMDb or Genius).
+- **`volume_entity`**: Dynamically select which entity controls volume for a specific player.
+- **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
+- **`image_url` / `missing_art_url`**: (Inside `media_artwork_overrides`) Dynamically determine artwork.
+
+## Available Variables
+
+All templates have access to standard Home Assistant Jinja2 functions (`states()`, `is_state()`, etc.) plus the following card-specific variables:
+
+| Variable | Type | Description |
+| :--- | :--- | :--- |
+| `current` | `string` | The Entity ID of the currently selected media player chip. |
+| `is_idle` | `boolean` | `true` if the card is currently in idle mode (collapsed). |
+| `is_playing` | `boolean` | `true` if the selected entity is actively playing. |
+| `is_search` | `boolean` | `true` if the search overlay is open. |
+| `is_lyrics` | `boolean` | `true` if the lyrics view is active. |
+| `is_any_menu_open` | `boolean` | `true` if search, grouping, or options menus are open. |
+| `is_grouping` | `boolean` | `true` if the group players menu is open. |
+| `is_source` | `boolean` | `true` if the source selection list is open. |
+| `is_options` | `boolean` | `true` if the entity options menu is open. |
+| `is_transfer_queue` | `boolean` | `true` if the transfer queue menu is open. |
+
+## Examples
+
+### Dynamic Card Height
+Adjust the card size based on what the user is doing.
+
+```yaml
+card_height: |
+  {% if is_search %} 700
+  {% elif is_idle %} 250
+  {% else %} 450
+  {% endif %}
+```
+
+### Search External Sites
+Link to IMDb or Genius based on the currently playing track.
+
+```yaml
+actions:
+  - name: IMDb
+    icon: mdi:movie-search
+    action: navigate
+    navigation_path: 'https://www.imdb.com/find/?q={{ state_attr(current, "media_title") }}'
+    navigation_new_tab: true
+```
+
+### Dynamic Volume Control
+Route volume controls to a soundbar only when it is powered on.
+
+```yaml
+entities:
+  - entity_id: media_player.living_room_atv
+    volume_entity: |
+      {% if is_state('switch.soundbar_power', 'on') %}
+        media_player.soundbar
+      {% else %}
+        media_player.living_room_atv
+      {% endif %}
+```
 
 ## Controls & Typography
 > Tune button sizing, entity labels, and adaptive text.
