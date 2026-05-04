@@ -416,7 +416,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return meta
       .sort((a, b) => {
         // Disabled entities always sort to the end
-        if (a.disabled !== b.disabled) return a.disabled ? 1 : -1;
+        if (a.disabled !== b.disabled) return a.disabled - b.disabled;
         if (a.ts === b.ts) return a.idx - b.idx;
         return b.ts - a.ts;
       })
@@ -454,7 +454,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const result = Object.values(map)
       .sort((a, b) => {
         // Groups where all members are disabled sort to the end
-        if (a.allDisabled !== b.allDisabled) return a.allDisabled ? 1 : -1;
+        if (a.allDisabled !== b.allDisabled) return a.allDisabled - b.allDisabled;
         if (b.ts === a.ts) return a.minIdx - b.minIdx;
         return b.ts - a.ts;
       })   // sort groups by recency
