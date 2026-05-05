@@ -889,9 +889,11 @@
   }
 
   /* Override action chip colors when match_theme is false */
+  :host([data-match-theme="false"]) .action-chip:active {
+    background: #ff9800 ;
+  }
   @media (hover: hover) {
-    :host([data-match-theme="false"]) .action-chip:hover,
-    :host([data-match-theme="false"]) .action-chip:active {
+    :host([data-match-theme="false"]) .action-chip:hover {
       background: #ff9800 ;
     }
   }
@@ -979,9 +981,11 @@
     color: var(--custom-accent);
   }
 
+  .chip[playing][selected] .chip-playing-indicator {
+    color: #fff;
+  }
   @media (hover: hover) {
-    .chip[playing]:hover .chip-playing-indicator,
-    .chip[playing][selected] .chip-playing-indicator {
+    .chip[playing]:hover .chip-playing-indicator {
       color: #fff;
     }
   }
