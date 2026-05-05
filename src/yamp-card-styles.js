@@ -451,10 +451,12 @@ export const yampCardStyles = css`
     white-space: nowrap;
   }
 
-  .source-option:hover,
-  .source-option:focus {
-    background: var(--custom-accent);
-    color: #fff;
+  @media (hover: hover) {
+    .source-option:hover,
+    .source-option:focus {
+      background: var(--custom-accent);
+      color: #fff;
+    }
   }
 
   .source-row {
@@ -514,8 +516,10 @@ export const yampCardStyles = css`
     color: var(--custom-accent);
   }
 
-  .chip:hover .chip-icon ha-icon {
-    color: #fff;
+  @media (hover: hover) {
+    .chip:hover .chip-icon ha-icon {
+      color: #fff;
+    }
   }
 
   .chip-mini-art {
@@ -613,11 +617,13 @@ export const yampCardStyles = css`
     gap: 6px;
   }
 
-  .action-chip:hover {
-    background: var(--custom-accent);
-    color: #fff;
-    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
-    text-shadow: none;
+  @media (hover: hover) {
+    .action-chip:hover {
+      background: var(--custom-accent);
+      color: #fff;
+      box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
+      text-shadow: none;
+    }
   }
 
   .action-chip:active {
@@ -629,9 +635,13 @@ export const yampCardStyles = css`
   }
 
   /* Override action chip colors when match_theme is false */
-  :host([data-match-theme="false"]) .action-chip:hover,
   :host([data-match-theme="false"]) .action-chip:active {
     background: #ff9800 ;
+  }
+  @media (hover: hover) {
+    :host([data-match-theme="false"]) .action-chip:hover {
+      background: #ff9800 ;
+    }
   }
 
   /* Main chips */
@@ -655,9 +665,11 @@ export const yampCardStyles = css`
     position: relative;
   }
 
-  .chip:hover {
-    background: var(--yamp-chip-selected-bg);
-    color: var(--yamp-chip-selected-text);
+  @media (hover: hover) {
+    .chip:hover {
+      background: var(--yamp-chip-selected-bg);
+      color: var(--yamp-chip-selected-text);
+    }
   }
 
   .chip[selected] {
@@ -715,9 +727,13 @@ export const yampCardStyles = css`
     color: var(--custom-accent);
   }
 
-  .chip[playing][selected] .chip-playing-indicator,
-  .chip[playing]:hover .chip-playing-indicator {
+  .chip[playing][selected] .chip-playing-indicator {
     color: #fff;
+  }
+  @media (hover: hover) {
+    .chip[playing]:hover .chip-playing-indicator {
+      color: #fff;
+    }
   }
 
   /* Chip pin */
@@ -740,8 +756,10 @@ export const yampCardStyles = css`
     transition: box-shadow 0.18s;
   }
 
-  .chip-pin:hover {
-    box-shadow: 0 2px 12px rgba(33,33,33,0.17);
+  @media (hover: hover) {
+    .chip-pin:hover {
+      box-shadow: 0 2px 12px rgba(33,33,33,0.17);
+    }
   }
 
   .chip-pin ha-icon {
@@ -774,16 +792,18 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
-  .chip-pin:hover ha-icon,
-  .chip-pin-inside:hover ha-icon,
-  .chip-quick-group:hover ha-icon {
-    color: #fff;
-  }
+  @media (hover: hover) {
+    .chip-pin:hover ha-icon,
+    .chip-pin-inside:hover ha-icon,
+    .chip-quick-group:hover ha-icon {
+      color: #fff;
+    }
 
-  .chip:hover .chip-pin ha-icon,
-  .chip:hover .chip-pin-inside ha-icon,
-  .chip:hover .chip-quick-group ha-icon {
-    color: #fff;
+    .chip:hover .chip-pin ha-icon,
+    .chip:hover .chip-pin-inside ha-icon,
+    .chip:hover .chip-quick-group ha-icon {
+      color: #fff;
+    }
   }
 
   .chip-quick-group {
@@ -908,9 +928,11 @@ export const yampCardStyles = css`
     --mdc-icon-size: 1.3rem;
   }
 
-  .track-options-btn:hover {
-    opacity: 0.7;
-    text-decoration: underline;
+  @media (hover: hover) {
+    .track-options-btn:hover {
+      opacity: 0.7;
+      text-decoration: underline;
+    }
   }
 
   .track-options-title {
@@ -918,8 +940,10 @@ export const yampCardStyles = css`
     transition: text-decoration 0.2s;
   }
 
-  .track-options-title:hover {
-    text-decoration: underline;
+  @media (hover: hover) {
+    .track-options-title:hover {
+      text-decoration: underline;
+    }
   }
 
   .title {
@@ -1096,8 +1120,10 @@ export const yampCardStyles = css`
     height: 36px;
   }
 
-  .modern-button:hover {
-    background: rgba(255,255,255,0.25);
+  @media (hover: hover) {
+    .modern-button:hover {
+      background: rgba(255,255,255,0.25);
+    }
   }
 
   .modern-button:active {
@@ -1276,8 +1302,10 @@ export const yampCardStyles = css`
     margin: 0;
   }
 
-  .volume-icon-btn:hover {
-    color: var(--custom-accent);
+  @media (hover: hover) {
+    .volume-icon-btn:hover {
+      color: var(--custom-accent);
+    }
   }
 
   .volume-icon-btn ha-icon {
@@ -1615,21 +1643,27 @@ export const yampCardStyles = css`
   }
 
   /* Hover effects for primary playback controls using chip color variables (background + text) */
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .controls-row .button:hover,
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover {
-    background: var(--yamp-chip-selected-bg);
-    color: var(--yamp-chip-selected-text) !important;
-    border-radius: var(--button-border-radius, 8px);
+  @media (hover: hover) {
+    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .controls-row .button:hover,
+    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover {
+      background: var(--yamp-chip-selected-bg);
+      color: var(--yamp-chip-selected-text) !important;
+      border-radius: var(--button-border-radius, 8px);
+    }
   }
 
   /* Modern button hover specifically needs 999px radius to stay circular */
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover {
-    border-radius: 999px;
+  @media (hover: hover) {
+    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover {
+      border-radius: 999px;
+    }
   }
 
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .controls-row .button:hover ha-icon,
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover ha-icon {
-    color: var(--yamp-chip-selected-text) !important;
+  @media (hover: hover) {
+    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .controls-row .button:hover ha-icon,
+    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover ha-icon {
+      color: var(--yamp-chip-selected-text) !important;
+    }
   }
 
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
@@ -2025,8 +2059,10 @@ export const yampCardStyles = css`
     transition: color 0.2s ease;
   }
 
-  .persistent-volume-stepper .stepper-btn:hover {
-    color: var(--custom-accent);
+  @media (hover: hover) {
+    .persistent-volume-stepper .stepper-btn:hover {
+      color: var(--custom-accent);
+    }
   }
 
   .persistent-volume-stepper .stepper-btn:active {
@@ -2080,10 +2116,12 @@ export const yampCardStyles = css`
     }
   }
 
-  .persistent-control-btn:hover {
-    background: var(--custom-accent);
-    border-color: var(--custom-accent);
-    transform: scale(1.05);
+  @media (hover: hover) {
+    .persistent-control-btn:hover {
+      background: var(--custom-accent);
+      border-color: var(--custom-accent);
+      transform: scale(1.05);
+    }
   }
 
   .persistent-control-btn:active {
@@ -2274,9 +2312,11 @@ export const yampCardStyles = css`
     color: inherit;
   }
 
-  .entity-options-item:hover {
-    color: var(--custom-accent, #ff9800);
-    background: none;
+  @media (hover: hover) {
+    .entity-options-item:hover {
+      color: var(--custom-accent, #ff9800);
+      background: none;
+    }
   }
 
   .entity-options-item.close-item {
@@ -2410,9 +2450,11 @@ export const yampCardStyles = css`
     display: none;
   }
 
-  .floating-source-index .source-index-letter:hover,
-  .floating-source-index .source-index-letter:focus {
-    color: var(--yamp-overlay-text);
+  @media (hover: hover) {
+    .floating-source-index .source-index-letter:hover,
+    .floating-source-index .source-index-letter:focus {
+      color: var(--yamp-overlay-text);
+    }
   }
 
   .floating-source-index .source-index-letter[disabled] {
@@ -2450,8 +2492,10 @@ export const yampCardStyles = css`
     pointer-events: none;
   }
 
-  .group-toggle-transparent:hover {
-    background: none;
+  @media (hover: hover) {
+    .group-toggle-transparent:hover {
+      background: none;
+    }
   }
 
   /* Force theme-aware text in grouping sheet */
@@ -2584,9 +2628,11 @@ export const yampCardStyles = css`
     transition: background 0.2s, color 0.2s;
   }
 
-  .slide-out-button:hover {
-    background: var(--custom-accent);
-    color: #fff;
+  @media (hover: hover) {
+    .slide-out-button:hover {
+      background: var(--custom-accent);
+      color: #fff;
+    }
   }
 
   .slide-out-button ha-icon {
@@ -2604,8 +2650,10 @@ export const yampCardStyles = css`
     justify-content: center;
   }
 
-  .slide-out-close:hover {
-    color: var(--custom-accent);
+  @media (hover: hover) {
+    .slide-out-close:hover {
+      color: var(--custom-accent);
+    }
   }
 
   .entity-options-search-result:last-child {
@@ -2661,11 +2709,13 @@ export const yampCardStyles = css`
   
   }
 
-  .entity-options-search-play:hover,
-  .entity-options-search-play:focus {
-    background: transparent;
-    color: var(--custom-accent) !important;
-    opacity: 0.8;
+  @media (hover: hover) {
+    .entity-options-search-play:hover,
+    .entity-options-search-play:focus {
+      background: transparent;
+      color: var(--custom-accent) !important;
+      opacity: 0.8;
+    }
   }
 
   .entity-options-search-queue {
@@ -2673,12 +2723,14 @@ export const yampCardStyles = css`
     padding-right: 20px; /* Add right padding to prevent cutoff on mobile */
   }
 
-  .entity-options-search-queue:hover,
-  .entity-options-search-queue:focus {
-    background: transparent;
-    border: none;
-    color: var(--custom-accent);
-    opacity: 0.8;
+  @media (hover: hover) {
+    .entity-options-search-queue:hover,
+    .entity-options-search-queue:focus {
+      background: transparent;
+      border: none;
+      color: var(--custom-accent);
+      opacity: 0.8;
+    }
   }
 
   /* Queue control buttons */
@@ -2710,28 +2762,36 @@ export const yampCardStyles = css`
     height: 14px;
   }
 
-  .queue-btn-up:hover,
-  .queue-btn-up:focus {
-    background: transparent;
-    color: var(--yamp-success-color);
+  @media (hover: hover) {
+    .queue-btn-up:hover,
+    .queue-btn-up:focus {
+      background: transparent;
+      color: var(--yamp-success-color);
+    }
   }
 
-  .queue-btn-down:hover,
-  .queue-btn-down:focus {
-    background: transparent;
-    color: var(--yamp-success-color);
+  @media (hover: hover) {
+    .queue-btn-down:hover,
+    .queue-btn-down:focus {
+      background: transparent;
+      color: var(--yamp-success-color);
+    }
   }
 
-  .queue-btn-next:hover,
-  .queue-btn-next:focus {
-    background: transparent;
-    color: var(--custom-accent);
+  @media (hover: hover) {
+    .queue-btn-next:hover,
+    .queue-btn-next:focus {
+      background: transparent;
+      color: var(--custom-accent);
+    }
   }
 
-  .queue-btn-remove:hover,
-  .queue-btn-remove:focus {
-    background: transparent;
-    color: var(--yamp-error-color);
+  @media (hover: hover) {
+    .queue-btn-remove:hover,
+    .queue-btn-remove:focus {
+      background: transparent;
+      color: var(--yamp-error-color);
+    }
   }
 
   /* Visual feedback for moved queue items */
@@ -2797,8 +2857,10 @@ export const yampCardStyles = css`
     z-index: 2;
   }
 
-  .search-input-clear:hover {
-    color: var(--custom-accent);
+  @media (hover: hover) {
+    .search-input-clear:hover {
+      color: var(--custom-accent);
+    }
   }
 
   .search-input-clear ha-icon {
@@ -2870,10 +2932,12 @@ export const yampCardStyles = css`
     justify-content: center;
   }
 
-  .entity-options-sheet .search-filter-chips .chip:hover {
-    background: var(--custom-accent) !important;
-    color: var(--yamp-chip-selected-text) !important;
-    opacity: 1;
+  @media (hover: hover) {
+    .entity-options-sheet .search-filter-chips .chip:hover {
+      background: var(--custom-accent) !important;
+      color: var(--yamp-chip-selected-text) !important;
+      opacity: 1;
+    }
   }
 
   .entity-options-sheet .entity-options-search-results {
@@ -2916,9 +2980,11 @@ export const yampCardStyles = css`
     transition: color 0.2s ease;
   }
 
-  .search-sub-filters .button:hover {
-    color: var(--custom-accent) !important;
-    opacity: 1 !important;
+  @media (hover: hover) {
+    .search-sub-filters .button:hover {
+      color: var(--custom-accent) !important;
+      opacity: 1 !important;
+    }
   }
 
   .search-sub-filters .button.active {
@@ -2930,8 +2996,10 @@ export const yampCardStyles = css`
     color: var(--custom-accent) !important;
   }
 
-  .search-sub-filters .radio-mode-button:hover {
-    color: var(--custom-accent);
+  @media (hover: hover) {
+    .search-sub-filters .radio-mode-button:hover {
+      color: var(--custom-accent);
+    }
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] {
@@ -3055,10 +3123,12 @@ export const yampCardStyles = css`
     gap: 12px;
   }
 
-  .entity-options-resolved-entities .entity-options-item:hover,
-  .entity-options-resolved-entities .entity-options-item:focus {
-    color: var(--custom-accent) ;
-    background: none ;
+  @media (hover: hover) {
+    .entity-options-resolved-entities .entity-options-item:hover,
+    .entity-options-resolved-entities .entity-options-item:focus {
+      color: var(--custom-accent) ;
+      background: none ;
+    }
   }
 
   .entity-options-resolved-entities .entity-options-item:last-child {
@@ -3070,8 +3140,10 @@ export const yampCardStyles = css`
     cursor: pointer;
   }
 
-  .clickable-artist:hover {
-    text-decoration: underline;
+  @media (hover: hover) {
+    .clickable-artist:hover {
+      text-decoration: underline;
+    }
   }
 
   /* Clickable search results */
@@ -3080,9 +3152,11 @@ export const yampCardStyles = css`
     transition: color var(--transition-fast);
   }
 
-  .clickable-search-result:hover {
-    text-decoration: underline;
-    color: var(--yamp-overlay-text);
+  @media (hover: hover) {
+    .clickable-search-result:hover {
+      text-decoration: underline;
+      color: var(--yamp-overlay-text);
+    }
   }
 
   /* Search breadcrumb */
@@ -3123,9 +3197,11 @@ export const yampCardStyles = css`
     flex-shrink: 0;
   }
 
-  .entity-options-search-breadcrumb-play:hover {
-    background-color: var(--custom-accent);
-    color: var(--yamp-overlay-text);
+  @media (hover: hover) {
+    .entity-options-search-breadcrumb-play:hover {
+      background-color: var(--custom-accent);
+      color: var(--yamp-overlay-text);
+    }
   }
 
   .entity-options-search-breadcrumb-play ha-icon {
@@ -3285,8 +3361,10 @@ export const yampCardStyles = css`
     z-index: 2;
   }
 
-  .card-menu-button:hover {
-    opacity: 1;
+  @media (hover: hover) {
+    .card-menu-button:hover {
+      opacity: 1;
+    }
   }
 
   .search-result-card .search-row-slide-out {
@@ -3329,8 +3407,10 @@ export const yampCardStyles = css`
     flex-shrink: 0;
   }
 
-  .search-sheet-result:hover {
-    background: var(--search-hover-bg);
+  @media (hover: hover) {
+    .search-sheet-result:hover {
+      background: var(--search-hover-bg);
+    }
   }
 
   .search-sheet-thumb,
@@ -3403,8 +3483,10 @@ export const yampCardStyles = css`
     border-radius: 8px;
   }
 
-  .search-sheet-result:hover .card-overlay-buttons {
-    opacity: 1;
+  @media (hover: hover) {
+    .search-sheet-result:hover .card-overlay-buttons {
+      opacity: 1;
+    }
   }
 
   .icon-only.search-sheet-play, 
@@ -3520,9 +3602,11 @@ export const yampCardStyles = css`
     cursor: pointer;
   }
 
-  .search-sheet-title.browsable:hover,
-  .search-sheet-subtitle.browsable:hover {
-    text-decoration: underline;
+  @media (hover: hover) {
+    .search-sheet-title.browsable:hover,
+    .search-sheet-subtitle.browsable:hover {
+      text-decoration: underline;
+    }
   }
 
   .search-sheet-buttons {
@@ -3552,9 +3636,11 @@ export const yampCardStyles = css`
     height: 20px;
   }
 
-  .search-sheet-play:hover,
-  .search-sheet-queue:hover {
-    background: var(--search-play-hover);
+  @media (hover: hover) {
+    .search-sheet-play:hover,
+    .search-sheet-queue:hover {
+      background: var(--search-play-hover);
+    }
   }
 
   .search-sheet-queue {
@@ -3562,9 +3648,11 @@ export const yampCardStyles = css`
     border: 1px solid var(--search-queue-border);
   }
 
-  .search-sheet-queue:hover {
-    background: var(--search-queue-hover);
-    border-color: var(--search-queue-hover-border);
+  @media (hover: hover) {
+    .search-sheet-queue:hover {
+      background: var(--search-queue-hover);
+      border-color: var(--search-queue-hover-border);
+    }
   }
 
   /* Override styles when match_theme is false - force default colors */
@@ -3627,8 +3715,10 @@ export const yampCardStyles = css`
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;
   }
 
-  .search-sheet[data-match-theme="false"] .search-sheet-result:hover {
-    background: rgba(255, 255, 255, 0.1) ;
+  @media (hover: hover) {
+    .search-sheet[data-match-theme="false"] .search-sheet-result:hover {
+      background: rgba(255, 255, 255, 0.1) ;
+    }
   }
 
 
