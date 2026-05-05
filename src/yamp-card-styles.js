@@ -727,9 +727,11 @@ export const yampCardStyles = css`
     color: var(--custom-accent);
   }
 
+  .chip[playing][selected] .chip-playing-indicator {
+    color: #fff;
+  }
   @media (hover: hover) {
-    .chip[playing]:hover .chip-playing-indicator,
-    .chip[playing][selected] .chip-playing-indicator {
+    .chip[playing]:hover .chip-playing-indicator {
       color: #fff;
     }
   }
