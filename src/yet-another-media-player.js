@@ -7516,7 +7516,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         ? `url('${artworkUrl}')`
         : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
-    const backgroundFilter = (artworkUrl && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))
+    const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
     const sharedBackgroundStyle = [

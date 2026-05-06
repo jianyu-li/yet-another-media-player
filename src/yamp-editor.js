@@ -879,6 +879,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             </div>
           </div>
+          <div class="form-row form-row-multi-column">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="blurred-artwork-toggle"
+                .checked=${this._config.blurred_artwork === true}
+                @change=${(e) => this._updateConfig("blurred_artwork", e.target.checked)}
+              ></ha-switch>
+              <div style="display: flex; flex-direction: column;">
+                <label for="blurred-artwork-toggle" style="font-weight: 500;">${localize('editor.labels.blurred_artwork')}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.blurred_artwork')}</div>
+              </div>
+            </div>
+          </div>
           <div class="form-row">
             <ha-textfield
               class="full-width"

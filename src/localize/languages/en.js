@@ -134,7 +134,8 @@ export default {
             "card_type": "Choose the card mode. 'Default' is the standard media player. 'Dedicated Search' makes the card a permanent search interface.",
             "always_show_lyrics": "Automatically open the lyrics view when the page is refreshed.",
             "lyrics_source": "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
-            "lyrics_pre_roll": "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0)."
+            "lyrics_pre_roll": "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0).",
+            "blurred_artwork": "Always blur the background artwork"
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -174,7 +175,8 @@ export default {
             "always_show_lyrics": "Always Show Lyrics",
             "lyrics_mode": "Lyrics Mode",
             "lyrics_source": "Lyrics Source",
-            "lyrics_pre_roll": "Lyrics Pre-Roll (seconds)"
+            "lyrics_pre_roll": "Lyrics Pre-Roll (seconds)",
+            "blurred_artwork": "Blurred Artwork"
         },
         "fields": {
             "artwork_fit": "Artwork Fit",
