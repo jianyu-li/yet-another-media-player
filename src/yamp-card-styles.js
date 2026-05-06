@@ -294,12 +294,9 @@ export const yampCardStyles = css`
   .more-info-menu {
     display: flex;
     align-items: center;
-    margin-right: 0;
-    position: absolute;
-    right: 18px;
-    bottom: 18px;
+    margin-right: -4px;
+    margin-top: -4px;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
-    margin-top: -6px;
   }
 
   .more-info-btn {
@@ -4062,10 +4059,7 @@ export const lyricsStyles = css`
   .yamp-card-inner.compact-collapsed .collapsed-artwork-container {
     top: -12px !important;
   }
-  .yamp-card-inner.compact-collapsed .more-info-menu {
-    bottom: 4px !important;
-    right: 8px !important;
-  }
+
   .yamp-card-inner.compact-collapsed .modern-button.primary {
     width: 52px !important;
     height: 52px !important;

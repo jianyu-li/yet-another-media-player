@@ -7746,8 +7746,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         controlLayout: this._controlLayout,
         swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop,
       })}
-
-                    ${renderVolumeRow({
+                </div>
+                ${renderVolumeRow({
         isRemoteVolumeEntity,
         showSlider,
         vol,
@@ -7762,22 +7762,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
         reserveLeadingControlSpace: this._controlLayout === "modern",
         showRightPlaceholder: this._controlLayout === "modern",
         rightSlotTemplate,
-        hideVolume: this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions),
-        moreInfoMenu: html`<div style="width: 36px; height: 36px; margin-right: 0; margin-top: -6px;"></div>`,
+        hideVolume: hideControlsNow || this._showEntityOptions || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions),
+        moreInfoMenu: (!this._showEntityOptions) ? html`
+          <div class="more-info-menu">
+            <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+              <span class="more-info-icon">&#9776;</span>
+            </button>
+          </div>
+        ` : nothing,
       })}
-                  </div>
             ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? html`
               <div class="in-menu-active-label">${activeChipName}</div>
             ` : nothing}
           </div>
         </div>
-        ${(!this._showEntityOptions) ? html`
-          <div class="more-info-menu" style="z-index: ${Z_LAYERS.FLOATING_ELEMENT}; ${isCompact && collapsed ? 'bottom: 4px; right: 8px;' : ''}">
-            <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-              <span class="more-info-icon">&#9776;</span>
-            </button>
-          </div>
-        ` : nothing}
+
 
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
