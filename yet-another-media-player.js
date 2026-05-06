@@ -6394,7 +6394,7 @@
                     @pointermove=${b=>this._onTapAreaPointerMove(b)}
                     @pointerup=${b=>this._onTapAreaPointerUp(b)}
                     @pointercancel=${()=>{this._gestureActive=!1,clearTimeout(this._gestureHoldTimer)}}
-                    style="${[`background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,at>0?`width:${Math.round(we+8)}px`:"",Me&&L?"top: -8px; height: auto !important;":"",this._cardTriggers.tap||this._cardTriggers.hold||this._cardTriggers.double_tap||this._cardTriggers.swipe_left||this._cardTriggers.swipe_right?"cursor:pointer; pointer-events:auto;":""].filter(Boolean).join("; ")}"
+                    style="${[`background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,at>0?`width:${Math.round(we+8)}px`:"",Me&&L?"top: -2px; height: auto !important; overflow: visible !important;":"",this._cardTriggers.tap||this._cardTriggers.hold||this._cardTriggers.double_tap||this._cardTriggers.swipe_left||this._cardTriggers.swipe_right?"cursor:pointer; pointer-events:auto;":""].filter(Boolean).join("; ")}"
                   >
                     <img
                       class="collapsed-artwork"

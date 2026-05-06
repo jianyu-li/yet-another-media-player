@@ -7584,7 +7584,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     style="${[
           `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
           collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '',
-          isCompact && collapsed ? 'top: -8px; height: auto !important;' : '',
+          isCompact && collapsed ? 'top: -2px; height: auto !important; overflow: visible !important;' : '',
           (this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right) ? 'cursor:pointer; pointer-events:auto;' : ''
         ].filter(Boolean).join('; ')}"
                   >
