@@ -6508,13 +6508,13 @@
                 <div style="${Me||this._showEntityOptions?"visibility:hidden; opacity:0; pointer-events:none;":""}">
                     ${qo({stateObj:et,showStop:this._shouldShowStopButton(et),shuffleActive:Tn,repeatActive:Mn,onControlClick:b=>this._onControlClick(b),supportsFeature:(b,R)=>this._supportsFeature(b,R),showFavorite:M,favoriteActive:U,hiddenControls:L,adaptiveControls:this._adaptiveControls,controlLayout:this._controlLayout,swapPauseForStop:this._controlLayout==="modern"&&this._swapPauseForStop})}
                 </div>
-                ${Uo({isRemoteVolumeEntity:Fn,showSlider:Dn,vol:jn,isMuted:this.currentVolumeStateObj?.attributes?.is_volume_muted??!1,supportsMute:this.currentVolumeStateObj?this._supportsFeature(this.currentVolumeStateObj,xa):!1,onVolumeDragStart:b=>this._onVolumeDragStart(b),onVolumeDragEnd:b=>this._onVolumeDragEnd(b),onVolumeChange:b=>this._onVolumeChange(b),onVolumeStep:b=>this._onVolumeStep(b),onMuteToggle:()=>this._onMuteToggle(),leadingControlTemplate:Me||this._showEntityOptions?v:Z,reserveLeadingControlSpace:Me||this._showEntityOptions?!1:this._controlLayout==="modern",showRightPlaceholder:Me||this._showEntityOptions?!1:this._controlLayout==="modern",rightSlotTemplate:Me||this._showEntityOptions?v:ne,hideVolume:Me||this._showEntityOptions||this.config.volume_mode==="hidden"||a&&t<260&&N&&!this._showEntityOptions,moreInfoMenu:this._showEntityOptions?v:_`
+                ${Uo({isRemoteVolumeEntity:Fn,showSlider:Dn,vol:jn,isMuted:this.currentVolumeStateObj?.attributes?.is_volume_muted??!1,supportsMute:this.currentVolumeStateObj?this._supportsFeature(this.currentVolumeStateObj,xa):!1,onVolumeDragStart:b=>this._onVolumeDragStart(b),onVolumeDragEnd:b=>this._onVolumeDragEnd(b),onVolumeChange:b=>this._onVolumeChange(b),onVolumeStep:b=>this._onVolumeStep(b),onMuteToggle:()=>this._onMuteToggle(),leadingControlTemplate:Me||this._showEntityOptions||a&&t<320&&!this._alwaysCollapsed?v:Z,reserveLeadingControlSpace:Me||this._showEntityOptions||a&&t<320&&!this._alwaysCollapsed?!1:this._controlLayout==="modern",showRightPlaceholder:Me||this._showEntityOptions||a&&t<320&&!this._alwaysCollapsed?!1:this._controlLayout==="modern",rightSlotTemplate:Me||this._showEntityOptions||a&&t<320&&!this._alwaysCollapsed?v:ne,hideVolume:Me||this._showEntityOptions||this.config.volume_mode==="hidden"||a&&t<260&&N&&!this._showEntityOptions||a&&t<320&&!this._alwaysCollapsed,moreInfoMenu:!this._showEntityOptions&&!(a&&t<320&&!this._alwaysCollapsed)?_`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async()=>await this._openEntityOptions()}>
               <span class="more-info-icon">&#9776;</span>
             </button>
           </div>
-        `})}
+        `:v})}
             ${u&&!this._showEntityOptions&&!this._hideActiveEntityLabel?_`
               <div class="in-menu-active-label">${q}</div>
             `:v}

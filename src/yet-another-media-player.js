@@ -7756,12 +7756,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
         onVolumeChange: (e) => this._onVolumeChange(e),
         onVolumeStep: (dir) => this._onVolumeStep(dir),
         onMuteToggle: () => this._onMuteToggle(),
-        leadingControlTemplate: (hideControlsNow || this._showEntityOptions) ? nothing : leadingVolumeControl,
-        reserveLeadingControlSpace: (hideControlsNow || this._showEntityOptions) ? false : this._controlLayout === "modern",
-        showRightPlaceholder: (hideControlsNow || this._showEntityOptions) ? false : this._controlLayout === "modern",
-        rightSlotTemplate: (hideControlsNow || this._showEntityOptions) ? nothing : rightSlotTemplate,
-        hideVolume: hideControlsNow || this._showEntityOptions || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions),
-        moreInfoMenu: (!this._showEntityOptions) ? html`
+        leadingControlTemplate: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? nothing : leadingVolumeControl,
+        reserveLeadingControlSpace: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? false : this._controlLayout === "modern",
+        showRightPlaceholder: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? false : this._controlLayout === "modern",
+        rightSlotTemplate: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? nothing : rightSlotTemplate,
+        hideVolume: hideControlsNow || this._showEntityOptions || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions) || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed),
+        moreInfoMenu: (!this._showEntityOptions && !(hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
               <span class="more-info-icon">&#9776;</span>
