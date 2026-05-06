@@ -3899,10 +3899,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let sizePercentage = null;
     let objectFit = null;
 
-    // If no_artwork is selected, we don't want to fetch or show any artwork
-    if (this._artworkObjectFit === "no_artwork") {
-      return { url: null, sizePercentage: null, objectFit: "no_artwork" };
-    }
+
 
     // Check for media artwork overrides first
     const overrides = Array.isArray(this.config?.media_artwork_overrides)
@@ -7513,11 +7510,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       backgroundSize = `${artworkSizePercentage}%`;
     }
 
-    const backgroundImageValue = (idleImageUrl || isAlternateFit)
-      ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
-      : artworkUrl
-        ? `url('${artworkUrl}')`
-        : "none";
+    const backgroundImageValue = (activeArtworkFit === "no_artwork")
+      ? "none"
+      : (idleImageUrl || isAlternateFit)
+        ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
+        : artworkUrl
+          ? `url('${artworkUrl}')`
+          : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
     const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
