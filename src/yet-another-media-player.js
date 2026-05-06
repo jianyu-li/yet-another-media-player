@@ -7652,8 +7652,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <div class="details" style="${isCompact && collapsed ? 'margin-top: -12px; padding-bottom: 2px; min-height: 0; gap: 1px;' : ''} ${(() => {
           const detailStyleParts = [];
           if (this._showEntityOptions) {
-            detailStyleParts.push('visibility:hidden');
             detailStyleParts.push('opacity:0');
+            detailStyleParts.push('pointer-events:none');
           }
           detailStyleParts.push(`min-height:${detailsMinHeight}px`);
           if (!shouldShowDetails) detailStyleParts.push('opacity:0');
@@ -7756,10 +7756,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
         onVolumeChange: (e) => this._onVolumeChange(e),
         onVolumeStep: (dir) => this._onVolumeStep(dir),
         onMuteToggle: () => this._onMuteToggle(),
-        leadingControlTemplate: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? nothing : leadingVolumeControl,
-        reserveLeadingControlSpace: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? false : this._controlLayout === "modern",
-        showRightPlaceholder: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? false : this._controlLayout === "modern",
-        rightSlotTemplate: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? nothing : rightSlotTemplate,
+        leadingControlTemplate: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? (leadingVolumeControl !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${leadingVolumeControl}</div>` : nothing) : leadingVolumeControl,
+        reserveLeadingControlSpace: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? (this._controlLayout === "modern") : this._controlLayout === "modern",
+        showRightPlaceholder: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? (this._controlLayout === "modern") : this._controlLayout === "modern",
+        rightSlotTemplate: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
         hideVolume: hideControlsNow || this._showEntityOptions || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions) || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed),
         moreInfoMenu: (!this._showEntityOptions && !(hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? html`
           <div class="more-info-menu">
