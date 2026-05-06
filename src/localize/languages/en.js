@@ -135,7 +135,8 @@ export default {
             "always_show_lyrics": "Automatically open the lyrics view when the page is refreshed.",
             "lyrics_source": "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
             "lyrics_pre_roll": "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0).",
-            "blurred_artwork": "Always blur the background artwork"
+            "blurred_artwork": "Always blur the background artwork",
+            "hide_collapsed_artwork": "Hide the smaller artwork on the right when the card is collapsed"
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -176,7 +177,8 @@ export default {
             "lyrics_mode": "Lyrics Mode",
             "lyrics_source": "Lyrics Source",
             "lyrics_pre_roll": "Lyrics Pre-Roll (seconds)",
-            "blurred_artwork": "Blurred Artwork"
+            "blurred_artwork": "Blurred Artwork",
+            "hide_collapsed_artwork": "Hide Collapsed Artwork"
         },
         "fields": {
             "artwork_fit": "Artwork Fit",

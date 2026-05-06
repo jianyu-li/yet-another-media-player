@@ -883,12 +883,25 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
               <ha-switch
                 id="blurred-artwork-toggle"
-                .checked=${this._config.blurred_artwork === true}
+                .checked=${this._config.blurred_artwork === true || (this._config.blurred_artwork !== false && (this._config.always_collapsed === true || this._config.artwork_object_fit === "scaled-contain"))}
                 @change=${(e) => this._updateConfig("blurred_artwork", e.target.checked)}
               ></ha-switch>
               <div style="display: flex; flex-direction: column;">
                 <label for="blurred-artwork-toggle" style="font-weight: 500;">${localize('editor.labels.blurred_artwork')}</label>
                 <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.blurred_artwork')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="hide-collapsed-artwork-toggle"
+                .checked=${this._config.hide_collapsed_artwork === true}
+                @change=${(e) => this._updateConfig("hide_collapsed_artwork", e.target.checked)}
+              ></ha-switch>
+              <div style="display: flex; flex-direction: column;">
+                <label for="hide-collapsed-artwork-toggle" style="font-weight: 500;">${localize('editor.labels.hide_collapsed_artwork')}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.hide_collapsed_artwork')}</div>
               </div>
             </div>
           </div>

@@ -7382,9 +7382,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     // Scale artwork based on available height (target ~48% of height)
     let collapsedArtworkSize = Math.round(lowerContentAvailableHeight * 0.48);
+    if (this.config.hide_collapsed_artwork === true) {
+      collapsedArtworkSize = 0;
+    }
     
     // Clamping logic
-    if (hasCustomCardHeight) {
+    if (hasCustomCardHeight && collapsedArtworkSize > 0) {
       if (customCardHeight < 230) {
         collapsedArtworkSize = 0; // Hide if extremely small
       } else {
@@ -7394,7 +7397,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           collapsedArtworkSize = Math.max(102, collapsedArtworkSize);
         }
       }
-    } else {
+    } else if (!hasCustomCardHeight && collapsedArtworkSize > 0) {
       collapsedArtworkSize = 102; // Default
     }
 
