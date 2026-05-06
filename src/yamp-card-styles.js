@@ -295,7 +295,7 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     margin-right: -4px;
-    margin-top: -4px;
+    margin-top: -5px;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 

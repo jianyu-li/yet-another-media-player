@@ -547,7 +547,7 @@
     display: flex;
     align-items: center;
     margin-right: -4px;
-    margin-top: -4px;
+    margin-top: -5px;
     z-index: ${z.FLOATING_CONTROLS};
   }
 
