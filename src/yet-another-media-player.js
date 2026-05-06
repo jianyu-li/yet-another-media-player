@@ -7646,7 +7646,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 ` : nothing}
                 ${this.config.details_alignment !== 'none' ? html`
-                  <div class="details" style="${isCompact && collapsed ? 'margin-top: -12px; gap: 1px;' : ''} ${(() => {
+                  <div class="details" style="${isCompact && collapsed ? 'margin-top: -12px; padding-bottom: 2px; min-height: 0; gap: 1px;' : ''} ${(() => {
           const detailStyleParts = [];
           if (this._showEntityOptions) {
             detailStyleParts.push('visibility:hidden');
@@ -7725,7 +7725,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         )
         : nothing
       }
-                ${(!hideControlsNow && controlSpacerSize > 0) ? html`
+                ${(!hideControlsNow && controlSpacerSize > 0 && !(isCompact && collapsed)) ? html`
                   <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
                 ` : nothing}
                 <div style="${hideControlsNow || this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">

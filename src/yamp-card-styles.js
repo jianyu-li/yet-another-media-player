@@ -4046,7 +4046,9 @@ export const lyricsStyles = css`
   .yamp-card-inner.compact-collapsed .details {
     padding-left: 12px !important;
     padding-right: 12px !important;
+    padding-bottom: 2px !important;
     margin-top: -12px !important;
+    min-height: 0 !important;
     gap: 1px !important;
   }
   .yamp-card-inner.compact-collapsed .controls-row {
