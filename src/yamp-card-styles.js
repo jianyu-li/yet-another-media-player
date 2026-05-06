@@ -295,7 +295,9 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     margin-right: 0;
-    position: relative;
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     margin-top: -6px;
   }
@@ -1724,7 +1726,7 @@ export const yampCardStyles = css`
     position: absolute;
     top: 16px;
     right: 6px;
-    width: 110px;
+    width: calc(var(--yamp-collapsed-artwork-size, 102px) + 8px);
     height: calc(100% - 60px);
     display: flex;
     align-items: flex-start;
@@ -1734,12 +1736,12 @@ export const yampCardStyles = css`
     pointer-events: none;
     box-shadow: none;
     padding: 0;
-    transition: background var(--transition-slow);
+    transition: background var(--transition-slow), width var(--transition-normal);
   }
 
   .card-lower-content.collapsed .collapsed-artwork {
-    width: 102px;
-    height: 102px;
+    width: var(--yamp-collapsed-artwork-size, 102px);
+    height: var(--yamp-collapsed-artwork-size, 102px);
     border-radius: 16px;
     object-fit: var(--yamp-artwork-fit, cover);
     background: transparent;
@@ -1748,6 +1750,7 @@ export const yampCardStyles = css`
     user-select: none;
     display: block;
     margin: 2px;
+    transition: width var(--transition-normal), height var(--transition-normal);
   }
 
   .card-lower-content.collapsed.has-artwork .controls-row {
@@ -1765,14 +1768,8 @@ export const yampCardStyles = css`
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 105px;
       right: 4px;
       top: 14px;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 98px;
-      height: 98px;
     }
   }
 
@@ -1785,14 +1782,8 @@ export const yampCardStyles = css`
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 90px;
       right: 3px;
       top: 12px;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 84px;
-      height: 84px;
     }
   }
 
@@ -1805,14 +1796,8 @@ export const yampCardStyles = css`
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 80px;
       right: 2px;
       top: 10px;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 74px;
-      height: 74px;
     }
   }
 
@@ -4047,5 +4032,48 @@ export const lyricsStyles = css`
     --mdc-icon-size: 40px;
     margin-bottom: 12px;
     opacity: 0.6;
+  }
+
+  /* Compact mode overrides for constrained heights */
+  .yamp-card-inner.compact-collapsed .chip-row {
+    padding-top: 0 !important;
+    padding-bottom: 4px !important;
+  }
+  .yamp-card-inner.compact-collapsed .action-chip-row {
+    padding-bottom: 0 !important;
+    margin-bottom: -12px !important;
+  }
+  .yamp-card-inner.compact-collapsed .details {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    margin-top: -12px !important;
+    gap: 1px !important;
+  }
+  .yamp-card-inner.compact-collapsed .controls-row {
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+    gap: 4px !important;
+  }
+  .yamp-card-inner.compact-collapsed .volume-row {
+    padding-bottom: 4px !important;
+  }
+  .yamp-card-inner.compact-collapsed .collapsed-artwork-container {
+    top: -12px !important;
+  }
+  .yamp-card-inner.compact-collapsed .more-info-menu {
+    bottom: 4px !important;
+    right: 8px !important;
+  }
+  .yamp-card-inner.compact-collapsed .modern-button.primary {
+    width: 52px !important;
+    height: 52px !important;
+  }
+  .yamp-card-inner.compact-collapsed .modern-button.medium {
+    width: 38px !important;
+    height: 38px !important;
+  }
+  .yamp-card-inner.compact-collapsed .modern-button.small {
+    width: 34px !important;
+    height: 34px !important;
   }
 `;
