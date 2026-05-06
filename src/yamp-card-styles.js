@@ -1563,7 +1563,7 @@ export const yampCardStyles = css`
     transition: opacity 0.3s;
   }
 
-  .card-lower-content.collapsed .details {
+  .card-lower-content.collapsed.has-artwork .details {
     opacity: 1;
     pointer-events: auto;
     margin-right: var(--yamp-collapsed-details-offset, 120px);
@@ -1571,7 +1571,7 @@ export const yampCardStyles = css`
   }
 
   @media (max-width: 420px) {
-    .card-lower-content.collapsed .details {
+    .card-lower-content.collapsed.has-artwork .details {
       margin-right: var(--yamp-collapsed-details-offset, 74px);
     }
   }

@@ -7570,13 +7570,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       })()}"
               ></div>
               ${!(dimIdleFrame || isAlternateFit) ? html`<div class="card-lower-fade"></div>` : nothing}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
           : 'min-height: 350px;';
       })()}">
-                ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? html`
+                ${collapsed && artworkUrl && collapsedArtworkSize > 0 && this._isValidArtworkUrl(artworkUrl) ? html`
                   <div
                     class="collapsed-artwork-container"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
