@@ -7728,9 +7728,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         )
         : nothing
       }
-                ${(!hideControlsNow && controlSpacerSize > 0 && !(isCompact && collapsed)) ? html`
-                  <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
-                ` : nothing}
+
                 <div style="${hideControlsNow || this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">
                     ${renderControlsRow({
         stateObj: playbackStateObj,
@@ -7758,10 +7756,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
         onVolumeChange: (e) => this._onVolumeChange(e),
         onVolumeStep: (dir) => this._onVolumeStep(dir),
         onMuteToggle: () => this._onMuteToggle(),
-        leadingControlTemplate: leadingVolumeControl,
-        reserveLeadingControlSpace: this._controlLayout === "modern",
-        showRightPlaceholder: this._controlLayout === "modern",
-        rightSlotTemplate,
+        leadingControlTemplate: (hideControlsNow || this._showEntityOptions) ? nothing : leadingVolumeControl,
+        reserveLeadingControlSpace: (hideControlsNow || this._showEntityOptions) ? false : this._controlLayout === "modern",
+        showRightPlaceholder: (hideControlsNow || this._showEntityOptions) ? false : this._controlLayout === "modern",
+        rightSlotTemplate: (hideControlsNow || this._showEntityOptions) ? nothing : rightSlotTemplate,
         hideVolume: hideControlsNow || this._showEntityOptions || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions),
         moreInfoMenu: (!this._showEntityOptions) ? html`
           <div class="more-info-menu">

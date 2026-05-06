@@ -335,7 +335,7 @@ export const yampCardStyles = css`
   }
 
   .more-info-icon {
-    font-size: 1.7em;
+    font-size: 2.0em;
     line-height: 1;
     color: #fff !important;
     display: flex;
