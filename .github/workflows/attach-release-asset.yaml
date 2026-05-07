@@ -7,13 +7,24 @@ on:
 
 jobs:
   upload-bundle:
-    name: Attach Bundle to Release
+    name: Build and Attach Bundle to Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the bundle
+        run: npm run build
 
       - name: Upload bundle to release
         uses: softprops/action-gh-release@v2
