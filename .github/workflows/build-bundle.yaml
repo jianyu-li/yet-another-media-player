@@ -26,6 +26,9 @@ jobs:
       - name: Build the bundle
         run: npm run build
 
+      - name: Stage the ignored bundle
+        run: git add -f yet-another-media-player.js
+
       - name: Commit built bundle
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
