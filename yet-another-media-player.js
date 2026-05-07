@@ -4912,14 +4912,15 @@
             </div>
           </div>
           <div class="form-row">
-            <ha-textfield
+            <ha-selector
+              .hass=${this.hass}
               class="full-width"
               label="${d("editor.fields.artwork_hostname")}"
+              .selector=${{text:{}}}
               .value=${this._config.artwork_hostname??""}
-              @input=${a=>this._updateConfig("artwork_hostname",a.target.value)}
+              @value-changed=${a=>this._updateConfig("artwork_hostname",a.detail.value)}
               helper="e.g. http://192.168.1.50:8123"
-              .helperPersistent=${!0}
-            ></ha-textfield>
+            ></ha-selector>
           </div>
         </div>
 
@@ -4939,14 +4940,15 @@
             </div>
             <div style="flex: 2;">
               ${this._useIdleImageUrl?_`
-                <ha-textfield
+                <ha-selector
+                  .hass=${this.hass}
                   class="full-width"
-                  placeholder="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                  .selector=${{text:{}}}
                   .value=${this._config.idle_image??""}
-                  @input=${a=>this._updateConfig("idle_image",a.target.value)}
+                  @value-changed=${a=>this._updateConfig("idle_image",a.detail.value)}
+                  label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
                   helper="${d("editor.subtitles.image_url_helper")}"
-                  .helperPersistent=${!0}
-                ></ha-textfield>
+                ></ha-selector>
               `:_`
                 <ha-generic-picker
                   class="full-width"
@@ -5001,30 +5003,33 @@
                                     allow-custom-value
                                   ></ha-generic-picker>
                                 `:_`
-                                  <ha-textfield
+                                  <ha-selector
+                                    .hass=${this.hass}
                                     class="full-width"
+                                    .selector=${{text:{}}}
                                     label="${d("editor.fields.match_value")}"
                                     .value=${a.match_value??""}
-                                    @input=${r=>this._onArtworkMatchValueChange(s,r.target.value)}
-                                  ></ha-textfield>
+                                    @value-changed=${r=>this._onArtworkMatchValueChange(s,r.detail.value)}
+                                  ></ha-selector>
                                 `}
-                        <ha-textfield
+                        <ha-selector
+                          .hass=${this.hass}
                           class="full-width"
+                          .selector=${{text:{}}}
                           label=${a.match_type==="missing_art"?d("editor.fields.fallback_image_url"):d("editor.fields.image_url")}
                           .value=${a.image_url??""}
-                          @input=${r=>this._onArtworkImageUrlChange(s,r.target.value)}
-                        ></ha-textfield>
+                          @value-changed=${r=>this._onArtworkImageUrlChange(s,r.detail.value)}
+                        ></ha-selector>
                         <div class="form-row-multi-column" style="gap:12px; flex-wrap:wrap; align-items:flex-start;">
                           <div class="grow-children" style="flex:1;">
-                            <ha-textfield
+                            <ha-selector
+                              .hass=${this.hass}
                               class="full-width"
                               label="${d("editor.fields.size_percent")}"
-                              type="number"
-                              min="1"
-                              max="100"
+                              .selector=${{number:{min:1,max:100,mode:"box"}}}
                               .value=${a.size_percentage??""}
-                              @input=${r=>this._onArtworkSizePercentageChange(s,r.target.value)}
-                            ></ha-textfield>
+                              @value-changed=${r=>this._onArtworkSizePercentageChange(s,r.detail.value)}
+                            ></ha-selector>
                           </div>
                           <div class="grow-children" style="flex:1.5;">
                             <ha-selector
@@ -5273,13 +5278,13 @@
           </div>
             <div class="form-row form-row-multi-column">
               <div class="grow-children number-input-with-note">
-                <ha-selector-number
+                <ha-selector
                   .selector=${{number:{min:0,max:1e3,step:1,mode:"box"}}}
                   .value=${this._config.search_results_limit??20}
                   label="${d("editor.fields.search_limit")}"
                   helper="${d("editor.subtitles.search_limit_full")}"
                   @value-changed=${t=>this._updateConfig("search_results_limit",t.detail.value)}
-                ></ha-selector-number>
+                ></ha-selector>
                 ${e?_`
                   <div class="config-subtitle warning">
                     Warning: requesting higher results can cause performance issues.
@@ -5434,16 +5439,15 @@
           </div>
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
-              <ha-textfield
+              <ha-selector
+                .hass=${this.hass}
                 class="full-width"
-                type="number"
-                min="0"
+                .selector=${{number:{min:0,max:2e3,mode:"box"}}}
                 label="${d("editor.fields.card_height")}"
                 .value=${this._config.card_height??""}
                 helper="${d("editor.subtitles.card_height_full")}"
-                .helperPersistent=${!0}
-                @input=${t=>{const a=t.target.value;if(a===""){this._updateConfig("card_height",void 0);return}const s=Number(a);this._updateConfig("card_height",Number.isFinite(s)&&s>0?s:void 0)}}
-              ></ha-textfield>
+                @value-changed=${t=>{const a=t.detail.value;if(a===""||a===void 0){this._updateConfig("card_height",void 0);return}const s=Number(a);this._updateConfig("card_height",Number.isFinite(s)&&s>0?s:void 0)}}
+              ></ha-selector>
             </div>
             <ha-icon
                 class="icon-button"
@@ -5637,13 +5641,14 @@
                       <ha-icon class="action-icon" icon="${t?.icon}" title="Action Icon"></ha-icon>
                     `:_`<span class="action-icon-placeholder"></span>`}
                     <div class="grow-children">
-                      <ha-textfield
-                        placeholder="(Icon Only)"
+                      <ha-selector
+                        .hass=${this.hass}
+                        .selector=${{text:{}}}
+                        label="(Icon Only)"
                         .value=${t?.name??""}
                         .helper=${this._getActionHelperText(t)}
-                        .helperPersistent=${!0}
-                        @input=${s=>this._onActionChanged(a,s.target.value)}
-                      ></ha-textfield>
+                        @value-changed=${s=>this._onActionChanged(a,s.detail.value)}
+                      ></ha-selector>
                     </div>
                     <div class="action-row-actions">
                       <ha-icon
@@ -5711,12 +5716,14 @@
         </div>
 
         <div class="form-row">
-          <ha-textfield
+          <ha-selector
+            .hass=${this.hass}
             class="full-width"
+            .selector=${{text:{}}}
             label="${d("editor.fields.name")}"
             .value=${e?.name??""}
-            @input=${s=>this._updateEntityProperty("name",s.target.value)}
-          ></ha-textfield>
+            @value-changed=${s=>this._updateEntityProperty("name",s.detail.value)}
+          ></ha-selector>
         </div>
 
         <div class="form-row">
@@ -5724,8 +5731,6 @@
             .hass=${this.hass}
             .selector=${{select:{mode:"dropdown",multiple:!0,options:[{value:"previous",label:"Previous Track"},{value:"play_pause",label:"Play/Pause"},{value:"stop",label:"Stop"},{value:"next",label:"Next Track"},{value:"shuffle",label:"Shuffle"},{value:"repeat",label:"Repeat"},{value:"favorite",label:"Favorite"},{value:"power",label:"Power"}]}}}
             .value=${Array.isArray(e?.hidden_controls)?e.hidden_controls:[]}
-            .required=${!1}
-            .invalid=${!1}
             label="${d("editor.fields.hidden_controls")}"
             helper="${d("editor.subtitles.hide_controls")}"
             @value-changed=${s=>this._updateEntityProperty("hidden_controls",s.detail.value)}
@@ -5788,8 +5793,6 @@
               .hass=${this.hass}
               .selector=${{select:{mode:"dropdown",multiple:!0,options:[{value:"artist",label:"Artist"},{value:"album",label:"Album"},{value:"track",label:"Track"},{value:"playlist",label:"Playlist"},{value:"radio",label:"Radio"},{value:"podcast",label:"Podcast"},{value:"episode",label:"Episode"}]}}}
               .value=${Array.isArray(e?.hidden_filter_chips)?e.hidden_filter_chips:[]}
-              .required=${!1}
-              .invalid=${!1}
               label="${d("editor.fields.hidden_chips")}"
               helper="${d("editor.subtitles.hide_search_chips")}"
               @value-changed=${p=>this._updateEntityProperty("hidden_filter_chips",p.detail.value)}
@@ -5912,13 +5915,14 @@
         </div>
 
         <div class="form-row">
-          <ha-textfield
+          <ha-selector
+            .hass=${this.hass}
             class="full-width"
-            label="${d("editor.fields.name")}"
-            placeholder="(Icon Only)"
+            .selector=${{text:{}}}
+            label="${d("editor.fields.name")} (Icon Only)"
             .value=${e?.name??""}
-            @input=${a=>this._updateActionProperty("name",a.target.value)}
-          ></ha-textfield>
+            @value-changed=${a=>this._updateActionProperty("name",a.detail.value)}
+          ></ha-selector>
         </div>
 
         <div class="form-row">
@@ -5983,13 +5987,14 @@
         `:v} 
         ${t==="navigate"?_`
           <div class="form-row">
-            <ha-textfield
+            <ha-selector
+              .hass=${this.hass}
               class="full-width"
-              label="${d("editor.fields.nav_path")}"
-              placeholder="/lovelace/music or #popup"
+              .selector=${{text:{}}}
+              label="${d("editor.fields.nav_path")} (/lovelace/music or #popup)"
               .value=${e?.navigation_path??""}
-              @input=${a=>{this._updateActionProperty("navigation_path",a.target.value),this._updateActionProperty("action","navigate")}}
-            ></ha-textfield>
+              @value-changed=${a=>{this._updateActionProperty("navigation_path",a.detail.value),this._updateActionProperty("action","navigate")}}
+            ></ha-selector>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
@@ -6034,7 +6039,6 @@
               .selector=${{select:{mode:"dropdown",filterable:!0,options:this._serviceItems||[]}}}
               .value=${e.service??""}
               label="${d("editor.fields.service")}"
-              .required=${!0}
               @value-changed=${a=>this._updateActionProperty("service",a.detail.value)}
             ></ha-selector>
           </div>
