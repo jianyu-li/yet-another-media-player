@@ -7765,7 +7765,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         showRightPlaceholder: this._controlLayout === "modern",
         rightSlotTemplate: shouldHideVolumeControls ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
         hideVolume: shouldHideVolumeControls || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions),
-        moreInfoMenu: !shouldHideVolumeControls ? html`
+        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
               <span class="more-info-icon">&#9776;</span>
