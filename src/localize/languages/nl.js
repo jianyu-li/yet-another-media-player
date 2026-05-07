@@ -134,6 +134,10 @@ export default {
             "card_type": "Kies de kaartmodus. 'Standaard' is de standaard mediaspeler. 'Speciale zoekopdracht' maakt van de kaart een permanente zoekinterface.",
             "always_show_lyrics": "Open automatisch de songtekstweergave wanneer de pagina wordt vernieuwd.",
             "lyrics_pre_roll": "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0)."
+        ,
+            "lyrics_source": "Music Assistant vereist de mass_queue-integratie om songteksten op te halen uit de interne metadata-engine.",
+            "blurred_artwork": "Achtergrond artwork altijd vervagen",
+            "hide_collapsed_artwork": "Verberg het kleinere artwork aan de rechterkant wanneer de kaart is ingeklapt"
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",
@@ -223,6 +227,8 @@ export default {
             "card_type": "Kaarttype",
             "no_artwork_option": "Geen artwork",
             "details_alignment": "Details uitlijning"
+        ,
+            "appearance": "Uiterlijk"
         },
         "action_types": {
             "menu": "Open een kaartmenu-item",
@@ -277,6 +283,12 @@ export default {
             "scaled-contain": "Geschaalde contain",
             "scaled-contain-alternate": "Geschaalde contain alternatief",
             "none": "Geen"
+        }
+    ,
+        "appearance_options": {
+            "automatic": "Automatisch",
+            "light": "Licht",
+            "dark": "Donker"
         }
     },
     "card": {
@@ -372,11 +384,18 @@ export default {
     "lyrics": {
         "finding": "Songteksten zoeken...",
         "none_found": "Geen songteksten gevonden",
-        "not_available": "Songtekst niet beschikbaar"
+        "not_available": "Songtekst niet beschikbaar",
+        "instrumental": "Instrumentaal nummer"
     },
     "lyrics_modes": {
         "default": "Standaard (Markeren & scrollen)",
         "scroll": "Alleen scrollen",
         "text": "Alleen tekst"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Terugval naar LRCLIB)",
+        "mass": "Alleen Music Assistant",
+        "lrclib": "Alleen LRCLIB",
+        "lrclib_mass": "LRCLIB (Terugval naar Music Assistant)"
     }
 };

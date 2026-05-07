@@ -134,6 +134,10 @@ export default {
             "card_type": "Wählen Sie den Kartenmodus. 'Standard' ist der normale Mediaplayer. 'Dedizierte Suche' macht die Karte zu einer permanenten Suchoberfläche.",
             "always_show_lyrics": "Liedtextansicht bei Seitenaktualisierung automatisch öffnen.",
             "lyrics_pre_roll": "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0)."
+        ,
+            "lyrics_source": "Music Assistant erfordert die mass_queue-Integration, um Songtexte aus seiner internen Metadaten-Engine abzurufen.",
+            "blurred_artwork": "Hintergrund-Artwork immer weichzeichnen",
+            "hide_collapsed_artwork": "Das kleinere Artwork rechts ausblenden, wenn die Karte eingeklappt ist"
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",
@@ -223,6 +227,8 @@ export default {
             "card_type": "Kartentyp",
             "no_artwork_option": "Kein Coverbild",
             "details_alignment": "Detail-Ausrichtung"
+        ,
+            "appearance": "Erscheinungsbild"
         },
         "action_types": {
             "menu": "Kartenmenüpunkt öffnen",
@@ -277,6 +283,12 @@ export default {
             "scaled-contain": "Skaliertes Einpassen",
             "scaled-contain-alternate": "Skaliertes Einpassen (Alternativ)",
             "none": "Keine"
+        }
+    ,
+        "appearance_options": {
+            "automatic": "Automatisch",
+            "light": "Hell",
+            "dark": "Dunkel"
         }
     },
     "card": {
@@ -372,11 +384,18 @@ export default {
     "lyrics": {
         "finding": "Suche Songtext...",
         "none_found": "Kein Songtext gefunden",
-        "not_available": "Songtext nicht verfügbar"
+        "not_available": "Songtext nicht verfügbar",
+        "instrumental": "Instrumental-Titel"
     },
     "lyrics_modes": {
         "default": "Standard (Hervorheben & Scrollen)",
         "scroll": "Nur Scrollen",
         "text": "Nur Text"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Fallback zu LRCLIB)",
+        "mass": "Nur Music Assistant",
+        "lrclib": "Nur LRCLIB",
+        "lrclib_mass": "LRCLIB (Fallback zu Music Assistant)"
     }
 };

@@ -134,6 +134,10 @@ export default {
             "card_type": "Choisissez le mode de la carte. 'Par défaut' est le lecteur multimédia standard. 'Recherche dédiée' fait de la carte une interface de recherche permanente.",
             "always_show_lyrics": "Ouvrir automatiquement la vue des paroles lors du rafraîchissement de la page.",
             "lyrics_pre_roll": "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0)."
+        ,
+            "lyrics_source": "Music Assistant nécessite l'intégration mass_queue pour récupérer les paroles de son moteur de métadonnées interne.",
+            "blurred_artwork": "Toujours flouter l'image d'arrière-plan",
+            "hide_collapsed_artwork": "Masquer la petite image à droite lorsque la carte est réduite"
         },
         "titles": {
             "edit_entity": "Modifier l'entité",
@@ -223,6 +227,8 @@ export default {
             "card_type": "Type de carte",
             "no_artwork_option": "Pas d'image de couverture",
             "details_alignment": "Alignement des détails"
+        ,
+            "appearance": "Apparence"
         },
         "action_types": {
             "menu": "Ouvrir un élément de menu",
@@ -277,6 +283,12 @@ export default {
             "scaled-contain": "Contenir mis à l'échelle",
             "scaled-contain-alternate": "Contenir mis à l'échelle alternatif",
             "none": "Aucun"
+        }
+    ,
+        "appearance_options": {
+            "automatic": "Automatique",
+            "light": "Clair",
+            "dark": "Sombre"
         }
     },
     "card": {
@@ -372,11 +384,18 @@ export default {
     "lyrics": {
         "finding": "Recherche des paroles...",
         "none_found": "Aucune parole trouvée",
-        "not_available": "Paroles non disponibles"
+        "not_available": "Paroles non disponibles",
+        "instrumental": "Piste instrumentale"
     },
     "lyrics_modes": {
         "default": "Par défaut (Surligner et faire défiler)",
         "scroll": "Défilement uniquement",
         "text": "Texte uniquement"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Repli sur LRCLIB)",
+        "mass": "Music Assistant uniquement",
+        "lrclib": "LRCLIB uniquement",
+        "lrclib_mass": "LRCLIB (Repli sur Music Assistant)"
     }
 };

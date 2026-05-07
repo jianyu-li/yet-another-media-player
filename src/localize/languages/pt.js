@@ -134,6 +134,10 @@ export default {
             "card_type": "Escolha o modo do cartão. 'Padrão' é o reprodutor de mídia padrão. 'Busca dedicada' torna o cartão uma interface de busca permanente.",
             "always_show_lyrics": "Abrir automaticamente a visualização de letras quando a página for atualizada.",
             "lyrics_pre_roll": "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 0)."
+        ,
+            "lyrics_source": "O Music Assistant requer a integração mass_queue para obter letras do seu mecanismo de metadados interno.",
+            "blurred_artwork": "Sempre desfocar a imagem de fundo",
+            "hide_collapsed_artwork": "Ocultar a imagem pequena à direita quando o cartão estiver recolhido"
         },
         "titles": {
             "edit_entity": "Editar entidade",
@@ -222,6 +226,8 @@ export default {
             "search_view": "Vista de resultados de pesquisa",
             "search_card_columns": "Colunas de cartões",
             "details_alignment": "Alinhamento de detalhes"
+        ,
+            "appearance": "Aparência"
         },
         "action_types": {
             "menu": "Abrir um item do menu",
@@ -276,6 +282,12 @@ export default {
             "scaled-contain": "Conter dimensionado",
             "scaled-contain-alternate": "Conter dimensionado alternativo",
             "none": "Nenhum"
+        }
+    ,
+        "appearance_options": {
+            "automatic": "Automático",
+            "light": "Claro",
+            "dark": "Escuro"
         }
     },
     "card": {
@@ -371,11 +383,18 @@ export default {
     "lyrics": {
         "finding": "Procurando letra...",
         "none_found": "Nenhuma letra encontrada",
-        "not_available": "Letra não disponível"
+        "not_available": "Letra não disponível",
+        "instrumental": "Faixa instrumental"
     },
     "lyrics_modes": {
         "default": "Padrão (Destacar e rolar)",
         "scroll": "Apenas rolar",
         "text": "Apenas texto"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Alternativa para LRCLIB)",
+        "mass": "Apenas Music Assistant",
+        "lrclib": "Apenas LRCLIB",
+        "lrclib_mass": "LRCLIB (Alternativa para Music Assistant)"
     }
 };

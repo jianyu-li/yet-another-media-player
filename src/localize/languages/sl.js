@@ -134,6 +134,10 @@ export default {
             "card_type": "Izberite način kartice. 'Privzeto' je standardni medijski predvajalnik. 'Namensko iskanje' spremeni kartico v trajen iskalni vmesnik.",
             "always_show_lyrics": "Samodejno odprite pogled besedila, ko se stran osveži.",
             "lyrics_pre_roll": "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0)."
+        ,
+            "lyrics_source": "Music Assistant zahteva integracijo mass_queue za pridobivanje besedil iz svojega notranjega mehanizma metapodatkov.",
+            "blurred_artwork": "Vedno zamegli ozadje",
+            "hide_collapsed_artwork": "Skrij majhno sliko na desni, ko je kartica strnjena"
         },
         "titles": {
             "edit_entity": "Uredi entiteto",
@@ -222,6 +226,8 @@ export default {
             "search_view": "Pogled rezultatov iskanja",
             "search_card_columns": "Stolpci kartic",
             "details_alignment": "Poravnava podrobnosti"
+        ,
+            "appearance": "Videz"
         },
         "action_types": {
             "menu": "Odpri element menija kartice",
@@ -276,6 +282,12 @@ export default {
             "scaled-contain": "Pomanjšano prilagodi",
             "scaled-contain-alternate": "Pomanjšano prilagodi alternativno",
             "none": "Brez"
+        }
+    ,
+        "appearance_options": {
+            "automatic": "Samodejno",
+            "light": "Svetlo",
+            "dark": "Temno"
         }
     },
     "card": {
@@ -371,11 +383,18 @@ export default {
     "lyrics": {
         "finding": "Iskanje besedila...",
         "none_found": "Besedila ni bilo mogoče najti",
-        "not_available": "Besedilo ni na voljo"
+        "not_available": "Besedilo ni na voljo",
+        "instrumental": "Instrumentalna skladba"
     },
     "lyrics_modes": {
         "default": "Privzeto (Označi in pomakni)",
         "scroll": "Samo pomikanje",
         "text": "Samo besedilo"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Rezerva na LRCLIB)",
+        "mass": "Samo Music Assistant",
+        "lrclib": "Samo LRCLIB",
+        "lrclib_mass": "LRCLIB (Rezerva na Music Assistant)"
     }
 };

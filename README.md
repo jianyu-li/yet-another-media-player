@@ -1181,9 +1181,8 @@ Contributions are welcome! Please follow these steps so reviews go smoothly:
 
 1. **Fork and branch** – Fork the repo on GitHub, clone your fork, then work off a feature branch.
 2. **Install dependencies** – Run `npm install` (or `npm ci` if you need an exact lockfile sync) in the project root before touching the sources.
-3. **Develop in `src/`** – Only edit files under `src/`. The bundled `yet-another-media-player.js` in the repo root is generated and should never be modified by hand.
-4. **Build before you push** – Run `npm run build` to generate the distributable. Test in Home Assistant by copying the bundle into your config and adding the resource modules (you can't have the HACS version and a local version installed at the same time).
-5. **Commit + PR** – Use concise, imperative commit messages. Rebase on `main` if needed, push your branch to your fork, then open a pull request against `main` that explains the change, shows any relevant screenshots, and notes how you tested.
+3. **Develop in `src/`** – Only edit files under `src/`. 
+4. **Commit + PR** – Use concise, imperative commit messages. Rebase on `main` if needed, push your branch to your fork, then open a pull request against `main` that explains the change, shows any relevant screenshots, and notes how you tested.
 
 ### Adding Translations
 

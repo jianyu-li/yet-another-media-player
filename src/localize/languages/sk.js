@@ -134,6 +134,10 @@ export default {
             "card_type": "Vyberte režim karty. 'Predvolené' je štandardný prehrávač médií. 'Vyhradené vyhľadávanie' urobí z karty trvalé rozhranie na vyhľadávanie.",
             "always_show_lyrics": "Automaticky otvoriť zobrazenie textov piesní pri obnovení stránky.",
             "lyrics_pre_roll": "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0)."
+        ,
+            "lyrics_source": "Music Assistant vyžaduje integráciu mass_queue na získavanie textov piesní z jeho interného metadátového enginu.",
+            "blurred_artwork": "Vždy rozmazať pozadie",
+            "hide_collapsed_artwork": "Skryť malý obrázok vpravo, keď je karta zbalená"
         },
         "titles": {
             "edit_entity": "Upraviť entitu",
@@ -222,6 +226,8 @@ export default {
             "search_view": "Zobrazenie výsledkov vyhľadávania",
             "search_card_columns": "Stĺpce karty",
             "details_alignment": "Zarovnanie detailov"
+        ,
+            "appearance": "Vzhľad"
         },
         "action_types": {
             "menu": "Otvoriť položku menu karty",
@@ -276,6 +282,12 @@ export default {
             "scaled-contain": "Škálované prispôsobenie",
             "scaled-contain-alternate": "Škálované prispôsobenie alternatívne",
             "none": "Žiadne"
+        }
+    ,
+        "appearance_options": {
+            "automatic": "Automaticky",
+            "light": "Svetlý",
+            "dark": "Tmavý"
         }
     },
     "card": {
@@ -371,11 +383,18 @@ export default {
     "lyrics": {
         "finding": "Hľadanie textu piesne...",
         "none_found": "Žiadny text piesne sa nenašiel",
-        "not_available": "Text piesne nie je k dispozícii"
+        "not_available": "Text piesne nie je k dispozícii",
+        "instrumental": "Inštrumentálna skladba"
     },
     "lyrics_modes": {
         "default": "Predvolené (Zvýrazniť a posúvať)",
         "scroll": "Len posúvať",
         "text": "Len text"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Záloha na LRCLIB)",
+        "mass": "Len Music Assistant",
+        "lrclib": "Len LRCLIB",
+        "lrclib_mass": "LRCLIB (Záloha na Music Assistant)"
     }
 };

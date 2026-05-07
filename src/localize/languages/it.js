@@ -134,6 +134,10 @@ export default {
             "card_type": "Scegli la modalità della scheda. 'Predefinito' è il lettore multimediale standard. 'Ricerca dedicata' rende la scheda un'interfaccia di ricerca permanente.",
             "always_show_lyrics": "Apri automaticamente la visualizzazione dei testi quando la pagina viene aggiornata.",
             "lyrics_pre_roll": "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0)."
+        ,
+            "lyrics_source": "Music Assistant richiede l'integrazione mass_queue per recuperare i testi dal suo motore di metadati interno.",
+            "blurred_artwork": "Sfoca sempre l'immagine di sfondo",
+            "hide_collapsed_artwork": "Nascondi l'immagine piccola a destra quando la scheda è compressa"
         },
         "titles": {
             "edit_entity": "Modifica entità",
@@ -222,6 +226,8 @@ export default {
             "search_view": "Vista risultati ricerca",
             "search_card_columns": "Colonne schede",
             "details_alignment": "Allineamento dei dettagli"
+        ,
+            "appearance": "Aspetto"
         },
         "action_types": {
             "menu": "Apri un elemento del menu",
@@ -276,6 +282,12 @@ export default {
             "scaled-contain": "Contieni scalato",
             "scaled-contain-alternate": "Contieni scalato alternativo",
             "none": "Nessuno"
+        }
+    ,
+        "appearance_options": {
+            "automatic": "Automatico",
+            "light": "Chiaro",
+            "dark": "Scuro"
         }
     },
     "card": {
@@ -371,11 +383,18 @@ export default {
     "lyrics": {
         "finding": "Ricerca testi...",
         "none_found": "Nessun testo trovato",
-        "not_available": "Testi non disponibili"
+        "not_available": "Testi non disponibili",
+        "instrumental": "Brano strumentale"
     },
     "lyrics_modes": {
         "default": "Predefinito (Evidenzia e scorri)",
         "scroll": "Solo scorrimento",
         "text": "Solo testo"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Fallback su LRCLIB)",
+        "mass": "Solo Music Assistant",
+        "lrclib": "Solo LRCLIB",
+        "lrclib_mass": "LRCLIB (Fallback su Music Assistant)"
     }
 };

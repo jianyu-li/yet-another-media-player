@@ -134,6 +134,10 @@ export default {
             "card_type": "Elija el modo de tarjeta. 'Por defecto' es el reproductor de medios estándar. 'Búsqueda dedicada' convierte la tarjeta en una interfaz de búsqueda permanente.",
             "always_show_lyrics": "Abrir automáticamente la vista de letras al actualizar la página.",
             "lyrics_pre_roll": "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 0)."
+        ,
+            "lyrics_source": "Music Assistant requiere la integración mass_queue para obtener letras de su motor de metadatos interno.",
+            "blurred_artwork": "Desenfocar siempre el arte de fondo",
+            "hide_collapsed_artwork": "Ocultar el arte pequeño a la derecha cuando la tarjeta está colapsada"
         },
         "titles": {
             "edit_entity": "Editar entidad",
@@ -223,6 +227,8 @@ export default {
             "search_view": "Vista de resultados de búsqueda",
             "search_card_columns": "Columnas de tarjetas",
             "details_alignment": "Alineación de detalles"
+        ,
+            "appearance": "Apariencia"
         },
         "action_types": {
             "menu": "Abrir un elemento del menú",
@@ -277,6 +283,12 @@ export default {
             "scaled-contain": "Contenido escalado",
             "scaled-contain-alternate": "Contenido escalado alternativo",
             "none": "Ninguno"
+        }
+    ,
+        "appearance_options": {
+            "automatic": "Automático",
+            "light": "Claro",
+            "dark": "Oscuro"
         }
     },
     "card": {
@@ -372,11 +384,18 @@ export default {
     "lyrics": {
         "finding": "Buscando letra...",
         "none_found": "No se encontró letra",
-        "not_available": "Letra no disponible"
+        "not_available": "Letra no disponible",
+        "instrumental": "Pista instrumental"
     },
     "lyrics_modes": {
         "default": "Predeterminado (Resaltar y desplazarse)",
         "scroll": "Solo desplazarse",
         "text": "Solo texto"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Respaldo en LRCLIB)",
+        "mass": "Solo Music Assistant",
+        "lrclib": "Solo LRCLIB",
+        "lrclib_mass": "LRCLIB (Respaldo en Music Assistant)"
     }
 };
