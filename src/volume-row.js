@@ -38,7 +38,7 @@ export function renderVolumeRow({
       ? leadingControlTemplate
       : (reserveLeadingControlSpace ? html`<div class="volume-leading-placeholder"></div>` : nothing)
     }
-        ${(!hideVolume && !isRemoteVolumeEntity) ? html`
+        <div style="${(hideVolume || isRemoteVolumeEntity) ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">
           <button 
             class="volume-icon-btn" 
             @click=${onMuteToggle} 
@@ -46,11 +46,10 @@ export function renderVolumeRow({
           >
             <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
           </button>
-        ` : nothing}
+        </div>
       </div>
 
-      <div class="volume-center">
-        ${!hideVolume ? html`
+      <div class="volume-center" style="${hideVolume ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">
           ${isRemoteVolumeEntity
         ? html`
               <div class="vol-stepper-container">
@@ -81,16 +80,15 @@ export function renderVolumeRow({
                 </div>
               `
           : html`
-              <div class="vol-stepper-container">
-                <div class="vol-stepper">
-                  <button class="button" @click=${() => onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
-                  <span class="vol-value">${Math.round(vol * 100)}%</span>
-                  <button class="button" @click=${() => onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
+                <div class="vol-stepper-container">
+                  <div class="vol-stepper">
+                    <button class="button" @click=${() => onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
+                    <span class="vol-value">${Math.round(vol * 100)}%</span>
+                    <button class="button" @click=${() => onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
+                  </div>
                 </div>
-              </div>
-            `
+              `
       }
-        ` : nothing}
       </div>
 
       <div class="volume-right">

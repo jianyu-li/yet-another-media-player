@@ -7034,10 +7034,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ? this._cardHeightTemplateResult
       : this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string"
-      ? customCardHeightInput
+      ? (customCardHeightInput.includes('px') ? parseFloat(customCardHeightInput) : Number(customCardHeightInput))
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
     const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
+    
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
     const hasSingleEntity = this.entityObjs.length === 1;
@@ -7368,22 +7369,48 @@ class YetAnotherMediaPlayerCard extends LitElement {
         : (this._collapseOnIdle ? this._isIdle : false);
     }
     const collapsedExtraSpace = collapsed && this._alwaysCollapsed && hasCustomCardHeight
-      ? Math.max(0, customCardHeight - collapsedBaselineHeight)
+      ? customCardHeight - collapsedBaselineHeight
       : 0;
     const chipRowReserve = collapsed && showChipsInline ? 48 : 0;
     const actionRowReserve = collapsed && rowActions.length > 0 ? 40 : 0;
     const reservedTopSpace = chipRowReserve + actionRowReserve;
+    
+    // Calculate available height for lower content
+    const lowerContentAvailableHeight = hasCustomCardHeight 
+      ? Math.max(100, customCardHeight - reservedTopSpace) 
+      : (this._collapsedBaselineHeight || 220);
+    
+    // Scale artwork based on available height (target ~48% of height)
+    let collapsedArtworkSize = Math.round(lowerContentAvailableHeight * 0.48);
+    if (this.config.hide_collapsed_artwork === true) {
+      collapsedArtworkSize = 0;
+    }
+    
+    // Clamping logic
+    if (hasCustomCardHeight && collapsedArtworkSize > 0) {
+      if (customCardHeight < 230) {
+        collapsedArtworkSize = 0; // Hide if extremely small
+      } else {
+        collapsedArtworkSize = Math.max(40, Math.min(240, collapsedArtworkSize));
+        // If we have decent room, don't go below the classic 102px
+        if (customCardHeight >= 320) {
+          collapsedArtworkSize = Math.max(102, collapsedArtworkSize);
+        }
+      }
+    } else if (!hasCustomCardHeight && collapsedArtworkSize > 0) {
+      collapsedArtworkSize = 102; // Default
+    }
+
+    const effectiveExtraSpace = Math.max(-60, collapsedExtraSpace - reservedTopSpace);
+    
     const baseDetailsMinHeight = 48;
-    const effectiveExtraSpace = Math.max(0, collapsedExtraSpace - reservedTopSpace);
-    const collapsedArtworkSize = collapsedExtraSpace > 0
-      ? Math.min(240, 102 + effectiveExtraSpace * 0.75)
-      : 102;
+
     const detailGrowth = effectiveExtraSpace > 0
       ? Math.min(effectiveExtraSpace * 0.45, 96)
       : 0;
     const collapsedDetailsMinHeight = effectiveExtraSpace > 0
       ? Math.round(baseDetailsMinHeight + detailGrowth)
-      : baseDetailsMinHeight;
+      : (effectiveExtraSpace < -20 ? 36 : baseDetailsMinHeight);
     const detailsMinHeight = collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight;
     const controlSpacerSize = effectiveExtraSpace > 0
       ? Math.max(0, effectiveExtraSpace - detailGrowth)
@@ -7398,34 +7425,41 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ? false
       : (!collapsed || meetsPersistentHeight);
     const releaseControlsRow = controlSpacerSize >= 48;
-    const collapsedDetailsOffset = collapsedExtraSpace > 0
-      ? Math.max(100, Math.round(collapsedArtworkSize + 24 + Math.min(40, collapsedExtraSpace * 0.12)))
-      : null;
+    
+    // Adjust offsets for compact layout
+    const isCompact = hasCustomCardHeight && customCardHeight < 280;
+    const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
+    const shouldHideVolumeControls = hideControlsNow || this._showEntityOptions || isCompactVolume;
+    const baseOffset = isCompact ? (collapsedArtworkSize > 0 ? collapsedArtworkSize + 12 : 0) : 100;
+    const collapsedDetailsOffset = (collapsed && collapsedArtworkSize > 0)
+      ? Math.round(collapsedArtworkSize + (isCompact ? 12 : 24) + Math.min(40, Math.max(0, collapsedExtraSpace) * 0.12))
+      : (collapsed && collapsedArtworkSize === 0 ? 0 : null);
+
     const collapsedControlsOffset = releaseControlsRow ? 0 : (collapsedDetailsOffset ?? 0);
     let cardWidth = this.offsetWidth || (this.shadowRoot?.host?.offsetWidth ?? 0);
     const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
     const heightScale = collapsedExtraSpace > 0
       ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
-      : 1;
-    const titleScale = heightScale > 1 || widthScale > 1
+      : (isCompact ? 0.9 : 1);
+    const titleScale = (heightScale > 1 || widthScale > 1)
       ? Math.min(1.6, Math.max(heightScale, widthScale))
-      : 1;
-    const artistScale = Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
+      : (isCompact ? 0.95 : 1);
+    const artistScale = isCompact ? 0.85 : Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
 
     if (this.shadowRoot && this.shadowRoot.host) {
-      if (collapsedExtraSpace > 0) {
+      if (collapsedExtraSpace !== 0 || isCompact) {
         if (collapsedDetailsOffset != null) {
           this.shadowRoot.host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
         }
         this.shadowRoot.host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
         this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
         this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
+        this.shadowRoot.host.style.setProperty('--yamp-collapsed-artwork-size', `${collapsedArtworkSize}px`);
       }
-      this.shadowRoot.host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
-      this.shadowRoot.host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
-      if (!(collapsedExtraSpace > 0 && hasCustomCardHeight)) {
+      if (!(collapsedExtraSpace !== 0 && (hasCustomCardHeight || isCompact))) {
         this.shadowRoot.host.style.removeProperty('--yamp-collapsed-controls-offset');
         this.shadowRoot.host.style.removeProperty('--yamp-collapsed-details-offset');
+        this.shadowRoot.host.style.removeProperty('--yamp-collapsed-artwork-size');
       }
       if (shouldShowPersistentControls) {
         this.shadowRoot.host.removeAttribute('data-hide-persistent-controls');
@@ -7481,13 +7515,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
       backgroundSize = `${artworkSizePercentage}%`;
     }
 
-    const backgroundImageValue = (idleImageUrl || isAlternateFit)
-      ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
-      : artworkUrl
-        ? `url('${artworkUrl}')`
-        : "none";
+    const backgroundImageValue = (activeArtworkFit === "no_artwork")
+      ? "none"
+      : (idleImageUrl || isAlternateFit)
+        ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
+        : artworkUrl
+          ? `url('${artworkUrl}')`
+          : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
-    const backgroundFilter = (artworkUrl && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))
+    const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
     const sharedBackgroundStyle = [
@@ -7510,6 +7546,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             data-artwork-fit="${activeArtworkFit}"
             class=${classMap({
       "yamp-card-inner": true,
+      "compact-collapsed": isCompact && collapsed,
       "dim-idle": shouldDimIdle,
       "no-chip-dim": this.config.dim_chips_on_idle === false
     })}
@@ -7538,13 +7575,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
       })()}"
               ></div>
               ${!(dimIdleFrame || isAlternateFit) ? html`<div class="card-lower-fade"></div>` : nothing}
-              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl ? ' has-artwork' : ''}" style="${(() => {
+              <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
           : 'min-height: 350px;';
       })()}">
-                ${collapsed && artworkUrl && this._isValidArtworkUrl(artworkUrl) ? html`
+                ${collapsed && artworkUrl && collapsedArtworkSize > 0 && this._isValidArtworkUrl(artworkUrl) ? html`
                   <div
                     class="collapsed-artwork-container"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
@@ -7554,6 +7591,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     style="${[
           `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
           collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '',
+          isCompact && collapsed ? 'top: -2px; height: auto !important; overflow: visible !important;' : '',
           (this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right) ? 'cursor:pointer; pointer-events:auto;' : ''
         ].filter(Boolean).join('; ')}"
                   >
@@ -7615,11 +7653,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   </div>
                 ` : nothing}
                 ${this.config.details_alignment !== 'none' ? html`
-                  <div class="details" style="${(() => {
+                  <div class="details" style="${isCompact && collapsed ? 'margin-top: -12px; padding-bottom: 2px; min-height: 0; gap: 1px;' : ''} ${(() => {
           const detailStyleParts = [];
           if (this._showEntityOptions) {
-            detailStyleParts.push('visibility:hidden');
             detailStyleParts.push('opacity:0');
+            detailStyleParts.push('pointer-events:none');
           }
           detailStyleParts.push(`min-height:${detailsMinHeight}px`);
           if (!shouldShowDetails) detailStyleParts.push('opacity:0');
@@ -7694,9 +7732,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         )
         : nothing
       }
-                ${(!hideControlsNow && controlSpacerSize > 0) ? html`
-                  <div class="collapsed-flex-spacer" style="flex: 1 0 ${Math.round(controlSpacerSize)}px;"></div>
-                ` : nothing}
+
                 <div style="${hideControlsNow || this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">
                     ${renderControlsRow({
         stateObj: playbackStateObj,
@@ -7712,8 +7748,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         controlLayout: this._controlLayout,
         swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop,
       })}
-
-                    ${renderVolumeRow({
+                </div>
+                ${renderVolumeRow({
         isRemoteVolumeEntity,
         showSlider,
         vol,
@@ -7724,26 +7760,25 @@ class YetAnotherMediaPlayerCard extends LitElement {
         onVolumeChange: (e) => this._onVolumeChange(e),
         onVolumeStep: (dir) => this._onVolumeStep(dir),
         onMuteToggle: () => this._onMuteToggle(),
-        leadingControlTemplate: leadingVolumeControl,
+        leadingControlTemplate: shouldHideVolumeControls ? (leadingVolumeControl !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${leadingVolumeControl}</div>` : nothing) : leadingVolumeControl,
         reserveLeadingControlSpace: this._controlLayout === "modern",
         showRightPlaceholder: this._controlLayout === "modern",
-        rightSlotTemplate,
-        hideVolume: this.config.volume_mode === "hidden",
-        moreInfoMenu: html`<div style="width: 36px; height: 36px; margin-right: 0; margin-top: -6px;"></div>`,
+        rightSlotTemplate: shouldHideVolumeControls ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
+        hideVolume: shouldHideVolumeControls || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions),
+        moreInfoMenu: !shouldHideVolumeControls ? html`
+          <div class="more-info-menu">
+            <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+              <span class="more-info-icon">&#9776;</span>
+            </button>
+          </div>
+        ` : nothing,
       })}
-                  </div>
             ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? html`
               <div class="in-menu-active-label">${activeChipName}</div>
             ` : nothing}
           </div>
         </div>
-        ${(!this._showEntityOptions) ? html`
-          <div class="more-info-menu" style="position: absolute; right: 18px; bottom: 18px; z-index: ${Z_LAYERS.FLOATING_ELEMENT};">
-            <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-              <span class="more-info-icon">&#9776;</span>
-            </button>
-          </div>
-        ` : nothing}
+
 
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>

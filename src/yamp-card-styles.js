@@ -294,10 +294,9 @@ export const yampCardStyles = css`
   .more-info-menu {
     display: flex;
     align-items: center;
-    margin-right: 0;
-    position: relative;
+    margin-right: -4px;
+    margin-top: -5px;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
-    margin-top: -6px;
   }
 
   .more-info-btn {
@@ -336,7 +335,7 @@ export const yampCardStyles = css`
   }
 
   .more-info-icon {
-    font-size: 1.7em;
+    font-size: 2.0em;
     line-height: 1;
     color: #fff !important;
     display: flex;
@@ -1564,7 +1563,7 @@ export const yampCardStyles = css`
     transition: opacity 0.3s;
   }
 
-  .card-lower-content.collapsed .details {
+  .card-lower-content.collapsed.has-artwork .details {
     opacity: 1;
     pointer-events: auto;
     margin-right: var(--yamp-collapsed-details-offset, 120px);
@@ -1572,7 +1571,7 @@ export const yampCardStyles = css`
   }
 
   @media (max-width: 420px) {
-    .card-lower-content.collapsed .details {
+    .card-lower-content.collapsed.has-artwork .details {
       margin-right: var(--yamp-collapsed-details-offset, 74px);
     }
   }
@@ -1724,7 +1723,7 @@ export const yampCardStyles = css`
     position: absolute;
     top: 16px;
     right: 6px;
-    width: 110px;
+    width: calc(var(--yamp-collapsed-artwork-size, 102px) + 8px);
     height: calc(100% - 60px);
     display: flex;
     align-items: flex-start;
@@ -1734,12 +1733,12 @@ export const yampCardStyles = css`
     pointer-events: none;
     box-shadow: none;
     padding: 0;
-    transition: background var(--transition-slow);
+    transition: background var(--transition-slow), width var(--transition-normal);
   }
 
   .card-lower-content.collapsed .collapsed-artwork {
-    width: 102px;
-    height: 102px;
+    width: var(--yamp-collapsed-artwork-size, 102px);
+    height: var(--yamp-collapsed-artwork-size, 102px);
     border-radius: 16px;
     object-fit: var(--yamp-artwork-fit, cover);
     background: transparent;
@@ -1748,6 +1747,7 @@ export const yampCardStyles = css`
     user-select: none;
     display: block;
     margin: 2px;
+    transition: width var(--transition-normal), height var(--transition-normal);
   }
 
   .card-lower-content.collapsed.has-artwork .controls-row {
@@ -1765,14 +1765,8 @@ export const yampCardStyles = css`
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 105px;
       right: 4px;
       top: 14px;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 98px;
-      height: 98px;
     }
   }
 
@@ -1785,14 +1779,8 @@ export const yampCardStyles = css`
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 90px;
       right: 3px;
       top: 12px;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 84px;
-      height: 84px;
     }
   }
 
@@ -1805,14 +1793,8 @@ export const yampCardStyles = css`
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
-      width: 80px;
       right: 2px;
       top: 10px;
-    }
-
-    .card-lower-content.collapsed .collapsed-artwork {
-      width: 74px;
-      height: 74px;
     }
   }
 
@@ -4047,5 +4029,47 @@ export const lyricsStyles = css`
     --mdc-icon-size: 40px;
     margin-bottom: 12px;
     opacity: 0.6;
+  }
+
+  /* Compact mode overrides for constrained heights */
+  .yamp-card-inner.compact-collapsed .chip-row {
+    padding-top: 0;
+    padding-bottom: 4px;
+  }
+  .yamp-card-inner.compact-collapsed .action-chip-row {
+    padding-bottom: 0;
+    margin-bottom: -12px;
+  }
+  .yamp-card-inner.compact-collapsed .details {
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 2px;
+    margin-top: -12px;
+    min-height: 0;
+    gap: 1px;
+  }
+  .yamp-card-inner.compact-collapsed .controls-row {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    gap: 4px;
+  }
+  .yamp-card-inner.compact-collapsed .volume-row {
+    padding-bottom: 4px;
+  }
+  .yamp-card-inner.compact-collapsed .collapsed-artwork-container {
+    top: -12px;
+  }
+
+  .yamp-card-inner.compact-collapsed .modern-button.primary {
+    width: 52px;
+    height: 52px;
+  }
+  .yamp-card-inner.compact-collapsed .modern-button.medium {
+    width: 38px;
+    height: 38px;
+  }
+  .yamp-card-inner.compact-collapsed .modern-button.small {
+    width: 34px;
+    height: 34px;
   }
 `;
