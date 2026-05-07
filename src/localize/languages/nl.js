@@ -239,7 +239,7 @@ export default {
             "next_entity": "Volgende entiteit chip",
             "sync_selected_entity": "Synchroniseer geselecteerde entiteit",
             "select_entity": "Selecteer entiteit uit helper",
-            "toggle_lyrics": "Toggle Lyrics Overlay"
+            "toggle_lyrics": "Wisselen tussen songtekst-overlay"
         },
         "action_helpers": {
             "sync_selected_entity": "Geselecteerde entiteit synchroniseren",
