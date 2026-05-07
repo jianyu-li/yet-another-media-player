@@ -509,7 +509,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _lyricsError: { state: true },
     _lastLyricsTrackId: { state: true },
     _lastLyricsEntityId: { state: true },
-    _showSourceMenu: { state: true }
+    _showSourceMenu: { state: true },
+    _volumeDraggingEntity: { state: true },
+    _dragVolume: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -598,6 +600,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Queue success message
     this._showQueueSuccessMessage = false;
     this._searchActiveOptionsItem = null;
+    this._volumeDraggingEntity = null;
+    this._dragVolume = 0;
     this._activeSearchRowMenuId = null;
     this._loadingSearchRowMenuId = null;
     this._errorSearchRowMenuId = null;
@@ -5183,8 +5187,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
               display:flex;
               align-items:center;
               gap:6px;
-              padding:4px 8px;
-              margin-bottom:1px;
+              padding: 12px 8px 4px 8px;
+              margin-bottom: 1px;
               ${isBusy ? "opacity: 0.5;" : ""}
             ">
               <div style="flex:1; min-width:120px;">
@@ -5204,17 +5208,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     </div>
                   `
           : html`
-                    <input
-                      class="vol-slider"
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      .value=${volVal}
-                      @change=${e => this._onGroupVolumeChange(id, displayEntity, e)}
-                      title="Volume"
-                      style="width:100%;max-width:260px;"
-                    />
+                    <div class="volume-slider-container grouping-vol-slider-container" style="flex:1; padding: 0 4px; position: relative; display: flex; align-items: center;">
+                      <div class="volume-percentage-indicator ${this._volumeDraggingEntity === id ? 'visible' : ''}" style="left: calc(13px + ${this._dragVolume} * (100% - 26px))">
+                        ${Math.round(this._dragVolume * 100)}%
+                      </div>
+                      <input
+                        class="vol-slider"
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        .value=${volVal}
+                        @mousedown=${(e) => this._onVolumeDragStart(e, id)}
+                        @touchstart=${(e) => this._onVolumeDragStart(e, id)}
+                        @input=${(e) => this._onVolumeInput(e)}
+                        @mouseup=${(e) => this._onVolumeDragEnd(e)}
+                        @touchend=${(e) => this._onVolumeDragEnd(e)}
+                        @change=${e => this._onGroupVolumeChange(id, displayEntity, e)}
+                        title="Volume"
+                        style="width:100%;max-width:260px;"
+                      />
+                    </div>
                   `
         }
                 <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
@@ -6887,14 +6901,21 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
-  _onVolumeDragStart(e) {
+  _onVolumeDragStart(e, entityId = 'main') {
     // Store base group volume at drag start
     if (!this.hass) return;
     const state = this.currentVolumeStateObj;
     this._groupBaseVolume = state ? Number(state.attributes.volume_level || 0) : 0;
+    this._volumeDraggingEntity = entityId;
+    this._dragVolume = Number(e.target.value);
   }
   _onVolumeDragEnd(e) {
     this._groupBaseVolume = null;
+    this._volumeDraggingEntity = null;
+  }
+
+  _onVolumeInput(e) {
+    this._dragVolume = Number(e.target.value);
   }
 
   _onGroupVolumeChange(entityId, volumeEntity, e) {
@@ -7753,10 +7774,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
         isRemoteVolumeEntity,
         showSlider,
         vol,
+        isDragging: this._volumeDraggingEntity === 'main',
+        dragVol: this._dragVolume,
         isMuted: this.currentVolumeStateObj?.attributes?.is_volume_muted ?? false,
         supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
         onVolumeDragStart: (e) => this._onVolumeDragStart(e),
         onVolumeDragEnd: (e) => this._onVolumeDragEnd(e),
+        onVolumeInput: (e) => this._onVolumeInput(e),
         onVolumeChange: (e) => this._onVolumeChange(e),
         onVolumeStep: (dir) => this._onVolumeStep(dir),
         onMuteToggle: () => this._onMuteToggle(),

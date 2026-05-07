@@ -1210,7 +1210,7 @@ export const yampCardStyles = css`
     display: grid;
     grid-template-columns: minmax(min-content, 1fr) auto minmax(min-content, 1fr);
     align-items: center;
-    padding: 0 16px 14px 16px;
+    padding: 10px 16px 14px 16px;
   }
 
   /* Remove flex:1 since we are using grid columns */
@@ -1361,6 +1361,39 @@ export const yampCardStyles = css`
     color: var(--primary-text);
     opacity: 0.7;
     min-width: 20px;
+  }
+  
+  .volume-percentage-indicator {
+    position: absolute;
+    top: -22px;
+    background: var(--custom-accent);
+    color: var(--yamp-chip-selected-text);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.72em;
+    font-weight: 700;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s ease-in-out;
+    white-space: nowrap;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+    transform: translateX(-50%);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+
+  .volume-percentage-indicator::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 4px;
+    border-style: solid;
+    border-color: var(--custom-accent) transparent transparent transparent;
+  }
+
+  .volume-percentage-indicator.visible {
+    opacity: 1;
   }
 
   .vol-slider {
