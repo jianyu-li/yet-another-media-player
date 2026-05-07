@@ -495,7 +495,7 @@ All templates have access to standard Home Assistant Jinja2 functions (`states()
 | Variable | Type | Description |
 | :--- | :--- | :--- |
 | `current` | `string` | The Entity ID of the currently selected media player chip. |
-| `is_idle` | `boolean` | `true` if the card is currently in idle mode (collapsed). |
+| `is_idle` | `boolean` | `true` if the card is currently in idle mode. |
 | `is_playing` | `boolean` | `true` if the selected entity is actively playing. |
 | `is_search` | `boolean` | `true` if the search overlay is open. |
 | `is_lyrics` | `boolean` | `true` if the lyrics view is active. |
