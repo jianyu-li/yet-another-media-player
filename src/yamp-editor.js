@@ -906,14 +906,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
           </div>
           <div class="form-row">
-            <ha-textfield
+            <ha-selector
+              .hass=${this.hass}
               class="full-width"
               label="${localize('editor.fields.artwork_hostname')}"
+              .selector=${{ text: {} }}
               .value=${this._config.artwork_hostname ?? ""}
-              @input=${(e) => this._updateConfig("artwork_hostname", e.target.value)}
+              @value-changed=${(e) => this._updateConfig("artwork_hostname", e.detail.value)}
               helper="e.g. http://192.168.1.50:8123"
-              .helperPersistent=${true}
-            ></ha-textfield>
+            ></ha-selector>
           </div>
         </div>
 
@@ -940,14 +941,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
             <div style="flex: 2;">
               ${this._useIdleImageUrl ? html`
-                <ha-textfield
+                <ha-selector
+                  .hass=${this.hass}
                   class="full-width"
-                  placeholder="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                  .selector=${{ text: {} }}
                   .value=${this._config.idle_image ?? ""}
-                  @input=${(e) => this._updateConfig("idle_image", e.target.value)}
+                  @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
+                  label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
                   helper="${localize('editor.subtitles.image_url_helper')}"
-                  .helperPersistent=${true}
-                ></ha-textfield>
+                ></ha-selector>
               ` : html`
                 <ha-generic-picker
                   class="full-width"
@@ -1008,31 +1010,34 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                   ></ha-generic-picker>
                                 `
               : html`
-                                  <ha-textfield
+                                  <ha-selector
+                                    .hass=${this.hass}
                                     class="full-width"
+                                    .selector=${{ text: {} }}
                                     label="${localize('editor.fields.match_value')}"
                                     .value=${rule.match_value ?? ""}
-                                    @input=${(e) => this._onArtworkMatchValueChange(idx, e.target.value)}
-                                  ></ha-textfield>
+                                    @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                  ></ha-selector>
                                 `
           }
-                        <ha-textfield
+                        <ha-selector
+                          .hass=${this.hass}
                           class="full-width"
+                          .selector=${{ text: {} }}
                           label=${rule.match_type === "missing_art" ? localize('editor.fields.fallback_image_url') : localize('editor.fields.image_url')}
                           .value=${rule.image_url ?? ""}
-                          @input=${(e) => this._onArtworkImageUrlChange(idx, e.target.value)}
-                        ></ha-textfield>
+                          @value-changed=${(e) => this._onArtworkImageUrlChange(idx, e.detail.value)}
+                        ></ha-selector>
                         <div class="form-row-multi-column" style="gap:12px; flex-wrap:wrap; align-items:flex-start;">
                           <div class="grow-children" style="flex:1;">
-                            <ha-textfield
+                            <ha-selector
+                              .hass=${this.hass}
                               class="full-width"
                               label="${localize('editor.fields.size_percent')}"
-                              type="number"
-                              min="1"
-                              max="100"
+                              .selector=${{ number: { min: 1, max: 100, mode: "box" } }}
                               .value=${rule.size_percentage ?? ""}
-                              @input=${(e) => this._onArtworkSizePercentageChange(idx, e.target.value)}
-                            ></ha-textfield>
+                              @value-changed=${(e) => this._onArtworkSizePercentageChange(idx, e.detail.value)}
+                            ></ha-selector>
                           </div>
                           <div class="grow-children" style="flex:1.5;">
                             <ha-selector
@@ -1353,13 +1358,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
             <div class="form-row form-row-multi-column">
               <div class="grow-children number-input-with-note">
-                <ha-selector-number
+                <ha-selector
                   .selector=${{ number: { min: 0, max: 1000, step: 1, mode: "box" } }}
                   .value=${this._config.search_results_limit ?? 20}
                   label="${localize('editor.fields.search_limit')}"
                   helper="${localize('editor.subtitles.search_limit_full')}"
                   @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
-                ></ha-selector-number>
+                ></ha-selector>
                 ${searchLimitWarningActive ? html`
                   <div class="config-subtitle warning">
                     Warning: requesting higher results can cause performance issues.
@@ -1588,24 +1593,23 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
-              <ha-textfield
+              <ha-selector
+                .hass=${this.hass}
                 class="full-width"
-                type="number"
-                min="0"
+                .selector=${{ number: { min: 0, max: 2000, mode: "box" } }}
                 label="${localize('editor.fields.card_height')}"
                 .value=${this._config.card_height ?? ""}
                 helper="${localize('editor.subtitles.card_height_full')}"
-                .helperPersistent=${true}
-                @input=${(e) => {
-        const raw = e.target.value;
-        if (raw === "") {
+                @value-changed=${(e) => {
+        const raw = e.detail.value;
+        if (raw === "" || raw === undefined) {
           this._updateConfig("card_height", undefined);
           return;
         }
         const parsed = Number(raw);
         this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
       }}
-              ></ha-textfield>
+              ></ha-selector>
             </div>
             <ha-icon
                 class="icon-button"
@@ -1852,13 +1856,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon class="action-icon" icon="${act?.icon}" title="Action Icon"></ha-icon>
                     ` : html`<span class="action-icon-placeholder"></span>`}
                     <div class="grow-children">
-                      <ha-textfield
-                        placeholder="(Icon Only)"
+                      <ha-selector
+                        .hass=${this.hass}
+                        .selector=${{ text: {} }}
+                        label="(Icon Only)"
                         .value=${act?.name ?? ""}
                         .helper=${this._getActionHelperText(act)}
-                        .helperPersistent=${true}
-                        @input=${a => this._onActionChanged(idx, a.target.value)}
-                      ></ha-textfield>
+                        @value-changed=${a => this._onActionChanged(idx, a.detail.value)}
+                      ></ha-selector>
                     </div>
                     <div class="action-row-actions">
                       <ha-icon
@@ -1948,12 +1953,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
 
         <div class="form-row">
-          <ha-textfield
+          <ha-selector
+            .hass=${this.hass}
             class="full-width"
+            .selector=${{ text: {} }}
             label="${localize('editor.fields.name')}"
             .value=${entity?.name ?? ""}
-            @input=${(e) => this._updateEntityProperty("name", e.target.value)}
-          ></ha-textfield>
+            @value-changed=${(e) => this._updateEntityProperty("name", e.detail.value)}
+          ></ha-selector>
         </div>
 
         <div class="form-row">
@@ -1976,8 +1983,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
       }}
             .value=${Array.isArray(entity?.hidden_controls) ? entity.hidden_controls : []}
-            .required=${false}
-            .invalid=${false}
             label="${localize('editor.fields.hidden_controls')}"
             helper="${localize('editor.subtitles.hide_controls')}"
             @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
@@ -2072,8 +2077,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 }
               }}
               .value=${Array.isArray(entity?.hidden_filter_chips) ? entity.hidden_filter_chips : []}
-              .required=${false}
-              .invalid=${false}
               label="${localize('editor.fields.hidden_chips')}"
               helper="${localize('editor.subtitles.hide_search_chips')}"
               @value-changed=${(e) => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
@@ -2225,13 +2228,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
 
         <div class="form-row">
-          <ha-textfield
+          <ha-selector
+            .hass=${this.hass}
             class="full-width"
-            label="${localize('editor.fields.name')}"
-            placeholder="(Icon Only)"
+            .selector=${{ text: {} }}
+            label="${localize('editor.fields.name')} (Icon Only)"
             .value=${action?.name ?? ""}
-            @input=${(e) => this._updateActionProperty("name", e.target.value)}
-          ></ha-textfield>
+            @value-changed=${(e) => this._updateActionProperty("name", e.detail.value)}
+          ></ha-selector>
         </div>
 
         <div class="form-row">
@@ -2427,16 +2431,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         ` : nothing} 
         ${actionMode === "navigate" ? html`
           <div class="form-row">
-            <ha-textfield
+            <ha-selector
+              .hass=${this.hass}
               class="full-width"
-              label="${localize('editor.fields.nav_path')}"
-              placeholder="/lovelace/music or #popup"
+              .selector=${{ text: {} }}
+              label="${localize('editor.fields.nav_path')} (/lovelace/music or #popup)"
               .value=${action?.navigation_path ?? ""}
-              @input=${(e) => {
-          this._updateActionProperty("navigation_path", e.target.value);
+              @value-changed=${(e) => {
+          this._updateActionProperty("navigation_path", e.detail.value);
           this._updateActionProperty("action", "navigate");
         }}
-            ></ha-textfield>
+            ></ha-selector>
           </div>
           <div class="form-row form-row-multi-column">
             <div>
@@ -2496,7 +2501,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }}
               .value=${action.service ?? ""}
               label="${localize('editor.fields.service')}"
-              .required=${true}
               @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
             ></ha-selector>
           </div>
