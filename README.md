@@ -21,7 +21,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 - **Many Layouts** — Collapse the card when idle or keep it compact while playing, change text sizing, and more to match your dashboard style
 - **Custom Actions** — Add action chips or menu items that call any Home Assistant action or script, with full access to the currently selected entity
 - **Idle Mode** — Display a custom background image when nothing is playing, from a local file, URL, or even a slideshow
-- **Jinja Template Support** — Use Jinja templates for dynamic configuration of volume entities, Music Assistant entities, artwork overrides, and more
+- **Template Support** — Use templates for dynamic configuration of volume entities, Music Assistant entities, artwork overrides, and more
 
 ---
 
@@ -52,9 +52,9 @@ Below you will find a list of all configuration options.
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
 | `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for the standard player, `search` for a dedicated search card, or `group_players` for a dedicated group management card |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
-| `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Jinja2](#jinja2-template-support)) |
+| `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Templates](#template-support)) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
-| `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping ([Supports Jinja2](#jinja2-template-support)) |
+| `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping ([Supports Templates](#template-support)) |
 | `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array        | No           | `[]`        | Array of control names to hide for this specific entity         |
@@ -98,7 +98,7 @@ Below you will find a list of all configuration options.
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
-| `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Jinja2](#jinja2-template-support)) |
+| `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Templates](#template-support)) |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
 | `search_card_columns`      | number       | No           | `4`         | Number of columns for search results when `search_view` is set to `card` or `card_minimal` |
 |                                                                                                 |
@@ -108,7 +108,7 @@ Below you will find a list of all configuration options.
 | `artwork_position`         | choice       | No           | `top center`| Control artwork alignment: `top center`, `center center`, or `bottom center`                     |
 | `extend_artwork`           | boolean      | No           | `false`     | When `true`, extends the artwork background up behind the chip and action rows for a full-bleed look |
 | `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` and `object_fit` can be used to style the replacement (defaults to global `artwork_object_fit`). `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
-| `idle_image`               | image/camera/url/string | No           | —           | Background image when player is idle ([Supports Jinja2](#jinja2-template-support)) |
+| `idle_image`               | image/camera/url/string | No           | —           | Background image when player is idle ([Supports Templates](#template-support)) |
 | `idle_timeout_ms`          | number       | No           | `60000`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
 |                                                                                                 |
 | **Actions**                |              |              |             | (Each chip/action can have any/all of the below)                                                |
@@ -149,8 +149,8 @@ entities:
     music_assistant_entity: media_player.kitchen_homepod_2
 ```
 
-#### Jinja Template Example
-For advanced users, you can use Jinja templates to dynamically select the Music Assistant entity:
+#### Template Example
+For advanced users, you can use templates to dynamically select the Music Assistant entity:
 
 ```yaml
 type: custom:yet-another-media-player
@@ -228,7 +228,7 @@ The card can surface a **Transfer Queue** menu option for Music Assistant player
 
 ### Volume Entity Configuration
 
-You can use a separate `volume_entity` for volume display and control. This can be a static entity or a Jinja template that resolves to an entity id (e.g., `media_player.*` or `remote.*`). If `sync_power` is enabled, the resolved volume entity will be powered on/off along with the main entity.
+You can use a separate `volume_entity` for volume display and control. This can be a static entity or a template that resolves to an entity id (e.g., `media_player.*` or `remote.*`). If `sync_power` is enabled, the resolved volume entity will be powered on/off along with the main entity.
 
 #### Follow Active Entity
 
@@ -257,7 +257,7 @@ entities:
     sync_power: true
 ```
 
-#### Jinja Template Example
+#### Template Example
 ```yaml
 type: custom:yet-another-media-player
 entities:
@@ -473,13 +473,13 @@ Set `card_type: group_players` to lock YAMP to the group players menu.
 - **Alternate Progress Bar**: Uses the collapsed progress bar when expanded.
 - **Card Height**: Override the card height (in px); leave unset to use the default layout. 
 
-# Jinja2 Template Support
+# Template Support
 
-YAMP provides powerful Jinja2 template support for many configuration options, allowing you to create a dynamic interface that adapts to your needs.
+YAMP provides powerful template support for many configuration options, allowing you to create a dynamic interface that adapts to your needs.
 
 ## Supported Options
 
-The following configuration keys support Jinja2 templates:
+The following configuration keys support templates:
 
 - **`card_height`**: Dynamically adjust the total height of the card.
 - **`idle_image`**: Change the background image shown when the player is idle.
@@ -490,7 +490,7 @@ The following configuration keys support Jinja2 templates:
 
 ## Available Variables
 
-All templates have access to standard Home Assistant Jinja2 functions (`states()`, `is_state()`, etc.) plus the following card-specific variables:
+All templates have access to standard Home Assistant template functions (`states()`, `is_state()`, etc.) plus the following card-specific variables:
 
 | Variable | Type | Description |
 | :--- | :--- | :--- |
@@ -740,9 +740,9 @@ actions:
     navigation_new_tab: true
 ```
 
-### Dynamic Navigation (Jinja)
+### Dynamic Navigation
 
-You can use Jinja templates in `navigation_path` to create dynamic URLs based on the currently playing media. This is great for linking to external sites like IMDb or Genius.
+You can use templates in `navigation_path` to create dynamic URLs based on the currently playing media. This is great for linking to external sites like IMDb or Genius.
 
 The following variables are available in the template context:
 - `current`: The entity ID of the currently selected media player.
