@@ -133,11 +133,10 @@ export default {
             "search_card_columns": "Especifica cuántas columnas usar en la vista de tarjetas. El artwork se adaptará automáticamente.",
             "card_type": "Elija el modo de tarjeta. 'Por defecto' es el reproductor de medios estándar. 'Búsqueda dedicada' convierte la tarjeta en una interfaz de búsqueda permanente.",
             "always_show_lyrics": "Abrir automáticamente la vista de letras al actualizar la página.",
-            "lyrics_pre_roll": "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 0)."
-        ,
-            "lyrics_source": "Music Assistant requiere la integración mass_queue para obtener letras de su motor de metadatos interno.",
-            "blurred_artwork": "Desenfocar siempre el arte de fondo",
-            "hide_collapsed_artwork": "Ocultar el arte pequeño a la derecha cuando la tarjeta está colapsada"
+            "lyrics_source": "Music Assistant requiere la integración de mass_queue para obtener las letras de su motor de metadatos interno.",
+            "lyrics_pre_roll": "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 0).",
+            "blurred_artwork": "Difuminar siempre la imagen de fondo",
+            "hide_collapsed_artwork": "Ocultar la imagen pequeña a la derecha cuando la tarjeta esté contraída"
         },
         "titles": {
             "edit_entity": "Editar entidad",
@@ -152,10 +151,10 @@ export default {
             "disable_autofocus": "Desactivar autofoco",
             "keep_filters": "Mantener filtros",
             "dismiss_on_play": "Cerrar al reproducir",
-            "default_search_filter": "Filtro de búsqueda predeterminado",
-            "default_search_favorites": "Filtro de favoritos por defecto",
             "pin_headers": "Fijar encabezados",
             "hide_search_headers_on_idle": "Ocultar encabezados en inactividad",
+            "default_search_filter": "Filtro de búsqueda predeterminado",
+            "default_search_favorites": "Filtro de favoritos por defecto",
             "disable_mass": "Desactivar Mass Queue",
             "match_theme": "Seguir tema",
             "alt_progress": "Barra de progreso alternativa",
@@ -176,9 +175,10 @@ export default {
             "disable_auto_select": "Desactivar selección automática",
             "always_show_lyrics": "Mostrar siempre las letras",
             "lyrics_mode": "Modo de letras",
+            "lyrics_source": "Fuente de letras",
             "lyrics_pre_roll": "Anticipo de letra (segundos)",
-            "card_type": "Tipo de tarjeta",
-            "no_artwork_option": "Sin imagen de portada"
+            "blurred_artwork": "Imagen difuminada",
+            "hide_collapsed_artwork": "Ocultar imagen reducida"
         },
         "fields": {
             "artwork_fit": "Ajuste",
@@ -226,9 +226,10 @@ export default {
             "card_trigger": "Activador de la tarjeta",
             "search_view": "Vista de resultados de búsqueda",
             "search_card_columns": "Columnas de tarjetas",
+            "card_type": "Tipo de tarjeta",
+            "appearance": "Apariencia",
+            "no_artwork_option": "Sin imagen",
             "details_alignment": "Alineación de detalles"
-        ,
-            "appearance": "Apariencia"
         },
         "action_types": {
             "menu": "Abrir un elemento del menú",
@@ -274,6 +275,11 @@ export default {
             "search": "Buscar",
             "group_players": "Agrupar"
         },
+        "appearance_options": {
+            "automatic": "Automático",
+            "light": "Claro",
+            "dark": "Oscuro"
+        },
         "artwork_fit": {
             "default": "Por defecto",
             "cover": "Portada (por defecto)",
@@ -283,12 +289,6 @@ export default {
             "scaled-contain": "Contenido escalado",
             "scaled-contain-alternate": "Contenido escalado alternativo",
             "none": "Ninguno"
-        }
-    ,
-        "appearance_options": {
-            "automatic": "Automático",
-            "light": "Claro",
-            "dark": "Oscuro"
         }
     },
     "card": {
@@ -376,9 +376,9 @@ export default {
             "audiobook": "Audiolibro"
         },
         "search_artist": "Buscar este artista",
+        "browse_album": "Explorar pistas de {album}",
         "play_collection": "Reproducir esta colección",
         "play_collection_error": "No se puede reproducir esta colección directamente",
-        "browse_album": "Explorar pistas de {album}",
         "play_item": "Reproducir {item}"
     },
     "lyrics": {
@@ -387,15 +387,15 @@ export default {
         "not_available": "Letra no disponible",
         "instrumental": "Pista instrumental"
     },
-    "lyrics_modes": {
-        "default": "Predeterminado (Resaltar y desplazarse)",
-        "scroll": "Solo desplazarse",
-        "text": "Solo texto"
-    },
     "lyrics_sources": {
         "mass_lrclib": "Music Assistant (Respaldo en LRCLIB)",
         "mass": "Solo Music Assistant",
         "lrclib": "Solo LRCLIB",
         "lrclib_mass": "LRCLIB (Respaldo en Music Assistant)"
+    },
+    "lyrics_modes": {
+        "default": "Predeterminado (Resaltar y desplazarse)",
+        "scroll": "Solo desplazarse",
+        "text": "Solo texto"
     }
 };

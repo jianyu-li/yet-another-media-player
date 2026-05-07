@@ -133,11 +133,10 @@ export default {
             "search_card_columns": "Spécifiez le nombre de colonnes à utiliser dans la vue carte. L'illustration s'adaptera automatiquement.",
             "card_type": "Choisissez le mode de la carte. 'Par défaut' est le lecteur multimédia standard. 'Recherche dédiée' fait de la carte une interface de recherche permanente.",
             "always_show_lyrics": "Ouvrir automatiquement la vue des paroles lors du rafraîchissement de la page.",
-            "lyrics_pre_roll": "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0)."
-        ,
             "lyrics_source": "Music Assistant nécessite l'intégration mass_queue pour récupérer les paroles de son moteur de métadonnées interne.",
+            "lyrics_pre_roll": "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0).",
             "blurred_artwork": "Toujours flouter l'image d'arrière-plan",
-            "hide_collapsed_artwork": "Masquer la petite image à droite lorsque la carte est réduite"
+            "hide_collapsed_artwork": "Masquer l'image réduite sur la droite lorsque la carte est repliée"
         },
         "titles": {
             "edit_entity": "Modifier l'entité",
@@ -152,10 +151,10 @@ export default {
             "disable_autofocus": "Désactiver l'autofocus",
             "keep_filters": "Garder les filtres",
             "dismiss_on_play": "Fermer en lecture",
-            "default_search_filter": "Filtre de recherche par défaut",
-            "default_search_favorites": "Filtre des favoris par défaut",
             "pin_headers": "Épingler les en-têtes",
             "hide_search_headers_on_idle": "Masquer les en-têtes en veille",
+            "default_search_filter": "Filtre de recherche par défaut",
+            "default_search_favorites": "Filtre des favoris par défaut",
             "disable_mass": "Désactiver Mass Queue",
             "match_theme": "Suivre le thème",
             "alt_progress": "Barre de progression alternative",
@@ -176,7 +175,10 @@ export default {
             "disable_auto_select": "Désactiver la sélection automatique",
             "always_show_lyrics": "Toujours afficher les paroles",
             "lyrics_mode": "Mode des paroles",
-            "lyrics_pre_roll": "Pré-roll des paroles (secondes)"
+            "lyrics_source": "Source des paroles",
+            "lyrics_pre_roll": "Pré-roll des paroles (secondes)",
+            "blurred_artwork": "Image floutée",
+            "hide_collapsed_artwork": "Masquer l'image réduite"
         },
         "fields": {
             "artwork_fit": "Ajustement",
@@ -225,10 +227,9 @@ export default {
             "search_view": "Vue des résultats de recherche",
             "search_card_columns": "Nombre de colonnes",
             "card_type": "Type de carte",
-            "no_artwork_option": "Pas d'image de couverture",
+            "appearance": "Apparence",
+            "no_artwork_option": "Pas d'illustration",
             "details_alignment": "Alignement des détails"
-        ,
-            "appearance": "Apparence"
         },
         "action_types": {
             "menu": "Ouvrir un élément de menu",
@@ -274,6 +275,11 @@ export default {
             "search": "Rechercher",
             "group_players": "Grouper les lecteurs"
         },
+        "appearance_options": {
+            "automatic": "Automatique",
+            "light": "Clair",
+            "dark": "Sombre"
+        },
         "artwork_fit": {
             "default": "Par défaut",
             "cover": "Couverture (par défaut)",
@@ -283,12 +289,6 @@ export default {
             "scaled-contain": "Contenir mis à l'échelle",
             "scaled-contain-alternate": "Contenir mis à l'échelle alternatif",
             "none": "Aucun"
-        }
-    ,
-        "appearance_options": {
-            "automatic": "Automatique",
-            "light": "Clair",
-            "dark": "Sombre"
         }
     },
     "card": {
@@ -376,9 +376,9 @@ export default {
             "audiobook": "Livre audio"
         },
         "search_artist": "Chercher cet artiste",
+        "browse_album": "Parcourir les titres de {album}",
         "play_collection": "Lire cette collection",
         "play_collection_error": "Impossible de lire cette collection directement",
-        "browse_album": "Parcourir les titres de {album}",
         "play_item": "Lire {item}"
     },
     "lyrics": {
@@ -387,15 +387,15 @@ export default {
         "not_available": "Paroles non disponibles",
         "instrumental": "Piste instrumentale"
     },
-    "lyrics_modes": {
-        "default": "Par défaut (Surligner et faire défiler)",
-        "scroll": "Défilement uniquement",
-        "text": "Texte uniquement"
-    },
     "lyrics_sources": {
         "mass_lrclib": "Music Assistant (Repli sur LRCLIB)",
         "mass": "Music Assistant uniquement",
         "lrclib": "LRCLIB uniquement",
         "lrclib_mass": "LRCLIB (Repli sur Music Assistant)"
+    },
+    "lyrics_modes": {
+        "default": "Par défaut (Surligner et faire défiler)",
+        "scroll": "Défilement uniquement",
+        "text": "Texte uniquement"
     }
 };
