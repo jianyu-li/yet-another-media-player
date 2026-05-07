@@ -10,6 +10,7 @@ export function renderVolumeRow({
   supportsMute,
   onVolumeDragStart,
   onVolumeDragEnd,
+  onVolumeInput,
   onVolumeChange,
   onVolumeStep,
   onMuteToggle,
@@ -19,6 +20,8 @@ export function renderVolumeRow({
   showRightPlaceholder = false,
   rightSlotTemplate = nothing,
   hideVolume = false,
+  isDragging = false,
+  dragVol = 0,
 }) {
   const hasLeadingControl = leadingControlTemplate !== nothing && leadingControlTemplate !== undefined && leadingControlTemplate !== null;
   // Determine volume icon based on volume level and mute state
@@ -63,6 +66,9 @@ export function renderVolumeRow({
         : showSlider
           ? html`
                 <div class="volume-slider-container">
+                  <div class="volume-percentage-indicator ${isDragging ? 'visible' : ''}" style="left: calc(33px + ${dragVol} * (100% - 66px))">
+                    ${Math.round(dragVol * 100)}%
+                  </div>
                   <input
                     class="vol-slider"
                     type="range"
@@ -72,6 +78,7 @@ export function renderVolumeRow({
                     .value=${vol}
                     @mousedown=${onVolumeDragStart}
                     @touchstart=${onVolumeDragStart}
+                    @input=${onVolumeInput}
                     @change=${onVolumeChange}
                     @mouseup=${onVolumeDragEnd}
                     @touchend=${onVolumeDragEnd}
