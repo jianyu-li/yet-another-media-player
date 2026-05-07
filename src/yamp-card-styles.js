@@ -302,8 +302,9 @@ export const yampCardStyles = css`
   .dim-idle .more-info-menu {
     position: absolute;
     bottom: 14px;
-    right: 16px;
+    right: 12px;
     margin-top: 0;
+    margin-right: 0;
   }
 
   .more-info-btn {
