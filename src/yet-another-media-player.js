@@ -6916,7 +6916,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _onVolumeInput(e) {
     this._dragVolume = Number(e.target.value);
-    this.requestUpdate();
   }
 
   _onGroupVolumeChange(entityId, volumeEntity, e) {
