@@ -299,6 +299,14 @@ export const yampCardStyles = css`
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
+  .dim-idle .more-info-menu {
+    position: absolute;
+    bottom: 14px;
+    right: 12px;
+    margin-top: 0;
+    margin-right: 0;
+  }
+
   .more-info-btn {
     display: flex;
     align-items: center;
