@@ -133,7 +133,10 @@ export default {
             "search_card_columns": "Specifica quante colonne utilizzare nella vista a schede. La copertina si adatterà automaticamente.",
             "card_type": "Scegli la modalità della scheda. 'Predefinito' è il lettore multimediale standard. 'Ricerca dedicata' rende la scheda un'interfaccia di ricerca permanente.",
             "always_show_lyrics": "Apri automaticamente la visualizzazione dei testi quando la pagina viene aggiornata.",
-            "lyrics_pre_roll": "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0)."
+            "lyrics_source": "Music Assistant richiede l'integrazione mass_queue per recuperare i testi dal suo motore di metadati interno.",
+            "lyrics_pre_roll": "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0).",
+            "blurred_artwork": "Sfoca sempre l'immagine di sfondo",
+            "hide_collapsed_artwork": "Nascondi l'immagine piccola a destra quando la scheda è compressa"
         },
         "titles": {
             "edit_entity": "Modifica entità",
@@ -148,10 +151,10 @@ export default {
             "disable_autofocus": "Disabilita autofocus",
             "keep_filters": "Mantieni filtri",
             "dismiss_on_play": "Chiudi alla riproduzione",
-            "default_search_filter": "Filtro di ricerca predefinito",
-            "default_search_favorites": "Filtro preferiti predefinito",
             "pin_headers": "Fissa intestazioni",
             "hide_search_headers_on_idle": "Nascondi intestazioni in inattività",
+            "default_search_filter": "Filtro di ricerca predefinito",
+            "default_search_favorites": "Filtro preferiti predefinito",
             "disable_mass": "Disabilita Mass Queue",
             "match_theme": "Segui tema",
             "alt_progress": "Barra progresso alternativa",
@@ -172,8 +175,10 @@ export default {
             "disable_auto_select": "Disabilita selezione automatica",
             "always_show_lyrics": "Mostra sempre i testi",
             "lyrics_mode": "Modalità testi",
+            "lyrics_source": "Sorgente testi",
             "lyrics_pre_roll": "Pre-roll testi (secondi)",
-            "card_type": "Tipo di scheda"
+            "blurred_artwork": "Immagine sfocata",
+            "hide_collapsed_artwork": "Nascondi immagine contratta"
         },
         "fields": {
             "artwork_fit": "Adattamento",
@@ -221,6 +226,9 @@ export default {
             "card_trigger": "Trigger della scheda",
             "search_view": "Vista risultati ricerca",
             "search_card_columns": "Colonne schede",
+            "card_type": "Tipo di scheda",
+            "appearance": "Aspetto",
+            "no_artwork_option": "Nessuna copertina",
             "details_alignment": "Allineamento dei dettagli"
         },
         "action_types": {
@@ -266,6 +274,11 @@ export default {
             "default": "Predefinito",
             "search": "Cerca",
             "group_players": "Raggruppa i lettori"
+        },
+        "appearance_options": {
+            "automatic": "Automatico",
+            "light": "Chiaro",
+            "dark": "Scuro"
         },
         "artwork_fit": {
             "default": "Predefinito",
@@ -363,15 +376,22 @@ export default {
             "audiobook": "Audiolibro"
         },
         "search_artist": "Cerca questo artista",
+        "browse_album": "Sfoglia i brani di {album}",
         "play_collection": "Riproduci questa collezione",
         "play_collection_error": "Impossibile riprodurre direttamente questa collezione",
-        "browse_album": "Sfoglia i brani di {album}",
         "play_item": "Riproduci {item}"
     },
     "lyrics": {
         "finding": "Ricerca testi...",
         "none_found": "Nessun testo trovato",
-        "not_available": "Testi non disponibili"
+        "not_available": "Testi non disponibili",
+        "instrumental": "Brano strumentale"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Fallback su LRCLIB)",
+        "mass": "Solo Music Assistant",
+        "lrclib": "Solo LRCLIB",
+        "lrclib_mass": "LRCLIB (Fallback su Music Assistant)"
     },
     "lyrics_modes": {
         "default": "Predefinito (Evidenzia e scorri)",

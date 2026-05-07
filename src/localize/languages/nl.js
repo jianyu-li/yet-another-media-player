@@ -133,7 +133,10 @@ export default {
             "search_card_columns": "Geef aan hoeveel kolommen er gebruikt moeten worden in de kaartweergave. De afbeelding wordt automatisch aangepast.",
             "card_type": "Kies de kaartmodus. 'Standaard' is de standaard mediaspeler. 'Speciale zoekopdracht' maakt van de kaart een permanente zoekinterface.",
             "always_show_lyrics": "Open automatisch de songtekstweergave wanneer de pagina wordt vernieuwd.",
-            "lyrics_pre_roll": "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0)."
+            "lyrics_source": "Music Assistant vereist de mass_queue-integratie om songteksten op te halen uit de interne metadata-engine.",
+            "lyrics_pre_roll": "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0).",
+            "blurred_artwork": "Achtergrondafbeelding altijd vervagen",
+            "hide_collapsed_artwork": "Verberg de kleine afbeelding aan de rechterkant wanneer de kaart is ingeklapt"
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",
@@ -148,10 +151,10 @@ export default {
             "disable_autofocus": "Zoek-autofocus uitschakelen",
             "keep_filters": "Filters behouden bij zoeken",
             "dismiss_on_play": "Zoeken sluiten bij afspelen",
-            "default_search_filter": "Standaard zoekfilter",
-            "default_search_favorites": "Standaard naar favorietenfilter",
             "pin_headers": "Zoekkoppen vastzetten",
             "hide_search_headers_on_idle": "Zoekkoppen verbergen bij inactiviteit",
+            "default_search_filter": "Standaard zoekfilter",
+            "default_search_favorites": "Standaard naar favorietenfilter",
             "disable_mass": "Mass Queue uitschakelen",
             "match_theme": "Thema matchen",
             "alt_progress": "Alternatieve Voortgangsbalk",
@@ -172,7 +175,10 @@ export default {
             "disable_auto_select": "Automatische selectie uitschakelen",
             "always_show_lyrics": "Toon altijd songteksten",
             "lyrics_mode": "Songtekstmodus",
-            "lyrics_pre_roll": "Songtekst Pre-Roll (seconden)"
+            "lyrics_source": "Songtekstbron",
+            "lyrics_pre_roll": "Songtekst Pre-Roll (seconden)",
+            "blurred_artwork": "Vervaagde afbeelding",
+            "hide_collapsed_artwork": "Verkleinde afbeelding verbergen"
         },
         "fields": {
             "artwork_fit": "Artwork Passend Maken",
@@ -221,7 +227,8 @@ export default {
             "search_view": "Zoekresultaten weergave",
             "search_card_columns": "Aantal kolommen",
             "card_type": "Kaarttype",
-            "no_artwork_option": "Geen artwork",
+            "appearance": "Uiterlijk",
+            "no_artwork_option": "Geen afbeelding",
             "details_alignment": "Details uitlijning"
         },
         "action_types": {
@@ -231,12 +238,12 @@ export default {
             "prev_entity": "Vorige entiteit chip",
             "next_entity": "Volgende entiteit chip",
             "sync_selected_entity": "Synchroniseer geselecteerde entiteit",
-            "select_entity": "Selecteer entiteit uit helper"
+            "select_entity": "Selecteer entiteit uit helper",
+            "toggle_lyrics": "Wisselen tussen songtekst-overlay"
         },
         "action_helpers": {
             "sync_selected_entity": "Geselecteerde entiteit synchroniseren",
             "select_entity": "Entiteit selecteren uit helper",
-            "toggle_lyrics": "Wisselen tussen songtekst-overlay",
             "select_helper": "(selecteer helper)"
         },
         "sync_entity_options": {
@@ -267,6 +274,11 @@ export default {
             "default": "Standaard",
             "search": "Zoeken",
             "group_players": "Spelers groeperen"
+        },
+        "appearance_options": {
+            "automatic": "Automatisch",
+            "light": "Licht",
+            "dark": "Donker"
         },
         "artwork_fit": {
             "default": "Standaard",
@@ -364,15 +376,22 @@ export default {
             "audiobook": "Luisterboek"
         },
         "search_artist": "Zoek naar deze artiest",
+        "browse_album": "Tracks van {album} doorzoeken",
         "play_collection": "Speel deze collectie af",
         "play_collection_error": "Kan deze collectie niet direct afspelen",
-        "browse_album": "Tracks van {album} doorzoeken",
         "play_item": "{item} afspelen"
     },
     "lyrics": {
         "finding": "Songteksten zoeken...",
         "none_found": "Geen songteksten gevonden",
-        "not_available": "Songtekst niet beschikbaar"
+        "not_available": "Songtekst niet beschikbaar",
+        "instrumental": "Instrumentaal nummer"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Terugval naar LRCLIB)",
+        "mass": "Alleen Music Assistant",
+        "lrclib": "Alleen LRCLIB",
+        "lrclib_mass": "LRCLIB (Terugval naar Music Assistant)"
     },
     "lyrics_modes": {
         "default": "Standaard (Markeren & scrollen)",

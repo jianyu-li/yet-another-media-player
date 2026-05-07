@@ -133,7 +133,10 @@ export default {
             "search_card_columns": "Zadajte, koľko stĺpcov sa má použiť v zobrazení karty. Grafika sa automaticky prispôsobí.",
             "card_type": "Vyberte režim karty. 'Predvolené' je štandardný prehrávač médií. 'Vyhradené vyhľadávanie' urobí z karty trvalé rozhranie na vyhľadávanie.",
             "always_show_lyrics": "Automaticky otvoriť zobrazenie textov piesní pri obnovení stránky.",
-            "lyrics_pre_roll": "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0)."
+            "lyrics_source": "Music Assistant vyžaduje integráciu mass_queue na načítanie textov z jeho interného metadátového modulu.",
+            "lyrics_pre_roll": "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0).",
+            "blurred_artwork": "Vždy rozmazať obrázok na pozadí",
+            "hide_collapsed_artwork": "Skryť malý obrázok vpravo, keď je karta zbalená"
         },
         "titles": {
             "edit_entity": "Upraviť entitu",
@@ -148,10 +151,10 @@ export default {
             "disable_autofocus": "Vypnúť automatické zameranie hľadania",
             "keep_filters": "Zachovať filtre pri hľadaní",
             "dismiss_on_play": "Zavrieť hľadanie po spustení",
-            "default_search_filter": "Predvolený filter vyhľadávania",
-            "default_search_favorites": "Predvolený filter obľúbených",
             "pin_headers": "Pripnúť hlavičky hľadania",
             "hide_search_headers_on_idle": "Skryť hlavičky pri nečinnosti",
+            "default_search_filter": "Predvolený filter vyhľadávania",
+            "default_search_favorites": "Predvolený filter obľúbených",
             "disable_mass": "Deaktivovať Mass Queue",
             "match_theme": "Podľa témy",
             "alt_progress": "Alternatívny indikátor priebehu",
@@ -172,8 +175,10 @@ export default {
             "disable_auto_select": "Zakázať automatický výber",
             "always_show_lyrics": "Vždy zobraziť texty piesní",
             "lyrics_mode": "Režim textov piesní",
+            "lyrics_source": "Zdroj textov",
             "lyrics_pre_roll": "Pre-roll textu piesne (sekundy)",
-            "card_type": "Typ karty"
+            "blurred_artwork": "Rozmazaný obrázok",
+            "hide_collapsed_artwork": "Skryť zmenšený obrázok"
         },
         "fields": {
             "artwork_fit": "Prispôsobenie grafiky",
@@ -221,6 +226,9 @@ export default {
             "card_trigger": "Spúšťač karty",
             "search_view": "Zobrazenie výsledkov vyhľadávania",
             "search_card_columns": "Stĺpce karty",
+            "card_type": "Typ karty",
+            "appearance": "Vzhľad",
+            "no_artwork_option": "Žiadny obrázok",
             "details_alignment": "Zarovnanie detailov"
         },
         "action_types": {
@@ -266,6 +274,11 @@ export default {
             "default": "Predvolené",
             "search": "Hľadať",
             "group_players": "Zoskupiť prehrávače"
+        },
+        "appearance_options": {
+            "automatic": "Automaticky",
+            "light": "Svetlý",
+            "dark": "Tmavý"
         },
         "artwork_fit": {
             "default": "Predvolené",
@@ -363,15 +376,22 @@ export default {
             "audiobook": "Audiokniha"
         },
         "search_artist": "Hľadať tohto interpreta",
+        "browse_album": "Prehľadávať skladby z {album}",
         "play_collection": "Prehrať túto kolekciu",
         "play_collection_error": "Túto kolekciu nie je možné prehrať priamo",
-        "browse_album": "Prehľadávať skladby z {album}",
         "play_item": "Prehrať {item}"
     },
     "lyrics": {
         "finding": "Hľadanie textu piesne...",
         "none_found": "Žiadny text piesne sa nenašiel",
-        "not_available": "Text piesne nie je k dispozícii"
+        "not_available": "Text piesne nie je k dispozícii",
+        "instrumental": "Inštrumentálna skladba"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Záloha na LRCLIB)",
+        "mass": "Len Music Assistant",
+        "lrclib": "Len LRCLIB",
+        "lrclib_mass": "LRCLIB (Záloha na Music Assistant)"
     },
     "lyrics_modes": {
         "default": "Predvolené (Zvýrazniť a posúvať)",

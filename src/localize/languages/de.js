@@ -133,7 +133,10 @@ export default {
             "search_card_columns": "Geben Sie an, wie viele Spalten in der Kartenansicht verwendet werden sollen. Das Artwork wird automatisch skaliert.",
             "card_type": "Wählen Sie den Kartenmodus. 'Standard' ist der normale Mediaplayer. 'Dedizierte Suche' macht die Karte zu einer permanenten Suchoberfläche.",
             "always_show_lyrics": "Liedtextansicht bei Seitenaktualisierung automatisch öffnen.",
-            "lyrics_pre_roll": "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0)."
+            "lyrics_source": "Music Assistant benötigt die mass_queue-Integration, um Liedtexte von seiner internen Metadaten-Engine abzurufen.",
+            "lyrics_pre_roll": "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0).",
+            "blurred_artwork": "Hintergrundbild immer weichzeichnen",
+            "hide_collapsed_artwork": "Das kleine Artwork auf der rechten Seite ausblenden, wenn die Karte eingeklappt ist"
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",
@@ -148,10 +151,10 @@ export default {
             "disable_autofocus": "Such-Autofocus deaktivieren",
             "keep_filters": "Filter bei Suche beibehalten",
             "dismiss_on_play": "Suche beim Abspielen beenden",
-            "default_search_filter": "Standard-Suchfilter",
-            "default_search_favorites": "Standardmäßig Favoritenfilter verwenden",
             "pin_headers": "Such-Header fixieren",
             "hide_search_headers_on_idle": "Such-Header im Leerlauf ausblenden",
+            "default_search_filter": "Standard-Suchfilter",
+            "default_search_favorites": "Standardmäßig Favoritenfilter verwenden",
             "disable_mass": "Mass Queue deaktivieren",
             "match_theme": "Theme anpassen",
             "alt_progress": "Alternativer Fortschrittsbalken",
@@ -172,7 +175,10 @@ export default {
             "disable_auto_select": "Auto-Auswahl deaktivieren",
             "always_show_lyrics": "Liedtexte immer anzeigen",
             "lyrics_mode": "Liedtext-Modus",
-            "lyrics_pre_roll": "Liedtext Pre-Roll (Sekunden)"
+            "lyrics_source": "Liedtext-Quelle",
+            "lyrics_pre_roll": "Liedtext Pre-Roll (Sekunden)",
+            "blurred_artwork": "Verschwommenes Artwork",
+            "hide_collapsed_artwork": "Verkleinertes Artwork ausblenden"
         },
         "fields": {
             "artwork_fit": "Artwork-Anpassung",
@@ -221,7 +227,8 @@ export default {
             "search_view": "Suchergebnis-Ansicht",
             "search_card_columns": "Spaltenanzahl",
             "card_type": "Kartentyp",
-            "no_artwork_option": "Kein Coverbild",
+            "appearance": "Erscheinungsbild",
+            "no_artwork_option": "Kein Artwork",
             "details_alignment": "Detail-Ausrichtung"
         },
         "action_types": {
@@ -267,6 +274,11 @@ export default {
             "default": "Standard",
             "search": "Suche",
             "group_players": "Player gruppieren"
+        },
+        "appearance_options": {
+            "automatic": "Automatisch",
+            "light": "Hell",
+            "dark": "Dunkel"
         },
         "artwork_fit": {
             "default": "Standard",
@@ -364,15 +376,22 @@ export default {
             "audiobook": "Hörbuch"
         },
         "search_artist": "Nach diesem Künstler suchen",
+        "browse_album": "Albentitel von {album} durchsuchen",
         "play_collection": "Diese Sammlung abspielen",
         "play_collection_error": "Diese Sammlung kann nicht direkt abgespielt werden",
-        "browse_album": "Albentitel von {album} durchsuchen",
         "play_item": "{item} abspielen"
     },
     "lyrics": {
         "finding": "Suche Songtext...",
         "none_found": "Kein Songtext gefunden",
-        "not_available": "Songtext nicht verfügbar"
+        "not_available": "Songtext nicht verfügbar",
+        "instrumental": "Instrumental-Titel"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Fallback zu LRCLIB)",
+        "mass": "Nur Music Assistant",
+        "lrclib": "Nur LRCLIB",
+        "lrclib_mass": "LRCLIB (Fallback zu Music Assistant)"
     },
     "lyrics_modes": {
         "default": "Standard (Hervorheben & Scrollen)",

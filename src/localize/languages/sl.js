@@ -133,7 +133,10 @@ export default {
             "search_card_columns": "Določite število stolpcev v pogledu kartic. Grafika se bo samodejno prilagodila.",
             "card_type": "Izberite način kartice. 'Privzeto' je standardni medijski predvajalnik. 'Namensko iskanje' spremeni kartico v trajen iskalni vmesnik.",
             "always_show_lyrics": "Samodejno odprite pogled besedila, ko se stran osveži.",
-            "lyrics_pre_roll": "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0)."
+            "lyrics_source": "Music Assistant zahteva integracijo mass_queue za pridobivanje besedil iz svojega notranjega mehanizma metapodatkov.",
+            "lyrics_pre_roll": "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0).",
+            "blurred_artwork": "Vedno zamegli ozadje",
+            "hide_collapsed_artwork": "Skrij majhno sliko na desni, ko je kartica strnjena"
         },
         "titles": {
             "edit_entity": "Uredi entiteto",
@@ -148,10 +151,10 @@ export default {
             "disable_autofocus": "Onemogoči samodejni fokus",
             "keep_filters": "Ohrani filtre",
             "dismiss_on_play": "Zapri iskanje ob predvajanju",
-            "default_search_filter": "Privzeti iskalni filter",
-            "default_search_favorites": "Privzeti filter priljubljenih",
             "pin_headers": "Pripni glave iskanja",
             "hide_search_headers_on_idle": "Skrij glave iskanja med mirovanjem",
+            "default_search_filter": "Privzeti iskalni filter",
+            "default_search_favorites": "Privzeti filter priljubljenih",
             "disable_mass": "Onemogoči Mass Queue",
             "match_theme": "Ujemaj temo",
             "alt_progress": "Alternativna vrstica napredka",
@@ -172,8 +175,10 @@ export default {
             "disable_auto_select": "Onemogoči samodejno izbiro",
             "always_show_lyrics": "Vedno prikaži besedilo",
             "lyrics_mode": "Način besedila",
+            "lyrics_source": "Vir besedil",
             "lyrics_pre_roll": "Pre-roll besedila (sekunde)",
-            "card_type": "Vrsta kartice"
+            "blurred_artwork": "Zamegljena grafika",
+            "hide_collapsed_artwork": "Skrij skrčeno grafiko"
         },
         "fields": {
             "artwork_fit": "Prileganje grafike",
@@ -221,6 +226,9 @@ export default {
             "card_trigger": "Sprožilec kartice",
             "search_view": "Pogled rezultatov iskanja",
             "search_card_columns": "Stolpci kartic",
+            "card_type": "Vrsta kartice",
+            "appearance": "Videz",
+            "no_artwork_option": "Brez grafike",
             "details_alignment": "Poravnava podrobnosti"
         },
         "action_types": {
@@ -266,6 +274,11 @@ export default {
             "default": "Privzeto",
             "search": "Iskanje",
             "group_players": "Zoskupi predvajalnike"
+        },
+        "appearance_options": {
+            "automatic": "Samodejno",
+            "light": "Svetlo",
+            "dark": "Temno"
         },
         "artwork_fit": {
             "default": "Privzeto",
@@ -363,15 +376,22 @@ export default {
             "audiobook": "Zvočna knjiga"
         },
         "search_artist": "Išči tega izvajalca",
+        "browse_album": "Prebrskaj skladbe iz {album}",
         "play_collection": "Predvajaj to zbirko",
         "play_collection_error": "Te zbirke ni mogoče predvajati neposredno",
-        "browse_album": "Prebrskaj skladbe iz {album}",
         "play_item": "Predvajaj {item}"
     },
     "lyrics": {
         "finding": "Iskanje besedila...",
         "none_found": "Besedila ni bilo mogoče najti",
-        "not_available": "Besedilo ni na voljo"
+        "not_available": "Besedilo ni na voljo",
+        "instrumental": "Instrumentalna skladba"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Rezerva na LRCLIB)",
+        "mass": "Samo Music Assistant",
+        "lrclib": "Samo LRCLIB",
+        "lrclib_mass": "LRCLIB (Rezerva na Music Assistant)"
     },
     "lyrics_modes": {
         "default": "Privzeto (Označi in pomakni)",

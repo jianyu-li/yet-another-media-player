@@ -133,7 +133,10 @@ export default {
             "search_card_columns": "Especifique quantas colunas usar na visualização de cartões. A capa será redimensionada automaticamente.",
             "card_type": "Escolha o modo do cartão. 'Padrão' é o reprodutor de mídia padrão. 'Busca dedicada' torna o cartão uma interface de busca permanente.",
             "always_show_lyrics": "Abrir automaticamente a visualização de letras quando a página for atualizada.",
-            "lyrics_pre_roll": "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 0)."
+            "lyrics_source": "O Music Assistant requer a integração mass_queue para obter letras do seu motor de metadados interno.",
+            "lyrics_pre_roll": "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 0).",
+            "blurred_artwork": "Sempre desfocar a imagem de fundo",
+            "hide_collapsed_artwork": "Ocultar a imagem pequena à direita quando o cartão estiver recolhido"
         },
         "titles": {
             "edit_entity": "Editar entidade",
@@ -148,10 +151,10 @@ export default {
             "disable_autofocus": "Desativar autofoco",
             "keep_filters": "Manter filtros",
             "dismiss_on_play": "Fechar ao reproduzir",
-            "default_search_filter": "Filtro de pesquisa padrão",
-            "default_search_favorites": "Filtro de favoritos padrão",
             "pin_headers": "Fixar cabeçalhos",
             "hide_search_headers_on_idle": "Ocultar cabeçalhos em inatividade",
+            "default_search_filter": "Filtro de pesquisa padrão",
+            "default_search_favorites": "Filtro de favoritos padrão",
             "disable_mass": "Desativar Mass Queue",
             "match_theme": "Seguir tema",
             "alt_progress": "Barra de progresso alternativa",
@@ -172,8 +175,10 @@ export default {
             "disable_auto_select": "Desativar seleção automática",
             "always_show_lyrics": "Mostrar sempre as letras",
             "lyrics_mode": "Modo de letras",
+            "lyrics_source": "Fonte das letras",
             "lyrics_pre_roll": "Antecipação de letra (segundos)",
-            "card_type": "Tipo de cartão"
+            "blurred_artwork": "Imagem desfocada",
+            "hide_collapsed_artwork": "Ocultar imagem reduzida"
         },
         "fields": {
             "artwork_fit": "Ajuste",
@@ -221,6 +226,9 @@ export default {
             "card_trigger": "Gatilho do cartão",
             "search_view": "Vista de resultados de pesquisa",
             "search_card_columns": "Colunas de cartões",
+            "card_type": "Tipo de cartão",
+            "appearance": "Aparência",
+            "no_artwork_option": "Sem imagem",
             "details_alignment": "Alinhamento de detalhes"
         },
         "action_types": {
@@ -266,6 +274,11 @@ export default {
             "default": "Padrão",
             "search": "Procurar",
             "group_players": "Agrupar"
+        },
+        "appearance_options": {
+            "automatic": "Automático",
+            "light": "Claro",
+            "dark": "Escuro"
         },
         "artwork_fit": {
             "default": "Padrão",
@@ -363,15 +376,22 @@ export default {
             "audiobook": "Audiolivro"
         },
         "search_artist": "Procurar este artista",
+        "browse_album": "Explorar faixas de {album}",
         "play_collection": "Reproduzir esta coleção",
         "play_collection_error": "Não é possível reproduzir esta coleção diretamente",
-        "browse_album": "Explorar faixas de {album}",
         "play_item": "Reproduzir {item}"
     },
     "lyrics": {
         "finding": "Procurando letra...",
         "none_found": "Nenhuma letra encontrada",
-        "not_available": "Letra não disponível"
+        "not_available": "Letra não disponível",
+        "instrumental": "Faixa instrumental"
+    },
+    "lyrics_sources": {
+        "mass_lrclib": "Music Assistant (Alternativa para LRCLIB)",
+        "mass": "Apenas Music Assistant",
+        "lrclib": "Apenas LRCLIB",
+        "lrclib_mass": "LRCLIB (Alternativa para Music Assistant)"
     },
     "lyrics_modes": {
         "default": "Padrão (Destacar e rolar)",
