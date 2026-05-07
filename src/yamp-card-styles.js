@@ -4033,43 +4033,43 @@ export const lyricsStyles = css`
 
   /* Compact mode overrides for constrained heights */
   .yamp-card-inner.compact-collapsed .chip-row {
-    padding-top: 0 !important;
-    padding-bottom: 4px !important;
+    padding-top: 0;
+    padding-bottom: 4px;
   }
   .yamp-card-inner.compact-collapsed .action-chip-row {
-    padding-bottom: 0 !important;
-    margin-bottom: -12px !important;
+    padding-bottom: 0;
+    margin-bottom: -12px;
   }
   .yamp-card-inner.compact-collapsed .details {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    padding-bottom: 2px !important;
-    margin-top: -12px !important;
-    min-height: 0 !important;
-    gap: 1px !important;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 2px;
+    margin-top: -12px;
+    min-height: 0;
+    gap: 1px;
   }
   .yamp-card-inner.compact-collapsed .controls-row {
-    padding-top: 1px !important;
-    padding-bottom: 1px !important;
-    gap: 4px !important;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    gap: 4px;
   }
   .yamp-card-inner.compact-collapsed .volume-row {
-    padding-bottom: 4px !important;
+    padding-bottom: 4px;
   }
   .yamp-card-inner.compact-collapsed .collapsed-artwork-container {
-    top: -12px !important;
+    top: -12px;
   }
 
   .yamp-card-inner.compact-collapsed .modern-button.primary {
-    width: 52px !important;
-    height: 52px !important;
+    width: 52px;
+    height: 52px;
   }
   .yamp-card-inner.compact-collapsed .modern-button.medium {
-    width: 38px !important;
-    height: 38px !important;
+    width: 38px;
+    height: 38px;
   }
   .yamp-card-inner.compact-collapsed .modern-button.small {
-    width: 34px !important;
-    height: 34px !important;
+    width: 34px;
+    height: 34px;
   }
 `;

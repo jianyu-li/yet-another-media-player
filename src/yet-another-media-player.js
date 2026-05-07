@@ -3899,7 +3899,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let sizePercentage = null;
     let objectFit = null;
 
-
+    // If no_artwork is selected, we don't want to fetch or show any artwork
+    if (this._artworkObjectFit === "no_artwork") {
+      return { url: null, sizePercentage: null, objectFit: "no_artwork" };
+    }
 
     // Check for media artwork overrides first
     const overrides = Array.isArray(this.config?.media_artwork_overrides)
@@ -7425,6 +7428,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     // Adjust offsets for compact layout
     const isCompact = hasCustomCardHeight && customCardHeight < 280;
+    const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
+    const shouldHideVolumeControls = hideControlsNow || this._showEntityOptions || isCompactVolume;
     const baseOffset = isCompact ? (collapsedArtworkSize > 0 ? collapsedArtworkSize + 12 : 0) : 100;
     const collapsedDetailsOffset = (collapsed && collapsedArtworkSize > 0)
       ? Math.round(collapsedArtworkSize + (isCompact ? 12 : 24) + Math.min(40, Math.max(0, collapsedExtraSpace) * 0.12))
@@ -7755,12 +7760,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
         onVolumeChange: (e) => this._onVolumeChange(e),
         onVolumeStep: (dir) => this._onVolumeStep(dir),
         onMuteToggle: () => this._onMuteToggle(),
-        leadingControlTemplate: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? (leadingVolumeControl !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${leadingVolumeControl}</div>` : nothing) : leadingVolumeControl,
-        reserveLeadingControlSpace: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? (this._controlLayout === "modern") : this._controlLayout === "modern",
-        showRightPlaceholder: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? (this._controlLayout === "modern") : this._controlLayout === "modern",
-        rightSlotTemplate: (hideControlsNow || this._showEntityOptions || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
-        hideVolume: hideControlsNow || this._showEntityOptions || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions) || (hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed),
-        moreInfoMenu: (!this._showEntityOptions && !(hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed)) ? html`
+        leadingControlTemplate: shouldHideVolumeControls ? (leadingVolumeControl !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${leadingVolumeControl}</div>` : nothing) : leadingVolumeControl,
+        reserveLeadingControlSpace: this._controlLayout === "modern",
+        showRightPlaceholder: this._controlLayout === "modern",
+        rightSlotTemplate: shouldHideVolumeControls ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
+        hideVolume: shouldHideVolumeControls || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions),
+        moreInfoMenu: !shouldHideVolumeControls ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
               <span class="more-info-icon">&#9776;</span>
