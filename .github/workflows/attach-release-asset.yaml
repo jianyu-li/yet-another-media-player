@@ -27,6 +27,6 @@ jobs:
         run: npm run build
 
       - name: Upload bundle to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: yet-another-media-player.js
