@@ -3518,7 +3518,7 @@ export const yampCardStyles = css`
 
   .yamp-search-result-title {
     flex: 1;
-    color: var(--yamp-chip-text);
+    color: var(--primary-text);
     font-size: 0.9em;
     font-weight: 500;
     display: block;
@@ -3529,7 +3529,7 @@ export const yampCardStyles = css`
 
   .yamp-search-result-subtitle {
     display: block;
-    color: var(--secondary-text-color, #888);
+    color: var(--search-text-secondary);
     font-size: 0.9em;
     margin-top: 2px;
     white-space: nowrap;
@@ -3539,7 +3539,6 @@ export const yampCardStyles = css`
 
   .yamp-search-result:not(.search-result-card) .yamp-search-result-subtitle {
     font-size: 0.86em;
-    color: var(--search-text-secondary);
     line-height: 1.16;
   }
 
@@ -3576,7 +3575,6 @@ export const yampCardStyles = css`
 
   .yamp-search-result-title.clickable-search-result,
   .yamp-search-result-subtitle.clickable-search-result {
-    color: var(--custom-accent) ;
     text-decoration: none;
   }
 

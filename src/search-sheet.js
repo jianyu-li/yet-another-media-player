@@ -306,7 +306,7 @@ export function renderSearchResultItem({
       ${!isMinimal ? html`
         <div class="yamp-search-result-info">
           <span 
-            class="${isCard ? 'yamp-search-result-title' : ''} ${isClickable ? 'clickable-search-result' : ''}" 
+            class="yamp-search-result-title ${isClickable ? 'clickable-search-result' : ''}" 
             @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
             @click=${() => onResultClick && onResultClick(item)}
             title=${getClickTitle(item)}
