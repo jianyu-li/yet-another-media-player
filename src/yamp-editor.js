@@ -1708,6 +1708,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             </div>
             <div class="config-subtitle">${localize('editor.subtitles.hide_menu_player')}</div>
           </div>
+          <div class="form-row">
+            <div>
+              <ha-switch
+                id="hide-active-entity-label-on-idle-toggle"
+                .checked=${this._config.hide_active_entity_label_on_idle ?? false}
+                @change=${(e) => this._updateConfig("hide_active_entity_label_on_idle", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.hide_active_entity_on_idle')}</span>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.hide_active_entity_on_idle')}</div>
+          </div>
         <div class="form-row">
           <div class="full-width">
             <span class="form-label">${localize('editor.labels.adaptive_text_elements')}</span>
