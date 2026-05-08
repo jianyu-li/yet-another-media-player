@@ -639,6 +639,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
     this._hideActiveEntityLabel = false;
+    this._hideActiveEntityLabelOnIdle = false;
     this._currentDetailsScale = null;
     this._lastTitleLength = 0;
     
@@ -4186,6 +4187,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._setAdaptiveTextVars(1, new Set(), 1);
     }
     this._hideActiveEntityLabel = config.hide_active_entity_label === true;
+    this._hideActiveEntityLabelOnIdle = config.hide_active_entity_label_on_idle === true;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
 
@@ -7797,7 +7799,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           </div>
         ` : nothing,
       })}
-            ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel ? html`
+            ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel && !(this._hideActiveEntityLabelOnIdle && this._isIdle) ? html`
               <div class="in-menu-active-label">${activeChipName}</div>
             ` : nothing}
           </div>
