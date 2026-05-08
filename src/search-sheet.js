@@ -264,13 +264,19 @@ export function renderSearchResultItem({
     return html`<div class="yamp-search-result placeholder"></div>`;
   }
 
-  const isMA = isMusicAssistant || isMusicAssistantEntity(item.media_content_id);
+  const isMA = isMusicAssistant || 
+    item.app_id === 'music_assistant' ||
+    (item.media_content_id && (
+      item.media_content_id.startsWith('mass://') || 
+      item.media_content_id.startsWith('library://') ||
+      item.media_content_id.includes('://') && isMusicAssistant
+    ));
   const isClickable = item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable);
   const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
   const hideActions = isSelectionFlow;
 
   return html`
-    <div class="yamp-search-result ${isCard ? 'search-result-card' : ''} ${isMinimal ? 'minimal' : ''} ${item._justMoved ? 'just-moved' : ''} ${isActive ? 'menu-active' : ''}">
+    <div class="yamp-search-result ${isCard ? 'search-result-card' : ''} ${isMinimal ? 'minimal' : ''} ${item._justMoved ? 'just-moved' : ''} ${isActive ? 'menu-active' : ''} ${isClickable ? 'clickable' : ''}">
       <div class="search-sheet-thumb-container" 
            data-clickable="${isCard}"
            @click=${isCard ? (e) => (isSelectionFlow ? onResultClick(item, e) : onPlay(item)) : null}>
@@ -308,7 +314,7 @@ export function renderSearchResultItem({
           <span 
             class="yamp-search-result-title ${isClickable ? 'clickable-search-result' : ''}" 
             @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
-            @click=${() => onResultClick && onResultClick(item)}
+            @click=${(e) => onResultClick && onResultClick(item, e)}
             title=${getClickTitle(item)}
           >
             ${item.title}
@@ -316,7 +322,7 @@ export function renderSearchResultItem({
           <span 
             class="yamp-search-result-subtitle ${isClickable ? 'clickable-search-result' : ''}" 
             @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
-            @click=${() => onResultClick && onResultClick(item)}
+            @click=${(e) => onResultClick && onResultClick(item, e)}
           >
             ${(() => {
               const isTrack = item.media_class === 'track';

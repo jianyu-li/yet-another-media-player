@@ -3573,6 +3573,10 @@ export const yampCardStyles = css`
     min-height: 2.6em; /* Reserve space for 2 lines to keep all cards uniform */
   }
 
+  .yamp-search-result.clickable {
+    cursor: pointer;
+  }
+
   .yamp-search-result-title.clickable-search-result,
   .yamp-search-result-subtitle.clickable-search-result {
     text-decoration: none;
