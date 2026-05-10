@@ -266,7 +266,7 @@ export function renderSearchResultItem({
 
   const isMA = isMusicAssistant || 
     item.app_id === 'music_assistant' ||
-    (item.media_content_id && (
+    (typeof item.media_content_id === 'string' && (
       item.media_content_id.startsWith('mass://') || 
       item.media_content_id.startsWith('library://')
     ));
@@ -383,21 +383,19 @@ export function renderSearchResultItem({
         hideActions
       })}
 
-      ${loadingSearchRowMenuId === item.media_content_id ? html`
+      ${loadingSearchRowMenuId != null && item.media_content_id != null && loadingSearchRowMenuId === item.media_content_id ? html`
         <div class="search-row-loading-overlay">
           <ha-icon icon="mdi:loading" class="spin"></ha-icon>
           <span>${localize('common.loading')}</span>
         </div>
       ` : nothing}
-      
-      ${errorSearchRowMenuId === item.media_content_id ? html`
+      ${errorSearchRowMenuId != null && item.media_content_id != null && errorSearchRowMenuId === item.media_content_id ? html`
         <div class="search-row-error-overlay">
           <ha-icon icon="mdi:alert-circle" class="error-icon"></ha-icon>
           <span>${localize('common.error') || 'Error'}</span>
         </div>
       ` : nothing}
-
-      ${successSearchRowMenuId === item.media_content_id ? html`
+      ${successSearchRowMenuId != null && item.media_content_id != null && successSearchRowMenuId === item.media_content_id ? html`
         <div class="search-row-success-overlay">
           <span>✅</span>
           <span>${successSearchRowType === 'playlist' ? localize('search.added_to_playlist') : localize('search.added')}</span>
