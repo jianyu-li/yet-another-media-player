@@ -143,22 +143,22 @@ export function renderSearchResultActions({
     <div class="${containerClass}">
       ${isQueueItem && isInline ? html`
         <div class="queue-controls">
-          <button class="queue-btn queue-btn-up" @click=${() => onMoveUp(item)} title="${localize('search.move_up')}">
+          <button class="queue-btn queue-btn-up" @click=${(e) => { e.stopPropagation(); onMoveUp(item); }} title="${localize('search.move_up')}">
             <ha-icon icon="mdi:chevron-up"></ha-icon>
           </button>
-          <button class="queue-btn queue-btn-down" @click=${() => onMoveDown(item)} title="${localize('search.move_down')}">
+          <button class="queue-btn queue-btn-down" @click=${(e) => { e.stopPropagation(); onMoveDown(item); }} title="${localize('search.move_down')}">
             <ha-icon icon="mdi:chevron-down"></ha-icon>
           </button>
-          <button class="queue-btn queue-btn-next" @click=${() => onMoveNext(item)} title="${localize('search.move_next')}">
+          <button class="queue-btn queue-btn-next" @click=${(e) => { e.stopPropagation(); onMoveNext(item); }} title="${localize('search.move_next')}">
             <ha-icon icon="mdi:playlist-play"></ha-icon>
           </button>
-          <button class="queue-btn queue-btn-remove" @click=${() => onRemove(item)} title="${localize('search.remove')}">
+          <button class="queue-btn queue-btn-remove" @click=${(e) => { e.stopPropagation(); onRemove(item); }} title="${localize('search.remove')}">
             <ha-icon icon="mdi:close"></ha-icon>
           </button>
         </div>
       ` : nothing}
       <button class="${playClass}" 
-              @click=${() => onPlay(item)} 
+              @click=${(e) => { e.stopPropagation(); onPlay(item); }} 
               title="${localize('search.play_item', '{item}', item.title)}">
         <ha-icon icon="mdi:play"></ha-icon>
       </button>
@@ -193,33 +193,33 @@ export function renderSearchResultSlideOut({
   return html`
     <div class="search-row-slide-out ${isActive ? 'active' : ''}">
       ${isQueueItem && searchView === 'card' ? html`
-        <button class="slide-out-button" @click=${() => { onMoveUp(item); onOptionsToggle(null); }} title="${localize('search.move_up')}">
+        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onMoveUp(item); onOptionsToggle(null); }} title="${localize('search.move_up')}">
           ${localize('search.move_up')}
         </button>
-        <button class="slide-out-button" @click=${() => { onMoveDown(item); onOptionsToggle(null); }} title="${localize('search.move_down')}">
+        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onMoveDown(item); onOptionsToggle(null); }} title="${localize('search.move_down')}">
           ${localize('search.move_down')}
         </button>
-        <button class="slide-out-button" @click=${() => { onMoveNext(item); onOptionsToggle(null); }} title="${localize('search.move_next')}">
+        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onMoveNext(item); onOptionsToggle(null); }} title="${localize('search.move_next')}">
           ${localize('search.move_next')}
         </button>
-        <button class="slide-out-button" @click=${() => { onRemove(item); onOptionsToggle(null); }} title="${localize('search.remove')}">
+        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onRemove(item); onOptionsToggle(null); }} title="${localize('search.remove')}">
           ${localize('search.remove')}
         </button>
       ` : html`
-        <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace')} title="${localize('search.labels.replace')}">
+        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'replace'); }} title="${localize('search.labels.replace')}">
           ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
         </button>
-        <button class="slide-out-button" @click=${() => onPlayOption(item, 'next')} title="${localize('search.labels.next')}">
+        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'next'); }} title="${localize('search.labels.next')}">
           ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
         </button>
-        <button class="slide-out-button" @click=${() => onPlayOption(item, 'replace_next')} title="${localize('search.labels.replace_next')}">
+        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'replace_next'); }} title="${localize('search.labels.replace_next')}">
           ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
         </button>
-        <button class="slide-out-button" @click=${() => onPlayOption(item, 'add')} title="${localize('search.labels.add')}">
+        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'add'); }} title="${localize('search.labels.add')}">
           ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
         </button>
         ${isTrack(item) && massQueueAvailable ? html`
-          <button class="slide-out-button" @click=${() => onPlayOption(item, 'add_to_playlist')} title="${localize('search.labels.add_to_playlist')}">
+          <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'add_to_playlist'); }} title="${localize('search.labels.add_to_playlist')}">
             ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize('search.labels.add_to_playlist')}
           </button>
         ` : nothing}
