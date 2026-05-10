@@ -2545,7 +2545,7 @@ export const yampCardStyles = css`
     margin-top: 2px;
   }
 
-  .yamp-search-result.menu-active > *:not(.search-row-slide-out) {
+  .yamp-search-result.menu-active > *:not(.search-row-slide-out):not([class$="-overlay"]) {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;

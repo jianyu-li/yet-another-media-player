@@ -264,13 +264,8 @@ export function renderSearchResultItem({
     return html`<div class="yamp-search-result placeholder"></div>`;
   }
 
-  const isMA = isMusicAssistant || 
-    item.app_id === 'music_assistant' ||
-    (typeof item.media_content_id === 'string' && (
-      item.media_content_id.startsWith('mass://') || 
-      item.media_content_id.startsWith('library://')
-    ));
-  const isClickable = item.is_browsable && (item.media_class !== 'playlist' || massQueueAvailable);
+  const isMA = isMusicAssistant;
+  const isClickable = !!item.is_browsable || isSelectionFlow;
   const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
   const hideActions = isSelectionFlow;
 
@@ -320,20 +315,30 @@ export function renderSearchResultItem({
         <div class="yamp-search-result-info">
           <span 
             class="yamp-search-result-title ${isClickable ? 'clickable-search-result' : ''}" 
-            @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
+            @click=${(e) => {
+              if (isClickable || isSelectionFlow) {
+                e.stopPropagation();
+                onResultClick && onResultClick(item, e);
+              }
+            }}
             title=${getClickTitle(item)}
           >
             ${item.title}
           </span>
           <span 
             class="yamp-search-result-subtitle ${isClickable ? 'clickable-search-result' : ''}" 
-            @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
+            @click=${(e) => {
+              if (isClickable || isSelectionFlow) {
+                e.stopPropagation();
+                onResultClick && onResultClick(item, e);
+              }
+            }}
           >
             ${(() => {
-              const isTrack = item.media_class === 'track';
+              const isTrackItem = isTrack(item);
               const isTrackOrAlbum = (searchMediaClassFilter === 'track' || searchMediaClassFilter === 'album');
               
-              if (isTrack && item.artist && item.album) {
+              if (isTrackItem && item.artist && item.album) {
                 return `${item.artist} - ${item.album}`;
               }
               if ((isTrackOrAlbum || recentlyPlayedFilterActive || upcomingFilterActive || recommendationsFilterActive) && item.artist) {
