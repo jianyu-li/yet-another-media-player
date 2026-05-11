@@ -2545,13 +2545,13 @@ export const yampCardStyles = css`
     margin-top: 2px;
   }
 
-  .entity-options-search-result.menu-active > *:not(.search-row-slide-out) {
+  .yamp-search-result.menu-active > *:not(.search-row-slide-out):not([class$="-overlay"]) {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
   }
 
-  .entity-options-search-result {
+  .yamp-search-result {
     position: relative;
     overflow: hidden;
     display: flex;
@@ -2679,18 +2679,18 @@ export const yampCardStyles = css`
     }
   }
 
-  .entity-options-search-result:last-child {
+  .yamp-search-result:last-child {
     border-bottom: none;
   }
 
-  .entity-options-search-result.placeholder {
+  .yamp-search-result.placeholder {
     visibility: hidden;
     border-bottom: 1px solid transparent;
     min-height: 46px;
     box-sizing: border-box;
   }
 
-  .entity-options-search-thumb {
+  .yamp-search-result-thumb {
     height: 38px;
     width: 38px;
     border-radius: var(--button-border-radius);
@@ -2818,7 +2818,7 @@ export const yampCardStyles = css`
   }
 
   /* Visual feedback for moved queue items */
-  .entity-options-search-result.just-moved {
+  .yamp-search-result.just-moved {
     background: var(--yamp-success-bg-light) ;
     border-left: 3px solid var(--yamp-success-color) ;
     animation: queueMoveHighlight 1s ease-out;
@@ -3339,23 +3339,7 @@ export const yampCardStyles = css`
     ${HIDE_SCROLLBAR}
   }
 
-
-
-
-  .search-sheet-result {
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 15px;
-    border-bottom: 1px solid var(--search-border);
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .search-sheet-result.search-result-card,
-  .entity-options-search-result.search-result-card {
+  .yamp-search-result.search-result-card {
     flex-direction: column;
     padding: 8px;
     border-bottom: none;
@@ -3431,49 +3415,33 @@ export const yampCardStyles = css`
   }
 
   @media (hover: hover) {
-    .search-sheet-result:hover {
+    .search-sheet-results .yamp-search-result:not(.search-result-card):hover {
       background: var(--search-hover-bg);
     }
   }
 
-  .search-sheet-thumb,
-  .entity-options-search-thumb,
-  .entity-options-search-thumb-placeholder {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    object-fit: var(--yamp-artwork-fit, cover);
-    margin-right: 15px;
-  }
-
-  .entity-options-search-thumb,
-  .entity-options-search-thumb-placeholder {
+  .yamp-search-result-thumb,
+  .yamp-search-result-thumb-placeholder {
     width: 38px;
     height: 38px;
+    border-radius: 8px;
+    object-fit: var(--yamp-artwork-fit, cover);
     margin-right: 12px;
   }
 
-  .search-result-card .search-sheet-thumb,
-  .search-result-card .entity-options-search-thumb,
-  .search-result-card .search-sheet-thumb-placeholder,
-  .search-result-card .entity-options-search-thumb-placeholder {
+  .search-result-card .yamp-search-result-thumb,
+  .search-result-card .yamp-search-result-thumb-placeholder {
     width: 100%;
     height: auto;
     aspect-ratio: 1 / 1;
     margin-right: 0;
   }
 
-  .search-sheet-thumb-placeholder {
+  .yamp-search-result-thumb-placeholder {
     background: var(--search-thumb-placeholder-bg);
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .search-result-card .search-sheet-thumb-placeholder {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    height: auto;
   }
 
   .search-sheet-thumb-container {
@@ -3506,11 +3474,7 @@ export const yampCardStyles = css`
     border-radius: 8px;
   }
 
-  @media (hover: hover) {
-    .search-sheet-result:hover .card-overlay-buttons {
-      opacity: 1;
-    }
-  }
+
 
   .icon-only.search-sheet-play, 
   .icon-only.search-sheet-queue,
@@ -3529,19 +3493,12 @@ export const yampCardStyles = css`
     border-radius: 5px;
   }
 
-  .entity-options-search-thumb-placeholder {
-    background: var(--search-thumb-placeholder-bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .entity-options-search-thumb-placeholder ha-icon {
+  .yamp-search-result-thumb-placeholder ha-icon {
     color: var(--search-thumb-placeholder-icon);
     font-size: 16px;
   }
 
-  .search-sheet-info {
+  .yamp-search-result-info {
     flex: 1;
     min-width: 0;
     display: flex;
@@ -3549,15 +3506,15 @@ export const yampCardStyles = css`
     justify-content: center;
   }
 
-  .search-result-card .search-sheet-info {
+  .search-result-card .yamp-search-result-info {
     text-align: center;
     width: 100%;
     display: block; /* Original card behavior */
   }
 
-  .search-sheet-title {
+  .yamp-search-result-title {
     flex: 1;
-    color: var(--yamp-chip-text);
+    color: var(--primary-text);
     font-size: 0.9em;
     font-weight: 500;
     display: block;
@@ -3566,9 +3523,9 @@ export const yampCardStyles = css`
     text-overflow: ellipsis;
   }
 
-  .search-sheet-subtitle {
+  .yamp-search-result-subtitle {
     display: block;
-    color: var(--secondary-text-color, #888);
+    color: var(--search-text-secondary);
     font-size: 0.9em;
     margin-top: 2px;
     white-space: nowrap;
@@ -3576,23 +3533,17 @@ export const yampCardStyles = css`
     text-overflow: ellipsis;
   }
 
-  .entity-options-search-result:not(.search-result-card) .search-sheet-subtitle {
+  .yamp-search-result:not(.search-result-card) .yamp-search-result-subtitle {
     font-size: 0.86em;
-    color: var(--search-text-secondary);
     line-height: 1.16;
   }
 
-  .entity-options-search-subtitle {
-    font-size: 0.9em;
-    color: var(--secondary-text);
-  }
-
-  .search-result-card .search-sheet-info {
+  .search-result-card .yamp-search-result-info {
     text-align: center;
     width: 100%;
   }
 
-  .search-result-card .search-sheet-title {
+  .search-result-card .yamp-search-result-title {
     text-align: center;
     width: 100%;
     /* 2-line clamping with word-level breaks */
@@ -3605,7 +3556,7 @@ export const yampCardStyles = css`
     min-height: 2.6em; /* Reserve space for 2 lines to keep all cards uniform */
   }
 
-  .search-result-card .search-sheet-subtitle {
+  .search-result-card .yamp-search-result-subtitle {
     text-align: center;
     width: 100%;
     /* 2-line clamping with word-level breaks */
@@ -3618,16 +3569,18 @@ export const yampCardStyles = css`
     min-height: 2.6em; /* Reserve space for 2 lines to keep all cards uniform */
   }
 
-  .search-sheet-title.browsable,
-  .search-sheet-subtitle.browsable {
-    color: var(--custom-accent) ;
-    text-decoration: none;
+  .yamp-search-result.clickable {
     cursor: pointer;
   }
 
+  .yamp-search-result-title.clickable-search-result,
+  .yamp-search-result-subtitle.clickable-search-result {
+    text-decoration: none;
+  }
+
   @media (hover: hover) {
-    .search-sheet-title.browsable:hover,
-    .search-sheet-subtitle.browsable:hover {
+    .yamp-search-result-title.clickable-search-result:hover,
+    .yamp-search-result-subtitle.clickable-search-result:hover {
       text-decoration: underline;
     }
   }
@@ -3733,13 +3686,13 @@ export const yampCardStyles = css`
     border: 2px solid #4caf50 ;
   }
 
-  .search-sheet[data-match-theme="false"] .search-sheet-result {
+  .search-sheet[data-match-theme="false"] .yamp-search-result {
     color: #fff ;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;
   }
 
   @media (hover: hover) {
-    .search-sheet[data-match-theme="false"] .search-sheet-result:hover {
+    .search-sheet[data-match-theme="false"] .yamp-search-result:hover {
       background: rgba(255, 255, 255, 0.1) ;
     }
   }
