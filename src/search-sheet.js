@@ -22,6 +22,30 @@ export function isRadio(item) {
   return item && (item.media_class === 'radio' || item.media_content_type === 'radio');
 }
 
+export function isCardView(searchView) {
+  return searchView === 'card' || searchView === 'card_minimal';
+}
+
+export function getSearchResultSubtitle(item, {
+  searchMediaClassFilter = 'all',
+  recentlyPlayedFilterActive = false,
+  upcomingFilterActive = false,
+  recommendationsFilterActive = false,
+} = {}) {
+  const isTrackItem = isTrack(item);
+  const isTrackOrAlbum = (searchMediaClassFilter === 'track' || searchMediaClassFilter === 'album');
+
+  if (isTrackItem && item.artist && item.album) {
+    return `${item.artist} - ${item.album}`;
+  }
+  if ((isTrackOrAlbum || recentlyPlayedFilterActive || upcomingFilterActive || recommendationsFilterActive) && item.artist) {
+    return item.artist;
+  }
+  return item.media_class
+    ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
+    : "";
+}
+
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
   const numericLimit = Number(limit);
   if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
@@ -135,10 +159,10 @@ export function renderSearchResultActions({
   if (hideActions) return nothing;
   const isQueueItem = !!(upcomingFilterActive && item.queue_item_id && isMusicAssistant && massQueueAvailable);
 
-  const isCardView = searchView === 'card' || searchView === 'card_minimal';
-  const containerClass = isInline ? 'entity-options-search-buttons' : (isCardView ? 'card-overlay-buttons' : 'search-sheet-buttons');
-  const playClass = isInline ? 'entity-options-search-play' : (isCardView ? 'search-sheet-play icon-only' : 'search-sheet-play');
-  const queueClass = isInline ? 'entity-options-search-queue' : (isCardView ? 'search-sheet-queue icon-only' : 'search-sheet-queue');
+  const isCard = isCardView(searchView);
+  const containerClass = isInline ? 'entity-options-search-buttons' : (isCard ? 'card-overlay-buttons' : 'search-sheet-buttons');
+  const playClass = isInline ? 'entity-options-search-play' : (isCard ? 'search-sheet-play icon-only' : 'search-sheet-play');
+  const queueClass = isInline ? 'entity-options-search-queue' : (isCard ? 'search-sheet-queue icon-only' : 'search-sheet-queue');
 
   return html`
     <div class="${containerClass}">
@@ -191,9 +215,11 @@ export function renderSearchResultSlideOut({
   if (hideActions) return nothing;
   const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
 
+  const isCard = isCardView(searchView);
+
   return html`
     <div class="search-row-slide-out ${isActive ? 'active' : ''}">
-      ${isQueueItem && searchView === 'card' ? html`
+      ${isQueueItem && isCard ? html`
         <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onMoveUp(item); onOptionsToggle(null); }} title="${localize('search.move_up')}">
           ${localize('search.move_up')}
         </button>
@@ -208,20 +234,20 @@ export function renderSearchResultSlideOut({
         </button>
       ` : html`
         <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'replace'); }} title="${localize('search.labels.replace')}">
-          ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
+          ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
         </button>
         <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'next'); }} title="${localize('search.labels.next')}">
-          ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
+          ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
         </button>
         <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'replace_next'); }} title="${localize('search.labels.replace_next')}">
-          ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
+          ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
         </button>
         <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'add'); }} title="${localize('search.labels.add')}">
-          ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
+          ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
         </button>
         ${isTrack(item) && massQueueAvailable ? html`
           <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'add_to_playlist'); }} title="${localize('search.labels.add_to_playlist')}">
-            ${searchView === 'card' ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize('search.labels.add_to_playlist')}
+            ${isCard ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize('search.labels.add_to_playlist')}
           </button>
         ` : nothing}
       `}
@@ -274,12 +300,10 @@ export function renderSearchResultItem({
   return html`
     <div class="yamp-search-result ${isCard ? 'search-result-card' : ''} ${isMinimal ? 'minimal' : ''} ${item._justMoved ? 'just-moved' : ''} ${isActive ? 'menu-active' : ''} ${isClickable ? 'clickable' : ''}"
          @click=${(e) => {
-           if (isSelectionFlow) {
-             onResultClick && onResultClick(item, e);
+           if (isSelectionFlow || (!isCard && isClickable)) {
+             onResultClick?.(item, e);
            } else if (isCard) {
-             onPlay && onPlay(item);
-           } else if (isClickable) {
-             onResultClick && onResultClick(item, e);
+             onPlay?.(item);
            }
          }}>
       <div class="search-sheet-thumb-container" 
@@ -338,20 +362,12 @@ export function renderSearchResultItem({
               }
             }}
           >
-            ${(() => {
-              const isTrackItem = isTrack(item);
-              const isTrackOrAlbum = (searchMediaClassFilter === 'track' || searchMediaClassFilter === 'album');
-              
-              if (isTrackItem && item.artist && item.album) {
-                return `${item.artist} - ${item.album}`;
-              }
-              if ((isTrackOrAlbum || recentlyPlayedFilterActive || upcomingFilterActive || recommendationsFilterActive) && item.artist) {
-                return item.artist;
-              }
-              return item.media_class
-                ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
-                : "";
-            })()}
+            ${getSearchResultSubtitle(item, {
+              searchMediaClassFilter,
+              recentlyPlayedFilterActive,
+              upcomingFilterActive,
+              recommendationsFilterActive
+            })}
           </span>
           ${isCard && !isRadio(item) && !hideActions ? html`
             <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }}>
