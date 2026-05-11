@@ -135,9 +135,10 @@ export function renderSearchResultActions({
   if (hideActions) return nothing;
   const isQueueItem = !!(upcomingFilterActive && item.queue_item_id && isMusicAssistant && massQueueAvailable);
 
-  const containerClass = isInline ? 'entity-options-search-buttons' : (searchView === 'card' ? 'card-overlay-buttons' : 'search-sheet-buttons');
-  const playClass = isInline ? 'entity-options-search-play' : (searchView === 'card' ? 'search-sheet-play icon-only' : 'search-sheet-play');
-  const queueClass = isInline ? 'entity-options-search-queue' : (searchView === 'card' ? 'search-sheet-queue icon-only' : 'search-sheet-queue');
+  const isCardView = searchView === 'card' || searchView === 'card_minimal';
+  const containerClass = isInline ? 'entity-options-search-buttons' : (isCardView ? 'card-overlay-buttons' : 'search-sheet-buttons');
+  const playClass = isInline ? 'entity-options-search-play' : (isCardView ? 'search-sheet-play icon-only' : 'search-sheet-play');
+  const queueClass = isInline ? 'entity-options-search-queue' : (isCardView ? 'search-sheet-queue icon-only' : 'search-sheet-queue');
 
   return html`
     <div class="${containerClass}">
@@ -266,6 +267,7 @@ export function renderSearchResultItem({
 
   const isMA = isMusicAssistant;
   const isClickable = !!item.is_browsable || isSelectionFlow;
+  const searchViewType = isCard ? (isMinimal ? 'card_minimal' : 'card') : 'list';
   const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
   const hideActions = isSelectionFlow;
 
@@ -301,7 +303,7 @@ export function renderSearchResultItem({
           upcomingFilterActive: !!upcomingFilterActive,
           isMusicAssistant: isMA,
           massQueueAvailable,
-          searchView: 'card',
+          searchView: searchViewType,
           onMoveUp,
           onMoveDown,
           onMoveNext,
@@ -315,6 +317,7 @@ export function renderSearchResultItem({
         <div class="yamp-search-result-info">
           <span 
             class="yamp-search-result-title ${isClickable ? 'clickable-search-result' : ''}" 
+            @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
             @click=${(e) => {
               if (isClickable || isSelectionFlow) {
                 e.stopPropagation();
@@ -327,6 +330,7 @@ export function renderSearchResultItem({
           </span>
           <span 
             class="yamp-search-result-subtitle ${isClickable ? 'clickable-search-result' : ''}" 
+            @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
             @click=${(e) => {
               if (isClickable || isSelectionFlow) {
                 e.stopPropagation();
@@ -364,7 +368,7 @@ export function renderSearchResultItem({
         upcomingFilterActive: !!upcomingFilterActive,
         isMusicAssistant: isMA,
         massQueueAvailable,
-        searchView: 'list',
+        searchView: searchViewType,
         isInline: true,
         onMoveUp,
         onMoveDown,
@@ -378,7 +382,7 @@ export function renderSearchResultItem({
         activeSearchRowMenuId,
         onPlayOption,
         onOptionsToggle,
-        searchView: isCard ? 'card' : 'list',
+        searchView: searchViewType,
         isQueueItem: isMA && item.queue_item_id && upcomingFilterActive && massQueueAvailable,
         massQueueAvailable,
         onMoveUp,

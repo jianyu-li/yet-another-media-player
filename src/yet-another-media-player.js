@@ -8071,7 +8071,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ` : nothing
                   }
 
-            <div class="entity-options-search-results ${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? 'search-results-card-view' : 'list-view'}" 
+            <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} ${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? 'search-results-card-view' : 'list-view'}" 
                  style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
               ${(() => {
                     const filter = this._searchMediaClassFilter || "all";

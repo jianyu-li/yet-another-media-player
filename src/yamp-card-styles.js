@@ -3415,7 +3415,7 @@ export const yampCardStyles = css`
   }
 
   @media (hover: hover) {
-    .yamp-search-result:hover {
+    .search-sheet-results .yamp-search-result:not(.search-result-card):hover {
       background: var(--search-hover-bg);
     }
   }
@@ -3474,11 +3474,7 @@ export const yampCardStyles = css`
     border-radius: 8px;
   }
 
-  @media (hover: hover) {
-    .search-sheet-result:hover .card-overlay-buttons {
-      opacity: 1;
-    }
-  }
+
 
   .icon-only.search-sheet-play, 
   .icon-only.search-sheet-queue,
@@ -3690,13 +3686,13 @@ export const yampCardStyles = css`
     border: 2px solid #4caf50 ;
   }
 
-  .search-sheet[data-match-theme="false"] .search-sheet-result {
+  .search-sheet[data-match-theme="false"] .yamp-search-result {
     color: #fff ;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;
   }
 
   @media (hover: hover) {
-    .search-sheet[data-match-theme="false"] .search-sheet-result:hover {
+    .search-sheet[data-match-theme="false"] .yamp-search-result:hover {
       background: rgba(255, 255, 255, 0.1) ;
     }
   }
