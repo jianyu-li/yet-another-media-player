@@ -30,7 +30,6 @@ jobs:
 
   validate-hacs:
     name: HACS Validation
-    if: github.event_name != 'pull_request'
     runs-on: "ubuntu-latest"
     steps:
       - name: HACS validation
