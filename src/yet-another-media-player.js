@@ -7358,8 +7358,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Details
     // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
     const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
-    // For display-only fields, fall back to metadataStateObj -> finalPlaybackStateObj -> mainState
-    const displaySource = metadataStateObj || finalPlaybackStateObj || mainState;
+    // For display-only fields, fall back to the state object that actually provides the title we matched
+    const displaySource = 
+      (metadataStateObj?.attributes?.media_title) ? metadataStateObj :
+      (finalPlaybackStateObj?.attributes?.media_title) ? finalPlaybackStateObj :
+      (mainState?.attributes?.media_title) ? mainState :
+      (metadataStateObj || finalPlaybackStateObj || mainState);
     const title = shouldShowDetails ? ((displaySource?.attributes?.media_title || "")) : "";
     const artist = shouldShowDetails
       ? (
