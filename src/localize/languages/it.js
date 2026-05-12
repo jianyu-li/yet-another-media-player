@@ -137,7 +137,8 @@ export default {
             "lyrics_source": "Music Assistant richiede l'integrazione mass_queue per recuperare i testi dal suo motore di metadati interno.",
             "lyrics_pre_roll": "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0).",
             "blurred_artwork": "Sfoca sempre l'immagine di sfondo",
-            "hide_collapsed_artwork": "Nascondi l'immagine piccola a destra quando la scheda è compressa"
+            "hide_collapsed_artwork": "Nascondi l'immagine piccola a destra quando la scheda è compressa",
+            "prefer_ma_metadata": "Utilizza sempre l'entità Music Assistant associata per il titolo del brano, l'artista e l'artwork, anche se l'entità principale è in riproduzione."
         },
         "titles": {
             "edit_entity": "Modifica entità",
@@ -180,7 +181,8 @@ export default {
             "lyrics_source": "Sorgente testi",
             "lyrics_pre_roll": "Pre-roll testi (secondi)",
             "blurred_artwork": "Immagine sfocata",
-            "hide_collapsed_artwork": "Nascondi immagine contratta"
+            "hide_collapsed_artwork": "Nascondi immagine contratta",
+            "prefer_ma_metadata": "Preferisci i metadati di Music Assistant"
         },
         "fields": {
             "artwork_fit": "Adattamento",

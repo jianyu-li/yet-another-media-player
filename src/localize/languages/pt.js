@@ -137,7 +137,8 @@ export default {
             "lyrics_source": "O Music Assistant requer a integração mass_queue para obter letras do seu motor de metadados interno.",
             "lyrics_pre_roll": "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 0).",
             "blurred_artwork": "Sempre desfocar a imagem de fundo",
-            "hide_collapsed_artwork": "Ocultar a imagem pequena à direita quando o cartão estiver recolhido"
+            "hide_collapsed_artwork": "Ocultar a imagem pequena à direita quando o cartão estiver recolhido",
+            "prefer_ma_metadata": "Utilizar sempre a entidade Music Assistant emparelhada para o título da faixa, artista e arte, mesmo que a entidade primária esteja a ser reproduzida."
         },
         "titles": {
             "edit_entity": "Editar entidade",
@@ -180,7 +181,8 @@ export default {
             "lyrics_source": "Fonte das letras",
             "lyrics_pre_roll": "Antecipação de letra (segundos)",
             "blurred_artwork": "Imagem desfocada",
-            "hide_collapsed_artwork": "Ocultar imagem reduzida"
+            "hide_collapsed_artwork": "Ocultar imagem reduzida",
+            "prefer_ma_metadata": "Preferir metadados do Music Assistant"
         },
         "fields": {
             "artwork_fit": "Ajuste",
