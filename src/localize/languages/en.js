@@ -137,7 +137,8 @@ export default {
             "lyrics_source": "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
             "lyrics_pre_roll": "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0).",
             "blurred_artwork": "Always blur the background artwork",
-            "hide_collapsed_artwork": "Hide the smaller artwork on the right when the card is collapsed"
+            "hide_collapsed_artwork": "Hide the smaller artwork on the right when the card is collapsed",
+            "prefer_ma_metadata": "Always use the paired Music Assistant entity for track title, artist, and artwork, even if the primary entity is playing."
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -180,7 +181,8 @@ export default {
             "lyrics_source": "Lyrics Source",
             "lyrics_pre_roll": "Lyrics Pre-Roll (seconds)",
             "blurred_artwork": "Blurred Artwork",
-            "hide_collapsed_artwork": "Hide Collapsed Artwork"
+            "hide_collapsed_artwork": "Hide Collapsed Artwork",
+            "prefer_ma_metadata": "Prefer Music Assistant Metadata"
         },
         "fields": {
             "artwork_fit": "Artwork Fit",
