@@ -3046,6 +3046,7 @@ export const yampCardStyles = css`
     flex: 0 0 auto;
     position: relative;
     z-index: 10;
+    padding-top: 12px;
   }
 
   /* When pinning is active, the header is sticky and seamless */
