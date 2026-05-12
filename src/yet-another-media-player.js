@@ -5134,7 +5134,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ` : nothing}
           <div class="entity-options-divider"></div>
         </div>
-        <div class="entity-options-title" style="margin-bottom:8px;">${localize('card.grouping.title')}</div>
+        ${''}
         <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
           ${activeIsBusy ? localize('card.grouping.unavailable') : localize('card.grouping.no_players')}
         </div>
@@ -5154,14 +5154,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     });
 
     return html`
-      <div class="grouping-header group-list-header">
+      <div class="entity-options-header grouping-header group-list-header">
         ${this._cardType !== "group_players" ? html`
           <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
             ${localize('common.back')}
           </button>
         ` : nothing}
+        <div class="entity-options-divider"></div>
       </div>
-      <div class="entity-options-title" style="margin-bottom:8px; margin-top:8px;">${localize('card.grouping.title')}</div>
+      ${''}
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
         ${groupedAny ? html`
           <button class="entity-options-item"
