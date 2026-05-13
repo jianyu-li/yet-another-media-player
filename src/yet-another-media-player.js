@@ -4912,7 +4912,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = this.hass?.states?.[playbackEntityId];
         const mainState = this.hass?.states?.[id];
-        const preferMaMetadata = this.entityObjs[idx]?.prefer_ma_metadata;
         const metadataArtwork = this._getArtworkUrl(metadataState);
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
@@ -4929,7 +4928,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           artObj = mainArtwork;
         }
         
-        return artObj || metadataArtwork || playbackArtwork || mainArtwork;
+        return artObj || playbackArtwork || mainArtwork;
       },
       getIsMaActive: (id) => {
         const idx = this.entityIds.indexOf(id);
@@ -5134,7 +5133,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ` : nothing}
           <div class="entity-options-divider"></div>
         </div>
-        ${''}
+        ${nothing}
         <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
           ${activeIsBusy ? localize('card.grouping.unavailable') : localize('card.grouping.no_players')}
         </div>
@@ -5162,7 +5161,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         ` : nothing}
         <div class="entity-options-divider"></div>
       </div>
-      ${''}
+      ${nothing}
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
         ${groupedAny ? html`
           <button class="entity-options-item"
@@ -7547,7 +7546,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let artworkSizePercentage = null;
     let artworkObjectFit = this._artworkObjectFit;
     if (!this._isIdle) {
-      // Use the unified entity resolution system for artwork
       // Use the unified entity resolution system for artwork
       const artwork = selectedArt;
       artworkUrl = artwork?.url || null;
