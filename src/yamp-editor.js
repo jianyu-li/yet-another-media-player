@@ -2097,6 +2097,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           })()}
     `}
 
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="prefer-ma-metadata-toggle"
+              .checked=${entity?.prefer_ma_metadata ?? false}
+              .disabled=${!entity?.music_assistant_entity || entity.music_assistant_entity.trim() === ""}
+              @change=${(e) => this._updateEntityProperty("prefer_ma_metadata", e.target.checked)}
+            ></ha-switch>
+            <label for="prefer-ma-metadata-toggle">${localize('editor.labels.prefer_ma_metadata')}</label>
+          </div>
+          <div class="config-subtitle">${localize('editor.subtitles.prefer_ma_metadata')}</div>
+        </div>
+
         <div class="form-row">
           <ha-switch
             id="disable-auto-select-toggle"

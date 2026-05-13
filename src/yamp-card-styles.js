@@ -2345,7 +2345,9 @@ export const yampCardStyles = css`
   .entity-options-item.close-item {
     font-weight: 500;
     margin: 1px 0;
-    padding: 4px 0 5px 0;
+    margin-top: 12px;
+    padding-top: 4px;
+    padding-bottom: 5px;
     display: block;
     width: 100%;
   }
@@ -2362,11 +2364,7 @@ export const yampCardStyles = css`
   .grouping-header {
     width: 100%;
   }
-  .grouping-header .entity-options-item.close-item {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
-    margin-bottom: 6px;
-    padding-bottom: 6px;
-  }
+
 
   /* Source index */
   .source-index-letter:focus {

@@ -137,7 +137,8 @@ export default {
             "lyrics_source": "Music Assistant vyžaduje integráciu mass_queue na načítanie textov z jeho interného metadátového modulu.",
             "lyrics_pre_roll": "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0).",
             "blurred_artwork": "Vždy rozmazať obrázok na pozadí",
-            "hide_collapsed_artwork": "Skryť malý obrázok vpravo, keď je karta zbalená"
+            "hide_collapsed_artwork": "Skryť malý obrázok vpravo, keď je karta zbalená",
+            "prefer_ma_metadata": "Vždy používajte spárovanú entitu Music Assistant pre názov skladby, interpreta a grafiku, aj keď sa prehráva primárna entita."
         },
         "titles": {
             "edit_entity": "Upraviť entitu",
@@ -180,7 +181,8 @@ export default {
             "lyrics_source": "Zdroj textov",
             "lyrics_pre_roll": "Pre-roll textu piesne (sekundy)",
             "blurred_artwork": "Rozmazaný obrázok",
-            "hide_collapsed_artwork": "Skryť zmenšený obrázok"
+            "hide_collapsed_artwork": "Skryť zmenšený obrázok",
+            "prefer_ma_metadata": "Uprednostniť metadáta z Music Assistant"
         },
         "fields": {
             "artwork_fit": "Prispôsobenie grafiky",

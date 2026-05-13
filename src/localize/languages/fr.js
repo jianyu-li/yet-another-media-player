@@ -137,7 +137,8 @@ export default {
             "lyrics_source": "Music Assistant nécessite l'intégration mass_queue pour récupérer les paroles de son moteur de métadonnées interne.",
             "lyrics_pre_roll": "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0).",
             "blurred_artwork": "Toujours flouter l'image d'arrière-plan",
-            "hide_collapsed_artwork": "Masquer l'image réduite sur la droite lorsque la carte est repliée"
+            "hide_collapsed_artwork": "Masquer l'image réduite sur la droite lorsque la carte est repliée",
+            "prefer_ma_metadata": "Toujours utiliser l'entité Music Assistant associée pour le titre de la piste, l'artiste et l'image, même si l'entité principale est en cours de lecture."
         },
         "titles": {
             "edit_entity": "Modifier l'entité",
@@ -180,7 +181,8 @@ export default {
             "lyrics_source": "Source des paroles",
             "lyrics_pre_roll": "Pré-roll des paroles (secondes)",
             "blurred_artwork": "Image floutée",
-            "hide_collapsed_artwork": "Masquer l'image réduite"
+            "hide_collapsed_artwork": "Masquer l'image réduite",
+            "prefer_ma_metadata": "Préférer les métadonnées Music Assistant"
         },
         "fields": {
             "artwork_fit": "Ajustement",

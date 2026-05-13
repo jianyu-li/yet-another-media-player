@@ -137,7 +137,8 @@ export default {
             "lyrics_source": "Music Assistant benötigt die mass_queue-Integration, um Liedtexte von seiner internen Metadaten-Engine abzurufen.",
             "lyrics_pre_roll": "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0).",
             "blurred_artwork": "Hintergrundbild immer weichzeichnen",
-            "hide_collapsed_artwork": "Das kleine Artwork auf der rechten Seite ausblenden, wenn die Karte eingeklappt ist"
+            "hide_collapsed_artwork": "Das kleine Artwork auf der rechten Seite ausblenden, wenn die Karte eingeklappt ist",
+            "prefer_ma_metadata": "Verwenden Sie immer die gekoppelte Music Assistant-Entität für Titel, Künstler und Artwork, auch wenn die primäre Entität gerade spielt."
         },
         "titles": {
             "edit_entity": "Entität bearbeiten",
@@ -180,7 +181,8 @@ export default {
             "lyrics_source": "Liedtext-Quelle",
             "lyrics_pre_roll": "Liedtext Pre-Roll (Sekunden)",
             "blurred_artwork": "Verschwommenes Artwork",
-            "hide_collapsed_artwork": "Verkleinertes Artwork ausblenden"
+            "hide_collapsed_artwork": "Verkleinertes Artwork ausblenden",
+            "prefer_ma_metadata": "Music Assistant Metadaten bevorzugen"
         },
         "fields": {
             "artwork_fit": "Artwork-Anpassung",

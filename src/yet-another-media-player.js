@@ -4296,6 +4296,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
         disable_auto_select: this._isAutoSelectDisabled(index),
+        prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
         ...(typeof group_volume !== "undefined" ? { group_volume } : {})
       };
     });
@@ -4339,6 +4340,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       case 'sorting':
         // For chip sorting: use active playback entity (MA entity if playing, otherwise main entity)
+        return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
+      
+      case 'metadata':
+        // For metadata: use MA entity if prefer_ma_metadata is enabled, otherwise use active playback entity
+        if (obj.prefer_ma_metadata) {
+          return this._resolveEntity(obj.music_assistant_entity, obj.entity_id, idx) || obj.entity_id;
+        }
         return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
 
       default:
@@ -4774,6 +4782,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return this._cachedActivePlaybackEntityId;
   }
 
+  get metadataStateObj() {
+    const id = this._getEntityForPurpose(this._selectedIndex, 'metadata');
+    return id ? this.hass?.states?.[id] : null;
+  }
+
   get currentActivePlaybackStateObj() {
     const id = this.currentActivePlaybackEntityId;
     return id ? this.hass?.states?.[id] : null;
@@ -4885,30 +4898,40 @@ class YetAnotherMediaPlayerCard extends LitElement {
       mediaArtworkOverrides: this.config?.media_artwork_overrides || [],
       fallbackArtwork: this.config?.fallback_artwork || null,
       getIsChipPlaying: (id, isSelected) => {
-        const obj = this._findEntityObjByAnyId(id);
-        const mainId = obj?.entity_id || id;
-        const idx = this.entityIds.indexOf(mainId);
+        const idx = this.entityIds.indexOf(id);
         if (idx < 0) return false;
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = this.hass?.states?.[playbackEntityId];
         return this._isEntityPlaying(playbackState);
       },
       getChipArt: (id) => {
-        const obj = this._findEntityObjByAnyId(id);
-        const mainId = obj?.entity_id || id;
-        const idx = this.entityIds.indexOf(mainId);
+        const idx = this.entityIds.indexOf(id);
         if (idx < 0) return null;
+        const metadataEntityId = this._getEntityForPurpose(idx, 'metadata');
+        const metadataState = this.hass?.states?.[metadataEntityId];
         const playbackEntityId = this._getEntityForPurpose(idx, 'playback_control');
         const playbackState = this.hass?.states?.[playbackEntityId];
-        const mainState = this.hass?.states?.[mainId];
+        const mainState = this.hass?.states?.[id];
+        const metadataArtwork = this._getArtworkUrl(metadataState);
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
-        return playbackArtwork || mainArtwork;
+        
+        const displaySource = metadataState || playbackState || mainState;
+        const displayTitle = displaySource?.attributes?.media_title;
+        
+        // Prioritize metadata artwork, then fall back to others only if they match the displayed title
+        let artObj = metadataArtwork;
+        if (displayTitle && (!artObj || !artObj.url) && playbackArtwork?.url && playbackState?.attributes?.media_title === displayTitle) {
+          artObj = playbackArtwork;
+        }
+        if (displayTitle && (!artObj || !artObj.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
+          artObj = mainArtwork;
+        }
+        
+        return artObj || playbackArtwork || mainArtwork;
       },
       getIsMaActive: (id) => {
-        const obj = this._findEntityObjByAnyId(id);
-        const mainId = obj?.entity_id || id;
-        const idx = this.entityIds.indexOf(mainId);
+        const idx = this.entityIds.indexOf(id);
         if (idx < 0) return false;
         const entityObj = this.entityObjs[idx];
         if (!entityObj?.music_assistant_entity) return false;
@@ -5110,7 +5133,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ` : nothing}
           <div class="entity-options-divider"></div>
         </div>
-        <div class="entity-options-title" style="margin-bottom:8px;">${localize('card.grouping.title')}</div>
+        ${nothing}
         <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
           ${activeIsBusy ? localize('card.grouping.unavailable') : localize('card.grouping.no_players')}
         </div>
@@ -5130,14 +5153,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     });
 
     return html`
-      <div class="grouping-header group-list-header">
+      <div class="entity-options-header grouping-header group-list-header">
         ${this._cardType !== "group_players" ? html`
           <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
             ${localize('common.back')}
           </button>
         ` : nothing}
+        <div class="entity-options-divider"></div>
       </div>
-      <div class="entity-options-title" style="margin-bottom:8px; margin-top:8px;">${localize('card.grouping.title')}</div>
+      ${nothing}
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
         ${groupedAny ? html`
           <button class="entity-options-item"
@@ -5373,7 +5397,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lyricsError = false;
     const configSource = this.config.lyrics_source || "mass_lrclib";
 
-    const activeState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     if (!activeState) {
       this._massLyrics = [];
       this.requestUpdate();
@@ -5652,9 +5676,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // Check if currently playing track has changed and refresh "Next Up" if active
       if (this._upcomingFilterActive) {
-        const currentPlaybackEntity = this.currentActivePlaybackEntityId;
-        if (currentPlaybackEntity) {
-          const currentState = this.hass.states[currentPlaybackEntity];
+        const metadataEntityId = this._getEntityForPurpose(this._selectedIndex, 'metadata');
+        if (metadataEntityId) {
+          const currentState = this.hass.states[metadataEntityId];
           const currentMediaTitle = currentState?.attributes?.media_title;
           if (currentMediaTitle && currentMediaTitle !== this._lastMediaTitle) {
             this._lastMediaTitle = currentMediaTitle;
@@ -5805,7 +5829,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     // Lyrics fetch trigger
     if (this._lyricsActive) {
-      const activeState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+      const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
       const trackId = activeState?.attributes?.media_content_id || null;
       const artist = activeState?.attributes?.media_artist || null;
       const title = activeState?.attributes?.media_title || null;
@@ -7299,20 +7323,46 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const shuffleActive = !!finalPlaybackStateObj?.attributes?.shuffle;
     const repeatActive = finalPlaybackStateObj?.attributes?.repeat && finalPlaybackStateObj?.attributes?.repeat !== "off";
 
+    // Metadata and Details Source
+    const metadataStateObj = this.metadataStateObj;
+
     // Artwork and idle logic
     // When idle_timeout_ms=0, always show content regardless of idle state
     const isPlaying = this._idleTimeoutMs === 0 ? this._isEntityPlaying(playbackStateObj) : (!this._isIdle && this._isEntityPlaying(playbackStateObj));
     // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
     const mainState = this.currentStateObj;
-    const mainArtwork = this._getArtworkUrl(mainState);
+    const metadataArtwork = this._getArtworkUrl(metadataStateObj);
     const playbackArtwork = this._getArtworkUrl(playbackStateObj);
-    const isRealArtwork = this._idleTimeoutMs === 0 ? (isPlaying && (mainArtwork?.url || playbackArtwork?.url)) : (!this._isIdle && isPlaying && (mainArtwork?.url || playbackArtwork?.url));
-    const art = isRealArtwork ? (mainArtwork?.url || playbackArtwork?.url) : null;
+    const mainArtwork = this._getArtworkUrl(mainState);
+
+    const displayTitle = metadataStateObj?.attributes?.media_title || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
+
+    // Intelligent artwork fallback: 
+    // 1. Always prefer the explicit metadata source
+    // 2. Fall back to active/main playback ONLY if they are playing the exact same track title
+    let selectedArt = metadataArtwork;
+    if (displayTitle && (!selectedArt || !selectedArt.url) && playbackArtwork?.url && playbackStateObj?.attributes?.media_title === displayTitle) {
+      selectedArt = playbackArtwork;
+    }
+    if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
+      selectedArt = mainArtwork;
+    }
+
+    const isRealArtwork = this._idleTimeoutMs === 0 
+      ? (isPlaying && (selectedArt?.url)) 
+      : (!this._isIdle && isPlaying && (selectedArt?.url));
+    
+    const art = isRealArtwork ? selectedArt?.url : null;
+
     // Details
     // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
     const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
-    // For display-only fields, fall back to mainState when playback state is unavailable
-    const displaySource = finalPlaybackStateObj || mainState;
+    // For display-only fields, fall back to the state object that actually provides the title we matched
+    const displaySource = 
+      (metadataStateObj?.attributes?.media_title) ? metadataStateObj :
+      (finalPlaybackStateObj?.attributes?.media_title) ? finalPlaybackStateObj :
+      (mainState?.attributes?.media_title) ? mainState :
+      (metadataStateObj || finalPlaybackStateObj || mainState);
     const title = shouldShowDetails ? ((displaySource?.attributes?.media_title || "")) : "";
     const artist = shouldShowDetails
       ? (
@@ -7497,9 +7547,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let artworkObjectFit = this._artworkObjectFit;
     if (!this._isIdle) {
       // Use the unified entity resolution system for artwork
-      const playbackArtwork = this._getArtworkUrl(playbackStateObj);
-      const mainArtwork = this._getArtworkUrl(mainState);
-      const artwork = (playbackArtwork?.url) ? playbackArtwork : mainArtwork;
+      const artwork = selectedArt;
       artworkUrl = artwork?.url || null;
       artworkSizePercentage = artwork?.sizePercentage;
       if (artwork?.objectFit) {
@@ -8169,9 +8217,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                 <div class="persistent-controls-artwork">
                   ${(() => {
             // Use the same entity resolution as the main card
-            const playbackStateObj = this.currentPlaybackStateObj;
-            const mainState = this.currentStateObj;
-            const artwork = this._getArtworkUrl(playbackStateObj) || this._getArtworkUrl(mainState);
+            const artwork = selectedArt;
             return artwork?.url && this._isValidArtworkUrl(artwork.url) ? html`
                       <img src="${artwork.url}" alt="Album Art" class="persistent-artwork" onerror="this.style.display='none'">
                     ` : html`

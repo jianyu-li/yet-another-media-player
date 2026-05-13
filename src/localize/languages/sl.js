@@ -137,7 +137,8 @@ export default {
             "lyrics_source": "Music Assistant zahteva integracijo mass_queue za pridobivanje besedil iz svojega notranjega mehanizma metapodatkov.",
             "lyrics_pre_roll": "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0).",
             "blurred_artwork": "Vedno zamegli ozadje",
-            "hide_collapsed_artwork": "Skrij majhno sliko na desni, ko je kartica strnjena"
+            "hide_collapsed_artwork": "Skrij majhno sliko na desni, ko je kartica strnjena",
+            "prefer_ma_metadata": "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta."
         },
         "titles": {
             "edit_entity": "Uredi entiteto",
@@ -180,7 +181,8 @@ export default {
             "lyrics_source": "Vir besedil",
             "lyrics_pre_roll": "Pre-roll besedila (sekunde)",
             "blurred_artwork": "Zamegljena grafika",
-            "hide_collapsed_artwork": "Skrij skrčeno grafiko"
+            "hide_collapsed_artwork": "Skrij skrčeno grafika",
+            "prefer_ma_metadata": "Prednost metapodatkom Music Assistant"
         },
         "fields": {
             "artwork_fit": "Prileganje grafike",

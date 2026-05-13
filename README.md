@@ -55,6 +55,7 @@ Below you will find a list of all configuration options.
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Templates](#template-support)) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
 | `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping ([Supports Templates](#template-support)) |
+| `prefer_ma_metadata`       | boolean      | No           | `false`     | Prioritize the Music Assistant entity for artwork and metadata resolution regardless of which device is playing |
 | `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array        | No           | `[]`        | Array of control names to hide for this specific entity         |
@@ -147,6 +148,20 @@ entities:
   - entity_id: media_player.kitchen_homepod
     name: Kitchen
     music_assistant_entity: media_player.kitchen_homepod_2
+```
+
+### Metadata Source Override
+
+Use `prefer_ma_metadata: true` when you want the card to explicitly prioritize the Music Assistant entity for retrieving artwork and media info. This is particularly useful for playback devices that don't natively provide rich metadata (like some AirPlay or Bluetooth targets) when they are being driven by Music Assistant.
+
+When enabled, the card will use the Music Assistant entity as the primary source for the track title, artist, and album art. 
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.office_homepod
+    music_assistant_entity: media_player.office_homepod_2
+    prefer_ma_metadata: true
 ```
 
 #### Template Example
