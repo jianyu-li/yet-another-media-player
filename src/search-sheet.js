@@ -308,7 +308,7 @@ export function renderSearchResultItem({
          }}>
       <div class="search-sheet-thumb-container" 
            data-clickable="${isCard}">
-        ${item.thumbnail && isValidArtwork(item.thumbnail) && !String(item.thumbnail).includes('imageproxy') ? html`
+        ${item.thumbnail && isValidArtwork(item.thumbnail) ? html`
           <img
             class="yamp-search-result-thumb"
             src=${item.thumbnail}
