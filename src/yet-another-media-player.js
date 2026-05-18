@@ -4444,8 +4444,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Resolve a grouping member ID to its configured entityObj (synchronous and cache-based)
   _resolveEntityObjByGroupingId(groupingEntityId) {
-    for (let i = 0; i < this.entityObjs.length; i++) {
-      const obj = this.entityObjs[i];
+    const objs = this.entityObjs;
+    for (let i = 0; i < objs.length; i++) {
+      const obj = objs[i];
       const resolvedId = this._resolveMaEntityForObj(obj, i);
       if (resolvedId === groupingEntityId) return obj;
     }
@@ -6863,8 +6864,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
       for (const t of targets) {
-        // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
-        const volTarget = t; // Use the grouping entity directly
+        const foundObj = this._resolveEntityObjByGroupingId(t);
+        // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
+        const volTarget = this._getVolumeEntityForObj(foundObj) || t;
         const targetState = this.hass.states[volTarget];
         const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
 
