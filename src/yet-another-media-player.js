@@ -4314,7 +4314,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (obj.follow_active_volume) {
           return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
         }
-        return this._resolveEntity(obj.volume_entity, obj.entity_id, idx) || obj.entity_id;
+        return this._resolveEntity(obj.volume_entity, obj.entity_id, idx, 'vol') || obj.entity_id;
 
       case 'playback_control':
         // For playback controls: use the entity that is actually playing
@@ -4337,12 +4337,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Helper to resolve template entities
-  _resolveEntity(entityTemplate, fallbackEntityId, idx) {
+  _resolveEntity(entityTemplate, fallbackEntityId, idx, cacheType = 'ma') {
     if (!entityTemplate) return null;
 
     if (typeof entityTemplate === 'string' && (entityTemplate.includes('{{') || entityTemplate.includes('{%'))) {
       // For templates, use cached resolved entity
-      const cached = this._maResolveCache?.[idx]?.id;
+      const cache = cacheType === 'vol' ? this._volResolveCache : this._maResolveCache;
+      const cached = cache?.[idx]?.id;
       return cached || fallbackEntityId;
     }
 
@@ -4444,24 +4445,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
   // Resolve a grouping member ID to its configured entityObj
   async _resolveEntityObjByGroupingId(groupingEntityId) {
     for (const obj of this.entityObjs) {
-      let resolvedId;
-      if (obj.music_assistant_entity) {
-        if (typeof obj.music_assistant_entity === 'string' &&
-          (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-          try {
-            resolvedId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
-          } catch (error) {
-            resolvedId = obj.entity_id;
-          }
-        } else {
-          resolvedId = obj.music_assistant_entity;
-        }
-      } else {
-        resolvedId = obj.entity_id;
-      }
+      const resolvedId = await this._resolveMaEntityForObj(obj);
       if (resolvedId === groupingEntityId) return obj;
     }
     return null;
+  }
+
+  // Helper to resolve the Music Assistant entity for a given entityObj at action time (handles templates)
+  async _resolveMaEntityForObj(obj) {
+    if (!obj) return null;
+    if (obj.music_assistant_entity) {
+      if (typeof obj.music_assistant_entity === 'string' &&
+        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+        try {
+          return await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
+        } catch (error) {
+          return obj.entity_id;
+        }
+      } else {
+        return obj.music_assistant_entity;
+      }
+    }
+    return obj.entity_id;
   }
 
   // Get the physical volume entity for a given entityObj
@@ -4743,6 +4748,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getGroupingMasterObj() {
     const idx = this._getGroupingMasterIndex();
     return idx >= 0 ? this.entityObjs[idx] : null;
+  }
+
+  _isActiveChipGrouped(idx) {
+    if (!this.entityIds || idx < 0 || idx >= this.entityIds.length) return false;
+    const currentId = this.entityIds[idx];
+    if (!currentId) return false;
+    const groups = this.groupedSortedEntityIds || [];
+    const activeGroup = groups.find(g => g.includes(currentId));
+    return !!(activeGroup && activeGroup.length > 1);
   }
 
   _resolveGroupingEntityId(obj, fallbackEntityId) {
@@ -6692,8 +6706,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Always use group_volume directly from obj
     const groupVolume = (typeof obj.group_volume === "boolean") ? obj.group_volume : true;
+    const isChipGrouped = this._isActiveChipGrouped(idx);
 
-    if (!groupVolume || this._quickGroupingMode) {
+    if (!groupVolume || !isChipGrouped) {
       this.hass.callService("media_player", "volume_set", {
         entity_id: this._getVolumeEntity(idx),
         volume_level: newVol
@@ -6751,7 +6766,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
     const state = this.hass.states[groupingEntity];
 
-    if (this._isCurrentlyGrouped(state)) {
+    const obj = this.entityObjs[idx];
+    const groupVolume = (typeof obj.group_volume === "boolean") ? obj.group_volume : true;
+    const isChipGrouped = this._isActiveChipGrouped(idx);
+
+    if (groupVolume && isChipGrouped && this._isCurrentlyGrouped(state)) {
       // Grouped: apply group gain step (deduplicated targets)
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
@@ -6842,7 +6861,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       console.error('yamp: Error in grouping detection:', error);
     }
 
-    if (this._isCurrentlyGrouped(state)) {
+    const obj = this.entityObjs[idx];
+    const groupVolume = (typeof obj.group_volume === "boolean") ? obj.group_volume : true;
+    const isChipGrouped = this._isActiveChipGrouped(idx);
+
+    if (groupVolume && isChipGrouped && this._isCurrentlyGrouped(state)) {
       // Grouped: apply mute to all group members (deduplicated)
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
