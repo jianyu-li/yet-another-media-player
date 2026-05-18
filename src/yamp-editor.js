@@ -1940,7 +1940,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   _renderEntityEditor(entity) {
 
     const stateObj = this.hass?.states?.[entity?.entity_id];
-    const showGroupVolume = this._isGroupCapable(stateObj);
+    let showGroupVolume = this._isGroupCapable(stateObj);
+    if (!showGroupVolume && entity?.music_assistant_entity) {
+      const mae = entity.music_assistant_entity;
+      if (this._looksLikeTemplate(mae)) {
+        showGroupVolume = true;
+      } else {
+        const maStateObj = this.hass?.states?.[mae];
+        if (maStateObj && this._isGroupCapable(maStateObj)) {
+          showGroupVolume = true;
+        }
+      }
+    }
 
     return html`
         <div class="entity-editor-header">

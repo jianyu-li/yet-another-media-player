@@ -56,7 +56,7 @@ Below you will find a list of all configuration options.
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
 | `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping ([Supports Templates](#template-support)) |
 | `prefer_ma_metadata`       | boolean      | No           | `false`     | Prioritize the Music Assistant entity for artwork and metadata resolution regardless of which device is playing |
-| `group_volume`             | boolean      | No           | `auto`      | Override default group volume logic for grouped players                                         |
+| `group_volume`             | boolean      | No           | `true`      | Isolate this entity's volume from group volume changes and vice versa (see [Group Volume Override](#group-volume-override-per-entity)) |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array        | No           | `[]`        | Array of control names to hide for this specific entity         |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
@@ -216,6 +216,25 @@ Use `disable_auto_select: true` to prevent the card from automatically jumping t
 - The card will **not** auto-switch to this chip if it becomes the master of a group (unless you manually select it first).
 - The chip will **not** re-order to the front of the chip row when it begins playing.
 - The card will **not** wake from idle mode if this is the only active player.
+### Group Volume Override (Per-Entity)
+
+Use `group_volume: false` on an entity to isolate its volume control from the group:
+- **Outgoing volume isolation**: Adjusting this player's volume slider or stepper will **only** change its own volume, never affecting the rest of the group.
+- **Incoming volume isolation**: When this player is part of a group, adjusting the volume of the **group master** or other grouped players will **not** affect this player's volume. Its volume remains locked at its current level.
+
+By default, `group_volume` is `true` (if omitted).
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    follow_active_volume: true
+  - entity_id: media_player.office_homepod
+    name: Office
+    music_assistant_entity: media_player.office_homepod_2
+    group_volume: false  # Office volume will not change when Kitchen volume is adjusted
+```
 
 
 ### Group Players

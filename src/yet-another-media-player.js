@@ -4314,25 +4314,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (obj.follow_active_volume) {
           return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
         }
-        return this._resolveEntity(obj.volume_entity, obj.entity_id, idx) || obj.entity_id;
-
-      case 'volume_display':
-        // For volume display: show active entity if follow_active_volume enabled, otherwise show control entity
-        if (obj.follow_active_volume) {
-          return this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
-        }
-        return this._resolveEntity(obj.volume_entity, obj.entity_id, idx) || obj.entity_id;
-
-      case 'grouping_control':
-        // For grouping menu: use MA entity (main entity if it's MA, or configured MA entity)
-        // Check if main entity is a Music Assistant entity by checking if it supports grouping
-        const mainState = this.hass.states[obj.entity_id];
-        const mainIsMA = this._isGroupCapable(mainState);
-
-        if (mainIsMA) {
-          return obj.entity_id;
-        }
-        return this._resolveEntity(obj.music_assistant_entity, obj.entity_id, idx) || obj.entity_id;
+        return this._resolveEntity(obj.volume_entity, obj.entity_id, idx, 'vol') || obj.entity_id;
 
       case 'playback_control':
         // For playback controls: use the entity that is actually playing
@@ -4355,12 +4337,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Helper to resolve template entities
-  _resolveEntity(entityTemplate, fallbackEntityId, idx) {
+  _resolveEntity(entityTemplate, fallbackEntityId, idx, cacheType = 'ma') {
     if (!entityTemplate) return null;
 
     if (typeof entityTemplate === 'string' && (entityTemplate.includes('{{') || entityTemplate.includes('{%'))) {
       // For templates, use cached resolved entity
-      const cached = this._maResolveCache?.[idx]?.id;
+      const cache = cacheType === 'vol' ? this._volResolveCache : this._maResolveCache;
+      const cached = cache?.[idx]?.id;
       return cached || fallbackEntityId;
     }
 
@@ -4459,8 +4442,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return this._getEntityForPurpose(idx, 'volume_control');
   }
 
-  _getVolumeEntityForGrouping(idx) {
-    return this._getEntityForPurpose(idx, 'grouping_control');
+  // Resolve a grouping member ID to its configured entity index (synchronous and cache-based)
+  _resolveEntityIdxByGroupingId(groupingEntityId) {
+    const objs = this.entityObjs;
+    for (let i = 0; i < objs.length; i++) {
+      const resolvedId = this._resolveMaEntityForObj(objs[i], i);
+      if (resolvedId === groupingEntityId) return i;
+    }
+    return -1;
+  }
+
+  // Helper to resolve the Music Assistant entity for a given entityObj (synchronous and cache-based)
+  _resolveMaEntityForObj(obj, idx) {
+    if (!obj) return null;
+    return this._resolveEntity(obj.music_assistant_entity, obj.entity_id, idx) || obj.entity_id;
   }
 
   // Prefer Music Assistant entity for search/grouping if configured
@@ -4734,6 +4729,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _getGroupingMasterObj() {
     const idx = this._getGroupingMasterIndex();
     return idx >= 0 ? this.entityObjs[idx] : null;
+  }
+
+  _isActiveChipGrouped(idx) {
+    if (!this.entityIds || idx < 0 || idx >= this.entityIds.length) return false;
+    const currentId = this.entityIds[idx];
+    if (!currentId) return false;
+    const groups = this.groupedSortedEntityIds || [];
+    const activeGroup = groups.find(g => g.includes(currentId));
+    return !!(activeGroup && activeGroup.length > 1);
   }
 
   _resolveGroupingEntityId(obj, fallbackEntityId) {
@@ -5191,7 +5195,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const busyLabel = item.busyLabel;
 
       const entityIdx = this.entityIds.indexOf(id);
-      const volumeEntity = this._getVolumeEntityForGrouping(entityIdx);
+      const volumeEntity = this._getVolumeEntity(entityIdx);
       const displayEntity = volumeEntity || actualGroupId;
       const displayVolumeState = this.hass.states[displayEntity];
 
@@ -6673,18 +6677,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
    * With group_volume: false, always sets only the single volume entity, never the group.
    * With group_volume: true/undefined, applies group logic.
    */
-  async _onVolumeChange(e) {
+  _onVolumeChange(e) {
     const idx = this._selectedIndex;
-    const groupingEntityTemplate = this._getGroupingEntityId(idx);
-    const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
+    const groupingEntity = this._getGroupingEntityId(idx) || this.currentEntityId;
     const state = this.hass.states[groupingEntity];
     const newVol = Number(e.target.value);
     const obj = this.entityObjs[idx];
 
     // Always use group_volume directly from obj
     const groupVolume = (typeof obj.group_volume === "boolean") ? obj.group_volume : true;
+    const isChipGrouped = this._isActiveChipGrouped(idx);
 
-    if (!groupVolume || this._quickGroupingMode) {
+    if (!groupVolume || !isChipGrouped) {
       this.hass.callService("media_player", "volume_set", {
         entity_id: this._getVolumeEntity(idx),
         volume_level: newVol
@@ -6703,35 +6707,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
         : Number(this.currentVolumeStateObj?.attributes.volume_level || 0);
       const delta = newVol - base;
 
+      // Deduplicate resolved volume targets to prevent redundant service calls
+      const seen = new Set();
       for (const t of targets) {
-        // Find the configured entity that has this grouping entity
-        let foundObj = null;
-        for (const obj of this.entityObjs) {
-          let resolvedGroupingId;
-          if (obj.music_assistant_entity) {
-            if (typeof obj.music_assistant_entity === 'string' &&
-              (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-              // For templates, resolve at action time
-              try {
-                resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
-              } catch (error) {
-                resolvedGroupingId = obj.entity_id;
-              }
-            } else {
-              resolvedGroupingId = obj.music_assistant_entity;
-            }
-          } else {
-            resolvedGroupingId = obj.entity_id;
-          }
-
-          if (resolvedGroupingId === t) {
-            foundObj = obj;
-            break;
-          }
+        const foundIdx = this._resolveEntityIdxByGroupingId(t);
+        // Skip targets whose configured entity has group_volume: false (but never skip the current entity)
+        if (foundIdx >= 0 && foundIdx !== idx) {
+          const targetObj = this.entityObjs[foundIdx];
+          if (targetObj && targetObj.group_volume === false) continue;
         }
-
-        // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
-        const volTarget = t; // Use the grouping entity directly
+        // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
+        const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
+        if (seen.has(volTarget)) continue;
+        seen.add(volTarget);
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
@@ -6747,7 +6735,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
-  async _onVolumeStep(direction) {
+  _onVolumeStep(direction) {
     const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
     if (!entity) return;
@@ -6763,45 +6751,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    const groupingEntityTemplate = this._getGroupingEntityId(idx);
-    const groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
+    const groupingEntity = this._getGroupingEntityId(idx) || this.currentEntityId;
     const state = this.hass.states[groupingEntity];
 
-    if (this._isCurrentlyGrouped(state)) {
+    const obj = this.entityObjs[idx];
+    const groupVolume = (typeof obj.group_volume === "boolean") ? obj.group_volume : true;
+    const isChipGrouped = this._isActiveChipGrouped(idx);
+
+    if (groupVolume && isChipGrouped && this._isCurrentlyGrouped(state)) {
       // Grouped: apply group gain step (deduplicated targets)
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
       // Use configurable step size
       const step = this._volumeStep * direction;
+      // Deduplicate resolved volume targets to prevent redundant service calls
+      const seen = new Set();
       for (const t of targets) {
-        // Find the configured entity that has this grouping entity
-        let foundObj = null;
-        for (const obj of this.entityObjs) {
-          let resolvedGroupingId;
-          if (obj.music_assistant_entity) {
-            if (typeof obj.music_assistant_entity === 'string' &&
-              (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-              // For templates, resolve at action time
-              try {
-                resolvedGroupingId = await this._resolveTemplateAtActionTime(obj.music_assistant_entity, obj.entity_id);
-              } catch (error) {
-                resolvedGroupingId = obj.entity_id;
-              }
-            } else {
-              resolvedGroupingId = obj.music_assistant_entity;
-            }
-          } else {
-            resolvedGroupingId = obj.entity_id;
-          }
-
-          if (resolvedGroupingId === t) {
-            foundObj = obj;
-            break;
-          }
+        const foundIdx = this._resolveEntityIdxByGroupingId(t);
+        // Skip targets whose configured entity has group_volume: false (but never skip the current entity)
+        if (foundIdx >= 0 && foundIdx !== idx) {
+          const targetObj = this.entityObjs[foundIdx];
+          if (targetObj && targetObj.group_volume === false) continue;
         }
-
-        // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
-        const volTarget = t; // Use the grouping entity directly
+        // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
+        const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
+        if (seen.has(volTarget)) continue;
+        seen.add(volTarget);
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + step;
@@ -6821,7 +6796,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
-  async _onMuteToggle() {
+  _onMuteToggle() {
     const idx = this._selectedIndex;
     const entity = this._getVolumeEntity(idx);
     if (!entity) return;
@@ -6874,25 +6849,33 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    let groupingEntityTemplate, groupingEntity, state;
-    try {
-      groupingEntityTemplate = this._getGroupingEntityId(idx);
-      groupingEntity = await this._resolveTemplateAtActionTime(groupingEntityTemplate, this.currentEntityId);
-      state = this.hass.states[groupingEntity];
-    } catch (error) {
-      console.error('yamp: Error in grouping detection:', error);
-    }
+    const groupingEntity = this._getGroupingEntityId(idx) || this.currentEntityId;
+    const state = this.hass.states[groupingEntity];
 
-    if (this._isCurrentlyGrouped(state)) {
+    const obj = this.entityObjs[idx];
+    const groupVolume = (typeof obj.group_volume === "boolean") ? obj.group_volume : true;
+    const isChipGrouped = this._isActiveChipGrouped(idx);
+
+    if (groupVolume && isChipGrouped && this._isCurrentlyGrouped(state)) {
       // Grouped: apply mute to all group members (deduplicated)
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
 
 
 
+      // Deduplicate resolved volume targets to prevent redundant service calls
+      const seen = new Set();
       for (const t of targets) {
-        // For grouped volume changes, use the same entity that's being used for grouping (the MA entity)
-        const volTarget = t; // Use the grouping entity directly
+        const foundIdx = this._resolveEntityIdxByGroupingId(t);
+        // Skip targets whose configured entity has group_volume: false (but never skip the current entity)
+        if (foundIdx >= 0 && foundIdx !== idx) {
+          const targetObj = this.entityObjs[foundIdx];
+          if (targetObj && targetObj.group_volume === false) continue;
+        }
+        // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
+        const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
+        if (seen.has(volTarget)) continue;
+        seen.add(volTarget);
         const targetState = this.hass.states[volTarget];
         const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
 
@@ -9130,7 +9113,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!masterState || !this._isGroupCapable(masterState)) return;
 
     // Get master volume logic matching the renderer
-    const masterVolEntity = this._getVolumeEntityForGrouping(masterIdx) || masterGroupId;
+    const masterVolEntity = this._getVolumeEntity(masterIdx) || masterGroupId;
     const masterVolState = this.hass.states[masterVolEntity];
     const masterVol = Number(masterVolState?.attributes?.volume_level);
 
@@ -9151,7 +9134,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const foundIdx = groupingIdToIdx.get(memberGroupId);
 
       if (foundIdx !== undefined) {
-        const targetVolEntity = this._getVolumeEntityForGrouping(foundIdx) || memberGroupId;
+        const targetVolEntity = this._getVolumeEntity(foundIdx) || memberGroupId;
         this.hass.callService("media_player", "volume_set", {
           entity_id: targetVolEntity,
           volume_level: masterVol
