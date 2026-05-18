@@ -6707,10 +6707,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
         : Number(this.currentVolumeStateObj?.attributes.volume_level || 0);
       const delta = newVol - base;
 
+      // Deduplicate resolved volume targets to prevent redundant service calls
+      const seen = new Set();
       for (const t of targets) {
         const foundIdx = this._resolveEntityIdxByGroupingId(t);
         // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
         const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
+        if (seen.has(volTarget)) continue;
+        seen.add(volTarget);
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
@@ -6755,10 +6759,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
       // Use configurable step size
       const step = this._volumeStep * direction;
+      // Deduplicate resolved volume targets to prevent redundant service calls
+      const seen = new Set();
       for (const t of targets) {
         const foundIdx = this._resolveEntityIdxByGroupingId(t);
         // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
         const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
+        if (seen.has(volTarget)) continue;
+        seen.add(volTarget);
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + step;
@@ -6845,10 +6853,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
 
+      // Deduplicate resolved volume targets to prevent redundant service calls
+      const seen = new Set();
       for (const t of targets) {
         const foundIdx = this._resolveEntityIdxByGroupingId(t);
         // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
         const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
+        if (seen.has(volTarget)) continue;
+        seen.add(volTarget);
         const targetState = this.hass.states[volTarget];
         const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
 
