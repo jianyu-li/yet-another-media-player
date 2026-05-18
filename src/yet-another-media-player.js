@@ -4442,38 +4442,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return this._getEntityForPurpose(idx, 'volume_control');
   }
 
-  // Resolve a grouping member ID to its configured entityObj (synchronous and cache-based)
-  _resolveEntityObjByGroupingId(groupingEntityId) {
+  // Resolve a grouping member ID to its configured entity index (synchronous and cache-based)
+  _resolveEntityIdxByGroupingId(groupingEntityId) {
     const objs = this.entityObjs;
     for (let i = 0; i < objs.length; i++) {
-      const obj = objs[i];
-      const resolvedId = this._resolveMaEntityForObj(obj, i);
-      if (resolvedId === groupingEntityId) return obj;
+      const resolvedId = this._resolveMaEntityForObj(objs[i], i);
+      if (resolvedId === groupingEntityId) return i;
     }
-    return null;
+    return -1;
   }
 
   // Helper to resolve the Music Assistant entity for a given entityObj (synchronous and cache-based)
   _resolveMaEntityForObj(obj, idx) {
     if (!obj) return null;
-    if (obj.music_assistant_entity) {
-      if (typeof obj.music_assistant_entity === 'string' &&
-        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
-        const cached = this._maResolveCache?.[idx]?.id;
-        return cached || obj.entity_id;
-      } else {
-        return obj.music_assistant_entity;
-      }
-    }
-    return obj.entity_id;
-  }
-
-  // Get the physical volume entity for a given entityObj
-  _getVolumeEntityForObj(obj) {
-    if (!obj) return null;
-    const idx = this.entityObjs.indexOf(obj);
-    if (idx < 0) return null;
-    return this._getVolumeEntity(idx);
+    return this._resolveEntity(obj.music_assistant_entity, obj.entity_id, idx) || obj.entity_id;
   }
 
   // Prefer Music Assistant entity for search/grouping if configured
@@ -6726,9 +6708,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const delta = newVol - base;
 
       for (const t of targets) {
-        const foundObj = this._resolveEntityObjByGroupingId(t);
+        const foundIdx = this._resolveEntityIdxByGroupingId(t);
         // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
-        const volTarget = this._getVolumeEntityForObj(foundObj) || t;
+        const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
@@ -6774,9 +6756,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Use configurable step size
       const step = this._volumeStep * direction;
       for (const t of targets) {
-        const foundObj = this._resolveEntityObjByGroupingId(t);
+        const foundIdx = this._resolveEntityIdxByGroupingId(t);
         // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
-        const volTarget = this._getVolumeEntityForObj(foundObj) || t;
+        const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + step;
@@ -6864,9 +6846,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
       for (const t of targets) {
-        const foundObj = this._resolveEntityObjByGroupingId(t);
+        const foundIdx = this._resolveEntityIdxByGroupingId(t);
         // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
-        const volTarget = this._getVolumeEntityForObj(foundObj) || t;
+        const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
         const targetState = this.hass.states[volTarget];
         const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
 
