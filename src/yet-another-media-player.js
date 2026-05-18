@@ -6711,6 +6711,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const seen = new Set();
       for (const t of targets) {
         const foundIdx = this._resolveEntityIdxByGroupingId(t);
+        // Skip targets whose configured entity has group_volume: false (but never skip the current entity)
+        if (foundIdx >= 0 && foundIdx !== idx) {
+          const targetObj = this.entityObjs[foundIdx];
+          if (targetObj && targetObj.group_volume === false) continue;
+        }
         // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
         const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
         if (seen.has(volTarget)) continue;
@@ -6763,6 +6768,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const seen = new Set();
       for (const t of targets) {
         const foundIdx = this._resolveEntityIdxByGroupingId(t);
+        // Skip targets whose configured entity has group_volume: false (but never skip the current entity)
+        if (foundIdx >= 0 && foundIdx !== idx) {
+          const targetObj = this.entityObjs[foundIdx];
+          if (targetObj && targetObj.group_volume === false) continue;
+        }
         // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
         const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
         if (seen.has(volTarget)) continue;
@@ -6857,6 +6867,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const seen = new Set();
       for (const t of targets) {
         const foundIdx = this._resolveEntityIdxByGroupingId(t);
+        // Skip targets whose configured entity has group_volume: false (but never skip the current entity)
+        if (foundIdx >= 0 && foundIdx !== idx) {
+          const targetObj = this.entityObjs[foundIdx];
+          if (targetObj && targetObj.group_volume === false) continue;
+        }
         // Use the physical volume entity when a configured entity is found, otherwise fall back to the grouping entity
         const volTarget = (foundIdx >= 0) ? this._getVolumeEntity(foundIdx) : t;
         if (seen.has(volTarget)) continue;
