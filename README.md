@@ -56,7 +56,7 @@ Below you will find a list of all configuration options.
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
 | `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping ([Supports Templates](#template-support)) |
 | `prefer_ma_metadata`       | boolean      | No           | `false`     | Prioritize the Music Assistant entity for artwork and metadata resolution regardless of which device is playing |
-| `group_volume`             | boolean      | No           | `auto`      | Isolate this entity's volume from group volume changes and vice versa (see [Group Volume Override](#group-volume-override-per-entity)) |
+| `group_volume`             | boolean      | No           | `true`      | Isolate this entity's volume from group volume changes and vice versa (see [Group Volume Override](#group-volume-override-per-entity)) |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array        | No           | `[]`        | Array of control names to hide for this specific entity         |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
