@@ -372,9 +372,18 @@ export function getArtworkUrl(state, {
           if (regex === undefined) {
             if (typeof expected === "string" && expected.includes("*") && expected !== "*") {
               try {
-                const regexPattern = expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
-                regex = new RegExp(`^${regexPattern}$`, "i");
-                cached[key] = regex;
+                // Collapse consecutive asterisks to prevent ReDoS (e.g. **** -> *)
+                const cleanExpected = expected.replace(/\*+/g, "*");
+                // Limit maximum active wildcards to 5 to protect regex matching complexity
+                const asteriskCount = (cleanExpected.match(/\*/g) || []).length;
+                if (asteriskCount <= 5) {
+                  const regexPattern = cleanExpected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
+                  regex = new RegExp(`^${regexPattern}$`, "i");
+                  cached[key] = regex;
+                } else {
+                  cached[key] = null;
+                  regex = null;
+                }
               } catch (e) {
                 cached[key] = null; // Cache compilation failure
                 regex = null;

@@ -7838,8 +7838,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const hideControlsNow = showSearch && !expandOnSearch;
     
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
-    const playbackStateObj = this.hass.states[playbackEntityId];
-    const isCurrentPlayingForIdle = this._isEntityPlaying(playbackStateObj);
+    const playbackStateObj = (this.hass && this.hass.states && playbackEntityId) ? this.hass.states[playbackEntityId] : undefined;
+    const isCurrentPlayingForIdle = playbackStateObj ? this._isEntityPlaying(playbackStateObj) : false;
     const normalizedIdleImageInput = config.idle_image ? resolveStringTemplateSync(config.idle_image, this.hass) : null;
     const forceIdleImage = config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
     
