@@ -8333,7 +8333,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._isIdle || !this._hasSeenPlayback) {
       shouldBeActiveImmediately = isAnyUnrestrictedPlaying;
     } else {
-      shouldBeActiveImmediately = isAnyUnrestrictedPlaying || isCurrentPlayingValidForActive;
+      shouldBeActiveImmediately = isCurrentPlayingValidForActive;
     }
 
     if (shouldBeActiveImmediately) {
@@ -8370,43 +8370,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!this._isIdle && this._idleTimeoutMs > 0) {
         const isTabChange = changedProps && changedProps.has("_selectedIndex");
 
-        if (isTabChange && !isAnyUnrestrictedPlaying) {
-          // Bypass grace period if we just switched away from the only thing keeping the card awake (a playing disabled entity)
+        if (isTabChange) {
+          // If we manually change tabs/chips, clear any existing idle timeout to start fresh
           if (this._idleTimeout) {
             clearTimeout(this._idleTimeout);
             this._idleTimeout = null;
           }
-          this._setIdleState(true);
-          this._idleScreenApplied = false;
 
-          if (this._pinnedIndex === null) {
-            this._manualSelect = false;
-            this._manualSelectPlayingSet = null;
-          }
-
-          this._applyIdleScreen();
-          this.requestUpdate();
-        } else if (!this._idleTimeout) {
-          this._idleTimeout = setTimeout(() => {
-            // In search card mode: reset drill-down instead of going idle
-            if (this._cardType === "search") {
-              this._idleTimeout = null;
-              if (this._searchHierarchy.length > 0) {
-                this._searchHierarchy = [];
-                this._searchBreadcrumb = "";
-                this._searchResultsByType = {};
-                const defaultFilter = this.config?.default_search_filter === 'all' ? null : this.config?.default_search_filter;
-                this._doSearch(defaultFilter).catch(() => { });
-                this.requestUpdate();
-              }
-              return;
-            }
+          if (!isAnyUnrestrictedPlaying) {
+            // Bypass grace period if we just switched away from the only thing keeping the card awake (a playing disabled entity)
             this._setIdleState(true);
-            this._idleTimeout = null;
             this._idleScreenApplied = false;
 
-            // If not explicitly pinned, clear manual select on idle timeout
-            // so we can switch to other playing entities if needed
             if (this._pinnedIndex === null) {
               this._manualSelect = false;
               this._manualSelectPlayingSet = null;
@@ -8414,6 +8389,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
             this._applyIdleScreen();
             this.requestUpdate();
+          } else {
+            // Something is playing, start a fresh timeout for the new selection
+            this._idleTimeout = setTimeout(() => {
+              this._handleIdleTimeoutCallback();
+            }, this._idleTimeoutMs);
+          }
+        } else if (!this._idleTimeout) {
+          this._idleTimeout = setTimeout(() => {
+            this._handleIdleTimeoutCallback();
           }, this._idleTimeoutMs);
         }
       }
@@ -8425,6 +8409,67 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this.requestUpdate();
       }
     }
+  }
+
+  _handleIdleTimeoutCallback() {
+    // In search card mode: reset drill-down instead of going idle
+    if (this._cardType === "search") {
+      this._idleTimeout = null;
+      if (this._searchHierarchy.length > 0) {
+        this._searchHierarchy = [];
+        this._searchBreadcrumb = "";
+        this._searchResultsByType = {};
+        const defaultFilter = this.config?.default_search_filter === 'all' ? null : this.config?.default_search_filter;
+        this._doSearch(defaultFilter).catch(() => { });
+        this.requestUpdate();
+      }
+      return;
+    }
+
+    // Check if there is any playing entity before going idle
+    const isAnyPlaying = this.entityIds.some((id, idx) => {
+      if (this._isAutoSelectDisabled(idx)) return false;
+      const activeId = this._getEntityForPurpose(idx, 'sorting');
+      const stateObj = this.hass?.states?.[activeId];
+      return stateObj && this._isEntityPlaying(stateObj);
+    });
+
+    this._idleTimeout = null;
+
+    // If not explicitly pinned, clear manual select on idle timeout
+    // so we can switch to other playing entities if needed
+    if (this._pinnedIndex === null) {
+      this._manualSelect = false;
+      this._manualSelectPlayingSet = null;
+    }
+
+    if (isAnyPlaying) {
+      // Something is playing, so don't enter idle state. Switch to the playing entity instead.
+      const sortedIds = this.sortedEntityIds;
+      if (sortedIds.length > 0) {
+        let mostRecentId = sortedIds[0];
+        const candidateGroup = mostRecentId
+          ? (this.groupedSortedEntityIds || []).find(g => g.includes(mostRecentId))
+          : null;
+        if (candidateGroup && candidateGroup.length > 1) {
+          const groupMaster = this._getActualGroupMaster(candidateGroup);
+          if (groupMaster) {
+            mostRecentId = groupMaster;
+          }
+        }
+        const mostRecentIdx = this.entityIds.indexOf(mostRecentId);
+        if (mostRecentIdx >= 0 && mostRecentIdx !== this._selectedIndex) {
+          this._selectedIndex = mostRecentIdx;
+        }
+      }
+      this.requestUpdate();
+      return;
+    }
+
+    this._setIdleState(true);
+    this._idleScreenApplied = false;
+    this._applyIdleScreen();
+    this.requestUpdate();
   }
 
   // Home assistant layout options
