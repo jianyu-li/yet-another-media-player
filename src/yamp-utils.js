@@ -2,6 +2,9 @@
 import { localize } from "./localize/localize.js";
 import { ARTWORK_OVERRIDE_MATCH_KEYS } from "./constants.js";
 
+// WeakMap cache for compiled override regexes to avoid mutating config objects
+const overrideRegexCache = new WeakMap();
+
 /**
  * Get a valid artwork attribute value (non-empty string with content)
  * @param {Object} attrs - Entity attributes object
@@ -359,17 +362,31 @@ export function getArtworkUrl(state, {
               ? state?.state
               : attrs[key];
           if (expected === "*") return true;
-          if (override.__cachedRegexes?.[key]) {
-            return override.__cachedRegexes[key].test(String(value || ""));
+          let cached = overrideRegexCache.get(override);
+          if (!cached) {
+            cached = {};
+            overrideRegexCache.set(override, cached);
           }
-          if (typeof expected === "string" && expected.includes("*") && expected !== "*") {
-            try {
-              const regexPattern = expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
-              const regex = new RegExp(`^${regexPattern}$`, "i");
-              return regex.test(String(value || ""));
-            } catch (e) {
-              // ignore and fall through
+
+          let regex = cached[key];
+          if (regex === undefined) {
+            if (typeof expected === "string" && expected.includes("*") && expected !== "*") {
+              try {
+                const regexPattern = expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
+                regex = new RegExp(`^${regexPattern}$`, "i");
+                cached[key] = regex;
+              } catch (e) {
+                cached[key] = null; // Cache compilation failure
+                regex = null;
+              }
+            } else {
+              cached[key] = null;
+              regex = null;
             }
+          }
+
+          if (regex) {
+            return regex.test(String(value || ""));
           }
           return value === expected;
         })
