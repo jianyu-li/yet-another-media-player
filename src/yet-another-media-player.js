@@ -7786,14 +7786,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
   `;
   }
 
-  _updateHostAttributes() {
-    if (!this.shadowRoot || !this.shadowRoot.host || !this.hass || !this.config) return;
+  _getCardHeightMetrics(config) {
+    const customCardHeightInput = this._cardHeightTemplate
+      ? this._cardHeightTemplateResult
+      : config.card_height;
+    const customCardHeight = typeof customCardHeightInput === "string"
+      ? parseFloat(customCardHeightInput)
+      : Number(customCardHeightInput);
+    const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
+    const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
+    return { customCardHeight, hasCustomCardHeight };
+  }
 
-    const host = this.shadowRoot.host;
-    const config = this.config;
+  _setHostDataAttributes(host, config, hasCustomCardHeight) {
     const appearance = this._appearance || "automatic";
-
-    // Set attributes
     host.setAttribute("data-match-theme", String(config.match_theme === true));
     host.setAttribute("data-appearance", appearance);
     host.setAttribute("data-always-collapsed", String(config.always_collapsed === true));
@@ -7813,34 +7819,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const effectivePinHeaders = config.pin_search_headers === true && !isMinHeight;
     host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
 
-    // Custom card height check
-    const customCardHeightInput = this._cardHeightTemplate
-      ? this._cardHeightTemplateResult
-      : config.card_height;
-    const customCardHeight = typeof customCardHeightInput === "string"
-      ? parseFloat(customCardHeightInput)
-      : Number(customCardHeightInput);
-    const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
-    const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
-
     if (hasCustomCardHeight) {
       host.setAttribute("data-has-custom-height", "true");
     } else {
       host.removeAttribute("data-has-custom-height");
     }
+  }
 
-    // Now calculate and set layout-dependent custom style properties and attributes:
-    // (Originally set inside render())
-    
-    // Check if collapsed
-    const showSearch = this._showSearch;
-    const expandOnSearch = config.always_collapsed === true && config.expand_on_search === true;
-    const hideControlsNow = showSearch && !expandOnSearch;
-    
+  _getPlaybackAndCollapseState(config) {
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     const playbackStateObj = (this.hass && this.hass.states && playbackEntityId) ? this.hass.states[playbackEntityId] : undefined;
     const isCurrentPlayingForIdle = playbackStateObj ? this._isEntityPlaying(playbackStateObj) : false;
-    const normalizedIdleImageInput = config.idle_image ? resolveStringTemplateSync(config.idle_image, this.hass) : null;
+    const normalizedIdleImageInput = config.idle_image ? resolveStringTemplateSync(this.hass, config.idle_image) : null;
     const forceIdleImage = config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
     
     const isActuallyPlaying = this._isCurrentEntityPlaying();
@@ -7848,10 +7838,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const collapsed = config.always_collapsed === true ||
       (this._isIdle && config.collapse_on_idle === true && !isActuallyPlaying);
 
-    const isCompact = hasCustomCardHeight && customCardHeight < 280;
-    const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !config.always_collapsed;
-    
-    // Check height requirements for persistent controls
+    return { playbackStateObj, collapsed, forceIdleImage };
+  }
+
+  _updatePersistentControlsVisibility(host, config, collapsed, customCardHeight, hasCustomCardHeight) {
     const expandedHeightBaseline = 350;
     const resolvedCollapsedHeight = collapsed
       ? (hasCustomCardHeight ? customCardHeight : (this._collapsedBaselineHeight || 220))
@@ -7866,15 +7856,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     } else {
       host.setAttribute('data-hide-persistent-controls', 'true');
     }
+  }
 
-    // Calculate artwork sizes and offsets
+  _updateHostLayoutStyles(host, config, collapsed, customCardHeight, hasCustomCardHeight) {
+    const isCompact = hasCustomCardHeight && customCardHeight < 280;
     const showChipRow = config.show_chip_row || "auto";
     const hasMultipleEntities = (this.entityObjs || []).length > 1;
     const showChipsInMenu = (showChipRow === "in_menu" || (showChipRow === "in_menu_on_idle" && this._isIdle)) && hasMultipleEntities;
     const renderChipRowSeparately = showChipRow !== "hidden" && !showChipsInMenu && hasMultipleEntities;
 
     let baseMinHeight = 240;
-    let baseDetailsMinHeight = 120;
     let collapsedArtworkSize = 0;
 
     if (collapsed) {
@@ -7885,7 +7876,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     }
 
-    const collapsedDetailsMinHeight = isCompact ? 52 : 72;
     const baseExtraSpace = hasCustomCardHeight ? (customCardHeight - baseMinHeight) : 0;
     const chipRowSpacing = renderChipRowSeparately ? 58 : 0;
     const effectiveExtraSpace = Math.max(0, baseExtraSpace - chipRowSpacing);
@@ -7925,8 +7915,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
       host.style.removeProperty('--yamp-collapsed-title-scale');
       host.style.removeProperty('--yamp-collapsed-artist-scale');
     }
+  }
 
-    // Artwork fit style properties
+  _updateHostArtworkStyles(host, playbackStateObj, forceIdleImage) {
     const metadataStateObj = this.metadataStateObj;
     const metadataArtwork = this._getArtworkUrl(metadataStateObj);
     const playbackArtwork = this._getArtworkUrl(playbackStateObj);
@@ -7954,6 +7945,177 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
     host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
     host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
+  }
+
+  _updateHostAttributes() {
+    if (!this.shadowRoot || !this.shadowRoot.host || !this.hass || !this.config) return;
+
+    const host = this.shadowRoot.host;
+    const config = this.config;
+
+    const { customCardHeight, hasCustomCardHeight } = this._getCardHeightMetrics(config);
+
+    this._setHostDataAttributes(host, config, hasCustomCardHeight);
+
+    const { playbackStateObj, collapsed, forceIdleImage } = this._getPlaybackAndCollapseState(config);
+
+    this._updatePersistentControlsVisibility(host, config, collapsed, customCardHeight, hasCustomCardHeight);
+
+    this._updateHostLayoutStyles(host, config, collapsed, customCardHeight, hasCustomCardHeight);
+
+    this._updateHostArtworkStyles(host, playbackStateObj, forceIdleImage);
+  }
+
+  _renderSearchSubFilters(showSearchHeaders) {
+    if (!showSearchHeaders || !this._usingMusicAssistant || this._searchLoading) return nothing;
+
+    return html`
+      <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
+        <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
+          <button
+            class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
+            style="
+              border: none;
+              font-size: 1.2em;
+              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+              padding: 4px 8px;
+              border-radius: 50%;
+              transition: all 0.2s ease;
+              margin-right: 8px;
+              display: flex;
+              align-items: center;
+              opacity: ${this._searchAttempted ? '1' : '0.5'};
+            "
+            @click=${this._searchAttempted ? () => {
+              this._toggleFavoritesFilter();
+            } : () => { }}
+            title="${localize('search.favorites')}"
+          >
+            <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
+            ${this._initialFavoritesLoaded || this._favoritesFilterActive ? html`
+              <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
+                ${localize('search.favorites')}
+              </span>
+            ` : nothing}
+          </button>
+          <button
+            class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
+            style="
+              border: none;
+              font-size: 1.2em;
+              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+              padding: 4px 8px;
+              border-radius: 50%;
+              transition: all 0.2s ease;
+              margin-right: 8px;
+              display: flex;
+              align-items: center;
+              opacity: ${this._searchAttempted ? '1' : '0.5'};
+            "
+            @click=${this._searchAttempted ? () => {
+              this._toggleRecentlyPlayedFilter();
+            } : () => { }}
+            title="${localize('search.recently_played')}"
+          >
+            <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
+            ${this._recentlyPlayedFilterActive ? html`
+              <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
+                ${localize('search.recently_played')}
+              </span>
+            ` : nothing}
+          </button>
+          ${this._isMusicAssistantEntity() ? html`
+            <button
+              class="button${this._upcomingFilterActive ? ' active' : ''}"
+              style="
+                border: none;
+                font-size: 1.2em;
+                cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                padding: 4px 8px;
+                border-radius: 50%;
+                transition: all 0.2s ease;
+                margin-right: 8px;
+                display: flex;
+                align-items: center;
+                opacity: ${this._searchAttempted ? '1' : '0.5'};
+              "
+              @click=${this._searchAttempted ? () => {
+                this._toggleUpcomingFilter();
+              } : () => { }}
+              title="${localize('search.next_up')}"
+            >
+              <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
+              ${this._upcomingFilterActive ? html`
+                <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
+                  ${localize('search.next_up')}
+                </span>
+              ` : nothing}
+            </button>
+            ${this._hasMassQueueIntegration ? html`
+              <button
+                class="button${this._recommendationsFilterActive ? ' active' : ''}"
+                style="
+                  border: none;
+                  font-size: 1.2em;
+                  cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                  padding: 4px 8px;
+                  border-radius: 50%;
+                  transition: all 0.2s ease;
+                  margin-right: 8px;
+                  display: flex;
+                  align-items: center;
+                  opacity: ${this._searchAttempted ? '1' : '0.5'};
+                "
+                @click=${this._searchAttempted ? () => {
+                  this._toggleRecommendationsFilter();
+                } : () => { }}
+                title="${localize('search.recommendations')}"
+              >
+                <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:creation' : 'mdi:creation-outline'}></ha-icon>
+                ${this._recommendationsFilterActive ? html`
+                  <span style="margin-left:6px;font-size:0.81em;font-weight:600;white-space:nowrap;">
+                    ${localize('search.recommendations')}
+                  </span>
+                ` : nothing}
+              </button>
+            ` : nothing}
+          ` : nothing}
+          <button
+            class="radio-mode-button${this._radioModeActive ? ' active' : ''}"
+            @click=${() => this._toggleRadioMode()}
+            title="${localize('search.radio_mode')}"
+          >
+            <ha-icon .icon=${this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off'}></ha-icon>
+          </button>
+          ${this._shouldShowSearchSortToggle() ? html`
+            <button
+              class="button"
+              style="
+                border: none;
+                font-size: 1.2em;
+                cursor: ${this._searchAttempted ? 'pointer' : 'default'};
+                padding: 4px 8px;
+                border-radius: 50%;
+                transition: all 0.2s ease;
+                margin-right: 8px;
+                display: flex;
+                align-items: center;
+                opacity: ${this._searchAttempted ? '1' : '0.5'};
+              "
+              @click=${this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => { }}
+              title=${this._getSearchSortToggleTitle()}
+            >
+              <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
+            </button>
+          ` : nothing}
+          ${this._shouldShowSearchResultsCount() ? html`
+            <span class="search-results-count">
+              ${this._getSearchResultsCountLabel()}
+            </span>
+          ` : nothing}
+        </div>
+      </div>
+    `;
   }
 
   _renderSearchInOptions(showSearchHeaders) {
@@ -8026,10 +8188,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
         ${showSearchHeaders ? (() => {
           const classes = this._getVisibleSearchFilterClasses();
           const filter = this._searchMediaClassFilter || "all";
-
+ 
           if (this._searchHierarchy.length > 0) return nothing;
           if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
-
+ 
           return html`
             <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
                 <button
@@ -8053,154 +8215,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
         ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
         
-        ${showSearchHeaders && this._usingMusicAssistant && !this._searchLoading ? html`
-          <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
-            <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
-              <button
-                class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
-                style="
-                  border: none;
-                  font-size: 1.2em;
-                  cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                  padding: 4px 8px;
-                  border-radius: 50%;
-                  transition: all 0.2s ease;
-                  margin-right: 8px;
-                  display: flex;
-                  align-items: center;
-                  opacity: ${this._searchAttempted ? '1' : '0.5'};
-                "
-                @click=${this._searchAttempted ? () => {
-                  this._toggleFavoritesFilter();
-                } : () => { }}
-                title="${localize('search.favorites')}"
-              >
-                <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
-                ${this._initialFavoritesLoaded || this._favoritesFilterActive ? html`
-                  <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
-                    ${localize('search.favorites')}
-                  </span>
-                ` : nothing}
-              </button>
-              <button
-                class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
-                style="
-                  border: none;
-                  font-size: 1.2em;
-                  cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                  padding: 4px 8px;
-                  border-radius: 50%;
-                  transition: all 0.2s ease;
-                  margin-right: 8px;
-                  display: flex;
-                  align-items: center;
-                  opacity: ${this._searchAttempted ? '1' : '0.5'};
-                "
-                @click=${this._searchAttempted ? () => {
-                  this._toggleRecentlyPlayedFilter();
-                } : () => { }}
-                title="${localize('search.recently_played')}"
-              >
-                <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
-                ${this._recentlyPlayedFilterActive ? html`
-                  <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
-                    ${localize('search.recently_played')}
-                  </span>
-                ` : nothing}
-              </button>
-              ${this._isMusicAssistantEntity() ? html`
-                <button
-                  class="button${this._upcomingFilterActive ? ' active' : ''}"
-                  style="
-                    border: none;
-                    font-size: 1.2em;
-                    cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                    padding: 4px 8px;
-                    border-radius: 50%;
-                    transition: all 0.2s ease;
-                    margin-right: 8px;
-                    display: flex;
-                    align-items: center;
-                    opacity: ${this._searchAttempted ? '1' : '0.5'};
-                  "
-                  @click=${this._searchAttempted ? () => {
-                    this._toggleUpcomingFilter();
-                  } : () => { }}
-                  title="${localize('search.next_up')}"
-                >
-                  <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
-                  ${this._upcomingFilterActive ? html`
-                    <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
-                      ${localize('search.next_up')}
-                    </span>
-                  ` : nothing}
-                </button>
-                ${this._hasMassQueueIntegration ? html`
-                  <button
-                    class="button${this._recommendationsFilterActive ? ' active' : ''}"
-                    style="
-                      border: none;
-                      font-size: 1.2em;
-                      cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                      padding: 4px 8px;
-                      border-radius: 50%;
-                      transition: all 0.2s ease;
-                      margin-right: 8px;
-                      display: flex;
-                      align-items: center;
-                      opacity: ${this._searchAttempted ? '1' : '0.5'};
-                    "
-                    @click=${this._searchAttempted ? () => {
-                      this._toggleRecommendationsFilter();
-                    } : () => { }}
-                    title="${localize('search.recommendations')}"
-                  >
-                    <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:creation' : 'mdi:creation-outline'}></ha-icon>
-                    ${this._recommendationsFilterActive ? html`
-                      <span style="margin-left:6px;font-size:0.81em;font-weight:600;white-space:nowrap;">
-                        ${localize('search.recommendations')}
-                      </span>
-                    ` : nothing}
-                  </button>
-                ` : nothing}
-              ` : nothing}
-              <button
-                class="radio-mode-button${this._radioModeActive ? ' active' : ''}"
-                @click=${() => this._toggleRadioMode()}
-                title="${localize('search.radio_mode')}"
-              >
-                <ha-icon .icon=${this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off'}></ha-icon>
-              </button>
-              ${this._shouldShowSearchSortToggle() ? html`
-                <button
-                  class="button"
-                  style="
-                    border: none;
-                    font-size: 1.2em;
-                    cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                    padding: 4px 8px;
-                    border-radius: 50%;
-                    transition: all 0.2s ease;
-                    margin-right: 8px;
-                    display: flex;
-                    align-items: center;
-                    opacity: ${this._searchAttempted ? '1' : '0.5'};
-                  "
-                  @click=${this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => { }}
-                  title=${this._getSearchSortToggleTitle()}
-                >
-                  <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
-                </button>
-              ` : nothing}
-              ${this._shouldShowSearchResultsCount() ? html`
-                <span class="search-results-count">
-                  ${this._getSearchResultsCountLabel()}
-                </span>
-              ` : nothing}
-            </div>
-          </div>
-        ` : nothing}
-
+        ${this._renderSearchSubFilters(showSearchHeaders)}
+ 
         <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} ${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? 'search-results-card-view' : 'list-view'}" 
              style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
           ${(() => {
