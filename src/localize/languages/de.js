@@ -138,6 +138,7 @@ export default {
             "lyrics_pre_roll": "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0).",
             "blurred_artwork": "Hintergrundbild immer weichzeichnen",
             "hide_collapsed_artwork": "Das kleine Artwork auf der rechten Seite ausblenden, wenn die Karte eingeklappt ist",
+            "show_idle_artwork_when_not_playing": "Wenn aktiviert, wird beim Auswählen eines Chips, auf dem derzeit nichts abgespielt wird, das konfigurierte Ruhebild anstelle des aktiven Wiedergabe-Artworks angezeigt.",
             "prefer_ma_metadata": "Verwenden Sie immer die gekoppelte Music Assistant-Entität für Titel, Künstler und Artwork, auch wenn die primäre Entität gerade spielt."
         },
         "titles": {
@@ -182,6 +183,7 @@ export default {
             "lyrics_pre_roll": "Liedtext Pre-Roll (Sekunden)",
             "blurred_artwork": "Verschwommenes Artwork",
             "hide_collapsed_artwork": "Verkleinertes Artwork ausblenden",
+            "show_idle_artwork_when_not_playing": "Ruhebild anzeigen, wenn nicht abgespielt wird",
             "prefer_ma_metadata": "Music Assistant Metadaten bevorzugen"
         },
         "fields": {

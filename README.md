@@ -111,6 +111,7 @@ Below you will find a list of all configuration options.
 | `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, or entity) or supply `missing_art_url`; optional `size_percentage` and `object_fit` can be used to style the replacement (defaults to global `artwork_object_fit`). `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
 | `idle_image`               | image/camera/url/string | No           | —           | Background image when player is idle ([Supports Templates](#template-support)) |
 | `idle_timeout_ms`          | number       | No           | `60000`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
+| `show_idle_artwork_when_not_playing` | boolean | No        | `false`     | When `true`, displays the configured idle image on any selected entity that is not actively playing, even if another player in the card is active |
 |                                                                                                 |
 | **Actions**                |              |              |             | (Each chip/action can have any/all of the below)                                                |
 | `transfer_queue`           | menu action  | No           | —           | Adds a "Transfer Queue" menu action for Music Assistant entities (see below)                   |
@@ -684,6 +685,7 @@ Set `artwork_hostname` to your full HA URL (e.g., `http://192.168.1.50:8123`) so
 > Show a static image or entity snapshot whenever nothing is playing.
 
 - **Idle Image**: Background image when player is idle (supports local files, cameras, URLs, or templates that return either).
+- **Show Idle Image When Not Playing**: When enabled, selecting a chip that is not currently playing will display the configured idle image instead of the active playback artwork (even if another chip in the card is actively playing).
 
 ## Artwork Overrides
 > Overrides are evaluated from top to bottom. Drag to reorder.

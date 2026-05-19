@@ -138,6 +138,7 @@ export default {
             "lyrics_pre_roll": "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0).",
             "blurred_artwork": "Achtergrondafbeelding altijd vervagen",
             "hide_collapsed_artwork": "Verberg de kleine afbeelding aan de rechterkant wanneer de kaart is ingeklapt",
+            "show_idle_artwork_when_not_playing": "Indien ingeschakeld, zal het selecteren van een chip die momenteel niet wordt afgespeeld de geconfigureerde stand-by afbeelding weergeven in plaats van de actieve afspeel-art.",
             "prefer_ma_metadata": "Gebruik altijd de gekoppelde Music Assistant-entiteit voor de tracktitel, artiest en artwork, zelfs als de primaire entiteit wordt afgespeeld."
         },
         "titles": {
@@ -182,6 +183,7 @@ export default {
             "lyrics_pre_roll": "Songtekst Pre-Roll (seconden)",
             "blurred_artwork": "Vervaagde afbeelding",
             "hide_collapsed_artwork": "Verkleinde afbeelding verbergen",
+            "show_idle_artwork_when_not_playing": "Toon stand-by afbeelding wanneer niet afgespeeld",
             "prefer_ma_metadata": "Voorkeur voor Music Assistant-metadata"
         },
         "fields": {

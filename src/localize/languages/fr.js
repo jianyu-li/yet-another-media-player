@@ -138,6 +138,7 @@ export default {
             "lyrics_pre_roll": "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0).",
             "blurred_artwork": "Toujours flouter l'image d'arrière-plan",
             "hide_collapsed_artwork": "Masquer l'image réduite sur la droite lorsque la carte est repliée",
+            "show_idle_artwork_when_not_playing": "Lorsqu'il est activé, la sélection d'un badge qui n'est pas en cours de lecture affichera l'image d'inactivité configurée à la place de l'illustration de lecture active.",
             "prefer_ma_metadata": "Toujours utiliser l'entité Music Assistant associée pour le titre de la piste, l'artiste et l'image, même si l'entité principale est en cours de lecture."
         },
         "titles": {
@@ -182,6 +183,7 @@ export default {
             "lyrics_pre_roll": "Pré-roll des paroles (secondes)",
             "blurred_artwork": "Image floutée",
             "hide_collapsed_artwork": "Masquer l'image réduite",
+            "show_idle_artwork_when_not_playing": "Afficher l'image d'inactivité si pas de lecture",
             "prefer_ma_metadata": "Préférer les métadonnées Music Assistant"
         },
         "fields": {
