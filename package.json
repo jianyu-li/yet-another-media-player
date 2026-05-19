@@ -6,7 +6,7 @@
   "type": "module",
   "dependencies": {
     "js-yaml": "^4.1.1",
-    "lit": "^3.3.2",
+    "lit": "^3.3.3",
     "sortablejs": "^1.15.7"
   },
   "devDependencies": {
