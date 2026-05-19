@@ -8430,7 +8430,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const isAnyPlaying = this.entityIds.some((id, idx) => {
       if (this._isAutoSelectDisabled(idx)) return false;
       const activeId = this._getEntityForPurpose(idx, 'sorting');
-      return this.hass?.states[activeId] && this._isEntityPlaying(this.hass.states[activeId]);
+      const stateObj = this.hass?.states?.[activeId];
+      return stateObj && this._isEntityPlaying(stateObj);
     });
 
     this._idleTimeout = null;
