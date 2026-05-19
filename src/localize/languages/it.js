@@ -138,6 +138,7 @@ export default {
             "lyrics_pre_roll": "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0).",
             "blurred_artwork": "Sfoca sempre l'immagine di sfondo",
             "hide_collapsed_artwork": "Nascondi l'immagine piccola a destra quando la scheda è compressa",
+            "show_idle_artwork_when_not_playing": "Se abilitato, selezionando un chip che non è attualmente in riproduzione verrà mostrata l'immagine inattiva configurata invece della copertina di riproduzione attiva.",
             "prefer_ma_metadata": "Utilizza sempre l'entità Music Assistant associata per il titolo del brano, l'artista e l'artwork, anche se l'entità principale è in riproduzione."
         },
         "titles": {
@@ -182,6 +183,7 @@ export default {
             "lyrics_pre_roll": "Pre-roll testi (secondi)",
             "blurred_artwork": "Immagine sfocata",
             "hide_collapsed_artwork": "Nascondi immagine contratta",
+            "show_idle_artwork_when_not_playing": "Mostra immagine inattiva quando non in riproduzione",
             "prefer_ma_metadata": "Preferisci i metadati di Music Assistant"
         },
         "fields": {

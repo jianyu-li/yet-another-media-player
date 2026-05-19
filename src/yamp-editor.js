@@ -965,6 +965,20 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               `}
             </div>
           </div>
+          <div class="form-row form-row-multi-column" style="${!this._config.idle_image ? "opacity: 0.4; pointer-events: none;" : ""}">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="show-idle-artwork-toggle"
+                .checked=${this._config.show_idle_artwork_when_not_playing === true}
+                .disabled=${!this._config.idle_image}
+                @change=${(e) => this._updateConfig("show_idle_artwork_when_not_playing", e.target.checked)}
+              ></ha-switch>
+              <div style="display: flex; flex-direction: column;">
+                <label for="show-idle-artwork-toggle" style="font-weight: 500;">${localize('editor.labels.show_idle_artwork_when_not_playing')}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.show_idle_artwork_when_not_playing')}</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="config-section">

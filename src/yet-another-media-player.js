@@ -7191,8 +7191,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ? this._idleImageTemplateResult
       : this.config.idle_image;
     const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
+    
+    // Use the unified entity resolution system for playback state
+    const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
+    const playbackStateObj = this.hass?.states?.[playbackEntityId];
+    const isCurrentPlayingForIdle = this._isEntityPlaying(playbackStateObj);
+    const forceIdleImage = this.config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
+
     let idleImageUrl = null;
-    if (normalizedIdleImageInput && this._isIdle) {
+    if (normalizedIdleImageInput && (this._isIdle || forceIdleImage)) {
       // Check if it's an entity ID
       if (this.hass.states[normalizedIdleImageInput]) {
         const sensorState = this.hass.states[normalizedIdleImageInput];
@@ -7284,9 +7291,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       delete this._playbackLingerByIdx[idx];
     }
 
-    // Use the unified entity resolution system for playback state
-    const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
-    const playbackStateObj = this.hass?.states?.[playbackEntityId];
+
 
     // Use the unified entity resolution system for playback state
     const finalPlaybackStateObj = playbackStateObj;
@@ -7528,7 +7533,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let artworkUrl = null;
     let artworkSizePercentage = null;
     let artworkObjectFit = this._artworkObjectFit;
-    if (!this._isIdle) {
+    if (!this._isIdle && !forceIdleImage) {
       // Use the unified entity resolution system for artwork
       const artwork = selectedArt;
       artworkUrl = artwork?.url || null;

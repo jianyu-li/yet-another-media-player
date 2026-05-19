@@ -138,6 +138,7 @@ export default {
             "lyrics_pre_roll": "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0).",
             "blurred_artwork": "Vedno zamegli ozadje",
             "hide_collapsed_artwork": "Skrij majhno sliko na desni, ko je kartica strnjena",
+            "show_idle_artwork_when_not_playing": "Ko je to omogočeno, se ob izbiri čipa, na katerem se trenutno nič ne predvaja, prikaže nastavljena slika za nedejavnost namesto aktivne grafike predvajanja.",
             "prefer_ma_metadata": "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta."
         },
         "titles": {
@@ -182,6 +183,7 @@ export default {
             "lyrics_pre_roll": "Pre-roll besedila (sekunde)",
             "blurred_artwork": "Zamegljena grafika",
             "hide_collapsed_artwork": "Skrij skrčeno grafika",
+            "show_idle_artwork_when_not_playing": "Prikaži sliko za nedejavnost, ko se ne predvaja",
             "prefer_ma_metadata": "Prednost metapodatkom Music Assistant"
         },
         "fields": {
