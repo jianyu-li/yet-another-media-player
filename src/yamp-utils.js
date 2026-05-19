@@ -1,5 +1,9 @@
 // Utility functions for Yet Another Media Player (YAMP)
 import { localize } from "./localize/localize.js";
+import { ARTWORK_OVERRIDE_MATCH_KEYS } from "./constants.js";
+
+// WeakMap cache for compiled override regexes to avoid mutating config objects
+const overrideRegexCache = new WeakMap();
 
 /**
  * Get a valid artwork attribute value (non-empty string with content)
@@ -310,4 +314,180 @@ export function getSearchResultClickTitle(item) {
 
   // Default fallback
   return title;
+}
+
+/**
+ * Find and resolve artwork override from overrides list.
+ * @param {Object} state - Home Assistant state object
+ * @param {Array} overrides - Media artwork overrides configuration
+ * @param {Function} [resolveOverrideSource] - Callback for template override resolution
+ * @returns {Object|null} Resolved artwork override details, or null if none resolved
+ */
+function _findArtworkOverride(state, overrides, resolveOverrideSource) {
+  if (!overrides || !Array.isArray(overrides) || !overrides.length) return null;
+
+  const attrs = state.attributes;
+  const entityId = state.entity_id;
+
+  const findSpecificMatch = () =>
+    overrides.find((override) =>
+      ARTWORK_OVERRIDE_MATCH_KEYS.some((key) => {
+        const expected = override[key];
+        if (expected === undefined) return false;
+        const value = key === "entity_id"
+          ? entityId
+          : key === "entity_state"
+            ? state?.state
+            : attrs[key];
+        if (expected === "*") return true;
+        let cached = overrideRegexCache.get(override);
+        if (!cached) {
+          cached = {};
+          overrideRegexCache.set(override, cached);
+        }
+
+        let regex = cached[key];
+        if (regex === undefined) {
+          if (typeof expected === "string" && expected.includes("*") && expected !== "*") {
+            try {
+              // Collapse consecutive asterisks to prevent ReDoS (e.g. **** -> *)
+              const cleanExpected = expected.replace(/\*+/g, "*");
+              // Limit maximum active wildcards to 5 to protect regex matching complexity
+              const asteriskCount = (cleanExpected.match(/\*/g) || []).length;
+              if (asteriskCount <= 5) {
+                const regexPattern = cleanExpected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
+                regex = new RegExp(`^${regexPattern}$`, "i");
+                cached[key] = regex;
+              } else {
+                cached[key] = null;
+                regex = null;
+              }
+            } catch (e) {
+              cached[key] = null; // Cache compilation failure
+              regex = null;
+            }
+          } else {
+            cached[key] = null;
+            regex = null;
+          }
+        }
+
+        if (regex) {
+          return regex.test(String(value || ""));
+        }
+        return value === expected;
+      })
+    );
+
+  const hasExistingArtwork = getValidArtworkAttr(attrs, 'entity_picture_local') ||
+    getValidArtworkAttr(attrs, 'entity_picture') ||
+    getValidArtworkAttr(attrs, 'album_art');
+
+  let override = findSpecificMatch();
+  let overrideSource = null;
+  let overrideType = "image";
+
+  if (override?.image_url) {
+    overrideSource = override.image_url;
+  } else if (override?.missing_art_url && !hasExistingArtwork) {
+    overrideSource = override.missing_art_url;
+    overrideType = "missing";
+  }
+
+  if (!override && !hasExistingArtwork) {
+    const missingOverride = overrides.find((item) => item?.missing_art_url);
+    if (missingOverride?.missing_art_url) {
+      override = missingOverride;
+      overrideSource = missingOverride.missing_art_url;
+      overrideType = "missing";
+    }
+  }
+
+  if (override && overrideSource) {
+    const resolvedOverride = typeof resolveOverrideSource === "function"
+      ? resolveOverrideSource(override, overrideSource, overrideType, state)
+      : overrideSource;
+    if (resolvedOverride) {
+      return {
+        url: resolvedOverride,
+        sizePercentage: override?.size_percentage,
+        objectFit: override?.object_fit ?? null
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get artwork URL from entity state, supporting entity_picture_local and overrides.
+ * Consolidates wildcard/regex overrides, fallback SVGs, and hostname prefixes.
+ *
+ * @param {Object} state - Home Assistant state object
+ * @param {Object} [options] - Configuration options
+ * @param {string} [options.hostname] - Hostname prefix for relative URLs
+ * @param {Array} [options.overrides] - Media artwork overrides configuration
+ * @param {string} [options.fallbackArtwork] - Fallback artwork strategy ('smart' or direct URL)
+ * @param {string} [options.artworkObjectFit] - Fit strategy; if "no_artwork", returns null URL
+ * @param {Function} [options.resolveOverrideSource] - Callback for template override resolution
+ * @returns {Object} { url: string|null, sizePercentage: number|null, objectFit: string|null }
+ */
+export function getArtworkUrl(state, {
+  hostname = "",
+  overrides = [],
+  fallbackArtwork = null,
+  artworkObjectFit = null,
+  resolveOverrideSource = null
+} = {}) {
+  if (!state || !state.attributes) return null;
+
+  const attrs = state.attributes;
+
+  let artworkUrl = null;
+  let sizePercentage = null;
+  let objectFit = null;
+
+  if (artworkObjectFit === "no_artwork") {
+    return { url: null, sizePercentage: null, objectFit: "no_artwork" };
+  }
+
+  // Check for media artwork overrides first
+  const resolvedOverride = _findArtworkOverride(state, overrides, resolveOverrideSource);
+  if (resolvedOverride) {
+    artworkUrl = resolvedOverride.url;
+    sizePercentage = resolvedOverride.sizePercentage;
+    objectFit = resolvedOverride.objectFit;
+  }
+
+  // If no override found, use standard artwork
+  if (!artworkUrl) {
+    artworkUrl = getValidArtworkAttr(attrs, 'entity_picture_local') ||
+      getValidArtworkAttr(attrs, 'entity_picture') ||
+      getValidArtworkAttr(attrs, 'album_art') ||
+      null;
+  }
+
+  // If still no artwork, check for configured fallback artwork
+  if (!artworkUrl && fallbackArtwork) {
+    if (fallbackArtwork === 'smart') {
+      const isTV = attrs.media_title === 'TV' || attrs.media_channel ||
+        attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
+      if (isTV) {
+        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvcj4KPHJlY3QgeD0iNjgiIHk9IjEyMCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPHJlY3QgeD0iODAiIHk9IjEzMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPC9zdmc+Cg==';
+      } else {
+        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjM2IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjYyIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjY4IiB5PSI5OCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjEwMCIgeT0iNzAiIHdpZHRoPSIyMiIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSIxMzIiIHk9IjQyIiB3aWR0aD0iMjIiIGhlaWdodD0iMTA2IiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo=';
+      }
+    } else if (typeof fallbackArtwork === 'string') {
+      artworkUrl = fallbackArtwork;
+    }
+  }
+
+  // Apply hostname prefix if configured and artwork URL is relative
+  if (artworkUrl && hostname && !/^https?:\/\//i.test(artworkUrl) && !artworkUrl.startsWith('data:')) {
+    const cleanHost = hostname.endsWith('/') ? hostname.slice(0, -1) : hostname;
+    const cleanUrl = artworkUrl.startsWith('/') ? artworkUrl : `/${artworkUrl}`;
+    artworkUrl = cleanHost + cleanUrl;
+  }
+
+  return { url: artworkUrl, sizePercentage, objectFit };
 }

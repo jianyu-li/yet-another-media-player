@@ -21,7 +21,10 @@ export default {
         "unavailable": "Nedostupné",
         "back": "Späť",
         "cancel": "Zrušiť",
-        "reset_default": "Obnoviť predvolené"
+        "reset_default": "Obnoviť predvolené",
+        "unpin": "Odpnúť",
+        "clear": "Vymazať",
+        "album_art": "Grafika albumu"
     },
     "editor": {
         "tabs": {
@@ -344,6 +347,7 @@ export default {
         "next_up": "Nasledujúce",
         "recommendations": "Odporúčania",
         "radio_mode": "Režim rádio",
+        "show_track_options": "Zobraziť možnosti skladby",
         "play_similar": "Prehrať podobné skladby",
         "close": "Zatvoriť vyhľadávanie",
         "no_results": "Žiadne výsledky.",

@@ -1,109 +1,6 @@
-// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { html, nothing } from "lit";
-import { getValidArtworkAttr } from "./yamp-utils.js";
-
-
-// Get artwork URL from entity state, supporting entity_picture_local for Music Assistant
-function getArtworkUrl(state, hostname = '', overrides = [], fallbackArtwork = null) {
-  if (!state || !state.attributes) return null;
-
-  const attrs = state.attributes;
-  const entityId = state.entity_id;
-  const appId = attrs.app_id;
-
-  let artworkUrl = null;
-  let sizePercentage = null;
-
-  // Check for media artwork overrides first
-  if (overrides && Array.isArray(overrides) && overrides.length) {
-    const getOverrideValue = (override, key) => {
-      if (!override) return undefined;
-      return override[key];
-    };
-
-    const matchers = [
-      ["media_title", "media_title"],
-      ["media_artist", "media_artist"],
-      ["media_album_name", "media_album_name"],
-      ["media_content_id", "media_content_id"],
-      ["media_channel", "media_channel"],
-      ["app_name", "app_name"],
-      ["media_content_type", "media_content_type"],
-      ["entity_id", "entity_id"],
-      ["entity_state", "entity_state"],
-    ];
-
-    const findSpecificMatch = () =>
-      overrides.find((override) =>
-        matchers.some(([attrKey, overrideKey]) => {
-          const expected = getOverrideValue(override, overrideKey);
-          if (expected === undefined) return false;
-          const value = attrKey === "entity_id"
-            ? entityId
-            : attrKey === "entity_state"
-              ? state?.state
-              : attrs[attrKey];
-          return value === expected;
-        })
-      );
-
-    let override = findSpecificMatch();
-
-    if (!override) {
-      // Use helper to properly check for valid artwork attributes
-      const hasArtwork = getValidArtworkAttr(attrs, 'entity_picture_local') ||
-        getValidArtworkAttr(attrs, 'entity_picture') ||
-        getValidArtworkAttr(attrs, 'album_art');
-      if (!hasArtwork) {
-        override = overrides.find((item) => item?.missing_art_url);
-        if (override?.missing_art_url) {
-          override = { ...override, image_url: override.missing_art_url };
-        }
-      }
-    }
-
-    if (override?.image_url) {
-      artworkUrl = override.image_url;
-      sizePercentage = override?.size_percentage;
-    }
-  }
-
-  // If no override found, use standard artwork
-  // Use helper to properly check for valid artwork attributes and fallback correctly
-  if (!artworkUrl) {
-    artworkUrl = getValidArtworkAttr(attrs, 'entity_picture_local') ||
-      getValidArtworkAttr(attrs, 'entity_picture') ||
-      getValidArtworkAttr(attrs, 'album_art') ||
-      null;
-  }
-
-  // If still no artwork, check for configured fallback artwork
-  if (!artworkUrl && fallbackArtwork) {
-    // Check if it's a smart fallback (TV vs Music)
-    if (fallbackArtwork === 'smart') {
-      // Use TV icon for TV content, music icon for everything else
-      const isTV = attrs.media_title === 'TV' || attrs.media_channel ||
-        attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
-      if (isTV) {
-        // TV icon
-        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI2OCIgeT0iMTIwIiB3aWR0aD0iNDgiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSI4MCIgeT0iMTMwIiB3aWR0aD0iMjQiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8L3N2Zz4K';
-      } else {
-        // Music icon (equalizer bars)
-        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjM2IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjYyIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjY4IiB5PSI1OCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjEwMCIgeT0iNzAiIHdpZHRoPSIyMiIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSIxMzIiIHk9IjQyIiB3aWR0aD0iMjIiIGhlaWdodD0iMTA2IiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo=';
-      }
-    } else if (typeof fallbackArtwork === 'string') {
-      // Direct URL or base64 image
-      artworkUrl = fallbackArtwork;
-    }
-  }
-
-  // Apply hostname prefix if configured and artwork URL is relative
-  if (artworkUrl && hostname && !artworkUrl.startsWith('http')) {
-    artworkUrl = hostname + artworkUrl;
-  }
-
-  return { url: artworkUrl, sizePercentage };
-}
+import { getValidArtworkAttr, getArtworkUrl } from "./yamp-utils.js";
+import { localize } from "./localize/localize.js";
 
 // Helper to render a single chip
 export function renderChip({
@@ -159,7 +56,7 @@ export function renderChip({
       : nothing}
       ${pinned
       ? html`
-            <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="Unpin">
+            <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="${localize('common.unpin')}">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           `
@@ -248,7 +145,7 @@ export function renderGroupChip({
       : nothing}
       ${pinned
       ? html`
-            <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="Unpin">
+            <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="${localize('common.unpin')}">
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           `
@@ -363,8 +260,9 @@ export function renderChipRow({
         : (state?.state === "playing");
       const artObj = (typeof getChipArt === "function")
         ? getChipArt(id)
-        : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
+        : getArtworkUrl(state, { hostname: artworkHostname, overrides: mediaArtworkOverrides, fallbackArtwork });
       const art = artObj?.url;
+
       const objectFit = artObj?.objectFit;
 
       const icon = state?.attributes?.icon || "mdi:cast";
@@ -400,8 +298,9 @@ export function renderChipRow({
         : (state?.state === "playing");
       const artObj = (typeof getChipArt === "function")
         ? getChipArt(id)
-        : getArtworkUrl(state, artworkHostname, mediaArtworkOverrides, fallbackArtwork);
+        : getArtworkUrl(state, { hostname: artworkHostname, overrides: mediaArtworkOverrides, fallbackArtwork });
       const artSource = artObj?.url;
+
       const objectFit = artObj?.objectFit;
 
       const art = selectedEntityId === id ? (!isIdle && artSource) : (isChipPlaying && artSource);

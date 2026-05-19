@@ -21,7 +21,10 @@ export default {
         "unavailable": "Ni na voljo",
         "back": "Nazaj",
         "cancel": "Prekliči",
-        "reset_default": "Ponastavi na privzeto"
+        "reset_default": "Ponastavi na privzeto",
+        "unpin": "Odpni",
+        "clear": "Počisti",
+        "album_art": "Naslovnica albuma"
     },
     "editor": {
         "tabs": {
@@ -344,6 +347,7 @@ export default {
         "next_up": "Naslednje",
         "recommendations": "Priporočila",
         "radio_mode": "Radijski način",
+        "show_track_options": "Prikaži možnosti skladbe",
         "play_similar": "Predvajaj podobne pesmi",
         "close": "Zapri iskanje",
         "no_results": "Ni rezultatov.",
