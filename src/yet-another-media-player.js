@@ -7192,7 +7192,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       : this.config.idle_image;
     const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
     
-    // Use the unified entity resolution system for playback state
+    // Use the unified entity resolution system for playback state.
+    // (Note: resolved here at the top of render to support show_idle_artwork_when_not_playing detection)
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     const playbackStateObj = this.hass?.states?.[playbackEntityId];
     const isCurrentPlayingForIdle = this._isEntityPlaying(playbackStateObj);
