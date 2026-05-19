@@ -452,7 +452,7 @@ export function getArtworkUrl(state, {
   }
 
   // Apply hostname prefix if configured and artwork URL is relative
-  if (artworkUrl && hostname && !artworkUrl.startsWith('http') && !artworkUrl.startsWith('data:')) {
+  if (artworkUrl && hostname && !/^https?:\/\//i.test(artworkUrl) && !artworkUrl.startsWith('data:')) {
     const cleanHost = hostname.endsWith('/') ? hostname.slice(0, -1) : hostname;
     const cleanUrl = artworkUrl.startsWith('/') ? artworkUrl : `/${artworkUrl}`;
     artworkUrl = cleanHost + cleanUrl;

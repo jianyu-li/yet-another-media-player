@@ -7804,7 +7804,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       config.expand_on_search === true;
 
     host.setAttribute("data-hide-menu-player", String(config.hide_menu_player === true || forceHideMenuPlayer));
-    host.setAttribute("data-extend-artwork", String(config.extend_artwork === true));
+    host.setAttribute("data-extend-artwork", String(this._extendArtwork));
     host.setAttribute("data-control-layout", this._controlLayout || "classic");
     host.setAttribute("data-details-alignment", config.details_alignment || "left");
 
@@ -7818,7 +7818,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ? this._cardHeightTemplateResult
       : config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string"
-      ? (customCardHeightInput.includes('px') ? parseFloat(customCardHeightInput) : Number(customCardHeightInput))
+      ? parseFloat(customCardHeightInput)
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
     const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
