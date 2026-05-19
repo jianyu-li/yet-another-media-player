@@ -21,7 +21,10 @@ export default {
         "unavailable": "Niet beschikbaar",
         "back": "Terug",
         "cancel": "Annuleren",
-        "reset_default": "Herstellen naar standaard"
+        "reset_default": "Herstellen naar standaard",
+        "unpin": "Losmaken",
+        "clear": "Wissen",
+        "album_art": "Albumhoes"
     },
     "editor": {
         "tabs": {
@@ -344,6 +347,7 @@ export default {
         "next_up": "Volgende",
         "recommendations": "Aanbevelingen",
         "radio_mode": "Radiomodus",
+        "show_track_options": "Nummeropties weergeven",
         "play_similar": "Vergelijkbare nummers afspelen",
         "close": "Zoeken Sluiten",
         "no_results": "Geen resultaten.",

@@ -4066,3 +4066,4 @@ export const lyricsStyles = css`
     height: 34px;
   }
 `;
+

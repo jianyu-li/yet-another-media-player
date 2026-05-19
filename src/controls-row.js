@@ -1,7 +1,16 @@
-// import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { html, nothing } from "lit";
 import { localize } from "./localize/localize.js";
-
+import {
+  SUPPORT_PAUSE,
+  SUPPORT_PREVIOUS_TRACK,
+  SUPPORT_NEXT_TRACK,
+  SUPPORT_STOP,
+  SUPPORT_SHUFFLE,
+  SUPPORT_REPEAT_SET,
+  SUPPORT_TURN_ON,
+  SUPPORT_TURN_OFF,
+  SUPPORT_PLAY
+} from "./constants.js";
 
 export function renderControlsRow({
   stateObj,
@@ -23,17 +32,6 @@ export function renderControlsRow({
   // in src/yamp-editor.js must also be updated to match, and the README.md
   // documentation in the "Available Control Names" section should be updated.
 
-
-
-  const SUPPORT_PAUSE = 1;
-  const SUPPORT_PREVIOUS_TRACK = 16;
-  const SUPPORT_NEXT_TRACK = 32;
-  const SUPPORT_STOP = 4096;
-  const SUPPORT_SHUFFLE = 32768;
-  const SUPPORT_REPEAT_SET = 262144;
-  const SUPPORT_TURN_ON = 128;
-  const SUPPORT_TURN_OFF = 256;
-  const SUPPORT_PLAY = 16384;
 
   const normalizedLayout = controlLayout === "modern" ? "modern" : "classic";
 
@@ -146,32 +144,32 @@ export function renderControlsRow({
   return html`
     <div class=${rowClass} style=${rowStyle}>
       ${showPrevious ? html`
-        <button class="button" @click=${() => onControlClick("prev")} title="Previous">
+        <button class="button" @click=${() => onControlClick("prev")} title="${localize('card.media_controls.previous')}">
           <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
         </button>
       ` : nothing}
       ${showPlayPause ? html`
-        <button class="button" @click=${() => onControlClick("play_pause")} title="Play/Pause">
+        <button class="button" @click=${() => onControlClick("play_pause")} title="${localize('card.media_controls.play_pause')}">
           <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
         </button>
       ` : nothing}
       ${showStopButton ? html`
-        <button class="button" @click=${() => onControlClick("stop")} title="Stop">
+        <button class="button" @click=${() => onControlClick("stop")} title="${localize('card.media_controls.stop')}">
           <ha-icon .icon=${"mdi:stop"}></ha-icon>
         </button>
       ` : nothing}
       ${showNext ? html`
-        <button class="button" @click=${() => onControlClick("next")} title="Next">
+        <button class="button" @click=${() => onControlClick("next")} title="${localize('card.media_controls.next')}">
           <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
         </button>
       ` : nothing}
       ${showShuffleButton ? html`
-        <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="Shuffle">
+        <button class="button${shuffleActive ? ' active' : ''}" @click=${() => onControlClick("shuffle")} title="${localize('card.media_controls.shuffle')}">
           <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
         </button>
       ` : nothing}
       ${showRepeatButton ? html`
-        <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="Repeat">
+        <button class="button${repeatActive ? ' active' : ''}" @click=${() => onControlClick("repeat")} title="${localize('card.media_controls.repeat')}">
           <ha-icon .icon=${stateObj.attributes.repeat === "one"
         ? "mdi:repeat-once"
         : "mdi:repeat"
@@ -179,7 +177,7 @@ export function renderControlsRow({
         </button>
       ` : nothing}
       ${showFavoriteButton ? html`
-        <button class="button${favoriteActive ? ' active' : ''}" @click=${() => onControlClick("favorite")} title="Favorite">
+        <button class="button${favoriteActive ? ' active' : ''}" @click=${() => onControlClick("favorite")} title="${localize('common.favorite')}">
           <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
         </button>
       ` : nothing}
@@ -187,7 +185,7 @@ export function renderControlsRow({
         <button
           class="button${stateObj.state !== "off" ? " active" : ""}"
           @click=${() => onControlClick("power")}
-          title="Power"
+          title="${localize('common.power')}"
         >
           <ha-icon .icon=${"mdi:power"}></ha-icon>
         </button>
@@ -198,13 +196,6 @@ export function renderControlsRow({
 
 // Export a small helper used by the card for layout decisions
 export function countMainControls(stateObj, supportsFeature, showFavorite = false, hiddenControls = {}, showStop = false, controlLayout = "classic") {
-  const SUPPORT_PREVIOUS_TRACK = 16;
-  const SUPPORT_NEXT_TRACK = 32;
-  const SUPPORT_SHUFFLE = 32768;
-  const SUPPORT_REPEAT_SET = 262144;
-  const SUPPORT_TURN_ON = 128;
-  const SUPPORT_TURN_OFF = 256;
-
   const normalizedLayout = controlLayout === "modern" ? "modern" : "classic";
 
   let count = 0;

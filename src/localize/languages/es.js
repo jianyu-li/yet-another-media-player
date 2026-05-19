@@ -21,7 +21,10 @@ export default {
         "unavailable": "No disponible",
         "back": "Atrás",
         "cancel": "Cancelar",
-        "reset_default": "Restablecer valores"
+        "reset_default": "Restablecer valores",
+        "unpin": "Desanclar",
+        "clear": "Limpiar",
+        "album_art": "Portada del álbum"
     },
     "editor": {
         "tabs": {
@@ -344,6 +347,7 @@ export default {
         "next_up": "A continuación",
         "recommendations": "Recomendaciones",
         "radio_mode": "Modo Radio",
+        "show_track_options": "Mostrar opciones de canción",
         "play_similar": "Reproducir canciones similares",
         "close": "Cerrar",
         "no_results": "Sin resultados.",

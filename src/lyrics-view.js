@@ -13,7 +13,8 @@ export class YampLyricsView extends LitElement {
       error: { type: Boolean },
       activeThemeColor: { type: String },
       mode: { type: String },
-      preRoll: { type: Number }
+      preRoll: { type: Number },
+      _activeIndex: { state: true }
     };
   }
 
@@ -85,7 +86,6 @@ export class YampLyricsView extends LitElement {
 
     if (newActiveIndex !== this._activeIndex) {
       this._activeIndex = newActiveIndex;
-      this.requestUpdate();
       // Wait for Lit to finish rendering the active class before scrolling
       if (newActiveIndex !== -1) {
         this.updateComplete.then(() => this._scrollToActive());

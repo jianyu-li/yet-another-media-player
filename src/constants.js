@@ -13,3 +13,16 @@ export const SUPPORT_PLAY = 16384;
 export const SUPPORT_SHUFFLE = 32768;
 export const SUPPORT_GROUPING = 524288;  
 export const SUPPORT_REPEAT_SET = 262144;
+
+export const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
+  "media_title",
+  "media_artist",
+  "media_album_name",
+  "media_content_id",
+  "media_channel",
+  "app_name",
+  "media_content_type",
+  "entity_id",
+  "entity_state"
+]);
+

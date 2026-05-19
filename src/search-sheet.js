@@ -454,7 +454,7 @@ export function renderSearchOptionsOverlay({ item, onClose, onPlayOption, massQu
           <div class="entity-options-divider"></div>
           
           <button class="entity-options-item close-item" @click=${onClose}>
-            Cancel
+            ${localize('common.cancel')}
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 // import { LitElement, html, css } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 // import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/+esm";
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html } from "lit";
 import Sortable from "sortablejs";
 
 class YampSortable extends LitElement {
@@ -12,40 +12,6 @@ class YampSortable extends LitElement {
     };
   }
 
-  static get styles() {
-    return css`
-      :host {
-        display: block;
-      }
-      .sortable-fallback {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-      .sortable-ghost {
-        box-shadow: 0 0 0 2px var(--primary-color);
-        background: rgba(var(--rgb-primary-color), 0.25);
-        border-radius: 4px;
-        opacity: 0.4;
-      }
-      .sortable-drag {
-        border-radius: 4px;
-        opacity: 1;
-        background: var(--card-background-color);
-        box-shadow: 0px 4px 8px 3px #00000026;
-        cursor: grabbing;
-      }
-      /* Hide any fallback elements that might appear (mobile fix)*/
-      .sortable-fallback,
-      .sortable-fallback * {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-    `;
-  }
 
   constructor() {
     super();
