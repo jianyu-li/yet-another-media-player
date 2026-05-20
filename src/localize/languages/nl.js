@@ -142,7 +142,8 @@ export default {
             "blurred_artwork": "Achtergrondafbeelding altijd vervagen",
             "hide_collapsed_artwork": "Verberg de kleine afbeelding aan de rechterkant wanneer de kaart is ingeklapt",
             "show_idle_artwork_when_not_playing": "Indien ingeschakeld, zal het selecteren van een chip die momenteel niet wordt afgespeeld de geconfigureerde stand-by afbeelding weergeven in plaats van de actieve afspeel-art.",
-            "prefer_ma_metadata": "Gebruik altijd de gekoppelde Music Assistant-entiteit voor de tracktitel, artiest en artwork, zelfs als de primaire entiteit wordt afgespeeld."
+            "prefer_ma_metadata": "Gebruik altijd de gekoppelde Music Assistant-entiteit voor de tracktitel, artiest en artwork, zelfs als de primaire entiteit wordt afgespeeld.",
+            "show_volume_overlay": "Geef kort een grote volume-indicator weer over het artwork wanneer het volumeniveau verandert."
         },
         "titles": {
             "edit_entity": "Entiteit Bewerken",
@@ -187,7 +188,8 @@ export default {
             "blurred_artwork": "Vervaagde afbeelding",
             "hide_collapsed_artwork": "Verkleinde afbeelding verbergen",
             "show_idle_artwork_when_not_playing": "Toon stand-by afbeelding wanneer niet afgespeeld",
-            "prefer_ma_metadata": "Voorkeur voor Music Assistant-metadata"
+            "prefer_ma_metadata": "Voorkeur voor Music Assistant-metadata",
+            "show_volume_overlay": "Volume-overlay weergeven"
         },
         "fields": {
             "artwork_fit": "Artwork Passend Maken",

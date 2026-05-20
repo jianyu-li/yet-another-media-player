@@ -142,7 +142,8 @@ export default {
             "blurred_artwork": "Vedno zamegli ozadje",
             "hide_collapsed_artwork": "Skrij majhno sliko na desni, ko je kartica strnjena",
             "show_idle_artwork_when_not_playing": "Ko je to omogočeno, se ob izbiri čipa, na katerem se trenutno nič ne predvaja, prikaže nastavljena slika za nedejavnost namesto aktivne grafike predvajanja.",
-            "prefer_ma_metadata": "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta."
+            "prefer_ma_metadata": "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta.",
+            "show_volume_overlay": "Ob spremembi glasnosti za kratek čas prikaže velik indikator glasnosti čez naslovnico."
         },
         "titles": {
             "edit_entity": "Uredi entiteto",
@@ -187,7 +188,8 @@ export default {
             "blurred_artwork": "Zamegljena grafika",
             "hide_collapsed_artwork": "Skrij skrčeno grafika",
             "show_idle_artwork_when_not_playing": "Prikaži sliko za nedejavnost, ko se ne predvaja",
-            "prefer_ma_metadata": "Prednost metapodatkom Music Assistant"
+            "prefer_ma_metadata": "Prednost metapodatkom Music Assistant",
+            "show_volume_overlay": "Prikaži prekrivno ploščo za glasnost"
         },
         "fields": {
             "artwork_fit": "Prileganje grafike",
