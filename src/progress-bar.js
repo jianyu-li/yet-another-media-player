@@ -1,6 +1,7 @@
 // import { html, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { html, nothing } from "lit";
 import { localize } from "./localize/localize.js";
+import { DEFAULT_PROGRESS_BAR_HEIGHT } from "./constants.js";
 
 function formatTime(seconds) {
   if (seconds === undefined || seconds === null || isNaN(seconds)) return "0:00";
@@ -15,12 +16,12 @@ export function renderProgressBar({
   onSeek,
   collapsed,
   accent,
-  height = 6,
+  height = DEFAULT_PROGRESS_BAR_HEIGHT,
   style = "",
   displayTimestamps = false,
   currentTime = 0,
   duration = 0,
-  customHeight = 6
+  customHeight = DEFAULT_PROGRESS_BAR_HEIGHT
 }) {
   // Use `accent` for color, fallback to default if not set
   const barColor = accent || "var(--custom-accent, #ff9800)";
