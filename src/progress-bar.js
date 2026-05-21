@@ -44,7 +44,7 @@ export function renderProgressBar({
     <div class="progress-bar-container" style="${dynamicStyles} ${style}">
       <div
         class="progress-bar"
-        style="height:${activeHeight}px; background:rgba(255,255,255,0.22);"
+        style="height:${activeHeight}px;"
         @click=${seekEnabled ? onSeek : null}
         title=${seekEnabled ? localize('common.seek') : ""}
       >

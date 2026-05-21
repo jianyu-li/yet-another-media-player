@@ -1182,7 +1182,7 @@ export const yampCardStyles = css`
   .progress-bar {
     width: 100%;
     height: 4px;
-    background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.2));
+    background: rgba(255, 255, 255, 0.22);
     border-radius: var(--progress-radius, 2px);
     overflow: hidden;
     position: relative;
@@ -1663,7 +1663,8 @@ export const yampCardStyles = css`
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-icon-btn,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-icon-btn ha-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .radio-mode-button,
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-slider-icon {
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-slider-icon,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .timestamps-container {
     color: var(--primary-text);
   }
 
@@ -1714,7 +1715,8 @@ export const yampCardStyles = css`
     border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color, #e0e0e0));
   }
 
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider {
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .progress-bar {
     background: color-mix(in srgb, var(--primary-text), transparent 80%);
   }
 
