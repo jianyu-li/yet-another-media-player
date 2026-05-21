@@ -165,7 +165,7 @@ export default {
             "disable_mass": "Onemogoči Mass Queue",
             "match_theme": "Ujemaj temo",
             "alt_progress": "Alternativna vrstica napredka",
-            "large_progress": "Velika vrstica napredka",
+            "progress_bar_height": "Višina vrstice napredka",
             "display_timestamps": "Prikaži časovne oznake",
             "swap_pause_stop": "Zamenjaj pavzo z zaustavitvijo",
             "adaptive_controls": "Prilagodljiva velikost gumbov",

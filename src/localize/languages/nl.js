@@ -165,7 +165,7 @@ export default {
             "disable_mass": "Mass Queue uitschakelen",
             "match_theme": "Thema matchen",
             "alt_progress": "Alternatieve Voortgangsbalk",
-            "large_progress": "Grote voortgangsbalk",
+            "progress_bar_height": "Hoogte voortgangsbalk",
             "display_timestamps": "Tijdstempels Weergeven",
             "swap_pause_stop": "Pauze vervangen door Stop",
             "adaptive_controls": "Adaptieve Knoppen Grootte",

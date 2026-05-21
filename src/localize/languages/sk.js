@@ -165,7 +165,7 @@ export default {
             "disable_mass": "Deaktivovať Mass Queue",
             "match_theme": "Podľa témy",
             "alt_progress": "Alternatívny indikátor priebehu",
-            "large_progress": "Veľký indikátor priebehu",
+            "progress_bar_height": "Výška indikátora priebehu",
             "display_timestamps": "Zobraziť časové údaje",
             "swap_pause_stop": "Vymeniť pauzu za stop",
             "adaptive_controls": "Adaptívna veľkosť ovládania",

@@ -1183,7 +1183,7 @@ export const yampCardStyles = css`
     width: 100%;
     height: 4px;
     background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.2));
-    border-radius: 2px;
+    border-radius: var(--progress-radius, 2px);
     overflow: hidden;
     position: relative;
     cursor: pointer;
@@ -1192,46 +1192,21 @@ export const yampCardStyles = css`
   .progress-inner {
     height: 100%;
     background: var(--custom-accent);
-    border-radius: 3px 0 0 3px;
+    border-radius: var(--progress-radius, 3px) 0 0 var(--progress-radius, 3px);
     box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
   }
 
   .timestamps-container {
     display: flex;
     justify-content: space-between;
-    font-size: 10px;
+    font-size: var(--timestamp-size, 10px);
     margin-top: -1px;
     margin-bottom: 4px;
     color: rgba(255, 255, 255, 0.9);
     padding: 0 2px;
   }
 
-  .collapsed-progress-bar.large-mode {
-    border-radius: 6px;
-  }
 
-  .progress-bar-container.large-mode {
-    padding-left: 32px;
-    padding-right: 32px;
-    margin-top: 16px;
-    margin-bottom: 16px;
-  }
-
-  .progress-bar-container.large-mode .progress-bar {
-    border-radius: 6px;
-  }
-
-  .progress-bar-container.large-mode .progress-inner {
-    border-radius: 6px 0 0 6px;
-  }
-
-  .progress-bar-container.large-mode .timestamps-container {
-    font-size: 24px;
-    font-weight: 600;
-    margin-top: 12px;
-    margin-bottom: 8px;
-    padding: 0 8px;
-  }
 
   /* Volume controls */
   .volume-row {
@@ -1874,7 +1849,7 @@ export const yampCardStyles = css`
     bottom: 0;
     height: 4px;
     background: var(--custom-accent);
-    border-radius: 0 0 12px 12px;
+    border-radius: var(--progress-radius, 0) var(--progress-radius, 0) 12px 12px;
     z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
     transition: width var(--transition-normal) linear;
     pointer-events: none;
