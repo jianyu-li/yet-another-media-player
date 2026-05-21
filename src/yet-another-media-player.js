@@ -745,6 +745,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._volumeOverlayActive = false;
     this._volumeOverlayValue = 0;
     this._volumeOverlayTimer = null;
+    this._internalVolumeSuppressTimer = null;
     this._lastTrackedVolumeLevel = null;
     this._lastTrackedVolEntityId = null;
     this._volumeOverlayMuted = false;
@@ -5734,27 +5735,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._handleSelectEntityFromHelper();
     }
     // Volume overlay detection (Issue #252)
-    if (this._showVolumeOverlay && changedProps.has("hass") && this.hass) {
-      const volEntity = this._getVolumeEntity(this._selectedIndex);
-      const volState = volEntity ? this.hass.states[volEntity] : null;
-      const newLevel = volState?.attributes?.volume_level ?? null;
-      const isMuted = volState?.attributes?.is_volume_muted ?? false;
-
-      // Reset tracking when volume entity changes (e.g. chip switch)
-      if (volEntity !== this._lastTrackedVolEntityId) {
-        this._lastTrackedVolumeLevel = newLevel;
-        this._lastTrackedVolEntityId = volEntity;
-      } else if (
-        newLevel !== null &&
-        this._lastTrackedVolumeLevel !== null &&
-        newLevel !== this._lastTrackedVolumeLevel &&
-        !this._internalVolumeChangeFlag &&
-        !this._volumeDraggingEntity
-      ) {
-        this._showVolumeOverlayBriefly(newLevel, isMuted);
-      }
-      this._lastTrackedVolumeLevel = newLevel;
-    }
+    this._handleVolumeOverlayDetection(changedProps);
 
     // Lyrics fetch trigger
     if (this._lyricsActive) {
@@ -6854,6 +6835,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _onVolumeInput(e) {
     this._dragVolume = Number(e.target.value);
+  }
+
+  _handleVolumeOverlayDetection(changedProps) {
+    if (this._showVolumeOverlay && changedProps.has("hass") && this.hass && !this.isAnyMenuOpen) {
+      const volEntity = this._getVolumeEntity(this._selectedIndex);
+      const volState = volEntity ? this.hass.states[volEntity] : null;
+      const newLevel = volState?.attributes?.volume_level ?? null;
+      const isMuted = volState?.attributes?.is_volume_muted ?? false;
+
+      // Reset tracking when volume entity changes (e.g. chip switch)
+      if (volEntity !== this._lastTrackedVolEntityId) {
+        this._lastTrackedVolumeLevel = newLevel;
+        this._lastTrackedVolEntityId = volEntity;
+      } else if (
+        newLevel !== null &&
+        this._lastTrackedVolumeLevel !== null &&
+        newLevel !== this._lastTrackedVolumeLevel &&
+        !this._internalVolumeChangeFlag &&
+        !this._volumeDraggingEntity
+      ) {
+        this._showVolumeOverlayBriefly(newLevel, isMuted);
+      }
+      this._lastTrackedVolumeLevel = newLevel;
+    }
   }
 
   /**
