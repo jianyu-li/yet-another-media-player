@@ -13,7 +13,8 @@ export const Z_LAYERS = Object.freeze({
   MODAL_BACKDROP: 2,
   MODAL_TOAST: 2,
   SEARCH_SLIDE_OUT: 1,
-  SEARCH_SUCCESS: 1
+  SEARCH_SUCCESS: 1,
+  VOLUME_OVERLAY: 3
 });
 
 const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent, rgba(0,0,0,0.5) 10px, black 50px, black calc(100% - 50px), rgba(0,0,0,0.5) calc(100% - 10px), transparent)`;
@@ -3910,6 +3911,83 @@ export const yampCardStyles = css`
   .search-sheet-results::-webkit-scrollbar,
   .lyrics-scroll-container::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Volume Overlay styles */
+  .volume-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--volume-overlay-bg, rgba(0, 0, 0, 0.45));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px;
+    color: var(--volume-overlay-color, #ffffff);
+    animation: volume-overlay-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    pointer-events: auto;
+    box-sizing: border-box;
+    padding: 16px;
+    text-align: center;
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.VOLUME_OVERLAY};
+  }
+
+  .volume-overlay ha-icon {
+    --mdc-icon-size: clamp(48px, 12cqw, 96px);
+    margin-bottom: clamp(8px, 2cqw, 16px);
+    color: var(--custom-accent, var(--accent-color, #ff9800));
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+    animation: volume-icon-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .volume-overlay-text {
+    font-size: clamp(3.2rem, 15cqw, 7.5rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -1px;
+    font-family: var(--yamp-font-family, Roboto, -apple-system, sans-serif);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  @keyframes volume-overlay-in {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes volume-icon-pop {
+    0% {
+      transform: scale(0.7);
+    } 
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Volume Overlay in Collapsed Mode */
+  .collapsed .volume-overlay {
+    flex-direction: row;
+    gap: 12px;
+    padding: 8px 16px;
+    background: var(--volume-overlay-collapsed-bg, rgba(0, 0, 0, 0.65));
+  }
+
+  .collapsed .volume-overlay ha-icon {
+    --mdc-icon-size: clamp(28px, 6cqw, 36px);
+    margin-bottom: 0;
+  }
+
+  .collapsed .volume-overlay-text {
+    font-size: clamp(1.6rem, 8cqw, 2.5rem);
   }
 `;
 

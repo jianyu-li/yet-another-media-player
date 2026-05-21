@@ -142,7 +142,8 @@ export default {
             "blurred_artwork": "Always blur the background artwork",
             "hide_collapsed_artwork": "Hide the smaller artwork on the right when the card is collapsed",
             "show_idle_artwork_when_not_playing": "When enabled, selecting a chip that is not currently playing will display the configured idle image instead of the active playback artwork.",
-            "prefer_ma_metadata": "Always use the paired Music Assistant entity for track title, artist, and artwork, even if the primary entity is playing."
+            "prefer_ma_metadata": "Always use the paired Music Assistant entity for track title, artist, and artwork, even if the primary entity is playing.",
+            "show_volume_overlay": "Briefly display a large volume indicator over the artwork when the volume level changes."
         },
         "titles": {
             "edit_entity": "Edit Entity",
@@ -187,7 +188,8 @@ export default {
             "blurred_artwork": "Blurred Artwork",
             "hide_collapsed_artwork": "Hide Collapsed Artwork",
             "show_idle_artwork_when_not_playing": "Show Idle Image When Not Playing",
-            "prefer_ma_metadata": "Prefer Music Assistant Metadata"
+            "prefer_ma_metadata": "Prefer Music Assistant Metadata",
+            "show_volume_overlay": "Show Volume Overlay"
         },
         "fields": {
             "artwork_fit": "Artwork Fit",

@@ -142,7 +142,8 @@ export default {
             "blurred_artwork": "Sfoca sempre l'immagine di sfondo",
             "hide_collapsed_artwork": "Nascondi l'immagine piccola a destra quando la scheda è compressa",
             "show_idle_artwork_when_not_playing": "Se abilitato, selezionando un chip che non è attualmente in riproduzione verrà mostrata l'immagine inattiva configurata invece della copertina di riproduzione attiva.",
-            "prefer_ma_metadata": "Utilizza sempre l'entità Music Assistant associata per il titolo del brano, l'artista e l'artwork, anche se l'entità principale è in riproduzione."
+            "prefer_ma_metadata": "Utilizza sempre l'entità Music Assistant associata per il titolo del brano, l'artista e l'artwork, anche se l'entità principale è in riproduzione.",
+            "show_volume_overlay": "Visualizza brevemente un grande indicatore del volume sopra la copertina quando il livello del volume cambia."
         },
         "titles": {
             "edit_entity": "Modifica entità",
@@ -187,7 +188,8 @@ export default {
             "blurred_artwork": "Immagine sfocata",
             "hide_collapsed_artwork": "Nascondi immagine contratta",
             "show_idle_artwork_when_not_playing": "Mostra immagine inattiva quando non in riproduzione",
-            "prefer_ma_metadata": "Preferisci i metadati di Music Assistant"
+            "prefer_ma_metadata": "Preferisci i metadati di Music Assistant",
+            "show_volume_overlay": "Mostra overlay volume"
         },
         "fields": {
             "artwork_fit": "Adattamento",

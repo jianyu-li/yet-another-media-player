@@ -1313,6 +1313,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="form-row form-row-multi-column">
             <div>
               <ha-switch
+                id="show-volume-overlay-toggle"
+                .checked=${this._config.show_volume_overlay ?? false}
+                @change=${(e) => this._updateConfig("show_volume_overlay", e.target.checked)}
+              ></ha-switch>
+              <label for="show-volume-overlay-toggle">${localize('editor.labels.show_volume_overlay')}</label>
+            </div>
+            <div class="config-subtitle">${localize('editor.subtitles.show_volume_overlay')}</div>
+          </div>
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
                 .checked=${this._config.disable_autofocus ?? false}
                 @change=${(e) => this._updateConfig("disable_autofocus", e.target.checked)}
               ></ha-switch>

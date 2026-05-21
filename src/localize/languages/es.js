@@ -142,7 +142,8 @@ export default {
             "blurred_artwork": "Difuminar siempre la imagen de fondo",
             "hide_collapsed_artwork": "Ocultar la imagen pequeña a la derecha cuando la tarjeta esté contraída",
             "show_idle_artwork_when_not_playing": "Cuando está habilitado, al seleccionar una ficha que no se está reproduciendo actualmente, se mostrará la imagen de inactividad configurada en lugar de la carátula de reproducción activa.",
-            "prefer_ma_metadata": "Utilizar siempre la entidad de Music Assistant emparejada para el título de la pista, el artista y el arte, incluso si la entidad primaria está reproduciendo."
+            "prefer_ma_metadata": "Utilizar siempre la entidad de Music Assistant emparejada para el título de la pista, el artista y el arte, incluso si la entidad primaria está reproduciendo.",
+            "show_volume_overlay": "Muestra brevemente un indicador de volumen grande sobre la carátula cuando cambia el nivel de volumen."
         },
         "titles": {
             "edit_entity": "Editar entidad",
@@ -187,7 +188,8 @@ export default {
             "blurred_artwork": "Imagen difuminada",
             "hide_collapsed_artwork": "Ocultar imagen reducida",
             "show_idle_artwork_when_not_playing": "Mostrar imagen de inactividad cuando no se reproduce",
-            "prefer_ma_metadata": "Preferir metadatos de Music Assistant"
+            "prefer_ma_metadata": "Preferir metadatos de Music Assistant",
+            "show_volume_overlay": "Mostrar superposición de volumen"
         },
         "fields": {
             "artwork_fit": "Ajuste",
