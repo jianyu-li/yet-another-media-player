@@ -165,6 +165,7 @@ export default {
             "disable_mass": "Mass Queue deaktivieren",
             "match_theme": "Theme anpassen",
             "alt_progress": "Alternativer Fortschrittsbalken",
+            "large_progress": "Großer Fortschrittsbalken",
             "display_timestamps": "Zeitstempel anzeigen",
             "swap_pause_stop": "Pause durch Stop ersetzen",
             "adaptive_controls": "Adaptive Tastengröße",

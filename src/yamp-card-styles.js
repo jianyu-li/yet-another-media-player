@@ -1206,6 +1206,33 @@ export const yampCardStyles = css`
     padding: 0 2px;
   }
 
+  .collapsed-progress-bar.large-mode {
+    border-radius: 6px;
+  }
+
+  .progress-bar-container.large-mode {
+    padding-left: 32px;
+    padding-right: 32px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+
+  .progress-bar-container.large-mode .progress-bar {
+    border-radius: 6px;
+  }
+
+  .progress-bar-container.large-mode .progress-inner {
+    border-radius: 6px 0 0 6px;
+  }
+
+  .progress-bar-container.large-mode .timestamps-container {
+    font-size: 24px;
+    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    padding: 0 8px;
+  }
+
   /* Volume controls */
   .volume-row {
     display: grid;

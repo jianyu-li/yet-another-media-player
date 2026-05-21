@@ -7713,7 +7713,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             style: this._showEntityOptions ? "visibility:hidden; opacity:0" : "",
             displayTimestamps: this._displayTimestamps,
             currentTime: pos,
-            duration: duration
+            duration: duration,
+            largeMode: this.config.large_progress_bar === true
           })
           : renderProgressBar({
             progress: 0,
@@ -7722,7 +7723,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             style: "visibility:hidden; opacity:0",
             displayTimestamps: this._displayTimestamps,
             currentTime: 0,
-            duration: 0
+            duration: 0,
+            largeMode: this.config.large_progress_bar === true
           })
         )
         : nothing
@@ -7732,12 +7734,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ? renderProgressBar({
             progress,
             collapsed: true,
-            style: this._showEntityOptions ? "visibility:hidden; opacity:0" : ""
+            style: this._showEntityOptions ? "visibility:hidden; opacity:0" : "",
+            largeMode: this.config.large_progress_bar === true
           })
           : renderProgressBar({
             progress: 0,
             collapsed: true,
-            style: "visibility:hidden; opacity:0"
+            style: "visibility:hidden; opacity:0",
+            largeMode: this.config.large_progress_bar === true
           })
         )
         : nothing

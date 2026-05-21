@@ -1608,6 +1608,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-switch>
               <span>${localize('editor.labels.alt_progress')}</span>
             </div>
+            <div>
+              <ha-switch
+                id="large-progress-bar-toggle"
+                .checked=${this._config.large_progress_bar ?? false}
+                @change=${(e) => this._updateConfig("large_progress_bar", e.target.checked)}
+              ></ha-switch>
+              <span>${localize('editor.labels.large_progress')}</span>
+            </div>
           </div>
           <div class="form-row">
             <ha-selector

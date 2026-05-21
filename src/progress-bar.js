@@ -19,30 +19,35 @@ export function renderProgressBar({
   style = "",
   displayTimestamps = false,
   currentTime = 0,
-  duration = 0
+  duration = 0,
+  largeMode = false
 }) {
   // Use `accent` for color, fallback to default if not set
   const barColor = accent || "var(--custom-accent, #ff9800)";
+  
+  // Determine active height based on large mode
+  const activeHeight = (largeMode && !collapsed) ? 24 : height;
+  
   // Collapsed bar is typically smaller and positioned differently
   if (collapsed) {
     return html`
       <div
-        class="collapsed-progress-bar"
-        style="width: ${progress * 100}%; background: ${barColor}; height: 4px; ${style}"
+        class="collapsed-progress-bar${largeMode ? ' large-mode' : ''}"
+        style="width: ${progress * 100}%; background: ${barColor}; height: ${largeMode ? '12px' : '4px'}; ${style}"
       ></div>
     `;
   }
   return html`
-    <div class="progress-bar-container" style="${style}">
+    <div class="progress-bar-container${largeMode ? ' large-mode' : ''}" style="${style}">
       <div
         class="progress-bar"
-        style="height:${height}px; background:rgba(255,255,255,0.22);"
+        style="height:${activeHeight}px; background:rgba(255,255,255,0.22);"
         @click=${seekEnabled ? onSeek : null}
         title=${seekEnabled ? localize('common.seek') : ""}
       >
         <div
           class="progress-inner"
-          style="width: ${progress * 100}%; background: ${barColor}; height:${height}px;"
+          style="width: ${progress * 100}%; background: ${barColor}; height:${activeHeight}px;"
         ></div>
       </div>
       ${displayTimestamps ? html`
