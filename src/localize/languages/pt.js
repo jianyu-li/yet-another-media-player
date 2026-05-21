@@ -165,6 +165,7 @@ export default {
             "disable_mass": "Desativar Mass Queue",
             "match_theme": "Seguir tema",
             "alt_progress": "Barra de progresso alternativa",
+            "progress_bar_height": "Altura da barra de progresso",
             "display_timestamps": "Mostrar carimbos de tempo",
             "swap_pause_stop": "Substituir Pausa por Stop",
             "adaptive_controls": "Tamanho adaptativo",

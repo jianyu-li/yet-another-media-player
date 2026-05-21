@@ -26,3 +26,4 @@ export const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
   "entity_state"
 ]);
 
+export const DEFAULT_PROGRESS_BAR_HEIGHT = 6;

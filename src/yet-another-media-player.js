@@ -55,7 +55,8 @@ import {
   SUPPORT_SHUFFLE,
   SUPPORT_GROUPING,
   SUPPORT_REPEAT_SET,
-  ARTWORK_OVERRIDE_MATCH_KEYS
+  ARTWORK_OVERRIDE_MATCH_KEYS,
+  DEFAULT_PROGRESS_BAR_HEIGHT
 } from "./constants.js";
 
 const PLAYLIST_FETCH_LIMIT = 500;
@@ -7713,7 +7714,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             style: this._showEntityOptions ? "visibility:hidden; opacity:0" : "",
             displayTimestamps: this._displayTimestamps,
             currentTime: pos,
-            duration: duration
+            duration: duration,
+            customHeight: this.config.progress_bar_height ?? DEFAULT_PROGRESS_BAR_HEIGHT
           })
           : renderProgressBar({
             progress: 0,
@@ -7722,7 +7724,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
             style: "visibility:hidden; opacity:0",
             displayTimestamps: this._displayTimestamps,
             currentTime: 0,
-            duration: 0
+            duration: 0,
+            customHeight: this.config.progress_bar_height ?? DEFAULT_PROGRESS_BAR_HEIGHT
           })
         )
         : nothing
@@ -7732,12 +7735,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ? renderProgressBar({
             progress,
             collapsed: true,
-            style: this._showEntityOptions ? "visibility:hidden; opacity:0" : ""
+            style: this._showEntityOptions ? "visibility:hidden; opacity:0" : "",
+            customHeight: this.config.progress_bar_height ?? DEFAULT_PROGRESS_BAR_HEIGHT
           })
           : renderProgressBar({
             progress: 0,
             collapsed: true,
-            style: "visibility:hidden; opacity:0"
+            style: "visibility:hidden; opacity:0",
+            customHeight: this.config.progress_bar_height ?? DEFAULT_PROGRESS_BAR_HEIGHT
           })
         )
         : nothing

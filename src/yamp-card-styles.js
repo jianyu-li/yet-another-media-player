@@ -1182,8 +1182,8 @@ export const yampCardStyles = css`
   .progress-bar {
     width: 100%;
     height: 4px;
-    background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.2));
-    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: var(--progress-radius, 2px);
     overflow: hidden;
     position: relative;
     cursor: pointer;
@@ -1192,19 +1192,21 @@ export const yampCardStyles = css`
   .progress-inner {
     height: 100%;
     background: var(--custom-accent);
-    border-radius: 3px 0 0 3px;
+    border-radius: var(--progress-radius, 3px) 0 0 var(--progress-radius, 3px);
     box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
   }
 
   .timestamps-container {
     display: flex;
     justify-content: space-between;
-    font-size: 10px;
+    font-size: var(--timestamp-size, 10px);
     margin-top: -1px;
     margin-bottom: 4px;
     color: rgba(255, 255, 255, 0.9);
     padding: 0 2px;
   }
+
+
 
   /* Volume controls */
   .volume-row {
@@ -1661,7 +1663,8 @@ export const yampCardStyles = css`
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-icon-btn,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-icon-btn ha-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .radio-mode-button,
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-slider-icon {
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .volume-slider-icon,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .timestamps-container {
     color: var(--primary-text);
   }
 
@@ -1712,7 +1715,8 @@ export const yampCardStyles = css`
     border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color, #e0e0e0));
   }
 
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider {
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .progress-bar {
     background: color-mix(in srgb, var(--primary-text), transparent 80%);
   }
 
@@ -1847,7 +1851,7 @@ export const yampCardStyles = css`
     bottom: 0;
     height: 4px;
     background: var(--custom-accent);
-    border-radius: 0 0 12px 12px;
+    border-radius: var(--progress-radius, 0) var(--progress-radius, 0) 12px 12px;
     z-index: ${Z_LAYERS.ACCENT_FOREGROUND};
     transition: width var(--transition-normal) linear;
     pointer-events: none;
