@@ -26,10 +26,10 @@ export function renderProgressBar({
   const barColor = accent || "var(--custom-accent, #ff9800)";
   
   // Determine active height and derived styles
-  const activeHeight = collapsed ? Math.max(4, Math.floor(customHeight / 2)) : customHeight;
+  const activeHeight = collapsed ? Math.min(customHeight, Math.max(4, Math.floor(customHeight / 2))) : customHeight;
   const progressRadius = Math.min(6, activeHeight / 2);
   const timestampSize = Math.max(10, Math.min(24, Math.floor(activeHeight * 0.6 + 6)));
-  const dynamicStyles = `--progress-height: ${activeHeight}px; --progress-radius: ${progressRadius}px; --timestamp-size: ${timestampSize}px;`;
+  const dynamicStyles = `--progress-radius: ${progressRadius}px; --timestamp-size: ${timestampSize}px;`;
   
   // Collapsed bar is typically smaller and positioned differently
   if (collapsed) {
@@ -50,7 +50,7 @@ export function renderProgressBar({
       >
         <div
           class="progress-inner"
-          style="width: ${progress * 100}%; background: ${barColor}; height:${activeHeight}px;"
+          style="width: ${progress * 100}%; background: ${barColor};"
         ></div>
       </div>
       ${displayTimestamps ? html`
