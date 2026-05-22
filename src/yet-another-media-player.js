@@ -14,6 +14,7 @@ class YampGridLayout extends GridLayout {
     const initialWidth = parseInt(widthStr) || 150;
     const initialHeight = parseInt(heightStr) || 195;
     this._aspectRatio = initialHeight / initialWidth;
+    this._extraHeight = initialHeight - initialWidth;
   }
 
   set columns(val) {
@@ -33,6 +34,7 @@ class YampGridLayout extends GridLayout {
       const width = parseInt(dims.width) || 150;
       const height = parseInt(dims.height) || 195;
       this._aspectRatio = height / width;
+      this._extraHeight = height - width;
     }
   }
 
@@ -53,11 +55,13 @@ class YampGridLayout extends GridLayout {
 
       const isVertical = this.direction !== "horizontal";
       if (isVertical) {
-        this._itemSize.width = Math.max(10, Math.floor(calculatedWidth));
-        this._itemSize.height = Math.max(10, Math.floor(calculatedWidth * this._aspectRatio));
+        const itemWidth = Math.max(10, Math.floor(calculatedWidth));
+        this._itemSize.width = itemWidth;
+        this._itemSize.height = Math.max(10, Math.floor(itemWidth + this._extraHeight));
       } else {
-        this._itemSize.height = Math.max(10, Math.floor(calculatedWidth));
-        this._itemSize.width = Math.max(10, Math.floor(calculatedWidth / this._aspectRatio));
+        const itemHeight = Math.max(10, Math.floor(calculatedWidth));
+        this._itemSize.height = itemHeight;
+        this._itemSize.width = Math.max(10, Math.floor(itemHeight - this._extraHeight));
       }
     }
 
