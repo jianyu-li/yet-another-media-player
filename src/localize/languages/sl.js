@@ -111,7 +111,7 @@ export default {
             "hide_search_chips": "Skrij določene iskalne filtre.",
             "hide_active_entity_on_idle": "Skrije oznako entitete na dnu kartice le, ko je predvajalnik v stanju mirovanja.",
             "follow_active_entity": "Entiteta glasnosti sledi aktivni entiteti. Opomba: To prepiše izbrano entiteto za glasnost.",
-            "search_limit_full": "Največje število rezultatov (1–1000, privzeto: 20).",
+            "search_limit_full": "Največje število rezultatov (privzeto: 20).",
             "default_search_filter_full": "Izberite, kateri filter je privzeto aktiven ob odprtju iskanja.",
             "default_search_favorites": "Začni iskanje z aktivnimi priljubljenimi",
             "result_sorting_full": "Izberi razvrščanje rezultatov.",

@@ -1,5 +1,7 @@
 import { LitElement, html, css, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
+import { virtualize } from "@lit-labs/virtualizer/virtualize.js";
+import { yampGrid } from "./yamp-grid-layout.js";
 
 import { renderChip, renderGroupChip, createHoldToPinHandler, renderChipRow } from "./chip-row.js";
 import { renderActionChipRow } from "./action-chip-row.js";
@@ -8329,36 +8331,59 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ...currentResults,
           ...Array.from({ length: Math.max(0, totalRows - currentResults.length) }, () => null)
         ];
-        return (this._searchAttempted && currentResults.length === 0 && !this._searchLoading)
-          ? html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`
-          : paddedResults.map(item => renderSearchResultItem({
-            item,
-            isCard,
-            isMinimal,
-            activeSearchRowMenuId: this._activeSearchRowMenuId,
-            loadingSearchRowMenuId: this._loadingSearchRowMenuId,
-            errorSearchRowMenuId: this._errorSearchRowMenuId,
-            successSearchRowMenuId: this._successSearchRowMenuId,
-            successSearchRowType: this._successSearchRowType,
-            isSelectionFlow: this._isSelectionFlow,
-            massQueueAvailable: this._massQueueAvailable,
-            upcomingFilterActive: !!this._upcomingFilterActive,
-            recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
-            recommendationsFilterActive: !!this._recommendationsFilterActive,
-            searchMediaClassFilter: this._searchMediaClassFilter,
-            onPlay: (it) => this._playMediaFromSearch(it),
-            onResultClick: (it, e) => this._handleSearchResultClick(it, e),
-            onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
-            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-            onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
-            onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-            onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-            onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-            onRemove: (it) => this._removeQueueItem(it.queue_item_id),
-            isMusicAssistant: this._isMusicAssistantEntity(),
-            isValidArtwork: (url) => this._isValidArtworkUrl(url),
-            getClickTitle: (it) => this._getSearchResultClickTitle(it)
-          }));
+        const renderItemFn = (item) => renderSearchResultItem({
+          item,
+          isCard,
+          isMinimal,
+          activeSearchRowMenuId: this._activeSearchRowMenuId,
+          loadingSearchRowMenuId: this._loadingSearchRowMenuId,
+          errorSearchRowMenuId: this._errorSearchRowMenuId,
+          successSearchRowMenuId: this._successSearchRowMenuId,
+          successSearchRowType: this._successSearchRowType,
+          isSelectionFlow: this._isSelectionFlow,
+          massQueueAvailable: this._massQueueAvailable,
+          upcomingFilterActive: !!this._upcomingFilterActive,
+          recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
+          recommendationsFilterActive: !!this._recommendationsFilterActive,
+          searchMediaClassFilter: this._searchMediaClassFilter,
+          onPlay: (it) => this._playMediaFromSearch(it),
+          onResultClick: (it, e) => this._handleSearchResultClick(it, e),
+          onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
+          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+          onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
+          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+          onRemove: (it) => this._removeQueueItem(it.queue_item_id),
+          isMusicAssistant: this._isMusicAssistantEntity(),
+          isValidArtwork: (url) => this._isValidArtworkUrl(url),
+          getClickTitle: (it) => this._getSearchResultClickTitle(it)
+        });
+
+        if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
+          return html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`;
+        }
+
+        if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
+          this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
+          this._cachedSearchGridLayoutIsMinimal = isMinimal;
+          this._cachedSearchGridLayout = yampGrid({
+            columns: this._cachedSearchGridLayoutColumns,
+            gap: 12,
+            padding: 12,
+            itemSize: isMinimal
+              ? { width: 150, height: 150 }
+              : { width: 150, height: 244 }
+          });
+        }
+
+        return isCard
+          ? virtualize({
+              items: paddedResults,
+              renderItem: renderItemFn,
+              layout: this._cachedSearchGridLayout
+            })
+          : virtualize({ items: paddedResults, renderItem: renderItemFn });
       })()}
         </div>
       </div>

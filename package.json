@@ -5,6 +5,7 @@
   "main": "rollup.config.js",
   "type": "module",
   "dependencies": {
+    "@lit-labs/virtualizer": "^2.1.1",
     "js-yaml": "^4.1.1",
     "lit": "^3.3.3",
     "sortablejs": "^1.15.7"

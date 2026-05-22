@@ -136,7 +136,7 @@ export const yampCardStyles = css`
     --custom-accent: #ff9800 ;
     
     /* Search sheet default theme variables when match_theme is false */
-    --search-overlay-bg: rgba(0, 0, 0, 0.8);
+    --search-overlay-bg: var(--yamp-overlay-bg);
     --search-input-bg: #333;
     --search-input-text: #fff;
     --search-text: #fff;
@@ -166,7 +166,7 @@ export const yampCardStyles = css`
     --yamp-section-description-color: var(--secondary-text-color, #888);
 
     /* Search sheet theme-aware variables - used when match_theme is true to follow HA theme colors dynamically */
-    --search-overlay-bg: var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8)));
+    --search-overlay-bg: var(--yamp-overlay-bg);
     --search-input-bg: var(--ha-card-background, var(--secondary-background-color, #333));
     --search-input-text: var(--primary-text-color, #fff);
     --search-text: var(--primary-text-color, #fff);
@@ -2565,6 +2565,8 @@ export const yampCardStyles = css`
     font-size: 1.10em;
     color: var(--primary-text);
     background: none;
+    width: 100%;
+    box-sizing: border-box;
   }
   .search-row-slide-out {
     position: absolute;
@@ -3637,11 +3639,10 @@ export const yampCardStyles = css`
 
   /* Override styles when match_theme is false - force default colors */
   .search-sheet[data-match-theme="false"] {
-    background: rgba(0, 0, 0, 0.8) ;
+    background: var(--yamp-overlay-bg);
     
     /* Define CSS custom properties directly on the search sheet when match_theme is false */
-    --custom-accent: #ff9800 ;
-    --search-overlay-bg: rgba(0, 0, 0, 0.8) ;
+    --search-overlay-bg: var(--yamp-overlay-bg);
     --search-input-bg: #333 ;
     --search-input-text: #fff ;
     --search-text: #fff ;

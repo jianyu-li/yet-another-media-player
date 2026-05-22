@@ -111,7 +111,7 @@ export default {
             "hide_search_chips": "Verberg specifieke zoekfilterchips voor deze entiteit",
             "hide_active_entity_on_idle": "Verbergt het entiteitslabel onderaan de kaart alleen wanneer de speler inactief is.",
             "follow_active_entity": "Indien ingeschakeld, zal de volume-entiteit automatisch de actieve afspeel-entiteit volgen. Let op: dit overschrijft de geselecteerde volume-entiteit.",
-            "search_limit_full": "Maximaal aantal zoekresultaten om weer te geven (1-1000, standaard: 20)",
+            "search_limit_full": "Maximaal aantal zoekresultaten om weer te geven (standaard: 20)",
             "default_search_filter_full": "Kies welk filter standaard actief is wanneer het zoekscherm wordt geopend.",
             "default_search_favorites": "Start zoekopdracht met favorieten actief",
             "result_sorting_full": "Kies hoe zoekresultaten worden gesorteerd. Standaard behoudt de bronvolgorde.",

@@ -111,7 +111,7 @@ export default {
             "hide_search_chips": "Masquer des jetons de filtrage spécifiques.",
             "hide_active_entity_on_idle": "Masque l'étiquette de l'entité au bas de la carte uniquement lorsque le lecteur est en veille.",
             "follow_active_entity": "L'entité de volume suivra automatiquement l'entité active.",
-            "search_limit_full": "Nombre maximum de résultats (1-1000, défaut: 20).",
+            "search_limit_full": "Nombre maximum de résultats (défaut: 20).",
             "default_search_filter_full": "Choisissez quel filtre est actif par défaut à l'ouverture de la recherche.",
             "default_search_favorites": "Démarrer la recherche avec les favoris actifs",
             "result_sorting_full": "Choisir l'ordre des résultats. Par défaut conserve l'ordre source.",
