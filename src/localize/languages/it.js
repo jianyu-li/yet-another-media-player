@@ -111,7 +111,7 @@ export default {
             "hide_search_chips": "Nascondi chip di filtro ricerca.",
             "hide_active_entity_on_idle": "Nasconde l'etichetta dell'entità in fondo alla scheda solo quando il lettore è inattivo.",
             "follow_active_entity": "L'entità volume seguirà quella attiva.",
-            "search_limit_full": "Massimo risultati (1-1000, default: 20).",
+            "search_limit_full": "Massimo risultati (default: 20).",
             "default_search_filter_full": "Scegli quale filtro è attivo per impostazione predefinita all'apertura della ricerca.",
             "default_search_favorites": "Inizia ricerca con preferiti attivi",
             "result_sorting_full": "Scegli ordine risultati.",

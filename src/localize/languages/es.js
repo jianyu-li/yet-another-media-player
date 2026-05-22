@@ -111,7 +111,7 @@ export default {
             "hide_search_chips": "Ocultar chips de filtro de búsqueda.",
             "hide_active_entity_on_idle": "Oculta la etiqueta de la entidad en la parte inferior de la tarjeta solo cuando el reproductor está inactivo.",
             "follow_active_entity": "La entidad de volumen seguirá a la activa.",
-            "search_limit_full": "Máximo de resultados (1-1000, defecto: 20).",
+            "search_limit_full": "Máximo de resultados (defecto: 20).",
             "default_search_filter_full": "Elige qué filtro está activo por defecto cuando se abre la pantalla de búsqueda.",
             "default_search_favorites": "Iniciar búsqueda con favoritos activos",
             "result_sorting_full": "Elegir orden de resultados.",
