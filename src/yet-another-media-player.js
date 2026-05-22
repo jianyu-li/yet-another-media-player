@@ -7821,7 +7821,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._showGrouping ? this._renderGroupingSheet() :
             this._showTransferQueue ? this._renderTransferQueueSheet() :
               this._showResolvedEntities ? this._renderResolvedEntitiesSheet() :
-                this._showSearchInSheet ? this._renderSearchInOptions(showSearchHeaders) :
+                this._showSearchInSheet ? this._renderSearchInOptions(showSearchHeaders, effectivePinHeaders) :
                   this._renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters)}
               </div>
             </div>
@@ -8224,7 +8224,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     `;
   }
 
-  _renderSearchInOptions(showSearchHeaders) {
+  _renderSearchInOptions(showSearchHeaders, pinSearchHeaders = false) {
     return html`
       <div class="entity-options-search" style="margin-top:12px;">
         ${this._searchHierarchy.length > 0 ? html`
@@ -8385,9 +8385,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ? virtualize({
               items: paddedResults,
               renderItem: renderItemFn,
-              layout: this._cachedSearchGridLayout
+              layout: this._cachedSearchGridLayout,
+              scroller: pinSearchHeaders
             })
-          : virtualize({ items: paddedResults, renderItem: renderItemFn });
+          : virtualize({ items: paddedResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
       })()}
         </div>
       </div>
