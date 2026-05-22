@@ -2969,7 +2969,14 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet .entity-options-search-results {
-    min-height: 210px;
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    margin: 12px 0;
+    padding-bottom: 0px;
+    /* Hide scrollbars */
+    ${HIDE_SCROLLBAR}
   }
 
   /* Search layout */
@@ -3046,6 +3053,12 @@ export const yampCardStyles = css`
     padding-bottom: 0px ;
   }
 
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll {
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
   /* Unified Header and Scroll Containers for Menu Sheets */
   .entity-options-header {
     flex: 0 0 auto;
@@ -3073,7 +3086,7 @@ export const yampCardStyles = css`
 
   /* Reserved space for persistent media controls when pinning is active */
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
-  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search,
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
     margin-bottom: 80px;
     padding-bottom: 0px ;
@@ -3088,23 +3101,13 @@ export const yampCardStyles = css`
 
   /* Clean up legacy margin override rules since we now use padding on parent */
   :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
-  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search,
   :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
-  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search,
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
     margin-bottom: 0px;
   }
-
-  .entity-options-sheet .entity-options-search-results {
-    flex: 1;
-    overflow-y: auto;
-    margin: 12px 0;
-    padding-bottom: 0px;
-    /* Hide scrollbars */
-    ${HIDE_SCROLLBAR}
-  }
-
   /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
 
 
@@ -3329,14 +3332,11 @@ export const yampCardStyles = css`
     100% { opacity: 0; transform: translate(-50%, -40%); }
   }
 
-  .search-sheet-results.search-results-card-view,
-  .entity-options-search-results.search-results-card-view,
-  .search-sheet[data-card-view="true"] .search-sheet-results {
-    padding: 12px;
-  }
 
   .search-sheet-results {
+    position: relative;
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     /* Hide scrollbars */
     ${HIDE_SCROLLBAR}
