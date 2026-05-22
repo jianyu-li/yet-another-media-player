@@ -2565,6 +2565,8 @@ export const yampCardStyles = css`
     font-size: 1.10em;
     color: var(--primary-text);
     background: none;
+    width: 100%;
+    box-sizing: border-box;
   }
   .search-row-slide-out {
     position: absolute;
