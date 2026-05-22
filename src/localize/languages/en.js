@@ -149,7 +149,7 @@ export default {
             "hide_search_chips": "Hide specific search filter chips for this entity",
             "hide_active_entity_on_idle": "Hide the entity label at the bottom of the card only when the player is idle.",
             "follow_active_entity": "When enabled, the volume entity will automatically follow the active playback entity. Note: This overrides the selected volume entity.",
-            "search_limit_full": "Maximum number of search results to display (1-1000, default: 20)",
+            "search_limit_full": "Maximum number of search results to display (default: 20)",
             "default_search_filter_full": "Choose which filter is active by default when the search screen opens.",
             "default_search_favorites": "Start search with favorites active",
             "result_sorting_full": "Choose how results are ordered.",

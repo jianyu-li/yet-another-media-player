@@ -1288,7 +1288,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _renderBehaviorTab() {
-    const searchLimitWarningActive = Number(this._config.search_results_limit) > 100;
     return html`
         <div class="config-section">
           <div class="form-row">
@@ -1498,11 +1497,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   helper="${localize('editor.subtitles.search_limit_full')}"
                   @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
                 ></ha-selector>
-                ${searchLimitWarningActive ? html`
-                  <div class="config-subtitle warning">
-                    Warning: requesting higher results can cause performance issues.
-                  </div>
-                ` : nothing}
             </div>
             <ha-icon
               class="icon-button"

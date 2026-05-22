@@ -111,7 +111,7 @@ export default {
             "hide_search_chips": "Skryť konkrétne čipy filtra vyhľadávania pre túto entitu.",
             "hide_active_entity_on_idle": "Skryje štítok entity v dolnej časti karty iba vtedy, keď je prehrávač nečinný.",
             "follow_active_entity": "Ak je povolené, entita hlasitosti bude automaticky sledovať aktívny prehrávač. Poznámka: Toto prepíše vybranú entitu hlasitosti.",
-            "search_limit_full": "Maximálny počet výsledkov vyhľadávania (1-1000, predvolené: 20).",
+            "search_limit_full": "Maximálny počet výsledkov vyhľadávania (predvolené: 20).",
             "default_search_filter_full": "Vyberte, ktorý filter bude predvolene aktívny pri otvorení vyhľadávania.",
             "default_search_favorites": "Spustiť vyhľadávanie s aktívnymi obľúbenými",
             "result_sorting_full": "Vyberte spôsob zoradenia výsledkov. Predvolené ponecháva poradie zo zdroja.",

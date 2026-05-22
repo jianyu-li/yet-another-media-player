@@ -111,7 +111,7 @@ export default {
             "hide_search_chips": "Bestimmte Suchfilter-Chips für diese Entität ausblenden.",
             "hide_active_entity_on_idle": "Blendet die Entitätsbeschriftung am unteren Rand der Karte nur aus, wenn der Player im Leerlauf ist.",
             "follow_active_entity": "Lautstärke-Entität folgt automatisch der aktiven Wiedergabe-Entität.",
-            "search_limit_full": "Maximale Anzahl an Suchergebnissen (1-1000, Standard: 20).",
+            "search_limit_full": "Maximale Anzahl an Suchergebnissen (Standard: 20).",
             "default_search_filter_full": "Wählen Sie den Filter, der beim Öffnen der Suche standardmäßig aktiv ist.",
             "default_search_favorites": "Suche mit aktiven Favoriten starten",
             "result_sorting_full": "Sortierung der Suchergebnisse wählen. Standard behält die Quellreihenfolge bei.",

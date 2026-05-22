@@ -6,6 +6,7 @@ export default {
   output: {
     file: 'yet-another-media-player.js',
     format: 'es',
+    inlineDynamicImports: true,
   },
   plugins: [
     resolve({
