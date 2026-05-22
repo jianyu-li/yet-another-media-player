@@ -7539,10 +7539,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
+    let artworkPos = this.config.artwork_position || "top center";
+    if (artworkFullBleed) {
+      if (artworkPos === "top center") artworkPos = "center 50px";
+      else if (artworkPos === "bottom center") artworkPos = "center calc(100% - 50px)";
+    }
+
     const sharedBackgroundStyle = [
       `background-image: ${backgroundImageValue}`,
       `background-size: ${useInsetArtwork ? "cover" : backgroundSize}`,
-      `background-position: ${this.config.artwork_position || "top center"}`,
+      `background-position: ${artworkPos}`,
       "background-repeat: no-repeat",
       `filter: ${backgroundFilter}`
     ].join('; ');
