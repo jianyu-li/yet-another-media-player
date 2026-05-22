@@ -3332,9 +3332,6 @@ export const yampCardStyles = css`
   .search-sheet-results.search-results-card-view,
   .entity-options-search-results.search-results-card-view,
   .search-sheet[data-card-view="true"] .search-sheet-results {
-    display: grid;
-    grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
-    gap: 12px;
     padding: 12px;
   }
 

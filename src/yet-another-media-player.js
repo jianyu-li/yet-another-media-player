@@ -8373,8 +8373,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._cachedSearchGridLayoutIsMinimal = isMinimal;
           this._cachedSearchGridLayout = yampGrid({
             columns: this._cachedSearchGridLayoutColumns,
-            gap: 12,
-            padding: 12,
+            gap: '12px',
+            padding: '12px',
             itemSize: isMinimal
               ? { width: 150, height: 150 }
               : { width: 150, height: 244 }
