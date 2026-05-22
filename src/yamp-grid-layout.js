@@ -6,8 +6,8 @@ export class YampGridLayout extends GridLayout {
     this._columns = config?.columns || 4;
     this.flex = { preserve: "aspect-ratio" };
     this.justify = "start";
-    const widthStr = config?.itemSize?.width || "150px";
-    const heightStr = config?.itemSize?.height || "195px";
+    const widthStr = config?.itemSize?.width || 150;
+    const heightStr = config?.itemSize?.height || 195;
     const initialWidth = parseInt(widthStr) || 150;
     const initialHeight = parseInt(heightStr) || 195;
     this._aspectRatio = initialHeight / initialWidth;

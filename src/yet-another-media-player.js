@@ -8364,18 +8364,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
           return html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`;
         }
 
+        if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
+          this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
+          this._cachedSearchGridLayoutIsMinimal = isMinimal;
+          this._cachedSearchGridLayout = yampGrid({
+            columns: this._cachedSearchGridLayoutColumns,
+            gap: 12,
+            padding: 12,
+            itemSize: isMinimal
+              ? { width: 150, height: 150 }
+              : { width: 150, height: 244 }
+          });
+        }
+
         return isCard
           ? virtualize({
               items: paddedResults,
               renderItem: renderItemFn,
-              layout: yampGrid({
-                columns: this.config.search_card_columns || 4,
-                gap: "12px",
-                padding: "12px",
-                itemSize: isMinimal
-                  ? { width: "150px", height: "150px" }
-                  : { width: "150px", height: "244px" }
-              })
+              layout: this._cachedSearchGridLayout
             })
           : virtualize({ items: paddedResults, renderItem: renderItemFn });
       })()}
