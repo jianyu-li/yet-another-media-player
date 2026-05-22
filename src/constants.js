@@ -39,7 +39,13 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     artwork_object_fit: "cover",
     extend_artwork: true,
     show_chip_row: "in_menu_on_idle",
-    hold_to_pin: true
+    hold_to_pin: true,
+    pin_search_headers: true,
+    progress_bar_height: 16,
+    search_view: "card",
+    search_card_columns: 3,
+    display_timestamps: true,
+    details_alignment: "left"
   },
   crisp_clean: {
     match_theme: true,
@@ -47,7 +53,12 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     artwork_object_fit: "scaled-contain-alternate",
     control_layout: "modern",
     adaptive_controls: true,
-    hold_to_pin: true
+    hold_to_pin: true,
+    show_chip_row: "in_menu",
+    alternate_progress_bar: true,
+    search_view: "card_minimal",
+    search_card_columns: 3,
+    details_alignment: "center"
   },
   minimal_mini: {
     match_theme: true,
@@ -55,14 +66,12 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     always_collapsed: true,
     show_chip_row: "in_menu",
     details_alignment: "left",
-    hold_to_pin: true
-  },
-  auto_compact: {
-    match_theme: true,
-    appearance: "automatic",
-    collapse_on_idle: true,
-    show_chip_row: "in_menu_on_idle",
-    hold_to_pin: true
+    hold_to_pin: true,
+    progress_bar_height: 2,
+    volume_mode: "stepper",
+    extend_artwork: true,
+    blurred_artwork: true,
+    hide_collapsed_artwork: true
   },
   music_explorer: {
     match_theme: true,

@@ -51,10 +51,6 @@ export default {
                 "label": "Minimal Mini",
                 "description": "A compact, always-collapsed card ideal for tight spaces."
             },
-            "auto_compact": {
-                "label": "Auto-Compact",
-                "description": "Automatically collapses to save space when no media is playing."
-            },
             "quick_and_easy": {
                 "label": "Quick & Easy",
                 "description": "Optimized for speed with persistent chip rows and quick grouping."
