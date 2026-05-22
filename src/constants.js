@@ -73,15 +73,6 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     blurred_artwork: true,
     hide_collapsed_artwork: true
   },
-  music_explorer: {
-    match_theme: true,
-    appearance: "automatic",
-    idle_screen: "search",
-    hide_search_headers_on_idle: true,
-    search_view: "card",
-    search_card_columns: 4,
-    hold_to_pin: true
-  },
   dedicated_search: {
     match_theme: true,
     appearance: "automatic",

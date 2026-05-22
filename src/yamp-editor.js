@@ -860,7 +860,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     { value: "crisp_clean", label: localize('editor.templates.crisp_clean.label') },
                     { value: "minimal_mini", label: localize('editor.templates.minimal_mini.label') },
                     { value: "quick_and_easy", label: localize('editor.templates.quick_and_easy.label') },
-                    { value: "music_explorer", label: localize('editor.templates.music_explorer.label') },
                     { value: "dedicated_search", label: localize('editor.templates.dedicated_search.label') },
                     { value: "huge_yamp", label: localize('editor.templates.huge_yamp.label') }
                   ]

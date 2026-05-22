@@ -55,10 +55,6 @@ export default {
                 "label": "Quick & Easy",
                 "description": "Optimized for speed with persistent chip rows and quick grouping."
             },
-            "music_explorer": {
-                "label": "Music Explorer",
-                "description": "Focuses heavily on search and discovery with a prominent search interface."
-            },
             "dedicated_search": {
                 "label": "Dedicated Search Mode",
                 "description": "A standalone search card without the main media player interface."
