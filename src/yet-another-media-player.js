@@ -56,7 +56,8 @@ import {
   SUPPORT_GROUPING,
   SUPPORT_REPEAT_SET,
   ARTWORK_OVERRIDE_MATCH_KEYS,
-  DEFAULT_PROGRESS_BAR_HEIGHT
+  DEFAULT_PROGRESS_BAR_HEIGHT,
+  TEMPLATE_CONFIGS
 } from "./constants.js";
 
 const PLAYLIST_FETCH_LIMIT = 500;
@@ -4018,12 +4019,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return trimmed;
   }
 
-  setConfig(config) {
-    if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
+  setConfig(rawConfig) {
+    if (!rawConfig.entities || !Array.isArray(rawConfig.entities) || rawConfig.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
     const oldConfig = this.config;
-    this.config = { ...config };
+    const templateName = rawConfig.template || "custom";
+    const templateBase = TEMPLATE_CONFIGS[templateName] || {};
+    const config = { ...templateBase, ...rawConfig };
+    this.config = config;
     const layoutPref = typeof config.control_layout === "string" ? config.control_layout.toLowerCase() : "classic";
     this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
     this._swapPauseForStop = config.swap_pause_for_stop === true;

@@ -34,6 +34,44 @@ export default {
             "artwork": "Artwork",
             "actions": "Actions"
         },
+        "templates": {
+            "custom": {
+                "label": "Custom (Original Config)",
+                "description": "Your original, fully customized configuration."
+            },
+            "large_modern": {
+                "label": "Large Modern",
+                "description": "A sleek, modern design with adaptive controls and full-bleed artwork."
+            },
+            "crisp_clean": {
+                "label": "Crisp & Clean",
+                "description": "A clean layout with scaled artwork and modern controls."
+            },
+            "minimal_mini": {
+                "label": "Minimal Mini",
+                "description": "A compact, always-collapsed card ideal for tight spaces."
+            },
+            "auto_compact": {
+                "label": "Auto-Compact",
+                "description": "Automatically collapses to save space when no media is playing."
+            },
+            "quick_and_easy": {
+                "label": "Quick & Easy",
+                "description": "Optimized for speed with persistent chip rows and quick grouping."
+            },
+            "music_explorer": {
+                "label": "Music Explorer",
+                "description": "Focuses heavily on search and discovery with a prominent search interface."
+            },
+            "dedicated_search": {
+                "label": "Dedicated Search Mode",
+                "description": "A standalone search card without the main media player interface."
+            },
+            "huge_yamp": {
+                "label": "That's a Huge YAMP!",
+                "description": "Maximized controls, large text, and a massive progress bar for an ultra-large visual experience."
+            }
+        },
         "placeholders": {
             "search": "Search music..."
         },
