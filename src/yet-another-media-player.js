@@ -7541,6 +7541,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       : "none";
     let artworkPos = this.config.artwork_position || "top center";
     if (artworkFullBleed) {
+      // Offset artwork away from edges to account for the chip row / controls that overlay the artwork
       if (artworkPos === "top center") artworkPos = "center 50px";
       else if (artworkPos === "bottom center") artworkPos = "center calc(100% - 50px)";
     }
@@ -8329,7 +8330,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         
         ${this._renderSearchSubFilters(showSearchHeaders)}
  
-        <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} ${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? 'search-results-card-view' : 'list-view'}" 
+        <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}" 
              style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
           ${(() => {
         const filter = this._searchMediaClassFilter || "all";

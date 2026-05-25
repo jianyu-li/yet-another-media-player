@@ -34,6 +34,7 @@ export default {
             "artwork": "Artwork",
             "actions": "Actions"
         },
+        "template_label": "Card Template",
         "templates": {
             "custom": {
                 "label": "Custom (Original Config)",
@@ -49,7 +50,7 @@ export default {
             },
             "minimal_mini": {
                 "label": "MINImal",
-                "description": "A compact card with no artwork"
+                "description": "A compact card with no artwork."
             },
             "normal_mini": {
                 "label": "Mini Mode",
