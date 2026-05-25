@@ -49,16 +49,23 @@ export const TEMPLATE_CONFIGS = Object.freeze({
   },
   crisp_clean: {
     match_theme: true,
-    appearance: "automatic",
-    artwork_object_fit: "scaled-contain-alternate",
-    control_layout: "modern",
-    adaptive_controls: true,
+    volume_mode: "stepper",
     hold_to_pin: true,
+    volume_step: 0.05,
     show_chip_row: "in_menu",
-    alternate_progress_bar: true,
-    search_view: "card_minimal",
-    search_card_columns: 3,
-    details_alignment: "center"
+    extend_artwork: true,
+    search_results_sort: "play_count_desc",
+    control_layout: "modern",
+    dismiss_search_on_play: true,
+    keep_filters_on_search: false,
+    display_timestamps: true,
+    search_view: "list",
+    default_search_filter: "all",
+    default_search_favorites: true,
+    appearance: "automatic",
+    details_alignment: "center",
+    artwork_object_fit: "scaled-contain-alternate",
+    progress_bar_height: 2
   },
   minimal_mini: {
     match_theme: true,
@@ -73,13 +80,34 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     blurred_artwork: true,
     hide_collapsed_artwork: true
   },
+  normal_mini: {
+    match_theme: true,
+    appearance: "automatic",
+    always_collapsed: true,
+    show_chip_row: "auto",
+    details_alignment: "left",
+    hold_to_pin: true,
+    progress_bar_height: 2,
+    volume_mode: "slider",
+    extend_artwork: true,
+    blurred_artwork: true
+  },
   dedicated_search: {
     match_theme: true,
     appearance: "automatic",
     card_type: "search",
     search_view: "card",
-    hide_menu_player: false,
-    hold_to_pin: true
+    hide_menu_player: true,
+    hold_to_pin: true,
+    show_chip_row: "in_menu",
+    disable_autofocus: true
+  },
+  dedicated_grouping: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "group_players",
+    hide_menu_player: true,
+    show_chip_row: "in_menu"
   },
   quick_and_easy: {
     match_theme: true,
@@ -87,6 +115,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     always_show_quick_group: true,
     show_chip_row: "always",
     dismiss_search_on_play: true,
+    extend_artwork: true,
     show_volume_overlay: true,
     hold_to_pin: true
   },

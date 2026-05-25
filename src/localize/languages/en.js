@@ -40,28 +40,36 @@ export default {
                 "description": "Your original, fully customized configuration."
             },
             "large_modern": {
-                "label": "Large Modern",
-                "description": "A sleek, modern design with adaptive controls and full-bleed artwork."
+                "label": "Big Ol' Modern YAMP",
+                "description": "A slightly larger modern design with adaptive controls."
             },
             "crisp_clean": {
-                "label": "Crisp & Clean",
+                "label": "Clean",
                 "description": "A clean layout with scaled artwork and modern controls."
             },
             "minimal_mini": {
-                "label": "Minimal Mini",
-                "description": "A compact, always-collapsed card ideal for tight spaces."
+                "label": "MINImal",
+                "description": "A compact card with no artwork"
+            },
+            "normal_mini": {
+                "label": "Mini Mode",
+                "description": "The standard compact card."
             },
             "quick_and_easy": {
-                "label": "Quick & Easy",
-                "description": "Optimized for speed with persistent chip rows and quick grouping."
+                "label": "No Time To Explain",
+                "description": "Used for speed with persistent chip rows and quick grouping."
             },
             "dedicated_search": {
-                "label": "Dedicated Search Mode",
-                "description": "A standalone search card without the main media player interface."
+                "label": "All About That Search",
+                "description": "A standalone search card without the main media player."
+            },
+            "dedicated_grouping": {
+                "label": "Group Therapy",
+                "description": "A standalone player grouping card. Requires multiple entities configured."
             },
             "huge_yamp": {
                 "label": "That's a Huge YAMP!",
-                "description": "Maximized controls, large text, and a massive progress bar for an ultra-large visual experience."
+                "description": "Maximized controls, large text, and a massive progress bar for across room viewing."
             }
         },
         "placeholders": {

@@ -37,6 +37,16 @@ export default {
         "placeholders": {
             "search": "Zoek muziek..."
         },
+        "templates": {
+            "minimal_mini": {
+                "label": "MINImal",
+                "description": "Een compacte kaart zonder artwork."
+            },
+            "normal_mini": {
+                "label": "Mini Mode",
+                "description": "De standaard compacte kaart."
+            }
+        },
         "sections": {
             "artwork": {
                 "general": {

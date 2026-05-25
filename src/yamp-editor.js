@@ -859,8 +859,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     { value: "large_modern", label: localize('editor.templates.large_modern.label') },
                     { value: "crisp_clean", label: localize('editor.templates.crisp_clean.label') },
                     { value: "minimal_mini", label: localize('editor.templates.minimal_mini.label') },
+                    { value: "normal_mini", label: localize('editor.templates.normal_mini.label') },
                     { value: "quick_and_easy", label: localize('editor.templates.quick_and_easy.label') },
                     { value: "dedicated_search", label: localize('editor.templates.dedicated_search.label') },
+                    { value: "dedicated_grouping", label: localize('editor.templates.dedicated_grouping.label') },
                     { value: "huge_yamp", label: localize('editor.templates.huge_yamp.label') }
                   ]
                 }

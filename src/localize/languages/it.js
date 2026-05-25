@@ -37,6 +37,16 @@ export default {
         "placeholders": {
             "search": "Cerca musica..."
         },
+        "templates": {
+            "minimal_mini": {
+                "label": "MINImal",
+                "description": "Una scheda compatta senza copertina."
+            },
+            "normal_mini": {
+                "label": "Mini Mode",
+                "description": "La scheda compatta standard."
+            }
+        },
         "sections": {
             "artwork": {
                 "general": {

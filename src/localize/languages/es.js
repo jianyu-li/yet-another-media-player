@@ -37,6 +37,16 @@ export default {
         "placeholders": {
             "search": "Buscar música..."
         },
+        "templates": {
+            "minimal_mini": {
+                "label": "MINImal",
+                "description": "Una tarjeta compacta sin carátula."
+            },
+            "normal_mini": {
+                "label": "Mini Mode",
+                "description": "La tarjeta compacta estándar."
+            }
+        },
         "sections": {
             "artwork": {
                 "general": {
