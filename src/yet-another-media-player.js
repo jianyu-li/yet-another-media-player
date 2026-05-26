@@ -7422,7 +7422,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       collapsedArtworkSize = 0;
     }
 
-    const cardWidth = this.offsetWidth || (this.shadowRoot?.host?.offsetWidth ?? 0);
+    const cardWidth = this.offsetWidth || 0;
 
     // Clamping logic
     if (hasCustomCardHeight && collapsedArtworkSize > 0) {
@@ -7922,7 +7922,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
    * artwork remains recognisable even on narrow cards.
    */
   _getMaxCollapsedArtworkWidth(cardWidth) {
-    const safeMaxWidth = cardWidth > 0 ? Math.max(64, cardWidth - 220) : 160;
+    const safeMaxWidth = cardWidth > 0 ? Math.max(64, cardWidth - 220) : 102;
     return Math.min(safeMaxWidth, 160);
   }
 
@@ -7995,7 +7995,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     let baseMinHeight = 240;
     let collapsedArtworkSize = 0;
-    const cardWidth = this.offsetWidth || (host.offsetWidth ?? 0);
+    const cardWidth = this.offsetWidth || 0;
 
     // Layout artwork size for CSS variable offsets — uses 95% of (height − padding)
     // as the base, then clamps to a width-safe maximum (see _getMaxCollapsedArtworkWidth).
@@ -8032,6 +8032,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       : (isCompact ? 0.95 : 1);
     const artistScale = isCompact ? 0.85 : Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
 
+    const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
+    const hideVolume = config.volume_mode === "hidden" || isCompactVolume || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
+    const artworkClearance = hideVolume ? 54 : 100;
+
     if (collapsedExtraSpace !== 0 || isCompact) {
       if (collapsedDetailsOffset != null) {
         host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
@@ -8040,12 +8044,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
       host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
       host.style.setProperty('--yamp-collapsed-artwork-size', `${collapsedArtworkSize}px`);
+      host.style.setProperty('--yamp-collapsed-artwork-clearance', `${artworkClearance}px`);
     } else {
       host.style.removeProperty('--yamp-collapsed-controls-offset');
       host.style.removeProperty('--yamp-collapsed-details-offset');
       host.style.removeProperty('--yamp-collapsed-artwork-size');
       host.style.removeProperty('--yamp-collapsed-title-scale');
       host.style.removeProperty('--yamp-collapsed-artist-scale');
+      host.style.removeProperty('--yamp-collapsed-artwork-clearance');
     }
   }
 

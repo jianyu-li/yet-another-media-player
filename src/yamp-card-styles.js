@@ -1794,8 +1794,8 @@ export const yampCardStyles = css`
   :host([data-has-custom-height="true"]) .card-lower-content.collapsed .collapsed-artwork-container {
     align-items: center;
     top: 0;
-    /* 100px clearance accounts for controls-row (~44px) + volume-row (~46px) + padding (~10px) */
-    height: calc(100% - 100px);
+    /* Clearance dynamically accounts for controls-row (~44px) + volume-row (~46px) + padding (~10px) */
+    height: calc(100% - var(--yamp-collapsed-artwork-clearance, 100px));
   }
 
   .card-lower-content.collapsed .collapsed-artwork {
