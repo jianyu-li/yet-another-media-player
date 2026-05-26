@@ -1630,6 +1630,15 @@ export const yampCardStyles = css`
     pointer-events: auto;
   }
 
+  :host([data-has-custom-height="true"]) .card-lower-content.collapsed {
+    justify-content: center;
+  }
+
+  :host([data-has-custom-height="true"]) .card-lower-content.collapsed .card-artwork-spacer:not(.show-placeholder) {
+    flex: 0 0 0;
+    min-height: 0;
+  }
+
   .collapsed-flex-spacer {
     flex: 1 1 auto;
     width: 100%;
@@ -1782,6 +1791,13 @@ export const yampCardStyles = css`
     transition: background var(--transition-slow), width var(--transition-normal);
   }
 
+  :host([data-has-custom-height="true"]) .card-lower-content.collapsed .collapsed-artwork-container {
+    align-items: center;
+    top: 0;
+    /* Clearance dynamically accounts for controls-row (~44px) + volume-row (~46px) + padding (~10px) */
+    height: calc(100% - var(--yamp-collapsed-artwork-clearance, 100px));
+  }
+
   .card-lower-content.collapsed .collapsed-artwork {
     width: var(--yamp-collapsed-artwork-size, 102px);
     height: var(--yamp-collapsed-artwork-size, 102px);
@@ -1802,12 +1818,22 @@ export const yampCardStyles = css`
     width: auto ;
   }
 
+  :host([data-has-custom-height="true"]) .card-lower-content.collapsed.has-artwork .volume-row {
+    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px));
+    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px);
+  }
+
   /* Medium screens */
   @media (max-width: 600px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
       max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) ;
       margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) ;
       width: auto ;
+    }
+
+    :host([data-has-custom-height="true"]) .card-lower-content.collapsed.has-artwork .volume-row {
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px));
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px);
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {
@@ -1824,6 +1850,11 @@ export const yampCardStyles = css`
       width: auto ;
     }
 
+    :host([data-has-custom-height="true"]) .card-lower-content.collapsed.has-artwork .volume-row {
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px));
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px);
+    }
+
     .card-lower-content.collapsed .collapsed-artwork-container {
       right: 3px;
       top: 12px;
@@ -1836,6 +1867,11 @@ export const yampCardStyles = css`
       max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) ;
       margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) ;
       width: auto ;
+    }
+
+    :host([data-has-custom-height="true"]) .card-lower-content.collapsed.has-artwork .volume-row {
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px));
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px);
     }
 
     .card-lower-content.collapsed .collapsed-artwork-container {

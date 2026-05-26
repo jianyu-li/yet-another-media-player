@@ -7415,18 +7415,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ? Math.max(100, customCardHeight - reservedTopSpace)
       : (this._collapsedBaselineHeight || 220);
 
-    // Scale artwork based on available height (target ~48% of height)
+    // Visual artwork size for inline styles — uses 48% of available height
+    // as the base, then clamps to a width-safe maximum (see _getMaxCollapsedArtworkWidth).
     let collapsedArtworkSize = Math.round(lowerContentAvailableHeight * 0.48);
     if (this.config.hide_collapsed_artwork === true) {
       collapsedArtworkSize = 0;
     }
+
+    const cardWidth = this.offsetWidth || 0;
 
     // Clamping logic
     if (hasCustomCardHeight && collapsedArtworkSize > 0) {
       if (customCardHeight < 230) {
         collapsedArtworkSize = 0; // Hide if extremely small
       } else {
-        collapsedArtworkSize = Math.max(40, Math.min(240, collapsedArtworkSize));
+        const maxSize = this._getMaxCollapsedArtworkWidth(cardWidth);
+        collapsedArtworkSize = Math.max(40, Math.min(maxSize, collapsedArtworkSize));
         // If we have decent room, don't go below the classic 102px
         if (customCardHeight >= 320) {
           collapsedArtworkSize = Math.max(102, collapsedArtworkSize);
@@ -7471,7 +7475,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       : (collapsed && collapsedArtworkSize === 0 ? 0 : null);
 
     const collapsedControlsOffset = releaseControlsRow ? 0 : (collapsedDetailsOffset ?? 0);
-    let cardWidth = this.offsetWidth || (this.shadowRoot?.host?.offsetWidth ?? 0);
     const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
     const heightScale = collapsedExtraSpace > 0
       ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
@@ -7911,6 +7914,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return { customCardHeight, hasCustomCardHeight };
   }
 
+  /**
+   * Compute the maximum allowed collapsed artwork width based on the card's
+   * rendered width. The 220px clearance reserves horizontal space for the
+   * details/controls to the left of the artwork. The absolute cap of 160px
+   * prevents artwork from dominating the card, and 64px is the minimum so
+   * artwork remains recognisable even on narrow cards.
+   */
+  _getMaxCollapsedArtworkWidth(cardWidth) {
+    const safeMaxWidth = cardWidth > 0 ? Math.max(64, cardWidth - 220) : 102;
+    return Math.min(safeMaxWidth, 160);
+  }
+
   _setHostDataAttributes(host, config, hasCustomCardHeight) {
     const appearance = this._appearance || "automatic";
     host.setAttribute("data-match-theme", String(config.match_theme === true));
@@ -7980,10 +7995,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     let baseMinHeight = 240;
     let collapsedArtworkSize = 0;
+    const cardWidth = this.offsetWidth || 0;
 
+    // Layout artwork size for CSS variable offsets — uses 95% of (height − padding)
+    // as the base, then clamps to a width-safe maximum (see _getMaxCollapsedArtworkWidth).
+    // This differs from the render-method value which targets visual proportion (48% of height).
     if (collapsed) {
       if (hasCustomCardHeight) {
-        collapsedArtworkSize = Math.max(0, Math.min(100, Math.round((customCardHeight - (isCompact ? 90 : 130)) * 0.95)));
+        const maxSize = this._getMaxCollapsedArtworkWidth(cardWidth);
+        collapsedArtworkSize = Math.max(0, Math.min(maxSize, Math.round((customCardHeight - (isCompact ? 90 : 130)) * 0.95)));
       } else {
         collapsedArtworkSize = (this._artworkObjectFit === "no_artwork") ? 0 : 64;
       }
@@ -8003,7 +8023,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       : (collapsed && collapsedArtworkSize === 0 ? 0 : null);
 
     const collapsedControlsOffset = releaseControlsRow ? 0 : (collapsedDetailsOffset ?? 0);
-    const cardWidth = this.offsetWidth || (host.offsetWidth ?? 0);
     const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
     const heightScale = collapsedExtraSpace > 0
       ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
@@ -8013,6 +8032,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       : (isCompact ? 0.95 : 1);
     const artistScale = isCompact ? 0.85 : Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
 
+    const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
+    const hideVolume = config.volume_mode === "hidden" || isCompactVolume || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
+    const artworkClearance = hideVolume ? 54 : 100;
+
     if (collapsedExtraSpace !== 0 || isCompact) {
       if (collapsedDetailsOffset != null) {
         host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
@@ -8021,12 +8044,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
       host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
       host.style.setProperty('--yamp-collapsed-artwork-size', `${collapsedArtworkSize}px`);
+      host.style.setProperty('--yamp-collapsed-artwork-clearance', `${artworkClearance}px`);
     } else {
       host.style.removeProperty('--yamp-collapsed-controls-offset');
       host.style.removeProperty('--yamp-collapsed-details-offset');
       host.style.removeProperty('--yamp-collapsed-artwork-size');
       host.style.removeProperty('--yamp-collapsed-title-scale');
       host.style.removeProperty('--yamp-collapsed-artist-scale');
+      host.style.removeProperty('--yamp-collapsed-artwork-clearance');
     }
   }
 
