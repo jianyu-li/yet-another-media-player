@@ -3478,13 +3478,6 @@ export const yampCardStyles = css`
     margin-right: 12px;
   }
 
-  .yamp-search-result-thumb {
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
-    object-fit: var(--yamp-artwork-fit, cover);
-    margin-right: 12px;
-  }
 
   .search-result-card .yamp-search-result-thumb,
   .search-result-card .yamp-search-result-thumb-placeholder {
