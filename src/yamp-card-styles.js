@@ -2702,6 +2702,12 @@ export const yampCardStyles = css`
   .slide-out-button ha-icon {
     width: 18px;
     height: 18px;
+    color: inherit;
+    --mdc-icon-color: currentColor;
+    --icon-color: currentColor;
+    --paper-item-icon-color: currentColor;
+    --ha-icon-color: currentColor;
+    fill: currentColor;
   }
 
   .slide-out-close {
@@ -3464,8 +3470,15 @@ export const yampCardStyles = css`
     }
   }
 
-  .yamp-search-result-thumb,
   .yamp-search-result-thumb-placeholder {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    object-fit: var(--yamp-artwork-fit, cover);
+    margin-right: 12px;
+  }
+
+  .yamp-search-result-thumb {
     width: 38px;
     height: 38px;
     border-radius: 8px;
@@ -3492,6 +3505,7 @@ export const yampCardStyles = css`
     position: relative;
     width: auto;
     flex-shrink: 0;
+    padding-left: 5px;
   }
 
   .search-result-card .search-sheet-thumb-container {
