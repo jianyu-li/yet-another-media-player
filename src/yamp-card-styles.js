@@ -3342,6 +3342,11 @@ export const yampCardStyles = css`
     ${HIDE_SCROLLBAR}
   }
 
+  .entity-options-sheet:not([data-pin-search-headers="true"]) .search-sheet-results,
+  .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search-results {
+    overflow-y: visible;
+  }
+
   .yamp-search-result.search-result-card {
     flex-direction: column;
     padding: 8px;

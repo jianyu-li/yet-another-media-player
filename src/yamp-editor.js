@@ -299,7 +299,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     if (templateName === "custom") {
       if (this._preTemplateConfig) {
-        newYaml = { ...this._preTemplateConfig, template: "custom" };
+        newYaml = { ...this._preTemplateConfig, ...newYaml, template: "custom" };
       } else {
         newYaml.template = "custom";
       }

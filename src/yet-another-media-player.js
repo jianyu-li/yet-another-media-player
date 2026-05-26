@@ -7542,8 +7542,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let artworkPos = this.config.artwork_position || "top center";
     if (artworkFullBleed) {
       // Offset artwork away from edges to account for the chip row / controls that overlay the artwork
-      if (artworkPos === "top center") artworkPos = "center 50px";
-      else if (artworkPos === "bottom center") artworkPos = "center calc(100% - 50px)";
+      if (artworkPos === "top center" || artworkPos === "center top") artworkPos = "center 50px";
+      else if (artworkPos === "bottom center" || artworkPos === "center bottom") artworkPos = "center calc(100% - 50px)";
     }
 
     const sharedBackgroundStyle = [

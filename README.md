@@ -88,6 +88,7 @@ Below you will find a list of all configuration options.
 | `disable_mass_queue`       | boolean      | No           | `false`     | Disable the optional mass_queue integration even if it is installed |
 |                                                                                                 |
 | **Look and Feel**          |              |              |             |                                                                                                 |
+| `template`                 | choice       | No           | `custom`    | Apply a predefined card layout template; see [Card Templates](#card-templates)                  |
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
 | `appearance`               | choice       | No           | `automatic` | Force the card into `light` or `dark` mode, or use `automatic` to follow system/theme settings |
 | `display_timestamps`       | boolean      | No           | `false`     | Display timestamps on the progress bar                                                          |
@@ -498,6 +499,32 @@ Set `card_type: group_players` to lock YAMP to the group players menu.
 - **Auto-Sync**: Quickly join or unjoin players and adjust individual volumes from a single, persistent screen.
 
 # Look and Feel
+
+## Card Templates
+
+YAMP supports predefined layout templates to quickly change the look and behavior of the card without writing extensive YAML. You can apply a template and then fine-tune any configuration option from there to meet your needs. 
+
+To use a template, configure the `template` key at the root of the card:
+```yaml
+type: custom:yet-another-media-player
+template: large_modern
+entities:
+  - media_player.living_room
+```
+
+### Available Templates
+
+- **`custom`** (Default): Your original, fully customized configuration. No template values are applied, and the card respects all manual overrides.
+- **`large_modern`**: A slightly larger modern design featuring a cover artwork background, modern player control layout, adaptive control sizing, and dynamic card height.
+- **`crisp_clean`**: A clean, minimalist layout with scaled-contain artwork, modern player controls, center-aligned track details, and stepper volume controls.
+- **`minimal_mini`**: A compact mini card with no visible artwork, stepper volume control, and clean text alignment.
+- **`normal_mini`**: The standard compact mini player card with a blurred background artwork effect.
+- **`dedicated_search`**: A standalone search and library browsing card without the main media player interface (forces `card_type: search`).
+- **`dedicated_grouping`**: A standalone player grouping card (forces `card_type: group_players`).
+- **`quick_and_easy`**: Designed for high accessibility and fast control, featuring a persistent entity chip row, volume overlays, and always-active quick grouping mode.
+- **`huge_yamp`**: Maximized controls, large text, and a massive progress bar designed for across-the-room viewing.
+
+---
 
 ## Theme & Layout
 > Match dashboard styling and control the overall footprint.
