@@ -37,6 +37,16 @@ export default {
         "placeholders": {
             "search": "Hľadať hudbu..."
         },
+        "templates": {
+            "minimal_mini": {
+                "label": "MINImal",
+                "description": "Kompaktná karta bez obalu."
+            },
+            "normal_mini": {
+                "label": "Mini Mode",
+                "description": "Štandardná kompaktná karta."
+            }
+        },
         "sections": {
             "artwork": {
                 "general": {

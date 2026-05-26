@@ -37,6 +37,16 @@ export default {
         "placeholders": {
             "search": "Išči glasbo..."
         },
+        "templates": {
+            "minimal_mini": {
+                "label": "MINImal",
+                "description": "Kompaktna kartica brez naslovnice."
+            },
+            "normal_mini": {
+                "label": "Mini Mode",
+                "description": "Standardna kompaktna kartica."
+            }
+        },
         "sections": {
             "artwork": {
                 "general": {

@@ -37,6 +37,16 @@ export default {
         "placeholders": {
             "search": "Musik suchen..."
         },
+        "templates": {
+            "minimal_mini": {
+                "label": "MINImal",
+                "description": "Eine kompakte Karte ohne Artwork."
+            },
+            "normal_mini": {
+                "label": "Mini Mode",
+                "description": "Die Standard-Kompaktkarte."
+            }
+        },
         "sections": {
             "artwork": {
                 "general": {

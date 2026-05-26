@@ -34,6 +34,45 @@ export default {
             "artwork": "Artwork",
             "actions": "Actions"
         },
+        "template_label": "Card Template",
+        "templates": {
+            "custom": {
+                "label": "Custom (Original Config)",
+                "description": "Your original, fully customized configuration."
+            },
+            "large_modern": {
+                "label": "Big Ol' Modern YAMP",
+                "description": "A slightly larger modern design with adaptive controls."
+            },
+            "crisp_clean": {
+                "label": "Clean",
+                "description": "A clean layout with scaled artwork and modern controls."
+            },
+            "minimal_mini": {
+                "label": "MINImal",
+                "description": "A compact card with no artwork."
+            },
+            "normal_mini": {
+                "label": "Mini Mode",
+                "description": "The standard compact card."
+            },
+            "quick_and_easy": {
+                "label": "No Time To Explain",
+                "description": "Used for speed with persistent chip rows and quick grouping."
+            },
+            "dedicated_search": {
+                "label": "All About That Search",
+                "description": "A standalone search card without the main media player."
+            },
+            "dedicated_grouping": {
+                "label": "Group Therapy",
+                "description": "A standalone player grouping card. Requires multiple entities configured."
+            },
+            "huge_yamp": {
+                "label": "That's a Huge YAMP!",
+                "description": "Maximized controls, large text, and a massive progress bar for across room viewing."
+            }
+        },
         "placeholders": {
             "search": "Search music..."
         },

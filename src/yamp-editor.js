@@ -5,7 +5,7 @@ import yaml from 'js-yaml';
 import { localize } from "./localize/localize.js";
 
 
-import { SUPPORT_GROUPING } from "./constants.js";
+import { SUPPORT_GROUPING, TEMPLATE_CONFIGS } from "./constants.js";
 import { isMusicAssistantEntity } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
@@ -21,6 +21,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return {
       hass: {},
       _config: {},
+      _yamlConfig: {},
       _activeTab: { type: String },
       _entityEditorIndex: { type: Number },
       _actionEditorIndex: { type: Number },
@@ -40,10 +41,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._yamlDraft = "";
     this._parsedYaml = null;
     this._yamlError = false;
+    this._yamlConfig = {};
     this._serviceItems = [];
     this._useTemplate = null; // auto-detect per entity on open
     this._useVolTemplate = null; // auto-detect per entity on open
     this._artworkOverrides = [];
+    this._preTemplateConfig = null;
   }
 
   firstUpdated() {
@@ -251,12 +254,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   setConfig(config) {
+    this._yamlConfig = { ...config };
     const rawEntities = config.entities ?? [];
     const normalizedEntities = rawEntities.map((e) =>
       typeof e === "string" ? { entity_id: e } : e
     );
 
+    const templateName = config.template || "custom";
+    const templateBase = TEMPLATE_CONFIGS[templateName] || {};
+
     this._config = {
+      ...templateBase,
       ...config,
       entities: normalizedEntities,
     };
@@ -264,10 +272,58 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _updateConfig(key, value) {
+    if (key === "template") {
+      this._changeTemplate(value);
+      return;
+    }
+
+    const newYaml = { ...this._yamlConfig, [key]: value };
+    this._yamlConfig = newYaml;
+
     const newConfig = { ...this._config, [key]: value };
     this._config = newConfig;
     this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: { config: newConfig },
+      detail: { config: newYaml },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
+  _changeTemplate(templateName) {
+    let newYaml = { ...this._yamlConfig };
+
+    // Save snapshot if moving away from custom
+    if (templateName !== "custom" && (!newYaml.template || newYaml.template === "custom")) {
+      this._preTemplateConfig = { ...newYaml };
+    }
+
+    if (templateName === "custom") {
+      if (this._preTemplateConfig) {
+        newYaml = { ...this._preTemplateConfig, ...newYaml, template: "custom" };
+      } else {
+        newYaml.template = "custom";
+      }
+    } else {
+      const templateBase = TEMPLATE_CONFIGS[templateName] || {};
+      // Delete keys that the template provides so they don't override the template
+      for (const k of Object.keys(templateBase)) {
+        delete newYaml[k];
+      }
+      newYaml.template = templateName;
+    }
+
+    this._yamlConfig = newYaml;
+    
+    // Compute the new merged UI config
+    const activeTemplateBase = TEMPLATE_CONFIGS[templateName] || {};
+    this._config = {
+      ...activeTemplateBase,
+      ...newYaml,
+      entities: this._config.entities, // preserve normalized entities
+    };
+
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config: newYaml },
       bubbles: true,
       composed: true,
     }));
@@ -784,11 +840,35 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   render() {
     if (!this._config) return html``;
 
+    const currentTemplate = this._yamlConfig.template || "custom";
+
     // When editing an entity/action, keep tabs visible but show editor content
     const editingEntity = this._entityEditorIndex !== null;
     const editingAction = this._actionEditorIndex !== null;
 
     return html`
+        <div class="config-section" style="margin-top: 0; margin-bottom: 12px;">
+          <div class="form-row">
+            <ha-selector
+              .hass=${this.hass}
+              label=${localize('editor.template_label')}
+              .selector=${{
+                select: {
+                  mode: "dropdown",
+                  options: Object.keys(TEMPLATE_CONFIGS).map(key => ({
+                    value: key,
+                    label: localize(`editor.templates.${key}.label`)
+                  }))
+                }
+              }}
+              .value=${currentTemplate}
+              @value-changed=${(e) => this._updateConfig("template", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle small" style="margin-top: 8px;">
+              ${localize(`editor.templates.${currentTemplate}.description`)}
+            </div>
+          </div>
+        </div>
         <div class="tabs">
           ${["entities", "behavior", "look_and_feel", "artwork", "actions"].map((key) => {
       const name = localize(`editor.tabs.${key}`);

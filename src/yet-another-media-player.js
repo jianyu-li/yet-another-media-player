@@ -58,7 +58,8 @@ import {
   SUPPORT_GROUPING,
   SUPPORT_REPEAT_SET,
   ARTWORK_OVERRIDE_MATCH_KEYS,
-  DEFAULT_PROGRESS_BAR_HEIGHT
+  DEFAULT_PROGRESS_BAR_HEIGHT,
+  TEMPLATE_CONFIGS
 } from "./constants.js";
 
 const PLAYLIST_FETCH_LIMIT = 500;
@@ -4020,12 +4021,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return trimmed;
   }
 
-  setConfig(config) {
-    if (!config.entities || !Array.isArray(config.entities) || config.entities.length === 0) {
+  setConfig(rawConfig) {
+    if (!rawConfig.entities || !Array.isArray(rawConfig.entities) || rawConfig.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
     const oldConfig = this.config;
-    this.config = { ...config };
+    const templateName = rawConfig.template || "custom";
+    const templateBase = TEMPLATE_CONFIGS[templateName] || {};
+    const config = { ...templateBase, ...rawConfig };
+    this.config = config;
     const layoutPref = typeof config.control_layout === "string" ? config.control_layout.toLowerCase() : "classic";
     this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
     this._swapPauseForStop = config.swap_pause_for_stop === true;
@@ -7535,10 +7539,17 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
+    let artworkPos = this.config.artwork_position || "top center";
+    if (artworkFullBleed) {
+      // Offset artwork away from edges to account for the chip row / controls that overlay the artwork
+      if (artworkPos === "top center" || artworkPos === "center top") artworkPos = "center 50px";
+      else if (artworkPos === "bottom center" || artworkPos === "center bottom") artworkPos = "center calc(100% - 50px)";
+    }
+
     const sharedBackgroundStyle = [
       `background-image: ${backgroundImageValue}`,
       `background-size: ${useInsetArtwork ? "cover" : backgroundSize}`,
-      `background-position: ${this.config.artwork_position || "top center"}`,
+      `background-position: ${artworkPos}`,
       "background-repeat: no-repeat",
       `filter: ${backgroundFilter}`
     ].join('; ');
@@ -7817,7 +7828,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._showGrouping ? this._renderGroupingSheet() :
             this._showTransferQueue ? this._renderTransferQueueSheet() :
               this._showResolvedEntities ? this._renderResolvedEntitiesSheet() :
-                this._showSearchInSheet ? this._renderSearchInOptions(showSearchHeaders) :
+                this._showSearchInSheet ? this._renderSearchInOptions(showSearchHeaders, effectivePinHeaders) :
                   this._renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters)}
               </div>
             </div>
@@ -8220,7 +8231,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     `;
   }
 
-  _renderSearchInOptions(showSearchHeaders) {
+  _renderSearchInOptions(showSearchHeaders, pinSearchHeaders = false) {
     return html`
       <div class="entity-options-search" style="margin-top:12px;">
         ${this._searchHierarchy.length > 0 ? html`
@@ -8319,7 +8330,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         
         ${this._renderSearchSubFilters(showSearchHeaders)}
  
-        <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} ${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? 'search-results-card-view' : 'list-view'}" 
+        <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}" 
              style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
           ${(() => {
         const filter = this._searchMediaClassFilter || "all";
@@ -8369,8 +8380,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           this._cachedSearchGridLayoutIsMinimal = isMinimal;
           this._cachedSearchGridLayout = yampGrid({
             columns: this._cachedSearchGridLayoutColumns,
-            gap: 12,
-            padding: 12,
+            gap: '12px',
+            padding: '12px',
             itemSize: isMinimal
               ? { width: 150, height: 150 }
               : { width: 150, height: 244 }
@@ -8381,9 +8392,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ? virtualize({
               items: paddedResults,
               renderItem: renderItemFn,
-              layout: this._cachedSearchGridLayout
+              layout: this._cachedSearchGridLayout,
+              scroller: pinSearchHeaders
             })
-          : virtualize({ items: paddedResults, renderItem: renderItemFn });
+          : virtualize({ items: paddedResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
       })()}
         </div>
       </div>
