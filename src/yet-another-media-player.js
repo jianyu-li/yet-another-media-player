@@ -8419,11 +8419,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
         return isCard
           ? virtualize({
-              items: paddedResults,
-              renderItem: renderItemFn,
-              layout: this._cachedSearchGridLayout,
-              scroller: pinSearchHeaders
-            })
+            items: paddedResults,
+            renderItem: renderItemFn,
+            layout: this._cachedSearchGridLayout,
+            scroller: pinSearchHeaders
+          })
           : virtualize({ items: paddedResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
       })()}
         </div>
@@ -8478,7 +8478,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _updateIdleState(changedProps) {
     // Defer idle state if user is actively browsing menus
-    if (this._showEntityOptions) {
+    if (this.isAnyMenuOpen) {
       if (this._idleTimeout) {
         clearTimeout(this._idleTimeout);
         this._idleTimeout = null;
