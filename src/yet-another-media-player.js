@@ -8477,6 +8477,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _updateIdleState(changedProps) {
+    // Defer idle state if user is actively browsing menus
+    if (this._showEntityOptions) {
+      if (this._idleTimeout) {
+        clearTimeout(this._idleTimeout);
+        this._idleTimeout = null;
+      }
+      return;
+    }
+
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
@@ -8589,14 +8598,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._doSearch(defaultFilter).catch(() => { });
         this.requestUpdate();
       }
-      return;
-    }
-
-    // Defer idle state if user is actively browsing menus
-    if (this._showEntityOptions) {
-      this._idleTimeout = setTimeout(() => {
-        this._handleIdleTimeoutCallback();
-      }, this._idleTimeoutMs);
       return;
     }
 
