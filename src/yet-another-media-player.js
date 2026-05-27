@@ -8592,6 +8592,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
+    // Defer idle state if user is actively browsing menus
+    if (this._showEntityOptions) {
+      this._idleTimeout = setTimeout(() => {
+        this._handleIdleTimeoutCallback();
+      }, this._idleTimeoutMs);
+      return;
+    }
+
     // Check if there is any playing entity before going idle
     const isAnyPlaying = this.entityIds.some((id, idx) => {
       if (this._isAutoSelectDisabled(idx)) return false;
