@@ -8310,6 +8310,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               style="min-width:48px; padding: 0;"
               @click=${() => this._handleSearchSubmit()}
               title="${localize('common.search')}"
+              aria-label="${localize('common.search')}"
               ?disabled=${this._searchLoading}>
               <ha-icon icon="mdi:magnify"></ha-icon>
             </button>
@@ -8318,6 +8319,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
               class="entity-options-item icon-only"
               style="min-width:48px; padding: 0;"
               title="${localize('common.cancel')}"
+              aria-label="${localize('common.cancel')}"
               @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
               <ha-icon icon="mdi:close"></ha-icon>
             </button>
