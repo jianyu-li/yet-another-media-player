@@ -8306,18 +8306,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
               ` : nothing}
             </div>
             <button
-              class="entity-options-item"
-              style="min-width:80px;"
+              class="entity-options-item icon-only"
+              style="min-width:48px; padding: 0;"
               @click=${() => this._handleSearchSubmit()}
+              title="${localize('common.search')}"
               ?disabled=${this._searchLoading}>
-              ${localize('common.search')}
+              <ha-icon icon="mdi:magnify"></ha-icon>
             </button>
             ${this._cardType !== "search" ? html`
             <button
-              class="entity-options-item"
-              style="min-width:80px;"
+              class="entity-options-item icon-only"
+              style="min-width:48px; padding: 0;"
+              title="${localize('common.cancel')}"
               @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
-              ${localize('common.cancel')}
+              <ha-icon icon="mdi:close"></ha-icon>
             </button>
             ` : nothing}
           </div>
