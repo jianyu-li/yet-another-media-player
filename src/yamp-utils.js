@@ -146,18 +146,43 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
       return '';
     }
 
-    // 2. Check for states(...)
-    let statesMatch = expr.match(/^states\(\s*(['"]?)([\w.]+)\1\s*\)$/);
+    // 2. Check for states(...) with optional equality check
+    let statesMatch = expr.match(/^states\(\s*(['"]?)([\w.]+)\1\s*\)(?:\s*(==|!=)\s*(['"])(.*?)\4)?$/);
     if (statesMatch) {
       let entityArg = statesMatch[2];
       let entityId = (context[entityArg] !== undefined && !statesMatch[1]) ? context[entityArg] : entityArg;
+      let operator = statesMatch[3];
+      let compareVal = statesMatch[5];
 
       const state = hass?.states?.[entityId];
       if (state && state.state !== undefined) {
         let val = String(state.state);
+        
+        if (operator) {
+          let isMatch = operator === '==' ? (val === compareVal) : (val !== compareVal);
+          let boolStr = isMatch ? 'true' : 'false';
+          return useUrlEncode ? encodeURIComponent(boolStr) : boolStr;
+        }
+        
         return useUrlEncode ? encodeURIComponent(val) : val;
       }
-      return '';
+      return operator ? 'false' : '';
+    }
+
+    // 2.5 Check for is_state(...)
+    let isStateMatch = expr.match(/^is_state\(\s*(['"]?)([\w.]+)\1\s*,\s*(['"])(.*?)\3\s*\)$/);
+    if (isStateMatch) {
+      let entityArg = isStateMatch[2];
+      let entityId = (context[entityArg] !== undefined && !isStateMatch[1]) ? context[entityArg] : entityArg;
+      let compareVal = isStateMatch[4];
+
+      const state = hass?.states?.[entityId];
+      if (state && state.state !== undefined) {
+        let val = String(state.state);
+        let boolStr = (val === compareVal) ? 'true' : 'false';
+        return useUrlEncode ? encodeURIComponent(boolStr) : boolStr;
+      }
+      return 'false';
     }
 
     // 3. direct context variable matching
