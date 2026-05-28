@@ -194,7 +194,7 @@ export const yampCardStyles = css`
     --yamp-error-color: var(--error-color, #f44336);
     --yamp-success-bg-light: color-mix(in srgb, var(--success-color, #4caf50) 20%, transparent);
     --yamp-success-bg-medium: color-mix(in srgb, var(--success-color, #4caf50) 40%, transparent);
-    --yamp-chip-selected-text: var(--text-primary-color, #fff);
+    --yamp-chip-selected-text: #fff;
     --search-text-secondary: var(--secondary-text-color, #aaa);
 
     /* Mode-aware chip defaults - used when appearance is automatic */
@@ -230,7 +230,7 @@ export const yampCardStyles = css`
     background: transparent;
     color: var(--primary-text);
     transition: background var(--transition-normal);
-    overflow: visible;
+    overflow: hidden;
     font-size: inherit;
     position: relative;
     clip-path: none;
@@ -1725,12 +1725,6 @@ export const yampCardStyles = css`
     }
   }
 
-  .yamp-card-inner[data-artwork-fit="scaled-contain"] .inset-artwork,
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
-    box-sizing: border-box;
-    padding: 0 5px;
-  }
-
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
     border-radius: var(--ha-card-border-radius, 12px);
     border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color, #e0e0e0));
@@ -2578,10 +2572,17 @@ export const yampCardStyles = css`
     color: var(--yamp-overlay-text);
   }
 
-  /* Specific override to ensure selected chips keep their white text regardless of the global sheet rule above */
+  /* Specific override to ensure selected/hovered chips keep their text color regardless of the global sheet rule above */
   .entity-options-sheet .chip[selected],
   .entity-options-sheet .chip[selected] * {
     color: var(--yamp-chip-selected-text) !important;
+  }
+
+  @media (hover: hover) {
+    .entity-options-sheet .chip:hover,
+    .entity-options-sheet .chip:hover * {
+      color: var(--yamp-chip-selected-text) !important;
+    }
   }
 
   /* Search functionality */

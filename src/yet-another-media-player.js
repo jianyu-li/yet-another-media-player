@@ -7658,7 +7658,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     style="${(this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right) ? 'cursor:pointer; pointer-events:auto;' : ''}"
                   >
                     ${useInsetArtwork && artworkUrl ? html`
-                      <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                      <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none; box-sizing: border-box; padding: 0 5px;">
                         <img 
                           class="inset-artwork"
                           src="${artworkUrl}" 
