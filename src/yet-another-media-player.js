@@ -971,7 +971,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Clean up any stale subscriptions for indices beyond the current actions length
     const currentLength = this.config.actions.length;
     let checkIdx = currentLength;
-    while (this._templateSubscriptions[`${checkIdx}_action_in_menu`] || this._actionInMenuTemplateValues[checkIdx]) {
+    while (this._templateSubscriptions[`${checkIdx}_action_in_menu`] || this._actionInMenuTemplateValues[checkIdx] || this._actionInMenuResolveCache[checkIdx]) {
       this._unsubscribeFromTemplate(checkIdx, 'action_in_menu');
       delete this._actionInMenuTemplateValues[checkIdx];
       delete this._actionInMenuResolveCache[checkIdx];
