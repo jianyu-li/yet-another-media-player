@@ -177,12 +177,12 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
       let compareVal = isStateMatch[4];
 
       const state = hass?.states?.[entityId];
+      let val = 'unknown';
       if (state && state.state !== undefined) {
-        let val = String(state.state);
-        let boolStr = (val === compareVal) ? 'true' : 'false';
-        return useUrlEncode ? encodeURIComponent(boolStr) : boolStr;
+        val = String(state.state);
       }
-      return 'false';
+      let boolStr = (val === compareVal) ? 'true' : 'false';
+      return useUrlEncode ? encodeURIComponent(boolStr) : boolStr;
     }
 
     // 3. direct context variable matching

@@ -733,6 +733,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._manualSelectTimeout = null;
     // Track active websocket template subscriptions
     this._templateSubscriptions = {}; // { [idx_type]: unsubscribeFunction }
+    this._activeSubscriptionTokens = {}; // { [idx_type]: Symbol }
     this._maTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     this._volTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     this._actionInMenuTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
@@ -796,6 +797,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Generate a unique token for this subscription request to prevent race conditions
     const subToken = Symbol('subToken');
+    this._activeSubscriptionTokens[subKey] = subToken;
     this._templateSubscriptions[subKey] = subToken;
 
     // Subscribe to template rendering
@@ -808,7 +810,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       this.hass.connection.subscribeMessage((msg) => {
         // If we have unsubscribed or started a new subscription since, ignore message
-        if (this._templateSubscriptions[subKey] !== subToken && typeof this._templateSubscriptions[subKey] !== 'function') {
+        if (this._activeSubscriptionTokens[subKey] !== subToken) {
           return;
         }
 
@@ -849,7 +851,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         template: finalTemplate
       }).then((unsub) => {
         // If it was cancelled while subscribing, call unsub immediately to avoid resource leak
-        if (this._templateSubscriptions[subKey] !== subToken) {
+        if (this._activeSubscriptionTokens[subKey] !== subToken) {
           try {
             unsub();
           } catch (e) { /* ignore */ }
@@ -872,6 +874,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         } catch (e) { /* ignore */ }
       }
       delete this._templateSubscriptions[subKey];
+      delete this._activeSubscriptionTokens[subKey];
     }
   }
 
@@ -7185,7 +7188,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           // Fallback for initial render before subscription resolves
           if (!actionTemplateFallbackContext) {
             actionTemplateFallbackContext = {
-              entity: this.currentEntityId,
+              ...this._getTemplateContext(),
               state: this.hass?.states[this.currentEntityId]?.state || "unknown",
               attributes: this.hass?.states[this.currentEntityId]?.attributes || {}
             };
@@ -9167,6 +9170,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     });
     this._templateSubscriptions = {};
+    this._activeSubscriptionTokens = {};
 
     if (this._adaptiveScrollTimer) {
       clearTimeout(this._adaptiveScrollTimer);
