@@ -7084,8 +7084,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Action placement logic
     const getPlacement = (act) => {
       if (act?.placement) return act.placement;
-      if (act?.in_menu === "hidden") return "hidden";
-      return act?.in_menu === true ? "menu" : "chip";
+      
+      let inMenuVal = act?.in_menu;
+      if (typeof inMenuVal === "string" && (inMenuVal.includes("{{") || inMenuVal.includes("{%"))) {
+        const context = {
+          entity: this.currentEntityId,
+          state: this.hass?.states[this.currentEntityId]?.state || "unknown",
+          attributes: this.hass?.states[this.currentEntityId]?.attributes || {}
+        };
+        const resolved = resolveStringTemplateSync(this.hass, inMenuVal, context);
+        if (resolved !== null) {
+          inMenuVal = resolved;
+        }
+      }
+      
+      if (inMenuVal === "true") inMenuVal = true;
+      if (inMenuVal === "false") inMenuVal = false;
+      if (inMenuVal === "hidden") return "hidden";
+      return inMenuVal === true ? "menu" : "chip";
     };
 
     const rowActions = visibleActions.filter(({ action }) => getPlacement(action) === "chip");
