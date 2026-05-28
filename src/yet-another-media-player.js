@@ -733,8 +733,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._manualSelectTimeout = null;
     // Track active websocket template subscriptions
     this._templateSubscriptions = {}; // { [idx_type]: unsubscribeFunction }
+    this._activeSubscriptionTokens = {}; // { [idx_type]: Symbol }
     this._maTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     this._volTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
+    this._actionInMenuTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
+    this._actionInMenuResolveCache = {}; // { [idx]: { value: string, ts: number } }
+    this._lastActionEntityId = null;
     // Cache resolved Volume entity per index (template or static)
     this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
     this._volResolveTtlMs = 7000; // Used for static caching now
@@ -763,8 +767,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const subKey = `${idx}_${type}`;
 
+    let currentCache;
+    let templateVals;
+    let cache;
+    if (type === 'ma') {
+      currentCache = this._maTemplateValues[idx];
+      templateVals = this._maTemplateValues;
+      cache = this._maResolveCache;
+    } else if (type === 'vol') {
+      currentCache = this._volTemplateValues[idx];
+      templateVals = this._volTemplateValues;
+      cache = this._volResolveCache;
+    } else if (type === 'action_in_menu') {
+      currentCache = this._actionInMenuTemplateValues[idx];
+      templateVals = this._actionInMenuTemplateValues;
+      cache = this._actionInMenuResolveCache;
+    }
+
     // Check if there's already an active subscription for this exact template
-    const currentCache = type === 'ma' ? this._maTemplateValues[idx] : this._volTemplateValues[idx];
     if (this._templateSubscriptions[subKey] && currentCache?.template === templateString) {
       return;
     }
@@ -773,8 +793,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._unsubscribeFromTemplate(idx, type);
 
     // Save current template to state
-    const templateVals = type === 'ma' ? this._maTemplateValues : this._volTemplateValues;
     templateVals[idx] = { template: templateString, resolved: null };
+
+    // Generate a unique token for this subscription request to prevent race conditions
+    const subToken = Symbol('subToken');
+    this._activeSubscriptionTokens[subKey] = subToken;
+    this._templateSubscriptions[subKey] = subToken;
 
     // Subscribe to template rendering
     try {
@@ -785,8 +809,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const finalTemplate = `${setStatements} ${templateString}`;
 
       this.hass.connection.subscribeMessage((msg) => {
+        // If we have unsubscribed or started a new subscription since, ignore message
+        if (this._activeSubscriptionTokens[subKey] !== subToken) {
+          return;
+        }
+
         const resolved = (msg.result || '').toString().trim();
-        const isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
+        let isValid = false;
+
+        if (type === 'ma' || type === 'vol') {
+          isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
+        } else if (type === 'action_in_menu') {
+          isValid = true; // Any string result is valid for in_menu
+        }
 
         let shouldUpdate = false;
 
@@ -794,12 +829,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
           templateVals[idx].resolved = isValid ? resolved : null;
         }
 
-        const cache = type === 'ma' ? this._maResolveCache : this._volResolveCache;
-        const currentCached = cache[idx]?.id;
-
-        if (isValid && currentCached !== resolved) {
-          cache[idx] = { id: resolved, ts: Date.now() };
-          shouldUpdate = true;
+        if (type === 'ma' || type === 'vol') {
+          const currentCached = cache[idx]?.id;
+          if (isValid && currentCached !== resolved) {
+            cache[idx] = { id: resolved, ts: Date.now() };
+            shouldUpdate = true;
+          }
+        } else if (type === 'action_in_menu') {
+          const currentCached = cache[idx]?.value;
+          if (isValid && currentCached !== resolved) {
+            cache[idx] = { value: resolved, ts: Date.now() };
+            shouldUpdate = true;
+          }
         }
 
         if (shouldUpdate) {
@@ -809,7 +850,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
         type: 'render_template',
         template: finalTemplate
       }).then((unsub) => {
-        this._templateSubscriptions[subKey] = unsub;
+        // If it was cancelled while subscribing, call unsub immediately to avoid resource leak
+        if (this._activeSubscriptionTokens[subKey] !== subToken) {
+          try {
+            unsub();
+          } catch (e) { /* ignore */ }
+        } else {
+          this._templateSubscriptions[subKey] = unsub;
+        }
       });
     } catch (err) {
       console.warn('yamp: failed to subscribe to template:', err);
@@ -818,11 +866,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _unsubscribeFromTemplate(idx, type) {
     const subKey = `${idx}_${type}`;
-    if (this._templateSubscriptions[subKey]) {
-      try {
-        this._templateSubscriptions[subKey]();
-      } catch (e) { /* ignore */ }
+    const unsub = this._templateSubscriptions[subKey];
+    if (unsub) {
+      if (typeof unsub === 'function') {
+        try {
+          unsub();
+        } catch (e) { /* ignore */ }
+      }
       delete this._templateSubscriptions[subKey];
+      delete this._activeSubscriptionTokens[subKey];
     }
   }
 
@@ -888,6 +940,43 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Setup subscription for reactivity
     this._subscribeToTemplate(idx, 'vol', raw);
+  }
+
+  // Ensure action in_menu templates are resolved and subscribed for the current entity context
+  _ensureResolvedActions() {
+    if (!this.hass || !this.config?.actions) return;
+    
+    // Clear old subscriptions if context changed to ensure context updates
+    const currentContext = JSON.stringify(this._getTemplateContext());
+    if (this._lastActionTemplateContextKey !== currentContext) {
+      this.config.actions.forEach((_, idx) => {
+        this._unsubscribeFromTemplate(idx, 'action_in_menu');
+        if (this._actionInMenuTemplateValues[idx]) delete this._actionInMenuTemplateValues[idx];
+        if (this._actionInMenuResolveCache[idx]) delete this._actionInMenuResolveCache[idx];
+      });
+      this._lastActionTemplateContextKey = currentContext;
+    }
+
+    this.config.actions.forEach((act, idx) => {
+      const raw = act?.in_menu;
+      if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
+        this._subscribeToTemplate(idx, 'action_in_menu', raw);
+      } else {
+        this._unsubscribeFromTemplate(idx, 'action_in_menu');
+        if (this._actionInMenuTemplateValues[idx]) delete this._actionInMenuTemplateValues[idx];
+        delete this._actionInMenuResolveCache[idx];
+      }
+    });
+
+    // Clean up any stale subscriptions for indices beyond the current actions length
+    const currentLength = this.config.actions.length;
+    let checkIdx = currentLength;
+    while (this._templateSubscriptions[`${checkIdx}_action_in_menu`] || this._actionInMenuTemplateValues[checkIdx] || this._actionInMenuResolveCache[checkIdx]) {
+      this._unsubscribeFromTemplate(checkIdx, 'action_in_menu');
+      delete this._actionInMenuTemplateValues[checkIdx];
+      delete this._actionInMenuResolveCache[checkIdx];
+      checkIdx++;
+    }
   }
 
   // Get the resolved playback entity id for a chip index, preferring cache
@@ -3771,6 +3860,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getTemplateContext() {
     return {
+      entity: this.currentEntityId || '',
       is_idle: this._isIdle,
       is_playing: this._isCurrentEntityPlaying(),
       is_search: this._showSearchInSheet,
@@ -5565,6 +5655,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         void this._resolveCardHeightTemplate();
       }
     }
+    this._ensureResolvedActions();
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
@@ -7081,15 +7172,42 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Filter out sync_selected_entity / select_entity actions entirely - they don't render as chips
     const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity" && action?.action !== "select_entity");
 
+    // Shared context for synchronous template fallback
+    let actionTemplateFallbackContext = null;
+
     // Action placement logic
-    const getPlacement = (act) => {
+    const getPlacement = (act, actIdx) => {
       if (act?.placement) return act.placement;
-      if (act?.in_menu === "hidden") return "hidden";
-      return act?.in_menu === true ? "menu" : "chip";
+      
+      let inMenuVal = act?.in_menu;
+      if (typeof inMenuVal === "string" && (inMenuVal.includes("{{") || inMenuVal.includes("{%"))) {
+        const cached = this._actionInMenuResolveCache?.[actIdx]?.value;
+        if (cached !== undefined) {
+          inMenuVal = cached;
+        } else {
+          // Fallback for initial render before subscription resolves
+          if (!actionTemplateFallbackContext) {
+            actionTemplateFallbackContext = {
+              ...this._getTemplateContext(),
+              state: this.hass?.states[this.currentEntityId]?.state || "unknown",
+              attributes: this.hass?.states[this.currentEntityId]?.attributes || {}
+            };
+          }
+          const resolved = resolveStringTemplateSync(this.hass, inMenuVal, actionTemplateFallbackContext);
+          if (resolved !== null) {
+            inMenuVal = resolved;
+          }
+        }
+      }
+      
+      if (inMenuVal === "true") inMenuVal = true;
+      if (inMenuVal === "false") inMenuVal = false;
+      if (inMenuVal === "hidden") return "hidden";
+      return inMenuVal === true ? "menu" : "chip";
     };
 
-    const rowActions = visibleActions.filter(({ action }) => getPlacement(action) === "chip");
-    const menuOnlyActions = visibleActions.filter(({ action }) => getPlacement(action) === "menu");
+    const rowActions = visibleActions.filter(({ action, idx }) => getPlacement(action, idx) === "chip");
+    const menuOnlyActions = visibleActions.filter(({ action, idx }) => getPlacement(action, idx) === "menu");
 
     // Gesture trigger logic
     const tapAction = visibleActions.find(({ action }) => action?.card_trigger === "tap");
@@ -9052,6 +9170,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     });
     this._templateSubscriptions = {};
+    this._activeSubscriptionTokens = {};
 
     if (this._adaptiveScrollTimer) {
       clearTimeout(this._adaptiveScrollTimer);
