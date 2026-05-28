@@ -155,18 +155,18 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
       let compareVal = statesMatch[5];
 
       const state = hass?.states?.[entityId];
+      let val = 'unknown';
       if (state && state.state !== undefined) {
-        let val = String(state.state);
-        
-        if (operator) {
-          let isMatch = operator === '==' ? (val === compareVal) : (val !== compareVal);
-          let boolStr = isMatch ? 'true' : 'false';
-          return useUrlEncode ? encodeURIComponent(boolStr) : boolStr;
-        }
-        
-        return useUrlEncode ? encodeURIComponent(val) : val;
+        val = String(state.state);
       }
-      return operator ? 'false' : '';
+      
+      if (operator) {
+        let isMatch = operator === '==' ? (val === compareVal) : (val !== compareVal);
+        let boolStr = isMatch ? 'true' : 'false';
+        return useUrlEncode ? encodeURIComponent(boolStr) : boolStr;
+      }
+      
+      return useUrlEncode ? encodeURIComponent(val) : val;
     }
 
     // 2.5 Check for is_state(...)

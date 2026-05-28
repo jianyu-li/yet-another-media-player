@@ -794,6 +794,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Save current template to state
     templateVals[idx] = { template: templateString, resolved: null };
 
+    // Generate a unique token for this subscription request to prevent race conditions
+    const subToken = Symbol('subToken');
+    this._templateSubscriptions[subKey] = subToken;
+
     // Subscribe to template rendering
     try {
       const context = this._getTemplateContext();
@@ -803,6 +807,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const finalTemplate = `${setStatements} ${templateString}`;
 
       this.hass.connection.subscribeMessage((msg) => {
+        // If we have unsubscribed or started a new subscription since, ignore message
+        if (this._templateSubscriptions[subKey] !== subToken && typeof this._templateSubscriptions[subKey] !== 'function') {
+          return;
+        }
+
         const resolved = (msg.result || '').toString().trim();
         let isValid = false;
 
@@ -839,7 +848,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
         type: 'render_template',
         template: finalTemplate
       }).then((unsub) => {
-        this._templateSubscriptions[subKey] = unsub;
+        // If it was cancelled while subscribing, call unsub immediately to avoid resource leak
+        if (this._templateSubscriptions[subKey] !== subToken) {
+          try {
+            unsub();
+          } catch (e) { /* ignore */ }
+        } else {
+          this._templateSubscriptions[subKey] = unsub;
+        }
       });
     } catch (err) {
       console.warn('yamp: failed to subscribe to template:', err);
@@ -848,10 +864,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _unsubscribeFromTemplate(idx, type) {
     const subKey = `${idx}_${type}`;
-    if (this._templateSubscriptions[subKey]) {
-      try {
-        this._templateSubscriptions[subKey]();
-      } catch (e) { /* ignore */ }
+    const unsub = this._templateSubscriptions[subKey];
+    if (unsub) {
+      if (typeof unsub === 'function') {
+        try {
+          unsub();
+        } catch (e) { /* ignore */ }
+      }
       delete this._templateSubscriptions[subKey];
     }
   }
@@ -945,6 +964,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
         delete this._actionInMenuResolveCache[idx];
       }
     });
+
+    // Clean up any stale subscriptions for indices beyond the current actions length
+    const currentLength = this.config.actions.length;
+    let checkIdx = currentLength;
+    while (this._templateSubscriptions[`${checkIdx}_action_in_menu`] || this._actionInMenuTemplateValues[checkIdx]) {
+      this._unsubscribeFromTemplate(checkIdx, 'action_in_menu');
+      delete this._actionInMenuTemplateValues[checkIdx];
+      delete this._actionInMenuResolveCache[checkIdx];
+      checkIdx++;
+    }
   }
 
   // Get the resolved playback entity id for a chip index, preferring cache
@@ -5623,7 +5652,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         void this._resolveCardHeightTemplate();
       }
     }
-    void this._ensureResolvedActions();
+    this._ensureResolvedActions();
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
