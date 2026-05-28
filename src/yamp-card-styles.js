@@ -237,6 +237,12 @@ export const yampCardStyles = css`
     transform: translateZ(0);
   }
 
+  /* Add side padding only for scaled-contain modes where artwork doesn't fill the card edges */
+  ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain"]),
+  ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"]) {
+    background: var(--card-bg);
+  }
+
   .yamp-card-inner {
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_ELEMENT};
@@ -1717,6 +1723,12 @@ export const yampCardStyles = css`
     .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover ha-icon {
       color: var(--yamp-chip-selected-text) !important;
     }
+  }
+
+  .yamp-card-inner[data-artwork-fit="scaled-contain"] .inset-artwork,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
+    box-sizing: border-box;
+    padding: 0 5px;
   }
 
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
