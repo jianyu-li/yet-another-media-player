@@ -229,7 +229,7 @@ export const yampCardStyles = css`
     box-shadow: var(--ha-card-box-shadow, none);
     background: transparent;
     color: var(--primary-text);
-    transition: background var(--transition-normal), padding var(--transition-normal);
+    transition: background var(--transition-normal);
     overflow: visible;
     font-size: inherit;
     position: relative;
@@ -241,7 +241,6 @@ export const yampCardStyles = css`
   ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain"]),
   ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"]) {
     background: var(--card-bg);
-    padding: 0 5px;
   }
 
   .yamp-card-inner {
@@ -1726,8 +1725,13 @@ export const yampCardStyles = css`
     }
   }
 
+  .yamp-card-inner[data-artwork-fit="scaled-contain"] .inset-artwork,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
     box-sizing: border-box;
+    padding: 0 5px;
+  }
+
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
     border-radius: var(--ha-card-border-radius, 12px);
     border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color, #e0e0e0));
   }
