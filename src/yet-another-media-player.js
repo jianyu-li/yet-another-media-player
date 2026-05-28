@@ -735,6 +735,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._templateSubscriptions = {}; // { [idx_type]: unsubscribeFunction }
     this._maTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     this._volTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
+    this._actionInMenuTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
+    this._actionInMenuResolveCache = {}; // { [idx]: { value: string, ts: number } }
+    this._lastActionEntityId = null;
     // Cache resolved Volume entity per index (template or static)
     this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
     this._volResolveTtlMs = 7000; // Used for static caching now
@@ -763,8 +766,24 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const subKey = `${idx}_${type}`;
 
+    let currentCache;
+    let templateVals;
+    let cache;
+    if (type === 'ma') {
+      currentCache = this._maTemplateValues[idx];
+      templateVals = this._maTemplateValues;
+      cache = this._maResolveCache;
+    } else if (type === 'vol') {
+      currentCache = this._volTemplateValues[idx];
+      templateVals = this._volTemplateValues;
+      cache = this._volResolveCache;
+    } else if (type === 'action_in_menu') {
+      currentCache = this._actionInMenuTemplateValues[idx];
+      templateVals = this._actionInMenuTemplateValues;
+      cache = this._actionInMenuResolveCache;
+    }
+
     // Check if there's already an active subscription for this exact template
-    const currentCache = type === 'ma' ? this._maTemplateValues[idx] : this._volTemplateValues[idx];
     if (this._templateSubscriptions[subKey] && currentCache?.template === templateString) {
       return;
     }
@@ -773,7 +792,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._unsubscribeFromTemplate(idx, type);
 
     // Save current template to state
-    const templateVals = type === 'ma' ? this._maTemplateValues : this._volTemplateValues;
     templateVals[idx] = { template: templateString, resolved: null };
 
     // Subscribe to template rendering
@@ -786,7 +804,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       this.hass.connection.subscribeMessage((msg) => {
         const resolved = (msg.result || '').toString().trim();
-        const isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
+        let isValid = false;
+
+        if (type === 'ma' || type === 'vol') {
+          isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
+        } else if (type === 'action_in_menu') {
+          isValid = true; // Any string result is valid for in_menu
+        }
 
         let shouldUpdate = false;
 
@@ -794,12 +818,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
           templateVals[idx].resolved = isValid ? resolved : null;
         }
 
-        const cache = type === 'ma' ? this._maResolveCache : this._volResolveCache;
-        const currentCached = cache[idx]?.id;
-
-        if (isValid && currentCached !== resolved) {
-          cache[idx] = { id: resolved, ts: Date.now() };
-          shouldUpdate = true;
+        if (type === 'ma' || type === 'vol') {
+          const currentCached = cache[idx]?.id;
+          if (isValid && currentCached !== resolved) {
+            cache[idx] = { id: resolved, ts: Date.now() };
+            shouldUpdate = true;
+          }
+        } else if (type === 'action_in_menu') {
+          const currentCached = cache[idx]?.value;
+          if (isValid && currentCached !== resolved) {
+            cache[idx] = { value: resolved, ts: Date.now() };
+            shouldUpdate = true;
+          }
         }
 
         if (shouldUpdate) {
@@ -888,6 +918,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Setup subscription for reactivity
     this._subscribeToTemplate(idx, 'vol', raw);
+  }
+
+  // Ensure action in_menu templates are resolved and subscribed for the current entity context
+  _ensureResolvedActions() {
+    if (!this.hass || !this.config?.actions) return;
+    
+    // Clear old subscriptions if entity changed to ensure context updates
+    if (this._lastActionEntityId !== this.currentEntityId) {
+      this.config.actions.forEach((_, idx) => {
+        this._unsubscribeFromTemplate(idx, 'action_in_menu');
+        if (this._actionInMenuTemplateValues[idx]) delete this._actionInMenuTemplateValues[idx];
+      });
+      this._lastActionEntityId = this.currentEntityId;
+    }
+
+    this.config.actions.forEach((act, idx) => {
+      const raw = act?.in_menu;
+      if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
+        this._subscribeToTemplate(idx, 'action_in_menu', raw);
+      } else {
+        this._unsubscribeFromTemplate(idx, 'action_in_menu');
+        if (this._actionInMenuTemplateValues[idx]) delete this._actionInMenuTemplateValues[idx];
+        delete this._actionInMenuResolveCache[idx];
+      }
+    });
   }
 
   // Get the resolved playback entity id for a chip index, preferring cache
@@ -3771,6 +3826,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _getTemplateContext() {
     return {
+      entity: this.currentEntityId || '',
       is_idle: this._isIdle,
       is_playing: this._isCurrentEntityPlaying(),
       is_search: this._showSearchInSheet,
@@ -5566,6 +5622,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
+      void this._ensureResolvedActions();
       void this._updateTransferQueueAvailability({ refresh: false });
     }
 
@@ -7081,20 +7138,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Filter out sync_selected_entity / select_entity actions entirely - they don't render as chips
     const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity" && action?.action !== "select_entity");
 
+    // Shared context for synchronous template fallback
+    let actionTemplateFallbackContext = null;
+
     // Action placement logic
-    const getPlacement = (act) => {
+    const getPlacement = (act, actIdx) => {
       if (act?.placement) return act.placement;
       
       let inMenuVal = act?.in_menu;
       if (typeof inMenuVal === "string" && (inMenuVal.includes("{{") || inMenuVal.includes("{%"))) {
-        const context = {
-          entity: this.currentEntityId,
-          state: this.hass?.states[this.currentEntityId]?.state || "unknown",
-          attributes: this.hass?.states[this.currentEntityId]?.attributes || {}
-        };
-        const resolved = resolveStringTemplateSync(this.hass, inMenuVal, context);
-        if (resolved !== null) {
-          inMenuVal = resolved;
+        const cached = this._actionInMenuResolveCache?.[actIdx]?.value;
+        if (cached !== undefined) {
+          inMenuVal = cached;
+        } else {
+          // Fallback for initial render before subscription resolves
+          if (!actionTemplateFallbackContext) {
+            actionTemplateFallbackContext = {
+              entity: this.currentEntityId,
+              state: this.hass?.states[this.currentEntityId]?.state || "unknown",
+              attributes: this.hass?.states[this.currentEntityId]?.attributes || {}
+            };
+          }
+          const resolved = resolveStringTemplateSync(this.hass, inMenuVal, actionTemplateFallbackContext);
+          if (resolved !== null) {
+            inMenuVal = resolved;
+          }
         }
       }
       
@@ -7104,8 +7172,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return inMenuVal === true ? "menu" : "chip";
     };
 
-    const rowActions = visibleActions.filter(({ action }) => getPlacement(action) === "chip");
-    const menuOnlyActions = visibleActions.filter(({ action }) => getPlacement(action) === "menu");
+    const rowActions = visibleActions.filter(({ action, idx }) => getPlacement(action, idx) === "chip");
+    const menuOnlyActions = visibleActions.filter(({ action, idx }) => getPlacement(action, idx) === "menu");
 
     // Gesture trigger logic
     const tapAction = visibleActions.find(({ action }) => action?.card_trigger === "tap");
