@@ -227,7 +227,8 @@ export const yampCardStyles = css`
     display: block;
     border-radius: var(--border-radius);
     box-shadow: var(--ha-card-box-shadow, none);
-    background: transparent;
+    background: var(--card-bg);
+    padding: 0 5px;
     color: var(--primary-text);
     transition: background var(--transition-normal);
     overflow: visible;
@@ -1720,6 +1721,7 @@ export const yampCardStyles = css`
   }
 
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
+    box-sizing: border-box;
     border-radius: var(--ha-card-border-radius, 12px);
     border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color, #e0e0e0));
   }
