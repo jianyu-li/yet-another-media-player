@@ -924,14 +924,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _ensureResolvedActions() {
     if (!this.hass || !this.config?.actions) return;
     
-    // Clear old subscriptions if entity changed to ensure context updates
-    if (this._lastActionEntityId !== this.currentEntityId) {
+    // Clear old subscriptions if context changed to ensure context updates
+    const currentContext = JSON.stringify(this._getTemplateContext());
+    if (this._lastActionTemplateContextKey !== currentContext) {
       this.config.actions.forEach((_, idx) => {
         this._unsubscribeFromTemplate(idx, 'action_in_menu');
         if (this._actionInMenuTemplateValues[idx]) delete this._actionInMenuTemplateValues[idx];
         if (this._actionInMenuResolveCache[idx]) delete this._actionInMenuResolveCache[idx];
       });
-      this._lastActionEntityId = this.currentEntityId;
+      this._lastActionTemplateContextKey = currentContext;
     }
 
     this.config.actions.forEach((act, idx) => {
@@ -5622,8 +5623,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
         void this._resolveCardHeightTemplate();
       }
     }
+    void this._ensureResolvedActions();
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
-      void this._ensureResolvedActions();
       void this._updateTransferQueueAvailability({ refresh: false });
     }
 
