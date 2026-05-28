@@ -929,6 +929,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this.config.actions.forEach((_, idx) => {
         this._unsubscribeFromTemplate(idx, 'action_in_menu');
         if (this._actionInMenuTemplateValues[idx]) delete this._actionInMenuTemplateValues[idx];
+        if (this._actionInMenuResolveCache[idx]) delete this._actionInMenuResolveCache[idx];
       });
       this._lastActionEntityId = this.currentEntityId;
     }
