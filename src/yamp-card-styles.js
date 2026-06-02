@@ -14,7 +14,7 @@ export const Z_LAYERS = Object.freeze({
   MODAL_TOAST: 2,
   SEARCH_SLIDE_OUT: 1,
   SEARCH_SUCCESS: 1,
-  VOLUME_OVERLAY: 3
+  VOLUME_OVERLAY: 3,
 });
 
 const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent, rgba(0,0,0,0.5) 10px, black 50px, black calc(100% - 50px), rgba(0,0,0,0.5) calc(100% - 10px), transparent)`;
@@ -87,9 +87,9 @@ export const yampCardStyles = css`
     --border-radius: 16px;
     --chip-border-radius: 24px;
     --button-border-radius: 8px;
-    --shadow-light: 0 2px 8px rgba(0,0,0,0.13);
-    --shadow-medium: 0 2px 8px rgba(0,0,0,0.25);
-    --shadow-heavy: 0 0 6px 1px rgba(0,0,0,0.32), 0 0 1px 1px rgba(255,255,255,0.13);
+    --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.13);
+    --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.25);
+    --shadow-heavy: 0 0 6px 1px rgba(0, 0, 0, 0.32), 0 0 1px 1px rgba(255, 255, 255, 0.13);
     --yamp-artwork-fit: cover;
     --yamp-text-scale: 1;
     --yamp-text-scale-details: 1;
@@ -98,10 +98,10 @@ export const yampCardStyles = css`
     --yamp-details-scale: var(--yamp-text-scale-details, 1);
     --yamp-details-line-height: 1.2;
     --yamp-details-max-lines: 3;
-    --yamp-section-bg: rgba(255,255,255,0.02);
-    --yamp-section-border: rgba(255,255,255,0.1);
+    --yamp-section-bg: rgba(255, 255, 255, 0.02);
+    --yamp-section-border: rgba(255, 255, 255, 0.1);
     --yamp-section-radius: 12px;
-    --yamp-section-divider: rgba(255,255,255,0.06);
+    --yamp-section-divider: rgba(255, 255, 255, 0.06);
     --yamp-section-title-size: 1em;
     --yamp-section-title-weight: 600;
     --yamp-section-description-size: 0.9em;
@@ -133,8 +133,8 @@ export const yampCardStyles = css`
   }
 
   :host([data-match-theme="false"]) {
-    --custom-accent: #ff9800 ;
-    
+    --custom-accent: #ff9800;
+
     /* Search sheet default theme variables when match_theme is false */
     --search-overlay-bg: var(--yamp-overlay-bg);
     --search-input-bg: #333;
@@ -151,18 +151,27 @@ export const yampCardStyles = css`
     --search-queue-hover: #5a5a5a;
     --search-queue-hover-border: #777;
   }
-  
+
   :host([data-match-theme="true"]) {
     /* Always override custom-accent to use theme accent when match_theme is true, regardless of light/dark mode */
-    --custom-accent: var(--accent-color, var(--primary-color, var(--state-media_player-active-color, var(--state-active-color, #ff9800))));
-    
+    --custom-accent: var(
+      --accent-color,
+      var(
+        --primary-color,
+        var(--state-media_player-active-color, var(--state-active-color, #ff9800))
+      )
+    );
+
     /* Dynamically assign base components to theme variants */
     --card-bg: var(--ha-card-background, var(--card-background-color, #222));
     --primary-text: var(--primary-text-color, #fff);
     --secondary-text: var(--secondary-text-color, #aaa);
     --chip-bg: var(--chip-background, #333);
-    --yamp-section-bg: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.02)));
-    --yamp-section-border: var(--divider-color, rgba(255,255,255,0.1));
+    --yamp-section-bg: var(
+      --ha-card-background,
+      var(--card-background-color, rgba(255, 255, 255, 0.02))
+    );
+    --yamp-section-border: var(--divider-color, rgba(255, 255, 255, 0.1));
     --yamp-section-description-color: var(--secondary-text-color, #888);
 
     /* Search sheet theme-aware variables - used when match_theme is true to follow HA theme colors dynamically */
@@ -182,7 +191,11 @@ export const yampCardStyles = css`
     --search-queue-hover-border: var(--divider-color, #777);
 
     /* Universal theme-aware variables mapped to HA theme - used when appearance is automatic */
-    --yamp-overlay-bg: color-mix(in srgb, var(--ha-card-background, var(--card-background-color, #000)), transparent 18%);
+    --yamp-overlay-bg: color-mix(
+      in srgb,
+      var(--ha-card-background, var(--card-background-color, #000)),
+      transparent 18%
+    );
     --yamp-overlay-text: var(--primary-text-color, #fff);
     --yamp-overlay-text-shadow: none;
     --yamp-overlay-divider: var(--divider-color, rgba(255, 255, 255, 0.1));
@@ -198,18 +211,28 @@ export const yampCardStyles = css`
     --search-text-secondary: var(--secondary-text-color, #aaa);
 
     /* Mode-aware chip defaults - used when appearance is automatic */
-    --yamp-chip-bg: color-mix(in srgb, var(--primary-text-color, #fff) 8%, var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8))));
+    --yamp-chip-bg: color-mix(
+      in srgb,
+      var(--primary-text-color, #fff) 8%,
+      var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8)))
+    );
     --yamp-chip-text: var(--search-text);
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-border: var(--divider-color, rgba(0, 0, 0, 0.1));
     --search-error-bg: color-mix(in srgb, var(--error-color, #f44336) 80%, transparent);
-    --search-card-bg: color-mix(in srgb, var(--primary-text-color, #fff) 4%, var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8))));
-    --search-thumb-placeholder-bg: color-mix(in srgb, var(--primary-text-color, #fff) 10%, transparent);
+    --search-card-bg: color-mix(
+      in srgb,
+      var(--primary-text-color, #fff) 4%,
+      var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.8)))
+    );
+    --search-thumb-placeholder-bg: color-mix(
+      in srgb,
+      var(--primary-text-color, #fff) 10%,
+      transparent
+    );
     --search-thumb-placeholder-icon: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
     --search-success-text: var(--primary-text-color, #fff);
   }
-
-
 
   /* Base card styles - set once, inherit everywhere */
   :host {
@@ -274,9 +297,9 @@ export const yampCardStyles = css`
     pointer-events: none;
     background: linear-gradient(
       to bottom,
-      rgba(0,0,0,0.0) 0%,
-      rgba(0,0,0,0.40) 55%,
-      rgba(0,0,0,0.92) 100%
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.4) 55%,
+      rgba(0, 0, 0, 0.92) 100%
     );
     transform: translateZ(0);
   }
@@ -293,8 +316,8 @@ export const yampCardStyles = css`
 
   /* Improve selected chip readability while idle */
   .dim-idle .chip[selected] {
-    color: rgba(255,255,255,0.94);
-    text-shadow: 0 0 6px rgba(0,0,0,0.35);
+    color: rgba(255, 255, 255, 0.94);
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
   }
 
   /* More info menu */
@@ -350,7 +373,7 @@ export const yampCardStyles = css`
   }
 
   .more-info-icon {
-    font-size: 2.0em;
+    font-size: 2em;
     line-height: 1;
     color: #fff !important;
     display: flex;
@@ -398,7 +421,7 @@ export const yampCardStyles = css`
     inset: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     pointer-events: none;
   }
@@ -541,7 +564,7 @@ export const yampCardStyles = css`
     height: 28px;
     border-radius: 50%;
     object-fit: var(--yamp-artwork-fit, cover);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
     display: block;
   }
 
@@ -579,8 +602,6 @@ export const yampCardStyles = css`
     mask-image: ${CHIP_ROW_MASK};
   }
 
-
-
   .chip-row::-webkit-scrollbar-thumb {
     background: var(--accent-color, #1976d2);
     border-radius: 6px;
@@ -606,15 +627,16 @@ export const yampCardStyles = css`
     mask-image: ${CHIP_ROW_MASK};
   }
 
-
-
   /* Action chips */
   .action-chip {
     background: var(--yamp-chip-bg, transparent);
     opacity: 1;
     border-radius: var(--button-border-radius);
     color: var(--yamp-chip-text, var(--primary-text));
-    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
+    box-shadow: var(
+      --chip-box-shadow,
+      var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none))
+    );
     text-shadow: none;
     border: 1px solid var(--yamp-chip-border, transparent);
     outline: none;
@@ -623,7 +645,10 @@ export const yampCardStyles = css`
     font-size: 0.95em;
     cursor: pointer;
     margin: 4px 0;
-    transition: background var(--transition-normal) ease, transform 0.1s ease, box-shadow var(--transition-normal) ease;
+    transition:
+      background var(--transition-normal) ease,
+      transform 0.1s ease,
+      box-shadow var(--transition-normal) ease;
     flex: 0 0 auto;
     white-space: nowrap;
     display: inline-flex;
@@ -635,7 +660,10 @@ export const yampCardStyles = css`
     .action-chip:hover {
       background: var(--custom-accent);
       color: #fff;
-      box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
+      box-shadow: var(
+        --chip-box-shadow,
+        var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none))
+      );
       text-shadow: none;
     }
   }
@@ -644,17 +672,20 @@ export const yampCardStyles = css`
     background: var(--custom-accent);
     color: #fff;
     transform: scale(0.96);
-    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
+    box-shadow: var(
+      --chip-box-shadow,
+      var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none))
+    );
     text-shadow: none;
   }
 
   /* Override action chip colors when match_theme is false */
   :host([data-match-theme="false"]) .action-chip:active {
-    background: #ff9800 ;
+    background: #ff9800;
   }
   @media (hover: hover) {
     :host([data-match-theme="false"]) .action-chip:hover {
-      background: #ff9800 ;
+      background: #ff9800;
     }
   }
 
@@ -666,14 +697,20 @@ export const yampCardStyles = css`
     padding: 6px 6px 6px 8px;
     background: var(--yamp-chip-bg);
     color: var(--yamp-chip-text);
-    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
+    box-shadow: var(
+      --chip-box-shadow,
+      var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none))
+    );
     cursor: pointer;
     font-size: 0.9em;
     font-weight: 500;
     opacity: 1;
     border: 1px solid var(--yamp-chip-border, transparent);
     outline: none;
-    transition: background var(--transition-normal), opacity var(--transition-normal), box-shadow var(--transition-normal);
+    transition:
+      background var(--transition-normal),
+      opacity var(--transition-normal),
+      box-shadow var(--transition-normal);
     flex: 0 0 auto;
     white-space: nowrap;
     position: relative;
@@ -698,16 +735,31 @@ export const yampCardStyles = css`
 
   /* Playing indicator animation - equalizer bars */
   @keyframes chipPlayingBar1 {
-    0%, 100% { height: 3px; }
-    50% { height: 10px; }
+    0%,
+    100% {
+      height: 3px;
+    }
+    50% {
+      height: 10px;
+    }
   }
   @keyframes chipPlayingBar2 {
-    0%, 100% { height: 5px; }
-    50% { height: 12px; }
+    0%,
+    100% {
+      height: 5px;
+    }
+    50% {
+      height: 12px;
+    }
   }
   @keyframes chipPlayingBar3 {
-    0%, 100% { height: 4px; }
-    50% { height: 8px; }
+    0%,
+    100% {
+      height: 4px;
+    }
+    50% {
+      height: 8px;
+    }
   }
 
   .chip-playing-indicator {
@@ -765,14 +817,14 @@ export const yampCardStyles = css`
     align-items: center;
     justify-content: center;
     border: 2px solid var(--custom-accent);
-    box-shadow: 0 1px 5px rgba(0,0,0,0.11);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.11);
     cursor: pointer;
     transition: box-shadow 0.18s;
   }
 
   @media (hover: hover) {
     .chip-pin:hover {
-      box-shadow: 0 2px 12px rgba(33,33,33,0.17);
+      box-shadow: 0 2px 12px rgba(33, 33, 33, 0.17);
     }
   }
 
@@ -930,7 +982,9 @@ export const yampCardStyles = css`
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: opacity 0.2s, text-decoration 0.2s;
+    transition:
+      opacity 0.2s,
+      text-decoration 0.2s;
   }
 
   .track-options-btn ha-icon {
@@ -1016,10 +1070,11 @@ export const yampCardStyles = css`
   }
 
   .controls-row.adaptive .button {
-    flex: 1 1 calc(
-      (100% - (var(--yamp-control-gap, 10px) * (var(--yamp-control-count, 5) - 1))) /
-      var(--yamp-control-count, 5)
-    );
+    flex: 1 1
+      calc(
+        (100% - (var(--yamp-control-gap, 10px) * (var(--yamp-control-count, 5) - 1))) /
+          var(--yamp-control-count, 5)
+      );
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1079,16 +1134,18 @@ export const yampCardStyles = css`
   }
 
   .modern-button {
-    background: rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.15);
     border: none;
     color: inherit;
     cursor: pointer;
     border-radius: 999px;
-    transition: background var(--transition-normal), transform 0.12s ease;
+    transition:
+      background var(--transition-normal),
+      transform 0.12s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   }
 
   .modern-button.small,
@@ -1113,7 +1170,7 @@ export const yampCardStyles = css`
     width: 70px;
     height: 70px;
     font-size: 1.9em;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .modern-button ha-icon {
@@ -1136,7 +1193,7 @@ export const yampCardStyles = css`
 
   @media (hover: hover) {
     .modern-button:hover {
-      background: rgba(255,255,255,0.25);
+      background: rgba(255, 255, 255, 0.25);
     }
   }
 
@@ -1170,7 +1227,7 @@ export const yampCardStyles = css`
   }
 
   .button:active {
-    background: rgba(0,0,0,0.10);
+    background: rgba(0, 0, 0, 0.1);
   }
 
   .button.active ha-icon,
@@ -1199,7 +1256,7 @@ export const yampCardStyles = css`
     height: 100%;
     background: var(--custom-accent);
     border-radius: var(--progress-radius, 3px) 0 0 var(--progress-radius, 3px);
-    box-shadow: 0 0 8px 2px rgba(0,0,0,0.24);
+    box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.24);
   }
 
   .timestamps-container {
@@ -1212,8 +1269,6 @@ export const yampCardStyles = css`
     padding: 0 2px;
   }
 
-
-
   /* Volume controls */
   .volume-row {
     display: grid;
@@ -1223,7 +1278,7 @@ export const yampCardStyles = css`
   }
 
   /* Remove flex:1 since we are using grid columns */
-  .volume-left, 
+  .volume-left,
   .volume-right {
     display: flex;
     align-items: center;
@@ -1337,7 +1392,7 @@ export const yampCardStyles = css`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
     margin: 0;
   }
 
@@ -1371,7 +1426,7 @@ export const yampCardStyles = css`
     opacity: 0.7;
     min-width: 20px;
   }
-  
+
   .volume-percentage-indicator {
     position: absolute;
     top: -22px;
@@ -1387,11 +1442,11 @@ export const yampCardStyles = css`
     white-space: nowrap;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     transform: translateX(-50%);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   }
 
   .volume-percentage-indicator::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 100%;
     left: 50%;
@@ -1409,7 +1464,7 @@ export const yampCardStyles = css`
     -webkit-appearance: none;
     appearance: none;
     height: 6px;
-    background: hsla(0, 0.00%, 100.00%, 0.22);
+    background: hsla(0, 0%, 100%, 0.22);
     border-radius: 3px;
     outline: none;
     box-shadow: var(--shadow-heavy);
@@ -1442,7 +1497,7 @@ export const yampCardStyles = css`
     border-radius: 50%;
     background: var(--custom-accent);
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     border: 2px solid #fff;
   }
 
@@ -1457,7 +1512,7 @@ export const yampCardStyles = css`
 
   .vol-slider::-moz-range-track {
     height: 6px;
-    background: rgba(255,255,255,0.22);
+    background: rgba(255, 255, 255, 0.22);
     border-radius: 3px;
   }
 
@@ -1473,20 +1528,20 @@ export const yampCardStyles = css`
   .vol-slider::-ms-fill-lower,
   .vol-slider::-ms-fill-upper {
     height: 6px;
-    background: rgba(255,255,255,0.22);
+    background: rgba(255, 255, 255, 0.22);
     border-radius: 3px;
   }
 
   /* Touch device improvements */
   @media (pointer: coarse) {
     .vol-slider::-webkit-slider-thumb {
-      box-shadow: 0 0 0 18px rgba(0,0,0,0);
+      box-shadow: 0 0 0 18px rgba(0, 0, 0, 0);
     }
     .vol-slider::-moz-range-thumb {
-      box-shadow: 0 0 0 18px rgba(0,0,0,0);
+      box-shadow: 0 0 0 18px rgba(0, 0, 0, 0);
     }
     .vol-slider::-ms-thumb {
-      box-shadow: 0 0 0 18px rgba(0,0,0,0);
+      box-shadow: 0 0 0 18px rgba(0, 0, 0, 0);
     }
   }
 
@@ -1556,10 +1611,12 @@ export const yampCardStyles = css`
     top: 0;
     bottom: 0;
     pointer-events: none;
-    background: linear-gradient(to bottom, 
-      rgba(0,0,0,0.0) 0%,
-      rgba(0,0,0,0.40) 55%,
-      rgba(0,0,0,0.70) 100%);
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.4) 55%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
     z-index: ${Z_LAYERS.FLOATING_ELEMENT};
   }
 
@@ -1594,9 +1651,9 @@ export const yampCardStyles = css`
     z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     background: linear-gradient(
       to bottom,
-      rgba(0,0,0,0.0) 0%,
-      rgba(0,0,0,0.40) 55%,
-      rgba(0,0,0,0.92) 100%
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.4) 55%,
+      rgba(0, 0, 0, 0.92) 100%
     );
   }
 
@@ -1640,7 +1697,9 @@ export const yampCardStyles = css`
     justify-content: center;
   }
 
-  :host([data-has-custom-height="true"]) .card-lower-content.collapsed .card-artwork-spacer:not(.show-placeholder) {
+  :host([data-has-custom-height="true"])
+    .card-lower-content.collapsed
+    .card-artwork-spacer:not(.show-placeholder) {
     flex: 0 0 0;
     min-height: 0;
   }
@@ -1719,7 +1778,10 @@ export const yampCardStyles = css`
   }
 
   @media (hover: hover) {
-    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .controls-row .button:hover ha-icon,
+    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"]
+      .controls-row
+      .button:hover
+      ha-icon,
     .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover ha-icon {
       color: var(--yamp-chip-selected-text) !important;
     }
@@ -1727,7 +1789,8 @@ export const yampCardStyles = css`
 
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
     border-radius: var(--ha-card-border-radius, 12px);
-    border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color, #e0e0e0));
+    border: var(--ha-card-border-width, 1px) solid
+      var(--ha-card-border-color, var(--divider-color, #e0e0e0));
   }
 
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider,
@@ -1758,8 +1821,6 @@ export const yampCardStyles = css`
   .card-lower-content.collapsed .artist {
     font-size: calc(1em * var(--yamp-collapsed-artist-scale, 1));
   }
-  
-
 
   /* Media artwork placeholder */
   .media-artwork-placeholder {
@@ -1794,10 +1855,14 @@ export const yampCardStyles = css`
     pointer-events: none;
     box-shadow: none;
     padding: 0;
-    transition: background var(--transition-slow), width var(--transition-normal);
+    transition:
+      background var(--transition-slow),
+      width var(--transition-normal);
   }
 
-  :host([data-has-custom-height="true"]) .card-lower-content.collapsed .collapsed-artwork-container {
+  :host([data-has-custom-height="true"])
+    .card-lower-content.collapsed
+    .collapsed-artwork-container {
     align-items: center;
     top: 0;
     /* Clearance dynamically accounts for controls-row (~44px) + volume-row (~46px) + padding (~10px) */
@@ -1810,18 +1875,20 @@ export const yampCardStyles = css`
     border-radius: 16px;
     object-fit: var(--yamp-artwork-fit, cover);
     background: transparent;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.22);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.22);
     pointer-events: none;
     user-select: none;
     display: block;
     margin: 2px;
-    transition: width var(--transition-normal), height var(--transition-normal);
+    transition:
+      width var(--transition-normal),
+      height var(--transition-normal);
   }
 
   .card-lower-content.collapsed.has-artwork .controls-row {
-    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px)) ;
-    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px) ;
-    width: auto ;
+    max-width: calc(100% - var(--yamp-collapsed-controls-offset, 120px));
+    margin-right: max(calc(var(--yamp-collapsed-controls-offset, 120px) - 5px), 0px);
+    width: auto;
   }
 
   :host([data-has-custom-height="true"]) .card-lower-content.collapsed.has-artwork .volume-row {
@@ -1832,9 +1899,9 @@ export const yampCardStyles = css`
   /* Medium screens */
   @media (max-width: 600px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px)) ;
-      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px) ;
-      width: auto ;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 115px));
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 115px) - 5px), 0px);
+      width: auto;
     }
 
     :host([data-has-custom-height="true"]) .card-lower-content.collapsed.has-artwork .volume-row {
@@ -1851,9 +1918,9 @@ export const yampCardStyles = css`
   /* Small screens */
   @media (max-width: 420px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px)) ;
-      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px) ;
-      width: auto ;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 90px));
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 90px) - 5px), 0px);
+      width: auto;
     }
 
     :host([data-has-custom-height="true"]) .card-lower-content.collapsed.has-artwork .volume-row {
@@ -1870,9 +1937,9 @@ export const yampCardStyles = css`
   /* Very small screens */
   @media (max-width: 320px) {
     .card-lower-content.collapsed.has-artwork .controls-row {
-      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px)) ;
-      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px) ;
-      width: auto ;
+      max-width: calc(100% - var(--yamp-collapsed-controls-offset, 80px));
+      margin-right: max(calc(var(--yamp-collapsed-controls-offset, 80px) - 5px), 0px);
+      width: auto;
     }
 
     :host([data-has-custom-height="true"]) .card-lower-content.collapsed.has-artwork .volume-row {
@@ -2029,8 +2096,6 @@ export const yampCardStyles = css`
     ${HIDE_SCROLLBAR}
   }
 
-
-
   /* Persistent Media Controls */
   /* Persistent Media Controls */
   .persistent-media-controls {
@@ -2173,7 +2238,7 @@ export const yampCardStyles = css`
     .persistent-volume-stepper {
       margin-right: -12px;
     }
-    
+
     .persistent-volume-stepper .stepper-value {
       min-width: 36px;
       padding-left: 2px;
@@ -2197,7 +2262,6 @@ export const yampCardStyles = css`
   .persistent-control-btn:active {
     transform: scale(0.95);
   }
-
 
   .persistent-control-btn ha-icon {
     font-size: 16px;
@@ -2245,9 +2309,9 @@ export const yampCardStyles = css`
   }
 
   /* When always collapsed is enabled, keep menu at top */
-:host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
-  margin-top: 0px;
-}
+  :host([data-always-collapsed="true"]) .entity-options-sheet .entity-options-menu {
+    margin-top: 0px;
+  }
 
   /* Remove spacing between menu items */
   .entity-options-sheet .entity-options-menu .entity-options-item {
@@ -2284,8 +2348,6 @@ export const yampCardStyles = css`
     /* Uses centralized .chip styling */
   }
 
-
-
   .entity-options-menu.chips-in-menu {
     margin-top: 4px;
   }
@@ -2293,11 +2355,6 @@ export const yampCardStyles = css`
   .entity-options-sheet.chips-mode {
     padding-top: 4px;
   }
-
-
-
-
-
 
   .entity-options-sheet {
     ${HIDE_SCROLLBAR}
@@ -2307,8 +2364,6 @@ export const yampCardStyles = css`
   .group-list-scroll {
     ${HIDE_SCROLLBAR}
   }
-
-
 
   /* Seamless grouping header and scrolling list */
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-header {
@@ -2332,8 +2387,12 @@ export const yampCardStyles = css`
     width: 6px;
   }
 
-  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
-  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .group-list-scroll,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .group-list-scroll {
     margin-bottom: 12px;
     padding-bottom: 0;
   }
@@ -2412,10 +2471,9 @@ export const yampCardStyles = css`
     width: 100%;
   }
 
-
   /* Source index */
   .source-index-letter:focus {
-    background: rgba(255,255,255,0.11);
+    background: rgba(255, 255, 255, 0.11);
     outline: 1px solid var(--custom-accent);
   }
 
@@ -2444,8 +2502,6 @@ export const yampCardStyles = css`
   .source-list-scroll .entity-options-item {
     width: 100%;
   }
-
-
 
   .floating-source-index.grab-scroll-active,
   .floating-source-index.grab-scroll-active * {
@@ -2477,8 +2533,6 @@ export const yampCardStyles = css`
     height: calc(100% - clamp(72px, 15vh, 120px));
   }
 
-
-
   .floating-source-index .source-index-letter {
     background: none;
     border: none;
@@ -2489,7 +2543,10 @@ export const yampCardStyles = css`
     padding: 0;
     pointer-events: auto;
     outline: none;
-    transition: color var(--transition-fast), background var(--transition-fast), transform 0.16s cubic-bezier(.35,1.8,.4,1.04);
+    transition:
+      color var(--transition-fast),
+      background var(--transition-fast),
+      transform 0.16s cubic-bezier(0.35, 1.8, 0.4, 1.04);
     transform: scale(1);
     z-index: ${Z_LAYERS.MEDIA_OVERLAY};
     min-height: 22px;
@@ -2510,7 +2567,7 @@ export const yampCardStyles = css`
   }
 
   .floating-source-index .source-index-letter[data-scale="med"] {
-    transform: scale(1.10);
+    transform: scale(1.1);
     z-index: ${Z_LAYERS.MEDIA_OVERLAY};
   }
 
@@ -2611,7 +2668,7 @@ export const yampCardStyles = css`
     gap: 12px;
     padding: 9px 0;
     border-bottom: 1px solid var(--search-border);
-    font-size: 1.10em;
+    font-size: 1.1em;
     color: var(--primary-text);
     background: none;
     width: 100%;
@@ -2621,7 +2678,7 @@ export const yampCardStyles = css`
     position: absolute;
     inset: 0;
     left: 100%;
-    background: var(--search-overlay-bg) ;
+    background: var(--search-overlay-bg);
     backdrop-filter: ${BLUR_10};
     -webkit-backdrop-filter: ${BLUR_10};
     z-index: ${Z_LAYERS.SEARCH_SLIDE_OUT};
@@ -2634,8 +2691,6 @@ export const yampCardStyles = css`
     ${HIDE_SCROLLBAR}
     gap: 4px;
   }
-
-
 
   .search-row-slide-out.active {
     left: 0;
@@ -2660,7 +2715,7 @@ export const yampCardStyles = css`
     font-size: 0.95em;
     z-index: ${Z_LAYERS.SEARCH_SUCCESS};
     border-radius: inherit;
-    box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
     animation: success-fade-in 0.3s ease;
   }
 
@@ -2673,18 +2728,24 @@ export const yampCardStyles = css`
   .search-row-error-overlay ha-icon {
     font-size: 1.5em;
   }
-  
+
   .search-row-loading-overlay ha-icon {
     animation: spin 1s linear infinite;
   }
 
   @keyframes spin {
-    100% { transform: rotate(360deg); }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
   @keyframes success-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   .slide-out-button {
@@ -2702,7 +2763,9 @@ export const yampCardStyles = css`
 
   /* Redundant .chip removed - now uses base styling at line 571 */
   .slide-out-button {
-    transition: background 0.2s, color 0.2s;
+    transition:
+      background 0.2s,
+      color 0.2s;
   }
 
   @media (hover: hover) {
@@ -2755,7 +2818,7 @@ export const yampCardStyles = css`
     width: 38px;
     border-radius: var(--button-border-radius);
     object-fit: var(--yamp-artwork-fit, cover);
-    box-shadow: 0 1px 5px rgba(0,0,0,0.16);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.16);
     margin-right: 12px;
   }
 
@@ -2777,7 +2840,9 @@ export const yampCardStyles = css`
     padding: 6px 10px;
     cursor: pointer;
     box-shadow: none;
-    transition: background var(--transition-normal), color var(--transition-normal);
+    transition:
+      background var(--transition-normal),
+      color var(--transition-normal);
     text-shadow: none;
     display: flex;
     align-items: center;
@@ -2788,8 +2853,6 @@ export const yampCardStyles = css`
   .entity-options-search-queue ha-icon {
     width: 16px;
     height: 16px;
-    
-  
   }
 
   @media (hover: hover) {
@@ -2879,14 +2942,20 @@ export const yampCardStyles = css`
 
   /* Visual feedback for moved queue items */
   .yamp-search-result.just-moved {
-    background: var(--yamp-success-bg-light) ;
-    border-left: 3px solid var(--yamp-success-color) ;
+    background: var(--yamp-success-bg-light);
+    border-left: 3px solid var(--yamp-success-color);
     animation: queueMoveHighlight 1s ease-out;
   }
 
   @keyframes queueMoveHighlight {
-    0% { background: var(--yamp-success-bg-medium); transform: scale(1.02); }
-    100% { background: var(--yamp-success-bg-light); transform: scale(1); }
+    0% {
+      background: var(--yamp-success-bg-medium);
+      transform: scale(1.02);
+    }
+    100% {
+      background: var(--yamp-success-bg-light);
+      transform: scale(1);
+    }
   }
 
   .entity-options-search-input {
@@ -2910,7 +2979,9 @@ export const yampCardStyles = css`
     border: 1.5px solid var(--custom-accent);
     background: var(--search-input-bg);
     color: var(--search-input-text);
-    transition: border var(--transition-fast), background var(--transition-fast);
+    transition:
+      border var(--transition-fast),
+      background var(--transition-fast);
     outline: none;
     width: 100%;
   }
@@ -2963,7 +3034,7 @@ export const yampCardStyles = css`
   .entity-options-search-empty {
     padding: 8px 6px;
     font-size: 1.09em;
-    opacity: 0.90;
+    opacity: 0.9;
     color: var(--primary-text);
     background: none;
     text-align: left;
@@ -3093,10 +3164,10 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] {
-    overflow-y: hidden ;
+    overflow-y: hidden;
     display: flex;
     flex-direction: column;
-    padding-bottom: 0px ;
+    padding-bottom: 0px;
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
@@ -3105,7 +3176,7 @@ export const yampCardStyles = css`
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
-    padding-bottom: 0px ;
+    padding-bottom: 0px;
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll {
@@ -3126,7 +3197,7 @@ export const yampCardStyles = css`
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-header {
     position: sticky;
     top: 0;
-    background: none ;
+    background: none;
   }
 
   /* The scrollable area for all menus */
@@ -3137,34 +3208,44 @@ export const yampCardStyles = css`
     ${HIDE_SCROLLBAR}
   }
 
-
-
   /* Reserved space for persistent media controls when pinning is active */
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search,
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
     margin-bottom: 80px;
-    padding-bottom: 0px ;
-    background: none ;
+    padding-bottom: 0px;
+    background: none;
   }
 
   /* Adjust spacing when persistent controls are hidden */
-  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"],
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"],
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] {
-    padding-bottom: 12px ;
+    padding-bottom: 12px;
   }
 
   /* Clean up legacy margin override rules since we now use padding on parent */
-  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
-  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search,
-  :host([data-hide-persistent-controls="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
-  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
-  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search,
-  :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-scroll,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-search,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .group-list-scroll,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-scroll,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-search,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .group-list-scroll {
     margin-bottom: 0px;
   }
   /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
-
 
   .entity-options-resolved-entities {
     display: flex;
@@ -3180,9 +3261,7 @@ export const yampCardStyles = css`
     ${HIDE_SCROLLBAR}
   }
 
-
-
-  .entity-options-resolved-entities  .entity-options-search-input {
+  .entity-options-resolved-entities .entity-options-search-input {
     flex: 1;
     background: var(--search-input-bg);
     color: var(--search-input-text);
@@ -3213,8 +3292,8 @@ export const yampCardStyles = css`
   @media (hover: hover) {
     .entity-options-resolved-entities .entity-options-item:hover,
     .entity-options-resolved-entities .entity-options-item:focus {
-      color: var(--custom-accent) ;
-      background: none ;
+      color: var(--custom-accent);
+      background: none;
     }
   }
 
@@ -3280,7 +3359,9 @@ export const yampCardStyles = css`
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    transition: background-color 0.2s, color 0.2s;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
     flex-shrink: 0;
   }
 
@@ -3379,14 +3460,24 @@ export const yampCardStyles = css`
     pointer-events: none;
   }
 
-
   @keyframes fadeInOut {
-    0% { opacity: 0; transform: translate(-50%, -60%); }
-    10% { opacity: 1; transform: translate(-50%, -50%); }
-    90% { opacity: 1; transform: translate(-50%, -50%); }
-    100% { opacity: 0; transform: translate(-50%, -40%); }
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -60%);
+    }
+    10% {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+    90% {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -40%);
+    }
   }
-
 
   .search-sheet-results {
     position: relative;
@@ -3408,7 +3499,10 @@ export const yampCardStyles = css`
     border-bottom: none;
     border-radius: 12px;
     background: var(--search-card-bg);
-    box-shadow: var(--chip-box-shadow, var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none)));
+    box-shadow: var(
+      --chip-box-shadow,
+      var(--ha-assistant-chip-box-shadow, var(--ha-card-box-shadow, none))
+    );
     align-items: center;
     gap: 8px;
     height: min-content;
@@ -3491,7 +3585,6 @@ export const yampCardStyles = css`
     margin-right: 12px;
   }
 
-
   .search-result-card .yamp-search-result-thumb,
   .search-result-card .yamp-search-result-thumb-placeholder {
     width: 100%;
@@ -3538,9 +3631,7 @@ export const yampCardStyles = css`
     border-radius: 8px;
   }
 
-
-
-  .icon-only.search-sheet-play, 
+  .icon-only.search-sheet-play,
   .icon-only.search-sheet-queue,
   .icon-only.entity-options-search-play,
   .icon-only.entity-options-search-queue {
@@ -3698,107 +3789,100 @@ export const yampCardStyles = css`
   /* Override styles when match_theme is false - force default colors */
   .search-sheet[data-match-theme="false"] {
     background: var(--yamp-overlay-bg);
-    
+
     /* Define CSS custom properties directly on the search sheet when match_theme is false */
     --search-overlay-bg: var(--yamp-overlay-bg);
-    --search-input-bg: #333 ;
-    --search-input-text: #fff ;
-    --search-text: #fff ;
+    --search-input-bg: #333;
+    --search-input-text: #fff;
+    --search-text: #fff;
     --search-text-secondary: #bbb;
-    --search-error: #ff6b6b ;
+    --search-error: #ff6b6b;
     --search-error-bg: rgba(244, 67, 54, 0.8);
-    --search-success: #4caf50 ;
+    --search-success: #4caf50;
     --search-success-text: #fff;
-    --search-success-bg: rgba(76, 175, 80, 0.95) ;
-    --search-border: rgba(255, 255, 255, 0.1) ;
-    --search-hover-bg: rgba(255, 255, 255, 0.1) ;
-    --search-play-hover: #e68900 ;
-    --search-queue-bg: #4a4a4a ;
-    --search-queue-border: #666 ;
-    --search-queue-hover: #5a5a5a ;
-    --search-queue-hover-border: #777 ;
+    --search-success-bg: rgba(76, 175, 80, 0.95);
+    --search-border: rgba(255, 255, 255, 0.1);
+    --search-hover-bg: rgba(255, 255, 255, 0.1);
+    --search-play-hover: #e68900;
+    --search-queue-bg: #4a4a4a;
+    --search-queue-border: #666;
+    --search-queue-hover: #5a5a5a;
+    --search-queue-hover-border: #777;
     --search-card-bg: rgba(255, 255, 255, 0.05);
     --search-thumb-placeholder-bg: rgba(255, 255, 255, 0.1);
     --search-thumb-placeholder-icon: rgba(255, 255, 255, 0.6);
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-header input {
-    background: #333 ;
-    color: #fff ;
+    background: #333;
+    color: #fff;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-header button {
-    background: #ff9800 ;
-    color: #fff ;
+    background: #ff9800;
+    color: #fff;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-loading,
   .search-sheet[data-match-theme="false"] .search-sheet-error,
   .search-sheet[data-match-theme="false"] .search-sheet-success,
   .search-sheet[data-match-theme="false"] .search-sheet-empty {
-    color: #fff ;
+    color: #fff;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-error {
-    color: #ff6b6b ;
+    color: #ff6b6b;
   }
 
   .search-sheet[data-match-theme="false"] .search-sheet-success {
-    color: #4caf50 ;
-    background: rgba(76, 175, 80, 0.95) ;
-    border: 2px solid #4caf50 ;
+    color: #4caf50;
+    background: rgba(76, 175, 80, 0.95);
+    border: 2px solid #4caf50;
   }
 
   .search-sheet[data-match-theme="false"] .yamp-search-result {
-    color: #fff ;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   @media (hover: hover) {
     .search-sheet[data-match-theme="false"] .yamp-search-result:hover {
-      background: rgba(255, 255, 255, 0.1) ;
+      background: rgba(255, 255, 255, 0.1);
     }
   }
 
-
-
   .search-sheet[data-match-theme="false"] .search-sheet-play {
-    background: var(--custom-accent) ;
-    color: #fff ;
+    background: var(--custom-accent);
+    color: #fff;
   }
-
 
   .search-sheet-buttons .search-sheet-queue {
     color: var(--yamp-overlay-text);
   }
 
-
-
-
-
   .search-sheet[data-match-theme="false"] *[style*="background"] {
-    background: rgba(0, 0, 0, 0.8) ;
+    background: rgba(0, 0, 0, 0.8);
   }
 
   /* Force override any CSS custom properties that might be inherited */
   .search-sheet[data-match-theme="false"] {
-    --custom-accent: #ff9800 ;
-    --accent-color: #ff9800 ;
-    --primary-color: #ff9800 ;
-    --ha-accent-color: #ff9800 ;
+    --custom-accent: #ff9800;
+    --accent-color: #ff9800;
+    --primary-color: #ff9800;
+    --ha-accent-color: #ff9800;
   }
 
   /* Also redefine --custom-accent locally in the search sheet, just like entity-options-resolved-entities does */
   .search-sheet[data-match-theme="false"] {
-    --custom-accent: #ff9800 ;
+    --custom-accent: #ff9800;
   }
 
   /* Also override at the root level when match_theme is false */
   yet-another-media-player[data-match-theme="false"] {
-    --custom-accent: #ff9800 ;
-    --accent-color: #ff9800 ;
-    --primary-color: #ff9800 ;
-    --ha-accent-color: #ff9800 ;
+    --custom-accent: #ff9800;
+    --accent-color: #ff9800;
+    --primary-color: #ff9800;
+    --ha-accent-color: #ff9800;
   }
 
   /* Override any elements that might be using CSS custom properties */
@@ -3807,15 +3891,15 @@ export const yampCardStyles = css`
   .search-sheet[data-match-theme="false"] *[style*="background: var(--custom-accent)"],
   .search-sheet[data-match-theme="false"] *[style*="background: var(--accent-color)"],
   .search-sheet[data-match-theme="false"] *[style*="background: var(--primary-color)"] {
-    background: #ff9800 ;
-    color: #fff ;
+    background: #ff9800;
+    color: #fff;
   }
 
   /* Override any elements that might be using CSS custom properties for color */
   .search-sheet[data-match-theme="false"] *[style*="color: var(--custom-accent)"],
   .search-sheet[data-match-theme="false"] *[style*="color: var(--accent-color)"],
   .search-sheet[data-match-theme="false"] *[style*="color: var(--primary-color)"] {
-    color: #ff9800 ;
+    color: #ff9800;
   }
 
   /* ============================================
@@ -3855,7 +3939,7 @@ export const yampCardStyles = css`
   .gesture-ripple.tap {
     width: 120px;
     height: 120px;
-    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
     animation: gestureTapRipple 0.4s ease-out forwards;
   }
 
@@ -3882,7 +3966,7 @@ export const yampCardStyles = css`
   .gesture-ripple.double_tap {
     width: 140px;
     height: 140px;
-    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%);
     animation: gestureDoubleTapRipple 0.5s ease-out forwards;
   }
 
@@ -3891,23 +3975,28 @@ export const yampCardStyles = css`
     0% {
       transform: translate(-50%, -50%) scale(0.2);
       opacity: 0;
-      box-shadow: 0 0 0 0 rgba(255,255,255,0.4);
+      box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
     }
     30% {
       opacity: 0.5;
-      box-shadow: 0 0 20px 10px rgba(255,255,255,0.2);
+      box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.2);
     }
     100% {
       transform: translate(-50%, -50%) scale(1.2);
       opacity: 0;
-      box-shadow: 0 0 40px 20px rgba(255,255,255,0);
+      box-shadow: 0 0 40px 20px rgba(255, 255, 255, 0);
     }
   }
 
   .gesture-ripple.hold {
     width: 100px;
     height: 100px;
-    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 70%);
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 40%,
+      rgba(255, 255, 255, 0) 70%
+    );
     animation: gestureHoldPulse 0.6s ease-out forwards;
   }
 
@@ -3930,7 +4019,12 @@ export const yampCardStyles = css`
     width: 120px;
     height: 60px;
     border-radius: 30px;
-    background: linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.8) 100%);
+    background: linear-gradient(
+      to left,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0.8) 100%
+    );
     animation: gestureSwipeLeft 0.35s ease-out forwards;
     transform-origin: right center;
   }
@@ -3954,7 +4048,12 @@ export const yampCardStyles = css`
     width: 120px;
     height: 60px;
     border-radius: 30px;
-    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.8) 100%);
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0.8) 100%
+    );
     animation: gestureSwipeRight 0.35s ease-out forwards;
     transform-origin: left center;
   }
@@ -4030,7 +4129,7 @@ export const yampCardStyles = css`
   @keyframes volume-icon-pop {
     0% {
       transform: scale(0.7);
-    } 
+    }
     100% {
       transform: scale(1);
     }
@@ -4095,7 +4194,7 @@ export const lyricsStyles = css`
     flex-direction: column;
     align-items: center;
   }
-  
+
   .scroll-spacer {
     flex: 0 0 50%;
     width: 100%;
@@ -4122,7 +4221,7 @@ export const lyricsStyles = css`
   .lyric-line.active {
     opacity: 1;
     filter: blur(0);
-    color:  var(--yamp-lyrics-active-color, inherit);
+    color: var(--yamp-lyrics-active-color, inherit);
     font-size: var(--yamp-lyrics-active-font-size, var(--yamp-lyrics-font-size, 1.6rem));
     text-shadow: var(--yamp-overlay-text-shadow, none);
   }
@@ -4141,7 +4240,9 @@ export const lyricsStyles = css`
     filter: none;
   }
 
-  .lyrics-loading, .lyrics-error, .lyrics-empty {
+  .lyrics-loading,
+  .lyrics-error,
+  .lyrics-empty {
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -4149,7 +4250,10 @@ export const lyricsStyles = css`
     justify-content: center;
     text-align: center;
     padding: 24px;
-    color: var(--yamp-lyrics-status-color, var(--yamp-overlay-text-secondary, rgba(255, 255, 255, 0.8)));
+    color: var(
+      --yamp-lyrics-status-color,
+      var(--yamp-overlay-text-secondary, rgba(255, 255, 255, 0.8))
+    );
     background: transparent;
     border-radius: inherit;
   }
@@ -4159,7 +4263,8 @@ export const lyricsStyles = css`
     --md-sys-color-primary: var(--yamp-overlay-text, white);
   }
 
-  .lyrics-error ha-icon, .lyrics-empty ha-icon {
+  .lyrics-error ha-icon,
+  .lyrics-empty ha-icon {
     --mdc-icon-size: 40px;
     margin-bottom: 12px;
     opacity: 0.6;
@@ -4207,4 +4312,3 @@ export const lyricsStyles = css`
     height: 34px;
   }
 `;
-

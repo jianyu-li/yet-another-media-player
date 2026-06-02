@@ -14,7 +14,7 @@ export class YampLyricsView extends LitElement {
       activeThemeColor: { type: String },
       mode: { type: String },
       preRoll: { type: Number },
-      _activeIndex: { state: true }
+      _activeIndex: { state: true },
     };
   }
 
@@ -65,12 +65,11 @@ export class YampLyricsView extends LitElement {
     }
   }
 
-
   _updateActiveLyric() {
-    if (!this.lyrics || this.lyrics.length === 0 || this.mode === 'text') return;
+    if (!this.lyrics || this.lyrics.length === 0 || this.mode === "text") return;
 
     // If not a single line has a time, treat as unsynced
-    const isUnsynced = !this.lyrics.some(l => l.time !== null);
+    const isUnsynced = !this.lyrics.some((l) => l.time !== null);
     if (isUnsynced) return;
 
     let newActiveIndex = -1;
@@ -103,11 +102,11 @@ export class YampLyricsView extends LitElement {
       const containerCenter = container.clientHeight / 2;
       const elTop = activeEl.offsetTop;
       const elHeight = activeEl.clientHeight;
-      const targetScrollTop = (elTop + elHeight / 2) - containerCenter;
+      const targetScrollTop = elTop + elHeight / 2 - containerCenter;
 
       container.scrollTo({
         top: targetScrollTop,
-        behavior: behavior
+        behavior: behavior,
       });
     }
   }
@@ -122,8 +121,6 @@ export class YampLyricsView extends LitElement {
       this._scrollToActive();
     }, 3000);
   }
-
-
 
   render() {
     if (this.error) {
@@ -153,31 +150,29 @@ export class YampLyricsView extends LitElement {
       `;
     }
 
-    const isUnsynced = !this.lyrics.some(l => l.time !== null);
+    const isUnsynced = !this.lyrics.some((l) => l.time !== null);
 
     return html`
-      <div class="lyrics-scroll-container" @scroll=${this._handleScroll} style="--yamp-primary-color: ${this.activeThemeColor}">
+      <div
+        class="lyrics-scroll-container"
+        @scroll=${this._handleScroll}
+        style="--yamp-primary-color: ${this.activeThemeColor}"
+      >
         <div class="scroll-spacer"></div>
         ${this.lyrics.map((lyric, index) => {
-      const isActive = index === this._activeIndex;
-      const isUnsyncedMode = this.mode === 'text';
-      const isScrollMode = this.mode === 'scroll';
-      const isDefaultMode = this.mode === 'default';
+          const isActive = index === this._activeIndex;
+          const isUnsyncedMode = this.mode === "text";
+          const isScrollMode = this.mode === "scroll";
+          const isDefaultMode = this.mode === "default";
 
-      const classes = {
-        "lyric-line": true,
-        "active": isActive && !isUnsynced,
-        "unsynced": isUnsynced || isUnsyncedMode,
-        "scroll-mode": isScrollMode && !isUnsynced
-      };
-      return html`
-            <div
-              class="${classMap(classes)}"
-            >
-              ${lyric.text}
-            </div>
-          `;
-    })}
+          const classes = {
+            "lyric-line": true,
+            active: isActive && !isUnsynced,
+            unsynced: isUnsynced || isUnsyncedMode,
+            "scroll-mode": isScrollMode && !isUnsynced,
+          };
+          return html` <div class="${classMap(classes)}">${lyric.text}</div> `;
+        })}
         <div class="scroll-spacer"></div>
       </div>
     `;

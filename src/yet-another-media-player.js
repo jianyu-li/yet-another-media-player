@@ -18,16 +18,13 @@ import {
   getFavorites,
   getRecentlyPlayed,
   isTrackFavorited,
-  getMusicAssistantConfigEntryId,
   getMassQueueConfigEntryId,
-  renderSearchResultActions,
-  renderSearchResultSlideOut,
   renderSearchResultItem,
   ALLOWED_MEDIA_TYPES,
-  transformMusicAssistantItem,
-  isRadio
+  transformMusicAssistantItem
 } from "./search-sheet.js";
-import { YetAnotherMediaPlayerEditor } from "./yamp-editor.js";
+import "./yamp-editor.js";
+
 import {
   resolveTemplateAtActionTime,
   resolveStringTemplate,
@@ -36,7 +33,6 @@ import {
   getMusicAssistantState,
   getSearchResultClickTitle,
   isMusicAssistantEntity,
-  getValidArtworkAttr,
   getArtworkUrl
 } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
@@ -2359,7 +2355,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const targetState = typeof forceState === "boolean"
       ? forceState
       : !this._recentlyPlayedFilterActive;
-    const isStateChanging = targetState !== this._recentlyPlayedFilterActive;
     this._recentlyPlayedFilterActive = targetState;
 
     // Make mutually exclusive with other filters
@@ -2404,7 +2399,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const targetState = typeof forceState === "boolean"
       ? forceState
       : !this._upcomingFilterActive;
-    const isStateChanging = targetState !== this._upcomingFilterActive;
     this._upcomingFilterActive = targetState;
 
     // Make mutually exclusive with other filters
@@ -2456,7 +2450,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const targetState = typeof forceState === "boolean"
       ? forceState
       : !this._recommendationsFilterActive;
-    const isStateChanging = targetState !== this._recommendationsFilterActive;
     this._recommendationsFilterActive = targetState;
 
     if (this._recommendationsFilterActive) {

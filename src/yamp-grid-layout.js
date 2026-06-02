@@ -66,6 +66,10 @@ export class YampGridLayout extends GridLayout {
   }
 }
 
-export const yampGrid = (config) => Object.assign({
-  type: YampGridLayout,
-}, config);
+export const yampGrid = (config) =>
+  Object.assign(
+    {
+      type: YampGridLayout,
+    },
+    config
+  );

@@ -12,7 +12,6 @@ class YampSortable extends LitElement {
     };
   }
 
-
   constructor() {
     super();
     this.disabled = false;
@@ -26,9 +25,7 @@ class YampSortable extends LitElement {
   }
 
   render() {
-    return html`
-      <slot></slot>
-    `;
+    return html` <slot></slot> `;
   }
 
   connectedCallback() {
@@ -55,7 +52,7 @@ class YampSortable extends LitElement {
 
   _createSortable() {
     if (this._sortable) return;
-    
+
     const container = this.children[0];
     if (!container) return;
 
@@ -83,20 +80,22 @@ class YampSortable extends LitElement {
   }
 
   _handleUpdate(evt) {
-    this.dispatchEvent(new CustomEvent("item-moved", {
-      detail: {
-        oldIndex: evt.oldIndex,
-        newIndex: evt.newIndex,
-      },
-      bubbles: true,
-      composed: true,
-    }));
+    this.dispatchEvent(
+      new CustomEvent("item-moved", {
+        detail: {
+          oldIndex: evt.oldIndex,
+          newIndex: evt.newIndex,
+        },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   _handleEnd(evt) {
     // Clean up any remaining ghost elements
     this._cleanupGhostElements();
-    
+
     // Put back in original location if needed
     if (evt.item.placeholder) {
       evt.item.placeholder.replaceWith(evt.item);
@@ -117,8 +116,8 @@ class YampSortable extends LitElement {
 
   _cleanupGhostElements() {
     // Remove any lingering ghost elements
-    const ghostElements = document.querySelectorAll('.sortable-fallback, .sortable-ghost');
-    ghostElements.forEach(el => {
+    const ghostElements = document.querySelectorAll(".sortable-fallback, .sortable-ghost");
+    ghostElements.forEach((el) => {
       if (el.parentNode) {
         el.parentNode.removeChild(el);
       }

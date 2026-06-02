@@ -14,7 +14,7 @@ const overrideRegexCache = new WeakMap();
 export function getValidArtworkAttr(attrs, key) {
   const val = attrs?.[key];
   // Must be a non-empty string with actual content
-  if (typeof val === 'string' && val.trim() !== '') {
+  if (typeof val === "string" && val.trim() !== "") {
     return val;
   }
   return null;
@@ -28,16 +28,16 @@ export function getValidArtworkAttr(attrs, key) {
  * @returns {Promise<string>} Resolved entity ID
  */
 export async function resolveTemplateAtActionTime(hass, templateString, fallbackEntityId) {
-  if (!templateString || typeof templateString !== 'string') return fallbackEntityId;
+  if (!templateString || typeof templateString !== "string") return fallbackEntityId;
 
   // Not a template — return as-is
-  if (!templateString.includes('{{') && !templateString.includes('{%')) {
+  if (!templateString.includes("{{") && !templateString.includes("{%")) {
     return templateString;
   }
 
   try {
-    const res = await hass.callApi('POST', 'template', { template: templateString });
-    const out = (res || '').toString().trim();
+    const res = await hass.callApi("POST", "template", { template: templateString });
+    const out = (res || "").toString().trim();
     // Basic validation: must look like an entity_id
     if (out && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(out)) return out;
     return fallbackEntityId;
@@ -54,10 +54,10 @@ export async function resolveTemplateAtActionTime(hass, templateString, fallback
  * @returns {Promise<string>} Resolved string
  */
 export async function resolveStringTemplate(hass, templateString, context = {}) {
-  if (!templateString || typeof templateString !== 'string') return templateString;
+  if (!templateString || typeof templateString !== "string") return templateString;
 
   // Not a template — return as-is
-  if (!templateString.includes('{{') && !templateString.includes('{%')) {
+  if (!templateString.includes("{{") && !templateString.includes("{%")) {
     // Check for URL-encoded templates (%7B%7B or %7B%25)
     if (/%7B%7B|%7B%25/i.test(templateString)) {
       try {
@@ -68,7 +68,7 @@ export async function resolveStringTemplate(hass, templateString, context = {}) 
     }
 
     // Re-check after decoding
-    if (!templateString.includes('{{') && !templateString.includes('{%')) {
+    if (!templateString.includes("{{") && !templateString.includes("{%")) {
       return templateString;
     }
   }
@@ -78,15 +78,15 @@ export async function resolveStringTemplate(hass, templateString, context = {}) 
   if (context && Object.keys(context).length > 0) {
     const setStatements = Object.entries(context)
       .map(([key, value]) => `{% set ${key} = ${JSON.stringify(value)} %}`)
-      .join(' ');
+      .join(" ");
     finalTemplate = `${setStatements} ${templateString}`;
   }
 
   try {
-    const res = await hass.callApi('POST', 'template', { template: finalTemplate });
-    return (res || '').toString().trim();
+    const res = await hass.callApi("POST", "template", { template: finalTemplate });
+    return (res || "").toString().trim();
   } catch (error) {
-    console.warn('yamp: Error resolving template:', templateString, error);
+    console.warn("yamp: Error resolving template:", templateString, error);
     return templateString; // Return original string on error
   }
 }
@@ -100,7 +100,7 @@ export async function resolveStringTemplate(hass, templateString, context = {}) 
  * @returns {string|null} Resolved string, or null if it cannot be resolved synchronously
  */
 export function resolveStringTemplateSync(hass, templateString, context = {}) {
-  if (!templateString || typeof templateString !== 'string') return templateString;
+  if (!templateString || typeof templateString !== "string") return templateString;
 
   let decoded = templateString;
   if (/%7B%7B|%7B%25/i.test(decoded)) {
@@ -111,7 +111,7 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
     }
   }
 
-  if (!decoded.includes('{{') && !decoded.includes('{%')) {
+  if (!decoded.includes("{{") && !decoded.includes("{%")) {
     return decoded;
   }
 
@@ -123,19 +123,22 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
 
     // Check for urlencode filter
     let useUrlEncode = false;
-    if (expr.endsWith('| urlencode')) {
+    if (expr.endsWith("| urlencode")) {
       useUrlEncode = true;
-      expr = expr.replace(/\|\s*urlencode$/, '').trim();
-    } else if (expr.endsWith('|urlencode')) {
+      expr = expr.replace(/\|\s*urlencode$/, "").trim();
+    } else if (expr.endsWith("|urlencode")) {
       useUrlEncode = true;
-      expr = expr.replace(/\|urlencode$/, '').trim();
+      expr = expr.replace(/\|urlencode$/, "").trim();
     }
 
     // 1. Check for state_attr(...)
-    let stateAttrMatch = expr.match(/^state_attr\(\s*(['"]?)([\w.]+)\1\s*,\s*(['"]?)([\w_]+)\3\s*\)$/);
+    let stateAttrMatch = expr.match(
+      /^state_attr\(\s*(['"]?)([\w.]+)\1\s*,\s*(['"]?)([\w_]+)\3\s*\)$/
+    );
     if (stateAttrMatch) {
       let entityArg = stateAttrMatch[2];
-      let entityId = (context[entityArg] !== undefined && !stateAttrMatch[1]) ? context[entityArg] : entityArg;
+      let entityId =
+        context[entityArg] !== undefined && !stateAttrMatch[1] ? context[entityArg] : entityArg;
       let attrName = stateAttrMatch[4];
 
       const state = hass?.states?.[entityId];
@@ -143,29 +146,32 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
         let val = String(state.attributes[attrName]);
         return useUrlEncode ? encodeURIComponent(val) : val;
       }
-      return '';
+      return "";
     }
 
     // 2. Check for states(...) with optional equality check
-    let statesMatch = expr.match(/^states\(\s*(['"]?)([\w.]+)\1\s*\)(?:\s*(==|!=)\s*(['"])(.*?)\4)?$/);
+    let statesMatch = expr.match(
+      /^states\(\s*(['"]?)([\w.]+)\1\s*\)(?:\s*(==|!=)\s*(['"])(.*?)\4)?$/
+    );
     if (statesMatch) {
       let entityArg = statesMatch[2];
-      let entityId = (context[entityArg] !== undefined && !statesMatch[1]) ? context[entityArg] : entityArg;
+      let entityId =
+        context[entityArg] !== undefined && !statesMatch[1] ? context[entityArg] : entityArg;
       let operator = statesMatch[3];
       let compareVal = statesMatch[5];
 
       const state = hass?.states?.[entityId];
-      let val = 'unknown';
+      let val = "unknown";
       if (state && state.state !== undefined) {
         val = String(state.state);
       }
-      
+
       if (operator) {
-        let isMatch = operator === '==' ? (val === compareVal) : (val !== compareVal);
-        let boolStr = isMatch ? 'true' : 'false';
+        let isMatch = operator === "==" ? val === compareVal : val !== compareVal;
+        let boolStr = isMatch ? "true" : "false";
         return useUrlEncode ? encodeURIComponent(boolStr) : boolStr;
       }
-      
+
       return useUrlEncode ? encodeURIComponent(val) : val;
     }
 
@@ -173,15 +179,16 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
     let isStateMatch = expr.match(/^is_state\(\s*(['"]?)([\w.]+)\1\s*,\s*(['"])(.*?)\3\s*\)$/);
     if (isStateMatch) {
       let entityArg = isStateMatch[2];
-      let entityId = (context[entityArg] !== undefined && !isStateMatch[1]) ? context[entityArg] : entityArg;
+      let entityId =
+        context[entityArg] !== undefined && !isStateMatch[1] ? context[entityArg] : entityArg;
       let compareVal = isStateMatch[4];
 
       const state = hass?.states?.[entityId];
-      let val = 'unknown';
+      let val = "unknown";
       if (state && state.state !== undefined) {
         val = String(state.state);
       }
-      let boolStr = (val === compareVal) ? 'true' : 'false';
+      let boolStr = val === compareVal ? "true" : "false";
       return useUrlEncode ? encodeURIComponent(boolStr) : boolStr;
     }
 
@@ -196,7 +203,7 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
     return match;
   });
 
-  if (!success || result.includes('{%')) {
+  if (!success || result.includes("{%")) {
     return null;
   }
 
@@ -221,13 +228,11 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
   const maDeviceId = maEntity.attributes?.device_id;
   const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
 
-
   // Search through all button entities
   for (const [entityId, state] of Object.entries(hass.states)) {
-    if (entityId.startsWith('button.') && state.attributes) {
+    if (entityId.startsWith("button.") && state.attributes) {
       const buttonDeviceId = state.attributes.device_id;
       const buttonFriendlyName = state.attributes.friendly_name || entityId;
-
 
       // Check if this button is associated with the same device
       if (maDeviceId && buttonDeviceId === maDeviceId) {
@@ -235,20 +240,21 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
           entity_id: entityId,
           friendly_name: buttonFriendlyName,
           device_class: state.attributes.device_class,
-          reason: 'same_device'
+          reason: "same_device",
         });
       }
       // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
-      else if (buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) ||
-        maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())) {
+      else if (
+        buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) ||
+        maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())
+      ) {
         buttonEntities.push({
           entity_id: entityId,
           friendly_name: buttonFriendlyName,
           device_class: state.attributes.device_class,
-          reason: 'name_similarity'
+          reason: "name_similarity",
         });
       }
-
     }
   }
 
@@ -268,13 +274,13 @@ export function getMusicAssistantState(hass, entityId) {
   if (!state) return null;
 
   // Check if this entity has Music Assistant attributes
-  const hasMaAttributes = state.attributes && (
-    state.attributes.media_content_id ||
-    state.attributes.media_content_type ||
-    state.attributes.media_album_name ||
-    state.attributes.media_artist ||
-    state.attributes.media_title
-  );
+  const hasMaAttributes =
+    state.attributes &&
+    (state.attributes.media_content_id ||
+      state.attributes.media_content_type ||
+      state.attributes.media_album_name ||
+      state.attributes.media_artist ||
+      state.attributes.media_title);
 
   return hasMaAttributes ? state : null;
 }
@@ -287,8 +293,7 @@ export function getMusicAssistantState(hass, entityId) {
 export function isMusicAssistantEntity(state) {
   if (!state || !state.attributes) return false;
   return (
-    state.attributes.app_id === 'music_assistant' ||
-    state.attributes.mass_player_type !== undefined
+    state.attributes.app_id === "music_assistant" || state.attributes.mass_player_type !== undefined
   );
 }
 
@@ -298,42 +303,42 @@ export function isMusicAssistantEntity(state) {
  * @returns {string} Title to display
  */
 export function getSearchResultClickTitle(item) {
-  if (!item) return '';
+  if (!item) return "";
 
   // Normalize properties
   const mediaType = item.media_type || item.media_class || item.media_content_type;
-  const title = item.name || item.title || item.media_title || 'Unknown Title';
+  const title = item.name || item.title || item.media_title || "Unknown Title";
 
   // Handle artist normalization
   const firstArtist = item.artists?.[0];
   const artist =
     item.artist ||
     firstArtist?.name ||
-    (typeof firstArtist === 'string' ? firstArtist : undefined) ||
+    (typeof firstArtist === "string" ? firstArtist : undefined) ||
     item.media_artist ||
-    'Unknown Artist';
+    "Unknown Artist";
 
   // For tracks, show "Browse tracks from [Album]"
-  if (mediaType === 'track') {
+  if (mediaType === "track") {
     const albumName = item.album || item.media_album_name;
     if (albumName) {
-      return localize('search.browse_album', '{album}', albumName);
+      return localize("search.browse_album", "{album}", albumName);
     }
     return `${title} - ${artist}`;
   }
 
   // For albums, show "Album Name - Artist"
-  if (mediaType === 'album') {
-    return localize('search.browse_album', '{album}', title);
+  if (mediaType === "album") {
+    return localize("search.browse_album", "{album}", title);
   }
 
   // For artists, just show the name
-  if (mediaType === 'artist') {
+  if (mediaType === "artist") {
     return title;
   }
 
   // For playlists, show the name
-  if (mediaType === 'playlist') {
+  if (mediaType === "playlist") {
     return title;
   }
 
@@ -359,11 +364,8 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource) {
       ARTWORK_OVERRIDE_MATCH_KEYS.some((key) => {
         const expected = override[key];
         if (expected === undefined) return false;
-        const value = key === "entity_id"
-          ? entityId
-          : key === "entity_state"
-            ? state?.state
-            : attrs[key];
+        const value =
+          key === "entity_id" ? entityId : key === "entity_state" ? state?.state : attrs[key];
         if (expected === "*") return true;
         let cached = overrideRegexCache.get(override);
         if (!cached) {
@@ -380,7 +382,9 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource) {
               // Limit maximum active wildcards to 5 to protect regex matching complexity
               const asteriskCount = (cleanExpected.match(/\*/g) || []).length;
               if (asteriskCount <= 5) {
-                const regexPattern = cleanExpected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
+                const regexPattern = cleanExpected
+                  .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+                  .replace(/\\\*/g, ".*");
                 regex = new RegExp(`^${regexPattern}$`, "i");
                 cached[key] = regex;
               } else {
@@ -404,9 +408,10 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource) {
       })
     );
 
-  const hasExistingArtwork = getValidArtworkAttr(attrs, 'entity_picture_local') ||
-    getValidArtworkAttr(attrs, 'entity_picture') ||
-    getValidArtworkAttr(attrs, 'album_art');
+  const hasExistingArtwork =
+    getValidArtworkAttr(attrs, "entity_picture_local") ||
+    getValidArtworkAttr(attrs, "entity_picture") ||
+    getValidArtworkAttr(attrs, "album_art");
 
   let override = findSpecificMatch();
   let overrideSource = null;
@@ -429,14 +434,15 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource) {
   }
 
   if (override && overrideSource) {
-    const resolvedOverride = typeof resolveOverrideSource === "function"
-      ? resolveOverrideSource(override, overrideSource, overrideType, state)
-      : overrideSource;
+    const resolvedOverride =
+      typeof resolveOverrideSource === "function"
+        ? resolveOverrideSource(override, overrideSource, overrideType, state)
+        : overrideSource;
     if (resolvedOverride) {
       return {
         url: resolvedOverride,
         sizePercentage: override?.size_percentage,
-        objectFit: override?.object_fit ?? null
+        objectFit: override?.object_fit ?? null,
       };
     }
   }
@@ -457,13 +463,16 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource) {
  * @param {Function} [options.resolveOverrideSource] - Callback for template override resolution
  * @returns {Object} { url: string|null, sizePercentage: number|null, objectFit: string|null }
  */
-export function getArtworkUrl(state, {
-  hostname = "",
-  overrides = [],
-  fallbackArtwork = null,
-  artworkObjectFit = null,
-  resolveOverrideSource = null
-} = {}) {
+export function getArtworkUrl(
+  state,
+  {
+    hostname = "",
+    overrides = [],
+    fallbackArtwork = null,
+    artworkObjectFit = null,
+    resolveOverrideSource = null,
+  } = {}
+) {
   if (!state || !state.attributes) return null;
 
   const attrs = state.attributes;
@@ -486,31 +495,42 @@ export function getArtworkUrl(state, {
 
   // If no override found, use standard artwork
   if (!artworkUrl) {
-    artworkUrl = getValidArtworkAttr(attrs, 'entity_picture_local') ||
-      getValidArtworkAttr(attrs, 'entity_picture') ||
-      getValidArtworkAttr(attrs, 'album_art') ||
+    artworkUrl =
+      getValidArtworkAttr(attrs, "entity_picture_local") ||
+      getValidArtworkAttr(attrs, "entity_picture") ||
+      getValidArtworkAttr(attrs, "album_art") ||
       null;
   }
 
   // If still no artwork, check for configured fallback artwork
   if (!artworkUrl && fallbackArtwork) {
-    if (fallbackArtwork === 'smart') {
-      const isTV = attrs.media_title === 'TV' || attrs.media_channel ||
-        attrs.app_id === 'tv' || attrs.app_id === 'androidtv';
+    if (fallbackArtwork === "smart") {
+      const isTV =
+        attrs.media_title === "TV" ||
+        attrs.media_channel ||
+        attrs.app_id === "tv" ||
+        attrs.app_id === "androidtv";
       if (isTV) {
-        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvcj4KPHJlY3QgeD0iNjgiIHk9IjEyMCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPHJlY3QgeD0iODAiIHk9IjEzMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPC9zdmc+Cg==';
+        artworkUrl =
+          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjEwNCIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvcj4KPHJlY3QgeD0iNjgiIHk9IjEyMCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPHJlY3QgeD0iODAiIHk9IjEzMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSJjdXJyZW50Q29sb3IiLz4KPC9zdmc+Cg==";
       } else {
-        artworkUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjM2IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjYyIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjY4IiB5PSI5OCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjEwMCIgeT0iNzAiIHdpZHRoPSIyMiIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSIxMzIiIHk9IjQyIiB3aWR0aD0iMjIiIGhlaWdodD0iMTA2IiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo=';
+        artworkUrl =
+          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg0IiBoZWlnaHQ9IjE4NCIgdmlld0JveD0iMCAwIDE4NCAxODQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHg9IjM2IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjYyIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjY4IiB5PSI5OCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxyZWN0IHg9IjEwMCIgeT0iNzAiIHdpZHRoPSIyMiIgaGVpZ2h0PSI3OCIgcng9IjgiIGZpbGw9ImN1cnJlbnRDb2xvciIvPgo8cmVjdCB4PSIxMzIiIHk9IjQyIiB3aWR0aD0iMjIiIGhlaWdodD0iMTA2IiByeD0iOCIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo=";
       }
-    } else if (typeof fallbackArtwork === 'string') {
+    } else if (typeof fallbackArtwork === "string") {
       artworkUrl = fallbackArtwork;
     }
   }
 
   // Apply hostname prefix if configured and artwork URL is relative
-  if (artworkUrl && hostname && !/^https?:\/\//i.test(artworkUrl) && !artworkUrl.startsWith('data:')) {
-    const cleanHost = hostname.endsWith('/') ? hostname.slice(0, -1) : hostname;
-    const cleanUrl = artworkUrl.startsWith('/') ? artworkUrl : `/${artworkUrl}`;
+  if (
+    artworkUrl &&
+    hostname &&
+    !/^https?:\/\//i.test(artworkUrl) &&
+    !artworkUrl.startsWith("data:")
+  ) {
+    const cleanHost = hostname.endsWith("/") ? hostname.slice(0, -1) : hostname;
+    const cleanUrl = artworkUrl.startsWith("/") ? artworkUrl : `/${artworkUrl}`;
     artworkUrl = cleanHost + cleanUrl;
   }
 

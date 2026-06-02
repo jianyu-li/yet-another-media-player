@@ -23,11 +23,14 @@ export function renderVolumeRow({
   isDragging = false,
   dragVol = 0,
 }) {
-  const hasLeadingControl = leadingControlTemplate !== nothing && leadingControlTemplate !== undefined && leadingControlTemplate !== null;
+  const hasLeadingControl =
+    leadingControlTemplate !== nothing &&
+    leadingControlTemplate !== undefined &&
+    leadingControlTemplate !== null;
   // Determine volume icon based on volume level and mute state
   const getVolumeIcon = (volume, muted) => {
     // For entities that don't support mute, consider them muted when volume is 0
-    const effectiveMuted = supportsMute ? muted : (volume === 0);
+    const effectiveMuted = supportsMute ? muted : volume === 0;
     if (effectiveMuted || volume === 0) return "mdi:volume-off";
     if (volume < 0.2) return "mdi:volume-low";
     if (volume < 0.5) return "mdi:volume-medium";
@@ -35,38 +38,63 @@ export function renderVolumeRow({
   };
 
   return html`
-    <div class="volume-row ${showSlider && !isRemoteVolumeEntity ? 'has-slider' : ''}">
+    <div class="volume-row ${showSlider && !isRemoteVolumeEntity ? "has-slider" : ""}">
       <div class="volume-left">
         ${hasLeadingControl
-      ? leadingControlTemplate
-      : (reserveLeadingControlSpace ? html`<div class="volume-leading-placeholder"></div>` : nothing)
-    }
-        <div style="${(hideVolume || isRemoteVolumeEntity) ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">
-          <button 
-            class="volume-icon-btn" 
-            @click=${onMuteToggle} 
-            title=${(supportsMute ? isMuted : (vol === 0)) ? localize('common.unmute') : localize('common.mute')}
+          ? leadingControlTemplate
+          : reserveLeadingControlSpace
+            ? html`<div class="volume-leading-placeholder"></div>`
+            : nothing}
+        <div
+          style="${hideVolume || isRemoteVolumeEntity
+            ? "visibility:hidden; opacity:0; pointer-events:none;"
+            : ""}"
+        >
+          <button
+            class="volume-icon-btn"
+            @click=${onMuteToggle}
+            title=${(supportsMute ? isMuted : vol === 0)
+              ? localize("common.unmute")
+              : localize("common.mute")}
           >
             <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
           </button>
         </div>
       </div>
 
-      <div class="volume-center" style="${hideVolume ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">
-          ${isRemoteVolumeEntity
-        ? html`
+      <div
+        class="volume-center"
+        style="${hideVolume ? "visibility:hidden; opacity:0; pointer-events:none;" : ""}"
+      >
+        ${isRemoteVolumeEntity
+          ? html`
               <div class="vol-stepper-container">
                 <div class="vol-stepper">
-                  <button class="button" @click=${() => onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
+                  <button
+                    class="button"
+                    @click=${() => onVolumeStep(-1)}
+                    title="${localize("common.vol_down")}"
+                  >
+                    –
+                  </button>
                   <span class="vol-label">vol</span>
-                  <button class="button" @click=${() => onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
+                  <button
+                    class="button"
+                    @click=${() => onVolumeStep(1)}
+                    title="${localize("common.vol_up")}"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
             `
-        : showSlider
-          ? html`
+          : showSlider
+            ? html`
                 <div class="volume-slider-container">
-                  <div class="volume-percentage-indicator ${isDragging ? 'visible' : ''}" style="left: calc(33px + ${dragVol} * (100% - 66px))">
+                  <div
+                    class="volume-percentage-indicator ${isDragging ? "visible" : ""}"
+                    style="left: calc(33px + ${dragVol} * (100% - 66px))"
+                  >
                     ${Math.round(dragVol * 100)}%
                   </div>
                   <input
@@ -82,28 +110,37 @@ export function renderVolumeRow({
                     @change=${onVolumeChange}
                     @mouseup=${onVolumeDragEnd}
                     @touchend=${onVolumeDragEnd}
-                    title="${localize('common.volume')}"
+                    title="${localize("common.volume")}"
                   />
                 </div>
               `
-          : html`
+            : html`
                 <div class="vol-stepper-container">
                   <div class="vol-stepper">
-                    <button class="button" @click=${() => onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
+                    <button
+                      class="button"
+                      @click=${() => onVolumeStep(-1)}
+                      title="${localize("common.vol_down")}"
+                    >
+                      –
+                    </button>
                     <span class="vol-value">${Math.round(vol * 100)}%</span>
-                    <button class="button" @click=${() => onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
+                    <button
+                      class="button"
+                      @click=${() => onVolumeStep(1)}
+                      title="${localize("common.vol_up")}"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
-              `
-      }
+              `}
       </div>
 
       <div class="volume-right">
-        ${showRightPlaceholder ? html`
-          <div class="volume-placeholder">
-            ${rightSlotTemplate || nothing}
-          </div>
-        ` : nothing}
+        ${showRightPlaceholder
+          ? html` <div class="volume-placeholder">${rightSlotTemplate || nothing}</div> `
+          : nothing}
         ${moreInfoMenu}
       </div>
     </div>

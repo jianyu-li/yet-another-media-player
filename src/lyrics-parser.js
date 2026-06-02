@@ -1,12 +1,12 @@
 /**
  * Parses a standard LRC (LyRiCs) string into an array of timed lyric objects.
  * Supports basic [mm:ss.xx] and [mm:ss:xx] formats.
- * 
+ *
  * @param {string} lrcString - The raw LRC text.
  * @returns {Array<{text: string, time: number}>} Array of parsed lyric lines.
  */
 export function parseLrc(lrcString) {
-  if (!lrcString || typeof lrcString !== 'string') return [];
+  if (!lrcString || typeof lrcString !== "string") return [];
 
   const lines = lrcString.split(/\r?\n/);
   const parsedLyrics = [];
@@ -15,7 +15,7 @@ export function parseLrc(lrcString) {
   // Strict seconds range [0-5]\d (00-59)
   const timeRegex = /\[(\d+):([0-5]\d)(?:[.:](\d{2,3}))?\]/g;
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     line = line.trim();
     if (!line) return;
 
@@ -25,7 +25,7 @@ export function parseLrc(lrcString) {
     }
 
     let match;
-    let text = line.replace(timeRegex, '').trim();
+    let text = line.replace(timeRegex, "").trim();
 
     // Find all time tags in the line (some lines have multiple tags for repeated sections)
     const timeTags = [];
@@ -37,12 +37,12 @@ export function parseLrc(lrcString) {
 
       // Calculate fraction modifier based on length (xx vs xxx)
       const fractionModifier = match[3] ? (match[3].length === 3 ? 1000 : 100) : 1000;
-      const timeInSeconds = (minutes * 60) + seconds + (fractions / fractionModifier);
+      const timeInSeconds = minutes * 60 + seconds + fractions / fractionModifier;
       timeTags.push(timeInSeconds);
     }
 
     if (timeTags.length > 0) {
-      timeTags.forEach(time => {
+      timeTags.forEach((time) => {
         parsedLyrics.push({ time, text });
       });
     } else {

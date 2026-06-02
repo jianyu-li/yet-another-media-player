@@ -22,46 +22,62 @@ export function renderChip({
   objectFit,
   quickGroupingState,
   onQuickGroupClick,
-  onDoubleClick
+  onDoubleClick,
 }) {
   const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
   return html`
-    <button class="chip"
-            ?selected=${selected}
-            ?playing=${playing}
-            ?ma-active=${maActive}
-            @dblclick=${onDoubleClick}
-            @click=${() => onChipClick(idx)}
-            @pointerdown=${onPointerDown}
-            @pointermove=${onPointerMove}
-            @pointerup=${onPointerUp}
-            @pointerleave=${onPointerUp}
-            style="display:flex;align-items:center;justify-content:space-between;position:relative;">
+    <button
+      class="chip"
+      ?selected=${selected}
+      ?playing=${playing}
+      ?ma-active=${maActive}
+      @dblclick=${onDoubleClick}
+      @click=${() => onChipClick(idx)}
+      @pointerdown=${onPointerDown}
+      @pointermove=${onPointerMove}
+      @pointerup=${onPointerUp}
+      @pointerleave=${onPointerUp}
+      style="display:flex;align-items:center;justify-content:space-between;position:relative;"
+    >
       <span class="chip-icon">
         ${art
-      ? html`<img class="chip-mini-art" src="${art}" style="${artStyle}" onerror="this.style.display='none'" />`
-      : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+          ? html`<img
+              class="chip-mini-art"
+              src="${art}"
+              style="${artStyle}"
+              onerror="this.style.display='none'"
+            />`
+          : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
       </span>
-      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+      <span
+        class="chip-label"
+        style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;"
+      >
         ${name}
       </span>
       ${playing
-      ? html`
+        ? html`
             <span class="chip-playing-indicator">
               <span class="bar"></span>
               <span class="bar"></span>
               <span class="bar"></span>
             </span>
           `
-      : nothing}
+        : nothing}
       ${pinned
-      ? html`
-            <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="${localize('common.unpin')}">
+        ? html`
+            <span
+              class="chip-pin-inside"
+              @click=${(e) => {
+                e.stopPropagation();
+                onPinClick(idx, e);
+              }}
+              title="${localize("common.unpin")}"
+            >
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           `
-      : html`<span class="chip-pin-spacer"></span>`
-    }
+        : html`<span class="chip-pin-spacer"></span>`}
       ${renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick })}
     </button>
   `;
@@ -87,70 +103,85 @@ export function renderGroupChip({
   objectFit,
   quickGroupingState,
   onQuickGroupClick,
-  onDoubleClick
+  onDoubleClick,
 }) {
   const artStyle = objectFit ? `object-fit: ${objectFit};` : "";
   return html`
-    <button class="chip group"
-            ?selected=${selected}
-            ?ma-active=${maActive}
-            @dblclick=${onDoubleClick}
-            @click=${() => onChipClick(idx)}
-            @pointerdown=${onPointerDown}
-            @pointermove=${onPointerMove}
-            @pointerup=${onPointerUp}
-            @pointerleave=${onPointerUp}
-            style="display:flex;align-items:center;justify-content:space-between;position:relative;">
-      <span class="chip-icon"
-            style="cursor:pointer;"
-            @click=${e => {
-      e.stopPropagation();
-      if (onIconClick) {
-        onIconClick(idx, e);
-      }
-    }}>
+    <button
+      class="chip group"
+      ?selected=${selected}
+      ?ma-active=${maActive}
+      @dblclick=${onDoubleClick}
+      @click=${() => onChipClick(idx)}
+      @pointerdown=${onPointerDown}
+      @pointermove=${onPointerMove}
+      @pointerup=${onPointerUp}
+      @pointerleave=${onPointerUp}
+      style="display:flex;align-items:center;justify-content:space-between;position:relative;"
+    >
+      <span
+        class="chip-icon"
+        style="cursor:pointer;"
+        @click=${(e) => {
+          e.stopPropagation();
+          if (onIconClick) {
+            onIconClick(idx, e);
+          }
+        }}
+      >
         ${art
-      ? html`<img class="chip-mini-art"
-                      src="${art}"
-                      style="cursor:pointer;${artStyle}"
-                      onerror="this.style.display='none'"
-                      @click=${e => {
-          e.stopPropagation();
-          if (onIconClick) {
-            onIconClick(idx, e);
-          }
-        }}/>`
-
-      : html`<ha-icon .icon=${icon}
-                          style="font-size:28px;cursor:pointer;"
-                          @click=${e => {
-          e.stopPropagation();
-          if (onIconClick) {
-            onIconClick(idx, e);
-          }
-        }}></ha-icon>`
-    }
+          ? html`<img
+              class="chip-mini-art"
+              src="${art}"
+              style="cursor:pointer;${artStyle}"
+              onerror="this.style.display='none'"
+              @click=${(e) => {
+                e.stopPropagation();
+                if (onIconClick) {
+                  onIconClick(idx, e);
+                }
+              }}
+            />`
+          : html`<ha-icon
+              .icon=${icon}
+              style="font-size:28px;cursor:pointer;"
+              @click=${(e) => {
+                e.stopPropagation();
+                if (onIconClick) {
+                  onIconClick(idx, e);
+                }
+              }}
+            ></ha-icon>`}
       </span>
-      <span class="chip-label" style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+      <span
+        class="chip-label"
+        style="flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;"
+      >
         ${groupName}
       </span>
       ${playing
-      ? html`
+        ? html`
             <span class="chip-playing-indicator">
               <span class="bar"></span>
               <span class="bar"></span>
               <span class="bar"></span>
             </span>
           `
-      : nothing}
+        : nothing}
       ${pinned
-      ? html`
-            <span class="chip-pin-inside" @click=${e => { e.stopPropagation(); onPinClick(idx, e); }} title="${localize('common.unpin')}">
+        ? html`
+            <span
+              class="chip-pin-inside"
+              @click=${(e) => {
+                e.stopPropagation();
+                onPinClick(idx, e);
+              }}
+              title="${localize("common.unpin")}"
+            >
               <ha-icon .icon=${"mdi:pin"}></ha-icon>
             </span>
           `
-      : html`<span class="chip-pin-spacer"></span>`
-    }
+        : html`<span class="chip-pin-spacer"></span>`}
       ${renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick })}
     </button>
   `;
@@ -161,17 +192,24 @@ export function renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClic
   if (!quickGroupingState || !quickGroupingState.isGroupable) return nothing;
 
   const { isPrimary, isBusy, grouped, tooltip } = quickGroupingState;
-  const title = tooltip || (isPrimary ? "Primary" : isBusy ? "Unavailable" : grouped ? "Unjoin" : "Join");
+  const title =
+    tooltip || (isPrimary ? "Primary" : isBusy ? "Unavailable" : grouped ? "Unjoin" : "Join");
   const icon = isPrimary ? "mdi:star-circle-outline" : grouped ? "mdi:minus" : "mdi:plus";
 
   return html`
-    <span class="chip-quick-group" 
-          @click=${e => {
-      e.stopPropagation();
-      if (onQuickGroupClick && !isBusy && !isPrimary) onQuickGroupClick(idx, e);
-    }} 
-          title=${title} 
-          style="${isPrimary ? 'cursor:default;opacity:0.7;' : isBusy ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+    <span
+      class="chip-quick-group"
+      @click=${(e) => {
+        e.stopPropagation();
+        if (onQuickGroupClick && !isBusy && !isPrimary) onQuickGroupClick(idx, e);
+      }}
+      title=${title}
+      style="${isPrimary
+        ? "cursor:default;opacity:0.7;"
+        : isBusy
+          ? "opacity:0.5;cursor:not-allowed;"
+          : ""}"
+    >
       <ha-icon .icon=${icon}></ha-icon>
     </span>
   `;
@@ -214,7 +252,7 @@ export function createHoldToPinHandler({ onPin, onHoldEnd, holdTime = 600, moveT
       startX = null;
       startY = null;
       moved = false;
-    }
+    },
   };
 }
 // Central chip row renderer
@@ -231,7 +269,7 @@ export function renderChipRow({
   getIsMaActive,
   isIdle,
   hass,
-  artworkHostname = '',
+  artworkHostname = "",
   mediaArtworkOverrides = [],
   fallbackArtwork = null,
   onChipClick,
@@ -244,89 +282,107 @@ export function renderChipRow({
   quickGroupingMode,
   getQuickGroupingState,
   onQuickGroupClick,
-  onDoubleClick
+  onDoubleClick,
 }) {
   if (!groupedSortedEntityIds || !groupedSortedEntityIds.length) return nothing;
 
   return html`
     ${groupedSortedEntityIds.map((group) => {
-    // If it's a group (more than one entity)
-    if (group.length > 1) {
-      const id = getActualGroupMaster(group);
-      const idx = entityIds.indexOf(id);
-      const state = hass?.states?.[id];
-      const isChipPlaying = (typeof getIsChipPlaying === "function")
-        ? getIsChipPlaying(id, selectedEntityId === id)
-        : (state?.state === "playing");
-      const artObj = (typeof getChipArt === "function")
-        ? getChipArt(id)
-        : getArtworkUrl(state, { hostname: artworkHostname, overrides: mediaArtworkOverrides, fallbackArtwork });
-      const art = artObj?.url;
+      // If it's a group (more than one entity)
+      if (group.length > 1) {
+        const id = getActualGroupMaster(group);
+        const idx = entityIds.indexOf(id);
+        const state = hass?.states?.[id];
+        const isChipPlaying =
+          typeof getIsChipPlaying === "function"
+            ? getIsChipPlaying(id, selectedEntityId === id)
+            : state?.state === "playing";
+        const artObj =
+          typeof getChipArt === "function"
+            ? getChipArt(id)
+            : getArtworkUrl(state, {
+                hostname: artworkHostname,
+                overrides: mediaArtworkOverrides,
+                fallbackArtwork,
+              });
+        const art = artObj?.url;
 
-      const objectFit = artObj?.objectFit;
+        const objectFit = artObj?.objectFit;
 
-      const icon = state?.attributes?.icon || "mdi:cast";
-      const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
-      return renderGroupChip({
-        idx,
-        selected: selectedEntityId === id,
-        playing: isChipPlaying,
-        groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
-        art,
-        icon,
-        pinned: pinnedIndex === idx,
-        holdToPin,
-        maActive: isMaActive,
-        onChipClick,
-        onIconClick,
-        onPinClick,
-        onPointerDown: (e) => onPointerDown(e, idx),
-        onPointerMove: (e) => onPointerMove(e, idx),
-        onPointerUp: (e) => onPointerUp(e, idx),
-        objectFit,
-        quickGroupingState: quickGroupingMode && typeof getQuickGroupingState === "function" ? getQuickGroupingState(id) : null,
-        onQuickGroupClick,
-        onDoubleClick
-      });
-    } else {
-      // Single chip
-      const id = group[0];
-      const idx = entityIds.indexOf(id);
-      const state = hass?.states?.[id];
-      const isChipPlaying = (typeof getIsChipPlaying === "function")
-        ? getIsChipPlaying(id, selectedEntityId === id)
-        : (state?.state === "playing");
-      const artObj = (typeof getChipArt === "function")
-        ? getChipArt(id)
-        : getArtworkUrl(state, { hostname: artworkHostname, overrides: mediaArtworkOverrides, fallbackArtwork });
-      const artSource = artObj?.url;
+        const icon = state?.attributes?.icon || "mdi:cast";
+        const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
+        return renderGroupChip({
+          idx,
+          selected: selectedEntityId === id,
+          playing: isChipPlaying,
+          groupName: getChipName(id) + (group.length > 1 ? ` [${group.length}]` : ""),
+          art,
+          icon,
+          pinned: pinnedIndex === idx,
+          holdToPin,
+          maActive: isMaActive,
+          onChipClick,
+          onIconClick,
+          onPinClick,
+          onPointerDown: (e) => onPointerDown(e, idx),
+          onPointerMove: (e) => onPointerMove(e, idx),
+          onPointerUp: (e) => onPointerUp(e, idx),
+          objectFit,
+          quickGroupingState:
+            quickGroupingMode && typeof getQuickGroupingState === "function"
+              ? getQuickGroupingState(id)
+              : null,
+          onQuickGroupClick,
+          onDoubleClick,
+        });
+      } else {
+        // Single chip
+        const id = group[0];
+        const idx = entityIds.indexOf(id);
+        const state = hass?.states?.[id];
+        const isChipPlaying =
+          typeof getIsChipPlaying === "function"
+            ? getIsChipPlaying(id, selectedEntityId === id)
+            : state?.state === "playing";
+        const artObj =
+          typeof getChipArt === "function"
+            ? getChipArt(id)
+            : getArtworkUrl(state, {
+                hostname: artworkHostname,
+                overrides: mediaArtworkOverrides,
+                fallbackArtwork,
+              });
+        const artSource = artObj?.url;
 
-      const objectFit = artObj?.objectFit;
+        const objectFit = artObj?.objectFit;
 
-      const art = selectedEntityId === id ? (!isIdle && artSource) : (isChipPlaying && artSource);
-      const icon = state?.attributes?.icon || "mdi:cast";
-      const isMaActive = (typeof getIsMaActive === "function") ? getIsMaActive(id) : false;
-      return renderChip({
-        idx,
-        selected: selectedEntityId === id,
-        playing: isChipPlaying,
-        name: getChipName(id),
-        art,
-        icon,
-        pinned: pinnedIndex === idx,
-        holdToPin,
-        maActive: isMaActive,
-        onChipClick,
-        onPinClick,
-        onPointerDown: (e) => onPointerDown(e, idx),
-        onPointerMove: (e) => onPointerMove(e, idx),
-        onPointerUp: (e) => onPointerUp(e, idx),
-        objectFit,
-        quickGroupingState: quickGroupingMode && typeof getQuickGroupingState === "function" ? getQuickGroupingState(id) : null,
-        onQuickGroupClick,
-        onDoubleClick
-      });
-    }
-  })}
+        const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
+        const icon = state?.attributes?.icon || "mdi:cast";
+        const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
+        return renderChip({
+          idx,
+          selected: selectedEntityId === id,
+          playing: isChipPlaying,
+          name: getChipName(id),
+          art,
+          icon,
+          pinned: pinnedIndex === idx,
+          holdToPin,
+          maActive: isMaActive,
+          onChipClick,
+          onPinClick,
+          onPointerDown: (e) => onPointerDown(e, idx),
+          onPointerMove: (e) => onPointerMove(e, idx),
+          onPointerUp: (e) => onPointerUp(e, idx),
+          objectFit,
+          quickGroupingState:
+            quickGroupingMode && typeof getQuickGroupingState === "function"
+              ? getQuickGroupingState(id)
+              : null,
+          onQuickGroupClick,
+          onDoubleClick,
+        });
+      }
+    })}
   `;
 }
