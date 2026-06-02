@@ -1,5 +1,4 @@
-// import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-import { LitElement, html, css, nothing } from "lit";
+import { html, nothing } from "lit";
 import { isMusicAssistantEntity } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 

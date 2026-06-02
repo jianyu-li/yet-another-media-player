@@ -1,5 +1,5 @@
 import { html, nothing } from "lit";
-import { getValidArtworkAttr, getArtworkUrl } from "./yamp-utils.js";
+import { getArtworkUrl } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
 // Helper to render a single chip

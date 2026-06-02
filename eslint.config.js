@@ -17,7 +17,15 @@ export default [
       },
     },
     rules: {
-      "no-unused-vars": "warn",
+      "no-unused-vars": [
+        "warn",
+        {
+          "args": "none",
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrors": "none"
+        }
+      ],
       "no-undef": "error",
       ...litPlugin.configs.recommended.rules,
     },

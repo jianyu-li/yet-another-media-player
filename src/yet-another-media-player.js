@@ -1,14 +1,14 @@
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { virtualize } from "@lit-labs/virtualizer/virtualize.js";
 import { yampGrid } from "./yamp-grid-layout.js";
 
-import { renderChip, renderGroupChip, createHoldToPinHandler, renderChipRow } from "./chip-row.js";
+import { createHoldToPinHandler, renderChipRow } from "./chip-row.js";
 import { renderActionChipRow } from "./action-chip-row.js";
 import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
-import { yampCardStyles, Z_LAYERS } from "./yamp-card-styles.js";
+import { yampCardStyles } from "./yamp-card-styles.js";
 import { parseLrc } from "./lyrics-parser.js";
 import "./lyrics-view.js";
 import {
@@ -39,20 +39,11 @@ import { localize } from "./localize/localize.js";
 
 
 import {
-  SUPPORT_PAUSE,
-  SUPPORT_SEEK,
-  SUPPORT_VOLUME_SET,
   SUPPORT_VOLUME_MUTE,
-  SUPPORT_PREVIOUS_TRACK,
-  SUPPORT_NEXT_TRACK,
   SUPPORT_TURN_ON,
   SUPPORT_TURN_OFF,
-  SUPPORT_PLAY_MEDIA,
   SUPPORT_STOP,
-  SUPPORT_PLAY,
-  SUPPORT_SHUFFLE,
   SUPPORT_GROUPING,
-  SUPPORT_REPEAT_SET,
   ARTWORK_OVERRIDE_MATCH_KEYS,
   DEFAULT_PROGRESS_BAR_HEIGHT,
   TEMPLATE_CONFIGS
@@ -1303,7 +1294,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       return;
     }
 
-    let handled = false;
+    let handled;
     if (target.startsWith("#")) {
       window.location.hash = target;
       handled = true;
@@ -2681,7 +2672,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         hasServices = services.some(service => service.domain === "mass_queue");
       } else if (services && typeof services === 'object') {
         // Check if mass_queue exists as a key in the services object
-        hasServices = services.hasOwnProperty("mass_queue") || Object.keys(services).some(key => key === "mass_queue");
+        hasServices = Object.prototype.hasOwnProperty.call(services, "mass_queue") || Object.keys(services).some(key => key === "mass_queue");
       }
 
       if (!hasServices) {
@@ -5066,7 +5057,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const isPrimary = targetId === myGroupKey;
 
     const masterName = this.getChipName(activeId);
-    let tooltip = "";
+    let tooltip;
     if (isPrimary) {
       tooltip = localize('card.grouping.master');
     } else if (grouped) {
@@ -5096,7 +5087,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const groupedAny = Array.isArray(masterState?.attributes?.group_members) && masterState.attributes.group_members.length > 1;
 
     const groupPlayerIds = [];
-    const currentEntityIdx = this.entityIds.indexOf(this.currentEntityId);
     const myGroupKey = this._getGroupKey(this.currentEntityId);
 
     this.entityIds.forEach((id) => {
@@ -5435,7 +5425,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._massLyrics = [];
     this.requestUpdate();
 
-    let lyrics = [];
+    let lyrics;
 
     try {
       if (configSource === "mass") {
@@ -5995,7 +5985,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
         // attach swipe gesture once
         // this._attachSearchSwipe(); // Disabled on mobile due to false positives
-      }, 200);
+      }, focusDelay);
     }
     // When the source‑list sheet opens, make sure the overlay scrolls to the top
     if (this._showSourceList) {
@@ -6238,7 +6228,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const currentIndex = sortedIds.indexOf(currentId);
 
         if (currentIndex !== -1) {
-          let newIndex = currentIndex;
+          let newIndex;
           if (action.action === "prev_entity") {
             newIndex = Math.max(0, currentIndex - 1);
           } else {
@@ -7309,14 +7299,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
-    const maStateForPlayback = this.currentPlaybackStateObj;
-    const optimisticEntityId = this._optimisticPlayback?.entity_id || null;
-
+    
     // --- Priority rule for entity selection ---
     // Keep the currently‑selected entity (even if paused)
     // unless some other entity is *playing*.
-    // Use cached resolved MA ID instead of raw template string
-    const resolvedMaId = this._getResolvedPlaybackEntityIdSync(this._selectedIndex);
     // Also get the actual resolved MA entity for state detection (can be unconfigured)
     const actualResolvedMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
     const actualMaState = actualResolvedMaId ? this.hass?.states?.[actualResolvedMaId] : null;
@@ -7380,18 +7366,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Use the unified entity resolution system for playback state
     const finalPlaybackStateObj = playbackStateObj;
 
-    // Keep finalEntityId for backward compatibility with existing code
-    const finalEntityId = playbackEntityId;
-    // Blend in optimistic playback state if present
-    let effState = finalPlaybackStateObj?.state;
-    if (this._optimisticPlayback) {
-      // Only apply optimistic state if it matches the current playback entity
-      const optimisticEntityId = this._optimisticPlayback.entity_id;
-      const currentEntityId = finalEntityId;
-      if (optimisticEntityId === currentEntityId) {
-        effState = this._optimisticPlayback.state;
-      }
-    }
     const shuffleActive = !!finalPlaybackStateObj?.attributes?.shuffle;
     const repeatActive = finalPlaybackStateObj?.attributes?.repeat && finalPlaybackStateObj?.attributes?.repeat !== "off";
 
@@ -7420,11 +7394,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       selectedArt = mainArtwork;
     }
 
-    const isRealArtwork = this._idleTimeoutMs === 0
-      ? (isPlaying && (selectedArt?.url))
-      : (!this._isIdle && isPlaying && (selectedArt?.url));
 
-    const art = isRealArtwork ? selectedArt?.url : null;
 
     // Details
     // When idle_timeout_ms=0, always show title/artist if available, regardless of playing state
@@ -7562,10 +7532,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       ? Math.round(baseDetailsMinHeight + detailGrowth)
       : (effectiveExtraSpace < -20 ? 36 : baseDetailsMinHeight);
     const detailsMinHeight = collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight;
-    const controlSpacerSize = effectiveExtraSpace > 0
-      ? Math.max(0, effectiveExtraSpace - detailGrowth)
-      : 0;
-    let showCollapsedPlaceholder = false;
+    let showCollapsedPlaceholder;
     const expandedHeightBaseline = 350;
     const resolvedCollapsedHeight = collapsed
       ? (hasCustomCardHeight ? customCardHeight : (this._collapsedBaselineHeight || 220))
@@ -7574,26 +7541,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const shouldShowPersistentControls = this.config.hide_menu_player === true
       ? false
       : (!collapsed || meetsPersistentHeight);
-    const releaseControlsRow = controlSpacerSize >= 48;
-
+    
     // Adjust offsets for compact layout
     const isCompact = hasCustomCardHeight && customCardHeight < 280;
     const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
     const shouldHideVolumeControls = hideControlsNow || this._showEntityOptions || isCompactVolume;
-    const baseOffset = isCompact ? (collapsedArtworkSize > 0 ? collapsedArtworkSize + 12 : 0) : 100;
-    const collapsedDetailsOffset = (collapsed && collapsedArtworkSize > 0)
-      ? Math.round(collapsedArtworkSize + (isCompact ? 12 : 24) + Math.min(40, Math.max(0, collapsedExtraSpace) * 0.12))
-      : (collapsed && collapsedArtworkSize === 0 ? 0 : null);
-
-    const collapsedControlsOffset = releaseControlsRow ? 0 : (collapsedDetailsOffset ?? 0);
-    const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
-    const heightScale = collapsedExtraSpace > 0
-      ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
-      : (isCompact ? 0.9 : 1);
-    const titleScale = (heightScale > 1 || widthScale > 1)
-      ? Math.min(1.6, Math.max(heightScale, widthScale))
-      : (isCompact ? 0.95 : 1);
-    const artistScale = isCompact ? 0.85 : Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
 
 
     // Use null if idle or no artwork available
@@ -8473,7 +8425,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}" 
              style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
           ${(() => {
-        const filter = this._searchMediaClassFilter || "all";
         const currentResults = this._getDisplaySearchResults();
         const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
         const isMinimal = this.config.search_view === 'card_minimal';
@@ -8615,7 +8566,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // AND it's either an unrestricted entity OR the user manually selected it.
     const isCurrentPlayingValidForActive = isCurrentPlaying && (!isCurrentDisabled || this._manualSelect);
 
-    let shouldBeActiveImmediately = false;
+    let shouldBeActiveImmediately;
     if (this._isIdle || !this._hasSeenPlayback) {
       shouldBeActiveImmediately = isAnyUnrestrictedPlaying;
     } else {
