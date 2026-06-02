@@ -23,7 +23,7 @@ export const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
   "app_name",
   "media_content_type",
   "entity_id",
-  "entity_state"
+  "entity_state",
 ]);
 
 export const DEFAULT_PROGRESS_BAR_HEIGHT = 6;
@@ -45,7 +45,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     search_view: "card",
     search_card_columns: 3,
     display_timestamps: true,
-    details_alignment: "left"
+    details_alignment: "left",
   },
   crisp_clean: {
     match_theme: true,
@@ -65,7 +65,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     appearance: "automatic",
     details_alignment: "center",
     artwork_object_fit: "scaled-contain-alternate",
-    progress_bar_height: 2
+    progress_bar_height: 2,
   },
   minimal_mini: {
     match_theme: true,
@@ -78,7 +78,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     volume_mode: "stepper",
     extend_artwork: true,
     blurred_artwork: true,
-    hide_collapsed_artwork: true
+    hide_collapsed_artwork: true,
   },
   normal_mini: {
     match_theme: true,
@@ -90,7 +90,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     progress_bar_height: 2,
     volume_mode: "slider",
     extend_artwork: true,
-    blurred_artwork: true
+    blurred_artwork: true,
   },
   dedicated_search: {
     match_theme: true,
@@ -100,14 +100,14 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     hide_menu_player: true,
     hold_to_pin: true,
     show_chip_row: "in_menu",
-    disable_autofocus: true
+    disable_autofocus: true,
   },
   dedicated_grouping: {
     match_theme: true,
     appearance: "automatic",
     card_type: "group_players",
     hide_menu_player: true,
-    show_chip_row: "in_menu"
+    show_chip_row: "in_menu",
   },
   quick_and_easy: {
     match_theme: true,
@@ -117,7 +117,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     dismiss_search_on_play: true,
     extend_artwork: true,
     show_volume_overlay: true,
-    hold_to_pin: true
+    hold_to_pin: true,
   },
   huge_yamp: {
     match_theme: true,
@@ -131,6 +131,6 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     extend_artwork: true,
     search_view: "card",
     search_card_columns: 2,
-    show_volume_overlay: true
-  }
+    show_volume_overlay: true,
+  },
 });

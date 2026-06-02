@@ -15,6 +15,12 @@ YAMP is built using the following core dependencies:
 - [js-yaml](https://github.com/nodeca/js-yaml) - For YAML parsing
 - [SortableJS](https://sortablejs.github.io/Sortable/) - For drag-and-drop interactions
 
+### Development Dependencies
+The following dependencies are used for static analysis and formatting during development. These are checked manually using the code review workflow:
+- [ESLint](https://eslint.org/) - For static code analysis and identifying problematic patterns
+- [Prettier](https://prettier.io/) - For code formatting
+- [eslint-plugin-lit](https://www.npmjs.com/package/eslint-plugin-lit) - Lit-specific linting rules
+
 
 
 ## Features

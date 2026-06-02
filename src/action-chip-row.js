@@ -9,7 +9,10 @@ export function renderActionChipRow({ actions, onActionChipClick }) {
         (a, idx) => html`
           <button class="action-chip" @click=${() => onActionChipClick(idx)}>
             ${a.icon
-              ? html`<ha-icon .icon=${a.icon} style="font-size: 22px; margin-right: ${a.name ? '8px' : '0'};"></ha-icon>`
+              ? html`<ha-icon
+                  .icon=${a.icon}
+                  style="font-size: 22px; margin-right: ${a.name ? "8px" : "0"};"
+                ></ha-icon>`
               : nothing}
             ${a.name || ""}
           </button>

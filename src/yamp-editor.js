@@ -1,18 +1,17 @@
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 // import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
 import { LitElement, html, css, nothing } from "lit";
-import yaml from 'js-yaml';
+import yaml from "js-yaml";
 import { localize } from "./localize/localize.js";
-
 
 import { SUPPORT_GROUPING, TEMPLATE_CONFIGS } from "./constants.js";
 import { isMusicAssistantEntity } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
-  { value: "details", label: localize('card.sections.details') },
-  { value: "menu", label: localize('card.sections.menu') },
-  { value: "action_chips", label: localize('card.sections.action_chips') },
+  { value: "details", label: localize("card.sections.details") },
+  { value: "menu", label: localize("card.sections.menu") },
+  { value: "action_chips", label: localize("card.sections.action_chips") },
 ]);
 const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map((opt) => opt.value);
 
@@ -28,7 +27,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       _actionMode: { type: String },
       _useTemplate: { type: Boolean },
       _useVolTemplate: { type: Boolean },
-      _serviceItems: { type: Array }
+      _serviceItems: { type: Array },
     };
   }
 
@@ -146,7 +145,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (rule.match_type === "missing_art") {
       return {
         missing_art_url: image,
-        ...(rule.size_percentage !== undefined ? { size_percentage: Number(rule.size_percentage) } : {}),
+        ...(rule.size_percentage !== undefined
+          ? { size_percentage: Number(rule.size_percentage) }
+          : {}),
         ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
       };
     }
@@ -157,7 +158,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return {
       image_url: image,
       [rule.match_type]: value,
-      ...(rule.size_percentage !== undefined ? { size_percentage: Number(rule.size_percentage) } : {}),
+      ...(rule.size_percentage !== undefined
+        ? { size_percentage: Number(rule.size_percentage) }
+        : {}),
       ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
     };
   }
@@ -167,10 +170,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const serialized = list
       .map((rule) => this._serializeArtworkOverride(rule))
       .filter((item) => item);
-    this._updateConfig(
-      "media_artwork_overrides",
-      serialized.length ? serialized : undefined
-    );
+    this._updateConfig("media_artwork_overrides", serialized.length ? serialized : undefined);
   }
 
   _getServiceItems() {
@@ -231,9 +231,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         ADAPTIVE_TEXT_SELECTOR_VALUES.includes(value)
       );
     }
-    return this._config?.adaptive_text === true
-      ? [...ADAPTIVE_TEXT_SELECTOR_VALUES]
-      : [];
+    return this._config?.adaptive_text === true ? [...ADAPTIVE_TEXT_SELECTOR_VALUES] : [];
   }
 
   _onAdaptiveTextTargetsChanged(value) {
@@ -282,11 +280,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     const newConfig = { ...this._config, [key]: value };
     this._config = newConfig;
-    this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: { config: newYaml },
-      bubbles: true,
-      composed: true,
-    }));
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config: newYaml },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   _changeTemplate(templateName) {
@@ -313,7 +313,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     }
 
     this._yamlConfig = newYaml;
-    
+
     // Compute the new merged UI config
     const activeTemplateBase = TEMPLATE_CONFIGS[templateName] || {};
     this._config = {
@@ -322,16 +322,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       entities: this._config.entities, // preserve normalized entities
     };
 
-    this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: { config: newYaml },
-      bubbles: true,
-      composed: true,
-    }));
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config: newYaml },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   _addArtworkOverride() {
     const list = [...(this._artworkOverrides ?? [])];
-    list.push({ match_type: "media_title", match_value: "", image_url: "", size_percentage: undefined, object_fit: undefined });
+    list.push({
+      match_type: "media_title",
+      match_value: "",
+      image_url: "",
+      size_percentage: undefined,
+      object_fit: undefined,
+    });
     this._writeArtworkOverrides(list);
   }
 
@@ -411,7 +419,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     }
   }
 
-
   _updateActionProperty(key, value) {
     const actions = [...(this._config.actions ?? [])];
     const idx = this._actionEditorIndex;
@@ -442,7 +449,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (action.action === "prev_entity") return "prev_entity";
     if (action.action === "next_entity") return "next_entity";
     if (action.action === "select_entity") return "select_entity";
-    if (action.action === "sync_selected_entity" || action.sync_entity_helper) return "sync_selected_entity";
+    if (action.action === "sync_selected_entity" || action.sync_entity_helper)
+      return "sync_selected_entity";
     if (typeof action.menu_item === "string" && action.menu_item.trim() !== "") return "menu";
     const navPath = typeof action.navigation_path === "string" ? action.navigation_path.trim() : "";
     if (action.action === "navigate" || navPath) return "navigate";
@@ -847,55 +855,58 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const editingAction = this._actionEditorIndex !== null;
 
     return html`
-        <div class="config-section" style="margin-top: 0; margin-bottom: 12px;">
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              label=${localize('editor.template_label')}
-              .selector=${{
-                select: {
-                  mode: "dropdown",
-                  options: Object.keys(TEMPLATE_CONFIGS).map(key => ({
-                    value: key,
-                    label: localize(`editor.templates.${key}.label`)
-                  }))
-                }
-              }}
-              .value=${currentTemplate}
-              @value-changed=${(e) => this._updateConfig("template", e.detail.value)}
-            ></ha-selector>
-            <div class="config-subtitle small" style="margin-top: 8px;">
-              ${localize(`editor.templates.${currentTemplate}.description`)}
-            </div>
+      <div class="config-section" style="margin-top: 0; margin-bottom: 12px;">
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            label=${localize("editor.template_label")}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: Object.keys(TEMPLATE_CONFIGS).map((key) => ({
+                  value: key,
+                  label: localize(`editor.templates.${key}.label`),
+                })),
+              },
+            }}
+            .value=${currentTemplate}
+            @value-changed=${(e) => this._updateConfig("template", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle small" style="margin-top: 8px;">
+            ${localize(`editor.templates.${currentTemplate}.description`)}
           </div>
         </div>
-        <div class="tabs">
-          ${["entities", "behavior", "look_and_feel", "artwork", "actions"].map((key) => {
-      const name = localize(`editor.tabs.${key}`);
-      return html`
-              <button
-                class="tab" ${this._activeTab === key ? 'selected' : ''}
-                @click=${() => {
-          this._activeTab = key;
-          // Exit any sub-editor when switching tabs
-          this._entityEditorIndex = null;
-          this._actionEditorIndex = null;
-          this._useTemplate = null;
-          this._useVolTemplate = null;
-        }}
-                ?selected=${this._activeTab === key}
-              >${name}</button>
-            `;
-    })}
-        </div>
-        <div class="tab-content">
-          ${editingEntity
-        ? this._renderEntityEditor(this._config.entities?.[this._entityEditorIndex])
-        : editingAction
-          ? this._renderActionEditor(this._config.actions?.[this._actionEditorIndex])
-          : this._renderActiveTab()}
-        </div>
-      `;
+      </div>
+      <div class="tabs">
+        ${["entities", "behavior", "look_and_feel", "artwork", "actions"].map((key) => {
+          const name = localize(`editor.tabs.${key}`);
+          return html`
+            <button
+              class="tab"
+              ${this._activeTab === key ? "selected" : ""}
+              @click=${() => {
+                this._activeTab = key;
+                // Exit any sub-editor when switching tabs
+                this._entityEditorIndex = null;
+                this._actionEditorIndex = null;
+                this._useTemplate = null;
+                this._useVolTemplate = null;
+              }}
+              ?selected=${this._activeTab === key}
+            >
+              ${name}
+            </button>
+          `;
+        })}
+      </div>
+      <div class="tab-content">
+        ${editingEntity
+          ? this._renderEntityEditor(this._config.entities?.[this._entityEditorIndex])
+          : editingAction
+            ? this._renderActionEditor(this._config.actions?.[this._actionEditorIndex])
+            : this._renderActiveTab()}
+      </div>
+    `;
   }
 
   _renderArtworkTab() {
@@ -915,56 +926,65 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return html`
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">${localize('editor.sections.artwork.general.title')}</div>
-            <div class="section-description">${localize('editor.sections.artwork.general.description')}</div>
+            <div class="section-title">${localize("editor.sections.artwork.general.title")}</div>
+            <div class="section-description">${localize("editor.sections.artwork.general.description")}</div>
           </div>
 
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector
                 .hass=${this.hass}
-                label="${localize('editor.fields.artwork_fit')}"
+                label="${localize("editor.fields.artwork_fit")}"
                 .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "cover", label: localize('editor.artwork_fit.cover') },
-            { value: "contain", label: localize('editor.artwork_fit.contain') },
-            { value: "fill", label: localize('editor.artwork_fit.fill') },
-            { value: "scale-down", label: localize('editor.artwork_fit.scale-down') },
-            { value: "scaled-contain", label: localize('editor.artwork_fit.scaled-contain') },
-            { value: "scaled-contain-alternate", label: localize('editor.artwork_fit.scaled-contain-alternate') },
-            { value: "none", label: localize('editor.artwork_fit.none') },
-            { value: "no_artwork", label: localize('editor.fields.no_artwork_option') }
-          ]
-        }
-      }}
+                  select: {
+                    mode: "dropdown",
+                    options: [
+                      { value: "cover", label: localize("editor.artwork_fit.cover") },
+                      { value: "contain", label: localize("editor.artwork_fit.contain") },
+                      { value: "fill", label: localize("editor.artwork_fit.fill") },
+                      { value: "scale-down", label: localize("editor.artwork_fit.scale-down") },
+                      {
+                        value: "scaled-contain",
+                        label: localize("editor.artwork_fit.scaled-contain"),
+                      },
+                      {
+                        value: "scaled-contain-alternate",
+                        label: localize("editor.artwork_fit.scaled-contain-alternate"),
+                      },
+                      { value: "none", label: localize("editor.artwork_fit.none") },
+                      { value: "no_artwork", label: localize("editor.fields.no_artwork_option") },
+                    ],
+                  },
+                }}
                 .value=${this._config.artwork_object_fit ?? "cover"}
                 @value-changed=${(e) => {
-        const value = e.detail.value;
-        this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
-      }}
+                  const value = e.detail.value;
+                  this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
+                }}
               ></ha-selector>
             </div>
             <div class="grow-children">
               <ha-selector
                 .hass=${this.hass}
-                label="${localize('editor.fields.artwork_position')}"
+                label="${localize("editor.fields.artwork_position")}"
                 .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "top center", label: "Top (default)" },
-            { value: "center center", label: "Center" },
-            { value: "bottom center", label: "Bottom" }
-          ]
-        }
-      }}
+                  select: {
+                    mode: "dropdown",
+                    options: [
+                      { value: "top center", label: "Top (default)" },
+                      { value: "center center", label: "Center" },
+                      { value: "bottom center", label: "Bottom" },
+                    ],
+                  },
+                }}
                 .value=${this._config.artwork_position ?? "top center"}
                 @value-changed=${(e) => {
-        const value = e.detail.value;
-        this._updateConfig("artwork_position", value === "top center" ? undefined : value);
-      }}
+                  const value = e.detail.value;
+                  this._updateConfig(
+                    "artwork_position",
+                    value === "top center" ? undefined : value
+                  );
+                }}
               ></ha-selector>
             </div>
           </div>
@@ -976,8 +996,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("extend_artwork", e.target.checked)}
               ></ha-switch>
               <div style="display: flex; flex-direction: column;">
-                <label for="extend-artwork-toggle" style="font-weight: 500;">${localize('editor.subtitles.artwork_extend_label')}</label>
-                <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.artwork_extend')}</div>
+                <label for="extend-artwork-toggle" style="font-weight: 500;">${localize("editor.subtitles.artwork_extend_label")}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize("editor.subtitles.artwork_extend")}</div>
               </div>
             </div>
           </div>
@@ -989,8 +1009,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("blurred_artwork", e.target.checked)}
               ></ha-switch>
               <div style="display: flex; flex-direction: column;">
-                <label for="blurred-artwork-toggle" style="font-weight: 500;">${localize('editor.labels.blurred_artwork')}</label>
-                <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.blurred_artwork')}</div>
+                <label for="blurred-artwork-toggle" style="font-weight: 500;">${localize("editor.labels.blurred_artwork")}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize("editor.subtitles.blurred_artwork")}</div>
               </div>
             </div>
           </div>
@@ -1002,8 +1022,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("hide_collapsed_artwork", e.target.checked)}
               ></ha-switch>
               <div style="display: flex; flex-direction: column;">
-                <label for="hide-collapsed-artwork-toggle" style="font-weight: 500;">${localize('editor.labels.hide_collapsed_artwork')}</label>
-                <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.hide_collapsed_artwork')}</div>
+                <label for="hide-collapsed-artwork-toggle" style="font-weight: 500;">${localize("editor.labels.hide_collapsed_artwork")}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize("editor.subtitles.hide_collapsed_artwork")}</div>
               </div>
             </div>
           </div>
@@ -1011,7 +1031,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-selector
               .hass=${this.hass}
               class="full-width"
-              label="${localize('editor.fields.artwork_hostname')}"
+              label="${localize("editor.fields.artwork_hostname")}"
               .selector=${{ text: {} }}
               .value=${this._config.artwork_hostname ?? ""}
               @value-changed=${(e) => this._updateConfig("artwork_hostname", e.detail.value)}
@@ -1022,8 +1042,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">${localize('editor.sections.artwork.idle.title')}</div>
-            <div class="section-description">${localize('editor.sections.artwork.idle.description')}</div>
+            <div class="section-title">${localize("editor.sections.artwork.idle.title")}</div>
+            <div class="section-description">${localize("editor.sections.artwork.idle.description")}</div>
           </div>
           <div class="form-row form-row-multi-column">
             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
@@ -1031,40 +1051,44 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 id="idle-image-url-toggle"
                 .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
                 @change=${(e) => {
-        this._useIdleImageUrl = e.target.checked;
-        if (e.target.checked) {
-          this._updateConfig("idle_image", "");
-        } else {
-          this._updateConfig("idle_image", "");
-        }
-      }}
+                  this._useIdleImageUrl = e.target.checked;
+                  if (e.target.checked) {
+                    this._updateConfig("idle_image", "");
+                  } else {
+                    this._updateConfig("idle_image", "");
+                  }
+                }}
               ></ha-switch>
-              <label for="idle-image-url-toggle">${localize('editor.labels.use_url_path')}</label>
+              <label for="idle-image-url-toggle">${localize("editor.labels.use_url_path")}</label>
             </div>
             <div style="flex: 2;">
-              ${this._useIdleImageUrl ? html`
-                <ha-selector
-                  .hass=${this.hass}
-                  class="full-width"
-                  .selector=${{ text: {} }}
-                  .value=${this._config.idle_image ?? ""}
-                  @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
-                  label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
-                  helper="${localize('editor.subtitles.image_url_helper')}"
-                ></ha-selector>
-              ` : html`
-                <ha-generic-picker
-                  class="full-width"
-                  .hass=${this.hass}
-                  .value=${this._config.idle_image ?? ""}
-                  .label=${localize('editor.fields.idle_image_entity')}
-                  .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                  .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                  .getItems=${this._getEntityItems(["camera", "image"])}
-                  @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
-                  allow-custom-value
-                ></ha-generic-picker>
-              `}
+              ${
+                this._useIdleImageUrl
+                  ? html`
+                      <ha-selector
+                        .hass=${this.hass}
+                        class="full-width"
+                        .selector=${{ text: {} }}
+                        .value=${this._config.idle_image ?? ""}
+                        @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
+                        label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                        helper="${localize("editor.subtitles.image_url_helper")}"
+                      ></ha-selector>
+                    `
+                  : html`
+                      <ha-generic-picker
+                        class="full-width"
+                        .hass=${this.hass}
+                        .value=${this._config.idle_image ?? ""}
+                        .label=${localize("editor.fields.idle_image_entity")}
+                        .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                        .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                        .getItems=${this._getEntityItems(["camera", "image"])}
+                        @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
+                        allow-custom-value
+                      ></ha-generic-picker>
+                    `
+              }
             </div>
           </div>
           <div class="form-row form-row-multi-column" style="${!this._config.idle_image ? "opacity: 0.4; pointer-events: none;" : ""}">
@@ -1076,8 +1100,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 @change=${(e) => this._updateConfig("show_idle_artwork_when_not_playing", e.target.checked)}
               ></ha-switch>
               <div style="display: flex; flex-direction: column;">
-                <label for="show-idle-artwork-toggle" style="font-weight: 500;">${localize('editor.labels.show_idle_artwork_when_not_playing')}</label>
-                <div style="font-size: 0.85em; opacity: 0.7;">${localize('editor.subtitles.show_idle_artwork_when_not_playing')}</div>
+                <label for="show-idle-artwork-toggle" style="font-weight: 500;">${localize("editor.labels.show_idle_artwork_when_not_playing")}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize("editor.subtitles.show_idle_artwork_when_not_playing")}</div>
               </div>
             </div>
           </div>
@@ -1085,120 +1109,164 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="config-section">
           <div class="section-header">
-            <div class="section-title">${localize('editor.sections.artwork.overrides.title')}</div>
-            <div class="section-description">${localize('editor.sections.artwork.overrides.description')}</div>
+            <div class="section-title">${localize("editor.sections.artwork.overrides.title")}</div>
+            <div class="section-description">${localize("editor.sections.artwork.overrides.description")}</div>
           </div>
           <yamp-sortable @item-moved=${(e) => this._onArtworkMoved(e)}>
             <div class="sortable-container">
-              ${overrides.length
-        ? overrides.map((rule, idx) => html`
-                    <div class="action-row-inner sortable-item artwork-row">
-                      <div class="handle action-handle">
-                        <ha-icon icon="mdi:drag"></ha-icon>
-                      </div>
-                      <div class="artwork-fields">
-                        <ha-selector
-                          .hass=${this.hass}
-                          label="${localize('editor.fields.match_field')}"
-                          .selector=${{ select: { mode: "dropdown", options: matchOptions } }}
-                          .value=${rule.match_type ?? "media_title"}
-                          @value-changed=${(e) => this._onArtworkMatchTypeChange(idx, e.detail.value)}
-                        ></ha-selector>
-                        ${rule.match_type === "missing_art"
-            ? html`
-                                <div class="config-subtitle small">
-                                  Applies when the selected media provides no artwork.
-                                </div>
-                              `
-            : rule.match_type === "entity_id"
-              ? html`
-                                  <ha-generic-picker
-                                    class="full-width"
-                                    .hass=${this.hass}
-                                    .value=${rule.match_value ?? ""}
-                                    .label=${localize('editor.fields.match_entity')}
-                                    .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                                    .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                                    .getItems=${this._getEntityItems(["media_player"])}
-                                    @value-changed=${(e) =>
-                  this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                    allow-custom-value
-                                  ></ha-generic-picker>
+              ${
+                overrides.length
+                  ? overrides.map(
+                      (rule, idx) => html`
+                        <div class="action-row-inner sortable-item artwork-row">
+                          <div class="handle action-handle">
+                            <ha-icon icon="mdi:drag"></ha-icon>
+                          </div>
+                          <div class="artwork-fields">
+                            <ha-selector
+                              .hass=${this.hass}
+                              label="${localize("editor.fields.match_field")}"
+                              .selector=${{ select: { mode: "dropdown", options: matchOptions } }}
+                              .value=${rule.match_type ?? "media_title"}
+                              @value-changed=${(e) =>
+                                this._onArtworkMatchTypeChange(idx, e.detail.value)}
+                            ></ha-selector>
+                            ${rule.match_type === "missing_art"
+                              ? html`
+                                  <div class="config-subtitle small">
+                                    Applies when the selected media provides no artwork.
+                                  </div>
                                 `
-              : html`
-                                  <ha-selector
-                                    .hass=${this.hass}
-                                    class="full-width"
-                                    .selector=${{ text: {} }}
-                                    label="${localize('editor.fields.match_value')}"
-                                    .value=${rule.match_value ?? ""}
-                                    @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                  ></ha-selector>
-                                `
-          }
-                        <ha-selector
-                          .hass=${this.hass}
-                          class="full-width"
-                          .selector=${{ text: {} }}
-                          label=${rule.match_type === "missing_art" ? localize('editor.fields.fallback_image_url') : localize('editor.fields.image_url')}
-                          .value=${rule.image_url ?? ""}
-                          @value-changed=${(e) => this._onArtworkImageUrlChange(idx, e.detail.value)}
-                        ></ha-selector>
-                        <div class="form-row-multi-column" style="gap:12px; flex-wrap:wrap; align-items:flex-start;">
-                          <div class="grow-children" style="flex:1;">
+                              : rule.match_type === "entity_id"
+                                ? html`
+                                    <ha-generic-picker
+                                      class="full-width"
+                                      .hass=${this.hass}
+                                      .value=${rule.match_value ?? ""}
+                                      .label=${localize("editor.fields.match_entity")}
+                                      .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                                      .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                                      .getItems=${this._getEntityItems(["media_player"])}
+                                      @value-changed=${(e) =>
+                                        this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                      allow-custom-value
+                                    ></ha-generic-picker>
+                                  `
+                                : html`
+                                    <ha-selector
+                                      .hass=${this.hass}
+                                      class="full-width"
+                                      .selector=${{ text: {} }}
+                                      label="${localize("editor.fields.match_value")}"
+                                      .value=${rule.match_value ?? ""}
+                                      @value-changed=${(e) =>
+                                        this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                    ></ha-selector>
+                                  `}
                             <ha-selector
                               .hass=${this.hass}
                               class="full-width"
-                              label="${localize('editor.fields.size_percent')}"
-                              .selector=${{ number: { min: 1, max: 100, mode: "box" } }}
-                              .value=${rule.size_percentage ?? ""}
-                              @value-changed=${(e) => this._onArtworkSizePercentageChange(idx, e.detail.value)}
+                              .selector=${{ text: {} }}
+                              label=${rule.match_type === "missing_art"
+                                ? localize("editor.fields.fallback_image_url")
+                                : localize("editor.fields.image_url")}
+                              .value=${rule.image_url ?? ""}
+                              @value-changed=${(e) =>
+                                this._onArtworkImageUrlChange(idx, e.detail.value)}
                             ></ha-selector>
+                            <div
+                              class="form-row-multi-column"
+                              style="gap:12px; flex-wrap:wrap; align-items:flex-start;"
+                            >
+                              <div class="grow-children" style="flex:1;">
+                                <ha-selector
+                                  .hass=${this.hass}
+                                  class="full-width"
+                                  label="${localize("editor.fields.size_percent")}"
+                                  .selector=${{ number: { min: 1, max: 100, mode: "box" } }}
+                                  .value=${rule.size_percentage ?? ""}
+                                  @value-changed=${(e) =>
+                                    this._onArtworkSizePercentageChange(idx, e.detail.value)}
+                                ></ha-selector>
+                              </div>
+                              <div class="grow-children" style="flex:1.5;">
+                                <ha-selector
+                                  .hass=${this.hass}
+                                  label="${localize("editor.fields.object_fit")}"
+                                  .selector=${{
+                                    select: {
+                                      mode: "dropdown",
+                                      options: [
+                                        {
+                                          value: "default",
+                                          label: localize("editor.artwork_fit.default"),
+                                        },
+                                        {
+                                          value: "cover",
+                                          label: localize("editor.artwork_fit.cover"),
+                                        },
+                                        {
+                                          value: "contain",
+                                          label: localize("editor.artwork_fit.contain"),
+                                        },
+                                        {
+                                          value: "fill",
+                                          label: localize("editor.artwork_fit.fill"),
+                                        },
+                                        {
+                                          value: "scale-down",
+                                          label: localize("editor.artwork_fit.scale-down"),
+                                        },
+                                        {
+                                          value: "scaled-contain",
+                                          label: localize("editor.artwork_fit.scaled-contain"),
+                                        },
+                                        {
+                                          value: "scaled-contain-alternate",
+                                          label: localize(
+                                            "editor.artwork_fit.scaled-contain-alternate"
+                                          ),
+                                        },
+                                        {
+                                          value: "none",
+                                          label: localize("editor.artwork_fit.none"),
+                                        },
+                                        {
+                                          value: "no_artwork",
+                                          label: localize("editor.fields.no_artwork_option"),
+                                        },
+                                      ],
+                                    },
+                                  }}
+                                  .value=${rule.object_fit || "default"}
+                                  @value-changed=${(e) =>
+                                    this._onArtworkObjectFitChange(idx, e.detail.value)}
+                                ></ha-selector>
+                              </div>
+                            </div>
                           </div>
-                          <div class="grow-children" style="flex:1.5;">
-                            <ha-selector
-                              .hass=${this.hass}
-                              label="${localize('editor.fields.object_fit')}"
-                              .selector=${{
-            select: {
-              mode: "dropdown",
-              options: [
-                { value: "default", label: localize('editor.artwork_fit.default') },
-                { value: "cover", label: localize('editor.artwork_fit.cover') },
-                { value: "contain", label: localize('editor.artwork_fit.contain') },
-                { value: "fill", label: localize('editor.artwork_fit.fill') },
-                { value: "scale-down", label: localize('editor.artwork_fit.scale-down') },
-                { value: "scaled-contain", label: localize('editor.artwork_fit.scaled-contain') },
-                { value: "scaled-contain-alternate", label: localize('editor.artwork_fit.scaled-contain-alternate') },
-                { value: "none", label: localize('editor.artwork_fit.none') },
-                { value: "no_artwork", label: localize('editor.fields.no_artwork_option') }
-              ]
-            }
-          }}
-                              .value=${rule.object_fit || "default"}
-                              @value-changed=${(e) => this._onArtworkObjectFitChange(idx, e.detail.value)}
-                            ></ha-selector>
+                          <div class="action-row-actions">
+                            <ha-icon
+                              class="icon-button"
+                              icon="mdi:trash-can"
+                              title="Delete Override"
+                              @click=${() => this._removeArtworkOverride(idx)}
+                            ></ha-icon>
                           </div>
                         </div>
-                      </div>
-                      <div class="action-row-actions">
-                        <ha-icon
-                          class="icon-button"
-                          icon="mdi:trash-can"
-                          title="Delete Override"
-                          @click=${() => this._removeArtworkOverride(idx)}
-                        ></ha-icon>
-                      </div>
-                    </div>
-                  `)
-        : html`<div class="config-subtitle" style="padding:12px 0;text-align:center;">${localize('editor.subtitles.no_artwork_overrides')}</div>`}
+                      `
+                    )
+                  : html`<div class="config-subtitle" style="padding:12px 0;text-align:center;">
+                      ${localize("editor.subtitles.no_artwork_overrides")}
+                    </div>`
+              }
             </div>
           </yamp-sortable>
           <div class="add-action-button-wrapper">
             <ha-icon
               class="icon-button"
               icon="mdi:plus"
-              title="${localize('editor.titles.add_artwork_override')}"
+              title="${localize("editor.titles.add_artwork_override")}"
               @click=${this._addArtworkOverride}
             ></ha-icon>
           </div>
@@ -1232,17 +1300,23 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       entities.push({ entity_id: "" });
     }
     return html`
-        <div class="entity-group">
-          <div class="entity-group-header section-header">
-            <div class="entity-group-title section-title">${localize('editor.sections.entities.title')}</div>
-            <div class="section-description">${localize('editor.sections.entities.description')}</div>
+      <div class="entity-group">
+        <div class="entity-group-header section-header">
+          <div class="entity-group-title section-title">
+            ${localize("editor.sections.entities.title")}
           </div>
-          <div class="form-row">
-            <yamp-sortable @item-moved=${(e) => this._onEntityMoved(e)}>
-              <div class="sortable-container">
-                ${entities.map((ent, idx) => html`
-                  <div class="entity-row-inner ${idx < entities.length - 1 ? 'sortable-item' : ''}" data-index="${idx}">
-                    <div class="handle ${idx === entities.length - 1 ? 'handle-disabled' : ''}">
+          <div class="section-description">${localize("editor.sections.entities.description")}</div>
+        </div>
+        <div class="form-row">
+          <yamp-sortable @item-moved=${(e) => this._onEntityMoved(e)}>
+            <div class="sortable-container">
+              ${entities.map(
+                (ent, idx) => html`
+                  <div
+                    class="entity-row-inner ${idx < entities.length - 1 ? "sortable-item" : ""}"
+                    data-index="${idx}"
+                  >
+                    <div class="handle ${idx === entities.length - 1 ? "handle-disabled" : ""}">
                       <ha-icon icon="mdi:drag"></ha-icon>
                     </div>
                     <div class="grow-children">
@@ -1251,16 +1325,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         style="display: block; width: 100%;"
                         .hass=${this.hass}
                         .value=${ent.entity_id || ""}
-                        .label=${localize('common.media_player')}
+                        .label=${localize("common.media_player")}
                         .valueRenderer=${(v) => this._entityValueRenderer(v)}
                         .rowRenderer=${(item) => this._entityRowRenderer(item)}
                         .getItems=${this._getEntityItems(
-      ["media_player"],
-      (idx === entities.length - 1 && !ent.entity_id)
-        ? (this._config.entities?.map(e => e.entity_id) ?? [])
-        : []
-    )}
-                        @value-changed=${e => this._onEntityChanged(idx, e.detail.value)}
+                          ["media_player"],
+                          idx === entities.length - 1 && !ent.entity_id
+                            ? (this._config.entities?.map((e) => e.entity_id) ?? [])
+                            : []
+                        )}
+                        @value-changed=${(e) => this._onEntityChanged(idx, e.detail.value)}
                         allow-custom-value
                       ></ha-generic-picker>
                     </div>
@@ -1268,742 +1342,839 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon
                         class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
                         icon="mdi:pencil"
-                        title="${localize('common.edit_entity')}"
+                        title="${localize("common.edit_entity")}"
                         @click=${() => this._onEditEntity(idx)}
                       ></ha-icon>
                     </div>
                   </div>
-                `)}
-              </div>
-            </yamp-sortable>
-          </div>
+                `
+              )}
+            </div>
+          </yamp-sortable>
         </div>
-      `;
+      </div>
+    `;
   }
 
   _renderBehaviorTab() {
     return html`
-        <div class="config-section">
-          <div class="form-row">
+      <div class="config-section">
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "default", label: localize("editor.card_type_options.default") },
+                  { value: "search", label: localize("editor.card_type_options.search") },
+                  {
+                    value: "group_players",
+                    label: localize("editor.card_type_options.group_players"),
+                  },
+                ],
+              },
+            }}
+            .value=${this._config.card_type ?? "default"}
+            label="${localize("editor.fields.card_type")}"
+            @value-changed=${(e) => this._updateConfig("card_type", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle">${localize("editor.subtitles.card_type")}</div>
+        </div>
+      </div>
+
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-title">${localize("editor.sections.behavior.idle_chips.title")}</div>
+          <div class="section-description">
+            ${localize("editor.sections.behavior.idle_chips.description")}
+          </div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "default", label: localize('editor.card_type_options.default') },
-            { value: "search", label: localize('editor.card_type_options.search') },
-            { value: "group_players", label: localize('editor.card_type_options.group_players') },
-          ]
-        }
-      }}
-              .value=${this._config.card_type ?? "default"}
-              label="${localize('editor.fields.card_type')}"
-              @value-changed=${(e) => this._updateConfig("card_type", e.detail.value)}
+                number: { min: 0, step: 1000, unit_of_measurement: "ms", mode: "box" },
+              }}
+              .value=${this._config.idle_timeout_ms ?? 60000}
+              label="${localize("editor.fields.idle_timeout")}"
+              @value-changed=${(e) => this._updateConfig("idle_timeout_ms", e.detail.value)}
             ></ha-selector>
-            <div class="config-subtitle">${localize('editor.subtitles.card_type')}</div>
+            <div class="config-subtitle">${localize("editor.subtitles.idle_timeout")}</div>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="${localize("common.reset_default")}"
+            @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
+          ></ha-icon>
+        </div>
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "auto", label: "Auto" },
+                  { value: "always", label: "Always" },
+                  { value: "in_menu", label: "In Menu" },
+                  { value: "in_menu_on_idle", label: "In Menu on Idle" },
+                ],
+              },
+            }}
+            .value=${this._config.show_chip_row ?? "auto"}
+            label="${localize("editor.fields.show_chip_row")}"
+            @value-changed=${(e) => this._updateConfig("show_chip_row", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle">${localize("editor.subtitles.show_chip_row")}</div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="dim-chips-on-idle-toggle"
+              .checked=${this._config.dim_chips_on_idle ?? true}
+              @change=${(e) => this._updateConfig("dim_chips_on_idle", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.dim_chips")}</span>
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.dim_chips")}</div>
+        </div>
+      </div>
+
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-title">
+            ${localize("editor.sections.behavior.interactions_search.title")}
+          </div>
+          <div class="section-description">
+            ${localize("editor.sections.behavior.interactions_search.description")}
+          </div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="always-show-quick-group-toggle"
+              .checked=${this._config.always_show_quick_group ?? false}
+              @change=${(e) => this._updateConfig("always_show_quick_group", e.target.checked)}
+            ></ha-switch>
+            <label for="always-show-quick-group-toggle"
+              >${localize("editor.labels.always_show_group")}</label
+            >
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.always_show_group")}</div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="hold-to-pin-toggle"
+              .checked=${this._config.hold_to_pin ?? false}
+              @change=${(e) => this._updateConfig("hold_to_pin", e.target.checked)}
+            ></ha-switch>
+            <label for="hold-to-pin-toggle">${localize("editor.labels.hold_to_pin")}</label>
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.hold_to_pin")}</div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="show-volume-overlay-toggle"
+              .checked=${this._config.show_volume_overlay ?? false}
+              @change=${(e) => this._updateConfig("show_volume_overlay", e.target.checked)}
+            ></ha-switch>
+            <label for="show-volume-overlay-toggle"
+              >${localize("editor.labels.show_volume_overlay")}</label
+            >
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.show_volume_overlay")}</div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              .checked=${this._config.disable_autofocus ?? false}
+              @change=${(e) => this._updateConfig("disable_autofocus", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.disable_autofocus")}</span>
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.disable_autofocus")}</div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="default-search-favorites-toggle"
+              .checked=${this._config.default_search_favorites ?? false}
+              @change=${(e) => this._updateConfig("default_search_favorites", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.default_search_favorites")}</span>
+          </div>
+          <div class="config-subtitle">
+            ${localize("editor.subtitles.default_search_favorites")}
           </div>
         </div>
 
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">${localize('editor.sections.behavior.idle_chips.title')}</div>
-            <div class="section-description">${localize('editor.sections.behavior.idle_chips.description')}</div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              .checked=${this._config.keep_filters_on_search ?? false}
+              @change=${(e) => this._updateConfig("keep_filters_on_search", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.keep_filters")}</span>
           </div>
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                .selector=${{
-        number: { min: 0, step: 1000, unit_of_measurement: "ms", mode: "box" }
-      }}
-                .value=${this._config.idle_timeout_ms ?? 60000}
-                label="${localize('editor.fields.idle_timeout')}"
-                @value-changed=${(e) => this._updateConfig("idle_timeout_ms", e.detail.value)}
-              ></ha-selector>
-              <div class="config-subtitle">${localize('editor.subtitles.idle_timeout')}</div>
-            </div>
-            <ha-icon
-              class="icon-button"
-              icon="mdi:restore"
-              title="${localize('common.reset_default')}"
-              @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
-            ></ha-icon>
+          <div class="config-subtitle">${localize("editor.subtitles.search_within_filter")}</div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="dismiss-search-on-play-toggle"
+              .checked=${this._config.dismiss_search_on_play ?? true}
+              @change=${(e) => this._updateConfig("dismiss_search_on_play", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.dismiss_on_play")}</span>
           </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-        select: {
-          mode: "dropdown", options: [
-            { value: "auto", label: "Auto" },
-            { value: "always", label: "Always" },
-            { value: "in_menu", label: "In Menu" },
-            { value: "in_menu_on_idle", label: "In Menu on Idle" }
-          ]
-        }
-      }}
-              .value=${this._config.show_chip_row ?? "auto"}
-              label="${localize('editor.fields.show_chip_row')}"
-              @value-changed=${(e) => this._updateConfig("show_chip_row", e.detail.value)}
-            ></ha-selector>
-            <div class="config-subtitle">${localize('editor.subtitles.show_chip_row')}</div>
+          <div class="config-subtitle">${localize("editor.subtitles.close_search_on_play")}</div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div
+            style="${this._config.entities?.length === 1 &&
+            this._config.always_collapsed === true &&
+            this._config.expand_on_search !== true
+              ? "opacity: 0.5;"
+              : ""}"
+            title="${this._config.entities?.length === 1 &&
+            this._config.always_collapsed === true &&
+            this._config.expand_on_search !== true
+              ? "Not available with one entity in Always Collapsed mode unless Expand on Search is enabled"
+              : ""}"
+          >
+            <ha-switch
+              id="pin-search-headers-toggle"
+              .checked=${this._config.pin_search_headers ?? false}
+              @change=${(e) => this._updateConfig("pin_search_headers", e.target.checked)}
+              .disabled=${this._config.entities?.length === 1 &&
+              this._config.always_collapsed === true &&
+              this._config.expand_on_search !== true}
+            ></ha-switch>
+            <span>${localize("editor.labels.pin_headers")}</span>
           </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="dim-chips-on-idle-toggle"
-                .checked=${this._config.dim_chips_on_idle ?? true}
-                @change=${(e) => this._updateConfig("dim_chips_on_idle", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.dim_chips')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.dim_chips')}</div>
+          <div class="config-subtitle">${localize("editor.subtitles.pin_search_headers")}</div>
+        </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="hide-search-headers-on-idle-toggle"
+              .checked=${this._config.hide_search_headers_on_idle ?? false}
+              @change=${(e) => this._updateConfig("hide_search_headers_on_idle", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.hide_search_headers_on_idle")}</span>
+          </div>
+          <div class="config-subtitle">
+            ${localize("editor.subtitles.hide_search_headers_on_idle")}
           </div>
         </div>
 
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">${localize('editor.sections.behavior.interactions_search.title')}</div>
-            <div class="section-description">${localize('editor.sections.behavior.interactions_search.description')}</div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="disable-mass-queue-toggle"
+              .checked=${this._config.disable_mass_queue ?? false}
+              @change=${(e) => this._updateConfig("disable_mass_queue", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.disable_mass")}</span>
           </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="always-show-quick-group-toggle"
-                .checked=${this._config.always_show_quick_group ?? false}
-                @change=${(e) => this._updateConfig("always_show_quick_group", e.target.checked)}
-              ></ha-switch>
-              <label for="always-show-quick-group-toggle">${localize('editor.labels.always_show_group')}</label>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.always_show_group')}</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="hold-to-pin-toggle"
-                .checked=${this._config.hold_to_pin ?? false}
-                @change=${(e) => this._updateConfig("hold_to_pin", e.target.checked)}
-              ></ha-switch>
-              <label for="hold-to-pin-toggle">${localize('editor.labels.hold_to_pin')}</label>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.hold_to_pin')}</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="show-volume-overlay-toggle"
-                .checked=${this._config.show_volume_overlay ?? false}
-                @change=${(e) => this._updateConfig("show_volume_overlay", e.target.checked)}
-              ></ha-switch>
-              <label for="show-volume-overlay-toggle">${localize('editor.labels.show_volume_overlay')}</label>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.show_volume_overlay')}</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                .checked=${this._config.disable_autofocus ?? false}
-                @change=${(e) => this._updateConfig("disable_autofocus", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.disable_autofocus')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.disable_autofocus')}</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="default-search-favorites-toggle"
-                .checked=${this._config.default_search_favorites ?? false}
-                @change=${(e) => this._updateConfig("default_search_favorites", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.default_search_favorites')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.default_search_favorites')}</div>
-          </div>
-
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                .checked=${this._config.keep_filters_on_search ?? false}
-                @change=${(e) => this._updateConfig("keep_filters_on_search", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.keep_filters')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.search_within_filter')}</div>
-          </div>
-
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="dismiss-search-on-play-toggle"
-                .checked=${this._config.dismiss_search_on_play ?? true}
-                @change=${(e) => this._updateConfig("dismiss_search_on_play", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.dismiss_on_play')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.close_search_on_play')}</div>
-          </div>
-
-          <div class="form-row form-row-multi-column">
-            <div style="${(this._config.entities?.length === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true) ? "opacity: 0.5;" : ""}"
-              title="${(this._config.entities?.length === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true) ? "Not available with one entity in Always Collapsed mode unless Expand on Search is enabled" : ""}">
-              <ha-switch
-                id="pin-search-headers-toggle"
-                .checked=${this._config.pin_search_headers ?? false}
-                @change=${(e) => this._updateConfig("pin_search_headers", e.target.checked)}
-                .disabled=${(this._config.entities?.length === 1 && this._config.always_collapsed === true && this._config.expand_on_search !== true)}
-              ></ha-switch>
-              <span>${localize('editor.labels.pin_headers')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.pin_search_headers')}</div>
-          </div>
-
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="hide-search-headers-on-idle-toggle"
-                .checked=${this._config.hide_search_headers_on_idle ?? false}
-                @change=${(e) => this._updateConfig("hide_search_headers_on_idle", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.hide_search_headers_on_idle')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.hide_search_headers_on_idle')}</div>
-          </div>
-
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="disable-mass-queue-toggle"
-                .checked=${this._config.disable_mass_queue ?? false}
-                @change=${(e) => this._updateConfig("disable_mass_queue", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.disable_mass')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.disable_mass')}</div>
-          </div>
-            <div class="form-row form-row-multi-column">
-              <div class="grow-children number-input-with-note">
-                <ha-selector
-                  .selector=${{ number: { min: 0, max: 1000, step: 1, mode: "box" } }}
-                  .value=${this._config.search_results_limit ?? 20}
-                  label="${localize('editor.fields.search_limit')}"
-                  helper="${localize('editor.subtitles.search_limit_full')}"
-                  @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
-                ></ha-selector>
-            </div>
-            <ha-icon
-              class="icon-button"
-              id="search-limit-reset"
-              icon="mdi:restore"
-              title="${localize('common.reset_default')}"
-              @click=${() => this._updateConfig("search_results_limit", 20)}
-            ></ha-icon>
-          </div>
-
-          <div class="form-row">
+          <div class="config-subtitle">${localize("editor.subtitles.disable_mass")}</div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children number-input-with-note">
             <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "all", label: localize('search.filters.all') },
-            { value: "artist", label: localize('search.filters.artist') },
-            { value: "album", label: localize('search.filters.album') },
-            { value: "track", label: localize('search.filters.track') },
-            { value: "playlist", label: localize('search.filters.playlist') },
-            { value: "radio", label: localize('search.filters.radio') },
-            { value: "podcast", label: localize('search.filters.podcast') },
-            { value: "audiobook", label: localize('search.filters.audiobook') },
-          ]
-        }
-      }}
-              .value=${this._config.default_search_filter ?? "all"}
-              label="${localize('editor.labels.default_search_filter')}"
-              helper="${localize('editor.subtitles.default_search_filter_full')}"
-              @value-changed=${(e) => this._updateConfig("default_search_filter", e.detail.value)}
+              .selector=${{ number: { min: 0, max: 1000, step: 1, mode: "box" } }}
+              .value=${this._config.search_results_limit ?? 20}
+              label="${localize("editor.fields.search_limit")}"
+              helper="${localize("editor.subtitles.search_limit_full")}"
+              @value-changed=${(e) => this._updateConfig("search_results_limit", e.detail.value)}
             ></ha-selector>
           </div>
-
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-        select: {
-          mode: "dropdown", options: [
-            { value: "default", label: "Default" },
-            { value: "name", label: "Name (A→Z)" },
-            { value: "name_desc", label: "Name (Z→A)" },
-            { value: "sort_name", label: "Sort Name (A→Z)" },
-            { value: "sort_name_desc", label: "Sort Name (Z→A)" },
-            { value: "timestamp_added", label: "Date Added (Oldest)" },
-            { value: "timestamp_added_desc", label: "Date Added (Newest)" },
-            { value: "last_played", label: "Last Played (Oldest)" },
-            { value: "last_played_desc", label: "Last Played (Recent)" },
-            { value: "play_count", label: "Play Count (Low→High)" },
-            { value: "play_count_desc", label: "Play Count (High→Low)" },
-            { value: "year", label: "Year (Oldest)" },
-            { value: "year_desc", label: "Year (Newest)" },
-            { value: "position", label: "Position (Asc)" },
-            { value: "position_desc", label: "Position (Desc)" },
-            { value: "artist_name", label: "Artist (A→Z)" },
-            { value: "artist_name_desc", label: "Artist (Z→A)" },
-            { value: "random", label: "Random" },
-            { value: "random_play_count", label: "Random + Least Played" },
-          ]
-        }
-      }}
-              .value=${this._config.search_results_sort ?? "default"}
-              label="${localize('editor.fields.result_sorting')}"
-              helper="${localize('editor.subtitles.result_sorting_full')}"
-              @value-changed=${(e) => this._updateConfig("search_results_sort", e.detail.value)}
-            ></ha-selector>
-          </div>
+          <ha-icon
+            class="icon-button"
+            id="search-limit-reset"
+            icon="mdi:restore"
+            title="${localize("common.reset_default")}"
+            @click=${() => this._updateConfig("search_results_limit", 20)}
+          ></ha-icon>
         </div>
 
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">${localize('editor.sections.behavior.lyrics.title')}</div>
-            <div class="section-description">${localize('editor.sections.behavior.lyrics.description')}</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="always-show-lyrics-toggle"
-                .checked=${this._config.always_show_lyrics ?? false}
-                @change=${(e) => this._updateConfig("always_show_lyrics", e.target.checked)}
-              ></ha-switch>
-              <label for="always-show-lyrics-toggle">${localize('editor.labels.always_show_lyrics')}</label>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.always_show_lyrics')}</div>
-          </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "default", label: localize('lyrics_modes.default') },
-            { value: "scroll", label: localize('lyrics_modes.scroll') },
-            { value: "text", label: localize('lyrics_modes.text') },
-          ]
-        }
-      }}
-              .value=${this._config.lyrics_mode ?? "default"}
-              label="${localize('editor.labels.lyrics_mode')}"
-              @value-changed=${(e) => this._updateConfig("lyrics_mode", e.detail.value)}
-            ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-    select: {
-      mode: "dropdown",
-      options: [
-        { value: "mass_lrclib", label: localize('lyrics_sources.mass_lrclib') },
-        { value: "mass", label: localize('lyrics_sources.mass') },
-        { value: "lrclib", label: localize('lyrics_sources.lrclib') },
-        { value: "lrclib_mass", label: localize('lyrics_sources.lrclib_mass') },
-      ]
-    }
-  }}
-              .value=${this._config.lyrics_source ?? "mass_lrclib"}
-              label="${localize('editor.labels.lyrics_source')}"
-              @value-changed=${(e) => this._updateConfig("lyrics_source", e.detail.value)}
-            ></ha-selector>
-            <div class="config-subtitle">${localize('editor.subtitles.lyrics_source')}</div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                .selector=${{ number: { min: -5, max: 5, step: 0.1, unit_of_measurement: "s", mode: "box" } }}
-                .value=${this._config.lyrics_pre_roll ?? 0}
-                label="${localize('editor.labels.lyrics_pre_roll')}"
-                helper="${localize('editor.subtitles.lyrics_pre_roll')}"
-                @value-changed=${(e) => this._updateConfig("lyrics_pre_roll", e.detail.value)}
-              ></ha-selector>
-            </div>
-            <ha-icon
-              class="icon-button"
-              icon="mdi:restore"
-              title="${localize('common.reset_default')}"
-              @click=${() => this._updateConfig("lyrics_pre_roll", 0)}
-            ></ha-icon>
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "all", label: localize("search.filters.all") },
+                  { value: "artist", label: localize("search.filters.artist") },
+                  { value: "album", label: localize("search.filters.album") },
+                  { value: "track", label: localize("search.filters.track") },
+                  { value: "playlist", label: localize("search.filters.playlist") },
+                  { value: "radio", label: localize("search.filters.radio") },
+                  { value: "podcast", label: localize("search.filters.podcast") },
+                  { value: "audiobook", label: localize("search.filters.audiobook") },
+                ],
+              },
+            }}
+            .value=${this._config.default_search_filter ?? "all"}
+            label="${localize("editor.labels.default_search_filter")}"
+            helper="${localize("editor.subtitles.default_search_filter_full")}"
+            @value-changed=${(e) => this._updateConfig("default_search_filter", e.detail.value)}
+          ></ha-selector>
+        </div>
+
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "default", label: "Default" },
+                  { value: "name", label: "Name (A→Z)" },
+                  { value: "name_desc", label: "Name (Z→A)" },
+                  { value: "sort_name", label: "Sort Name (A→Z)" },
+                  { value: "sort_name_desc", label: "Sort Name (Z→A)" },
+                  { value: "timestamp_added", label: "Date Added (Oldest)" },
+                  { value: "timestamp_added_desc", label: "Date Added (Newest)" },
+                  { value: "last_played", label: "Last Played (Oldest)" },
+                  { value: "last_played_desc", label: "Last Played (Recent)" },
+                  { value: "play_count", label: "Play Count (Low→High)" },
+                  { value: "play_count_desc", label: "Play Count (High→Low)" },
+                  { value: "year", label: "Year (Oldest)" },
+                  { value: "year_desc", label: "Year (Newest)" },
+                  { value: "position", label: "Position (Asc)" },
+                  { value: "position_desc", label: "Position (Desc)" },
+                  { value: "artist_name", label: "Artist (A→Z)" },
+                  { value: "artist_name_desc", label: "Artist (Z→A)" },
+                  { value: "random", label: "Random" },
+                  { value: "random_play_count", label: "Random + Least Played" },
+                ],
+              },
+            }}
+            .value=${this._config.search_results_sort ?? "default"}
+            label="${localize("editor.fields.result_sorting")}"
+            helper="${localize("editor.subtitles.result_sorting_full")}"
+            @value-changed=${(e) => this._updateConfig("search_results_sort", e.detail.value)}
+          ></ha-selector>
+        </div>
+      </div>
+
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-title">${localize("editor.sections.behavior.lyrics.title")}</div>
+          <div class="section-description">
+            ${localize("editor.sections.behavior.lyrics.description")}
           </div>
         </div>
-      `;
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="always-show-lyrics-toggle"
+              .checked=${this._config.always_show_lyrics ?? false}
+              @change=${(e) => this._updateConfig("always_show_lyrics", e.target.checked)}
+            ></ha-switch>
+            <label for="always-show-lyrics-toggle"
+              >${localize("editor.labels.always_show_lyrics")}</label
+            >
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.always_show_lyrics")}</div>
+        </div>
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "default", label: localize("lyrics_modes.default") },
+                  { value: "scroll", label: localize("lyrics_modes.scroll") },
+                  { value: "text", label: localize("lyrics_modes.text") },
+                ],
+              },
+            }}
+            .value=${this._config.lyrics_mode ?? "default"}
+            label="${localize("editor.labels.lyrics_mode")}"
+            @value-changed=${(e) => this._updateConfig("lyrics_mode", e.detail.value)}
+          ></ha-selector>
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "mass_lrclib", label: localize("lyrics_sources.mass_lrclib") },
+                  { value: "mass", label: localize("lyrics_sources.mass") },
+                  { value: "lrclib", label: localize("lyrics_sources.lrclib") },
+                  { value: "lrclib_mass", label: localize("lyrics_sources.lrclib_mass") },
+                ],
+              },
+            }}
+            .value=${this._config.lyrics_source ?? "mass_lrclib"}
+            label="${localize("editor.labels.lyrics_source")}"
+            @value-changed=${(e) => this._updateConfig("lyrics_source", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle">${localize("editor.subtitles.lyrics_source")}</div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{
+                number: { min: -5, max: 5, step: 0.1, unit_of_measurement: "s", mode: "box" },
+              }}
+              .value=${this._config.lyrics_pre_roll ?? 0}
+              label="${localize("editor.labels.lyrics_pre_roll")}"
+              helper="${localize("editor.subtitles.lyrics_pre_roll")}"
+              @value-changed=${(e) => this._updateConfig("lyrics_pre_roll", e.detail.value)}
+            ></ha-selector>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="${localize("common.reset_default")}"
+            @click=${() => this._updateConfig("lyrics_pre_roll", 0)}
+          ></ha-icon>
+        </div>
+      </div>
+    `;
   }
 
   _renderVisualTab() {
-    const renderVolumeStep = this._config.volume_mode === "stepper"
-      ? html`
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                .selector=${{ number: { min: 0.01, max: 1, step: 0.01, unit_of_measurement: "", mode: "box" } }}
-                .value=${this._config.volume_step ?? 0.05}
-                label="${localize('editor.fields.vol_step')}"
-                @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
-              ></ha-selector>
+    const renderVolumeStep =
+      this._config.volume_mode === "stepper"
+        ? html`
+            <div class="form-row form-row-multi-column">
+              <div class="grow-children">
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{
+                    number: { min: 0.01, max: 1, step: 0.01, unit_of_measurement: "", mode: "box" },
+                  }}
+                  .value=${this._config.volume_step ?? 0.05}
+                  label="${localize("editor.fields.vol_step")}"
+                  @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
+                ></ha-selector>
+              </div>
+              <ha-icon
+                class="icon-button"
+                icon="mdi:restore"
+                title="${localize("common.reset_default")}"
+                @click=${() => this._updateConfig("volume_step", 0.05)}
+              ></ha-icon>
             </div>
-            <ha-icon
-              class="icon-button"
-              icon="mdi:restore"
-              title="${localize('common.reset_default')}"
-              @click=${() => this._updateConfig("volume_step", 0.05)}
-            ></ha-icon>
-          </div>
-        `
-      : nothing;
+          `
+        : nothing;
 
     return html`
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">${localize('editor.sections.look_and_feel.theme_layout.title')}</div>
-            <div class="section-description">${localize('editor.sections.look_and_feel.theme_layout.description')}</div>
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-title">
+            ${localize("editor.sections.look_and_feel.theme_layout.title")}
           </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="match-theme-toggle"
-                .checked=${this._config.match_theme ?? false}
-                @change=${(e) => this._updateConfig("match_theme", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.match_theme')}</span>
-            </div>
-            <div>
-              <ha-switch
-                id="alternate-progress-bar-toggle"
-                .checked=${this._config.alternate_progress_bar ?? false}
-                @change=${(e) => this._updateConfig("alternate_progress_bar", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.alt_progress')}</span>
-            </div>
+          <div class="section-description">
+            ${localize("editor.sections.look_and_feel.theme_layout.description")}
           </div>
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                .selector=${{ number: { min: 2, max: 48, step: 2, unit_of_measurement: "px", mode: "box" } }}
-                .value=${this._config.progress_bar_height ?? 6}
-                label="${localize('editor.labels.progress_bar_height')}"
-                @value-changed=${(e) => this._updateConfig("progress_bar_height", e.detail.value)}
-              ></ha-selector>
-            </div>
-            <ha-icon
-              class="icon-button"
-              icon="mdi:restore"
-              title="${localize('common.reset_default')}"
-              @click=${() => this._updateConfig("progress_bar_height", 6)}
-            ></ha-icon>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="match-theme-toggle"
+              .checked=${this._config.match_theme ?? false}
+              @change=${(e) => this._updateConfig("match_theme", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.match_theme")}</span>
           </div>
-          <div class="form-row">
+          <div>
+            <ha-switch
+              id="alternate-progress-bar-toggle"
+              .checked=${this._config.alternate_progress_bar ?? false}
+              @change=${(e) => this._updateConfig("alternate_progress_bar", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.alt_progress")}</span>
+          </div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-                select: {
-                  mode: "dropdown",
-                  options: [
-                    { value: "automatic", label: localize('editor.appearance_options.automatic') },
-                    { value: "light", label: localize('editor.appearance_options.light') },
-                    { value: "dark", label: localize('editor.appearance_options.dark') },
-                  ]
-                }
+                number: { min: 2, max: 48, step: 2, unit_of_measurement: "px", mode: "box" },
               }}
-              .value=${this._config.appearance ?? "automatic"}
-              label="${localize('editor.fields.appearance')}"
-              @value-changed=${(e) => this._updateConfig("appearance", e.detail.value)}
+              .value=${this._config.progress_bar_height ?? 6}
+              label="${localize("editor.labels.progress_bar_height")}"
+              @value-changed=${(e) => this._updateConfig("progress_bar_height", e.detail.value)}
             ></ha-selector>
           </div>
-          <div class="form-row form-row-multi-column">
-            <div title=${(this._config.alternate_progress_bar || this._config.always_collapsed) ? localize('editor.subtitles.not_available_alt_collapsed') : ""}>
-              <ha-switch
-                id="display-timestamps-toggle"
-                .checked=${this._config.display_timestamps ?? false}
-                @change=${(e) => this._updateConfig("display_timestamps", e.target.checked)}
-                .disabled=${this._config.alternate_progress_bar || this._config.always_collapsed}
-              ></ha-switch>
-              <span>${localize('editor.labels.display_timestamps')}</span>
-            </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="${localize("common.reset_default")}"
+            @click=${() => this._updateConfig("progress_bar_height", 6)}
+          ></ha-icon>
+        </div>
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "automatic", label: localize("editor.appearance_options.automatic") },
+                  { value: "light", label: localize("editor.appearance_options.light") },
+                  { value: "dark", label: localize("editor.appearance_options.dark") },
+                ],
+              },
+            }}
+            .value=${this._config.appearance ?? "automatic"}
+            label="${localize("editor.fields.appearance")}"
+            @value-changed=${(e) => this._updateConfig("appearance", e.detail.value)}
+          ></ha-selector>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div
+            title=${this._config.alternate_progress_bar || this._config.always_collapsed
+              ? localize("editor.subtitles.not_available_alt_collapsed")
+              : ""}
+          >
+            <ha-switch
+              id="display-timestamps-toggle"
+              .checked=${this._config.display_timestamps ?? false}
+              @change=${(e) => this._updateConfig("display_timestamps", e.target.checked)}
+              .disabled=${this._config.alternate_progress_bar || this._config.always_collapsed}
+            ></ha-switch>
+            <span>${localize("editor.labels.display_timestamps")}</span>
           </div>
-          <div class="form-row form-row-multi-column">
-            <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                class="full-width"
-                .selector=${{ number: { min: 0, max: 2000, mode: "box" } }}
-                label="${localize('editor.fields.card_height')}"
-                .value=${this._config.card_height ?? ""}
-                helper="${localize('editor.subtitles.card_height_full')}"
-                @value-changed=${(e) => {
-        const raw = e.detail.value;
-        if (raw === "" || raw === undefined) {
-          this._updateConfig("card_height", undefined);
-          return;
-        }
-        const parsed = Number(raw);
-        this._updateConfig("card_height", Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
-      }}
-              ></ha-selector>
-            </div>
-            <ha-icon
-                class="icon-button"
-                icon="mdi:restore"
-                title="${localize('common.reset_default')}"
-                @click=${() => this._updateConfig("card_height", undefined)}
-              ></ha-icon>
-            </div>
-            <div class="form-row">
-              <ha-selector
-                .hass=${this.hass}
-                .selector=${{
-        select: {
-          mode: "dropdown", options: [
-            { value: "list", label: localize('editor.search_view_options.list') },
-            { value: "card", label: localize('editor.search_view_options.card') },
-            { value: "card_minimal", label: localize('editor.search_view_options.card_minimal') },
-          ]
-        }
-      }}
-                .value=${this._config.search_view ?? "list"}
-                label="${localize('editor.fields.search_view')}"
-                helper="${localize('editor.subtitles.search_view')}"
-                @value-changed=${(e) => this._updateConfig("search_view", e.detail.value)}
-              ></ha-selector>
-            </div>
-            ${(this._config.search_view === 'card' || this._config.search_view === 'card_minimal') ? html`
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div class="grow-children">
+            <ha-selector
+              .hass=${this.hass}
+              class="full-width"
+              .selector=${{ number: { min: 0, max: 2000, mode: "box" } }}
+              label="${localize("editor.fields.card_height")}"
+              .value=${this._config.card_height ?? ""}
+              helper="${localize("editor.subtitles.card_height_full")}"
+              @value-changed=${(e) => {
+                const raw = e.detail.value;
+                if (raw === "" || raw === undefined) {
+                  this._updateConfig("card_height", undefined);
+                  return;
+                }
+                const parsed = Number(raw);
+                this._updateConfig(
+                  "card_height",
+                  Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+                );
+              }}
+            ></ha-selector>
+          </div>
+          <ha-icon
+            class="icon-button"
+            icon="mdi:restore"
+            title="${localize("common.reset_default")}"
+            @click=${() => this._updateConfig("card_height", undefined)}
+          ></ha-icon>
+        </div>
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "list", label: localize("editor.search_view_options.list") },
+                  { value: "card", label: localize("editor.search_view_options.card") },
+                  {
+                    value: "card_minimal",
+                    label: localize("editor.search_view_options.card_minimal"),
+                  },
+                ],
+              },
+            }}
+            .value=${this._config.search_view ?? "list"}
+            label="${localize("editor.fields.search_view")}"
+            helper="${localize("editor.subtitles.search_view")}"
+            @value-changed=${(e) => this._updateConfig("search_view", e.detail.value)}
+          ></ha-selector>
+        </div>
+        ${this._config.search_view === "card" || this._config.search_view === "card_minimal"
+          ? html`
               <div class="form-row">
                 <ha-selector
                   .hass=${this.hass}
                   .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
                   .value=${this._config.search_card_columns ?? 4}
-                  label="${localize('editor.fields.search_card_columns')}"
-                  helper="${localize('editor.subtitles.search_card_columns')}"
+                  label="${localize("editor.fields.search_card_columns")}"
+                  helper="${localize("editor.subtitles.search_card_columns")}"
                   @value-changed=${(e) => this._updateConfig("search_card_columns", e.detail.value)}
                 ></ha-selector>
               </div>
-            ` : nothing}
-          </div>
+            `
+          : nothing}
+      </div>
 
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">${localize('editor.sections.look_and_feel.controls_typography.title')}</div>
-            <div class="section-description">${localize('editor.sections.look_and_feel.controls_typography.description')}</div>
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-title">
+            ${localize("editor.sections.look_and_feel.controls_typography.title")}
           </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "classic", label: "Classic" },
-            { value: "modern", label: "Modern" },
-          ],
-        },
-      }}
-              .value=${this._config.control_layout ?? "classic"}
-              label="${localize('editor.fields.control_layout')}"
-              helper="${localize('editor.subtitles.control_layout_full')}"
-              @value-changed=${(e) => this._updateConfig("control_layout", e.detail.value)}
-            ></ha-selector>
+          <div class="section-description">
+            ${localize("editor.sections.look_and_feel.controls_typography.description")}
           </div>
-          <div class="form-row"
-            style="${(this._config.control_layout ?? "classic") === "modern" ? "" : "opacity: 0.5;"}"
-            title="${(this._config.control_layout ?? "classic") === "modern" ? "" : localize('editor.subtitles.only_available_modern')}"}>
-            <div>
-              <ha-switch
-                .checked=${this._config.swap_pause_for_stop ?? false}
-                @change=${(e) => this._updateConfig("swap_pause_for_stop", e.target.checked)}
-                .disabled=${(this._config.control_layout ?? "classic") !== "modern"}
-              ></ha-switch>
-              <span>${localize('editor.labels.swap_pause_stop')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.swap_pause_stop')}</div>
+        </div>
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "classic", label: "Classic" },
+                  { value: "modern", label: "Modern" },
+                ],
+              },
+            }}
+            .value=${this._config.control_layout ?? "classic"}
+            label="${localize("editor.fields.control_layout")}"
+            helper="${localize("editor.subtitles.control_layout_full")}"
+            @value-changed=${(e) => this._updateConfig("control_layout", e.detail.value)}
+          ></ha-selector>
+        </div>
+        <div
+          class="form-row"
+          style="${(this._config.control_layout ?? "classic") === "modern" ? "" : "opacity: 0.5;"}"
+          title="${(this._config.control_layout ?? "classic") === "modern"
+            ? ""
+            : localize("editor.subtitles.only_available_modern")}"
+          }
+        >
+          <div>
+            <ha-switch
+              .checked=${this._config.swap_pause_for_stop ?? false}
+              @change=${(e) => this._updateConfig("swap_pause_for_stop", e.target.checked)}
+              .disabled=${(this._config.control_layout ?? "classic") !== "modern"}
+            ></ha-switch>
+            <span>${localize("editor.labels.swap_pause_stop")}</span>
           </div>
-          <div class="form-row">
-            <div>
-              <ha-switch
-                id="adaptive-controls-toggle"
-                .checked=${this._config.adaptive_controls ?? false}
-                @change=${(e) => this._updateConfig("adaptive_controls", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.adaptive_controls')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.adaptive_controls')}</div>
+          <div class="config-subtitle">${localize("editor.subtitles.swap_pause_stop")}</div>
+        </div>
+        <div class="form-row">
+          <div>
+            <ha-switch
+              id="adaptive-controls-toggle"
+              .checked=${this._config.adaptive_controls ?? false}
+              @change=${(e) => this._updateConfig("adaptive_controls", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.adaptive_controls")}</span>
           </div>
-          <div class="form-row">
-            <div>
-              <ha-switch
-                id="hide-active-entity-label-toggle"
-                .checked=${this._config.hide_active_entity_label ?? false}
-                @change=${(e) => this._updateConfig("hide_active_entity_label", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.hide_active_entity')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.hide_menu_player')}</div>
+          <div class="config-subtitle">${localize("editor.subtitles.adaptive_controls")}</div>
+        </div>
+        <div class="form-row">
+          <div>
+            <ha-switch
+              id="hide-active-entity-label-toggle"
+              .checked=${this._config.hide_active_entity_label ?? false}
+              @change=${(e) => this._updateConfig("hide_active_entity_label", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.hide_active_entity")}</span>
           </div>
-          <div class="form-row">
-            <div>
-              <ha-switch
-                id="hide-active-entity-label-on-idle-toggle"
-                .checked=${this._config.hide_active_entity_label_on_idle ?? false}
-                @change=${(e) => this._updateConfig("hide_active_entity_label_on_idle", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.hide_active_entity_on_idle')}</span>
-            </div>
-            <div class="config-subtitle">${localize('editor.subtitles.hide_active_entity_on_idle')}</div>
+          <div class="config-subtitle">${localize("editor.subtitles.hide_menu_player")}</div>
+        </div>
+        <div class="form-row">
+          <div>
+            <ha-switch
+              id="hide-active-entity-label-on-idle-toggle"
+              .checked=${this._config.hide_active_entity_label_on_idle ?? false}
+              @change=${(e) =>
+                this._updateConfig("hide_active_entity_label_on_idle", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.hide_active_entity_on_idle")}</span>
           </div>
+          <div class="config-subtitle">
+            ${localize("editor.subtitles.hide_active_entity_on_idle")}
+          </div>
+        </div>
         <div class="form-row">
           <div class="full-width">
-            <span class="form-label">${localize('editor.labels.adaptive_text_elements')}</span>
-            <div class="config-subtitle">${localize('editor.subtitles.adaptive_text')}</div>
+            <span class="form-label">${localize("editor.labels.adaptive_text_elements")}</span>
+            <div class="config-subtitle">${localize("editor.subtitles.adaptive_text")}</div>
             <ha-selector
               .hass=${this.hass}
               .selector=${{
-        select: {
-          multiple: true,
-          options: ADAPTIVE_TEXT_SELECTOR_OPTIONS,
-        },
-      }}
+                select: {
+                  multiple: true,
+                  options: ADAPTIVE_TEXT_SELECTOR_OPTIONS,
+                },
+              }}
               .value=${this._getAdaptiveTextTargetsValue()}
               @value-changed=${(e) => this._onAdaptiveTextTargetsChanged(e.detail.value)}
             ></ha-selector>
           </div>
         </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-        select: {
-          mode: "dropdown", options: [
-            { value: "left", label: "Left" },
-            { value: "center", label: "Center" },
-            { value: "right", label: "Right" },
-            { value: "none", label: "None" },
-          ]
-        }
-      }}
-              .value=${this._config.details_alignment ?? "left"}
-              label="${localize('editor.fields.details_alignment')}"
-              @value-changed=${(e) => this._updateConfig("details_alignment", e.detail.value)}
-            ></ha-selector>
-          </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-        select: {
-          mode: "dropdown", options: [
-            { value: "slider", label: "Slider" },
-            { value: "stepper", label: "Stepper" },
-            { value: "hidden", label: "Hidden" },
-          ]
-        }
-      }}
-              .value=${this._config.volume_mode ?? "slider"}
-              label="${localize('editor.fields.volume_mode')}"
-              @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
-            ></ha-selector>
-          </div>
-          ${renderVolumeStep}
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "left", label: "Left" },
+                  { value: "center", label: "Center" },
+                  { value: "right", label: "Right" },
+                  { value: "none", label: "None" },
+                ],
+              },
+            }}
+            .value=${this._config.details_alignment ?? "left"}
+            label="${localize("editor.fields.details_alignment")}"
+            @value-changed=${(e) => this._updateConfig("details_alignment", e.detail.value)}
+          ></ha-selector>
         </div>
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "slider", label: "Slider" },
+                  { value: "stepper", label: "Stepper" },
+                  { value: "hidden", label: "Hidden" },
+                ],
+              },
+            }}
+            .value=${this._config.volume_mode ?? "slider"}
+            label="${localize("editor.fields.volume_mode")}"
+            @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
+          ></ha-selector>
+        </div>
+        ${renderVolumeStep}
+      </div>
 
-        <div class="config-section">
-          <div class="section-header">
-            <div class="section-title">${localize('editor.sections.look_and_feel.collapsed_idle.title')}</div>
-            <div class="section-description">${localize('editor.sections.look_and_feel.collapsed_idle.description')}</div>
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-title">
+            ${localize("editor.sections.look_and_feel.collapsed_idle.title")}
           </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="collapse-on-idle-toggle"
-                .checked=${this._config.collapse_on_idle ?? false}
-                @change=${(e) => this._updateConfig("collapse_on_idle", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.collapse_on_idle')}</span>
-            </div>
-            <div style="${!this._config.always_collapsed ? "" : "opacity: 0.5;"}"
-              title="${!this._config.always_collapsed ? "" : localize('editor.subtitles.not_available_collapsed')}">
-              <ha-switch
-                id="hide-menu-player-toggle"
-                .checked=${this._config.hide_menu_player ?? false}
-                @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
-                .disabled=${!!this._config.always_collapsed || (this._config.always_collapsed === true && this._config.pin_search_headers === true && this._config.expand_on_search === true)}
-              ></ha-switch>
-              <span>${localize('editor.labels.hide_menu_player_toggle')}</span>
-            </div>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="always-collapsed-toggle"
-                .checked=${this._config.always_collapsed ?? false}
-                @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
-              ></ha-switch>
-              <span>${localize('editor.labels.always_collapsed')}</span>
-            </div>
-            <div style="${this._config.always_collapsed ? "" : "opacity: 0.5;"}"
-              title="${this._config.always_collapsed ? "" : localize('editor.subtitles.only_available_collapsed')}">
-              <ha-switch
-                id="expand-on-search-toggle"
-                .checked=${this._config.expand_on_search ?? false}
-                @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
-                .disabled=${!this._config.always_collapsed}
-              ></ha-switch>
-              <span>${localize('editor.labels.expand_on_search')}</span>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="config-subtitle">${localize('editor.subtitles.collapse_expand')}</div>
-          </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "default", label: "Default" },
-            { value: "search", label: "Search" },
-            { value: "search-recently-played", label: "Recently Played" },
-            { value: "search-next-up", label: "Next Up" }
-          ]
-        }
-      }}
-              .value=${this._config.idle_screen ?? "default"}
-              label="${localize('editor.fields.idle_screen')}"
-              @value-changed=${(e) => this._updateConfig("idle_screen", e.detail.value)}
-            ></ha-selector>
-            <div class="config-subtitle">${localize('editor.subtitles.idle_screen')}</div>
+          <div class="section-description">
+            ${localize("editor.sections.look_and_feel.collapsed_idle.description")}
           </div>
         </div>
-
-      `;
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="collapse-on-idle-toggle"
+              .checked=${this._config.collapse_on_idle ?? false}
+              @change=${(e) => this._updateConfig("collapse_on_idle", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.collapse_on_idle")}</span>
+          </div>
+          <div
+            style="${!this._config.always_collapsed ? "" : "opacity: 0.5;"}"
+            title="${!this._config.always_collapsed
+              ? ""
+              : localize("editor.subtitles.not_available_collapsed")}"
+          >
+            <ha-switch
+              id="hide-menu-player-toggle"
+              .checked=${this._config.hide_menu_player ?? false}
+              @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
+              .disabled=${!!this._config.always_collapsed ||
+              (this._config.always_collapsed === true &&
+                this._config.pin_search_headers === true &&
+                this._config.expand_on_search === true)}
+            ></ha-switch>
+            <span>${localize("editor.labels.hide_menu_player_toggle")}</span>
+          </div>
+        </div>
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="always-collapsed-toggle"
+              .checked=${this._config.always_collapsed ?? false}
+              @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.always_collapsed")}</span>
+          </div>
+          <div
+            style="${this._config.always_collapsed ? "" : "opacity: 0.5;"}"
+            title="${this._config.always_collapsed
+              ? ""
+              : localize("editor.subtitles.only_available_collapsed")}"
+          >
+            <ha-switch
+              id="expand-on-search-toggle"
+              .checked=${this._config.expand_on_search ?? false}
+              @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
+              .disabled=${!this._config.always_collapsed}
+            ></ha-switch>
+            <span>${localize("editor.labels.expand_on_search")}</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="config-subtitle">${localize("editor.subtitles.collapse_expand")}</div>
+        </div>
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "default", label: "Default" },
+                  { value: "search", label: "Search" },
+                  { value: "search-recently-played", label: "Recently Played" },
+                  { value: "search-next-up", label: "Next Up" },
+                ],
+              },
+            }}
+            .value=${this._config.idle_screen ?? "default"}
+            label="${localize("editor.fields.idle_screen")}"
+            @value-changed=${(e) => this._updateConfig("idle_screen", e.detail.value)}
+          ></ha-selector>
+          <div class="config-subtitle">${localize("editor.subtitles.idle_screen")}</div>
+        </div>
+      </div>
+    `;
   }
 
   _renderActionsTab() {
     let actions = [...(this._config.actions ?? [])];
     return html`
-        <div class="action-group config-section">
-          <div class="action-group-header section-header">
-            <div class="action-group-title section-title">${localize('editor.sections.actions.title')}</div>
-            <div class="section-description">${localize('editor.sections.actions.description')}</div>
+      <div class="action-group config-section">
+        <div class="action-group-header section-header">
+          <div class="action-group-title section-title">
+            ${localize("editor.sections.actions.title")}
           </div>
-          <div class="form-row">
-            <yamp-sortable @item-moved=${(e) => this._onActionMoved(e)}>
-              <div class="sortable-container">
-                ${actions.map((act, idx) => html`
+          <div class="section-description">${localize("editor.sections.actions.description")}</div>
+        </div>
+        <div class="form-row">
+          <yamp-sortable @item-moved=${(e) => this._onActionMoved(e)}>
+            <div class="sortable-container">
+              ${actions.map(
+                (act, idx) => html`
                   <div class="action-row-inner sortable-item">
                     <div class="handle action-handle">
                       <ha-icon icon="mdi:drag"></ha-icon>
                     </div>
-                    ${act?.icon ? html`
-                      <ha-icon class="action-icon" icon="${act?.icon}" title="Action Icon"></ha-icon>
-                    ` : html`<span class="action-icon-placeholder"></span>`}
+                    ${act?.icon
+                      ? html`
+                          <ha-icon
+                            class="action-icon"
+                            icon="${act?.icon}"
+                            title="Action Icon"
+                          ></ha-icon>
+                        `
+                      : html`<span class="action-icon-placeholder"></span>`}
                     <div class="grow-children">
                       <ha-selector
                         .hass=${this.hass}
@@ -2011,72 +2182,92 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         label="(Icon Only)"
                         .value=${act?.name ?? ""}
                         .helper=${this._getActionHelperText(act)}
-                        @value-changed=${a => this._onActionChanged(idx, a.detail.value)}
+                        @value-changed=${(a) => this._onActionChanged(idx, a.detail.value)}
                       ></ha-selector>
                     </div>
                     <div class="action-row-actions">
                       <ha-icon
                         class="icon-button icon-button-compact"
                         icon="mdi:pencil"
-                        title="${localize('common.edit_action')}"
+                        title="${localize("common.edit_action")}"
                         @click=${() => this._onEditAction(idx)}
                       ></ha-icon>
-                      ${act?.action !== "sync_selected_entity" && act?.action !== "select_entity" ? html`
-                      <ha-icon
-                        class="icon-button icon-button-compact icon-button-toggle ${act?.in_menu === "hidden" ? "icon-button-disabled" : (act?.in_menu === true ? "active" : "")}"
-                        icon="${act?.in_menu === true ? "mdi:menu" : (act?.in_menu === "hidden" ? (act?.card_trigger && act.card_trigger !== "none" ? "mdi:image-outline" : "mdi:eye-off-outline") : "mdi:view-grid-outline")}"
-                        title="${(() => {
-          const placementText = act?.in_menu === "hidden"
-            ? (act?.card_trigger && act.card_trigger !== "none" ? localize('editor.placements.hidden') : `${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})`)
-            : (act?.in_menu ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu'));
-          return placementText;
-        })()}"
-                        role="button"
-                        aria-label="${act?.in_menu === true ? localize('editor.fields.move_to_main') : localize('editor.fields.move_to_menu')}"
-                        @click=${() => {
-          if (act?.in_menu !== "hidden") {
-            this._toggleActionInMenu(idx);
-          }
-        }}
-                      ></ha-icon>
-                      ` : html`
-                      <ha-icon
-                        class="icon-button icon-button-compact icon-button-disabled"
-                        icon="mdi:eye-off-outline"
-                        title="${localize(`editor.action_types.${act?.action}`)}"
-                      ></ha-icon>
-                      `}
+                      ${act?.action !== "sync_selected_entity" && act?.action !== "select_entity"
+                        ? html`
+                            <ha-icon
+                              class="icon-button icon-button-compact icon-button-toggle ${act?.in_menu ===
+                              "hidden"
+                                ? "icon-button-disabled"
+                                : act?.in_menu === true
+                                  ? "active"
+                                  : ""}"
+                              icon="${act?.in_menu === true
+                                ? "mdi:menu"
+                                : act?.in_menu === "hidden"
+                                  ? act?.card_trigger && act.card_trigger !== "none"
+                                    ? "mdi:image-outline"
+                                    : "mdi:eye-off-outline"
+                                  : "mdi:view-grid-outline"}"
+                              title="${(() => {
+                                const placementText =
+                                  act?.in_menu === "hidden"
+                                    ? act?.card_trigger && act.card_trigger !== "none"
+                                      ? localize("editor.placements.hidden")
+                                      : `${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`
+                                    : act?.in_menu
+                                      ? localize("editor.fields.move_to_main")
+                                      : localize("editor.fields.move_to_menu");
+                                return placementText;
+                              })()}"
+                              role="button"
+                              aria-label="${act?.in_menu === true
+                                ? localize("editor.fields.move_to_main")
+                                : localize("editor.fields.move_to_menu")}"
+                              @click=${() => {
+                                if (act?.in_menu !== "hidden") {
+                                  this._toggleActionInMenu(idx);
+                                }
+                              }}
+                            ></ha-icon>
+                          `
+                        : html`
+                            <ha-icon
+                              class="icon-button icon-button-compact icon-button-disabled"
+                              icon="mdi:eye-off-outline"
+                              title="${localize(`editor.action_types.${act?.action}`)}"
+                            ></ha-icon>
+                          `}
                       <ha-icon
                         class="icon-button icon-button-compact"
                         icon="mdi:trash-can"
-                        title="${localize('editor.fields.delete_action')}"
+                        title="${localize("editor.fields.delete_action")}"
                         @click=${() => this._removeAction(idx)}
                       ></ha-icon>
                     </div>
                   </div>
-                `)}
-              </div>
-            </yamp-sortable>
-          </div>
-          <div class="add-action-button-wrapper">
-            <ha-icon
-              class="icon-button"
-              icon="mdi:plus"
-              title="Add Action"
-              @click=${() => {
-        const newActions = [...(this._config.actions ?? []), {}];
-        const newIndex = newActions.length - 1;
-        this._updateConfig("actions", newActions);
-        this._onEditAction(newIndex);
-      }}
-            ></ha-icon>
-          </div>
+                `
+              )}
+            </div>
+          </yamp-sortable>
         </div>
-      `;
+        <div class="add-action-button-wrapper">
+          <ha-icon
+            class="icon-button"
+            icon="mdi:plus"
+            title="Add Action"
+            @click=${() => {
+              const newActions = [...(this._config.actions ?? []), {}];
+              const newIndex = newActions.length - 1;
+              this._updateConfig("actions", newActions);
+              this._onEditAction(newIndex);
+            }}
+          ></ha-icon>
+        </div>
+      </div>
+    `;
   }
 
   _renderEntityEditor(entity) {
-
     const stateObj = this.hass?.states?.[entity?.entity_id];
     let showGroupVolume = this._isGroupCapable(stateObj);
     if (!showGroupVolume && entity?.music_assistant_entity) {
@@ -2096,10 +2287,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <ha-icon
             class="icon-button"
             icon="mdi:chevron-left"
-            title="${localize('common.back')}"
+            title="${localize("common.back")}"
             @click=${this._onBackFromEntityEditor}>
           </ha-icon>
-          <div class="entity-editor-title">${localize('editor.titles.edit_entity')}</div>
+          <div class="entity-editor-title">${localize("editor.titles.edit_entity")}</div>
         </div>
 
         <div class="form-row">
@@ -2117,7 +2308,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             .hass=${this.hass}
             class="full-width"
             .selector=${{ text: {} }}
-            label="${localize('editor.fields.name')}"
+            label="${localize("editor.fields.name")}"
             .value=${entity?.name ?? ""}
             @value-changed=${(e) => this._updateEntityProperty("name", e.detail.value)}
           ></ha-selector>
@@ -2127,24 +2318,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <ha-selector
             .hass=${this.hass}
             .selector=${{
-        select: {
-          mode: "dropdown",
-          multiple: true,
-          options: [
-            { value: "previous", label: "Previous Track" },
-            { value: "play_pause", label: "Play/Pause" },
-            { value: "stop", label: "Stop" },
-            { value: "next", label: "Next Track" },
-            { value: "shuffle", label: "Shuffle" },
-            { value: "repeat", label: "Repeat" },
-            { value: "favorite", label: "Favorite" },
-            { value: "power", label: "Power" }
-          ]
-        }
-      }}
+              select: {
+                mode: "dropdown",
+                multiple: true,
+                options: [
+                  { value: "previous", label: "Previous Track" },
+                  { value: "play_pause", label: "Play/Pause" },
+                  { value: "stop", label: "Stop" },
+                  { value: "next", label: "Next Track" },
+                  { value: "shuffle", label: "Shuffle" },
+                  { value: "repeat", label: "Repeat" },
+                  { value: "favorite", label: "Favorite" },
+                  { value: "power", label: "Power" },
+                ],
+              },
+            }}
             .value=${Array.isArray(entity?.hidden_controls) ? entity.hidden_controls : []}
-            label="${localize('editor.fields.hidden_controls')}"
-            helper="${localize('editor.subtitles.hide_controls')}"
+            label="${localize("editor.fields.hidden_controls")}"
+            helper="${localize("editor.subtitles.hide_controls")}"
             @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
           ></ha-selector>
         </div>
@@ -2157,22 +2348,25 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               id="ma-template-toggle"
               .checked=${this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity)}
               @change=${(e) => {
-        this._useTemplate = e.target.checked;
-      }}
+                this._useTemplate = e.target.checked;
+              }}
             ></ha-switch>
-            <label for="ma-template-toggle">${localize('editor.labels.use_ma_template')}</label>
+            <label for="ma-template-toggle">${localize("editor.labels.use_ma_template")}</label>
           </div>
         </div>
 
-        ${(this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity))
-        ? html`
+        ${
+          (this._useTemplate ?? this._looksLikeTemplate(entity?.music_assistant_entity))
+            ? html`
       <div class="form-row">
-        <div class=${this._yamlError && (entity?.music_assistant_entity ?? "").trim() !== ""
+        <div class=${
+          this._yamlError && (entity?.music_assistant_entity ?? "").trim() !== ""
             ? "code-editor-wrapper error"
-            : "code-editor-wrapper"}>
+            : "code-editor-wrapper"
+        }>
           <ha-code-editor
             id="ma-template-editor"
-            label="${localize('editor.fields.ma_template')}"
+            label="${localize("editor.fields.ma_template")}"
             .hass=${this.hass}
             mode="jinja2"
             autocomplete-entities
@@ -2181,7 +2375,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-code-editor>
           <div class="help-text">
             <ha-icon icon="mdi:information-outline"></ha-icon>
-            ${localize('editor.subtitles.jinja_template_hint')}
+            ${localize("editor.subtitles.jinja_template_hint")}
             <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
   media_player.picore_house
 {% else %}
@@ -2192,59 +2386,66 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
       </div>
     `
-        : html`
-      <div class="form-row">
-        <ha-generic-picker
-          .hass=${this.hass}
-          .value=${this._isEntityId(entity?.music_assistant_entity) ? entity.music_assistant_entity : ""}
-          .label=${localize('editor.fields.ma_entity')}
-          .valueRenderer=${(v) => this._entityValueRenderer(v)}
-          .rowRenderer=${(item) => this._entityRowRenderer(item)}
-          .getItems=${this._getEntityItems(["media_player"])}
-          @value-changed=${(e) => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
-          allow-custom-value
-        ></ha-generic-picker>
-      </div>
-      ${(() => {
-            const mainId = entity?.entity_id;
-            const mainState = mainId ? this.hass?.states?.[mainId] : undefined;
-            const mainIsMA = mainState ? isMusicAssistantEntity(mainState) : false;
-            const rawMa = entity?.music_assistant_entity;
-            const isTemplate = this._looksLikeTemplate?.(rawMa);
-            const maId = (typeof rawMa === 'string' && !isTemplate) ? rawMa : undefined;
-            const maState = maId ? this.hass?.states?.[maId] : undefined;
-            const maIsMA = maState ? isMusicAssistantEntity(maState) : false;
-            // Only show under the dropdown (non-template path)
-            const showHiddenFilterChips = mainIsMA || maIsMA;
-            if (!showHiddenFilterChips) return nothing;
-            return html`
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-                select: {
-                  mode: "dropdown",
-                  multiple: true,
-                  options: [
-                    { value: "artist", label: "Artist" },
-                    { value: "album", label: "Album" },
-                    { value: "track", label: "Track" },
-                    { value: "playlist", label: "Playlist" },
-                    { value: "radio", label: "Radio" },
-                    { value: "podcast", label: "Podcast" },
-                    { value: "episode", label: "Episode" }
-                  ]
-                }
-              }}
-              .value=${Array.isArray(entity?.hidden_filter_chips) ? entity.hidden_filter_chips : []}
-              label="${localize('editor.fields.hidden_chips')}"
-              helper="${localize('editor.subtitles.hide_search_chips')}"
-              @value-changed=${(e) => this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
-            ></ha-selector>
-          </div>
-        `;
-          })()}
-    `}
+            : html`
+                <div class="form-row">
+                  <ha-generic-picker
+                    .hass=${this.hass}
+                    .value=${this._isEntityId(entity?.music_assistant_entity)
+                      ? entity.music_assistant_entity
+                      : ""}
+                    .label=${localize("editor.fields.ma_entity")}
+                    .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                    .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                    .getItems=${this._getEntityItems(["media_player"])}
+                    @value-changed=${(e) =>
+                      this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+                    allow-custom-value
+                  ></ha-generic-picker>
+                </div>
+                ${(() => {
+                  const mainId = entity?.entity_id;
+                  const mainState = mainId ? this.hass?.states?.[mainId] : undefined;
+                  const mainIsMA = mainState ? isMusicAssistantEntity(mainState) : false;
+                  const rawMa = entity?.music_assistant_entity;
+                  const isTemplate = this._looksLikeTemplate?.(rawMa);
+                  const maId = typeof rawMa === "string" && !isTemplate ? rawMa : undefined;
+                  const maState = maId ? this.hass?.states?.[maId] : undefined;
+                  const maIsMA = maState ? isMusicAssistantEntity(maState) : false;
+                  // Only show under the dropdown (non-template path)
+                  const showHiddenFilterChips = mainIsMA || maIsMA;
+                  if (!showHiddenFilterChips) return nothing;
+                  return html`
+                    <div class="form-row">
+                      <ha-selector
+                        .hass=${this.hass}
+                        .selector=${{
+                          select: {
+                            mode: "dropdown",
+                            multiple: true,
+                            options: [
+                              { value: "artist", label: "Artist" },
+                              { value: "album", label: "Album" },
+                              { value: "track", label: "Track" },
+                              { value: "playlist", label: "Playlist" },
+                              { value: "radio", label: "Radio" },
+                              { value: "podcast", label: "Podcast" },
+                              { value: "episode", label: "Episode" },
+                            ],
+                          },
+                        }}
+                        .value=${Array.isArray(entity?.hidden_filter_chips)
+                          ? entity.hidden_filter_chips
+                          : []}
+                        label="${localize("editor.fields.hidden_chips")}"
+                        helper="${localize("editor.subtitles.hide_search_chips")}"
+                        @value-changed=${(e) =>
+                          this._updateEntityProperty("hidden_filter_chips", e.detail.value)}
+                      ></ha-selector>
+                    </div>
+                  `;
+                })()}
+              `
+        }
 
         <div class="form-row form-row-multi-column">
           <div>
@@ -2254,140 +2455,164 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               .disabled=${!entity?.music_assistant_entity || entity.music_assistant_entity.trim() === ""}
               @change=${(e) => this._updateEntityProperty("prefer_ma_metadata", e.target.checked)}
             ></ha-switch>
-            <label for="prefer-ma-metadata-toggle">${localize('editor.labels.prefer_ma_metadata')}</label>
+            <label for="prefer-ma-metadata-toggle">${localize("editor.labels.prefer_ma_metadata")}</label>
           </div>
-          <div class="config-subtitle">${localize('editor.subtitles.prefer_ma_metadata')}</div>
+          <div class="config-subtitle">${localize("editor.subtitles.prefer_ma_metadata")}</div>
         </div>
 
         <div class="form-row">
           <ha-switch
             id="disable-auto-select-toggle"
             .checked=${entity?.disable_auto_select ?? false}
-            @change=${(e) =>
-        this._updateEntityProperty("disable_auto_select", e.target.checked)}
+            @change=${(e) => this._updateEntityProperty("disable_auto_select", e.target.checked)}
           ></ha-switch>
-          <label for="disable-auto-select-toggle">${localize('editor.labels.disable_auto_select')}</label>
-          <div class="config-subtitle">${localize('editor.subtitles.disable_auto_select')}</div>
+          <label for="disable-auto-select-toggle">${localize("editor.labels.disable_auto_select")}</label>
+          <div class="config-subtitle">${localize("editor.subtitles.disable_auto_select")}</div>
         </div>
 
-        ${showGroupVolume ? html`
-          <div class="form-row">
-            <ha-switch
-              id="group-volume-toggle"
-              .checked=${entity?.group_volume ?? true}
-              @change=${(e) =>
-          this._updateEntityProperty("group_volume", e.target.checked)}
-            ></ha-switch>
-            <label for="group-volume-toggle">Group Volume</label>
-          </div>
-        ` : nothing}
+        ${
+          showGroupVolume
+            ? html`
+                <div class="form-row">
+                  <ha-switch
+                    id="group-volume-toggle"
+                    .checked=${entity?.group_volume ?? true}
+                    @change=${(e) => this._updateEntityProperty("group_volume", e.target.checked)}
+                  ></ha-switch>
+                  <label for="group-volume-toggle">Group Volume</label>
+                </div>
+              `
+            : nothing
+        }
 
         <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="follow-active-toggle"
               .checked=${entity?.follow_active_volume ?? false}
-              @change=${(e) =>
-        this._updateEntityProperty("follow_active_volume", e.target.checked)}
+              @change=${(e) => this._updateEntityProperty("follow_active_volume", e.target.checked)}
             ></ha-switch>
-            <label for="follow-active-toggle">${localize('editor.labels.follow_active_entity')}</label>
+            <label for="follow-active-toggle">${localize("editor.labels.follow_active_entity")}</label>
           </div>
-          ${!(entity?.follow_active_volume ?? false) ? html`
-            <div>
-              <ha-switch
-                id="vol-template-toggle"
-                .checked=${this._useVolTemplate ?? this._looksLikeTemplate(entity?.volume_entity)}
-                @change=${(e) => {
-          this._useVolTemplate = e.target.checked;
-        }}
-              ></ha-switch>
-              <label for="vol-template-toggle">${localize('editor.labels.use_vol_template')}</label>
-            </div>
-          ` : nothing}
+          ${
+            !(entity?.follow_active_volume ?? false)
+              ? html`
+                  <div>
+                    <ha-switch
+                      id="vol-template-toggle"
+                      .checked=${this._useVolTemplate ??
+                      this._looksLikeTemplate(entity?.volume_entity)}
+                      @change=${(e) => {
+                        this._useVolTemplate = e.target.checked;
+                      }}
+                    ></ha-switch>
+                    <label for="vol-template-toggle"
+                      >${localize("editor.labels.use_vol_template")}</label
+                    >
+                  </div>
+                `
+              : nothing
+          }
         </div>
 
-        ${!(entity?.follow_active_volume ?? false) ? html`
-          ${(this._useVolTemplate ?? this._looksLikeTemplate(entity?.volume_entity))
-          ? html`
-                <div class="form-row">
-                  <div class=${this._yamlError && (entity?.volume_entity ?? "").trim() !== ""
-              ? "code-editor-wrapper error"
-              : "code-editor-wrapper"}>
-                    <ha-code-editor
-                      id="vol-template-editor"
-                      label="${localize('editor.fields.vol_template')}"
-                      .hass=${this.hass}
-                      mode="jinja2"
-                      autocomplete-entities
-                      .value=${entity?.volume_entity ?? ""}
-                      @value-changed=${(e) => this._updateEntityProperty("volume_entity", e.detail.value)}
-                    ></ha-code-editor>
-                    <div class="help-text">
-                      <ha-icon icon="mdi:information-outline"></ha-icon>
-                      ${localize('editor.subtitles.jinja_template_vol_hint')}
-                      <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_boolean.tv_volume','on') %}
+        ${
+          !(entity?.follow_active_volume ?? false)
+            ? html`
+                ${(this._useVolTemplate ?? this._looksLikeTemplate(entity?.volume_entity))
+                  ? html`
+                      <div class="form-row">
+                        <div
+                          class=${this._yamlError && (entity?.volume_entity ?? "").trim() !== ""
+                            ? "code-editor-wrapper error"
+                            : "code-editor-wrapper"}
+                        >
+                          <ha-code-editor
+                            id="vol-template-editor"
+                            label="${localize("editor.fields.vol_template")}"
+                            .hass=${this.hass}
+                            mode="jinja2"
+                            autocomplete-entities
+                            .value=${entity?.volume_entity ?? ""}
+                            @value-changed=${(e) =>
+                              this._updateEntityProperty("volume_entity", e.detail.value)}
+                          ></ha-code-editor>
+                          <div class="help-text">
+                            <ha-icon icon="mdi:information-outline"></ha-icon>
+                            ${localize("editor.subtitles.jinja_template_vol_hint")}
+                            <pre style="margin:6px 0; white-space:pre-wrap;">
+{% if is_state('input_boolean.tv_volume','on') %}
   remote.soundbar
 {% else %}
   media_player.office_homepod
-{% endif %}</pre>
-                    </div>
+{% endif %}</pre
+                            >
+                          </div>
+                        </div>
+                      </div>
+                    `
+                  : html`
+                      <div class="form-row">
+                        <ha-generic-picker
+                          .hass=${this.hass}
+                          .value=${this._isEntityId(entity?.volume_entity)
+                            ? entity.volume_entity
+                            : (entity?.entity_id ?? "")}
+                          .label=${localize("editor.fields.vol_entity")}
+                          .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                          .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                          .getItems=${this._getEntityItems(["media_player", "remote"])}
+                          @value-changed=${(e) => {
+                            const value = e.detail.value;
+                            this._updateEntityProperty("volume_entity", value);
+
+                            if (!value || value === entity.entity_id) {
+                              // sync_power is meaningless in these cases
+                              this._updateEntityProperty("sync_power", false);
+                            }
+                          }}
+                          allow-custom-value
+                        ></ha-generic-picker>
+                      </div>
+                    `}
+              `
+            : nothing
+        }
+
+        ${
+          entity?.volume_entity &&
+          entity.volume_entity !== entity.entity_id &&
+          !(entity?.follow_active_volume ?? false)
+            ? html`
+                <div class="form-row form-row-multi-column">
+                  <div>
+                    <ha-switch
+                      id="sync-power-toggle"
+                      .checked=${entity?.sync_power ?? false}
+                      @change=${(e) => this._updateEntityProperty("sync_power", e.target.checked)}
+                    ></ha-switch>
+                    <label for="sync-power-toggle">Sync Power</label>
                   </div>
                 </div>
               `
-          : html`
-                <div class="form-row">
-                  <ha-generic-picker
-                    .hass=${this.hass}
-                    .value=${this._isEntityId(entity?.volume_entity) ? entity.volume_entity : (entity?.entity_id ?? "")}
-                    .label=${localize('editor.fields.vol_entity')}
-                    .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                    .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                    .getItems=${this._getEntityItems(["media_player", "remote"])}
-                    @value-changed=${(e) => {
-              const value = e.detail.value;
-              this._updateEntityProperty("volume_entity", value);
+            : nothing
+        }
 
-              if (!value || value === entity.entity_id) {
-                // sync_power is meaningless in these cases
-                this._updateEntityProperty("sync_power", false);
-              }
-            }}
-                    allow-custom-value
-                  ></ha-generic-picker>
+        ${
+          entity?.follow_active_volume
+            ? html`
+                <div class="help-text">
+                  <ha-icon icon="mdi:information-outline"></ha-icon>
+                  ${localize("editor.subtitles.follow_active_entity")}
+                  <br /><br />
                 </div>
-              `}
-        ` : nothing}
-
-        ${entity?.volume_entity && entity.volume_entity !== entity.entity_id && !(entity?.follow_active_volume ?? false)
-
-        ? html`
-              <div class="form-row form-row-multi-column">
-                <div>
-                  <ha-switch
-                    id="sync-power-toggle"
-                    .checked=${entity?.sync_power ?? false}
-                    @change=${(e) =>
-            this._updateEntityProperty("sync_power", e.target.checked)}
-                  ></ha-switch>
-                  <label for="sync-power-toggle">Sync Power</label>
-                </div>
-              </div>
-            `
-        : nothing}
-
-        ${entity?.follow_active_volume ? html`
-            <div class="help-text">
-              <ha-icon icon="mdi:information-outline"></ha-icon>
-              ${localize('editor.subtitles.follow_active_entity')}
-              <br><br>
-            </div>
-        ` : nothing}
+              `
+            : nothing
+        }
         </div>
       `;
   }
 
   _renderActionEditor(action) {
-
     const actionMode = this._actionMode ?? this._deriveActionMode(action);
 
     return html`
@@ -2397,7 +2622,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             icon="mdi:chevron-left"
             @click=${this._onBackFromActionEditor}>
           </ha-icon>
-          <div class="action-editor-title">${localize('editor.titles.edit_action')}</div>
+          <div class="action-editor-title">${localize("editor.titles.edit_action")}</div>
         </div>
 
         <div class="form-row">
@@ -2405,7 +2630,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             .hass=${this.hass}
             class="full-width"
             .selector=${{ text: {} }}
-            label="${localize('editor.fields.name')} (Icon Only)"
+            label="${localize("editor.fields.name")} (Icon Only)"
             .value=${action?.name ?? ""}
             @value-changed=${(e) => this._updateActionProperty("name", e.detail.value)}
           ></ha-selector>
@@ -2413,11 +2638,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="form-row">
           <ha-icon-picker
-            label="${localize('editor.fields.icon')}"
+            label="${localize("editor.fields.icon")}"
             .hass=${this.hass}
             .value=${action?.icon ?? ""}
-            @value-changed=${(e) =>
-        this._updateActionProperty("icon", e.detail.value)}
+            @value-changed=${(e) => this._updateActionProperty("icon", e.detail.value)}
           ></ha-icon-picker>
         </div>
  
@@ -2425,350 +2649,416 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
-              label="${localize('editor.fields.placement')}"
+              label="${localize("editor.fields.placement")}"
               .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity"}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "chip", label: localize('editor.placements.chip') },
-            { value: "menu", label: localize('editor.placements.menu') },
-            { value: "hidden", label: localize('editor.placements.hidden') }
-          ]
-        }
-      }}
-              .value=${action?.in_menu === "hidden" ? "hidden" : (action?.in_menu ? "menu" : "chip")}
+                select: {
+                  mode: "dropdown",
+                  options: [
+                    { value: "chip", label: localize("editor.placements.chip") },
+                    { value: "menu", label: localize("editor.placements.menu") },
+                    { value: "hidden", label: localize("editor.placements.hidden") },
+                  ],
+                },
+              }}
+              .value=${action?.in_menu === "hidden" ? "hidden" : action?.in_menu ? "menu" : "chip"}
               @value-changed=${(e) => {
-        const val = e.detail.value;
-        let inMenu = false;
-        if (val === "menu") inMenu = true;
-        else if (val === "hidden") inMenu = "hidden";
-        this._updateActionProperty("in_menu", inMenu);
-        if (val !== "hidden") {
-          this._updateActionProperty("card_trigger", "none");
-        }
-      }}
+                const val = e.detail.value;
+                let inMenu = false;
+                if (val === "menu") inMenu = true;
+                else if (val === "hidden") inMenu = "hidden";
+                this._updateActionProperty("in_menu", inMenu);
+                if (val !== "hidden") {
+                  this._updateActionProperty("card_trigger", "none");
+                }
+              }}
             ></ha-selector>
           </div>
           <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
-              label="${localize('editor.fields.card_trigger')}"
+              label="${localize("editor.fields.card_trigger")}"
               .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || action?.in_menu !== "hidden"}
               .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "none", label: localize('editor.triggers.none') },
-            { value: "tap", label: localize('editor.triggers.tap') },
-            { value: "hold", label: localize('editor.triggers.hold') },
-            { value: "double_tap", label: localize('editor.triggers.double_tap') },
-            { value: "swipe_left", label: localize('editor.triggers.swipe_left') },
-            { value: "swipe_right", label: localize('editor.triggers.swipe_right') }
-          ]
-        }
-      }}
+                select: {
+                  mode: "dropdown",
+                  options: [
+                    { value: "none", label: localize("editor.triggers.none") },
+                    { value: "tap", label: localize("editor.triggers.tap") },
+                    { value: "hold", label: localize("editor.triggers.hold") },
+                    { value: "double_tap", label: localize("editor.triggers.double_tap") },
+                    { value: "swipe_left", label: localize("editor.triggers.swipe_left") },
+                    { value: "swipe_right", label: localize("editor.triggers.swipe_right") },
+                  ],
+                },
+              }}
               .value=${action?.card_trigger || "none"}
               @value-changed=${(e) => this._updateActionProperty("card_trigger", e.detail.value)}
             ></ha-selector>
           </div>
         </div>
-        ${action?.in_menu === "hidden" && (!action?.card_trigger || action?.card_trigger === "none") && actionMode !== "sync_selected_entity" && actionMode !== "select_entity" ? html`
-          <div class="help-text">
-            <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
-            ${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})
-          </div>
-        ` : nothing}
+        ${
+          action?.in_menu === "hidden" &&
+          (!action?.card_trigger || action?.card_trigger === "none") &&
+          actionMode !== "sync_selected_entity" &&
+          actionMode !== "select_entity"
+            ? html`
+                <div class="help-text">
+                  <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+                  ${localize("editor.placements.hidden")}
+                  (${localize("editor.placements.not_triggerable")})
+                </div>
+              `
+            : nothing
+        }
 
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
-            label="${localize('editor.fields.action_type')}"
+            label="${localize("editor.fields.action_type")}"
             .selector=${{
-        select: {
-          mode: "dropdown",
-          options: [
-            { value: "menu", label: localize('editor.action_types.menu') },
-            { value: "service", label: localize('editor.action_types.service') },
-            { value: "navigate", label: localize('editor.action_types.navigate') },
-            { value: "sync_selected_entity", label: localize('editor.action_types.sync_selected_entity') },
-            { value: "select_entity", label: localize('editor.action_types.select_entity') },
-            { value: "prev_entity", label: localize('editor.action_types.prev_entity') || "Previous Entity Chip" },
-            { value: "next_entity", label: localize('editor.action_types.next_entity') || "Next Entity Chip" },
-            { value: "toggle_lyrics", label: localize('editor.action_types.toggle_lyrics') || "Toggle Lyrics Overlay" }
-          ]
-        }
-      }}
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "menu", label: localize("editor.action_types.menu") },
+                  { value: "service", label: localize("editor.action_types.service") },
+                  { value: "navigate", label: localize("editor.action_types.navigate") },
+                  {
+                    value: "sync_selected_entity",
+                    label: localize("editor.action_types.sync_selected_entity"),
+                  },
+                  { value: "select_entity", label: localize("editor.action_types.select_entity") },
+                  {
+                    value: "prev_entity",
+                    label: localize("editor.action_types.prev_entity") || "Previous Entity Chip",
+                  },
+                  {
+                    value: "next_entity",
+                    label: localize("editor.action_types.next_entity") || "Next Entity Chip",
+                  },
+                  {
+                    value: "toggle_lyrics",
+                    label: localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay",
+                  },
+                ],
+              },
+            }}
             .value=${this._actionMode ?? this._deriveActionMode(action)}
             @value-changed=${(e) => {
-        const mode = e.detail.value;
-        this._actionMode = mode;
-        if (mode === "service") {
-          this._updateActionProperty("menu_item", undefined);
-          this._updateActionProperty("navigation_path", undefined);
-          this._updateActionProperty("navigation_new_tab", undefined);
-          this._updateActionProperty("action", undefined);
-          // Initialize service to empty string so Service Data editor renders immediately
-          if (!this._config.actions?.[this._actionEditorIndex]?.service) {
-            this._updateActionProperty("service", "");
-          }
-        } else if (mode === "menu") {
-          this._updateActionProperty("service", undefined);
-          this._updateActionProperty("service_data", undefined);
-          this._updateActionProperty("script_variable", undefined);
-          this._updateActionProperty("navigation_path", undefined);
-          this._updateActionProperty("navigation_new_tab", undefined);
-          this._updateActionProperty("action", undefined);
-        } else if (mode === "navigate") {
-          this._updateActionProperty("menu_item", undefined);
-          this._updateActionProperty("service", undefined);
-          this._updateActionProperty("service_data", undefined);
-          this._updateActionProperty("script_variable", undefined);
-          this._updateActionProperty("action", "navigate");
-          if (!action?.navigation_path) {
-            this._updateActionProperty("navigation_path", "");
-          }
-        } else if (mode === "sync_selected_entity") {
-          this._updateActionProperty("menu_item", undefined);
-          this._updateActionProperty("service", undefined);
-          this._updateActionProperty("service_data", undefined);
-          this._updateActionProperty("script_variable", undefined);
-          this._updateActionProperty("navigation_path", undefined);
-          this._updateActionProperty("navigation_new_tab", undefined);
-          this._updateActionProperty("action", "sync_selected_entity");
-          this._updateActionProperty("in_menu", "hidden");
-          this._updateActionProperty("card_trigger", "none");
-          if (!action?.sync_entity_type) {
-            this._updateActionProperty("sync_entity_type", "yamp_entity");
-          }
-        } else if (mode === "select_entity") {
-          this._updateActionProperty("menu_item", undefined);
-          this._updateActionProperty("service", undefined);
-          this._updateActionProperty("service_data", undefined);
-          this._updateActionProperty("script_variable", undefined);
-          this._updateActionProperty("navigation_path", undefined);
-          this._updateActionProperty("navigation_new_tab", undefined);
-          this._updateActionProperty("action", "select_entity");
-          this._updateActionProperty("in_menu", "hidden");
-          this._updateActionProperty("card_trigger", "none");
-          if (!action?.sync_entity_type) {
-            this._updateActionProperty("sync_entity_type", "yamp_entity");
-          }
-        } else if (mode === "prev_entity" || mode === "next_entity") {
-          this._updateActionProperty("menu_item", undefined);
-          this._updateActionProperty("service", undefined);
-          this._updateActionProperty("service_data", undefined);
-          this._updateActionProperty("script_variable", undefined);
-          this._updateActionProperty("navigation_path", undefined);
-          this._updateActionProperty("navigation_new_tab", undefined);
-          this._updateActionProperty("action", mode);
-        } else if (mode === "toggle_lyrics") {
-          this._updateActionProperty("menu_item", undefined);
-          this._updateActionProperty("service", undefined);
-          this._updateActionProperty("service_data", undefined);
-          this._updateActionProperty("script_variable", undefined);
-          this._updateActionProperty("navigation_path", undefined);
-          this._updateActionProperty("navigation_new_tab", undefined);
-          this._updateActionProperty("action", "toggle_lyrics");
-        }
-      }}
+              const mode = e.detail.value;
+              this._actionMode = mode;
+              if (mode === "service") {
+                this._updateActionProperty("menu_item", undefined);
+                this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("navigation_new_tab", undefined);
+                this._updateActionProperty("action", undefined);
+                // Initialize service to empty string so Service Data editor renders immediately
+                if (!this._config.actions?.[this._actionEditorIndex]?.service) {
+                  this._updateActionProperty("service", "");
+                }
+              } else if (mode === "menu") {
+                this._updateActionProperty("service", undefined);
+                this._updateActionProperty("service_data", undefined);
+                this._updateActionProperty("script_variable", undefined);
+                this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("navigation_new_tab", undefined);
+                this._updateActionProperty("action", undefined);
+              } else if (mode === "navigate") {
+                this._updateActionProperty("menu_item", undefined);
+                this._updateActionProperty("service", undefined);
+                this._updateActionProperty("service_data", undefined);
+                this._updateActionProperty("script_variable", undefined);
+                this._updateActionProperty("action", "navigate");
+                if (!action?.navigation_path) {
+                  this._updateActionProperty("navigation_path", "");
+                }
+              } else if (mode === "sync_selected_entity") {
+                this._updateActionProperty("menu_item", undefined);
+                this._updateActionProperty("service", undefined);
+                this._updateActionProperty("service_data", undefined);
+                this._updateActionProperty("script_variable", undefined);
+                this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("navigation_new_tab", undefined);
+                this._updateActionProperty("action", "sync_selected_entity");
+                this._updateActionProperty("in_menu", "hidden");
+                this._updateActionProperty("card_trigger", "none");
+                if (!action?.sync_entity_type) {
+                  this._updateActionProperty("sync_entity_type", "yamp_entity");
+                }
+              } else if (mode === "select_entity") {
+                this._updateActionProperty("menu_item", undefined);
+                this._updateActionProperty("service", undefined);
+                this._updateActionProperty("service_data", undefined);
+                this._updateActionProperty("script_variable", undefined);
+                this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("navigation_new_tab", undefined);
+                this._updateActionProperty("action", "select_entity");
+                this._updateActionProperty("in_menu", "hidden");
+                this._updateActionProperty("card_trigger", "none");
+                if (!action?.sync_entity_type) {
+                  this._updateActionProperty("sync_entity_type", "yamp_entity");
+                }
+              } else if (mode === "prev_entity" || mode === "next_entity") {
+                this._updateActionProperty("menu_item", undefined);
+                this._updateActionProperty("service", undefined);
+                this._updateActionProperty("service_data", undefined);
+                this._updateActionProperty("script_variable", undefined);
+                this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("navigation_new_tab", undefined);
+                this._updateActionProperty("action", mode);
+              } else if (mode === "toggle_lyrics") {
+                this._updateActionProperty("menu_item", undefined);
+                this._updateActionProperty("service", undefined);
+                this._updateActionProperty("service_data", undefined);
+                this._updateActionProperty("script_variable", undefined);
+                this._updateActionProperty("navigation_path", undefined);
+                this._updateActionProperty("navigation_new_tab", undefined);
+                this._updateActionProperty("action", "toggle_lyrics");
+              }
+            }}
           ></ha-selector>
         </div>
 
         
-        ${actionMode === "menu" ? html`
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              label="${localize('editor.fields.menu_item')}"
-              .selector=${{
-          select: {
-            mode: "dropdown",
-            options: [
-              { value: "", label: "" },
-              { value: "search", label: "Search" },
-              { value: "search-recently-played", label: "Recently Played" },
-              { value: "search-next-up", label: "Next Up" },
-              { value: "source", label: "Source" },
-              { value: "more-info", label: "More Info" },
-              { value: "group-players", label: "Group Players" },
-              { value: "transfer-queue", label: "Transfer Queue" }
-            ]
-          }
-        }}
-              .value=${action?.menu_item ?? ""}
-              @value-changed=${(e) =>
-          this._updateActionProperty("menu_item", e.detail.value || undefined)}
-            ></ha-selector>
-          </div>
-        ` : nothing} 
-        ${actionMode === "navigate" ? html`
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              class="full-width"
-              .selector=${{ text: {} }}
-              label="${localize('editor.fields.nav_path')} (/lovelace/music or #popup)"
-              .value=${action?.navigation_path ?? ""}
-              @value-changed=${(e) => {
-          this._updateActionProperty("navigation_path", e.detail.value);
-          this._updateActionProperty("action", "navigate");
-        }}
-            ></ha-selector>
-          </div>
-          <div class="form-row form-row-multi-column">
-            <div>
-              <ha-switch
-                id="navigation-new-tab-toggle"
-                .checked=${action?.navigation_new_tab ?? false}
-                @change=${(e) => this._updateActionProperty("navigation_new_tab", e.target.checked)}
-              ></ha-switch>
-              <label for="navigation-new-tab-toggle">Open External URLs in New Tab</label>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="config-subtitle">Supports dashboard paths, URLs, and anchors (e.g., <code>/lovelace/music</code> or <code>#pop-up-menu</code>).</div>
-          </div>
-        ` : nothing}
-        ${actionMode === "sync_selected_entity" || actionMode === "select_entity" ? html`
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{ entity: { domain: "input_text" } }}
-              .value=${action?.sync_entity_helper ?? ""}
-              label="${localize('editor.fields.selected_entity_helper')}"
-              @value-changed=${(e) => this._updateActionProperty("sync_entity_helper", e.detail.value)}
-            ></ha-selector>
-            <div class="config-subtitle">${actionMode === "select_entity" ? localize('editor.subtitles.select_entity_helper') : localize('editor.subtitles.selected_entity_helper')}</div>
-          </div>
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              label="${localize('editor.fields.sync_entity_type')}"
-              .selector=${{
-          select: {
-            mode: "dropdown",
-            options: [
-              { value: "yamp_entity", label: localize('editor.sync_entity_options.yamp_entity') },
-              { value: "yamp_main_entity", label: localize('editor.sync_entity_options.yamp_main_entity') },
-              { value: "yamp_playback_entity", label: localize('editor.sync_entity_options.yamp_playback_entity') }
-            ]
-          }
-        }}
-              .value=${action?.sync_entity_type ?? "yamp_entity"}
-              @value-changed=${(e) => this._updateActionProperty("sync_entity_type", e.detail.value)}
-            ></ha-selector>
-            <div class="config-subtitle">${localize('editor.subtitles.sync_entity_type')}</div>
-          </div>
-        ` : nothing}
-        ${actionMode === 'service' ? html`
-          <div class="form-row">
-            <ha-selector
-              .hass=${this.hass}
-              .selector=${{
-          select: {
-            mode: "dropdown",
-            filterable: true,
-            options: this._serviceItems || []
-          }
-        }}
-              .value=${action.service ?? ""}
-              label="${localize('editor.fields.service')}"
-              @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
-            ></ha-selector>
-          </div>
-
-          ${typeof action.service === "string" && action.service.startsWith("script.") ? html`
-            <div class="form-row form-row-multi-column">
-              <div>
-                <ha-switch
-                  id="script-variable-toggle"
-                  .checked=${action?.script_variable ?? false}
-                  @change=${(e) =>
-            this._updateActionProperty("script_variable", e.target.checked)}
-                ></ha-switch>
-                <span>${localize('editor.labels.script_var')}</span>
-              </div>
-            </div>
-          ` : nothing}
-
-          ${typeof action.service === "string" ? html`
-            <div class="help-text">
-              <ha-icon
-                icon="mdi:information-outline"
-              ></ha-icon>
-
-              ${localize('editor.subtitles.entity_current_hint')}
-
-            </div>
-            <div class="help-text">
-              <ha-icon
-                icon="mdi:information-outline"
-              ></ha-icon>
-            ${localize('editor.subtitles.service_data_note')}
-            </div>
-            <div class="form-row">
-              <div class="service-data-editor-header">
-                <div class="service-data-editor-title">${localize('editor.titles.service_data')}</div>
-                <div class="service-data-editor-actions">
-                  <ha-icon
-                    class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
-                    icon="mdi:content-save"
-                    title="${localize('editor.fields.save_service_data')}"
-                    @click=${this._saveYamlEditor}
-                  ></ha-icon>
-                  <ha-icon
-                    class="icon-button ${!this._yamlModified ? "icon-button-disabled" : ""}"
-                    icon="mdi:backup-restore"
-                    title="${localize('editor.fields.revert_service_data')}"
-                    @click=${this._revertYamlEditor}
-                  ></ha-icon>
-                  <ha-icon
-                    class="icon-button ${this._yamlError || this._yamlDraftUsesCurrentEntity() || !action?.service
-            ? "icon-button-disabled" : ""}"
-                    icon="mdi:play-circle-outline"
-                    title="${localize('editor.fields.test_action')}"
-                    @click=${this._testServiceCall}
-                  ></ha-icon>
-              
+        ${
+          actionMode === "menu"
+            ? html`
+                <div class="form-row">
+                  <ha-selector
+                    .hass=${this.hass}
+                    label="${localize("editor.fields.menu_item")}"
+                    .selector=${{
+                      select: {
+                        mode: "dropdown",
+                        options: [
+                          { value: "", label: "" },
+                          { value: "search", label: "Search" },
+                          { value: "search-recently-played", label: "Recently Played" },
+                          { value: "search-next-up", label: "Next Up" },
+                          { value: "source", label: "Source" },
+                          { value: "more-info", label: "More Info" },
+                          { value: "group-players", label: "Group Players" },
+                          { value: "transfer-queue", label: "Transfer Queue" },
+                        ],
+                      },
+                    }}
+                    .value=${action?.menu_item ?? ""}
+                    @value-changed=${(e) =>
+                      this._updateActionProperty("menu_item", e.detail.value || undefined)}
+                  ></ha-selector>
                 </div>
-            </div>
-            <div class=${this._yamlError && this._yamlDraft.trim() !== ""
-            ? "code-editor-wrapper error"
-            : "code-editor-wrapper"}>
-              <ha-code-editor
-                id="service-data-editor"
-                label="${localize('editor.fields.service_data')}"
-                autocomplete-entities
-                autocomplete-icons
-                .hass=${this.hass}
-                mode="yaml"
-                .value=${action?.service_data ? yaml.dump(action.service_data) : ""}
-                @value-changed=${(e) => {
-            /* the yaml will be parsed in real time to detect errors, but we will defer 
+              `
+            : nothing
+        } 
+        ${
+          actionMode === "navigate"
+            ? html`
+                <div class="form-row">
+                  <ha-selector
+                    .hass=${this.hass}
+                    class="full-width"
+                    .selector=${{ text: {} }}
+                    label="${localize("editor.fields.nav_path")} (/lovelace/music or #popup)"
+                    .value=${action?.navigation_path ?? ""}
+                    @value-changed=${(e) => {
+                      this._updateActionProperty("navigation_path", e.detail.value);
+                      this._updateActionProperty("action", "navigate");
+                    }}
+                  ></ha-selector>
+                </div>
+                <div class="form-row form-row-multi-column">
+                  <div>
+                    <ha-switch
+                      id="navigation-new-tab-toggle"
+                      .checked=${action?.navigation_new_tab ?? false}
+                      @change=${(e) =>
+                        this._updateActionProperty("navigation_new_tab", e.target.checked)}
+                    ></ha-switch>
+                    <label for="navigation-new-tab-toggle">Open External URLs in New Tab</label>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="config-subtitle">
+                    Supports dashboard paths, URLs, and anchors (e.g.,
+                    <code>/lovelace/music</code> or <code>#pop-up-menu</code>).
+                  </div>
+                </div>
+              `
+            : nothing
+        }
+        ${
+          actionMode === "sync_selected_entity" || actionMode === "select_entity"
+            ? html`
+                <div class="form-row">
+                  <ha-selector
+                    .hass=${this.hass}
+                    .selector=${{ entity: { domain: "input_text" } }}
+                    .value=${action?.sync_entity_helper ?? ""}
+                    label="${localize("editor.fields.selected_entity_helper")}"
+                    @value-changed=${(e) =>
+                      this._updateActionProperty("sync_entity_helper", e.detail.value)}
+                  ></ha-selector>
+                  <div class="config-subtitle">
+                    ${actionMode === "select_entity"
+                      ? localize("editor.subtitles.select_entity_helper")
+                      : localize("editor.subtitles.selected_entity_helper")}
+                  </div>
+                </div>
+                <div class="form-row">
+                  <ha-selector
+                    .hass=${this.hass}
+                    label="${localize("editor.fields.sync_entity_type")}"
+                    .selector=${{
+                      select: {
+                        mode: "dropdown",
+                        options: [
+                          {
+                            value: "yamp_entity",
+                            label: localize("editor.sync_entity_options.yamp_entity"),
+                          },
+                          {
+                            value: "yamp_main_entity",
+                            label: localize("editor.sync_entity_options.yamp_main_entity"),
+                          },
+                          {
+                            value: "yamp_playback_entity",
+                            label: localize("editor.sync_entity_options.yamp_playback_entity"),
+                          },
+                        ],
+                      },
+                    }}
+                    .value=${action?.sync_entity_type ?? "yamp_entity"}
+                    @value-changed=${(e) =>
+                      this._updateActionProperty("sync_entity_type", e.detail.value)}
+                  ></ha-selector>
+                  <div class="config-subtitle">
+                    ${localize("editor.subtitles.sync_entity_type")}
+                  </div>
+                </div>
+              `
+            : nothing
+        }
+        ${
+          actionMode === "service"
+            ? html`
+                <div class="form-row">
+                  <ha-selector
+                    .hass=${this.hass}
+                    .selector=${{
+                      select: {
+                        mode: "dropdown",
+                        filterable: true,
+                        options: this._serviceItems || [],
+                      },
+                    }}
+                    .value=${action.service ?? ""}
+                    label="${localize("editor.fields.service")}"
+                    @value-changed=${(e) => this._updateActionProperty("service", e.detail.value)}
+                  ></ha-selector>
+                </div>
+
+                ${typeof action.service === "string" && action.service.startsWith("script.")
+                  ? html`
+                      <div class="form-row form-row-multi-column">
+                        <div>
+                          <ha-switch
+                            id="script-variable-toggle"
+                            .checked=${action?.script_variable ?? false}
+                            @change=${(e) =>
+                              this._updateActionProperty("script_variable", e.target.checked)}
+                          ></ha-switch>
+                          <span>${localize("editor.labels.script_var")}</span>
+                        </div>
+                      </div>
+                    `
+                  : nothing}
+                ${typeof action.service === "string"
+                  ? html`
+                      <div class="help-text">
+                        <ha-icon icon="mdi:information-outline"></ha-icon>
+
+                        ${localize("editor.subtitles.entity_current_hint")}
+                      </div>
+                      <div class="help-text">
+                        <ha-icon icon="mdi:information-outline"></ha-icon>
+                        ${localize("editor.subtitles.service_data_note")}
+                      </div>
+                      <div class="form-row">
+                        <div class="service-data-editor-header">
+                          <div class="service-data-editor-title">
+                            ${localize("editor.titles.service_data")}
+                          </div>
+                          <div class="service-data-editor-actions">
+                            <ha-icon
+                              class="icon-button ${!this._yamlModified
+                                ? "icon-button-disabled"
+                                : ""}"
+                              icon="mdi:content-save"
+                              title="${localize("editor.fields.save_service_data")}"
+                              @click=${this._saveYamlEditor}
+                            ></ha-icon>
+                            <ha-icon
+                              class="icon-button ${!this._yamlModified
+                                ? "icon-button-disabled"
+                                : ""}"
+                              icon="mdi:backup-restore"
+                              title="${localize("editor.fields.revert_service_data")}"
+                              @click=${this._revertYamlEditor}
+                            ></ha-icon>
+                            <ha-icon
+                              class="icon-button ${this._yamlError ||
+                              this._yamlDraftUsesCurrentEntity() ||
+                              !action?.service
+                                ? "icon-button-disabled"
+                                : ""}"
+                              icon="mdi:play-circle-outline"
+                              title="${localize("editor.fields.test_action")}"
+                              @click=${this._testServiceCall}
+                            ></ha-icon>
+                          </div>
+                        </div>
+                        <div
+                          class=${this._yamlError && this._yamlDraft.trim() !== ""
+                            ? "code-editor-wrapper error"
+                            : "code-editor-wrapper"}
+                        >
+                          <ha-code-editor
+                            id="service-data-editor"
+                            label="${localize("editor.fields.service_data")}"
+                            autocomplete-entities
+                            autocomplete-icons
+                            .hass=${this.hass}
+                            mode="yaml"
+                            .value=${action?.service_data ? yaml.dump(action.service_data) : ""}
+                            @value-changed=${(e) => {
+                              /* the yaml will be parsed in real time to detect errors, but we will defer 
               updating the config until the save button above the editor is clicked.
             */
-            this._yamlDraft = e.detail.value;
-            this._yamlModified = true;
-            try {
-              const parsed = yaml.load(this._yamlDraft);
-              if (parsed && typeof parsed === "object") {
-                this._yamlError = null;
-              } else {
-                this._yamlError = "Invalid YAML";
-              }
-            } catch (err) {
-              this._yamlError = err.message;
-            }
-          }}
-              ></ha-code-editor>
-              ${this._yamlError && this._yamlDraft.trim() !== ""
-            ? html`<div class="yaml-error-message">${this._yamlError}</div>`
-            : nothing}
-            </div>
-          ` : nothing}
-        ` : nothing}
-      </div>`
+                              this._yamlDraft = e.detail.value;
+                              this._yamlModified = true;
+                              try {
+                                const parsed = yaml.load(this._yamlDraft);
+                                if (parsed && typeof parsed === "object") {
+                                  this._yamlError = null;
+                                } else {
+                                  this._yamlError = "Invalid YAML";
+                                }
+                              } catch (err) {
+                                this._yamlError = err.message;
+                              }
+                            }}
+                          ></ha-code-editor>
+                          ${this._yamlError && this._yamlDraft.trim() !== ""
+                            ? html`<div class="yaml-error-message">${this._yamlError}</div>`
+                            : nothing}
+                        </div>
+                      </div>
+                    `
+                  : nothing}
+              `
+            : nothing
+        }
+      </div>`;
   }
 
   _onEntityChanged(index, newValue) {
@@ -2799,16 +3089,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _getActionHelperText(act) {
     const inMenuVal = act?.in_menu;
-    const placement = inMenuVal === "hidden" ? "hidden" : (inMenuVal === true ? "menu" : "chip");
+    const placement = inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip";
     const trigger = act?.card_trigger;
     let placementText = "";
     if (placement === "menu") placementText = " \u2022 In Menu";
     else if (placement === "hidden") {
       if (act?.action !== "sync_selected_entity" && act?.action !== "select_entity") {
         if (!trigger || trigger === "none") {
-          placementText = ` \u2022 ${localize('editor.placements.hidden')} (${localize('editor.placements.not_triggerable')})`;
+          placementText = ` \u2022 ${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`;
         } else {
-          placementText = ` \u2022 ${localize('editor.placements.hidden')}`;
+          placementText = ` \u2022 ${localize("editor.placements.hidden")}`;
         }
       }
     }
@@ -2818,16 +3108,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     }
 
     if (act?.action === "select_entity") {
-      return `${localize('editor.action_helpers.select_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}${placementText}${triggerText}`;
+      return `${localize("editor.action_helpers.select_entity")} ${act.sync_entity_helper || localize("editor.action_helpers.select_helper")}${placementText}${triggerText}`;
     }
     if (act?.action === "sync_selected_entity") {
-      return `${localize('editor.action_helpers.sync_selected_entity')} ${act.sync_entity_helper || localize('editor.action_helpers.select_helper')}${placementText}${triggerText}`;
+      return `${localize("editor.action_helpers.sync_selected_entity")} ${act.sync_entity_helper || localize("editor.action_helpers.select_helper")}${placementText}${triggerText}`;
     }
     if (act?.action === "prev_entity") {
-      return `${localize('editor.action_types.prev_entity') || "Previous Entity Chip"}${placementText}${triggerText}`;
+      return `${localize("editor.action_types.prev_entity") || "Previous Entity Chip"}${placementText}${triggerText}`;
     }
     if (act?.action === "next_entity") {
-      return `${localize('editor.action_types.next_entity') || "Next Entity Chip"}${placementText}${triggerText}`;
+      return `${localize("editor.action_types.next_entity") || "Next Entity Chip"}${placementText}${triggerText}`;
     }
     if (act?.menu_item) {
       return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;
@@ -2839,7 +3129,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       const newTab = act?.navigation_new_tab ? " (New Tab)" : "";
       return `Navigate to ${act.navigation_path || "(missing path)"}${newTab}${placementText}${triggerText}`;
     }
-    return (placementText || triggerText) ? `Not Configured${placementText}${triggerText}` : "Not Configured";
+    return placementText || triggerText
+      ? `Not Configured${placementText}${triggerText}`
+      : "Not Configured";
   }
 
   _onEditEntity(index) {
@@ -2902,8 +3194,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._updateConfig("actions", actions);
   }
 
-
-
   _removeAction(index) {
     const actions = [...(this._config.actions ?? [])];
     if (index < 0 || index >= actions.length) return;
@@ -2954,14 +3244,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._yamlModified = false;
   }
 
-
   _yamlDraftUsesCurrentEntity() {
     if (!this._yamlDraft) return false;
     const regex = /^\s*entity_id\s*:\s*current\s*$/m;
     let result = regex.test(this._yamlDraft);
     return result;
   }
-
 
   async _testServiceCall() {
     if (this._yamlError || !this._yamlDraft?.trim()) {
@@ -3009,16 +3297,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _looksLikeUrlOrPath(value) {
     if (!value) return false;
-    return value.startsWith('http://') ||
-      value.startsWith('https://') ||
-      value.startsWith('/') ||
-      value.includes('.jpg') ||
-      value.includes('.jpeg') ||
-      value.includes('.png') ||
-      value.includes('.gif') ||
-      value.includes('.webp');
+    return (
+      value.startsWith("http://") ||
+      value.startsWith("https://") ||
+      value.startsWith("/") ||
+      value.includes(".jpg") ||
+      value.includes(".jpeg") ||
+      value.includes(".png") ||
+      value.includes(".gif") ||
+      value.includes(".webp")
+    );
   }
 }
 
 customElements.define("yet-another-media-player-editor", YetAnotherMediaPlayerEditor);
-

@@ -3,46 +3,62 @@ import { LitElement, html, css, nothing } from "lit";
 import { isMusicAssistantEntity } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
-
 const playOptions = [
-  { mode: 'replace', icon: 'mdi:playlist-remove', label: localize('search.replace') },
-  { mode: 'next', icon: 'mdi:playlist-play', label: localize('search.play_next') },
-  { mode: 'replace_next', icon: 'mdi:playlist-music', label: localize('search.replace_play') },
-  { mode: 'add', icon: 'mdi:playlist-plus', label: localize('search.add_queue') },
-  { mode: 'add_to_playlist', icon: 'mdi:plus', label: localize('search.add_to_playlist') },
+  { mode: "replace", icon: "mdi:playlist-remove", label: localize("search.replace") },
+  { mode: "next", icon: "mdi:playlist-play", label: localize("search.play_next") },
+  { mode: "replace_next", icon: "mdi:playlist-music", label: localize("search.replace_play") },
+  { mode: "add", icon: "mdi:playlist-plus", label: localize("search.add_queue") },
+  { mode: "add_to_playlist", icon: "mdi:plus", label: localize("search.add_to_playlist") },
 ];
 
-export const ALLOWED_MEDIA_TYPES = ['artist', 'album', 'track', 'playlist', 'radio', 'podcast', 'audiobook'];
+export const ALLOWED_MEDIA_TYPES = [
+  "artist",
+  "album",
+  "track",
+  "playlist",
+  "radio",
+  "podcast",
+  "audiobook",
+];
 
 export function isTrack(item) {
-  return item && (item.media_class === 'track' || item.media_content_type === 'track');
+  return item && (item.media_class === "track" || item.media_content_type === "track");
 }
 
 export function isRadio(item) {
-  return item && (item.media_class === 'radio' || item.media_content_type === 'radio');
+  return item && (item.media_class === "radio" || item.media_content_type === "radio");
 }
 
 export function isCardView(searchView) {
-  return searchView === 'card' || searchView === 'card_minimal';
+  return searchView === "card" || searchView === "card_minimal";
 }
 
-export function getSearchResultSubtitle(item, {
-  searchMediaClassFilter = 'all',
-  recentlyPlayedFilterActive = false,
-  upcomingFilterActive = false,
-  recommendationsFilterActive = false,
-} = {}) {
+export function getSearchResultSubtitle(
+  item,
+  {
+    searchMediaClassFilter = "all",
+    recentlyPlayedFilterActive = false,
+    upcomingFilterActive = false,
+    recommendationsFilterActive = false,
+  } = {}
+) {
   const isTrackItem = isTrack(item);
-  const isTrackOrAlbum = (searchMediaClassFilter === 'track' || searchMediaClassFilter === 'album');
+  const isTrackOrAlbum = searchMediaClassFilter === "track" || searchMediaClassFilter === "album";
 
   if (isTrackItem && item.artist && item.album) {
     return `${item.artist} - ${item.album}`;
   }
-  if ((isTrackOrAlbum || recentlyPlayedFilterActive || upcomingFilterActive || recommendationsFilterActive) && item.artist) {
+  if (
+    (isTrackOrAlbum ||
+      recentlyPlayedFilterActive ||
+      upcomingFilterActive ||
+      recommendationsFilterActive) &&
+    item.artist
+  ) {
     return item.artist;
   }
   return item.media_class
-    ? (item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1))
+    ? item.media_class.charAt(0).toUpperCase() + item.media_class.slice(1)
     : "";
 }
 
@@ -67,12 +83,17 @@ let cachedMusicAssistantEntryTs = 0;
 
 export async function getMusicAssistantConfigEntryId(hass) {
   const now = Date.now();
-  if (cachedMusicAssistantEntryId && now - cachedMusicAssistantEntryTs < MUSIC_ASSISTANT_CONFIG_TTL_MS) {
+  if (
+    cachedMusicAssistantEntryId &&
+    now - cachedMusicAssistantEntryTs < MUSIC_ASSISTANT_CONFIG_TTL_MS
+  ) {
     return cachedMusicAssistantEntryId;
   }
   try {
     const entries = await hass.callApi("GET", "config/config_entries/entry");
-    const maEntry = entries.find(entry => entry.domain === "music_assistant" && entry.state === "loaded");
+    const maEntry = entries.find(
+      (entry) => entry.domain === "music_assistant" && entry.state === "loaded"
+    );
     cachedMusicAssistantEntryId = maEntry?.entry_id || null;
     cachedMusicAssistantEntryTs = now;
     return cachedMusicAssistantEntryId;
@@ -94,7 +115,9 @@ export async function getMassQueueConfigEntryId(hass) {
   }
   try {
     const entries = await hass.callApi("GET", "config/config_entries/entry");
-    const mqEntry = entries.find(entry => entry.domain === "mass_queue" && entry.state === "loaded");
+    const mqEntry = entries.find(
+      (entry) => entry.domain === "mass_queue" && entry.state === "loaded"
+    );
     cachedMassQueueEntryId = mqEntry?.entry_id || null;
     cachedMassQueueEntryTs = now;
     return cachedMassQueueEntryId;
@@ -115,10 +138,14 @@ export function transformMusicAssistantItem(item) {
     media_class: item.media_type,
     item_id: item.item_id,
     thumbnail: item.image,
-    ...(item.artists && { artist: item.artists.map(a => a.name).join(', ') }),
+    ...(item.artists && { artist: item.artists.map((a) => a.name).join(", ") }),
     ...(item.album && { album: item.album.name, album_uri: item.album.uri }),
-    is_browsable: item.media_type === 'artist' || item.media_type === 'album' || item.media_type === 'playlist' || item.media_type === 'track',
-    is_editable: item.is_editable === true
+    is_browsable:
+      item.media_type === "artist" ||
+      item.media_type === "album" ||
+      item.media_type === "playlist" ||
+      item.media_type === "track",
+    is_editable: item.is_editable === true,
   };
 }
 
@@ -147,7 +174,7 @@ export function renderSearchResultActions({
   upcomingFilterActive = false,
   isMusicAssistant = false,
   massQueueAvailable = false,
-  searchView = 'list',
+  searchView = "list",
   isInline = false,
   onMoveUp,
   onMoveDown,
@@ -157,43 +184,103 @@ export function renderSearchResultActions({
   hideActions = false,
 }) {
   if (hideActions) return nothing;
-  const isQueueItem = !!(upcomingFilterActive && item.queue_item_id && isMusicAssistant && massQueueAvailable);
+  const isQueueItem = !!(
+    upcomingFilterActive &&
+    item.queue_item_id &&
+    isMusicAssistant &&
+    massQueueAvailable
+  );
 
   const isCard = isCardView(searchView);
-  const containerClass = isInline ? 'entity-options-search-buttons' : (isCard ? 'card-overlay-buttons' : 'search-sheet-buttons');
-  const playClass = isInline ? 'entity-options-search-play' : (isCard ? 'search-sheet-play icon-only' : 'search-sheet-play');
-  const queueClass = isInline ? 'entity-options-search-queue' : (isCard ? 'search-sheet-queue icon-only' : 'search-sheet-queue');
+  const containerClass = isInline
+    ? "entity-options-search-buttons"
+    : isCard
+      ? "card-overlay-buttons"
+      : "search-sheet-buttons";
+  const playClass = isInline
+    ? "entity-options-search-play"
+    : isCard
+      ? "search-sheet-play icon-only"
+      : "search-sheet-play";
+  const queueClass = isInline
+    ? "entity-options-search-queue"
+    : isCard
+      ? "search-sheet-queue icon-only"
+      : "search-sheet-queue";
 
   return html`
     <div class="${containerClass}">
-      ${isQueueItem && isInline ? html`
-        <div class="queue-controls">
-          <button class="queue-btn queue-btn-up" @click=${(e) => { e.stopPropagation(); onMoveUp(item); }} title="${localize('search.move_up')}">
-            <ha-icon icon="mdi:chevron-up"></ha-icon>
-          </button>
-          <button class="queue-btn queue-btn-down" @click=${(e) => { e.stopPropagation(); onMoveDown(item); }} title="${localize('search.move_down')}">
-            <ha-icon icon="mdi:chevron-down"></ha-icon>
-          </button>
-          <button class="queue-btn queue-btn-next" @click=${(e) => { e.stopPropagation(); onMoveNext(item); }} title="${localize('search.move_next')}">
-            <ha-icon icon="mdi:playlist-play"></ha-icon>
-          </button>
-          <button class="queue-btn queue-btn-remove" @click=${(e) => { e.stopPropagation(); onRemove(item); }} title="${localize('search.remove')}">
-            <ha-icon icon="mdi:close"></ha-icon>
-          </button>
-        </div>
-      ` : nothing}
-      <button class="${playClass}" 
-              @click=${(e) => { e.stopPropagation(); onPlay(item); }} 
-              title="${localize('search.play_item', '{item}', item.title)}">
+      ${isQueueItem && isInline
+        ? html`
+            <div class="queue-controls">
+              <button
+                class="queue-btn queue-btn-up"
+                @click=${(e) => {
+                  e.stopPropagation();
+                  onMoveUp(item);
+                }}
+                title="${localize("search.move_up")}"
+              >
+                <ha-icon icon="mdi:chevron-up"></ha-icon>
+              </button>
+              <button
+                class="queue-btn queue-btn-down"
+                @click=${(e) => {
+                  e.stopPropagation();
+                  onMoveDown(item);
+                }}
+                title="${localize("search.move_down")}"
+              >
+                <ha-icon icon="mdi:chevron-down"></ha-icon>
+              </button>
+              <button
+                class="queue-btn queue-btn-next"
+                @click=${(e) => {
+                  e.stopPropagation();
+                  onMoveNext(item);
+                }}
+                title="${localize("search.move_next")}"
+              >
+                <ha-icon icon="mdi:playlist-play"></ha-icon>
+              </button>
+              <button
+                class="queue-btn queue-btn-remove"
+                @click=${(e) => {
+                  e.stopPropagation();
+                  onRemove(item);
+                }}
+                title="${localize("search.remove")}"
+              >
+                <ha-icon icon="mdi:close"></ha-icon>
+              </button>
+            </div>
+          `
+        : nothing}
+      <button
+        class="${playClass}"
+        @click=${(e) => {
+          e.stopPropagation();
+          onPlay(item);
+        }}
+        title="${localize("search.play_item", "{item}", item.title)}"
+      >
         <ha-icon icon="mdi:play"></ha-icon>
       </button>
-      ${!isQueueItem && !isRadio(item) && !minimal ? html`
-        <button class="${queueClass}" 
-                @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }} 
-                title="${localize('common.more_options')}">
-          <ha-icon icon="mdi:dots-vertical"></ha-icon>
-        </button>
-      ` : nothing}
+      ${!isQueueItem && !isRadio(item) && !minimal
+        ? html`
+            <button
+              class="${queueClass}"
+              @click=${(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onOptionsToggle(item);
+              }}
+              title="${localize("common.more_options")}"
+            >
+              <ha-icon icon="mdi:dots-vertical"></ha-icon>
+            </button>
+          `
+        : nothing}
     </div>
   `;
 }
@@ -203,7 +290,7 @@ export function renderSearchResultSlideOut({
   activeSearchRowMenuId,
   onPlayOption,
   onOptionsToggle,
-  searchView = 'list',
+  searchView = "list",
   isQueueItem = false,
   massQueueAvailable = false,
   onMoveUp,
@@ -213,48 +300,137 @@ export function renderSearchResultSlideOut({
   hideActions = false,
 }) {
   if (hideActions) return nothing;
-  const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
+  const isActive =
+    activeSearchRowMenuId != null &&
+    item.media_content_id != null &&
+    activeSearchRowMenuId === item.media_content_id;
 
   const isCard = isCardView(searchView);
 
   return html`
-    <div class="search-row-slide-out ${isActive ? 'active' : ''}">
-      ${isQueueItem && isCard ? html`
-        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onMoveUp(item); onOptionsToggle(null); }} title="${localize('search.move_up')}">
-          ${localize('search.move_up')}
-        </button>
-        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onMoveDown(item); onOptionsToggle(null); }} title="${localize('search.move_down')}">
-          ${localize('search.move_down')}
-        </button>
-        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onMoveNext(item); onOptionsToggle(null); }} title="${localize('search.move_next')}">
-          ${localize('search.move_next')}
-        </button>
-        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onRemove(item); onOptionsToggle(null); }} title="${localize('search.remove')}">
-          ${localize('search.remove')}
-        </button>
-      ` : html`
-        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'replace'); }} title="${localize('search.labels.replace')}">
-          ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize('search.labels.replace')}
-        </button>
-        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'next'); }} title="${localize('search.labels.next')}">
-          ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize('search.labels.next')}
-        </button>
-        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'replace_next'); }} title="${localize('search.labels.replace_next')}">
-          ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize('search.labels.replace_next')}
-        </button>
-        <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'add'); }} title="${localize('search.labels.add')}">
-          ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize('search.labels.add')}
-        </button>
-        ${isTrack(item) && massQueueAvailable ? html`
-          <button class="slide-out-button" @click=${(e) => { e.stopPropagation(); onPlayOption(item, 'add_to_playlist'); }} title="${localize('search.labels.add_to_playlist')}">
-            ${isCard ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize('search.labels.add_to_playlist')}
-          </button>
-        ` : nothing}
-      `}
-      <div class="slide-out-close" @click=${(e) => { e.stopPropagation(); onOptionsToggle(null); }}>
+    <div class="search-row-slide-out ${isActive ? "active" : ""}">
+      ${isQueueItem && isCard
+        ? html`
+            <button
+              class="slide-out-button"
+              @click=${(e) => {
+                e.stopPropagation();
+                onMoveUp(item);
+                onOptionsToggle(null);
+              }}
+              title="${localize("search.move_up")}"
+            >
+              ${localize("search.move_up")}
+            </button>
+            <button
+              class="slide-out-button"
+              @click=${(e) => {
+                e.stopPropagation();
+                onMoveDown(item);
+                onOptionsToggle(null);
+              }}
+              title="${localize("search.move_down")}"
+            >
+              ${localize("search.move_down")}
+            </button>
+            <button
+              class="slide-out-button"
+              @click=${(e) => {
+                e.stopPropagation();
+                onMoveNext(item);
+                onOptionsToggle(null);
+              }}
+              title="${localize("search.move_next")}"
+            >
+              ${localize("search.move_next")}
+            </button>
+            <button
+              class="slide-out-button"
+              @click=${(e) => {
+                e.stopPropagation();
+                onRemove(item);
+                onOptionsToggle(null);
+              }}
+              title="${localize("search.remove")}"
+            >
+              ${localize("search.remove")}
+            </button>
+          `
+        : html`
+            <button
+              class="slide-out-button"
+              @click=${(e) => {
+                e.stopPropagation();
+                onPlayOption(item, "replace");
+              }}
+              title="${localize("search.labels.replace")}"
+            >
+              ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize(
+                "search.labels.replace"
+              )}
+            </button>
+            <button
+              class="slide-out-button"
+              @click=${(e) => {
+                e.stopPropagation();
+                onPlayOption(item, "next");
+              }}
+              title="${localize("search.labels.next")}"
+            >
+              ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize(
+                "search.labels.next"
+              )}
+            </button>
+            <button
+              class="slide-out-button"
+              @click=${(e) => {
+                e.stopPropagation();
+                onPlayOption(item, "replace_next");
+              }}
+              title="${localize("search.labels.replace_next")}"
+            >
+              ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize(
+                "search.labels.replace_next"
+              )}
+            </button>
+            <button
+              class="slide-out-button"
+              @click=${(e) => {
+                e.stopPropagation();
+                onPlayOption(item, "add");
+              }}
+              title="${localize("search.labels.add")}"
+            >
+              ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize(
+                "search.labels.add"
+              )}
+            </button>
+            ${isTrack(item) && massQueueAvailable
+              ? html`
+                  <button
+                    class="slide-out-button"
+                    @click=${(e) => {
+                      e.stopPropagation();
+                      onPlayOption(item, "add_to_playlist");
+                    }}
+                    title="${localize("search.labels.add_to_playlist")}"
+                  >
+                    ${isCard ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize(
+                      "search.labels.add_to_playlist"
+                    )}
+                  </button>
+                `
+              : nothing}
+          `}
+      <div
+        class="slide-out-close"
+        @click=${(e) => {
+          e.stopPropagation();
+          onOptionsToggle(null);
+        }}
+      >
         <ha-icon icon="mdi:close"></ha-icon>
       </div>
-
     </div>
   `;
 }
@@ -273,7 +449,7 @@ export function renderSearchResultItem({
   upcomingFilterActive,
   recentlyPlayedFilterActive = false,
   recommendationsFilterActive = false,
-  searchMediaClassFilter = 'all',
+  searchMediaClassFilter = "all",
   onPlay,
   onResultClick,
   onResultTouch,
@@ -285,7 +461,7 @@ export function renderSearchResultItem({
   onRemove,
   isMusicAssistant = false,
   isValidArtwork = (url) => !!url,
-  getClickTitle = (item) => ""
+  getClickTitle = (item) => "",
 }) {
   if (!item) {
     return html`<div class="yamp-search-result placeholder"></div>`;
@@ -293,106 +469,129 @@ export function renderSearchResultItem({
 
   const isMA = isMusicAssistant;
   const isClickable = !!item.is_browsable || isSelectionFlow;
-  const searchViewType = isCard ? (isMinimal ? 'card_minimal' : 'card') : 'list';
-  const isActive = activeSearchRowMenuId != null && item.media_content_id != null && activeSearchRowMenuId === item.media_content_id;
+  const searchViewType = isCard ? (isMinimal ? "card_minimal" : "card") : "list";
+  const isActive =
+    activeSearchRowMenuId != null &&
+    item.media_content_id != null &&
+    activeSearchRowMenuId === item.media_content_id;
   const hideActions = isSelectionFlow;
 
   return html`
-    <div class="yamp-search-result ${isCard ? 'search-result-card' : ''} ${isMinimal ? 'minimal' : ''} ${item._justMoved ? 'just-moved' : ''} ${isActive ? 'menu-active' : ''} ${isClickable ? 'clickable' : ''}"
-         @click=${(e) => {
-           if (isSelectionFlow || (!isCard && isClickable)) {
-             onResultClick?.(item, e);
-           } else if (isCard) {
-             onPlay?.(item);
-           }
-         }}>
-      <div class="search-sheet-thumb-container" 
-           data-clickable="${isCard}">
-        ${item.thumbnail && isValidArtwork(item.thumbnail) ? html`
-          <img
-            class="yamp-search-result-thumb"
-            src=${item.thumbnail}
-            alt=${item.title}
-            onerror="this.style.display='none'"
-          />
-        ` : html`
-          <div class="yamp-search-result-thumb-placeholder">
-            <ha-icon icon="mdi:music"></ha-icon>
-          </div>
-        `}
-        ${isCard ? renderSearchResultActions({
-          item,
-          onPlay,
-          onOptionsToggle,
-          upcomingFilterActive: !!upcomingFilterActive,
-          isMusicAssistant: isMA,
-          massQueueAvailable,
-          searchView: searchViewType,
-          onMoveUp,
-          onMoveDown,
-          onMoveNext,
-          onRemove,
-          minimal: isMinimal,
-          hideActions
-        }) : nothing}
+    <div
+      class="yamp-search-result ${isCard ? "search-result-card" : ""} ${isMinimal
+        ? "minimal"
+        : ""} ${item._justMoved ? "just-moved" : ""} ${isActive ? "menu-active" : ""} ${isClickable
+        ? "clickable"
+        : ""}"
+      @click=${(e) => {
+        if (isSelectionFlow || (!isCard && isClickable)) {
+          onResultClick?.(item, e);
+        } else if (isCard) {
+          onPlay?.(item);
+        }
+      }}
+    >
+      <div class="search-sheet-thumb-container" data-clickable="${isCard}">
+        ${item.thumbnail && isValidArtwork(item.thumbnail)
+          ? html`
+              <img
+                class="yamp-search-result-thumb"
+                src=${item.thumbnail}
+                alt=${item.title}
+                onerror="this.style.display='none'"
+              />
+            `
+          : html`
+              <div class="yamp-search-result-thumb-placeholder">
+                <ha-icon icon="mdi:music"></ha-icon>
+              </div>
+            `}
+        ${isCard
+          ? renderSearchResultActions({
+              item,
+              onPlay,
+              onOptionsToggle,
+              upcomingFilterActive: !!upcomingFilterActive,
+              isMusicAssistant: isMA,
+              massQueueAvailable,
+              searchView: searchViewType,
+              onMoveUp,
+              onMoveDown,
+              onMoveNext,
+              onRemove,
+              minimal: isMinimal,
+              hideActions,
+            })
+          : nothing}
       </div>
-      
-      ${!isMinimal ? html`
-        <div class="yamp-search-result-info">
-          <span 
-            class="yamp-search-result-title ${isClickable ? 'clickable-search-result' : ''}" 
-            @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
-            @click=${(e) => {
-              if (isClickable || isSelectionFlow) {
-                e.stopPropagation();
-                onResultClick && onResultClick(item, e);
-              }
-            }}
-            title=${getClickTitle(item)}
-          >
-            ${item.title}
-          </span>
-          <span 
-            class="yamp-search-result-subtitle ${isClickable ? 'clickable-search-result' : ''}" 
-            @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
-            @click=${(e) => {
-              if (isClickable || isSelectionFlow) {
-                e.stopPropagation();
-                onResultClick && onResultClick(item, e);
-              }
-            }}
-          >
-            ${getSearchResultSubtitle(item, {
-              searchMediaClassFilter,
-              recentlyPlayedFilterActive,
-              upcomingFilterActive,
-              recommendationsFilterActive
-            })}
-          </span>
-          ${isCard && !isRadio(item) && !hideActions ? html`
-            <div class="card-menu-button" @click=${(e) => { e.preventDefault(); e.stopPropagation(); onOptionsToggle(item); }}>
-              <ha-icon icon="mdi:dots-vertical"></ha-icon>
-            </div>
-          ` : nothing}
-        </div>
-      ` : nothing}
 
-      ${!isCard ? renderSearchResultActions({
-        item,
-        onPlay,
-        onOptionsToggle,
-        upcomingFilterActive: !!upcomingFilterActive,
-        isMusicAssistant: isMA,
-        massQueueAvailable,
-        searchView: searchViewType,
-        isInline: true,
-        onMoveUp,
-        onMoveDown,
-        onMoveNext,
-        onRemove,
-        hideActions
-      }) : nothing}
-      
+      ${!isMinimal
+        ? html`
+            <div class="yamp-search-result-info">
+              <span
+                class="yamp-search-result-title ${isClickable ? "clickable-search-result" : ""}"
+                @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
+                @click=${(e) => {
+                  if (isClickable || isSelectionFlow) {
+                    e.stopPropagation();
+                    onResultClick && onResultClick(item, e);
+                  }
+                }}
+                title=${getClickTitle(item)}
+              >
+                ${item.title}
+              </span>
+              <span
+                class="yamp-search-result-subtitle ${isClickable ? "clickable-search-result" : ""}"
+                @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
+                @click=${(e) => {
+                  if (isClickable || isSelectionFlow) {
+                    e.stopPropagation();
+                    onResultClick && onResultClick(item, e);
+                  }
+                }}
+              >
+                ${getSearchResultSubtitle(item, {
+                  searchMediaClassFilter,
+                  recentlyPlayedFilterActive,
+                  upcomingFilterActive,
+                  recommendationsFilterActive,
+                })}
+              </span>
+              ${isCard && !isRadio(item) && !hideActions
+                ? html`
+                    <div
+                      class="card-menu-button"
+                      @click=${(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onOptionsToggle(item);
+                      }}
+                    >
+                      <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                    </div>
+                  `
+                : nothing}
+            </div>
+          `
+        : nothing}
+      ${!isCard
+        ? renderSearchResultActions({
+            item,
+            onPlay,
+            onOptionsToggle,
+            upcomingFilterActive: !!upcomingFilterActive,
+            isMusicAssistant: isMA,
+            massQueueAvailable,
+            searchView: searchViewType,
+            isInline: true,
+            onMoveUp,
+            onMoveDown,
+            onMoveNext,
+            onRemove,
+            hideActions,
+          })
+        : nothing}
       ${renderSearchResultSlideOut({
         item,
         activeSearchRowMenuId,
@@ -405,56 +604,86 @@ export function renderSearchResultItem({
         onMoveDown,
         onMoveNext,
         onRemove,
-        hideActions
+        hideActions,
       })}
-
-      ${loadingSearchRowMenuId != null && item.media_content_id != null && loadingSearchRowMenuId === item.media_content_id ? html`
-        <div class="search-row-loading-overlay">
-          <ha-icon icon="mdi:loading" class="spin"></ha-icon>
-          <span>${localize('common.loading')}</span>
-        </div>
-      ` : nothing}
-      ${errorSearchRowMenuId != null && item.media_content_id != null && errorSearchRowMenuId === item.media_content_id ? html`
-        <div class="search-row-error-overlay">
-          <ha-icon icon="mdi:alert-circle" class="error-icon"></ha-icon>
-          <span>${localize('common.error') || 'Error'}</span>
-        </div>
-      ` : nothing}
-      ${successSearchRowMenuId != null && item.media_content_id != null && successSearchRowMenuId === item.media_content_id ? html`
-        <div class="search-row-success-overlay">
-          <span>✅</span>
-          <span>${successSearchRowType === 'playlist' ? localize('search.added_to_playlist') : localize('search.added')}</span>
-        </div>
-      ` : nothing}
+      ${loadingSearchRowMenuId != null &&
+      item.media_content_id != null &&
+      loadingSearchRowMenuId === item.media_content_id
+        ? html`
+            <div class="search-row-loading-overlay">
+              <ha-icon icon="mdi:loading" class="spin"></ha-icon>
+              <span>${localize("common.loading")}</span>
+            </div>
+          `
+        : nothing}
+      ${errorSearchRowMenuId != null &&
+      item.media_content_id != null &&
+      errorSearchRowMenuId === item.media_content_id
+        ? html`
+            <div class="search-row-error-overlay">
+              <ha-icon icon="mdi:alert-circle" class="error-icon"></ha-icon>
+              <span>${localize("common.error") || "Error"}</span>
+            </div>
+          `
+        : nothing}
+      ${successSearchRowMenuId != null &&
+      item.media_content_id != null &&
+      successSearchRowMenuId === item.media_content_id
+        ? html`
+            <div class="search-row-success-overlay">
+              <span>✅</span>
+              <span
+                >${successSearchRowType === "playlist"
+                  ? localize("search.added_to_playlist")
+                  : localize("search.added")}</span
+              >
+            </div>
+          `
+        : nothing}
     </div>
   `;
 }
 
-export function renderSearchOptionsOverlay({ item, onClose, onPlayOption, massQueueAvailable = false }) {
+export function renderSearchOptionsOverlay({
+  item,
+  onClose,
+  onPlayOption,
+  massQueueAvailable = false,
+}) {
   if (!item) return nothing;
 
   return html`
     <div class="entity-options-overlay entity-options-overlay-opening" @click=${onClose}>
-      <div class="entity-options-container entity-options-sheet-opening" @click=${(e) => e.stopPropagation()}>
+      <div
+        class="entity-options-container entity-options-sheet-opening"
+        @click=${(e) => e.stopPropagation()}
+      >
         <div class="entity-options-sheet">
           <div class="entity-options-title">${item.title}</div>
-          
-          ${playOptions.filter(option => {
-    if (option.mode === 'add_to_playlist') {
-      return isTrack(item) && massQueueAvailable;
-    }
-    return true;
-  }).map(option => html`
-            <button class="entity-options-item menu-action-item" @click=${() => onPlayOption(item, option.mode)}>
-              <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
-              <span class="menu-action-label">${option.label}</span>
-            </button>
-          `)}
-          
+
+          ${playOptions
+            .filter((option) => {
+              if (option.mode === "add_to_playlist") {
+                return isTrack(item) && massQueueAvailable;
+              }
+              return true;
+            })
+            .map(
+              (option) => html`
+                <button
+                  class="entity-options-item menu-action-item"
+                  @click=${() => onPlayOption(item, option.mode)}
+                >
+                  <ha-icon class="menu-action-icon" .icon=${option.icon}></ha-icon>
+                  <span class="menu-action-label">${option.label}</span>
+                </button>
+              `
+            )}
+
           <div class="entity-options-divider"></div>
-          
+
           <button class="entity-options-item close-item" @click=${onClose}>
-            ${localize('common.cancel')}
+            ${localize("common.cancel")}
           </button>
         </div>
       </div>
@@ -463,18 +692,21 @@ export function renderSearchOptionsOverlay({ item, onClose, onPlayOption, massQu
 }
 
 // Service helpers to keep search-related logic colocated with the search UI module
-export async function searchMedia(hass, entityId, query, mediaType = null, searchParams = {}, searchResultsLimit = 20) {
+export async function searchMedia(
+  hass,
+  entityId,
+  query,
+  mediaType = null,
+  searchParams = {},
+  searchResultsLimit = 20
+) {
   const configEntryId = await getMusicAssistantConfigEntryId(hass);
   // Try Music Assistant search if we have a config entry
   if (configEntryId) {
     try {
-
-
       // If favorites are requested, use Music Assistant get_library with favorite + search
       if (searchParams.favorites) {
-        const mediaTypes = (mediaType && mediaType !== 'all')
-          ? [mediaType]
-          : ALLOWED_MEDIA_TYPES;
+        const mediaTypes = mediaType && mediaType !== "all" ? [mediaType] : ALLOWED_MEDIA_TYPES;
         const flatResultsFav = [];
         await Promise.all(
           mediaTypes.map(async (mt) => {
@@ -495,20 +727,20 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
               if (favoritesLimit !== undefined) {
                 message.service_data.limit = favoritesLimit;
               }
-              if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+              if (searchParams.orderBy && searchParams.orderBy !== "default") {
                 message.service_data.order_by = searchParams.orderBy;
               }
               const favRes = await hass.connection.sendMessagePromise(message);
               const favResponse = favRes?.response;
               const items = favResponse?.items || [];
-              items.forEach(item => {
+              items.forEach((item) => {
                 const transformedItem = transformMusicAssistantItem(item);
                 if (transformedItem) {
                   flatResultsFav.push(transformedItem);
                 }
               });
             } catch (error) {
-              console.error('yamp: Error searching favorites for type', mt, error);
+              console.error("yamp: Error searching favorites for type", mt, error);
             }
           })
         );
@@ -516,10 +748,17 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
       }
 
       // If query is empty and we have a specific media type (not 'all'), treat as browsing the library
-      if ((!query || query.trim() === '') && mediaType && mediaType !== 'all' && !searchParams.favorites) {
+      if (
+        (!query || query.trim() === "") &&
+        mediaType &&
+        mediaType !== "all" &&
+        !searchParams.favorites
+      ) {
         // Validate media type strictly
         if (!ALLOWED_MEDIA_TYPES.includes(mediaType)) {
-          console.warn(`yamp: Unsupported media type for browsing: ${mediaType}. Skipping get_library call.`);
+          console.warn(
+            `yamp: Unsupported media type for browsing: ${mediaType}. Skipping get_library call.`
+          );
           return { results: [], usedMusicAssistant: true };
         }
 
@@ -530,7 +769,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
             service: "get_library",
             service_data: {
               config_entry_id: configEntryId,
-              media_type: mediaType
+              media_type: mediaType,
               // favorite param omitted to get ALL items
             },
             return_response: true,
@@ -540,7 +779,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
           if (limit !== undefined) {
             message.service_data.limit = limit;
           }
-          if (searchParams.orderBy && searchParams.orderBy !== 'default') {
+          if (searchParams.orderBy && searchParams.orderBy !== "default") {
             message.service_data.order_by = searchParams.orderBy;
           }
 
@@ -549,7 +788,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
           const items = response?.items || [];
 
           const browseResults = [];
-          items.forEach(item => {
+          items.forEach((item) => {
             const transformedItem = transformMusicAssistantItem(item);
             if (transformedItem) {
               browseResults.push(transformedItem);
@@ -558,7 +797,7 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
 
           return { results: browseResults, usedMusicAssistant: true };
         } catch (error) {
-          console.error('yamp: Error browsing library for type', mediaType, error);
+          console.error("yamp: Error browsing library for type", mediaType, error);
           return { results: [], usedMusicAssistant: true };
         }
       }
@@ -567,16 +806,15 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
         name: query,
         config_entry_id: configEntryId,
       };
-      const searchLimit = resolveLimitValue(
-        searchResultsLimit,
-        { cap: mediaType === "all" ? 8 : undefined }
-      );
+      const searchLimit = resolveLimitValue(searchResultsLimit, {
+        cap: mediaType === "all" ? 8 : undefined,
+      });
       if (searchLimit !== undefined) {
         serviceData.limit = searchLimit; // Use configurable limit for filtered searches
       }
 
       // Add media_type if specified and not "all"
-      if (mediaType && mediaType !== 'all') {
+      if (mediaType && mediaType !== "all") {
         serviceData.media_type = mediaType;
       }
 
@@ -588,9 +826,6 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
         serviceData.album = searchParams.album;
       }
 
-
-
-
       const msg = {
         type: "call_service",
         domain: "music_assistant",
@@ -601,17 +836,13 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
 
       const res = await hass.connection.sendMessagePromise(msg);
 
-
       const response = res?.response;
       if (response) {
-
-
         // Convert grouped results to flat array and transform to expected format
         const flatResults = [];
         Object.entries(response).forEach(([mediaType, items]) => {
           if (Array.isArray(items)) {
-
-            items.forEach(item => {
+            items.forEach((item) => {
               const transformedItem = transformMusicAssistantItem(item);
               if (transformedItem) {
                 flatResults.push(transformedItem);
@@ -620,23 +851,32 @@ export async function searchMedia(hass, entityId, query, mediaType = null, searc
           }
         });
 
-
         return { results: flatResults, usedMusicAssistant: true };
       }
-
-
     } catch (error) {
-      console.error('yamp: Error in searchMedia:', error);
+      console.error("yamp: Error in searchMedia:", error);
     }
   }
 
   // Fallback to media_player search
-  const fallbackResults = await fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, searchParams);
+  const fallbackResults = await fallbackToMediaPlayerSearch(
+    hass,
+    entityId,
+    query,
+    mediaType,
+    searchParams
+  );
   return { results: fallbackResults, usedMusicAssistant: false };
 }
 
 // Get favorites from Music Assistant
-export async function getRecentlyPlayed(hass, entityId, mediaType = null, searchResultsLimit = 20, options = {}) {
+export async function getRecentlyPlayed(
+  hass,
+  entityId,
+  mediaType = null,
+  searchResultsLimit = 20,
+  options = {}
+) {
   const configEntryId = await getMusicAssistantConfigEntryId(hass);
   if (!configEntryId) {
     return { results: [], usedMusicAssistant: false };
@@ -660,13 +900,11 @@ export async function getRecentlyPlayed(hass, entityId, mediaType = null, search
     }
     const response = await hass.connection.sendMessagePromise(message);
     const items = response?.response?.items || [];
-    return items
-      .map(transformMusicAssistantItem)
-      .filter(Boolean);
+    return items.map(transformMusicAssistantItem).filter(Boolean);
   };
 
   try {
-    if (mediaType === 'all') {
+    if (mediaType === "all") {
       const allResults = [];
       await Promise.all(
         ALLOWED_MEDIA_TYPES.map(async (mt) => {
@@ -682,18 +920,24 @@ export async function getRecentlyPlayed(hass, entityId, mediaType = null, search
       return { results: allResults, usedMusicAssistant: true };
     }
 
-    const chunk = await fetchMediaType(mediaType || 'track');
+    const chunk = await fetchMediaType(mediaType || "track");
     if (chunk.length && onChunk) {
-      onChunk(chunk, mediaType || 'track');
+      onChunk(chunk, mediaType || "track");
     }
     return { results: chunk, usedMusicAssistant: true };
   } catch (error) {
-    console.error('yamp: Error getting recently played from Music Assistant:', error);
+    console.error("yamp: Error getting recently played from Music Assistant:", error);
     return { results: [], usedMusicAssistant: false };
   }
 }
 
-export async function getFavorites(hass, entityId, mediaType = null, searchResultsLimit = 20, options = {}) {
+export async function getFavorites(
+  hass,
+  entityId,
+  mediaType = null,
+  searchResultsLimit = 20,
+  options = {}
+) {
   const configEntryId = await getMusicAssistantConfigEntryId(hass);
   if (!configEntryId) {
     return { results: [], usedMusicAssistant: false };
@@ -712,31 +956,28 @@ export async function getFavorites(hass, entityId, mediaType = null, searchResul
       },
       return_response: true,
     };
-    const favoritesLimit = resolveLimitValue(
-      searchResultsLimit,
-      { cap: type === "all" ? 8 : undefined }
-    );
+    const favoritesLimit = resolveLimitValue(searchResultsLimit, {
+      cap: type === "all" ? 8 : undefined,
+    });
     if (favoritesLimit !== undefined) {
       message.service_data.limit = favoritesLimit;
     }
-    if (options.orderBy && options.orderBy !== 'default') {
+    if (options.orderBy && options.orderBy !== "default") {
       message.service_data.order_by = options.orderBy;
     }
     try {
       const res = await hass.connection.sendMessagePromise(message);
       const response = res?.response;
       const items = response?.items || [];
-      return items
-        .map(transformMusicAssistantItem)
-        .filter(Boolean);
+      return items.map(transformMusicAssistantItem).filter(Boolean);
     } catch (error) {
-      console.error('yamp: Error loading favorites for type', type, error);
+      console.error("yamp: Error loading favorites for type", type, error);
       return [];
     }
   };
 
   try {
-    if (mediaType && mediaType !== 'all') {
+    if (mediaType && mediaType !== "all") {
       const chunk = await fetchFavoritesForType(mediaType);
       if (chunk.length && onChunk) {
         onChunk(chunk, mediaType);
@@ -759,7 +1000,7 @@ export async function getFavorites(hass, entityId, mediaType = null, searchResul
 
     return { results: flatResults, usedMusicAssistant: true };
   } catch (error) {
-    console.error('yamp: Error loading favorites', error);
+    console.error("yamp: Error loading favorites", error);
     return { results: [], usedMusicAssistant: false };
   }
 }
@@ -771,7 +1012,7 @@ async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, sea
     search_query: query,
   };
 
-  if (mediaType && mediaType !== 'all') {
+  if (mediaType && mediaType !== "all") {
     fallbackData.media_content_type = mediaType;
   }
 
@@ -789,7 +1030,6 @@ async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, sea
   const fallbackRes = await hass.connection.sendMessagePromise(fallbackMsg);
   const results = fallbackRes?.response?.[entityId]?.result || fallbackRes?.result || [];
 
-
   return results;
 }
 
@@ -802,7 +1042,14 @@ export function playSearchedMedia(hass, entityId, item) {
 }
 
 // Check if a track is favorited in Music Assistant
-export async function isTrackFavorited(hass, mediaContentId, entityId = null, trackName = null, artistName = null, searchResultsLimit = 100) {
+export async function isTrackFavorited(
+  hass,
+  mediaContentId,
+  entityId = null,
+  trackName = null,
+  artistName = null,
+  searchResultsLimit = 100
+) {
   if (!mediaContentId) {
     return false;
   }
@@ -818,9 +1065,8 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
     if (!targetEntityId) {
       // Try to find a Music Assistant entity
       const states = Object.values(hass.states);
-      const maEntity = states.find(state =>
-        isMusicAssistantEntity(state) &&
-        state.entity_id.startsWith('media_player.')
+      const maEntity = states.find(
+        (state) => isMusicAssistantEntity(state) && state.entity_id.startsWith("media_player.")
       );
       if (maEntity) {
         targetEntityId = maEntity.entity_id;
@@ -835,7 +1081,7 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
         const serviceData = {
           name: trackName || artistName,
           config_entry_id: configEntryId,
-          media_type: 'track',
+          media_type: "track",
         };
         const searchLimit = resolveLimitValue(searchResultsLimit);
         if (searchLimit !== undefined) {
@@ -845,9 +1091,9 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
           serviceData.artist = artistName;
         }
         const searchMsg = {
-          type: 'call_service',
-          domain: 'music_assistant',
-          service: 'search',
+          type: "call_service",
+          domain: "music_assistant",
+          service: "search",
           service_data: serviceData,
           return_response: true,
         };
@@ -856,7 +1102,7 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
         let searchItems = [];
         if (Array.isArray(searchResponse)) {
           searchItems = searchResponse;
-        } else if (searchResponse && typeof searchResponse === 'object') {
+        } else if (searchResponse && typeof searchResponse === "object") {
           Object.values(searchResponse).forEach((val) => {
             if (Array.isArray(val)) {
               searchItems.push(...val);
@@ -864,13 +1110,16 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
           });
         }
         if (searchItems.length) {
-          const idPart = (mediaContentId.split('/').pop() || '').trim();
+          const idPart = (mediaContentId.split("/").pop() || "").trim();
           const byUri = searchItems.find((it) => it?.uri === mediaContentId);
-          const byId = !byUri && /^\d+$/.test(idPart)
-            ? searchItems.find((it) => typeof it?.uri === 'string' && it.uri.endsWith(`/${idPart}`))
-            : null;
+          const byId =
+            !byUri && /^\d+$/.test(idPart)
+              ? searchItems.find(
+                  (it) => typeof it?.uri === "string" && it.uri.endsWith(`/${idPart}`)
+                )
+              : null;
           const foundItem = byUri || byId || null;
-          if (foundItem && typeof foundItem.favorite === 'boolean') {
+          if (foundItem && typeof foundItem.favorite === "boolean") {
             return !!foundItem.favorite;
           }
         }
@@ -899,7 +1148,7 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
           }
           const response = await hass.connection.sendMessagePromise(message);
           const favoriteTracks = response?.response?.items || [];
-          if (favoriteTracks.some(track => track.uri === mediaContentId)) {
+          if (favoriteTracks.some((track) => track.uri === mediaContentId)) {
             return true;
           }
         } catch (e) {
@@ -927,7 +1176,7 @@ export async function isTrackFavorited(hass, mediaContentId, entityId = null, tr
       }
       const response = await hass.connection.sendMessagePromise(message);
       const favoriteTracks = response?.response?.items || [];
-      return favoriteTracks.some(t => t.uri === mediaContentId);
+      return favoriteTracks.some((t) => t.uri === mediaContentId);
     } catch (getLibraryError) {
       // Fallback to false if get_library fails
     }
