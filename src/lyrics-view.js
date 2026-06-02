@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from "lit";
+import { LitElement, html } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { lyricsStyles } from "./yamp-card-styles.js";
 import { localize } from "./localize/localize.js";
@@ -163,7 +163,6 @@ export class YampLyricsView extends LitElement {
           const isActive = index === this._activeIndex;
           const isUnsyncedMode = this.mode === "text";
           const isScrollMode = this.mode === "scroll";
-          const isDefaultMode = this.mode === "default";
 
           const classes = {
             "lyric-line": true,

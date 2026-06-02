@@ -37,7 +37,6 @@ export class YampGridLayout extends GridLayout {
 
   _updateLayout() {
     const justify = this.justify;
-    const [padding1Start, padding1End] = this._padding1;
     const [padding2Start, padding2End] = this._padding2;
     const usePaddingAndGap2 = this.flex || ["start", "center", "end"].includes(justify);
 
