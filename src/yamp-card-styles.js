@@ -37,7 +37,6 @@ const LINE_CLAMP_2 = css`
   overflow: hidden;
 `;
 
-
 const lightModeVariables = css`
   --card-bg: #fff;
   --primary-text: #222;
