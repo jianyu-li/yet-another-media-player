@@ -7,6 +7,14 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 
 [![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=yet-another-media-player&category=dashboard&owner=jianyu-li)
 
+## Dependencies
+
+YAMP is built using the following core dependencies:
+- [Lit](https://lit.dev/) - Core framework for web components
+- [@lit-labs/virtualizer](https://www.npmjs.com/package/@lit-labs/virtualizer) - For efficient list rendering
+- [js-yaml](https://github.com/nodeca/js-yaml) - For YAML parsing
+- [SortableJS](https://sortablejs.github.io/Sortable/) - For drag-and-drop interactions
+
 
 
 ## Features
