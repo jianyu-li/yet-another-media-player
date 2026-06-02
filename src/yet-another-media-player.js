@@ -7303,7 +7303,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // --- Priority rule for entity selection ---
     // Keep the currently‑selected entity (even if paused)
     // unless some other entity is *playing*.
-    // Use cached resolved MA ID instead of raw template string
     // Also get the actual resolved MA entity for state detection (can be unconfigured)
     const actualResolvedMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
     const actualMaState = actualResolvedMaId ? this.hass?.states?.[actualResolvedMaId] : null;
@@ -7367,8 +7366,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Use the unified entity resolution system for playback state
     const finalPlaybackStateObj = playbackStateObj;
 
-    // Keep finalEntityId for backward compatibility with existing code
-    // Blend in optimistic playback state if present
     const shuffleActive = !!finalPlaybackStateObj?.attributes?.shuffle;
     const repeatActive = finalPlaybackStateObj?.attributes?.repeat && finalPlaybackStateObj?.attributes?.repeat !== "off";
 
