@@ -9611,7 +9611,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
 
 window.customCards = window.customCards || [];
-window.customCards.push({
+if (!window.customCards.some(card => card.type === "yet-another-media-player")) {
+  window.customCards.push({
   type: "yet-another-media-player",
   name: "Yet Another Media Player",
   description: "A custom card to control multiple media players.",
@@ -9626,3 +9627,4 @@ window.customCards.push({
     };
   },
 });
+}
