@@ -78,7 +78,7 @@ Below you will find a list of all configuration options.
 |                                                                                                 |
 | **Behavior**               |              |              |             |                                                                                                 |
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
-| `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing                                          |
+| `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing ([Supports Templates](#template-support))                                          |
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
@@ -109,7 +109,7 @@ Below you will find a list of all configuration options.
 | `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu, `in_menu_on_idle`: shows chips inline when active but moves them to the menu when idle |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
-| `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card |
+| `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card ([Supports Templates](#template-support)) |
 | `swap_pause_for_stop`      | boolean      | No           | `false`     | Only for `control_layout: modern`; when `true`, the center pause button is replaced with a stop button |
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
@@ -562,6 +562,8 @@ The following configuration keys support templates:
 - **`navigation_path`**: Create dynamic navigation URLs (e.g., search IMDb or Genius).
 - **`volume_entity`**: Dynamically select which entity controls volume for a specific player.
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
+- **`always_collapsed`**: Dynamically determine if the card should be fully collapsed.
+- **`control_layout`**: Dynamically select the control layout style (`classic` or `modern`).
 - **`in_menu`**: Dynamically determine where an action is placed (`true`, `false`, or `hidden`).
 - **`image_url` / `missing_art_url`**: (Inside `media_artwork_overrides`) Dynamically determine artwork.
 

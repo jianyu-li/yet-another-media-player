@@ -516,12 +516,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   static styles = yampCardStyles;
 
+  get _controlLayout() {
+    const raw = this.config?.control_layout;
+    let val = raw;
+    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
+      const resolved = this._controlLayoutResolveCache?.['card']?.value;
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        val = resolved;
+      } else {
+        return "classic"; // Default until template resolves
+      }
+    }
+    const layoutPref = typeof val === "string" ? val.trim().toLowerCase() : "classic";
+    return layoutPref === "modern" ? "modern" : "classic";
+  }
+
   get _alwaysCollapsed() {
     const raw = this.config?.always_collapsed;
     if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
       const resolved = this._alwaysCollapsedResolveCache?.['card']?.value;
       if (resolved !== undefined && resolved !== null && resolved !== "") {
-        const lower = resolved.toLowerCase();
+        const lower = String(resolved).trim().toLowerCase();
         return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
       }
       return false; // Default until template resolves
@@ -607,7 +622,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._latestManualShiftTime = 0;
     this._searchTimeoutHandle = null;
     this._swapPauseForStop = false;
-    this._controlLayout = "classic";
+    this._controlLayoutTemplateValue = {};
+    this._controlLayoutResolveCache = {};
     // Search hierarchy tracking
     this._searchHierarchy = []; // Array of {type: 'artist'|'album', name: string, query: string}
     this._searchBreadcrumb = ""; // Display string for current search context
@@ -807,6 +823,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       currentCache = this._alwaysCollapsedTemplateValue[idx];
       templateVals = this._alwaysCollapsedTemplateValue;
       cache = this._alwaysCollapsedResolveCache;
+    } else if (type === 'control_layout') {
+      currentCache = this._controlLayoutTemplateValue[idx];
+      templateVals = this._controlLayoutTemplateValue;
+      cache = this._controlLayoutResolveCache;
     }
 
     // Check if there's already an active subscription for this exact template
@@ -844,7 +864,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
         if (type === 'ma' || type === 'vol') {
           isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
-        } else if (type === 'action_in_menu' || type === 'always_collapsed') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout') {
           isValid = true; // Any string result is valid
         }
 
@@ -860,7 +880,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             cache[idx] = { id: resolved, ts: Date.now() };
             shouldUpdate = true;
           }
-        } else if (type === 'action_in_menu' || type === 'always_collapsed') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout') {
           const currentCached = cache[idx]?.value;
           if (isValid && currentCached !== resolved) {
             cache[idx] = { value: resolved, ts: Date.now() };
@@ -980,6 +1000,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       templateVals = this._actionInMenuTemplateValues;
       cache = this._actionInMenuResolveCache;
       contextKeyName = '_lastActionTemplateContextKey';
+    } else if (type === 'control_layout') {
+      templateVals = this._controlLayoutTemplateValue;
+      cache = this._controlLayoutResolveCache;
+      contextKeyName = '_lastControlLayoutContextKey';
     } else {
       return;
     }
@@ -1005,7 +1029,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     };
 
-    if (type === 'always_collapsed') {
+    if (type === 'always_collapsed' || type === 'control_layout') {
       processItem('card', rawConfigData);
     } else if (type === 'action_in_menu') {
       const actions = rawConfigData || [];
@@ -4160,8 +4184,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const templateBase = TEMPLATE_CONFIGS[templateName] || {};
     const config = { ...templateBase, ...rawConfig };
     this.config = config;
-    const layoutPref = typeof config.control_layout === "string" ? config.control_layout.toLowerCase() : "classic";
-    this._controlLayout = layoutPref === "modern" ? "modern" : "classic";
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
     this._disableSearchAutofocus = config.disable_autofocus === true;
@@ -4193,15 +4215,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showVolumeOverlay = !!config.show_volume_overlay;
     // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
-    // Force always-collapsed view
-    const rawAlwaysCollapsed = config.always_collapsed;
-    if (typeof rawAlwaysCollapsed === 'string' && (rawAlwaysCollapsed.includes('{{') || rawAlwaysCollapsed.includes('{%'))) {
-      this._subscribeToTemplate('card', 'always_collapsed', rawAlwaysCollapsed);
-    } else {
-      this._unsubscribeFromTemplate('card', 'always_collapsed');
-      if (this._alwaysCollapsedTemplateValue?.['card']) delete this._alwaysCollapsedTemplateValue['card'];
-      if (this._alwaysCollapsedResolveCache?.['card']) delete this._alwaysCollapsedResolveCache['card'];
-    }
     // Expand on search option (only available when always_collapsed is true)
     this._expandOnSearch = !!config.expand_on_search;
     // Alternate progress‑bar mode
@@ -5701,6 +5714,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const currentContext = JSON.stringify(this._getTemplateContext());
       this._syncTemplateSubscriptions('action_in_menu', currentContext, this.config?.actions);
       this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
+      this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
@@ -7246,6 +7260,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       }
       
+      if (typeof inMenuVal === "string") inMenuVal = inMenuVal.trim();
       if (inMenuVal === "true") inMenuVal = true;
       if (inMenuVal === "false") inMenuVal = false;
       if (inMenuVal === "hidden") return "hidden";
