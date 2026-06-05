@@ -516,6 +516,27 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   static styles = yampCardStyles;
 
+  get _alwaysCollapsed() {
+    const raw = this.config?.always_collapsed;
+    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
+      const resolved = this._alwaysCollapsedResolveCache?.['card']?.value;
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        const lower = resolved.toLowerCase();
+        return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
+      }
+      return false; // Default until template resolves
+    }
+    return !!raw;
+  }
+
+  get _artworkObjectFit() {
+    const fit = this._baseArtworkObjectFit || "cover";
+    if (fit === "scaled-contain-alternate" && this._alwaysCollapsed) {
+      return "scaled-contain";
+    }
+    return fit;
+  }
+
   get _cardType() {
     return this.config?.card_type || "default";
   }
@@ -624,7 +645,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._collapsedBaselineHeight = 220;
     this._lastRenderedCollapsed = false;
     this._lastRenderedHideControls = false;
-    this._artworkObjectFit = "cover";
+    this._baseArtworkObjectFit = "cover";
     this._idleScreen = "default";
     this._idleScreenApplied = false;
     this._hasSeenPlayback = false;
@@ -736,6 +757,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._volTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     this._actionInMenuTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     this._actionInMenuResolveCache = {}; // { [idx]: { value: string, ts: number } }
+    this._alwaysCollapsedTemplateValue = {}; // { card: { template: string, resolved: string } }
+    this._alwaysCollapsedResolveCache = {}; // { card: { value: string, ts: number } }
     this._lastActionEntityId = null;
     // Cache resolved Volume entity per index (template or static)
     this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
@@ -780,6 +803,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       currentCache = this._actionInMenuTemplateValues[idx];
       templateVals = this._actionInMenuTemplateValues;
       cache = this._actionInMenuResolveCache;
+    } else if (type === 'always_collapsed') {
+      currentCache = this._alwaysCollapsedTemplateValue[idx];
+      templateVals = this._alwaysCollapsedTemplateValue;
+      cache = this._alwaysCollapsedResolveCache;
     }
 
     // Check if there's already an active subscription for this exact template
@@ -817,8 +844,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
         if (type === 'ma' || type === 'vol') {
           isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
-        } else if (type === 'action_in_menu') {
-          isValid = true; // Any string result is valid for in_menu
+        } else if (type === 'action_in_menu' || type === 'always_collapsed') {
+          isValid = true; // Any string result is valid
         }
 
         let shouldUpdate = false;
@@ -833,7 +860,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             cache[idx] = { id: resolved, ts: Date.now() };
             shouldUpdate = true;
           }
-        } else if (type === 'action_in_menu') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed') {
           const currentCached = cache[idx]?.value;
           if (isValid && currentCached !== resolved) {
             cache[idx] = { value: resolved, ts: Date.now() };
@@ -940,40 +967,58 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._subscribeToTemplate(idx, 'vol', raw);
   }
 
-  // Ensure action in_menu templates are resolved and subscribed for the current entity context
-  _ensureResolvedActions() {
-    if (!this.hass || !this.config?.actions) return;
-    
-    // Clear old subscriptions if context changed to ensure context updates
-    const currentContext = JSON.stringify(this._getTemplateContext());
-    if (this._lastActionTemplateContextKey !== currentContext) {
-      this.config.actions.forEach((_, idx) => {
-        this._unsubscribeFromTemplate(idx, 'action_in_menu');
-        if (this._actionInMenuTemplateValues[idx]) delete this._actionInMenuTemplateValues[idx];
-        if (this._actionInMenuResolveCache[idx]) delete this._actionInMenuResolveCache[idx];
-      });
-      this._lastActionTemplateContextKey = currentContext;
+  // Unified helper for resolving and subscribing to UI templates
+  _syncTemplateSubscriptions(type, currentContext, rawConfigData) {
+    if (!this.hass) return;
+
+    let templateVals, cache, contextKeyName;
+    if (type === 'always_collapsed') {
+      templateVals = this._alwaysCollapsedTemplateValue;
+      cache = this._alwaysCollapsedResolveCache;
+      contextKeyName = '_lastAlwaysCollapsedContextKey';
+    } else if (type === 'action_in_menu') {
+      templateVals = this._actionInMenuTemplateValues;
+      cache = this._actionInMenuResolveCache;
+      contextKeyName = '_lastActionTemplateContextKey';
+    } else {
+      return;
     }
 
-    this.config.actions.forEach((act, idx) => {
-      const raw = act?.in_menu;
-      if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
-        this._subscribeToTemplate(idx, 'action_in_menu', raw);
-      } else {
-        this._unsubscribeFromTemplate(idx, 'action_in_menu');
-        if (this._actionInMenuTemplateValues[idx]) delete this._actionInMenuTemplateValues[idx];
-        delete this._actionInMenuResolveCache[idx];
-      }
-    });
+    const isContextChanged = this[contextKeyName] !== currentContext;
+    if (isContextChanged) {
+      this[contextKeyName] = currentContext;
+    }
 
-    // Clean up any stale subscriptions for indices beyond the current actions length
-    const currentLength = this.config.actions.length;
-    let checkIdx = currentLength;
-    while (this._templateSubscriptions[`${checkIdx}_action_in_menu`] || this._actionInMenuTemplateValues[checkIdx] || this._actionInMenuResolveCache[checkIdx]) {
-      this._unsubscribeFromTemplate(checkIdx, 'action_in_menu');
-      delete this._actionInMenuTemplateValues[checkIdx];
-      delete this._actionInMenuResolveCache[checkIdx];
-      checkIdx++;
+    const processItem = (idx, raw) => {
+      if (isContextChanged) {
+        this._unsubscribeFromTemplate(idx, type);
+        if (templateVals[idx]) delete templateVals[idx];
+        if (cache[idx]) delete cache[idx];
+      }
+
+      if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
+        this._subscribeToTemplate(idx, type, raw);
+      } else {
+        this._unsubscribeFromTemplate(idx, type);
+        if (templateVals[idx]) delete templateVals[idx];
+        delete cache[idx];
+      }
+    };
+
+    if (type === 'always_collapsed') {
+      processItem('card', rawConfigData);
+    } else if (type === 'action_in_menu') {
+      const actions = rawConfigData || [];
+      actions.forEach((act, idx) => processItem(idx, act?.in_menu));
+
+      // Clean up any stale subscriptions for indices beyond the current actions length
+      let checkIdx = actions.length;
+      while (this._templateSubscriptions[`${checkIdx}_${type}`] || templateVals[checkIdx] || cache[checkIdx]) {
+        this._unsubscribeFromTemplate(checkIdx, type);
+        delete templateVals[checkIdx];
+        delete cache[checkIdx];
+        checkIdx++;
+      }
     }
   }
 
@@ -4133,11 +4178,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._lastPlaying = null;
     this._lastActiveEntityId = null;
     const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain", "scaled-contain-alternate", "no_artwork"]);
-    let fit = allowedFits.has(config.artwork_object_fit) ? config.artwork_object_fit : "cover";
-    if (fit === "scaled-contain-alternate" && config.always_collapsed === true) {
-      fit = "scaled-contain";
-    }
-    this._artworkObjectFit = fit;
+    this._baseArtworkObjectFit = allowedFits.has(config.artwork_object_fit) ? config.artwork_object_fit : "cover";
     this._extendArtwork = config.extend_artwork === true;
     this._idleScreen = config.idle_screen || "default";
     this._idleScreenApplied = false;
@@ -4153,7 +4194,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
     // Force always-collapsed view
-    this._alwaysCollapsed = !!config.always_collapsed;
+    const rawAlwaysCollapsed = config.always_collapsed;
+    if (typeof rawAlwaysCollapsed === 'string' && (rawAlwaysCollapsed.includes('{{') || rawAlwaysCollapsed.includes('{%'))) {
+      this._subscribeToTemplate('card', 'always_collapsed', rawAlwaysCollapsed);
+    } else {
+      this._unsubscribeFromTemplate('card', 'always_collapsed');
+      if (this._alwaysCollapsedTemplateValue?.['card']) delete this._alwaysCollapsedTemplateValue['card'];
+      if (this._alwaysCollapsedResolveCache?.['card']) delete this._alwaysCollapsedResolveCache['card'];
+    }
     // Expand on search option (only available when always_collapsed is true)
     this._expandOnSearch = !!config.expand_on_search;
     // Alternate progress‑bar mode
@@ -4847,7 +4895,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         
         ${this._renderGroupingMenuOption()}
         
-        ${!this.config.always_collapsed ? html`
+        ${!this._alwaysCollapsed ? html`
           <button class="entity-options-item" @click=${() => {
           this._lyricsActive = !this._lyricsActive;
           if (!this._lyricsActive) {
@@ -5649,7 +5697,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         void this._resolveCardHeightTemplate();
       }
     }
-    this._ensureResolvedActions();
+    if (changedProps.has("hass") || changedProps.has("config")) {
+      const currentContext = JSON.stringify(this._getTemplateContext());
+      this._syncTemplateSubscriptions('action_in_menu', currentContext, this.config?.actions);
+      this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
+    }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
@@ -7146,7 +7198,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
     const hasSingleEntity = this.entityObjs.length === 1;
-    const isMinHeight = hasSingleEntity && this.config.always_collapsed === true && this.config.expand_on_search !== true;
+    const isMinHeight = hasSingleEntity && this._alwaysCollapsed && this.config.expand_on_search !== true;
     const effectivePinHeaders = this.config.pin_search_headers === true && !isMinHeight;
     const showSearchHeaders = !(this.config.hide_search_headers_on_idle === true && this._isIdle);
 
@@ -8004,20 +8056,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const appearance = this._appearance || "automatic";
     host.setAttribute("data-match-theme", String(config.match_theme === true));
     host.setAttribute("data-appearance", appearance);
-    host.setAttribute("data-always-collapsed", String(config.always_collapsed === true));
-    host.setAttribute("data-card-type", config.card_type || "default");
+    host.setAttribute("data-always-collapsed", String(this._alwaysCollapsed));
 
-    const forceHideMenuPlayer = config.always_collapsed === true &&
-      config.pin_search_headers === true &&
-      config.expand_on_search === true;
+    // Force hide menu player if always collapsed and no multiple entities/grouping mode
+    const hasMultipleEntities = (this.entityObjs || []).length > 1;
+    const forceHideMenuPlayer = this._alwaysCollapsed &&
+      !hasMultipleEntities &&
+      !this._showGrouping;
 
     host.setAttribute("data-hide-menu-player", String(config.hide_menu_player === true || forceHideMenuPlayer));
     host.setAttribute("data-extend-artwork", String(this._extendArtwork));
     host.setAttribute("data-control-layout", this._controlLayout || "classic");
     host.setAttribute("data-details-alignment", config.details_alignment || "left");
 
+    // Calculate if we're in absolute minimum height mode (64px)
     const hasSingleEntity = (this.entityObjs || []).length === 1;
-    const isMinHeight = hasSingleEntity && config.always_collapsed === true && config.expand_on_search !== true;
+    const isMinHeight = hasSingleEntity && this._alwaysCollapsed && config.expand_on_search !== true;
     const effectivePinHeaders = config.pin_search_headers === true && !isMinHeight;
     host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
 
@@ -8037,7 +8091,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const isActuallyPlaying = this._isCurrentEntityPlaying();
 
-    const collapsed = config.always_collapsed === true ||
+    const collapsed = this._alwaysCollapsed ||
       (this._isIdle && config.collapse_on_idle === true && !isActuallyPlaying);
 
     return { playbackStateObj, collapsed, forceIdleImage };
