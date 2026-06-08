@@ -69,19 +69,6 @@ const GESTURE_DOUBLE_TAP_IGNORE_NATIVE_DELAY = 500;
 const GESTURE_TAP_DELAY = 300;
 const GESTURE_SWIPE_THRESHOLD = 50;
 
-// Props that should trigger card_height template re-resolution when changed
-const CARD_HEIGHT_MENU_PROPS = Object.freeze([
-  "_showSearchInSheet",
-  "_showGrouping",
-  "_showSourceList",
-  "_lyricsActive",
-  "_showEntityOptions",
-  "_showTransferQueue",
-  "_showSourceMenu",
-  "_showResolvedEntities",
-  "_showMediaTitleOptions",
-]);
-
 window.customCards = window.customCards || [];
 if (!window.customCards.some(card => card.type === "yet-another-media-player")) {
   window.customCards.push({
@@ -594,10 +581,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._showSourceList = false;
     // Overlay state for transfer queue sheet
     this._showTransferQueue = false;
-    this._cardHeightTemplate = null;
-    this._cardHeightTemplateResult = null;
-    this._cardHeightTemplateNeedsResolve = false;
-    this._resolvingCardHeightTemplate = false;
+    this._cardHeightTemplateValue = {};
+    this._cardHeightResolveCache = {};
     this._lastCardHeightContextKey = null;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
@@ -827,6 +812,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       currentCache = this._controlLayoutTemplateValue[idx];
       templateVals = this._controlLayoutTemplateValue;
       cache = this._controlLayoutResolveCache;
+    } else if (type === 'card_height') {
+      currentCache = this._cardHeightTemplateValue[idx];
+      templateVals = this._cardHeightTemplateValue;
+      cache = this._cardHeightResolveCache;
     }
 
     // Check if there's already an active subscription for this exact template
@@ -864,7 +853,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
         if (type === 'ma' || type === 'vol') {
           isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height') {
           isValid = true; // Any string result is valid
         }
 
@@ -880,7 +869,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
             cache[idx] = { id: resolved, ts: Date.now() };
             shouldUpdate = true;
           }
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height') {
           const currentCached = cache[idx]?.value;
           if (isValid && currentCached !== resolved) {
             cache[idx] = { value: resolved, ts: Date.now() };
@@ -1004,6 +993,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       templateVals = this._controlLayoutTemplateValue;
       cache = this._controlLayoutResolveCache;
       contextKeyName = '_lastControlLayoutContextKey';
+    } else if (type === 'card_height') {
+      templateVals = this._cardHeightTemplateValue;
+      cache = this._cardHeightResolveCache;
+      contextKeyName = '_lastCardHeightContextKey';
     } else {
       return;
     }
@@ -1014,13 +1007,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     const processItem = (idx, raw) => {
-      if (isContextChanged) {
-        this._unsubscribeFromTemplate(idx, type);
-        if (templateVals[idx]) delete templateVals[idx];
-        if (cache[idx]) delete cache[idx];
-      }
-
       if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
+        if (isContextChanged) {
+          this._unsubscribeFromTemplate(idx, type);
+          if (templateVals[idx]) delete templateVals[idx];
+          if (cache[idx]) delete cache[idx];
+        }
         this._subscribeToTemplate(idx, type, raw);
       } else {
         this._unsubscribeFromTemplate(idx, type);
@@ -1029,7 +1021,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     };
 
-    if (type === 'always_collapsed' || type === 'control_layout') {
+    if (type === 'always_collapsed' || type === 'control_layout' || type === 'card_height') {
       processItem('card', rawConfigData);
     } else if (type === 'action_in_menu') {
       const actions = rawConfigData || [];
@@ -3885,8 +3877,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _getAdaptiveBaselineHeight(collapsed = false) {
-    const raw = this._cardHeightTemplate
-      ? this._cardHeightTemplateResult
+    const raw = this._cardHeightTemplateValue?.card?.template
+      ? this._cardHeightResolveCache?.card?.value
       : this.config?.card_height;
     if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
       return raw;
@@ -3948,28 +3940,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._isIdle = idle;
     if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
   }
-
-  async _resolveCardHeightTemplate() {
-    if (!this._cardHeightTemplate || this._resolvingCardHeightTemplate || !this.hass) return;
-    // Skip resolution if context hasn't changed since last resolve
-    const context = this._getTemplateContext();
-    const contextKey = JSON.stringify(context);
-    if (contextKey === this._lastCardHeightContextKey && !this._cardHeightTemplateNeedsResolve) return;
-    this._resolvingCardHeightTemplate = true;
-    try {
-      const result = await resolveStringTemplate(this.hass, this._cardHeightTemplate, context);
-      const parsed = Number(result);
-      this._cardHeightTemplateResult = (Number.isFinite(parsed) && parsed > 0) ? parsed : null;
-      this._lastCardHeightContextKey = contextKey;
-    } catch (error) {
-      this._cardHeightTemplateResult = null;
-    } finally {
-      this._resolvingCardHeightTemplate = false;
-      this._cardHeightTemplateNeedsResolve = false;
-      this.requestUpdate();
-    }
-  }
-
   _ensureArtworkOverrideIndexMap() {
     if (this._artworkOverrideIndexMap) return;
     this._artworkOverrideIndexMap = new WeakMap();
@@ -4283,18 +4253,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._idleImageTemplateNeedsResolve = false;
     }
     // Handle card_height templates (similar to idle_image)
-    if (typeof config.card_height === "string" &&
-      (config.card_height.includes("{{") || config.card_height.includes("{%"))) {
-      this._cardHeightTemplate = config.card_height;
-      this._cardHeightTemplateResult = null; // null = not yet resolved
-      this._cardHeightTemplateNeedsResolve = true;
-      this._lastCardHeightContextKey = null;
-    } else {
-      this._cardHeightTemplate = null;
-      this._cardHeightTemplateResult = null;
-      this._cardHeightTemplateNeedsResolve = false;
-      this._lastCardHeightContextKey = null;
-    }
+    // card_height now uses websocket template subscriptions
     // Set idle timeout ms
     this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
     if (this._idleTimeoutMs === 0) {
@@ -5705,17 +5664,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._idleImageTemplate && changedProps.has("hass")) {
       this._idleImageTemplateNeedsResolve = true;
     }
-    if (this._cardHeightTemplate) {
-      if (changedProps.has("hass") || this._cardHeightTemplateNeedsResolve || CARD_HEIGHT_MENU_PROPS.some(p => changedProps.has(p))) {
-        void this._resolveCardHeightTemplate();
-      }
-    }
-    if (changedProps.has("hass") || changedProps.has("config")) {
-      const currentContext = JSON.stringify(this._getTemplateContext());
-      this._syncTemplateSubscriptions('action_in_menu', currentContext, this.config?.actions);
-      this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
-      this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
-    }
+    const currentContext = JSON.stringify(this._getTemplateContext());
+    this._syncTemplateSubscriptions('action_in_menu', currentContext, this.config?.actions);
+    this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
+    this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
+    this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
@@ -5993,11 +5946,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          const customHeight = Number(
-            this._cardHeightTemplate
-              ? this._cardHeightTemplateResult
-              : this.config?.card_height
-          );
+          const customHeightInput = this._cardHeightTemplateValue?.card?.template
+            ? this._cardHeightResolveCache?.card?.value
+            : this.config?.card_height;
+          const customHeight = Number(customHeightInput);
           const hasCustomCardHeight = Number.isFinite(customHeight) && customHeight > 0;
           if (!hasCustomCardHeight) {
             this._collapsedBaselineHeight = measured;
@@ -7200,8 +7152,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
 
-    const customCardHeightInput = this._cardHeightTemplate
-      ? this._cardHeightTemplateResult
+    const customCardHeightInput = this._cardHeightTemplateValue?.card?.template
+      ? this._cardHeightResolveCache?.card?.value
       : this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string"
       ? (customCardHeightInput.includes('px') ? parseFloat(customCardHeightInput) : Number(customCardHeightInput))
@@ -8044,8 +7996,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _getCardHeightMetrics(config) {
-    const customCardHeightInput = this._cardHeightTemplate
-      ? this._cardHeightTemplateResult
+    const customCardHeightInput = this._cardHeightTemplateValue?.card?.template
+      ? this._cardHeightResolveCache?.card?.value
       : config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string"
       ? parseFloat(customCardHeightInput)
