@@ -38,7 +38,12 @@ export function renderVolumeRow({
   };
 
   return html`
-    <div class="volume-row ${showSlider && !isRemoteVolumeEntity ? "has-slider" : ""}">
+    <div
+      class="volume-row ${showSlider && !isRemoteVolumeEntity ? "has-slider" : ""}"
+      style="${hideVolume && !moreInfoMenu && !hasLeadingControl && !showRightPlaceholder
+        ? "display: none !important;"
+        : ""}"
+    >
       <div class="volume-left">
         ${hasLeadingControl
           ? leadingControlTemplate

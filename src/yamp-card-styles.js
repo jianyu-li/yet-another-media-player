@@ -941,6 +941,7 @@ export const yampCardStyles = css`
     margin-top: calc(8px * var(--yamp-details-scale, 1));
     min-height: calc(48px * var(--yamp-details-scale, 1));
     font-size: calc(1em * var(--yamp-details-scale, 1));
+    flex-shrink: 0;
   }
 
   .details .title {
@@ -956,11 +957,15 @@ export const yampCardStyles = css`
     -webkit-line-clamp: var(--yamp-details-max-lines, 3);
     overflow: hidden;
     padding-top: calc(8px * var(--yamp-details-scale, 1));
+    padding-bottom: calc(4px * var(--yamp-details-scale, 1));
+    margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
   }
 
   .details .artist {
     font-size: calc(1em * var(--yamp-details-scale, 1));
     line-height: var(--yamp-details-line-height, 1.2);
+    padding-bottom: calc(4px * var(--yamp-details-scale, 1));
+    margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
   }
 
   .track-options-row {

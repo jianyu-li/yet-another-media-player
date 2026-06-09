@@ -3850,23 +3850,36 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._currentTextScale = scale;
       this._currentDetailsScale = detailScale;
       this._setAdaptiveTextVars(scale, undefined, detailScale);
+      this.requestUpdate();
     }
   }
 
   _calculateDetailsScale(width, height, fallbackScale = 1) {
     const targetSet = this._adaptiveTextTargets;
     if (!targetSet?.has("details")) return 1;
-    const widthFactor = Math.min(Math.max(1, width / 360), 3.2);
-    const heightFactor = Math.max(1, Math.min(height / 330, 2.4));
-    const dominant = Math.max(widthFactor * 0.7 + heightFactor * 0.3, heightFactor);
-    const maxScale = Math.min(3.25, 1 + (heightFactor - 1) * 1.35);
-    const requested = Math.max(fallbackScale, dominant * 1.18);
-    const baseScale = Math.max(1, Math.min(requested, maxScale));
+    
+    // Width is the primary driver of text size because text expands horizontally.
+    const widthFactor = width / 360;
+    const desiredScale = Math.min(3.25, Math.max(1, widthFactor * 0.85 + 0.15));
+    
+    // Height acts as a physical constraint so the scaled text doesn't push the layout out of bounds.
+    // At scale 1.0, the UI needs ~190px of vertical height.
+    // Every additional 1.0 scale adds about 170px of required height 
+    // due to padding, line-height, and font-size scaling.
+    const maxHeightScale = Math.max(1, 1 + (height - 190) / 170);
+    const maxScaleByHeight = Math.min(3.25, maxHeightScale);
+    
+    // The base scale must satisfy BOTH physical dimensions (width and height)
+    const baseScale = Math.min(desiredScale, maxScaleByHeight);
+    
     const titleLength = this._lastTitleLength || 0;
     const lengthClamp = titleLength > 0
       ? Math.max(0.62, Math.min(1, 30 / Math.min(titleLength, 72)))
       : 1;
-    return 1 + (baseScale - 1) * lengthClamp;
+      
+    // Apply length clamp
+    const clampedScale = 1 + (baseScale - 1) * lengthClamp;
+    return Math.max(1, clampedScale);
   }
 
   _calculateDetailsLineHeight(scale) {
@@ -7561,7 +7574,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const collapsedDetailsMinHeight = effectiveExtraSpace > 0
       ? Math.round(baseDetailsMinHeight + detailGrowth)
       : (effectiveExtraSpace < -20 ? 36 : baseDetailsMinHeight);
-    const detailsMinHeight = collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight;
+    const detailsScale = (this._adaptiveTextTargets?.has("details")) ? (this._currentDetailsScale || 1) : 1;
+    const detailsMinHeight = Math.round((collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight) * detailsScale);
     let showCollapsedPlaceholder;
     const expandedHeightBaseline = 350;
     const resolvedCollapsedHeight = collapsed
@@ -7689,7 +7703,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
         styles.push(`min-height: ${collapsed
           ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px')
-          : (hideControlsNow ? '350px' : '350px')}`);
+          : (hasCustomCardHeight ? `${customCardHeight}px` : '350px')}`);
         styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
         return styles.join('; ');
       })()}"
@@ -7699,7 +7713,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (!hideControlsNow) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
-          : 'min-height: 350px;';
+          : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : '350px'};`;
       })()}">
                 ${collapsed && artworkUrl && collapsedArtworkSize > 0 && this._isValidArtworkUrl(artworkUrl) ? html`
                   <div
