@@ -266,6 +266,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     }
   }
 
+  _renderTemplateToggle(key, currentValue, updateCallback, disabled = false) {
+    const isTemplate = this._isTemplateMode(key, currentValue);
+    return html`
+      <ha-icon
+        class="icon-button-small icon-button-toggle ${isTemplate ? "active" : ""} ${disabled
+          ? "icon-button-disabled"
+          : ""}"
+        icon="mdi:code-braces"
+        title="${localize("editor.labels.toggle_template_mode")}"
+        @click=${() => {
+          if (!disabled) {
+            this._toggleTemplateMode(key, currentValue, updateCallback);
+          }
+        }}
+      ></ha-icon>
+    `;
+  }
+
   _isEntityId(val) {
     return typeof val === "string" && /^[a-z_]+\.[a-zA-Z0-9_]+$/.test(val.trim());
   }
@@ -1103,86 +1121,86 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <div class="section-title">${localize("editor.sections.artwork.idle.title")}</div>
             <div class="section-description">${localize("editor.sections.artwork.idle.description")}</div>
           </div>
-          ${this._isTemplateMode("idle_image", this._config.idle_image)
-            ? html`
-                <div class="form-row">
-                  <div class="editor-field-wrapper">
-                    <div class="grow-children">
-                      <ha-code-editor lint
-                        .hass=${this.hass}
-                        mode="jinja2"
-                        autocomplete-entities
-                        label="${localize("editor.sections.artwork.idle.title")}"
-                        .value=${this._config.idle_image ?? ""}
-                        @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
-                      ></ha-code-editor>
-                    </div>
-                    <div class="field-actions">
-                      <ha-icon
-                        class="icon-button-small icon-button-toggle active"
-                        icon="mdi:code-braces"
-                        title="${localize("editor.labels.toggle_template_mode")}"
-                        @click=${() => this._toggleTemplateMode("idle_image", this._config.idle_image, (v) => this._updateConfig("idle_image", v))}
-                      ></ha-icon>
-                    </div>
-                  </div>
-                </div>
-              `
-            : html`
-                <div class="form-row form-row-multi-column">
-                  <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-                    <ha-switch
-                      id="idle-image-url-toggle"
-                      .checked=${this._useIdleImageUrl ?? this._looksLikeUrlOrPath(this._config.idle_image)}
-                      @change=${(e) => {
-                        this._useIdleImageUrl = e.target.checked;
-                        this._updateConfig("idle_image", "");
-                      }}
-                    ></ha-switch>
-                    <label for="idle-image-url-toggle">${localize("editor.labels.use_url_path")}</label>
-                  </div>
-                  <div style="flex: 2; display: flex; align-items: center; gap: 8px;">
+          ${
+            this._isTemplateMode("idle_image", this._config.idle_image)
+              ? html`
+                  <div class="form-row">
                     <div class="editor-field-wrapper">
                       <div class="grow-children">
-                        ${this._useIdleImageUrl
-                          ? html`
-                              <ha-selector
-                                .hass=${this.hass}
-                                class="full-width"
-                                .selector=${{ text: {} }}
-                                .value=${this._config.idle_image ?? ""}
-                                @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
-                                label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
-                                helper="${localize("editor.subtitles.image_url_helper")}"
-                              ></ha-selector>
-                            `
-                          : html`
-                              <ha-generic-picker
-                                class="full-width"
-                                .hass=${this.hass}
-                                .value=${this._config.idle_image ?? ""}
-                                .label=${localize("editor.fields.idle_image_entity")}
-                                .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                                .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                                .getItems=${this._getEntityItems(["camera", "image"])}
-                                @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
-                                allow-custom-value
-                              ></ha-generic-picker>
-                            `
-                        }
+                        <ha-code-editor
+                          lint
+                          .hass=${this.hass}
+                          mode="jinja2"
+                          autocomplete-entities
+                          label="${localize("editor.sections.artwork.idle.title")}"
+                          .value=${this._config.idle_image ?? ""}
+                          @value-changed=${(e) => this._updateConfig("idle_image", e.detail.value)}
+                        ></ha-code-editor>
                       </div>
                       <div class="field-actions">
-                        <ha-icon
-                          class="icon-button-small icon-button-toggle"
-                          icon="mdi:code-braces"
-                          title="${localize("editor.labels.toggle_template_mode")}"
-                          @click=${() => this._toggleTemplateMode("idle_image", this._config.idle_image, (v) => this._updateConfig("idle_image", v))}
-                        ></ha-icon>
+                        ${this._renderTemplateToggle("idle_image", this._config.idle_image, (v) =>
+                          this._updateConfig("idle_image", v)
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-              `
+                `
+              : html`
+                  <div class="form-row form-row-multi-column">
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                      <ha-switch
+                        id="idle-image-url-toggle"
+                        .checked=${this._useIdleImageUrl ??
+                        this._looksLikeUrlOrPath(this._config.idle_image)}
+                        @change=${(e) => {
+                          this._useIdleImageUrl = e.target.checked;
+                          this._updateConfig("idle_image", "");
+                        }}
+                      ></ha-switch>
+                      <label for="idle-image-url-toggle"
+                        >${localize("editor.labels.use_url_path")}</label
+                      >
+                    </div>
+                    <div style="flex: 2; display: flex; align-items: center; gap: 8px;">
+                      <div class="editor-field-wrapper">
+                        <div class="grow-children">
+                          ${this._useIdleImageUrl
+                            ? html`
+                                <ha-selector
+                                  .hass=${this.hass}
+                                  class="full-width"
+                                  .selector=${{ text: {} }}
+                                  .value=${this._config.idle_image ?? ""}
+                                  @value-changed=${(e) =>
+                                    this._updateConfig("idle_image", e.detail.value)}
+                                  label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                                  helper="${localize("editor.subtitles.image_url_helper")}"
+                                ></ha-selector>
+                              `
+                            : html`
+                                <ha-generic-picker
+                                  class="full-width"
+                                  .hass=${this.hass}
+                                  .value=${this._config.idle_image ?? ""}
+                                  .label=${localize("editor.fields.idle_image_entity")}
+                                  .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                                  .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                                  .getItems=${this._getEntityItems(["camera", "image"])}
+                                  @value-changed=${(e) =>
+                                    this._updateConfig("idle_image", e.detail.value)}
+                                  allow-custom-value
+                                ></ha-generic-picker>
+                              `}
+                        </div>
+                        <div class="field-actions">
+                          ${this._renderTemplateToggle("idle_image", this._config.idle_image, (v) =>
+                            this._updateConfig("idle_image", v)
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `
           }
           <div class="form-row form-row-multi-column" style="${!this._config.idle_image ? "opacity: 0.4; pointer-events: none;" : ""}">
             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
@@ -1260,7 +1278,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               ${this._isTemplateMode(`artwork_image_url_${idx}`, rule.image_url)
                                 ? html`
                                     <div class="grow-children">
-                                      <ha-code-editor lint
+                                      <ha-code-editor
+                                        lint
                                         .hass=${this.hass}
                                         mode="jinja2"
                                         autocomplete-entities
@@ -1273,12 +1292,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                       ></ha-code-editor>
                                     </div>
                                     <div class="field-actions">
-                                      <ha-icon
-                                        class="icon-button-small icon-button-toggle active"
-                                        icon="mdi:code-braces"
-                                        title="${localize("editor.labels.toggle_template_mode")}"
-                                        @click=${() => this._toggleTemplateMode(`artwork_image_url_${idx}`, rule.image_url, (v) => this._onArtworkImageUrlChange(idx, v))}
-                                      ></ha-icon>
+                                      ${this._renderTemplateToggle(
+                                        `artwork_image_url_${idx}`,
+                                        rule.image_url,
+                                        (v) => this._onArtworkImageUrlChange(idx, v)
+                                      )}
                                     </div>
                                   `
                                 : html`
@@ -1296,15 +1314,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                       ></ha-selector>
                                     </div>
                                     <div class="field-actions">
-                                      <ha-icon
-                                        class="icon-button-small icon-button-toggle"
-                                        icon="mdi:code-braces"
-                                        title="${localize("editor.labels.toggle_template_mode")}"
-                                        @click=${() => this._toggleTemplateMode(`artwork_image_url_${idx}`, rule.image_url, (v) => this._onArtworkImageUrlChange(idx, v))}
-                                      ></ha-icon>
+                                      ${this._renderTemplateToggle(
+                                        `artwork_image_url_${idx}`,
+                                        rule.image_url,
+                                        (v) => this._onArtworkImageUrlChange(idx, v)
+                                      )}
                                     </div>
-                                  `
-                              }
+                                  `}
                             </div>
                             <div
                               class="form-row-multi-column"
@@ -1991,22 +2007,23 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${this._isTemplateMode("card_height", this._config.card_height)
               ? html`
                   <div class="grow-children">
-                    <ha-code-editor lint
+                    <ha-code-editor
+                      lint
                       .hass=${this.hass}
                       mode="jinja2"
                       autocomplete-entities
                       label="${localize("editor.fields.card_height")}"
-                      .value=${this._config.card_height !== undefined && this._config.card_height !== null ? String(this._config.card_height) : ""}
+                      .value=${this._config.card_height !== undefined &&
+                      this._config.card_height !== null
+                        ? String(this._config.card_height)
+                        : ""}
                       @value-changed=${(e) => this._updateConfig("card_height", e.detail.value)}
                     ></ha-code-editor>
                   </div>
                   <div class="field-actions">
-                    <ha-icon
-                      class="icon-button-small icon-button-toggle active"
-                      icon="mdi:code-braces"
-                      title="${localize("editor.labels.toggle_template_mode")}"
-                      @click=${() => this._toggleTemplateMode("card_height", this._config.card_height, (v) => this._updateConfig("card_height", v))}
-                    ></ha-icon>
+                    ${this._renderTemplateToggle("card_height", this._config.card_height, (v) =>
+                      this._updateConfig("card_height", v)
+                    )}
                     <ha-icon
                       class="icon-button-small"
                       icon="mdi:restore"
@@ -2039,12 +2056,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     ></ha-selector>
                   </div>
                   <div class="field-actions">
-                    <ha-icon
-                      class="icon-button-small icon-button-toggle"
-                      icon="mdi:code-braces"
-                      title="${localize("editor.labels.toggle_template_mode")}"
-                      @click=${() => this._toggleTemplateMode("card_height", this._config.card_height, (v) => this._updateConfig("card_height", v))}
-                    ></ha-icon>
+                    ${this._renderTemplateToggle("card_height", this._config.card_height, (v) =>
+                      this._updateConfig("card_height", v)
+                    )}
                     <ha-icon
                       class="icon-button-small"
                       icon="mdi:restore"
@@ -2052,8 +2066,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       @click=${() => this._updateConfig("card_height", undefined)}
                     ></ha-icon>
                   </div>
-                `
-            }
+                `}
           </div>
         </div>
         <div class="form-row">
@@ -2108,7 +2121,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${this._isTemplateMode("control_layout", this._config.control_layout)
               ? html`
                   <div class="grow-children">
-                    <ha-code-editor lint
+                    <ha-code-editor
+                      lint
                       .hass=${this.hass}
                       mode="jinja2"
                       autocomplete-entities
@@ -2118,12 +2132,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     ></ha-code-editor>
                   </div>
                   <div class="field-actions">
-                    <ha-icon
-                      class="icon-button-small icon-button-toggle active"
-                      icon="mdi:code-braces"
-                      title="${localize("editor.labels.toggle_template_mode")}"
-                      @click=${() => this._toggleTemplateMode("control_layout", this._config.control_layout, (v) => this._updateConfig("control_layout", v))}
-                    ></ha-icon>
+                    ${this._renderTemplateToggle(
+                      "control_layout",
+                      this._config.control_layout,
+                      (v) => this._updateConfig("control_layout", v)
+                    )}
                   </div>
                 `
               : html`
@@ -2147,15 +2160,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     ></ha-selector>
                   </div>
                   <div class="field-actions">
-                    <ha-icon
-                      class="icon-button-small icon-button-toggle"
-                      icon="mdi:code-braces"
-                      title="${localize("editor.labels.toggle_template_mode")}"
-                      @click=${() => this._toggleTemplateMode("control_layout", this._config.control_layout, (v) => this._updateConfig("control_layout", v))}
-                    ></ha-icon>
+                    ${this._renderTemplateToggle(
+                      "control_layout",
+                      this._config.control_layout,
+                      (v) => this._updateConfig("control_layout", v)
+                    )}
                   </div>
-                `
-            }
+                `}
           </div>
         </div>
         <div
@@ -2310,22 +2321,26 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               <div class="form-row">
                 <div class="editor-field-wrapper">
                   <div class="grow-children">
-                    <ha-code-editor lint
+                    <ha-code-editor
+                      lint
                       .hass=${this.hass}
                       mode="jinja2"
                       autocomplete-entities
                       label="${localize("editor.labels.always_collapsed")}"
-                      .value=${this._config.always_collapsed !== undefined && this._config.always_collapsed !== null ? String(this._config.always_collapsed) : ""}
-                      @value-changed=${(e) => this._updateConfig("always_collapsed", e.detail.value)}
+                      .value=${this._config.always_collapsed !== undefined &&
+                      this._config.always_collapsed !== null
+                        ? String(this._config.always_collapsed)
+                        : ""}
+                      @value-changed=${(e) =>
+                        this._updateConfig("always_collapsed", e.detail.value)}
                     ></ha-code-editor>
                   </div>
                   <div class="field-actions">
-                    <ha-icon
-                      class="icon-button-small icon-button-toggle active"
-                      icon="mdi:code-braces"
-                      title="${localize("editor.labels.toggle_template_mode")}"
-                      @click=${() => this._toggleTemplateMode("always_collapsed", this._config.always_collapsed, (v) => this._updateConfig("always_collapsed", v))}
-                    ></ha-icon>
+                    ${this._renderTemplateToggle(
+                      "always_collapsed",
+                      this._config.always_collapsed,
+                      (v) => this._updateConfig("always_collapsed", v)
+                    )}
                   </div>
                 </div>
               </div>
@@ -2339,12 +2354,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
                   ></ha-switch>
                   <span>${localize("editor.labels.always_collapsed")}</span>
-                  <ha-icon
-                    class="icon-button-small icon-button-toggle"
-                    icon="mdi:code-braces"
-                    title="${localize("editor.labels.toggle_template_mode")}"
-                    @click=${() => this._toggleTemplateMode("always_collapsed", this._config.always_collapsed, (v) => this._updateConfig("always_collapsed", v))}
-                  ></ha-icon>
+                  ${this._renderTemplateToggle(
+                    "always_collapsed",
+                    this._config.always_collapsed,
+                    (v) => this._updateConfig("always_collapsed", v)
+                  )}
                 </div>
                 <div
                   style="${this._config.always_collapsed ? "" : "opacity: 0.5;"}"
@@ -2361,8 +2375,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   <span>${localize("editor.labels.expand_on_search")}</span>
                 </div>
               </div>
-            `
-        }
+            `}
         <div class="form-row">
           <div class="config-subtitle">${localize("editor.subtitles.collapse_expand")}</div>
         </div>
@@ -2587,8 +2600,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="form-row">
           <div class="editor-field-wrapper">
-            ${this._isTemplateMode("music_assistant_entity", entity?.music_assistant_entity)
-              ? html`
+            ${
+              this._isTemplateMode("music_assistant_entity", entity?.music_assistant_entity)
+                ? html`
                   <div class="grow-children">
                     <div class=${
                       this._yamlError && (entity?.music_assistant_entity ?? "").trim() !== ""
@@ -2617,39 +2631,33 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     </div>
                   </div>
                   <div class="field-actions">
-                    <ha-icon
-                      class="icon-button-small icon-button-toggle active"
-                      icon="mdi:code-braces"
-                      title="${localize("editor.labels.toggle_template_mode")}"
-                      @click=${() => this._toggleTemplateMode("music_assistant_entity", entity?.music_assistant_entity, (v) => this._updateEntityProperty("music_assistant_entity", v))}
-                    ></ha-icon>
+                    ${this._renderTemplateToggle("music_assistant_entity", entity?.music_assistant_entity, (v) => this._updateEntityProperty("music_assistant_entity", v))}
                   </div>
                 `
-              : html`
-                  <div class="grow-children">
-                    <ha-generic-picker
-                      .hass=${this.hass}
-                      .value=${this._isEntityId(entity?.music_assistant_entity)
-                        ? entity.music_assistant_entity
-                        : ""}
-                      .label=${localize("editor.fields.ma_entity")}
-                      .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                      .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                      .getItems=${this._getEntityItems(["media_player"])}
-                      @value-changed=${(e) =>
-                        this._updateEntityProperty("music_assistant_entity", e.detail.value)}
-                      allow-custom-value
-                    ></ha-generic-picker>
-                  </div>
-                  <div class="field-actions">
-                    <ha-icon
-                      class="icon-button-small icon-button-toggle"
-                      icon="mdi:code-braces"
-                      title="${localize("editor.labels.toggle_template_mode")}"
-                      @click=${() => this._toggleTemplateMode("music_assistant_entity", entity?.music_assistant_entity, (v) => this._updateEntityProperty("music_assistant_entity", v))}
-                    ></ha-icon>
-                  </div>
-                `
+                : html`
+                    <div class="grow-children">
+                      <ha-generic-picker
+                        .hass=${this.hass}
+                        .value=${this._isEntityId(entity?.music_assistant_entity)
+                          ? entity.music_assistant_entity
+                          : ""}
+                        .label=${localize("editor.fields.ma_entity")}
+                        .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                        .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                        .getItems=${this._getEntityItems(["media_player"])}
+                        @value-changed=${(e) =>
+                          this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+                        allow-custom-value
+                      ></ha-generic-picker>
+                    </div>
+                    <div class="field-actions">
+                      ${this._renderTemplateToggle(
+                        "music_assistant_entity",
+                        entity?.music_assistant_entity,
+                        (v) => this._updateEntityProperty("music_assistant_entity", v)
+                      )}
+                    </div>
+                  `
             }
           </div>
         </div>
@@ -2760,71 +2768,81 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 ? "code-editor-wrapper error"
                                 : "code-editor-wrapper"}
                               style="width: 100%;"
-                          >
-                            <ha-code-editor lint
-                              id="vol-template-editor"
-                              label="${localize("editor.fields.vol_template")}"
-                              .hass=${this.hass}
-                              mode="jinja2"
-                              autocomplete-entities
-                              .value=${entity?.volume_entity ?? ""}
-                              @value-changed=${(e) =>
-                                this._updateEntityProperty("volume_entity", e.detail.value)}
-                            ></ha-code-editor>
-                            <div class="help-text">
-                              <ha-icon icon="mdi:information-outline"></ha-icon>
-                              ${localize("editor.subtitles.jinja_template_vol_hint")}
-                              <pre style="margin:6px 0; white-space:pre-wrap;">
+                            >
+                              <ha-code-editor
+                                lint
+                                id="vol-template-editor"
+                                label="${localize("editor.fields.vol_template")}"
+                                .hass=${this.hass}
+                                mode="jinja2"
+                                autocomplete-entities
+                                .value=${entity?.volume_entity ?? ""}
+                                @value-changed=${(e) =>
+                                  this._updateEntityProperty("volume_entity", e.detail.value)}
+                              ></ha-code-editor>
+                              <div class="help-text">
+                                <ha-icon icon="mdi:information-outline"></ha-icon>
+                                ${localize("editor.subtitles.jinja_template_vol_hint")}
+                                <pre style="margin:6px 0; white-space:pre-wrap;">
 {% if is_state('input_boolean.tv_volume','on') %}
   remote.soundbar
 {% else %}
   media_player.office_homepod
-{% endif %}</pre>
-                              >
+{% endif %}</pre
+                                >
+                                >
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div class="field-actions">
-                          <ha-icon
-                            class="icon-button-small icon-button-toggle active"
-                            icon="mdi:code-braces"
-                            title="${localize("editor.labels.toggle_template_mode")}"
-                            @click=${() => this._toggleTemplateMode("volume_entity", entity?.volume_entity, (v) => this._updateEntityProperty("volume_entity", v))}
-                          ></ha-icon>
-                        </div>
-                      `
-                    : html`
-                        <div class="grow-children">
-                          <ha-generic-picker
-                            .hass=${this.hass}
-                            .value=${this._isEntityId(entity?.volume_entity)
-                              ? entity.volume_entity
-                              : (entity?.entity_id ?? "")}
-                            .label=${localize("editor.fields.vol_entity")}
-                            .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                            .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                            .getItems=${this._getEntityItems(["media_player", "remote"])}
-                            @value-changed=${(e) => {
-                              const value = e.detail.value;
-                              this._updateEntityProperty("volume_entity", value);
-
-                              if (!value || value === entity.entity_id) {
-                                // sync_power is meaningless in these cases
-                                this._updateEntityProperty("sync_power", false);
+                          <div class="field-actions">
+                            ${this._renderTemplateToggle(
+                              "volume_entity",
+                              entity?.volume_entity,
+                              (v) => {
+                                this._updateEntityProperty("volume_entity", v);
+                                if (!v) {
+                                  this._updateEntityProperty("sync_power", false);
+                                }
                               }
-                            }}
-                            allow-custom-value
-                          ></ha-generic-picker>
-                        </div>
-                        <div class="field-actions">
-                          <ha-icon
-                            class="icon-button-small icon-button-toggle"
-                            icon="mdi:code-braces"
-                            title="${localize("editor.labels.toggle_template_mode")}"
-                            @click=${() => this._toggleTemplateMode("volume_entity", entity?.volume_entity, (v) => this._updateEntityProperty("volume_entity", v))}
-                          ></ha-icon>
-                        </div>
-                      `}
+                            )}
+                          </div>
+                        `
+                      : html`
+                          <div class="grow-children">
+                            <ha-generic-picker
+                              .hass=${this.hass}
+                              .value=${this._isEntityId(entity?.volume_entity)
+                                ? entity.volume_entity
+                                : (entity?.entity_id ?? "")}
+                              .label=${localize("editor.fields.vol_entity")}
+                              .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                              .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                              .getItems=${this._getEntityItems(["media_player", "remote"])}
+                              @value-changed=${(e) => {
+                                const value = e.detail.value;
+                                this._updateEntityProperty("volume_entity", value);
+
+                                if (!value || value === entity.entity_id) {
+                                  // sync_power is meaningless in these cases
+                                  this._updateEntityProperty("sync_power", false);
+                                }
+                              }}
+                              allow-custom-value
+                            ></ha-generic-picker>
+                          </div>
+                          <div class="field-actions">
+                            ${this._renderTemplateToggle(
+                              "volume_entity",
+                              entity?.volume_entity,
+                              (v) => {
+                                this._updateEntityProperty("volume_entity", v);
+                                if (!v) {
+                                  this._updateEntityProperty("sync_power", false);
+                                }
+                              }
+                            )}
+                          </div>
+                        `}
                   </div>
                 </div>
               `
@@ -2901,73 +2919,85 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <div class="editor-field-wrapper">
-              ${this._isTemplateMode("in_menu", action?.in_menu)
-                ? html`
-                    <div class="grow-children">
-                      <ha-code-editor lint
-                        .hass=${this.hass}
-                        mode="jinja2"
-                        autocomplete-entities
-                        label="${localize("editor.fields.placement")}"
-                        .value=${typeof action?.in_menu === "string" ? action.in_menu : String(!!action?.in_menu)}
-                        @value-changed=${(e) => this._updateActionProperty("in_menu", e.detail.value)}
-                      ></ha-code-editor>
-                    </div>
-                    <div class="field-actions">
-                      <ha-icon
-                        class="icon-button-small icon-button-toggle active ${actionMode === "sync_selected_entity" || actionMode === "select_entity" ? 'icon-button-disabled' : ''}"
-                        icon="mdi:code-braces"
-                        title="${localize("editor.labels.toggle_template_mode")}"
-                        @click=${() => {
-                          if (actionMode !== "sync_selected_entity" && actionMode !== "select_entity") {
-                            this._toggleTemplateMode("in_menu", action?.in_menu, (v) => this._updateActionProperty("in_menu", v));
-                          }
-                        }}
-                      ></ha-icon>
-                    </div>
-                  `
-                : html`
-                    <div class="grow-children">
-                      <ha-selector
-                        .hass=${this.hass}
-                        label="${localize("editor.fields.placement")}"
-                        .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity"}
-                        .selector=${{
-                          select: {
-                            mode: "dropdown",
-                            options: [
-                              { value: "chip", label: localize("editor.placements.chip") },
-                              { value: "menu", label: localize("editor.placements.menu") },
-                              { value: "hidden", label: localize("editor.placements.hidden") },
-                            ],
+              ${
+                this._isTemplateMode("in_menu", action?.in_menu)
+                  ? html`
+                      <div class="grow-children">
+                        <ha-code-editor
+                          lint
+                          .hass=${this.hass}
+                          mode="jinja2"
+                          autocomplete-entities
+                          label="${localize("editor.fields.placement")}"
+                          .value=${typeof action?.in_menu === "string"
+                            ? action.in_menu
+                            : String(!!action?.in_menu)}
+                          @value-changed=${(e) =>
+                            this._updateActionProperty("in_menu", e.detail.value)}
+                        ></ha-code-editor>
+                      </div>
+                      <div class="field-actions">
+                        ${this._renderTemplateToggle(
+                          "in_menu",
+                          action?.in_menu,
+                          (v) => {
+                            this._updateActionProperty("in_menu", v);
+                            if (v !== "hidden") {
+                              this._updateActionProperty("card_trigger", "none");
+                            }
                           },
-                        }}
-                        .value=${action?.in_menu === "hidden" ? "hidden" : action?.in_menu ? "menu" : "chip"}
-                        @value-changed=${(e) => {
-                          const val = e.detail.value;
-                          let inMenu = false;
-                          if (val === "menu") inMenu = true;
-                          else if (val === "hidden") inMenu = "hidden";
-                          this._updateActionProperty("in_menu", inMenu);
-                          if (val !== "hidden") {
-                            this._updateActionProperty("card_trigger", "none");
-                          }
-                        }}
-                      ></ha-selector>
-                    </div>
-                    <div class="field-actions">
-                      <ha-icon
-                        class="icon-button-small icon-button-toggle ${actionMode === "sync_selected_entity" || actionMode === "select_entity" ? 'icon-button-disabled' : ''}"
-                        icon="mdi:code-braces"
-                        title="${localize("editor.labels.toggle_template_mode")}"
-                        @click=${() => {
-                          if (actionMode !== "sync_selected_entity" && actionMode !== "select_entity") {
-                            this._toggleTemplateMode("in_menu", action?.in_menu, (v) => this._updateActionProperty("in_menu", v));
-                          }
-                        }}
-                      ></ha-icon>
-                    </div>
-                  `
+                          actionMode === "sync_selected_entity" || actionMode === "select_entity"
+                        )}
+                      </div>
+                    `
+                  : html`
+                      <div class="grow-children">
+                        <ha-selector
+                          .hass=${this.hass}
+                          label="${localize("editor.fields.placement")}"
+                          .disabled=${actionMode === "sync_selected_entity" ||
+                          actionMode === "select_entity"}
+                          .selector=${{
+                            select: {
+                              mode: "dropdown",
+                              options: [
+                                { value: "chip", label: localize("editor.placements.chip") },
+                                { value: "menu", label: localize("editor.placements.menu") },
+                                { value: "hidden", label: localize("editor.placements.hidden") },
+                              ],
+                            },
+                          }}
+                          .value=${action?.in_menu === "hidden"
+                            ? "hidden"
+                            : action?.in_menu
+                              ? "menu"
+                              : "chip"}
+                          @value-changed=${(e) => {
+                            const val = e.detail.value;
+                            let inMenu = false;
+                            if (val === "menu") inMenu = true;
+                            else if (val === "hidden") inMenu = "hidden";
+                            this._updateActionProperty("in_menu", inMenu);
+                            if (val !== "hidden") {
+                              this._updateActionProperty("card_trigger", "none");
+                            }
+                          }}
+                        ></ha-selector>
+                      </div>
+                      <div class="field-actions">
+                        ${this._renderTemplateToggle(
+                          "in_menu",
+                          action?.in_menu,
+                          (v) => {
+                            this._updateActionProperty("in_menu", v);
+                            if (v !== "hidden") {
+                              this._updateActionProperty("card_trigger", "none");
+                            }
+                          },
+                          actionMode === "sync_selected_entity" || actionMode === "select_entity"
+                        )}
+                      </div>
+                    `
               }
             </div>
           </div>
@@ -3155,7 +3185,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     ${this._isTemplateMode("navigation_path", action?.navigation_path)
                       ? html`
                           <div class="grow-children">
-                            <ha-code-editor lint
+                            <ha-code-editor
+                              lint
                               .hass=${this.hass}
                               mode="jinja2"
                               autocomplete-entities
@@ -3168,15 +3199,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             ></ha-code-editor>
                           </div>
                           <div class="field-actions">
-                            <ha-icon
-                              class="icon-button-small icon-button-toggle active"
-                              icon="mdi:code-braces"
-                              title="${localize("editor.labels.toggle_template_mode")}"
-                              @click=${() => this._toggleTemplateMode("navigation_path", action?.navigation_path, (v) => {
+                            ${this._renderTemplateToggle(
+                              "navigation_path",
+                              action?.navigation_path,
+                              (v) => {
                                 this._updateActionProperty("navigation_path", v);
                                 this._updateActionProperty("action", "navigate");
-                              })}
-                            ></ha-icon>
+                              }
+                            )}
                           </div>
                         `
                       : html`
@@ -3185,7 +3215,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               .hass=${this.hass}
                               class="full-width"
                               .selector=${{ text: {} }}
-                              label="${localize("editor.fields.nav_path")} (/lovelace/music or #popup)"
+                              label="${localize(
+                                "editor.fields.nav_path"
+                              )} (/lovelace/music or #popup)"
                               .value=${action?.navigation_path ?? ""}
                               @value-changed=${(e) => {
                                 this._updateActionProperty("navigation_path", e.detail.value);
@@ -3194,18 +3226,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             ></ha-selector>
                           </div>
                           <div class="field-actions">
-                            <ha-icon
-                              class="icon-button-small icon-button-toggle"
-                              icon="mdi:code-braces"
-                              title="${localize("editor.labels.toggle_template_mode")}"
-                              @click=${() => this._toggleTemplateMode("navigation_path", action?.navigation_path, (v) => {
+                            ${this._renderTemplateToggle(
+                              "navigation_path",
+                              action?.navigation_path,
+                              (v) => {
                                 this._updateActionProperty("navigation_path", v);
                                 this._updateActionProperty("action", "navigate");
-                              })}
-                            ></ha-icon>
+                              }
+                            )}
                           </div>
-                        `
-                    }
+                        `}
                   </div>
                 </div>
                 <div class="form-row form-row-multi-column">
@@ -3364,7 +3394,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             ? "code-editor-wrapper error"
                             : "code-editor-wrapper"}
                         >
-                          <ha-code-editor lint
+                          <ha-code-editor
+                            lint
                             id="service-data-editor"
                             label="${localize("editor.fields.service_data")}"
                             autocomplete-entities
