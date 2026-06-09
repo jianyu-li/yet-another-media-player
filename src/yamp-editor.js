@@ -1108,7 +1108,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 <div class="form-row">
                   <div class="editor-field-wrapper">
                     <div class="grow-children">
-                      <ha-code-editor
+                      <ha-code-editor lint
                         .hass=${this.hass}
                         mode="jinja2"
                         autocomplete-entities
@@ -1260,7 +1260,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               ${this._isTemplateMode(`artwork_image_url_${idx}`, rule.image_url)
                                 ? html`
                                     <div class="grow-children">
-                                      <ha-code-editor
+                                      <ha-code-editor lint
                                         .hass=${this.hass}
                                         mode="jinja2"
                                         autocomplete-entities
@@ -1991,7 +1991,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${this._isTemplateMode("card_height", this._config.card_height)
               ? html`
                   <div class="grow-children">
-                    <ha-code-editor
+                    <ha-code-editor lint
                       .hass=${this.hass}
                       mode="jinja2"
                       autocomplete-entities
@@ -2108,7 +2108,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${this._isTemplateMode("control_layout", this._config.control_layout)
               ? html`
                   <div class="grow-children">
-                    <ha-code-editor
+                    <ha-code-editor lint
                       .hass=${this.hass}
                       mode="jinja2"
                       autocomplete-entities
@@ -2310,7 +2310,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               <div class="form-row">
                 <div class="editor-field-wrapper">
                   <div class="grow-children">
-                    <ha-code-editor
+                    <ha-code-editor lint
                       .hass=${this.hass}
                       mode="jinja2"
                       autocomplete-entities
@@ -2595,7 +2595,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         ? "code-editor-wrapper error"
                         : "code-editor-wrapper"
                     } style="width: 100%;">
-                      <ha-code-editor
+                      <ha-code-editor lint
                         id="ma-template-editor"
                         label="${localize("editor.fields.ma_template")}"
                         .hass=${this.hass}
@@ -2761,7 +2761,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 : "code-editor-wrapper"}
                               style="width: 100%;"
                           >
-                            <ha-code-editor
+                            <ha-code-editor lint
                               id="vol-template-editor"
                               label="${localize("editor.fields.vol_template")}"
                               .hass=${this.hass}
@@ -2904,7 +2904,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               ${this._isTemplateMode("in_menu", action?.in_menu)
                 ? html`
                     <div class="grow-children">
-                      <ha-code-editor
+                      <ha-code-editor lint
                         .hass=${this.hass}
                         mode="jinja2"
                         autocomplete-entities
@@ -3155,7 +3155,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     ${this._isTemplateMode("navigation_path", action?.navigation_path)
                       ? html`
                           <div class="grow-children">
-                            <ha-code-editor
+                            <ha-code-editor lint
                               .hass=${this.hass}
                               mode="jinja2"
                               autocomplete-entities
@@ -3364,7 +3364,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             ? "code-editor-wrapper error"
                             : "code-editor-wrapper"}
                         >
-                          <ha-code-editor
+                          <ha-code-editor lint
                             id="service-data-editor"
                             label="${localize("editor.fields.service_data")}"
                             autocomplete-entities
