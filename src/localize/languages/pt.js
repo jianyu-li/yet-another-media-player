@@ -181,6 +181,7 @@ export default {
       add_artwork_override: "Adicionar substituição",
     },
     labels: {
+      toggle_template_mode: "Alternar modo de modelo",
       dim_chips: "Escurecer chips em repouso",
       hold_to_pin: "Manter para fixar",
       always_show_group: "Grupo rápido por padrão",

@@ -200,6 +200,7 @@ export default {
       add_artwork_override: "Pridať prepísanie grafiky",
     },
     labels: {
+      toggle_template_mode: "Prepnúť režim šablóny",
       dim_chips: "Stlmiť čipy pri nečinnosti",
       hold_to_pin: "Podržať pre pripnutie",
       always_show_group: "Rýchle zoskupovanie ako predvolené",

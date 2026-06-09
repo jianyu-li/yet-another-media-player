@@ -1121,7 +1121,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon
                         class="icon-button-small icon-button-toggle active"
                         icon="mdi:code-braces"
-                        title="Toggle Template Mode"
+                        title="${localize("editor.labels.toggle_template_mode")}"
                         @click=${() => this._toggleTemplateMode("idle_image", this._config.idle_image, (v) => this._updateConfig("idle_image", v))}
                       ></ha-icon>
                     </div>
@@ -1175,7 +1175,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         <ha-icon
                           class="icon-button-small icon-button-toggle"
                           icon="mdi:code-braces"
-                          title="Toggle Template Mode"
+                          title="${localize("editor.labels.toggle_template_mode")}"
                           @click=${() => this._toggleTemplateMode("idle_image", this._config.idle_image, (v) => this._updateConfig("idle_image", v))}
                         ></ha-icon>
                       </div>
@@ -1276,7 +1276,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                       <ha-icon
                                         class="icon-button-small icon-button-toggle active"
                                         icon="mdi:code-braces"
-                                        title="Toggle Template Mode"
+                                        title="${localize("editor.labels.toggle_template_mode")}"
                                         @click=${() => this._toggleTemplateMode(`artwork_image_url_${idx}`, rule.image_url, (v) => this._onArtworkImageUrlChange(idx, v))}
                                       ></ha-icon>
                                     </div>
@@ -1299,7 +1299,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                       <ha-icon
                                         class="icon-button-small icon-button-toggle"
                                         icon="mdi:code-braces"
-                                        title="Toggle Template Mode"
+                                        title="${localize("editor.labels.toggle_template_mode")}"
                                         @click=${() => this._toggleTemplateMode(`artwork_image_url_${idx}`, rule.image_url, (v) => this._onArtworkImageUrlChange(idx, v))}
                                       ></ha-icon>
                                     </div>
@@ -2004,7 +2004,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-icon
                       class="icon-button-small icon-button-toggle active"
                       icon="mdi:code-braces"
-                      title="Toggle Template Mode"
+                      title="${localize("editor.labels.toggle_template_mode")}"
                       @click=${() => this._toggleTemplateMode("card_height", this._config.card_height, (v) => this._updateConfig("card_height", v))}
                     ></ha-icon>
                     <ha-icon
@@ -2042,7 +2042,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-icon
                       class="icon-button-small icon-button-toggle"
                       icon="mdi:code-braces"
-                      title="Toggle Template Mode"
+                      title="${localize("editor.labels.toggle_template_mode")}"
                       @click=${() => this._toggleTemplateMode("card_height", this._config.card_height, (v) => this._updateConfig("card_height", v))}
                     ></ha-icon>
                     <ha-icon
@@ -2121,7 +2121,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-icon
                       class="icon-button-small icon-button-toggle active"
                       icon="mdi:code-braces"
-                      title="Toggle Template Mode"
+                      title="${localize("editor.labels.toggle_template_mode")}"
                       @click=${() => this._toggleTemplateMode("control_layout", this._config.control_layout, (v) => this._updateConfig("control_layout", v))}
                     ></ha-icon>
                   </div>
@@ -2150,7 +2150,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-icon
                       class="icon-button-small icon-button-toggle"
                       icon="mdi:code-braces"
-                      title="Toggle Template Mode"
+                      title="${localize("editor.labels.toggle_template_mode")}"
                       @click=${() => this._toggleTemplateMode("control_layout", this._config.control_layout, (v) => this._updateConfig("control_layout", v))}
                     ></ha-icon>
                   </div>
@@ -2323,7 +2323,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-icon
                       class="icon-button-small icon-button-toggle active"
                       icon="mdi:code-braces"
-                      title="Toggle Template Mode"
+                      title="${localize("editor.labels.toggle_template_mode")}"
                       @click=${() => this._toggleTemplateMode("always_collapsed", this._config.always_collapsed, (v) => this._updateConfig("always_collapsed", v))}
                     ></ha-icon>
                   </div>
@@ -2342,7 +2342,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   <ha-icon
                     class="icon-button-small icon-button-toggle"
                     icon="mdi:code-braces"
-                    title="Toggle Template Mode"
+                    title="${localize("editor.labels.toggle_template_mode")}"
                     @click=${() => this._toggleTemplateMode("always_collapsed", this._config.always_collapsed, (v) => this._updateConfig("always_collapsed", v))}
                   ></ha-icon>
                 </div>
@@ -2620,7 +2620,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-icon
                       class="icon-button-small icon-button-toggle active"
                       icon="mdi:code-braces"
-                      title="Toggle Template Mode"
+                      title="${localize("editor.labels.toggle_template_mode")}"
                       @click=${() => this._toggleTemplateMode("music_assistant_entity", entity?.music_assistant_entity, (v) => this._updateEntityProperty("music_assistant_entity", v))}
                     ></ha-icon>
                   </div>
@@ -2645,7 +2645,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     <ha-icon
                       class="icon-button-small icon-button-toggle"
                       icon="mdi:code-braces"
-                      title="Toggle Template Mode"
+                      title="${localize("editor.labels.toggle_template_mode")}"
                       @click=${() => this._toggleTemplateMode("music_assistant_entity", entity?.music_assistant_entity, (v) => this._updateEntityProperty("music_assistant_entity", v))}
                     ></ha-icon>
                   </div>
@@ -2788,7 +2788,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           <ha-icon
                             class="icon-button-small icon-button-toggle active"
                             icon="mdi:code-braces"
-                            title="Toggle Template Mode"
+                            title="${localize("editor.labels.toggle_template_mode")}"
                             @click=${() => this._toggleTemplateMode("volume_entity", entity?.volume_entity, (v) => this._updateEntityProperty("volume_entity", v))}
                           ></ha-icon>
                         </div>
@@ -2820,7 +2820,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           <ha-icon
                             class="icon-button-small icon-button-toggle"
                             icon="mdi:code-braces"
-                            title="Toggle Template Mode"
+                            title="${localize("editor.labels.toggle_template_mode")}"
                             @click=${() => this._toggleTemplateMode("volume_entity", entity?.volume_entity, (v) => this._updateEntityProperty("volume_entity", v))}
                           ></ha-icon>
                         </div>
@@ -2917,7 +2917,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon
                         class="icon-button-small icon-button-toggle active ${actionMode === "sync_selected_entity" || actionMode === "select_entity" ? 'icon-button-disabled' : ''}"
                         icon="mdi:code-braces"
-                        title="Toggle Template Mode"
+                        title="${localize("editor.labels.toggle_template_mode")}"
                         @click=${() => {
                           if (actionMode !== "sync_selected_entity" && actionMode !== "select_entity") {
                             this._toggleTemplateMode("in_menu", action?.in_menu, (v) => this._updateActionProperty("in_menu", v));
@@ -2959,7 +2959,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <ha-icon
                         class="icon-button-small icon-button-toggle ${actionMode === "sync_selected_entity" || actionMode === "select_entity" ? 'icon-button-disabled' : ''}"
                         icon="mdi:code-braces"
-                        title="Toggle Template Mode"
+                        title="${localize("editor.labels.toggle_template_mode")}"
                         @click=${() => {
                           if (actionMode !== "sync_selected_entity" && actionMode !== "select_entity") {
                             this._toggleTemplateMode("in_menu", action?.in_menu, (v) => this._updateActionProperty("in_menu", v));
@@ -3171,7 +3171,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             <ha-icon
                               class="icon-button-small icon-button-toggle active"
                               icon="mdi:code-braces"
-                              title="Toggle Template Mode"
+                              title="${localize("editor.labels.toggle_template_mode")}"
                               @click=${() => this._toggleTemplateMode("navigation_path", action?.navigation_path, (v) => {
                                 this._updateActionProperty("navigation_path", v);
                                 this._updateActionProperty("action", "navigate");
@@ -3197,7 +3197,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             <ha-icon
                               class="icon-button-small icon-button-toggle"
                               icon="mdi:code-braces"
-                              title="Toggle Template Mode"
+                              title="${localize("editor.labels.toggle_template_mode")}"
                               @click=${() => this._toggleTemplateMode("navigation_path", action?.navigation_path, (v) => {
                                 this._updateActionProperty("navigation_path", v);
                                 this._updateActionProperty("action", "navigate");

@@ -197,6 +197,7 @@ export default {
       add_artwork_override: "Artwork-Überschreibung hinzufügen",
     },
     labels: {
+      toggle_template_mode: "Vorlagenmodus umschalten",
       dim_chips: "Chips im Leerlauf abdunkeln",
       hold_to_pin: "Gedrückt halten zum Anpinnen",
       always_show_group: "Schnellgruppierung standardmäßig aktivieren",
