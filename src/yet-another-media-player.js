@@ -590,6 +590,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._transferQueueAutoCloseTimer = null;
     // Alternate progress‑bar mode
     this._alternateProgressBar = false;
+    this._lastSpacerRendered = true;
+    this._lastVolumeRendered = true;
     // Group base volume for group gain logic
     this._groupBaseVolume = null;
     // Search sheet state variables
@@ -3838,7 +3840,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const width = rect?.width || 0;
     if (!width) return;
     const baselineHeight = this._getAdaptiveBaselineHeight(this._lastRenderedCollapsed || false);
-    const height = baselineHeight || rect?.height || width;
+    const height = rect?.height && rect.height > 0 ? rect.height : (baselineHeight || width);
     const widthFactor = width / 360;
     const heightFactor = height / 360;
     const blended = (widthFactor * 0.8) + (heightFactor * 0.2);
@@ -3863,10 +3865,22 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const desiredScale = Math.min(3.25, Math.max(1, widthFactor * 0.85 + 0.15));
     
     // Height acts as a physical constraint so the scaled text doesn't push the layout out of bounds.
-    // At scale 1.0, the UI needs ~190px of vertical height.
-    // Every additional 1.0 scale adds about 170px of required height 
-    // due to padding, line-height, and font-size scaling.
-    const maxHeightScale = Math.max(1, 1 + (height - 190) / 170);
+    // We compute baseline height requirements dynamically based on what is rendered:
+    // Spacer: 48px if rendered.
+    // Volume row: 72px if rendered.
+    // Controls: 56px.
+    // Details baseline: 82px (approx space needed at scale 1.0).
+    const isSpacerRendered = this._lastSpacerRendered !== false;
+    const isVolumeRendered = this._lastVolumeRendered !== false;
+    let baselineNeeded = 56 + 82; // Controls + Details baseline
+    if (isSpacerRendered) baselineNeeded += 48;
+    if (isVolumeRendered) baselineNeeded += 72;
+
+    // Scale cost represents extra pixels needed per 1.0 scale factor
+    // Details layout (margins, font size, gap, line height) scales by ~82px per 1.0 scale
+    const scaleCost = 82;
+
+    const maxHeightScale = Math.max(1, 1 + (height - baselineNeeded) / scaleCost);
     const maxScaleByHeight = Math.min(3.25, maxHeightScale);
     
     // The base scale must satisfy BOTH physical dimensions (width and height)
@@ -7628,6 +7642,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const isAlternateFit = activeArtworkFit === "scaled-contain-alternate";
     const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed;
+    const hasSpacerContent =
+      (useInsetArtwork && artworkUrl) ||
+      (!useInsetArtwork && !artworkUrl && !idleImageUrl) ||
+      (this._lyricsActive && !this._isIdle);
     // Add top padding to artwork spacer when scaled-contain and chips are not shown inline
     const needsArtworkTopPadding = (activeArtworkFit === "scaled-contain" || isAlternateFit) &&
       (showChipRow === "in_menu" || (hasSingleEntity && showChipRow !== "always"));
@@ -7665,6 +7683,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     ].join('; ');
 
 
+
+    const isVolumeHidden =
+      shouldHideVolumeControls ||
+      this.config.volume_mode === "hidden" ||
+      (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
+
+    this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && hasSpacerContent));
+    this._lastVolumeRendered = !isVolumeHidden;
 
     return html`
         <ha-card class="yamp-card" style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
@@ -7740,7 +7766,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       onerror="this.style.display='none'" />
                   </div>
                 ` : nothing}
-                ${(showCollapsedPlaceholder || !collapsed) ? html`
+                ${(showCollapsedPlaceholder || (!collapsed && hasSpacerContent)) ? html`
                   <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
                     @pointermove=${(e) => this._onTapAreaPointerMove(e)}
@@ -7905,7 +7931,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         reserveLeadingControlSpace: this._controlLayout === "modern",
         showRightPlaceholder: this._controlLayout === "modern",
         rightSlotTemplate: shouldHideVolumeControls ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
-        hideVolume: shouldHideVolumeControls || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions),
+        hideVolume: isVolumeHidden,
         moreInfoMenu: (!this._showEntityOptions && !isCompactVolume) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
