@@ -187,6 +187,7 @@ export default {
       add_artwork_override: "Ajouter un remplacement",
     },
     labels: {
+      toggle_template_mode: "Basculer le mode modèle",
       dim_chips: "Assombrir les jetons en veille",
       hold_to_pin: "Maintenir pour épingler",
       always_show_group: "Groupe rapide par défaut",

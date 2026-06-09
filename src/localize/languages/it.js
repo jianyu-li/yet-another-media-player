@@ -180,6 +180,7 @@ export default {
       add_artwork_override: "Aggiungi override",
     },
     labels: {
+      toggle_template_mode: "Attiva/disattiva modalità modello",
       dim_chips: "Appanna chip in riposo",
       hold_to_pin: "Tieni premuto per fissare",
       always_show_group: "Gruppo rapido predefinito",

@@ -207,6 +207,7 @@ export default {
       add_artwork_override: "Artwork Overschrijving Toevoegen",
     },
     labels: {
+      toggle_template_mode: "Sjabloonmodus wisselen",
       dim_chips: "Chips dimmen bij inactiviteit",
       hold_to_pin: "Ingedrukt houden om vast te zetten",
       always_show_group: "Snelgroepering standaard aan",

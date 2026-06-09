@@ -225,6 +225,7 @@ export default {
       add_artwork_override: "Add Artwork Override",
     },
     labels: {
+      toggle_template_mode: "Toggle Template Mode",
       dim_chips: "Dim Chips on Idle",
       hold_to_pin: "Hold to Pin",
       always_show_group: "Quick Group by Default",

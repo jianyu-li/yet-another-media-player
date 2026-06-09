@@ -180,6 +180,7 @@ export default {
       add_artwork_override: "Dodaj prepis grafike",
     },
     labels: {
+      toggle_template_mode: "Preklopi način predloge",
       dim_chips: "Zatemni čipe v mirovanju",
       hold_to_pin: "Drži za pripenjanje",
       always_show_group: "Hitro združevanje kot privzeto",
