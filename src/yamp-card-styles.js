@@ -941,10 +941,11 @@ export const yampCardStyles = css`
     margin-top: calc(8px * var(--yamp-details-scale, 1));
     min-height: calc(48px * var(--yamp-details-scale, 1));
     font-size: calc(1em * var(--yamp-details-scale, 1));
+    flex-shrink: 0;
   }
 
   .details .title {
-    font-size: calc(1.1em * var(--yamp-details-scale, 1));
+    font-size: 1.1em;
     font-weight: 600;
     line-height: var(--yamp-details-line-height, 1.2);
     white-space: normal;
@@ -956,11 +957,15 @@ export const yampCardStyles = css`
     -webkit-line-clamp: var(--yamp-details-max-lines, 3);
     overflow: hidden;
     padding-top: calc(8px * var(--yamp-details-scale, 1));
+    padding-bottom: calc(4px * var(--yamp-details-scale, 1));
+    margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
   }
 
   .details .artist {
-    font-size: calc(1em * var(--yamp-details-scale, 1));
+    font-size: 1em;
     line-height: var(--yamp-details-line-height, 1.2);
+    padding-bottom: calc(4px * var(--yamp-details-scale, 1));
+    margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
   }
 
   .track-options-row {
@@ -1037,6 +1042,21 @@ export const yampCardStyles = css`
   :host([data-details-alignment="right"]) .details {
     align-items: flex-end;
     text-align: right;
+  }
+
+  :host([data-has-custom-height="true"]) .details {
+    margin-top: calc(4px * var(--yamp-details-scale, 1));
+    padding-bottom: calc(6px * var(--yamp-details-scale, 1));
+    gap: calc(4px * var(--yamp-details-scale, 1));
+  }
+
+  :host([data-has-custom-height="true"]) .details .title {
+    padding-top: calc(4px * var(--yamp-details-scale, 1));
+  }
+
+  :host([data-has-custom-height="true"]) .controls-row {
+    padding-top: 2px;
+    padding-bottom: 2px;
   }
 
   :host([data-details-alignment="center"]) .track-options-row {

@@ -590,6 +590,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._transferQueueAutoCloseTimer = null;
     // Alternate progress‑bar mode
     this._alternateProgressBar = false;
+    this._lastSpacerRendered = true;
+    this._lastVolumeRendered = true;
     // Group base volume for group gain logic
     this._groupBaseVolume = null;
     // Search sheet state variables
@@ -3838,7 +3840,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const width = rect?.width || 0;
     if (!width) return;
     const baselineHeight = this._getAdaptiveBaselineHeight(this._lastRenderedCollapsed || false);
-    const height = baselineHeight || rect?.height || width;
+    const height = rect?.height && rect.height > 0 ? rect.height : (baselineHeight || width);
     const widthFactor = width / 360;
     const heightFactor = height / 360;
     const blended = (widthFactor * 0.8) + (heightFactor * 0.2);
@@ -3850,23 +3852,48 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this._currentTextScale = scale;
       this._currentDetailsScale = detailScale;
       this._setAdaptiveTextVars(scale, undefined, detailScale);
+      this.requestUpdate();
     }
   }
 
   _calculateDetailsScale(width, height, fallbackScale = 1) {
     const targetSet = this._adaptiveTextTargets;
     if (!targetSet?.has("details")) return 1;
-    const widthFactor = Math.min(Math.max(1, width / 360), 3.2);
-    const heightFactor = Math.max(1, Math.min(height / 330, 2.4));
-    const dominant = Math.max(widthFactor * 0.7 + heightFactor * 0.3, heightFactor);
-    const maxScale = Math.min(3.25, 1 + (heightFactor - 1) * 1.35);
-    const requested = Math.max(fallbackScale, dominant * 1.18);
-    const baseScale = Math.max(1, Math.min(requested, maxScale));
+    
+    // Width is the primary driver of text size because text expands horizontally.
+    const widthFactor = width / 360;
+    const desiredScale = Math.min(3.25, Math.max(1, widthFactor * 0.85 + 0.15));
+    
+    // Height acts as a physical constraint so the scaled text doesn't push the layout out of bounds.
+    // We compute baseline height requirements dynamically based on what is rendered:
+    // Spacer: 48px if rendered.
+    // Volume row: 72px if rendered.
+    // Controls: 56px.
+    // Details baseline: 82px (approx space needed at scale 1.0).
+    const isSpacerRendered = this._lastSpacerRendered !== false;
+    const isVolumeRendered = this._lastVolumeRendered !== false;
+    let baselineNeeded = 56 + 82; // Controls + Details baseline
+    if (isSpacerRendered) baselineNeeded += 48;
+    if (isVolumeRendered) baselineNeeded += 72;
+
+    // Scale cost represents extra pixels needed per 1.0 scale factor
+    // Details layout (margins, font size, gap, line height) scales by ~82px per 1.0 scale
+    const scaleCost = 82;
+
+    const maxHeightScale = Math.max(1, 1 + (height - baselineNeeded) / scaleCost);
+    const maxScaleByHeight = Math.min(3.25, maxHeightScale);
+    
+    // The base scale must satisfy BOTH physical dimensions (width and height)
+    const baseScale = Math.min(desiredScale, maxScaleByHeight);
+    
     const titleLength = this._lastTitleLength || 0;
     const lengthClamp = titleLength > 0
       ? Math.max(0.62, Math.min(1, 30 / Math.min(titleLength, 72)))
       : 1;
-    return 1 + (baseScale - 1) * lengthClamp;
+      
+    // Apply length clamp
+    const clampedScale = 1 + (baseScale - 1) * lengthClamp;
+    return Math.max(1, clampedScale);
   }
 
   _calculateDetailsLineHeight(scale) {
@@ -7561,7 +7588,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const collapsedDetailsMinHeight = effectiveExtraSpace > 0
       ? Math.round(baseDetailsMinHeight + detailGrowth)
       : (effectiveExtraSpace < -20 ? 36 : baseDetailsMinHeight);
-    const detailsMinHeight = collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight;
+    const detailsScale = (this._adaptiveTextTargets?.has("details")) ? (this._currentDetailsScale || 1) : 1;
+    const detailsMinHeight = Math.round((collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight) * detailsScale);
     let showCollapsedPlaceholder;
     const expandedHeightBaseline = 350;
     const resolvedCollapsedHeight = collapsed
@@ -7614,6 +7642,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const isAlternateFit = activeArtworkFit === "scaled-contain-alternate";
     const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed;
+    const hasSpacerContent =
+      (useInsetArtwork && artworkUrl) ||
+      (!useInsetArtwork && !artworkUrl && !idleImageUrl) ||
+      (this._lyricsActive && !this._isIdle);
     // Add top padding to artwork spacer when scaled-contain and chips are not shown inline
     const needsArtworkTopPadding = (activeArtworkFit === "scaled-contain" || isAlternateFit) &&
       (showChipRow === "in_menu" || (hasSingleEntity && showChipRow !== "always"));
@@ -7652,6 +7684,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
 
+    const isVolumeHidden =
+      shouldHideVolumeControls ||
+      this.config.volume_mode === "hidden" ||
+      (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
+
+    const hasMoreInfoMenu = (!this._showEntityOptions && !isCompactVolume);
+    const hasRightPlaceholder = this._controlLayout === "modern";
+    const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
+
+    const volumeRowWillCollapse = isVolumeHidden && !hasMoreInfoMenu && !hasLeadingControl && !hasRightPlaceholder;
+
+    this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && hasSpacerContent));
+    this._lastVolumeRendered = !volumeRowWillCollapse;
+
     return html`
         <ha-card class="yamp-card" style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
           <div
@@ -7689,7 +7735,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
         styles.push(`min-height: ${collapsed
           ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px')
-          : (hideControlsNow ? '350px' : '350px')}`);
+          : (hasCustomCardHeight ? `${customCardHeight}px` : '350px')}`);
         styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
         return styles.join('; ');
       })()}"
@@ -7699,7 +7745,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (!hideControlsNow) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
-          : 'min-height: 350px;';
+          : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : '350px'};`;
       })()}">
                 ${collapsed && artworkUrl && collapsedArtworkSize > 0 && this._isValidArtworkUrl(artworkUrl) ? html`
                   <div
@@ -7726,7 +7772,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       onerror="this.style.display='none'" />
                   </div>
                 ` : nothing}
-                ${(showCollapsedPlaceholder || !collapsed) ? html`
+                ${(showCollapsedPlaceholder || (!collapsed && hasSpacerContent)) ? html`
                   <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
                     @pointermove=${(e) => this._onTapAreaPointerMove(e)}
@@ -7891,7 +7937,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         reserveLeadingControlSpace: this._controlLayout === "modern",
         showRightPlaceholder: this._controlLayout === "modern",
         rightSlotTemplate: shouldHideVolumeControls ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
-        hideVolume: shouldHideVolumeControls || this.config.volume_mode === "hidden" || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions),
+        hideVolume: isVolumeHidden,
         moreInfoMenu: (!this._showEntityOptions && !isCompactVolume) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
