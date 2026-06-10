@@ -3884,7 +3884,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const maxScaleByHeight = Math.min(3.25, maxHeightScale);
     
     // The base scale must satisfy BOTH physical dimensions (width and height)
-    const baseScale = Math.min(desiredScale, maxScaleByHeight);
+    let baseScale = Math.min(desiredScale, maxScaleByHeight);
+    
+    if (!isSpacerRendered) {
+      // If spacer is missing, allow text to grow up to the height constraint to fill the void
+      baseScale = maxScaleByHeight;
+    }
     
     const titleLength = this._lastTitleLength || 0;
     const lengthClamp = titleLength > 0
@@ -7695,7 +7700,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const volumeRowWillCollapse = isVolumeHidden && !hasMoreInfoMenu && !hasLeadingControl && !hasRightPlaceholder;
 
-    this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && hasSpacerContent));
+    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details");
+    this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
     this._lastVolumeRendered = !volumeRowWillCollapse;
 
     return html`
@@ -7772,7 +7778,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       onerror="this.style.display='none'" />
                   </div>
                 ` : nothing}
-                ${(showCollapsedPlaceholder || (!collapsed && hasSpacerContent)) ? html`
+                ${this._lastSpacerRendered ? html`
                   <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
                     @pointermove=${(e) => this._onTapAreaPointerMove(e)}
@@ -7827,6 +7833,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }
           detailStyleParts.push(`min-height:${detailsMinHeight}px`);
           if (!shouldShowDetails) detailStyleParts.push('opacity:0');
+          if (!this._lastSpacerRendered) detailStyleParts.push('flex: 1');
           return detailStyleParts.join(';');
         })()}">
                     ${this._showMediaTitleOptions ? html`
