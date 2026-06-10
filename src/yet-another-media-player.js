@@ -3866,25 +3866,35 @@ class YetAnotherMediaPlayerCard extends LitElement {
     
     // Height acts as a physical constraint so the scaled text doesn't push the layout out of bounds.
     // We compute baseline height requirements dynamically based on what is rendered:
-    // Spacer: 48px if rendered.
-    // Volume row: 72px if rendered.
-    // Controls: 56px.
-    // Details baseline: 82px (approx space needed at scale 1.0).
     const isSpacerRendered = this._lastSpacerRendered !== false;
     const isVolumeRendered = this._lastVolumeRendered !== false;
-    let baselineNeeded = 56 + 82; // Controls + Details baseline
+    
+    // Exact baseline calculation:
+    // Padding: 32px (16px top/bottom on card-lower-content)
+    // Controls: 56px
+    // Details unscaled baseline: 56px (48px min-height + 8px margin-top)
+    let baselineNeeded = 32 + 56 + 56; // 144
+    if (!this._alternateProgressBar) {
+      const progressHeight = this.config?.progress_bar_height ?? 16;
+      baselineNeeded += Number(progressHeight);
+    }
     if (isSpacerRendered) baselineNeeded += 48;
     if (isVolumeRendered) baselineNeeded += 72;
 
     // Scale cost represents extra pixels needed per 1.0 scale factor
-    // Details layout (margins, font size, gap, line height) scales by ~82px per 1.0 scale
-    const scaleCost = 82;
+    // Details layout (min-height 48px, margin-top 8px) scales by 56px per 1.0 scale
+    const scaleCost = 56;
 
     const maxHeightScale = Math.max(1, 1 + (height - baselineNeeded) / scaleCost);
     const maxScaleByHeight = Math.min(3.25, maxHeightScale);
     
     // The base scale must satisfy BOTH physical dimensions (width and height)
-    const baseScale = Math.min(desiredScale, maxScaleByHeight);
+    let baseScale = Math.min(desiredScale, maxScaleByHeight);
+    
+    if (!isSpacerRendered) {
+      // If spacer is missing, allow text to grow up to the height constraint to fill the void
+      baseScale = maxScaleByHeight;
+    }
     
     const titleLength = this._lastTitleLength || 0;
     const lengthClamp = titleLength > 0
@@ -7695,7 +7705,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const volumeRowWillCollapse = isVolumeHidden && !hasMoreInfoMenu && !hasLeadingControl && !hasRightPlaceholder;
 
-    this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && hasSpacerContent));
+    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details");
+    this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
     this._lastVolumeRendered = !volumeRowWillCollapse;
 
     return html`
@@ -7772,7 +7783,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                       onerror="this.style.display='none'" />
                   </div>
                 ` : nothing}
-                ${(showCollapsedPlaceholder || (!collapsed && hasSpacerContent)) ? html`
+                ${this._lastSpacerRendered ? html`
                   <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
                     @pointermove=${(e) => this._onTapAreaPointerMove(e)}
@@ -7827,6 +7838,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           }
           detailStyleParts.push(`min-height:${detailsMinHeight}px`);
           if (!shouldShowDetails) detailStyleParts.push('opacity:0');
+          if (!this._lastSpacerRendered) {
+            detailStyleParts.push('flex: 1');
+            detailStyleParts.push('justify-content: flex-end');
+          }
           return detailStyleParts.join(';');
         })()}">
                     ${this._showMediaTitleOptions ? html`
