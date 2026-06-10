@@ -7689,8 +7689,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       this.config.volume_mode === "hidden" ||
       (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
 
+    const hasMoreInfoMenu = (!this._showEntityOptions && !isCompactVolume);
+    const hasRightPlaceholder = this._controlLayout === "modern";
+    const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
+
+    const volumeRowWillCollapse = isVolumeHidden && !hasMoreInfoMenu && !hasLeadingControl && !hasRightPlaceholder;
+
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && hasSpacerContent));
-    this._lastVolumeRendered = !isVolumeHidden;
+    this._lastVolumeRendered = !volumeRowWillCollapse;
 
     return html`
         <ha-card class="yamp-card" style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>

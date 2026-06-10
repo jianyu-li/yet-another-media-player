@@ -40,7 +40,7 @@ export function renderVolumeRow({
   return html`
     <div
       class="volume-row ${showSlider && !isRemoteVolumeEntity ? "has-slider" : ""}"
-      style="${hideVolume && !moreInfoMenu && !hasLeadingControl && !showRightPlaceholder
+      style="${hideVolume && moreInfoMenu === nothing && !hasLeadingControl && !showRightPlaceholder
         ? "display: none !important;"
         : ""}"
     >
