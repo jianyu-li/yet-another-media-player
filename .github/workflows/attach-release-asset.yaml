@@ -29,4 +29,5 @@ jobs:
       - name: Upload bundle to release
         uses: softprops/action-gh-release@v3
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           files: yet-another-media-player.js
