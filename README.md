@@ -537,6 +537,15 @@ entities:
 
 YAMP provides powerful template support for many configuration options, allowing you to create a dynamic interface that adapts to your needs.
 
+## Template Syntaxes
+
+YAMP supports two distinct template engines:
+
+1. **Jinja2 (Server-Side)**: Standard Home Assistant templating using `{{ ... }}` or `{% ... %}`. This is evaluated on your Home Assistant backend. It requires an active WebSocket connection and has access to the full Home Assistant state machine.
+2. **JavaScript (Client-Side)**: Evaluated directly in your browser without contacting the backend. Wrap your JS expressions in triple brackets `[[[ ... ]]]`. This is extremely fast and works on restricted devices (like older iPads) where backend WebSocket template subscriptions might be blocked. 
+
+*Note: Both syntaxes have access to the same card-specific variables below.*
+
 ## Supported Options
 
 The following configuration keys support templates:
@@ -573,6 +582,7 @@ All templates have access to standard Home Assistant template functions (`states
 ### Dynamic Card Height
 Adjust the card size based on what the user is doing.
 
+**Jinja2 (Server-Side)**
 ```yaml
 card_height: |
   {% if is_search %} 700
@@ -581,9 +591,20 @@ card_height: |
   {% endif %}
 ```
 
+**JavaScript (Client-Side)**
+```yaml
+card_height: |
+  [[[
+    if (is_search) return 700;
+    if (is_idle) return 250;
+    return 450;
+  ]]]
+```
+
 ### Search External Sites
 Link to IMDb or Genius based on the currently playing track.
 
+**Jinja2 (Server-Side)**
 ```yaml
 actions:
   - name: IMDb
@@ -593,9 +614,20 @@ actions:
     navigation_new_tab: true
 ```
 
+**JavaScript (Client-Side)**
+```yaml
+actions:
+  - name: IMDb
+    icon: mdi:movie-search
+    action: navigate
+    navigation_path: '[[[ "https://www.imdb.com/find/?q=" + encodeURIComponent(state_attr(current, "media_title")) ]]]'
+    navigation_new_tab: true
+```
+
 ### Dynamic Volume Control
 Route volume controls to a soundbar only when it is powered on.
 
+**Jinja2 (Server-Side)**
 ```yaml
 entities:
   - entity_id: media_player.living_room_atv
@@ -605,6 +637,19 @@ entities:
       {% else %}
         media_player.living_room_atv
       {% endif %}
+```
+
+**JavaScript (Client-Side)**
+```yaml
+entities:
+  - entity_id: media_player.living_room_atv
+    volume_entity: |
+      [[[
+        if (is_state('switch.soundbar_power', 'on')) {
+          return 'media_player.soundbar';
+        }
+        return 'media_player.living_room_atv';
+      ]]]
 ```
 
 ## Controls & Typography
