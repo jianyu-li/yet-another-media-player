@@ -242,7 +242,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   _looksLikeTemplate(val) {
     if (typeof val !== "string") return false;
     const s = val.trim();
-    return s.includes("{{") || s.includes("{%");
+    return s.includes("{{") || s.includes("{%") || (s.startsWith("[[[") && s.endsWith("]]]"));
   }
 
   _isTemplateMode(key, currentValue) {

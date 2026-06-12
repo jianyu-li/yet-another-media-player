@@ -506,7 +506,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   get _controlLayout() {
     const raw = this.config?.control_layout;
     let val = raw;
-    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
+    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
       const resolved = this._controlLayoutResolveCache?.['card']?.value;
       if (resolved !== undefined && resolved !== null && resolved !== "") {
         val = resolved;
@@ -520,9 +520,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   get _alwaysCollapsed() {
     const raw = this.config?.always_collapsed;
-    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
+    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
       const resolved = this._alwaysCollapsedResolveCache?.['card']?.value;
       if (resolved !== undefined && resolved !== null && resolved !== "") {
+        // If JS template evaluated to boolean, handle it
+        if (typeof resolved === 'boolean') return resolved;
+        
         const lower = String(resolved).trim().toLowerCase();
         return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
       }
@@ -926,6 +929,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
       return;
     }
+    const isJsTemplate = raw.trim().startsWith('[[[');
+    if (isJsTemplate) {
+      this._unsubscribeFromTemplate(idx, 'ma');
+      if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
+      
+      const resolvedValue = this._evaluateJsTemplate(raw);
+      if (this._maResolveCache[idx]?.id !== resolvedValue) {
+        this._maResolveCache[idx] = { id: resolvedValue, ts: Date.now() };
+        this.requestUpdate();
+      }
+      return;
+    }
+
     const looksTemplate = raw.includes('{{') || raw.includes('{%');
     const now = Date.now();
 
@@ -963,6 +979,19 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
       return;
     }
+    const isJsTemplate = raw.trim().startsWith('[[[');
+    if (isJsTemplate) {
+      this._unsubscribeFromTemplate(idx, 'vol');
+      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
+      
+      const resolvedValue = this._evaluateJsTemplate(raw);
+      if (this._volResolveCache[idx]?.id !== resolvedValue) {
+        this._volResolveCache[idx] = { id: resolvedValue, ts: Date.now() };
+        this.requestUpdate();
+      }
+      return;
+    }
+
     const looksTemplate = raw.includes('{{') || raw.includes('{%');
     const now = Date.now();
 
@@ -976,6 +1005,40 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Setup subscription for reactivity
     this._subscribeToTemplate(idx, 'vol', raw);
+  }
+  _evaluateJsTemplate(templateStr) {
+    if (typeof templateStr !== "string") return templateStr;
+
+    const trimmed = templateStr.trim();
+    if (!trimmed.startsWith("[[[") || !trimmed.endsWith("]]]")) {
+      return templateStr;
+    }
+
+    // Extract the JS code block
+    const code = trimmed.substring(3, trimmed.length - 3).trim();
+
+    try {
+      const hass = this.hass;
+      if (!hass) return undefined;
+
+      const states = hass.states;
+      const user = hass.user;
+      const is_state = (entity, state) => states[entity]?.state === state;
+      const state_attr = (entity, attr) => states[entity]?.attributes?.[attr];
+
+      // Compile and execute in context
+      if (!this._compiledJsTemplates) this._compiledJsTemplates = {};
+      if (!this._compiledJsTemplates[code]) {
+        this._compiledJsTemplates[code] = new Function(
+          "hass", "states", "user", "is_state", "state_attr",
+          `return (${code});`
+        );
+      }
+      return this._compiledJsTemplates[code](hass, states, user, is_state, state_attr);
+    } catch (err) {
+      console.warn("yamp: failed to evaluate JS template:", templateStr, err);
+      return undefined;
+    }
   }
 
   // Unified helper for resolving and subscribing to UI templates
@@ -1009,7 +1072,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
 
     const processItem = (idx, raw) => {
-      if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
+      const hasJsTemplate = typeof raw === 'string' && raw.trim().startsWith('[[[');
+      if (hasJsTemplate) {
+        this._unsubscribeFromTemplate(idx, type);
+        const resolvedValue = this._evaluateJsTemplate(raw);
+        if (cache[idx]?.value !== resolvedValue) {
+          cache[idx] = { value: resolvedValue, ts: Date.now() };
+          this.requestUpdate();
+        }
+      } else if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
         if (isContextChanged) {
           this._unsubscribeFromTemplate(idx, type);
           if (templateVals[idx]) delete templateVals[idx];
@@ -5983,7 +6054,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (contentEl) {
         const measured = contentEl.offsetHeight;
         if (measured && measured > 0) {
-          const customHeightInput = this._cardHeightTemplateValue?.card?.template
+          const isCardHeightTemplate = typeof this.config?.card_height === 'string' && (this.config.card_height.includes('{{') || this.config.card_height.includes('{%') || this.config.card_height.trim().startsWith('[[['));
+          const customHeightInput = isCardHeightTemplate
             ? this._cardHeightResolveCache?.card?.value
             : this.config?.card_height;
           const customHeight = Number(customHeightInput);
@@ -7189,7 +7261,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
 
 
-    const customCardHeightInput = this._cardHeightTemplateValue?.card?.template
+    const isCardHeightTemplate = typeof this.config.card_height === 'string' && (this.config.card_height.includes('{{') || this.config.card_height.includes('{%') || this.config.card_height.trim().startsWith('[[['));
+    const customCardHeightInput = isCardHeightTemplate
       ? this._cardHeightResolveCache?.card?.value
       : this.config.card_height;
     const customCardHeight = typeof customCardHeightInput === "string"
@@ -7229,7 +7302,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (act?.placement) return act.placement;
       
       let inMenuVal = act?.in_menu;
-      if (typeof inMenuVal === "string" && (inMenuVal.includes("{{") || inMenuVal.includes("{%"))) {
+      if (typeof inMenuVal === "string" && (inMenuVal.includes("{{") || inMenuVal.includes("{%") || inMenuVal.trim().startsWith("[[["))) {
         const cached = this._actionInMenuResolveCache?.[actIdx]?.value;
         if (cached !== undefined) {
           inMenuVal = cached;
@@ -7327,9 +7400,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       void this._resolveIdleImageTemplate();
     }
     // Idle image "picture frame" mode when idle
-    const rawIdleImageInput = this._idleImageTemplate
-      ? this._idleImageTemplateResult
-      : this.config.idle_image;
+    const isJsTemplate = typeof this.config.idle_image === "string" && this.config.idle_image.trim().startsWith("[[[");
+    const rawIdleImageInput = isJsTemplate
+      ? this._evaluateJsTemplate(this.config.idle_image)
+      : (this._idleImageTemplate ? this._idleImageTemplateResult : this.config.idle_image);
     const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
 
     // Use the unified entity resolution system for playback state.
