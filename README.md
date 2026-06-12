@@ -537,6 +537,15 @@ entities:
 
 YAMP provides powerful template support for many configuration options, allowing you to create a dynamic interface that adapts to your needs.
 
+## Template Syntaxes
+
+YAMP supports two distinct template engines:
+
+1. **Jinja2 (Server-Side)**: Standard Home Assistant templating using `{{ ... }}` or `{% ... %}`. This is evaluated on your Home Assistant backend. It requires an active WebSocket connection and has access to the full Home Assistant state machine.
+2. **JavaScript (Client-Side)**: Evaluated directly in your browser without contacting the backend. Wrap your JS expressions in triple brackets `[[[ ... ]]]`. This is extremely fast and works on restricted devices (like older iPads) where backend WebSocket template subscriptions might be blocked. 
+
+*Note: Both syntaxes have access to the same card-specific variables below.*
+
 ## Supported Options
 
 The following configuration keys support templates:
