@@ -582,6 +582,7 @@ All templates have access to standard Home Assistant template functions (`states
 ### Dynamic Card Height
 Adjust the card size based on what the user is doing.
 
+**Jinja2 (Server-Side)**
 ```yaml
 card_height: |
   {% if is_search %} 700
@@ -590,9 +591,20 @@ card_height: |
   {% endif %}
 ```
 
+**JavaScript (Client-Side)**
+```yaml
+card_height: |
+  [[[
+    if (is_search) return 700;
+    if (is_idle) return 250;
+    return 450;
+  ]]]
+```
+
 ### Search External Sites
 Link to IMDb or Genius based on the currently playing track.
 
+**Jinja2 (Server-Side)**
 ```yaml
 actions:
   - name: IMDb
@@ -602,9 +614,20 @@ actions:
     navigation_new_tab: true
 ```
 
+**JavaScript (Client-Side)**
+```yaml
+actions:
+  - name: IMDb
+    icon: mdi:movie-search
+    action: navigate
+    navigation_path: '[[[ "https://www.imdb.com/find/?q=" + encodeURIComponent(state_attr(current, "media_title")) ]]]'
+    navigation_new_tab: true
+```
+
 ### Dynamic Volume Control
 Route volume controls to a soundbar only when it is powered on.
 
+**Jinja2 (Server-Side)**
 ```yaml
 entities:
   - entity_id: media_player.living_room_atv
@@ -614,6 +637,19 @@ entities:
       {% else %}
         media_player.living_room_atv
       {% endif %}
+```
+
+**JavaScript (Client-Side)**
+```yaml
+entities:
+  - entity_id: media_player.living_room_atv
+    volume_entity: |
+      [[[
+        if (is_state('switch.soundbar_power', 'on')) {
+          return 'media_player.soundbar';
+        }
+        return 'media_player.living_room_atv';
+      ]]]
 ```
 
 ## Controls & Typography

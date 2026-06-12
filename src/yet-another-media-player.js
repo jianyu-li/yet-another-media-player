@@ -1029,9 +1029,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Compile and execute in context
       if (!this._compiledJsTemplates) this._compiledJsTemplates = {};
       if (!this._compiledJsTemplates[code]) {
+        const body = code.includes("return") ? code : `return (${code});`;
         this._compiledJsTemplates[code] = new Function(
           "hass", "states", "user", "is_state", "state_attr",
-          `return (${code});`
+          body
         );
       }
       return this._compiledJsTemplates[code](hass, states, user, is_state, state_attr);
@@ -1130,7 +1131,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (cached && typeof cached === 'string') return cached;
     const raw = obj.volume_entity;
     if (raw && typeof raw === 'string') {
-      const looksTemplate = raw.includes('{{') || raw.includes('{%');
+      const looksTemplate = raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[[');
       if (!looksTemplate) return raw;
     }
     return obj.entity_id;
@@ -1149,7 +1150,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // No cache - check if we have a static MA entity
     const rawMaEntity = obj.music_assistant_entity;
     if (rawMaEntity && typeof rawMaEntity === 'string' &&
-      !rawMaEntity.includes('{{') && !rawMaEntity.includes('{%')) {
+      !rawMaEntity.includes('{{') && !rawMaEntity.includes('{%') && !rawMaEntity.trim().startsWith('[[[')) {
       return rawMaEntity;
     }
 
@@ -4080,8 +4081,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!sourceValue || typeof sourceValue !== "string") return null;
     const normalizedInput = this._normalizeImageSourceValue(sourceValue);
     if (!normalizedInput) return null;
-    const isTemplate = sourceValue.includes("{{") || sourceValue.includes("{%");
-    if (!isTemplate) return normalizedInput;
+    const isJsTemplate = typeof sourceValue === "string" && sourceValue.trim().startsWith("[[[");
+    const isJinjaTemplate = typeof sourceValue === "string" && (sourceValue.includes("{{") || sourceValue.includes("{%"));
+    if (!isJsTemplate && !isJinjaTemplate) return normalizedInput;
+
+    if (isJsTemplate) {
+      return this._normalizeImageSourceValue(this._evaluateJsTemplate(sourceValue));
+    }
 
     if (!this._artworkOverrideTemplateCache) {
       this._artworkOverrideTemplateCache = {};
@@ -4464,7 +4470,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _resolveEntity(entityTemplate, fallbackEntityId, idx, cacheType = 'ma') {
     if (!entityTemplate) return null;
 
-    if (typeof entityTemplate === 'string' && (entityTemplate.includes('{{') || entityTemplate.includes('{%'))) {
+    if (typeof entityTemplate === 'string' && 
+      (entityTemplate.includes('{{') || entityTemplate.includes('{%') || entityTemplate.trim().startsWith('[[['))) {
       // For templates, use cached resolved entity
       const cache = cacheType === 'vol' ? this._volResolveCache : this._maResolveCache;
       const cached = cache?.[idx]?.id;
@@ -4589,7 +4596,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Check if it's a template
     if (typeof obj.music_assistant_entity === 'string' &&
-      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
       // For templates, resolve at action time - return template string for now
       return obj.music_assistant_entity;
     }
@@ -4690,7 +4697,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (!obj) return null;
     if (obj.music_assistant_entity) {
       if (typeof obj.music_assistant_entity === 'string' &&
-        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
         const cached = this._maResolveCache?.[idx]?.id;
         return cached || obj.entity_id;
       }
@@ -4867,7 +4874,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _resolveGroupingEntityId(obj, fallbackEntityId) {
     if (!obj?.music_assistant_entity) return fallbackEntityId;
     if (typeof obj.music_assistant_entity === 'string' &&
-      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%'))) {
+      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
       const idx = this.entityIds.indexOf(fallbackEntityId);
       const cached = this._maResolveCache?.[idx]?.id;
       return cached || fallbackEntityId;
