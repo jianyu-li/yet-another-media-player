@@ -41,5 +41,9 @@
   "bugs": {
     "url": "https://github.com/jianyu-li/yet-another-media-player/issues"
   },
-  "homepage": "https://github.com/jianyu-li/yet-another-media-player#readme"
+  "homepage": "https://github.com/jianyu-li/yet-another-media-player#readme",
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "fsevents@2.3.3": true
+  }
 }
