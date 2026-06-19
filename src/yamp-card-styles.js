@@ -4337,10 +4337,12 @@ export const lyricsStyles = css`
   }
 
   .queue-drag-wrapper {
-    transition: max-height 0.2s cubic-bezier(0.2, 0, 0, 1),
-                opacity 0.15s ease,
-                margin 0.2s cubic-bezier(0.2, 0, 0, 1),
-                padding 0.2s cubic-bezier(0.2, 0, 0, 1);
+    max-height: 200px;
+    transition:
+      max-height 0.2s cubic-bezier(0.2, 0, 0, 1),
+      opacity 0.15s ease,
+      margin 0.2s cubic-bezier(0.2, 0, 0, 1),
+      padding 0.2s cubic-bezier(0.2, 0, 0, 1);
     overflow: visible;
   }
 
@@ -4355,7 +4357,9 @@ export const lyricsStyles = css`
   .queue-drag-wrapper.queue-drag-target > .yamp-search-result {
     background: rgba(var(--rgb-primary-color, 255, 152, 0), 0.08) !important;
     border-color: rgba(var(--rgb-primary-color, 255, 152, 0), 0.3) !important;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
   }
 
   .queue-drag-clone {
@@ -4363,4 +4367,3 @@ export const lyricsStyles = css`
     overflow: hidden;
   }
 `;
-

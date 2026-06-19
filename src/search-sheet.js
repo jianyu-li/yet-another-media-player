@@ -477,11 +477,11 @@ export function renderSearchResultItem({
 
   return html`
     <div
-      class="yamp-search-result nodrag no-drag ignore-drag ${isCard ? "search-result-card" : ""} ${isMinimal
-        ? "minimal"
-        : ""} ${item._justMoved ? "just-moved" : ""} ${isActive ? "menu-active" : ""} ${isClickable
-        ? "clickable"
-        : ""}"
+      class="yamp-search-result nodrag no-drag ignore-drag ${isCard
+        ? "search-result-card"
+        : ""} ${isMinimal ? "minimal" : ""} ${item._justMoved ? "just-moved" : ""} ${isActive
+        ? "menu-active"
+        : ""} ${isClickable ? "clickable" : ""}"
       @click=${(e) => {
         if (isSelectionFlow || (!isCard && isClickable)) {
           onResultClick?.(item, e);

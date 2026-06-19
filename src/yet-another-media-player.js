@@ -3174,28 +3174,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   _onQueueDragStart(e) {
     // Ignore clicks on interactive elements
-    if (e.target.closest && e.target.closest('.queue-controls, button, ha-icon, ha-svg-icon')) {
+    if (e.target.closest && e.target.closest(".queue-controls, button, ha-icon, ha-svg-icon")) {
       return;
     }
 
-    const wrapper = e.target.closest('.queue-drag-wrapper');
+    const wrapper = e.target.closest(".queue-drag-wrapper");
     if (!wrapper) return;
 
     const dragIdx = parseInt(wrapper.dataset.queueIdx, 10);
     if (isNaN(dragIdx)) return;
 
+    // Clean up any existing drag in progress
+    if (this._activeDragCleanup) {
+      this._activeDragCleanup();
+    }
+
     // Stop propagation to prevent HA dashboard from reacting
     e.stopPropagation();
 
     const startY = e.clientY;
-    const startX = e.clientX;
     let holdTimer = null;
     let isDragging = false;
     let floatingClone = null;
     let cloneOffsetY = 0;
 
     // Use a long-press delay on touch, immediate on mouse
-    const isTouchLike = e.pointerType === 'touch' || e.pointerType === 'pen';
+    const isTouchLike = e.pointerType === "touch" || e.pointerType === "pen";
     const holdDelay = isTouchLike ? 300 : 0;
 
     const startDrag = () => {
@@ -3206,19 +3210,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       // Measure the item height and set it as a CSS variable for the gap/collapse
       const wrapperRect = wrapper.getBoundingClientRect();
-      const container = this.renderRoot.querySelector('.queue-sortable-container');
+      const container = this.renderRoot.querySelector(".queue-sortable-container");
       if (container) {
-        container.style.setProperty('--queue-drag-item-h', `${wrapperRect.height}px`);
+        container.style.setProperty("--queue-drag-item-h", `${wrapperRect.height}px`);
+        container.style.touchAction = "none"; // Lock scrolling on touch devices during drag
       }
 
       // Create a floating clone that follows the pointer
-      const itemEl = wrapper.querySelector('.yamp-search-result');
+      const itemEl = wrapper.querySelector(".yamp-search-result");
       if (itemEl) {
         const rect = itemEl.getBoundingClientRect();
         cloneOffsetY = startY - rect.top;
 
         floatingClone = itemEl.cloneNode(true);
-        floatingClone.classList.add('queue-drag-clone');
+        floatingClone.classList.add("queue-drag-clone");
         floatingClone.style.cssText = `
           position: fixed;
           left: ${rect.left}px;
@@ -3270,10 +3275,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       // Find which queue item we're hovering over
-      const container = this.renderRoot.querySelector('.queue-sortable-container');
+      const container = this.renderRoot.querySelector(".queue-sortable-container");
       if (!container) return;
 
-      const wrappers = container.querySelectorAll('.queue-drag-wrapper');
+      const wrappers = container.querySelectorAll(".queue-drag-wrapper");
       let closestIdx = null;
       let closestDist = Infinity;
 
@@ -3300,15 +3305,34 @@ class YetAnotherMediaPlayerCard extends LitElement {
       upEvt.stopPropagation();
       clearTimeout(holdTimer);
 
-      if (isDragging && this._queueDropTargetIdx !== null && this._queueDropTargetIdx !== dragIdx) {
-        const newIndex = this._queueDropTargetIdx;
-        // Clear drag state BEFORE triggering the move
-        this._queueDragIdx = null;
-        this._queueDropTargetIdx = null;
-        this._isDragging = false;
+      if (isDragging) {
+        // Prevent next click event on window to avoid accidental play/activation
+        const dragEndTime = Date.now();
+        const captureClick = (clickEvt) => {
+          const elapsed = Date.now() - dragEndTime;
+          if (elapsed < 1000) {
+            clickEvt.stopPropagation();
+            clickEvt.preventDefault();
+          }
+          window.removeEventListener("click", captureClick, true);
+        };
+        window.addEventListener("click", captureClick, true);
+        setTimeout(() => {
+          window.removeEventListener("click", captureClick, true);
+        }, 2000);
 
-        // Use the existing move handler
-        this._onQueueItemMoved({ detail: { oldIndex: dragIdx, newIndex } });
+        if (this._queueDropTargetIdx !== null && this._queueDropTargetIdx !== dragIdx) {
+          const newIndex = this._queueDropTargetIdx;
+          this._queueDragIdx = null;
+          this._queueDropTargetIdx = null;
+          this._isDragging = false;
+          this._onQueueItemMoved({ detail: { oldIndex: dragIdx, newIndex } });
+        } else {
+          this._queueDragIdx = null;
+          this._queueDropTargetIdx = null;
+          this._isDragging = false;
+          this.requestUpdate();
+        }
       } else {
         this._queueDragIdx = null;
         this._queueDropTargetIdx = null;
@@ -3320,20 +3344,29 @@ class YetAnotherMediaPlayerCard extends LitElement {
     };
 
     const cleanup = () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerUp);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+
+      // Restore touchAction on container
+      const container = this.renderRoot.querySelector(".queue-sortable-container");
+      if (container) {
+        container.style.touchAction = "";
+      }
 
       // Remove the floating clone
       if (floatingClone && floatingClone.parentNode) {
         floatingClone.remove();
       }
       floatingClone = null;
+      this._activeDragCleanup = null;
     };
 
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
+    this._activeDragCleanup = cleanup;
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
   }
 
   // Advance the queue in UI immediately (e.g. on track skip)
@@ -9529,6 +9562,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   disconnectedCallback() {
+    if (this._activeDragCleanup) {
+      this._activeDragCleanup();
+    }
     if (this._idleTimeout) {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;

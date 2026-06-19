@@ -93,18 +93,18 @@ class YampSortable extends LitElement {
     // Stop drag-start events from bubbling to prevent Home Assistant dashboard from dragging the card
     this._stopBubble = (e) => {
       // If the target is interactive, let it bubble so clicks work
-      if (e.target.closest && e.target.closest('.queue-controls, button, ha-icon, ha-svg-icon')) {
+      if (e.target.closest && e.target.closest(".queue-controls, button, ha-icon, ha-svg-icon")) {
         return;
       }
       e.stopPropagation();
       this._disableDraggableAncestor();
     };
-    container.addEventListener('mousedown', this._stopBubble);
-    container.addEventListener('touchstart', this._stopBubble, { passive: true });
-    container.addEventListener('pointerdown', this._stopBubble);
-    container.addEventListener('dragstart', this._stopBubble);
-    container.addEventListener('dragend', this._stopBubble);
-    container.addEventListener('drop', this._stopBubble);
+    container.addEventListener("mousedown", this._stopBubble);
+    container.addEventListener("touchstart", this._stopBubble, { passive: true });
+    container.addEventListener("pointerdown", this._stopBubble);
+    container.addEventListener("dragstart", this._stopBubble);
+    container.addEventListener("dragend", this._stopBubble);
+    container.addEventListener("drop", this._stopBubble);
   }
 
   _handleUpdate(evt) {
@@ -138,12 +138,12 @@ class YampSortable extends LitElement {
         e.stopPropagation();
         e.preventDefault();
       }
-      window.removeEventListener('click', captureClick, true);
+      window.removeEventListener("click", captureClick, true);
     };
-    window.addEventListener('click', captureClick, true);
+    window.addEventListener("click", captureClick, true);
     // Remove the listener after a safety timeout in case no click is fired
     setTimeout(() => {
-      window.removeEventListener('click', captureClick, true);
+      window.removeEventListener("click", captureClick, true);
     }, 2000);
 
     this.dispatchEvent(
@@ -189,12 +189,12 @@ class YampSortable extends LitElement {
 
     const container = this.children[0];
     if (container && this._stopBubble) {
-      container.removeEventListener('mousedown', this._stopBubble);
-      container.removeEventListener('touchstart', this._stopBubble);
-      container.removeEventListener('pointerdown', this._stopBubble);
-      container.removeEventListener('dragstart', this._stopBubble);
-      container.removeEventListener('dragend', this._stopBubble);
-      container.removeEventListener('drop', this._stopBubble);
+      container.removeEventListener("mousedown", this._stopBubble);
+      container.removeEventListener("touchstart", this._stopBubble);
+      container.removeEventListener("pointerdown", this._stopBubble);
+      container.removeEventListener("dragstart", this._stopBubble);
+      container.removeEventListener("dragend", this._stopBubble);
+      container.removeEventListener("drop", this._stopBubble);
     }
 
     // Clean up any remaining ghost elements
@@ -206,9 +206,9 @@ class YampSortable extends LitElement {
 
     let parent = this;
     while (parent) {
-      if (parent.getAttribute && parent.getAttribute('draggable') === 'true') {
+      if (parent.getAttribute && parent.getAttribute("draggable") === "true") {
         this._draggableAncestor = parent;
-        parent.setAttribute('draggable', 'false');
+        parent.setAttribute("draggable", "false");
         break;
       }
       parent = parent.parentElement || (parent.getRootNode && parent.getRootNode().host);
@@ -217,16 +217,16 @@ class YampSortable extends LitElement {
     if (this._draggableAncestor) {
       const restore = () => {
         if (this._draggableAncestor) {
-          this._draggableAncestor.setAttribute('draggable', 'true');
+          this._draggableAncestor.setAttribute("draggable", "true");
           this._draggableAncestor = null;
         }
-        window.removeEventListener('mouseup', restore);
-        window.removeEventListener('touchend', restore);
-        window.removeEventListener('pointerup', restore);
+        window.removeEventListener("mouseup", restore);
+        window.removeEventListener("touchend", restore);
+        window.removeEventListener("pointerup", restore);
       };
-      window.addEventListener('mouseup', restore);
-      window.addEventListener('touchend', restore);
-      window.addEventListener('pointerup', restore);
+      window.addEventListener("mouseup", restore);
+      window.addEventListener("touchend", restore);
+      window.addEventListener("pointerup", restore);
     }
   }
 }
