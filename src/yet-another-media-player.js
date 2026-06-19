@@ -6179,12 +6179,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const cleanAlbum = album ? this._cleanTrackMetadata(album) : "";
 
     try {
+      const headers = {
+        "User-Agent": "yet-another-media-player (https://github.com/jianyu-li/yet-another-media-player)"
+      };
+
       // 1. Try precise get first
       let url = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
       if (cleanAlbum) url += `&album_name=${encodeURIComponent(cleanAlbum)}`;
       if (duration) url += `&duration=${Math.round(duration)}`;
 
-      let response = await fetch(url);
+      let response = await fetch(url, { headers });
       if (this._currentFetchToken !== fetchToken) return [];
 
       if (!response.ok && response.status !== 404) {
@@ -6197,7 +6201,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       } else {
         // 2. Try search fallback if precise get failed
         const searchUrl = `https://lrclib.net/api/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
-        const searchRes = await fetch(searchUrl);
+        const searchRes = await fetch(searchUrl, { headers });
         if (this._currentFetchToken !== fetchToken) return [];
 
         if (searchRes.ok) {
