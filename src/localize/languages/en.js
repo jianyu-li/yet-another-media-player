@@ -204,6 +204,8 @@ export default {
         "Specify how many columns to use in the card view. Artwork will scale automatically.",
       card_type:
         "Choose the card mode. 'Default' is the standard media player. 'Dedicated Search' makes the card a permanent search interface.",
+      queue_controls_style:
+        "Choose between a drag handle or classic movement buttons for the queue.",
       always_show_lyrics: "Automatically open the lyrics view when the page is refreshed.",
       lyrics_source:
         "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
@@ -313,6 +315,7 @@ export default {
       search_view: "Search Result View",
       search_card_columns: "Card Columns",
       card_type: "Card Type",
+      queue_controls_style: "Queue Controls Style",
       appearance: "Appearance",
       no_artwork_option: "No Artwork",
       details_alignment: "Details Alignment",
@@ -360,6 +363,10 @@ export default {
       default: "Default",
       search: "Search",
       group_players: "Group Players",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Drag Handle",
+      icons: "Movement Buttons",
     },
     appearance_options: {
       automatic: "Automatic",
