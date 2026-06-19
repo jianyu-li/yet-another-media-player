@@ -3115,15 +3115,31 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately for a seamless feel
       this._moveQueueItemInUIByIndex(oldIndex, newIndex);
 
-      // Perform backend move using up/down calls sequentially
-      const steps = Math.abs(newIndex - oldIndex);
-      const serviceName = newIndex < oldIndex ? "move_queue_item_up" : "move_queue_item_down";
+      // Perform backend move using the most efficient path of service calls
+      const costDirect = Math.abs(newIndex - oldIndex);
+      const costViaNext = 1 + newIndex;
 
-      for (let i = 0; i < steps; i++) {
-        await this.hass.callService("mass_queue", serviceName, {
+      if (costViaNext < costDirect) {
+        // Strategy B: Move to next (index 0), then move down sequentially
+        await this.hass.callService("mass_queue", "move_queue_item_next", {
           entity: maEntityId,
           queue_item_id: queueItemId
         });
+        for (let i = 0; i < newIndex; i++) {
+          await this.hass.callService("mass_queue", "move_queue_item_down", {
+            entity: maEntityId,
+            queue_item_id: queueItemId
+          });
+        }
+      } else {
+        // Strategy A: Direct moves up or down sequentially
+        const serviceName = newIndex < oldIndex ? "move_queue_item_up" : "move_queue_item_down";
+        for (let i = 0; i < costDirect; i++) {
+          await this.hass.callService("mass_queue", serviceName, {
+            entity: maEntityId,
+            queue_item_id: queueItemId
+          });
+        }
       }
 
       this._invalidateUpcomingCache();

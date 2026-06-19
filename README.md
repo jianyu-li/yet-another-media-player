@@ -446,6 +446,15 @@ Once installed and configured, YAMP will automatically detect the integration an
 
 These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
 
+#### Queue Drag-and-Drop Reordering
+
+When the `mass_queue` integration is active and you are viewing the upcoming queue list, you can drag and drop items to reorder them. 
+
+* **How it works (Optimized Paths)**: Home Assistant's underlying Music Assistant queue actions only allow moving items by one slot at a time (via `move_up` and `move_down`) or placing them immediately next in line (via `move_next`). To minimize server load and decrease latency, YAMP automatically calculates the most efficient route:
+  - If direct shifting up/down takes fewer calls, it triggers those sequentially.
+  - If placing the item at the "next" position (index 0) and then shifting it down takes fewer calls overall, it will perform a single `move_next` followed by sequential `move_down` calls.
+* **Latency Warning**: Even with this optimization, if you drag a track across a long queue, the card will execute multiple sequential calls in the background. If you immediately attempt to play the next track or perform another action right after a long drag, the server queue might not have fully caught up yet. Please allow a brief moment for the sequential updates to complete when making large drag displacements.
+
 ### Synced Lyrics (Music Assistant & LRCLIB)
 
 Experience synchronized, real-time lyrics directly within the card. YAMP supports fetching lyrics from **Music Assistant** and **LRCLIB**.
