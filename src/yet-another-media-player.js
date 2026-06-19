@@ -24,6 +24,8 @@ import {
   transformMusicAssistantItem
 } from "./search-sheet.js";
 import "./yamp-editor.js";
+import "./yamp-sortable.js";
+
 
 import {
   resolveTemplateAtActionTime,
@@ -1985,7 +1987,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return ALLOWED_MEDIA_TYPES.filter(c => !hiddenSet.has(c));
   }
 
-  async _playMediaFromSearch(item) {
+  async _playMediaFromSearch(item, event) {
+    if (this._isDragging) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      return;
+    }
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     this._searchError = "";
@@ -3078,6 +3087,255 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   }
 
+  async _onQueueItemMoved(e) {
+    const { oldIndex, newIndex } = e.detail;
+    if (oldIndex === newIndex) return;
+
+    const currentResults = this._getDisplaySearchResults();
+    if (!currentResults || oldIndex < 0 || oldIndex >= currentResults.length || newIndex < 0 || newIndex >= currentResults.length) {
+      return;
+    }
+
+    const draggedItem = currentResults[oldIndex];
+    const queueItemId = draggedItem?.queue_item_id;
+    if (!queueItemId) {
+      console.error("yamp: No queue_item_id found on dragged item", draggedItem);
+      return;
+    }
+
+    try {
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState?.entity_id;
+
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+
+      // Update UI immediately for a seamless feel
+      this._moveQueueItemInUIByIndex(oldIndex, newIndex);
+
+      // Perform backend move using up/down calls sequentially
+      const steps = Math.abs(newIndex - oldIndex);
+      const serviceName = newIndex < oldIndex ? "move_queue_item_up" : "move_queue_item_down";
+
+      for (let i = 0; i < steps; i++) {
+        await this.hass.callService("mass_queue", serviceName, {
+          entity: maEntityId,
+          queue_item_id: queueItemId
+        });
+      }
+
+      this._invalidateUpcomingCache();
+    } catch (error) {
+      console.error("yamp: Failed to move queue item via drag and drop:", error);
+      // Revert UI change on error
+      this._refreshQueue();
+    }
+  }
+
+  _moveQueueItemInUIByIndex(oldIndex, newIndex) {
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
+    const currentResults = this._searchResultsByType[cacheKey];
+
+    if (!Array.isArray(currentResults)) {
+      return;
+    }
+
+    if (oldIndex < 0 || oldIndex >= currentResults.length || newIndex < 0 || newIndex >= currentResults.length) {
+      return;
+    }
+
+    // Move item in array
+    const movedItem = currentResults.splice(oldIndex, 1)[0];
+    currentResults.splice(newIndex, 0, movedItem);
+
+    // Update the active search results too
+    this._searchResults = [...currentResults];
+
+    // Update position numbers for visual feedback
+    currentResults.forEach((item, index) => {
+      item.position = index + 1;
+    });
+
+    // Add visual feedback - temporarily highlight the moved item
+    movedItem._justMoved = true;
+    setTimeout(() => {
+      delete movedItem._justMoved;
+      this.requestUpdate();
+    }, 1000);
+
+    // Invalidate any in-flight background fetches so they don't overwrite this manual UI shift
+    this._latestSearchToken = Date.now();
+
+    // Trigger UI update
+    this.requestUpdate();
+  }
+
+  _onQueueDragStart(e) {
+    // Ignore clicks on interactive elements
+    if (e.target.closest && e.target.closest('.queue-controls, button, ha-icon, ha-svg-icon')) {
+      return;
+    }
+
+    const wrapper = e.target.closest('.queue-drag-wrapper');
+    if (!wrapper) return;
+
+    const dragIdx = parseInt(wrapper.dataset.queueIdx, 10);
+    if (isNaN(dragIdx)) return;
+
+    // Stop propagation to prevent HA dashboard from reacting
+    e.stopPropagation();
+
+    const startY = e.clientY;
+    const startX = e.clientX;
+    let holdTimer = null;
+    let isDragging = false;
+    let floatingClone = null;
+    let cloneOffsetY = 0;
+
+    // Use a long-press delay on touch, immediate on mouse
+    const isTouchLike = e.pointerType === 'touch' || e.pointerType === 'pen';
+    const holdDelay = isTouchLike ? 300 : 0;
+
+    const startDrag = () => {
+      isDragging = true;
+      this._isDragging = true;
+      this._queueDragIdx = dragIdx;
+      this._queueDropTargetIdx = null;
+
+      // Measure the item height and set it as a CSS variable for the gap/collapse
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const container = this.renderRoot.querySelector('.queue-sortable-container');
+      if (container) {
+        container.style.setProperty('--queue-drag-item-h', `${wrapperRect.height}px`);
+      }
+
+      // Create a floating clone that follows the pointer
+      const itemEl = wrapper.querySelector('.yamp-search-result');
+      if (itemEl) {
+        const rect = itemEl.getBoundingClientRect();
+        cloneOffsetY = startY - rect.top;
+
+        floatingClone = itemEl.cloneNode(true);
+        floatingClone.classList.add('queue-drag-clone');
+        floatingClone.style.cssText = `
+          position: fixed;
+          left: ${rect.left}px;
+          top: ${rect.top}px;
+          width: ${rect.width}px;
+          height: ${rect.height}px;
+          z-index: 99999;
+          pointer-events: none;
+          transform: scale(1.03);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+          background: var(--card-background-color, #1c1c1c);
+          border: 1px solid var(--custom-accent, #ff9800);
+          border-radius: 12px;
+          opacity: 0.95;
+          transition: transform 0.1s ease;
+          will-change: top;
+        `;
+        this.renderRoot.appendChild(floatingClone);
+      }
+
+      this.requestUpdate();
+    };
+
+    if (holdDelay > 0) {
+      holdTimer = setTimeout(startDrag, holdDelay);
+    } else {
+      startDrag();
+    }
+
+    const onPointerMove = (moveEvt) => {
+      moveEvt.stopPropagation();
+
+      // If still waiting for long-press, check if moved too far
+      if (!isDragging) {
+        const dist = Math.abs(moveEvt.clientY - startY);
+        if (dist > 10) {
+          // Cancel the long-press — user is scrolling
+          clearTimeout(holdTimer);
+          cleanup();
+        }
+        return;
+      }
+
+      moveEvt.preventDefault();
+
+      // Move the floating clone to follow the pointer
+      if (floatingClone) {
+        floatingClone.style.top = `${moveEvt.clientY - cloneOffsetY}px`;
+      }
+
+      // Find which queue item we're hovering over
+      const container = this.renderRoot.querySelector('.queue-sortable-container');
+      if (!container) return;
+
+      const wrappers = container.querySelectorAll('.queue-drag-wrapper');
+      let closestIdx = null;
+      let closestDist = Infinity;
+
+      for (const w of wrappers) {
+        const idx = parseInt(w.dataset.queueIdx, 10);
+        if (isNaN(idx) || idx === dragIdx) continue;
+
+        const rect = w.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const dist = Math.abs(moveEvt.clientY - midY);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestIdx = idx;
+        }
+      }
+
+      if (closestIdx !== null && closestIdx !== this._queueDropTargetIdx) {
+        this._queueDropTargetIdx = closestIdx;
+        this.requestUpdate();
+      }
+    };
+
+    const onPointerUp = (upEvt) => {
+      upEvt.stopPropagation();
+      clearTimeout(holdTimer);
+
+      if (isDragging && this._queueDropTargetIdx !== null && this._queueDropTargetIdx !== dragIdx) {
+        const newIndex = this._queueDropTargetIdx;
+        // Clear drag state BEFORE triggering the move
+        this._queueDragIdx = null;
+        this._queueDropTargetIdx = null;
+        this._isDragging = false;
+
+        // Use the existing move handler
+        this._onQueueItemMoved({ detail: { oldIndex: dragIdx, newIndex } });
+      } else {
+        this._queueDragIdx = null;
+        this._queueDropTargetIdx = null;
+        this._isDragging = false;
+        this.requestUpdate();
+      }
+
+      cleanup();
+    };
+
+    const cleanup = () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+
+      // Remove the floating clone
+      if (floatingClone && floatingClone.parentNode) {
+        floatingClone.remove();
+      }
+      floatingClone = null;
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+  }
+
   // Advance the queue in UI immediately (e.g. on track skip)
   _advanceQueueInUI(queueItemId = null, isManual = false) {
     if (!this._upcomingFilterActive) return;
@@ -3555,6 +3813,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Handle clicks on search result titles
   async _handleSearchResultClick(item, event) {
+    if (this._isDragging) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      return;
+    }
     if (!this._isClickableSearchResult(item)) return;
 
     // If this is a touch device and we have a touch event, ignore the click
@@ -8622,7 +8887,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
           recommendationsFilterActive: !!this._recommendationsFilterActive,
           searchMediaClassFilter: this._searchMediaClassFilter,
-          onPlay: (it) => this._playMediaFromSearch(it),
+          onPlay: (it, e) => this._playMediaFromSearch(it, e),
           onResultClick: (it, e) => this._handleSearchResultClick(it, e),
           onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
           onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
@@ -8640,6 +8905,36 @@ class YetAnotherMediaPlayerCard extends LitElement {
           return html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`;
         }
 
+        const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
+
+        if (isQueueDragAndDrop) {
+          const di = this._queueDragIdx;
+          const dt = this._queueDropTargetIdx;
+          const dragging = di !== null && di !== undefined;
+          return html`
+            <div class="queue-sortable-container"
+              @pointerdown=${(e) => this._onQueueDragStart(e)}
+            >
+              ${currentResults.map((item, idx) => {
+                let wrapCls = "queue-drag-wrapper";
+                if (dragging && idx === di) {
+                  wrapCls += " queue-drag-ghost";
+                }
+                if (dragging && dt !== null && dt !== undefined && idx === dt) {
+                  wrapCls += " queue-drag-target";
+                }
+                return html`
+                  <div class="${wrapCls}" data-queue-idx="${idx}">
+                    ${idx === dt && di > idx ? html`<div class="queue-drop-indicator"></div>` : nothing}
+                    ${renderItemFn(item)}
+                    ${idx === dt && di <= idx ? html`<div class="queue-drop-indicator"></div>` : nothing}
+                  </div>
+                `;
+              })}
+            </div>
+          `;
+        }
+
         if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
           this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
           this._cachedSearchGridLayoutIsMinimal = isMinimal;
@@ -8655,10 +8950,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
         return isCard
           ? virtualize({
-            items: paddedResults,
-            renderItem: renderItemFn,
-            layout: this._cachedSearchGridLayout,
-            scroller: pinSearchHeaders
+             items: paddedResults,
+             renderItem: renderItemFn,
+             layout: this._cachedSearchGridLayout,
+             scroller: pinSearchHeaders
           })
           : virtualize({ items: paddedResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
       })()}
@@ -9356,7 +9651,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Entity options overlay handlers
-  _closeEntityOptions() {
+  _closeEntityOptions(e) {
+    if (this._isDragging) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      return;
+    }
     // In dedicated search mode, don't close the entity options / search
     if (this._cardType === "search") {
       // Just close any sub-menus that might be open

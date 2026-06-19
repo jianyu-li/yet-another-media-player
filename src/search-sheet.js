@@ -477,7 +477,7 @@ export function renderSearchResultItem({
 
   return html`
     <div
-      class="yamp-search-result ${isCard ? "search-result-card" : ""} ${isMinimal
+      class="yamp-search-result nodrag no-drag ignore-drag ${isCard ? "search-result-card" : ""} ${isMinimal
         ? "minimal"
         : ""} ${item._justMoved ? "just-moved" : ""} ${isActive ? "menu-active" : ""} ${isClickable
         ? "clickable"
@@ -486,7 +486,7 @@ export function renderSearchResultItem({
         if (isSelectionFlow || (!isCard && isClickable)) {
           onResultClick?.(item, e);
         } else if (isCard) {
-          onPlay?.(item);
+          onPlay?.(item, e);
         }
       }}
     >

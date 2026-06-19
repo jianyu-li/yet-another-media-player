@@ -9,6 +9,10 @@ class YampSortable extends LitElement {
       disabled: { type: Boolean },
       handleSelector: { type: String },
       draggableSelector: { type: String },
+      delay: { type: Number },
+      delayOnTouchOnly: { type: Boolean },
+      filter: { type: String },
+      preventOnFilter: { type: Boolean },
     };
   }
 
@@ -17,6 +21,10 @@ class YampSortable extends LitElement {
     this.disabled = false;
     this.handleSelector = ".handle";
     this.draggableSelector = ".sortable-item";
+    this.delay = 0;
+    this.delayOnTouchOnly = false;
+    this.filter = "";
+    this.preventOnFilter = true;
     this._sortable = null;
   }
 
@@ -62,13 +70,17 @@ class YampSortable extends LitElement {
       scrollSpeed: 20,
       animation: 150,
       draggable: this.draggableSelector,
-      handle: this.handleSelector,
+      handle: this.handleSelector || undefined,
+      delay: this.delay,
+      delayOnTouchOnly: this.delayOnTouchOnly,
+      filter: this.filter || undefined,
+      preventOnFilter: this.preventOnFilter,
       // Mobile-specific options to fix ghost issues
       fallbackTolerance: 3,
       fallbackOnBody: true,
       fallbackClass: "sortable-fallback",
-      // Disable fallback on mobile to prevent ghost issues
-      fallback: false,
+      // Force fallback (touch/mouse simulation) to disable native HTML5 drag-and-drop and its bubble issues
+      forceFallback: true,
 
       onChoose: this._handleChoose.bind(this),
       onStart: this._handleStart.bind(this),
@@ -77,6 +89,22 @@ class YampSortable extends LitElement {
     };
 
     this._sortable = new Sortable(container, options);
+
+    // Stop drag-start events from bubbling to prevent Home Assistant dashboard from dragging the card
+    this._stopBubble = (e) => {
+      // If the target is interactive, let it bubble so clicks work
+      if (e.target.closest && e.target.closest('.queue-controls, button, ha-icon, ha-svg-icon')) {
+        return;
+      }
+      e.stopPropagation();
+      this._disableDraggableAncestor();
+    };
+    container.addEventListener('mousedown', this._stopBubble);
+    container.addEventListener('touchstart', this._stopBubble, { passive: true });
+    container.addEventListener('pointerdown', this._stopBubble);
+    container.addEventListener('dragstart', this._stopBubble);
+    container.addEventListener('dragend', this._stopBubble);
+    container.addEventListener('drop', this._stopBubble);
   }
 
   _handleUpdate(evt) {
@@ -101,11 +129,41 @@ class YampSortable extends LitElement {
       evt.item.placeholder.replaceWith(evt.item);
       delete evt.item.placeholder;
     }
+
+    // Capture the next click event on the window to prevent accidental clicks after drag
+    const dragEndTime = Date.now();
+    const captureClick = (e) => {
+      const elapsed = Date.now() - dragEndTime;
+      if (elapsed < 1000) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      window.removeEventListener('click', captureClick, true);
+    };
+    window.addEventListener('click', captureClick, true);
+    // Remove the listener after a safety timeout in case no click is fired
+    setTimeout(() => {
+      window.removeEventListener('click', captureClick, true);
+    }, 2000);
+
+    this.dispatchEvent(
+      new CustomEvent("drag-end", {
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   _handleStart(evt) {
     // Ensure proper cleanup on start
     this._cleanupGhostElements();
+
+    this.dispatchEvent(
+      new CustomEvent("drag-start", {
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   _handleChoose(evt) {
@@ -128,8 +186,48 @@ class YampSortable extends LitElement {
     if (!this._sortable) return;
     this._sortable.destroy();
     this._sortable = null;
+
+    const container = this.children[0];
+    if (container && this._stopBubble) {
+      container.removeEventListener('mousedown', this._stopBubble);
+      container.removeEventListener('touchstart', this._stopBubble);
+      container.removeEventListener('pointerdown', this._stopBubble);
+      container.removeEventListener('dragstart', this._stopBubble);
+      container.removeEventListener('dragend', this._stopBubble);
+      container.removeEventListener('drop', this._stopBubble);
+    }
+
     // Clean up any remaining ghost elements
     this._cleanupGhostElements();
+  }
+
+  _disableDraggableAncestor() {
+    if (this._draggableAncestor) return;
+
+    let parent = this;
+    while (parent) {
+      if (parent.getAttribute && parent.getAttribute('draggable') === 'true') {
+        this._draggableAncestor = parent;
+        parent.setAttribute('draggable', 'false');
+        break;
+      }
+      parent = parent.parentElement || (parent.getRootNode && parent.getRootNode().host);
+    }
+
+    if (this._draggableAncestor) {
+      const restore = () => {
+        if (this._draggableAncestor) {
+          this._draggableAncestor.setAttribute('draggable', 'true');
+          this._draggableAncestor = null;
+        }
+        window.removeEventListener('mouseup', restore);
+        window.removeEventListener('touchend', restore);
+        window.removeEventListener('pointerup', restore);
+      };
+      window.addEventListener('mouseup', restore);
+      window.addEventListener('touchend', restore);
+      window.addEventListener('pointerup', restore);
+    }
   }
 }
 
