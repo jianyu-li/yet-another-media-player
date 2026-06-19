@@ -134,7 +134,7 @@ class YampSortable extends LitElement {
     const dragEndTime = Date.now();
     const captureClick = (e) => {
       const elapsed = Date.now() - dragEndTime;
-      if (elapsed < 1000) {
+      if (elapsed < 200) {
         e.stopPropagation();
         e.preventDefault();
       }

@@ -24,7 +24,6 @@ import {
   transformMusicAssistantItem
 } from "./search-sheet.js";
 import "./yamp-editor.js";
-import "./yamp-sortable.js";
 
 
 import {
@@ -3058,33 +3057,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         return;
     }
 
-    if (newIndex === itemIndex) return;
-
-    // Move item in array (like companion card's moveQueueItem)
-    const movedItem = currentResults.splice(itemIndex, 1)[0];
-    currentResults.splice(newIndex, 0, movedItem);
-
-    // Update the active search results too
-    this._searchResults = [...currentResults];
-
-    // Update position numbers for visual feedback
-    currentResults.forEach((item, index) => {
-      item.position = index + 1;
-    });
-
-    // Add visual feedback - temporarily highlight the moved item
-    movedItem._justMoved = true;
-    setTimeout(() => {
-      delete movedItem._justMoved;
-      this.requestUpdate();
-    }, 1000);
-
-    // Invalidate any in-flight background fetches so they don't overwrite this manual UI shift
-    this._latestSearchToken = Date.now();
-
-    // Trigger UI update
-    this.requestUpdate();
-
+    this._moveQueueItemInUIByIndex(itemIndex, newIndex);
   }
 
   async _onQueueItemMoved(e) {
@@ -3189,8 +3162,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _onQueueDragStart(e) {
-    // Ignore clicks on interactive elements, except for the drag handle itself
-    if (e.target.closest && e.target.closest(".queue-controls, button, ha-icon, ha-svg-icon") && !e.target.closest(".queue-drag-handle")) {
+    // Restrict dragging to the drag handle when configured, or disable completely if movement buttons are selected
+    const style = this.config.queue_controls_style || "drag_handle";
+    if (style === "drag_handle") {
+      if (!e.target.closest || !e.target.closest(".queue-drag-handle")) {
+        return;
+      }
+    } else {
+      // Movement buttons (icons) style is selected: disable drag-and-drop
       return;
     }
 
@@ -3220,16 +3199,16 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let lastClientY = startY;
     let currentDropTargetIdx = null;
 
-    // Use a long-press delay on touch, immediate on mouse
+    // Use a long-press delay on touch, threshold-move on mouse
     const isTouchLike = e.pointerType === "touch" || e.pointerType === "pen";
-    const holdDelay = isTouchLike ? 300 : 0;
+    const holdDelay = isTouchLike ? 300 : null;
 
     // Find the nearest scrollable ancestor
     const findScrollParent = (el) => {
       let node = el.parentElement;
       while (node) {
         const style = window.getComputedStyle(node);
-        const overflowY = style.overflowY;
+        const overflowY = style?.overflowY;
         if (overflowY === "auto" || overflowY === "scroll") {
           return node;
         }
@@ -3393,21 +3372,26 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
     };
 
-    if (holdDelay > 0) {
+    if (holdDelay !== null) {
       holdTimer = setTimeout(startDrag, holdDelay);
-    } else {
-      startDrag();
     }
 
     const onPointerMove = (moveEvt) => {
       moveEvt.stopPropagation();
 
-      // If still waiting for long-press, check if moved too far
+      // If still waiting for long-press/motion-start, check if moved/threshold met
       if (!isDragging) {
         const dist = Math.abs(moveEvt.clientY - startY);
-        if (dist > 10) {
-          clearTimeout(holdTimer);
-          cleanup();
+        if (isTouchLike) {
+          if (dist > 10) {
+            clearTimeout(holdTimer);
+            cleanup();
+          }
+        } else {
+          // Desktop mouse: start drag only after moving > 5 pixels
+          if (dist > 5) {
+            startDrag();
+          }
         }
         return;
       }
@@ -3448,7 +3432,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const dragEndTime = Date.now();
         const captureClick = (clickEvt) => {
           const elapsed = Date.now() - dragEndTime;
-          if (elapsed < 1000) {
+          if (elapsed < 200) {
             clickEvt.stopPropagation();
             clickEvt.preventDefault();
           }
@@ -3457,7 +3441,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         window.addEventListener("click", captureClick, true);
         setTimeout(() => {
           window.removeEventListener("click", captureClick, true);
-        }, 2000);
+        }, 1000);
 
         clearDragVisuals();
 
