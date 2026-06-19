@@ -3198,23 +3198,155 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let floatingClone = null;
     let cloneOffsetY = 0;
 
+    let scrollContainer = null;
+    let scrollSpeed = 0;
+    let scrollAnimationFrame = null;
+    let lastClientY = startY;
+    let currentDropTargetIdx = null;
+
     // Use a long-press delay on touch, immediate on mouse
     const isTouchLike = e.pointerType === "touch" || e.pointerType === "pen";
     const holdDelay = isTouchLike ? 300 : 0;
+
+    // Find the nearest scrollable ancestor
+    const findScrollParent = (el) => {
+      let node = el.parentElement;
+      while (node) {
+        const style = window.getComputedStyle(node);
+        const overflowY = style.overflowY;
+        if (overflowY === "auto" || overflowY === "scroll") {
+          return node;
+        }
+        // Check shadow DOM hosts
+        if (!node.parentElement && node.getRootNode && node.getRootNode().host) {
+          node = node.getRootNode().host;
+        } else {
+          node = node.parentElement;
+        }
+      }
+      return null;
+    };
+
+    // Apply inline transforms to physically shift rows apart, creating a gap
+    let dragItemHeight = 0;
+
+    const applyDragVisuals = (newTargetIdx) => {
+      const container = this.renderRoot.querySelector(".queue-sortable-container");
+      if (!container) return;
+
+      const wrappers = container.querySelectorAll(".queue-drag-wrapper");
+
+      for (const w of wrappers) {
+        const idx = parseInt(w.dataset.queueIdx, 10);
+        if (isNaN(idx)) continue;
+
+        // Ghost: collapse the dragged item
+        if (idx === dragIdx) {
+          w.style.maxHeight = "0";
+          w.style.overflow = "hidden";
+          w.style.margin = "0";
+          w.style.padding = "0";
+          w.style.opacity = "0";
+          continue;
+        }
+
+        // Shift rows to open a gap at the drop target
+        if (newTargetIdx === null) {
+          w.style.transform = "";
+        } else if (dragIdx < newTargetIdx) {
+          // Dragging downward: items between (dragIdx, newTargetIdx] shift up
+          if (idx > dragIdx && idx <= newTargetIdx) {
+            w.style.transform = `translateY(${-dragItemHeight}px)`;
+          } else {
+            w.style.transform = "";
+          }
+        } else {
+          // Dragging upward: items between [newTargetIdx, dragIdx) shift down
+          if (idx >= newTargetIdx && idx < dragIdx) {
+            w.style.transform = `translateY(${dragItemHeight}px)`;
+          } else {
+            w.style.transform = "";
+          }
+        }
+      }
+    };
+
+    const clearDragVisuals = () => {
+      const container = this.renderRoot.querySelector(".queue-sortable-container");
+      if (!container) return;
+
+      const wrappers = container.querySelectorAll(".queue-drag-wrapper");
+      for (const w of wrappers) {
+        w.style.transform = "";
+        w.style.maxHeight = "";
+        w.style.overflow = "";
+        w.style.margin = "";
+        w.style.padding = "";
+        w.style.opacity = "";
+      }
+    };
+
+    const updateDropTarget = (clientY) => {
+      const container = this.renderRoot.querySelector(".queue-sortable-container");
+      if (!container) return;
+
+      // Use yamp-search-result content divs for stable bounding rects
+      const itemElements = container.querySelectorAll(".queue-drag-wrapper > .yamp-search-result");
+      let closestIdx = null;
+      let closestDist = Infinity;
+
+      for (const el of itemElements) {
+        const wrapperEl = el.parentElement;
+        const idx = parseInt(wrapperEl.dataset.queueIdx, 10);
+        if (isNaN(idx) || idx === dragIdx) continue;
+
+        const rect = el.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const dist = Math.abs(clientY - midY);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestIdx = idx;
+        }
+      }
+
+      if (closestIdx !== null && closestIdx !== currentDropTargetIdx) {
+        currentDropTargetIdx = closestIdx;
+        this._queueDropTargetIdx = closestIdx;
+        applyDragVisuals(closestIdx);
+      }
+    };
+
+    const scrollLoop = () => {
+      if (!isDragging || !scrollContainer) return;
+      if (scrollSpeed !== 0) {
+        scrollContainer.scrollTop += scrollSpeed;
+        updateDropTarget(lastClientY);
+      }
+      scrollAnimationFrame = requestAnimationFrame(scrollLoop);
+    };
 
     const startDrag = () => {
       isDragging = true;
       this._isDragging = true;
       this._queueDragIdx = dragIdx;
       this._queueDropTargetIdx = null;
+      currentDropTargetIdx = null;
 
-      // Measure the item height and set it as a CSS variable for the gap/collapse
+      // Measure the item height for translateY shifts
       const wrapperRect = wrapper.getBoundingClientRect();
+      dragItemHeight = wrapperRect.height;
       const container = this.renderRoot.querySelector(".queue-sortable-container");
       if (container) {
         container.style.setProperty("--queue-drag-item-h", `${wrapperRect.height}px`);
-        container.style.touchAction = "none"; // Lock scrolling on touch devices during drag
+        container.style.touchAction = "none";
+        scrollContainer = findScrollParent(container);
+        if (scrollContainer) {
+          scrollAnimationFrame = requestAnimationFrame(scrollLoop);
+        }
       }
+
+      // Apply ghost class on the dragged item immediately via DOM
+      applyDragVisuals(null);
 
       // Create a floating clone that follows the pointer
       const itemEl = wrapper.querySelector(".yamp-search-result");
@@ -3243,8 +3375,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         `;
         this.renderRoot.appendChild(floatingClone);
       }
-
-      this.requestUpdate();
     };
 
     if (holdDelay > 0) {
@@ -3260,7 +3390,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!isDragging) {
         const dist = Math.abs(moveEvt.clientY - startY);
         if (dist > 10) {
-          // Cancel the long-press — user is scrolling
           clearTimeout(holdTimer);
           cleanup();
         }
@@ -3268,37 +3397,30 @@ class YetAnotherMediaPlayerCard extends LitElement {
       }
 
       moveEvt.preventDefault();
+      lastClientY = moveEvt.clientY;
 
       // Move the floating clone to follow the pointer
       if (floatingClone) {
-        floatingClone.style.top = `${moveEvt.clientY - cloneOffsetY}px`;
+        floatingClone.style.top = `${lastClientY - cloneOffsetY}px`;
       }
 
-      // Find which queue item we're hovering over
-      const container = this.renderRoot.querySelector(".queue-sortable-container");
-      if (!container) return;
+      // Calculate scroll speed based on pointer position relative to scroll container
+      if (scrollContainer) {
+        const scrollRect = scrollContainer.getBoundingClientRect();
+        const topDiff = lastClientY - scrollRect.top;
+        const bottomDiff = scrollRect.bottom - lastClientY;
+        const threshold = 60;
 
-      const wrappers = container.querySelectorAll(".queue-drag-wrapper");
-      let closestIdx = null;
-      let closestDist = Infinity;
-
-      for (const w of wrappers) {
-        const idx = parseInt(w.dataset.queueIdx, 10);
-        if (isNaN(idx) || idx === dragIdx) continue;
-
-        const rect = w.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        const dist = Math.abs(moveEvt.clientY - midY);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closestIdx = idx;
+        if (topDiff < threshold && topDiff > -50) {
+          scrollSpeed = -Math.max(2, (threshold - topDiff) * 0.3);
+        } else if (bottomDiff < threshold && bottomDiff > -50) {
+          scrollSpeed = Math.max(2, (threshold - bottomDiff) * 0.3);
+        } else {
+          scrollSpeed = 0;
         }
       }
 
-      if (closestIdx !== null && closestIdx !== this._queueDropTargetIdx) {
-        this._queueDropTargetIdx = closestIdx;
-        this.requestUpdate();
-      }
+      updateDropTarget(lastClientY);
     };
 
     const onPointerUp = (upEvt) => {
@@ -3321,8 +3443,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
           window.removeEventListener("click", captureClick, true);
         }, 2000);
 
-        if (this._queueDropTargetIdx !== null && this._queueDropTargetIdx !== dragIdx) {
-          const newIndex = this._queueDropTargetIdx;
+        clearDragVisuals();
+
+        if (currentDropTargetIdx !== null && currentDropTargetIdx !== dragIdx) {
+          const newIndex = currentDropTargetIdx;
           this._queueDragIdx = null;
           this._queueDropTargetIdx = null;
           this._isDragging = false;
@@ -3337,16 +3461,41 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._queueDragIdx = null;
         this._queueDropTargetIdx = null;
         this._isDragging = false;
-        this.requestUpdate();
       }
 
       cleanup();
     };
 
+    const onPointerCancel = (cancelEvt) => {
+      cancelEvt.stopPropagation();
+      clearTimeout(holdTimer);
+
+      clearDragVisuals();
+
+      this._queueDragIdx = null;
+      this._queueDropTargetIdx = null;
+      this._isDragging = false;
+      this.requestUpdate();
+
+      cleanup();
+    };
+
+    const onTouchMove = (evt) => {
+      if (isDragging) {
+        evt.preventDefault();
+      }
+    };
+
     const cleanup = () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("pointercancel", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      window.removeEventListener("touchmove", onTouchMove, { passive: false });
+
+      if (scrollAnimationFrame) {
+        cancelAnimationFrame(scrollAnimationFrame);
+        scrollAnimationFrame = null;
+      }
 
       // Restore touchAction on container
       const container = this.renderRoot.querySelector(".queue-sortable-container");
@@ -3366,7 +3515,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
   }
 
   // Advance the queue in UI immediately (e.g. on track skip)
@@ -8941,29 +9091,15 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
 
         if (isQueueDragAndDrop) {
-          const di = this._queueDragIdx;
-          const dt = this._queueDropTargetIdx;
-          const dragging = di !== null && di !== undefined;
           return html`
             <div class="queue-sortable-container"
               @pointerdown=${(e) => this._onQueueDragStart(e)}
             >
-              ${currentResults.map((item, idx) => {
-                let wrapCls = "queue-drag-wrapper";
-                if (dragging && idx === di) {
-                  wrapCls += " queue-drag-ghost";
-                }
-                if (dragging && dt !== null && dt !== undefined && idx === dt) {
-                  wrapCls += " queue-drag-target";
-                }
-                return html`
-                  <div class="${wrapCls}" data-queue-idx="${idx}">
-                    ${idx === dt && di > idx ? html`<div class="queue-drop-indicator"></div>` : nothing}
-                    ${renderItemFn(item)}
-                    ${idx === dt && di <= idx ? html`<div class="queue-drop-indicator"></div>` : nothing}
-                  </div>
-                `;
-              })}
+              ${currentResults.map((item, idx) => html`
+                <div class="queue-drag-wrapper" data-queue-idx="${idx}">
+                  ${renderItemFn(item)}
+                </div>
+              `)}
             </div>
           `;
         }

@@ -4326,40 +4326,13 @@ export const lyricsStyles = css`
   }
 
   /* Drag and drop upcoming queue styles */
-  .queue-drop-indicator {
-    height: var(--queue-drag-item-h, 60px);
-    background: rgba(var(--rgb-primary-color, 255, 152, 0), 0.06);
-    border: 1px dashed var(--custom-accent, #ff9800);
-    border-radius: 12px;
-    margin: 4px 0;
-    pointer-events: none;
-    transition: height 0.2s cubic-bezier(0.2, 0, 0, 1);
-  }
-
   .queue-drag-wrapper {
-    max-height: 200px;
-    transition:
-      max-height 0.2s cubic-bezier(0.2, 0, 0, 1),
-      opacity 0.15s ease,
-      margin 0.2s cubic-bezier(0.2, 0, 0, 1),
-      padding 0.2s cubic-bezier(0.2, 0, 0, 1);
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
     overflow: visible;
   }
 
-  .queue-drag-wrapper.queue-drag-ghost {
-    max-height: 0 !important;
-    overflow: hidden;
-    margin: 0 !important;
-    padding: 0 !important;
-    opacity: 0 !important;
-  }
-
-  .queue-drag-wrapper.queue-drag-target > .yamp-search-result {
-    background: rgba(var(--rgb-primary-color, 255, 152, 0), 0.08) !important;
-    border-color: rgba(var(--rgb-primary-color, 255, 152, 0), 0.3) !important;
-    transition:
-      background 0.15s ease,
-      border-color 0.15s ease;
+  .queue-drop-indicator {
+    display: none;
   }
 
   .queue-drag-clone {
