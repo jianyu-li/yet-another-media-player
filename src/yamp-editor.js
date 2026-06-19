@@ -2105,6 +2105,30 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             `
           : nothing}
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  {
+                    value: "drag_handle",
+                    label: localize("editor.queue_controls_style_options.drag_handle"),
+                  },
+                  {
+                    value: "icons",
+                    label: localize("editor.queue_controls_style_options.icons"),
+                  },
+                ],
+              },
+            }}
+            .value=${this._config.queue_controls_style ?? "drag_handle"}
+            label="${localize("editor.fields.queue_controls_style")}"
+            helper="${localize("editor.subtitles.queue_controls_style")}"
+            @value-changed=${(e) => this._updateConfig("queue_controls_style", e.detail.value)}
+          ></ha-selector>
+        </div>
       </div>
 
       <div class="config-section">

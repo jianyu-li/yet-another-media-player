@@ -192,6 +192,8 @@ export default {
         "Vždy používajte spárovanú entitu Music Assistant pre názov skladby, interpreta a grafiku, aj keď sa prehráva primárna entita.",
       show_volume_overlay:
         "Pri zmene úrovne hlasitosti nakrátko zobrazí veľký ukazovateľ hlasitosti cez grafiku albumu.",
+      queue_controls_style:
+        "Vyberte, či sa má pre položky fronty zobraziť úchyt na ťahanie alebo jednotlivé tlačidlá pohybu.",
     },
     titles: {
       edit_entity: "Upraviť entitu",
@@ -291,6 +293,7 @@ export default {
       appearance: "Vzhľad",
       no_artwork_option: "Žiadny obrázok",
       details_alignment: "Zarovnanie detailov",
+      queue_controls_style: "Štýl ovládacích prvkov fronty",
     },
     action_types: {
       menu: "Otvoriť položku menu karty",
@@ -330,6 +333,10 @@ export default {
       list: "Zoznam",
       card: "Karta",
       card_minimal: "Minimálna karta",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Úchyt na ťahanie",
+      icons: "Tlačidlá pohybu",
     },
     card_type_options: {
       default: "Predvolené",
@@ -411,6 +418,7 @@ export default {
     move_down: "Posunúť nadol",
     move_next: "Presunúť na nasledujúce",
     remove: "Odstrániť z fronty",
+    drag_to_reorder: "Potiahnite pre zmenu poradia",
     added: "Pridané do fronty!",
     added_to_playlist: "Pridané do playlistu!",
     select_playlist: "Vybrať playlist pre '{track}'",

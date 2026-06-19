@@ -3173,8 +3173,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   _onQueueDragStart(e) {
-    // Ignore clicks on interactive elements
-    if (e.target.closest && e.target.closest(".queue-controls, button, ha-icon, ha-svg-icon")) {
+    // Ignore clicks on interactive elements, except for the drag handle itself
+    if (e.target.closest && e.target.closest(".queue-controls, button, ha-icon, ha-svg-icon") && !e.target.closest(".queue-drag-handle")) {
       return;
     }
 
@@ -9070,6 +9070,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
           recommendationsFilterActive: !!this._recommendationsFilterActive,
           searchMediaClassFilter: this._searchMediaClassFilter,
+          queueControlsStyle: this.config.queue_controls_style || "drag_handle",
           onPlay: (it, e) => this._playMediaFromSearch(it, e),
           onResultClick: (it, e) => this._handleSearchResultClick(it, e),
           onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),

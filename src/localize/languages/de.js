@@ -189,6 +189,8 @@ export default {
         "Verwenden Sie immer die gekoppelte Music Assistant-Entität für Titel, Künstler und Artwork, auch wenn die primäre Entität gerade spielt.",
       show_volume_overlay:
         "Zeige kurz eine große Lautstärkeanzeige über dem Cover an, wenn sich die Lautstärke ändert.",
+      queue_controls_style:
+        "Wählen Sie, ob ein Ziehgriff oder einzelne Bewegungstasten für Warteschlangenelemente angezeigt werden sollen.",
     },
     titles: {
       edit_entity: "Entität bearbeiten",
@@ -288,6 +290,7 @@ export default {
       appearance: "Erscheinungsbild",
       no_artwork_option: "Kein Artwork",
       details_alignment: "Detail-Ausrichtung",
+      queue_controls_style: "Warteschlangen-Steuerungsstil",
     },
     action_types: {
       menu: "Kartenmenüpunkt öffnen",
@@ -327,6 +330,10 @@ export default {
       list: "Liste",
       card: "Karte",
       card_minimal: "Minimal-Karte",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Ziehgriff",
+      icons: "Bewegungstasten",
     },
     card_type_options: {
       default: "Standard",
@@ -408,6 +415,7 @@ export default {
     move_down: "Nach unten",
     move_next: "Als Nächstes verschieben",
     remove: "Aus Warteschlange entfernen",
+    drag_to_reorder: "Ziehen zum Sortieren",
     added: "Zur Warteschlange hinzugefügt!",
     added_to_playlist: "Zur Playlist hinzugefügt!",
     select_playlist: "Playlist für '{track}' auswählen",

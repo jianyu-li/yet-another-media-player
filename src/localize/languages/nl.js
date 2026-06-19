@@ -199,6 +199,8 @@ export default {
         "Gebruik altijd de gekoppelde Music Assistant-entiteit voor de tracktitel, artiest en artwork, zelfs als de primaire entiteit wordt afgespeeld.",
       show_volume_overlay:
         "Geef kort een grote volume-indicator weer over het artwork wanneer het volumeniveau verandert.",
+      queue_controls_style:
+        "Kies of u een sleephandgreep of individuele bewegingsknoppen wilt weergeven voor wachtrij-items.",
     },
     titles: {
       edit_entity: "Entiteit Bewerken",
@@ -298,6 +300,7 @@ export default {
       appearance: "Uiterlijk",
       no_artwork_option: "Geen afbeelding",
       details_alignment: "Details uitlijning",
+      queue_controls_style: "Wachtrijbesturingsstijl",
     },
     action_types: {
       menu: "Open een kaartmenu-item",
@@ -337,6 +340,10 @@ export default {
       list: "Lijst",
       card: "Kaart",
       card_minimal: "Minimale kaart",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Sleephandgreep",
+      icons: "Bewegingsknoppen",
     },
     card_type_options: {
       default: "Standaard",
@@ -418,6 +425,7 @@ export default {
     move_down: "Omlaag verplaatsen",
     move_next: "Als volgende afspelen",
     remove: "Verwijderen uit wachtrij",
+    drag_to_reorder: "Sleep om te herordenen",
     added: "Toegevoegd aan wachtrij!",
     added_to_playlist: "Toegevoegd aan afspeellijst!",
     select_playlist: "Selecteer afspeellijst voor '{track}'",

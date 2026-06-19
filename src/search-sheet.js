@@ -175,6 +175,7 @@ export function renderSearchResultActions({
   massQueueAvailable = false,
   searchView = "list",
   isInline = false,
+  queueControlsStyle = "drag_handle",
   onMoveUp,
   onMoveDown,
   onMoveNext,
@@ -212,36 +213,47 @@ export function renderSearchResultActions({
       ${isQueueItem && isInline
         ? html`
             <div class="queue-controls">
-              <button
-                class="queue-btn queue-btn-up"
-                @click=${(e) => {
-                  e.stopPropagation();
-                  onMoveUp(item);
-                }}
-                title="${localize("search.move_up")}"
-              >
-                <ha-icon icon="mdi:chevron-up"></ha-icon>
-              </button>
-              <button
-                class="queue-btn queue-btn-down"
-                @click=${(e) => {
-                  e.stopPropagation();
-                  onMoveDown(item);
-                }}
-                title="${localize("search.move_down")}"
-              >
-                <ha-icon icon="mdi:chevron-down"></ha-icon>
-              </button>
-              <button
-                class="queue-btn queue-btn-next"
-                @click=${(e) => {
-                  e.stopPropagation();
-                  onMoveNext(item);
-                }}
-                title="${localize("search.move_next")}"
-              >
-                <ha-icon icon="mdi:playlist-play"></ha-icon>
-              </button>
+              ${queueControlsStyle === "drag_handle"
+                ? html`
+                    <div
+                      class="queue-btn queue-drag-handle"
+                      title="${localize("search.drag_to_reorder")}"
+                    >
+                      <ha-icon icon="mdi:drag"></ha-icon>
+                    </div>
+                  `
+                : html`
+                    <button
+                      class="queue-btn queue-btn-up"
+                      @click=${(e) => {
+                        e.stopPropagation();
+                        onMoveUp(item);
+                      }}
+                      title="${localize("search.move_up")}"
+                    >
+                      <ha-icon icon="mdi:chevron-up"></ha-icon>
+                    </button>
+                    <button
+                      class="queue-btn queue-btn-down"
+                      @click=${(e) => {
+                        e.stopPropagation();
+                        onMoveDown(item);
+                      }}
+                      title="${localize("search.move_down")}"
+                    >
+                      <ha-icon icon="mdi:chevron-down"></ha-icon>
+                    </button>
+                    <button
+                      class="queue-btn queue-btn-next"
+                      @click=${(e) => {
+                        e.stopPropagation();
+                        onMoveNext(item);
+                      }}
+                      title="${localize("search.move_next")}"
+                    >
+                      <ha-icon icon="mdi:playlist-play"></ha-icon>
+                    </button>
+                  `}
               <button
                 class="queue-btn queue-btn-remove"
                 @click=${(e) => {
@@ -449,6 +461,7 @@ export function renderSearchResultItem({
   recentlyPlayedFilterActive = false,
   recommendationsFilterActive = false,
   searchMediaClassFilter = "all",
+  queueControlsStyle = "drag_handle",
   onPlay,
   onResultClick,
   onResultTouch,
@@ -514,6 +527,7 @@ export function renderSearchResultItem({
               isMusicAssistant: isMA,
               massQueueAvailable,
               searchView: searchViewType,
+              queueControlsStyle,
               onMoveUp,
               onMoveDown,
               onMoveNext,
@@ -584,6 +598,7 @@ export function renderSearchResultItem({
             massQueueAvailable,
             searchView: searchViewType,
             isInline: true,
+            queueControlsStyle,
             onMoveUp,
             onMoveDown,
             onMoveNext,

@@ -179,6 +179,8 @@ export default {
         "Toujours utiliser l'entité Music Assistant associée pour le titre de la piste, l'artiste et l'image, même si l'entité principale est en cours de lecture.",
       show_volume_overlay:
         "Affiche brièvement un grand indicateur de volume sur l'illustration lorsque le niveau de volume change.",
+      queue_controls_style:
+        "Choisissez d'afficher une poignée de glissement ou des boutons de déplacement individuels pour les éléments de la file d'attente.",
     },
     titles: {
       edit_entity: "Modifier l'entité",
@@ -278,6 +280,7 @@ export default {
       appearance: "Apparence",
       no_artwork_option: "Pas d'illustration",
       details_alignment: "Alignement des détails",
+      queue_controls_style: "Style des commandes de file d'attente",
     },
     action_types: {
       menu: "Ouvrir un élément de menu",
@@ -317,6 +320,10 @@ export default {
       list: "Liste",
       card: "Carte",
       card_minimal: "Carte minimale",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Poignée de glissement",
+      icons: "Boutons de déplacement",
     },
     card_type_options: {
       default: "Par défaut",
@@ -398,6 +405,7 @@ export default {
     move_down: "Descendre",
     move_next: "Passer au suivant",
     remove: "Retirer de la file",
+    drag_to_reorder: "Glisser pour réorganiser",
     added: "Ajouté à la file !",
     added_to_playlist: "Ajouté à la playlist !",
     select_playlist: "Sélectionner une playlist pour '{track}'",

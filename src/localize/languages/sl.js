@@ -172,6 +172,8 @@ export default {
         "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta.",
       show_volume_overlay:
         "Ob spremembi glasnosti za kratek čas prikaže velik indikator glasnosti čez naslovnico.",
+      queue_controls_style:
+        "Izberite, ali želite prikazati ročaj za vlečenje ali posamezne gumbe za premikanje elementov čakalne vrste.",
     },
     titles: {
       edit_entity: "Uredi entiteto",
@@ -271,6 +273,7 @@ export default {
       appearance: "Videz",
       no_artwork_option: "Brez grafike",
       details_alignment: "Poravnava podrobnosti",
+      queue_controls_style: "Slog kontrol čakalne vrste",
     },
     action_types: {
       menu: "Odpri element menija kartice",
@@ -310,6 +313,10 @@ export default {
       list: "Seznam",
       card: "Kartica",
       card_minimal: "Minimalna kartica",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Ročaj za vlečenje",
+      icons: "Gumbi za premikanje",
     },
     card_type_options: {
       default: "Privzeto",
@@ -391,6 +398,7 @@ export default {
     move_down: "Premakni dol",
     move_next: "Premakni na naslednje",
     remove: "Odstrani iz čakalne vrste",
+    drag_to_reorder: "Povlecite za prerazvrstitev",
     added: "Dodano v čakalno vrsto!",
     added_to_playlist: "Dodano na seznam predvajanja!",
     select_playlist: "Izberite seznam predvajanja za '{track}'",

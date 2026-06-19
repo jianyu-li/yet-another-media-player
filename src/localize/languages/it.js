@@ -172,6 +172,8 @@ export default {
         "Utilizza sempre l'entità Music Assistant associata per il titolo del brano, l'artista e l'artwork, anche se l'entità principale è in riproduzione.",
       show_volume_overlay:
         "Visualizza brevemente un grande indicatore del volume sopra la copertina quando il livello del volume cambia.",
+      queue_controls_style:
+        "Scegli se mostrare una maniglia di trascinamento o pulsanti di movimento singoli per gli elementi della coda.",
     },
     titles: {
       edit_entity: "Modifica entità",
@@ -271,6 +273,7 @@ export default {
       appearance: "Aspetto",
       no_artwork_option: "Nessuna copertina",
       details_alignment: "Allineamento dei dettagli",
+      queue_controls_style: "Stile controlli coda",
     },
     action_types: {
       menu: "Apri un elemento del menu",
@@ -310,6 +313,10 @@ export default {
       list: "Lista",
       card: "Scheda",
       card_minimal: "Scheda minima",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Maniglia di trascinamento",
+      icons: "Pulsanti di movimento",
     },
     card_type_options: {
       default: "Predefinito",
@@ -391,6 +398,7 @@ export default {
     move_down: "Sposta giù",
     move_next: "Passa al successivo",
     remove: "Rimuovi da coda",
+    drag_to_reorder: "Trascina per riordinare",
     added: "Aggiunto!",
     added_to_playlist: "Aggiunto alla playlist!",
     select_playlist: "Seleziona playlist per '{track}'",

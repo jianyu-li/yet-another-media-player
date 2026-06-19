@@ -101,6 +101,7 @@ Below you will find a list of all configuration options.
 | `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Templates](#template-support)) |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
 | `search_card_columns`      | number       | No           | `4`         | Number of columns for search results when `search_view` is set to `card` or `card_minimal` |
+| `queue_controls_style`     | choice       | No           | `drag_handle` | Style of queue controls: `drag_handle` replaces movement buttons with a single drag handle, `icons` shows classic up/down/next buttons |
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
 | `artwork_hostname`         | string       | No           | —           | Hostname URL (e.g., `http://192.168.1.50:8123`) prepended to relative artwork URLs; required when Casting to external devices |

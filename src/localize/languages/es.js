@@ -173,6 +173,8 @@ export default {
         "Utilizar siempre la entidad de Music Assistant emparejada para el título de la pista, el artista y el arte, incluso si la entidad primaria está reproduciendo.",
       show_volume_overlay:
         "Muestra brevemente un indicador de volumen grande sobre la carátula cuando cambia el nivel de volumen.",
+      queue_controls_style:
+        "Elige si mostrar un tirador de arrastre o botones de movimento individuales para los elementos de la cola.",
     },
     titles: {
       edit_entity: "Editar entidad",
@@ -272,6 +274,7 @@ export default {
       appearance: "Apariencia",
       no_artwork_option: "Sin imagen",
       details_alignment: "Alineación de detalles",
+      queue_controls_style: "Estilo de controles de cola",
     },
     action_types: {
       menu: "Abrir un elemento del menú",
@@ -311,6 +314,10 @@ export default {
       list: "Lista",
       card: "Tarjeta",
       card_minimal: "Tarjeta reducida",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Tirador de arrastre",
+      icons: "Botones de movimiento",
     },
     card_type_options: {
       default: "Por defecto",
@@ -392,6 +399,7 @@ export default {
     move_down: "Bajar",
     move_next: "Pasar a siguiente",
     remove: "Quitar de cola",
+    drag_to_reorder: "Arrastrar para reordenar",
     added: "¡Añadido!",
     added_to_playlist: "¡Añadido a la lista de reproducción!",
     select_playlist: "Seleccionar lista de reproducción para '{track}'",
