@@ -3194,6 +3194,80 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this.requestUpdate();
   }
 
+  _findScrollParent(el) {
+    let node = el.parentElement;
+    while (node) {
+      const style = window.getComputedStyle(node);
+      const overflowY = style?.overflowY;
+      if (overflowY === "auto" || overflowY === "scroll") {
+        return node;
+      }
+      // Check shadow DOM hosts
+      if (!node.parentElement && node.getRootNode && node.getRootNode().host) {
+        node = node.getRootNode().host;
+      } else {
+        node = node.parentElement;
+      }
+    }
+    return null;
+  }
+
+  _applyQueueDragVisuals(dragIdx, dragItemHeight, newTargetIdx) {
+    const container = this.renderRoot.querySelector(".queue-sortable-container");
+    if (!container) return;
+
+    const wrappers = container.querySelectorAll(".queue-drag-wrapper");
+
+    for (const w of wrappers) {
+      const idx = parseInt(w.dataset.queueIdx, 10);
+      if (isNaN(idx)) continue;
+
+      // Ghost: collapse the dragged item
+      if (idx === dragIdx) {
+        w.style.maxHeight = "0";
+        w.style.overflow = "hidden";
+        w.style.margin = "0";
+        w.style.padding = "0";
+        w.style.opacity = "0";
+        continue;
+      }
+
+      // Shift rows to open a gap at the drop target
+      if (newTargetIdx === null) {
+        w.style.transform = "";
+      } else if (dragIdx < newTargetIdx) {
+        // Dragging downward: items between (dragIdx, newTargetIdx] shift up
+        if (idx > dragIdx && idx <= newTargetIdx) {
+          w.style.transform = `translateY(${-dragItemHeight}px)`;
+        } else {
+          w.style.transform = "";
+        }
+      } else {
+        // Dragging upward: items between [newTargetIdx, dragIdx) shift down
+        if (idx >= newTargetIdx && idx < dragIdx) {
+          w.style.transform = `translateY(${dragItemHeight}px)`;
+        } else {
+          w.style.transform = "";
+        }
+      }
+    }
+  }
+
+  _clearQueueDragVisuals() {
+    const container = this.renderRoot.querySelector(".queue-sortable-container");
+    if (!container) return;
+
+    const wrappers = container.querySelectorAll(".queue-drag-wrapper");
+    for (const w of wrappers) {
+      w.style.transform = "";
+      w.style.maxHeight = "";
+      w.style.overflow = "";
+      w.style.margin = "";
+      w.style.padding = "";
+      w.style.opacity = "";
+    }
+  }
+
   _onQueueDragStart(e) {
     // Restrict dragging to the drag handle when configured, or disable completely if movement buttons are selected
     const style = this.config.queue_controls_style || "drag_handle";
@@ -3236,83 +3310,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const isTouchLike = e.pointerType === "touch" || e.pointerType === "pen";
     const holdDelay = isTouchLike ? 300 : null;
 
-    // Find the nearest scrollable ancestor
-    const findScrollParent = (el) => {
-      let node = el.parentElement;
-      while (node) {
-        const style = window.getComputedStyle(node);
-        const overflowY = style?.overflowY;
-        if (overflowY === "auto" || overflowY === "scroll") {
-          return node;
-        }
-        // Check shadow DOM hosts
-        if (!node.parentElement && node.getRootNode && node.getRootNode().host) {
-          node = node.getRootNode().host;
-        } else {
-          node = node.parentElement;
-        }
-      }
-      return null;
-    };
-
     // Apply inline transforms to physically shift rows apart, creating a gap
     let dragItemHeight = 0;
-
-    const applyDragVisuals = (newTargetIdx) => {
-      const container = this.renderRoot.querySelector(".queue-sortable-container");
-      if (!container) return;
-
-      const wrappers = container.querySelectorAll(".queue-drag-wrapper");
-
-      for (const w of wrappers) {
-        const idx = parseInt(w.dataset.queueIdx, 10);
-        if (isNaN(idx)) continue;
-
-        // Ghost: collapse the dragged item
-        if (idx === dragIdx) {
-          w.style.maxHeight = "0";
-          w.style.overflow = "hidden";
-          w.style.margin = "0";
-          w.style.padding = "0";
-          w.style.opacity = "0";
-          continue;
-        }
-
-        // Shift rows to open a gap at the drop target
-        if (newTargetIdx === null) {
-          w.style.transform = "";
-        } else if (dragIdx < newTargetIdx) {
-          // Dragging downward: items between (dragIdx, newTargetIdx] shift up
-          if (idx > dragIdx && idx <= newTargetIdx) {
-            w.style.transform = `translateY(${-dragItemHeight}px)`;
-          } else {
-            w.style.transform = "";
-          }
-        } else {
-          // Dragging upward: items between [newTargetIdx, dragIdx) shift down
-          if (idx >= newTargetIdx && idx < dragIdx) {
-            w.style.transform = `translateY(${dragItemHeight}px)`;
-          } else {
-            w.style.transform = "";
-          }
-        }
-      }
-    };
-
-    const clearDragVisuals = () => {
-      const container = this.renderRoot.querySelector(".queue-sortable-container");
-      if (!container) return;
-
-      const wrappers = container.querySelectorAll(".queue-drag-wrapper");
-      for (const w of wrappers) {
-        w.style.transform = "";
-        w.style.maxHeight = "";
-        w.style.overflow = "";
-        w.style.margin = "";
-        w.style.padding = "";
-        w.style.opacity = "";
-      }
-    };
 
     const updateDropTarget = (clientY) => {
       const container = this.renderRoot.querySelector(".queue-sortable-container");
@@ -3340,7 +3339,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (closestIdx !== null && closestIdx !== currentDropTargetIdx) {
         currentDropTargetIdx = closestIdx;
         this._queueDropTargetIdx = closestIdx;
-        applyDragVisuals(closestIdx);
+        this._applyQueueDragVisuals(dragIdx, dragItemHeight, closestIdx);
       }
     };
 
@@ -3367,14 +3366,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (container) {
         container.style.setProperty("--queue-drag-item-h", `${wrapperRect.height}px`);
         container.style.touchAction = "none";
-        scrollContainer = findScrollParent(container);
+        scrollContainer = this._findScrollParent(container);
         if (scrollContainer) {
           scrollAnimationFrame = requestAnimationFrame(scrollLoop);
         }
       }
 
       // Apply ghost class on the dragged item immediately via DOM
-      applyDragVisuals(null);
+      this._applyQueueDragVisuals(dragIdx, dragItemHeight, null);
 
       // Create a floating clone that follows the pointer
       const itemEl = wrapper.querySelector(".yamp-search-result");
@@ -3417,7 +3416,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
         const dist = Math.abs(moveEvt.clientY - startY);
         if (isTouchLike) {
           if (dist > 10) {
-            clearTimeout(holdTimer);
+            if (holdTimer) {
+              clearTimeout(holdTimer);
+              holdTimer = null;
+            }
             cleanup();
           }
         } else {
@@ -3458,7 +3460,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const onPointerUp = (upEvt) => {
       upEvt.stopPropagation();
-      clearTimeout(holdTimer);
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
 
       if (isDragging) {
         // Prevent next click event on window to avoid accidental play/activation
@@ -3476,7 +3481,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           window.removeEventListener("click", captureClick, true);
         }, 1000);
 
-        clearDragVisuals();
+        this._clearQueueDragVisuals();
 
         if (currentDropTargetIdx !== null && currentDropTargetIdx !== dragIdx) {
           const newIndex = currentDropTargetIdx;
@@ -3501,9 +3506,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     const onPointerCancel = (cancelEvt) => {
       cancelEvt.stopPropagation();
-      clearTimeout(holdTimer);
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
 
-      clearDragVisuals();
+      this._clearQueueDragVisuals();
 
       this._queueDragIdx = null;
       this._queueDropTargetIdx = null;
@@ -3524,6 +3532,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerCancel);
       window.removeEventListener("touchmove", onTouchMove, { passive: false });
+
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
 
       if (scrollAnimationFrame) {
         cancelAnimationFrame(scrollAnimationFrame);

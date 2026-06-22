@@ -26,6 +26,9 @@ class YampSortable extends LitElement {
     this.filter = "";
     this.preventOnFilter = true;
     this._sortable = null;
+    this._captureClickFn = null;
+    this._captureClickTimeout = null;
+    this._restoreDraggableFn = null;
   }
 
   createRenderRoot() {
@@ -132,18 +135,34 @@ class YampSortable extends LitElement {
 
     // Capture the next click event on the window to prevent accidental clicks after drag
     const dragEndTime = Date.now();
-    const captureClick = (e) => {
+    if (this._captureClickFn) {
+      window.removeEventListener("click", this._captureClickFn, true);
+    }
+    if (this._captureClickTimeout) {
+      clearTimeout(this._captureClickTimeout);
+    }
+
+    this._captureClickFn = (e) => {
       const elapsed = Date.now() - dragEndTime;
       if (elapsed < 200) {
         e.stopPropagation();
         e.preventDefault();
       }
-      window.removeEventListener("click", captureClick, true);
+      window.removeEventListener("click", this._captureClickFn, true);
+      this._captureClickFn = null;
+      if (this._captureClickTimeout) {
+        clearTimeout(this._captureClickTimeout);
+        this._captureClickTimeout = null;
+      }
     };
-    window.addEventListener("click", captureClick, true);
+    window.addEventListener("click", this._captureClickFn, true);
     // Remove the listener after a safety timeout in case no click is fired
-    setTimeout(() => {
-      window.removeEventListener("click", captureClick, true);
+    this._captureClickTimeout = setTimeout(() => {
+      if (this._captureClickFn) {
+        window.removeEventListener("click", this._captureClickFn, true);
+        this._captureClickFn = null;
+      }
+      this._captureClickTimeout = null;
     }, 2000);
 
     this.dispatchEvent(
@@ -183,6 +202,18 @@ class YampSortable extends LitElement {
   }
 
   _destroySortable() {
+    if (this._captureClickTimeout) {
+      clearTimeout(this._captureClickTimeout);
+      this._captureClickTimeout = null;
+    }
+    if (this._captureClickFn) {
+      window.removeEventListener("click", this._captureClickFn, true);
+      this._captureClickFn = null;
+    }
+    if (this._restoreDraggableFn) {
+      this._restoreDraggableFn();
+    }
+
     if (!this._sortable) return;
     this._sortable.destroy();
     this._sortable = null;
@@ -215,18 +246,19 @@ class YampSortable extends LitElement {
     }
 
     if (this._draggableAncestor) {
-      const restore = () => {
+      this._restoreDraggableFn = () => {
         if (this._draggableAncestor) {
           this._draggableAncestor.setAttribute("draggable", "true");
           this._draggableAncestor = null;
         }
-        window.removeEventListener("mouseup", restore);
-        window.removeEventListener("touchend", restore);
-        window.removeEventListener("pointerup", restore);
+        window.removeEventListener("mouseup", this._restoreDraggableFn);
+        window.removeEventListener("touchend", this._restoreDraggableFn);
+        window.removeEventListener("pointerup", this._restoreDraggableFn);
+        this._restoreDraggableFn = null;
       };
-      window.addEventListener("mouseup", restore);
-      window.addEventListener("touchend", restore);
-      window.addEventListener("pointerup", restore);
+      window.addEventListener("mouseup", this._restoreDraggableFn);
+      window.addEventListener("touchend", this._restoreDraggableFn);
+      window.addEventListener("pointerup", this._restoreDraggableFn);
     }
   }
 }
