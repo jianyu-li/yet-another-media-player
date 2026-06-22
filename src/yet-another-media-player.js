@@ -9211,7 +9211,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _removeGrabScrollHandlers() {
     // Remove grab scroll handlers from all elements
     const elements = this.renderRoot.querySelectorAll(
-      '.chip-row, .action-chip-row, .floating-source-index'
+      '.chip-row, .action-chip-row, .floating-source-index, .search-filter-chips'
     );
 
     elements.forEach(el => {
