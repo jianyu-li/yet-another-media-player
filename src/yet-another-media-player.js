@@ -9265,6 +9265,32 @@ class YetAnotherMediaPlayerCard extends LitElement {
       clearTimeout(this._searchTimeoutHandle);
       this._searchTimeoutHandle = null;
     }
+
+    if (this._queueRefreshTimer) {
+      clearTimeout(this._queueRefreshTimer);
+      this._queueRefreshTimer = null;
+    }
+
+    if (this._gestureHoldTimer) {
+      clearTimeout(this._gestureHoldTimer);
+      this._gestureHoldTimer = null;
+    }
+
+    if (this._tapTimer) {
+      clearTimeout(this._tapTimer);
+      this._tapTimer = null;
+    }
+
+    if (this._successToastHandle) {
+      clearTimeout(this._successToastHandle);
+      this._successToastHandle = null;
+    }
+
+    if (this._transferQueueAutoCloseTimer) {
+      clearTimeout(this._transferQueueAutoCloseTimer);
+      this._transferQueueAutoCloseTimer = null;
+    }
+
     this._latestSearchToken = 0;
 
     this._removeSourceDropdownOutsideHandler();
@@ -9292,8 +9318,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Clear tracking properties
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
-    this._teardownAdaptiveTextObserver();
   }
+
   // Helper method to apply closing animations
   _applyClosingAnimations() {
     const overlay = this.renderRoot.querySelector('.entity-options-overlay');
