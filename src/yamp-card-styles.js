@@ -4324,6 +4324,37 @@ export const lyricsStyles = css`
     height: 34px;
   }
 
+  .queue-ops-progress {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    width: max-content;
+    background: var(--search-queue-hover, #5a5a5a);
+    color: var(--primary-text-color, #ffffff);
+    border-radius: 16px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 1000;
+    animation: queueOpsFadeInUp 0.2s ease-out forwards;
+  }
+  @keyframes queueOpsFadeInUp {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 10px);
+    }
+    to {
+      opacity: 0.95;
+      transform: translate(-50%, 0);
+    }
+  }
+
   /* Drag and drop upcoming queue styles */
   .queue-drag-wrapper {
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);

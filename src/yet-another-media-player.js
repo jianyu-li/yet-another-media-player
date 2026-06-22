@@ -778,6 +778,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._volumeOverlayMuted = false;
     this._internalVolumeChangeFlag = false;
     this._showVolumeOverlay = false;
+    this._queueOperationPromise = Promise.resolve();
+    this._queueOpsTotal = 0;
+    this._queueOpsCompleted = 0;
+    this._queueOpsTimeout = null;
   }
 
   // Subscribe to a template and update properties reactively
@@ -2914,6 +2918,44 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Queue reordering methods
+  _enqueueQueueOperation(operationFn) {
+    if (this._queueOpsTotal === this._queueOpsCompleted) {
+      this._queueOpsTotal = 0;
+      this._queueOpsCompleted = 0;
+    }
+    this._queueOpsTotal++;
+    if (this._queueOpsTimeout) {
+      clearTimeout(this._queueOpsTimeout);
+      this._queueOpsTimeout = null;
+    }
+    this.requestUpdate();
+
+    this._queueOperationPromise = this._queueOperationPromise.then(async () => {
+      try {
+        await operationFn();
+        this._invalidateUpcomingCache();
+      } catch (error) {
+        console.error("yamp: Queue operation failed:", error);
+        this._refreshQueue();
+      } finally {
+        this._queueOpsCompleted++;
+        this.requestUpdate();
+
+        if (this._queueOpsCompleted === this._queueOpsTotal) {
+          if (this._queueOpsTimeout) clearTimeout(this._queueOpsTimeout);
+          this._queueOpsTimeout = setTimeout(() => {
+            if (this._queueOpsCompleted === this._queueOpsTotal) {
+              this._queueOpsTotal = 0;
+              this._queueOpsCompleted = 0;
+              this._queueOpsTimeout = null;
+              this.requestUpdate();
+            }
+          }, 1500);
+        }
+      }
+    });
+  }
+
   async _moveQueueItemUp(queueItemId) {
     try {
       // Get the Music Assistant entity for the current chip
@@ -2927,12 +2969,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately (like companion card does)
       this._moveQueueItemInUI(queueItemId, 'up');
 
-      // Then call the service
-      await this.hass.callService("mass_queue", "move_queue_item_up", {
-        entity: maEntityId,
-        queue_item_id: queueItemId
+      this._enqueueQueueOperation(async () => {
+        await this.hass.callService("mass_queue", "move_queue_item_up", {
+          entity: maEntityId,
+          queue_item_id: queueItemId
+        });
       });
-      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2952,12 +2994,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately
       this._moveQueueItemInUI(queueItemId, 'down');
 
-      // Then call the service
-      await this.hass.callService("mass_queue", "move_queue_item_down", {
-        entity: maEntityId,
-        queue_item_id: queueItemId
+      this._enqueueQueueOperation(async () => {
+        await this.hass.callService("mass_queue", "move_queue_item_down", {
+          entity: maEntityId,
+          queue_item_id: queueItemId
+        });
       });
-      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2977,12 +3019,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately
       this._moveQueueItemInUI(queueItemId, 'next');
 
-      // Then call the service
-      await this.hass.callService("mass_queue", "move_queue_item_next", {
-        entity: maEntityId,
-        queue_item_id: queueItemId
+      this._enqueueQueueOperation(async () => {
+        await this.hass.callService("mass_queue", "move_queue_item_next", {
+          entity: maEntityId,
+          queue_item_id: queueItemId
+        });
       });
-      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -3002,12 +3044,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately
       this._removeQueueItemFromUI(queueItemId);
 
-      // Then call the service
-      await this.hass.callService("mass_queue", "remove_queue_item", {
-        entity: maEntityId,
-        queue_item_id: queueItemId
+      this._enqueueQueueOperation(async () => {
+        await this.hass.callService("mass_queue", "remove_queue_item", {
+          entity: maEntityId,
+          queue_item_id: queueItemId
+        });
       });
-      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -3079,34 +3121,34 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately for a seamless feel
       this._moveQueueItemInUIByIndex(oldIndex, newIndex);
 
-      // Perform backend move using the most efficient path of service calls
-      const costDirect = Math.abs(newIndex - oldIndex);
-      const costViaNext = 1 + newIndex;
+      this._enqueueQueueOperation(async () => {
+        // Perform backend move using the most efficient path of service calls
+        const costDirect = Math.abs(newIndex - oldIndex);
+        const costViaNext = 1 + newIndex;
 
-      if (costViaNext < costDirect) {
-        // Strategy B: Move to next (index 0), then move down sequentially
-        await this.hass.callService("mass_queue", "move_queue_item_next", {
-          entity: maEntityId,
-          queue_item_id: queueItemId
-        });
-        for (let i = 0; i < newIndex; i++) {
-          await this.hass.callService("mass_queue", "move_queue_item_down", {
+        if (costViaNext < costDirect) {
+          // Strategy B: Move to next (index 0), then move down sequentially
+          await this.hass.callService("mass_queue", "move_queue_item_next", {
             entity: maEntityId,
             queue_item_id: queueItemId
           });
+          for (let i = 0; i < newIndex; i++) {
+            await this.hass.callService("mass_queue", "move_queue_item_down", {
+              entity: maEntityId,
+              queue_item_id: queueItemId
+            });
+          }
+        } else {
+          // Strategy A: Direct moves up or down sequentially
+          const serviceName = newIndex < oldIndex ? "move_queue_item_up" : "move_queue_item_down";
+          for (let i = 0; i < costDirect; i++) {
+            await this.hass.callService("mass_queue", serviceName, {
+              entity: maEntityId,
+              queue_item_id: queueItemId
+            });
+          }
         }
-      } else {
-        // Strategy A: Direct moves up or down sequentially
-        const serviceName = newIndex < oldIndex ? "move_queue_item_up" : "move_queue_item_down";
-        for (let i = 0; i < costDirect; i++) {
-          await this.hass.callService("mass_queue", serviceName, {
-            entity: maEntityId,
-            queue_item_id: queueItemId
-          });
-        }
-      }
-
-      this._invalidateUpcomingCache();
+      });
     } catch (error) {
       console.error("yamp: Failed to move queue item via drag and drop:", error);
       // Revert UI change on error
@@ -8575,6 +8617,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         massQueueAvailable: this._massQueueAvailable
       }) : nothing
       }
+          ${this._queueOpsTotal > 0 ? html`
+            <div class="queue-ops-progress">
+              Re-ordering ${this._queueOpsCompleted}/${this._queueOpsTotal}
+            </div>
+          ` : ""}
           </div>
     </ha-card>
   `;
@@ -9760,6 +9807,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._transferQueueAutoCloseTimer) {
       clearTimeout(this._transferQueueAutoCloseTimer);
       this._transferQueueAutoCloseTimer = null;
+    }
+
+    if (this._queueOpsTimeout) {
+      clearTimeout(this._queueOpsTimeout);
+      this._queueOpsTimeout = null;
     }
 
     this._latestSearchToken = 0;

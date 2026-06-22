@@ -443,6 +443,7 @@ export default {
     move_down: "Move Down",
     move_next: "Move to Next",
     remove: "Remove from Queue",
+    drag_to_reorder: "Drag to reorder",
     added: "Added to queue!",
     added_to_playlist: "Added to playlist!",
     select_playlist: "Select Playlist for '{track}'",
