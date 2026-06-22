@@ -116,6 +116,8 @@ export default {
       swap_pause_stop: "Substituir pausa por stop no design moderno.",
       adaptive_controls: "Permitir que os botões se adaptem ao espaço.",
       hide_menu_player: "Ocultar nome da entidade quando no menu.",
+      hide_reorder_progress:
+        "Ocultar o indicador flutuante de progresso de reordenação da fila na parte inferior.",
       adaptive_text: "Escolher que textos se adaptam ao espaço.",
       collapse_expand:
         "Sempre contraído ativa modo mini. Expandir ao procurar expande temporariamente.",
@@ -205,6 +207,7 @@ export default {
       hide_active_entity_on_idle: "Ocultar etiqueta de entidade ativa quando inativo",
       collapse_on_idle: "Contrair em repouso",
       hide_menu_player_toggle: "Ocultar leitor do menu",
+      hide_reorder_progress_toggle: "Ocultar progresso de reordenação",
       always_collapsed: "Sempre contraído",
       expand_on_search: "Expandir ao procurar",
       script_var: "Variável script (yamp_entity)",

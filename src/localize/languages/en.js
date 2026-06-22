@@ -154,6 +154,8 @@ export default {
       adaptive_controls: "Let the playback buttons grow or shrink to fit the available space.",
       hide_menu_player:
         "When chips live in the menu, hide the entity label at the bottom of the card.",
+      hide_reorder_progress:
+        "Hide the floating queue re-ordering progress indicator at the bottom.",
       adaptive_text:
         "Choose which text groups should scale with available space (leave empty to disable adaptive text).",
       collapse_expand:
@@ -249,6 +251,7 @@ export default {
       hide_active_entity_on_idle: "Hide Active Entity Label on Idle",
       collapse_on_idle: "Collapse on Idle",
       hide_menu_player_toggle: "Hide Menu Player",
+      hide_reorder_progress_toggle: "Hide Re-ordering Progress",
       always_collapsed: "Always Collapsed",
       expand_on_search: "Expand on Search",
       script_var: "Script Variable (yamp_entity)",

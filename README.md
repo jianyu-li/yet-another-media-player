@@ -65,6 +65,7 @@ Below you will find a list of all configuration options.
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing ([Supports Templates](#template-support))                                          |
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
+| `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
@@ -1258,6 +1259,7 @@ collapse_on_idle: true
 always_collapsed: true
 expand_on_search: true
 hide_menu_player: false  
+hide_reorder_progress: false  
 idle_screen: search-next-up
 actions:
   - name: Transfer Queue

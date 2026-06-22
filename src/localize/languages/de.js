@@ -127,6 +127,8 @@ export default {
       swap_pause_stop: "Pause-Taste durch Stop-Taste im modernen Layout ersetzen.",
       adaptive_controls: "Wiedergabetasten an verfügbaren Platz anpassen.",
       hide_menu_player: "Entitäts-Label unten ausblenden, wenn Chips im Menü sind.",
+      hide_reorder_progress:
+        "Die schwebende Fortschrittsanzeige für die Warteschlangen-Neusortierung unten ausblenden.",
       adaptive_text:
         "Textgruppen wählen, die mit dem Platz skalieren (leer lassen zum Deaktivieren).",
       collapse_expand:
@@ -221,6 +223,7 @@ export default {
       hide_active_entity_on_idle: "Aktive Entitätsbeschriftung im Leerlauf ausblenden",
       collapse_on_idle: "Bei Leerlauf einklappen",
       hide_menu_player_toggle: "Menü-Player ausblenden",
+      hide_reorder_progress_toggle: "Neusortierungs-Fortschritt ausblenden",
       always_collapsed: "Immer eingeklappt",
       expand_on_search: "Bei Suche ausklappen",
       script_var: "Skript-Variable (yamp_entity)",

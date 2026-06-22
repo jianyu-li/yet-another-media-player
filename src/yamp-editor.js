@@ -1735,6 +1735,21 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.disable_mass")}</div>
         </div>
+
+        <div class="form-row form-row-multi-column">
+          <div>
+            <ha-switch
+              id="hide-reorder-progress-toggle"
+              .checked=${this._config.hide_reorder_progress ?? false}
+              @change=${(e) => this._updateConfig("hide_reorder_progress", e.target.checked)}
+            ></ha-switch>
+            <label for="hide-reorder-progress-toggle"
+              >${localize("editor.labels.hide_reorder_progress_toggle")}</label
+            >
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.hide_reorder_progress")}</div>
+        </div>
+
         <div class="form-row form-row-multi-column">
           <div class="grow-children number-input-with-note">
             <ha-selector

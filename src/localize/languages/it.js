@@ -116,6 +116,8 @@ export default {
       swap_pause_stop: "Sostituisci pausa con stop nel design moderno.",
       adaptive_controls: "Permetti ai pulsanti di adattarsi allo spazio.",
       hide_menu_player: "Nascondi nome entità quando è nel menu.",
+      hide_reorder_progress:
+        "Nascondi l'indicatore mobile di avanzamento del riordinamento della coda in basso.",
       adaptive_text: "Scegli quali testi si adattano allo spazio.",
       collapse_expand:
         "Sempre contratto attiva il modo mini. Espandi alla ricerca espande temporaneamente.",
@@ -204,6 +206,7 @@ export default {
       hide_active_entity_on_idle: "Nascondi etichetta entità attiva quando inattivo",
       collapse_on_idle: "Contrai in riposo",
       hide_menu_player_toggle: "Nascondi lettore menu",
+      hide_reorder_progress_toggle: "Nascondi avanzamento riordinamento",
       always_collapsed: "Sempre contratto",
       expand_on_search: "Espandi alla ricerca",
       script_var: "Variabile script (yamp_entity)",

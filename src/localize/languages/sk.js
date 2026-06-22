@@ -126,6 +126,8 @@ export default {
         "Nahradiť tlačidlo pauzy tlačidlom zastavenia pri použití moderného rozloženia.",
       adaptive_controls: "Umožniť tlačidlám prehrávania meniť veľkosť podľa dostupného priestoru.",
       hide_menu_player: "Keď sú čipy v menu, skryť názov entity v spodnej časti karty.",
+      hide_reorder_progress:
+        "Skryť plávajúci indikátor priebehu preusporiadania frontu v spodnej časti.",
       adaptive_text:
         "Vyberte skupiny textu, ktoré sa majú škálovať podľa priestoru (nechajte prázdne pre vypnutie).",
       collapse_expand:
@@ -224,6 +226,7 @@ export default {
       hide_active_entity_on_idle: "Skryť štítok aktívnej entity pri nečinnosti",
       collapse_on_idle: "Zbaliť pri nečinnosti",
       hide_menu_player_toggle: "Skryť prehrávač v menu",
+      hide_reorder_progress_toggle: "Skryť priebeh preusporiadania",
       always_collapsed: "Vždy zbalené",
       expand_on_search: "Rozbaliť pri hľadaní",
       script_var: "Premenná skriptu (yamp_entity)",

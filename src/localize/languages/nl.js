@@ -131,6 +131,8 @@ export default {
         "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
       hide_menu_player:
         "Wanneer chips in het menu staan, verberg dan het entiteitslabel onderaan de kaart.",
+      hide_reorder_progress:
+        "Verberg de zwevende voortgangsindicator voor het opnieuw sorteren van de wachtrij onderaan.",
       adaptive_text:
         "Kies welke tekstgroepen moeten schalen met de beschikbare ruimte (laat leeg om adaptieve tekst uit te schakelen).",
       collapse_expand:
@@ -231,6 +233,7 @@ export default {
       hide_active_entity_on_idle: "Actieve entiteitslabel verbergen bij inactiviteit",
       collapse_on_idle: "Inklappen bij inactiviteit",
       hide_menu_player_toggle: "Menu-speler Verbergen",
+      hide_reorder_progress_toggle: "Wachtrijsortering Verbergen",
       always_collapsed: "Altijd Ingeklapt",
       expand_on_search: "Uitklappen bij Zoeken",
       script_var: "Script Variabele (yamp_entity)",

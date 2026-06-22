@@ -8581,7 +8581,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="${localize('card.media_controls.next')}">
                     <ha-icon icon="mdi:skip-next"></ha-icon>
                   </button>
-                  ${this._queueOpsTotal > 0 ? html`
+                  ${!this.config.hide_reorder_progress && !this.config.hide_menu_player && this._queueOpsTotal > 0 ? html`
                     <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
                       Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
                     </div>
@@ -8622,7 +8622,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         massQueueAvailable: this._massQueueAvailable
       }) : nothing
       }
-          ${!shouldShowPersistentControls && this._queueOpsTotal > 0 ? html`
+          ${!shouldShowPersistentControls && !this.config.hide_reorder_progress && !this.config.hide_menu_player && this._queueOpsTotal > 0 ? html`
             <div class="queue-ops-progress" style="position: absolute !important; bottom: 12px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
               Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
             </div>

@@ -123,6 +123,8 @@ export default {
       adaptive_controls: "Laisser les boutons s'adapter à l'espace disponible.",
       hide_menu_player:
         "Masquer l'étiquette de l'entité en bas quand les jetons sont dans le menu.",
+      hide_reorder_progress:
+        "Masquer l'indicateur flottant de progression de réorganisation de la file d'attente en bas.",
       adaptive_text: "Choisir quels textes doivent s'adapter à l'espace.",
       collapse_expand:
         "Toujours réduit crée un mini lecteur. Agrandir à la Recherche agrandit temporairement.",
@@ -211,6 +213,7 @@ export default {
       hide_active_entity_on_idle: "Masquer l'étiquette de l'entité active en mode veille",
       collapse_on_idle: "Réduire en veille",
       hide_menu_player_toggle: "Masquer le lecteur menu",
+      hide_reorder_progress_toggle: "Masquer la progression de réorganisation",
       always_collapsed: "Toujours réduit",
       expand_on_search: "Agrandir en recherche",
       script_var: "Variable script (yamp_entity)",
