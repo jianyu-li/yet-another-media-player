@@ -206,9 +206,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _hoveredSourceLetterIndex = null;
   // Stores the last grouping master id for group chip selection
   _lastGroupingMasterId = null;
-  _groupedSortedCache = null;
   _cardTriggers = { tap: null, hold: null, double_tap: null, swipe_left: null, swipe_right: null };
-  _lastHassVersion = null;
   _debouncedVolumeTimer = null;
   _supportsFeature(stateObj, featureBit) {
     if (!stateObj || typeof stateObj.attributes.supported_features !== "number") return false;
@@ -429,11 +427,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
     const idList = this.entityIds;
     if (!idList || !Array.isArray(idList)) return [];
 
-    // Check if we can use the cache
-    if (this._groupedSortedCache && this.hass === this._lastHassVersion) {
-      return this._groupedSortedCache;
-    }
-
     const idSet = new Set(idList);
     const map = {};
     for (let i = 0; i < idList.length; i++) {
@@ -461,8 +454,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       })   // sort groups by recency
       .map(g => g.ids.sort());       // sort ids alphabetically inside each group
 
-    this._groupedSortedCache = result;
-    this._lastHassVersion = this.hass;
     return result;
   }
   static properties = {
