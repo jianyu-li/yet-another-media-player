@@ -8571,7 +8571,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     `;
           })()}
                 </div>
-                <div class="persistent-controls-buttons">
+                <div class="persistent-controls-buttons" style="position: relative;">
                   <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="${localize('card.media_controls.previous')}">
                     <ha-icon icon="mdi:skip-previous"></ha-icon>
                   </button>
@@ -8581,6 +8581,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="${localize('card.media_controls.next')}">
                     <ha-icon icon="mdi:skip-next"></ha-icon>
                   </button>
+                  ${this._queueOpsTotal > 0 ? html`
+                    <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+                      Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
+                    </div>
+                  ` : nothing}
                 </div>
                 ${(() => {
             const idx = this._selectedIndex;
@@ -8617,9 +8622,9 @@ class YetAnotherMediaPlayerCard extends LitElement {
         massQueueAvailable: this._massQueueAvailable
       }) : nothing
       }
-          ${this._queueOpsTotal > 0 ? html`
-            <div class="queue-ops-progress">
-              Re-ordering ${this._queueOpsCompleted}/${this._queueOpsTotal}
+          ${!shouldShowPersistentControls && this._queueOpsTotal > 0 ? html`
+            <div class="queue-ops-progress" style="position: absolute !important; bottom: 12px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+              Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
             </div>
           ` : ""}
           </div>

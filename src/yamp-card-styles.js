@@ -4325,33 +4325,24 @@ export const lyricsStyles = css`
   }
 
   .queue-ops-progress {
-    position: absolute;
-    bottom: 12px;
-    left: 50%;
-    transform: translate(-50%, 0);
-    width: max-content;
-    background: var(--search-queue-hover, #5a5a5a);
-    color: var(--primary-text-color, #ffffff);
-    border-radius: 16px;
-    padding: 6px 14px;
-    font-size: 13px;
+    background: var(--yamp-chip-bg, rgba(255, 255, 255, 0.15));
+    color: var(--search-text-secondary, #666);
+    border-radius: 10px;
+    padding: 3px 8px;
+    font-size: 10.5px;
     font-weight: 500;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    z-index: 1000;
-    animation: queueOpsFadeInUp 0.2s ease-out forwards;
+    gap: 4px;
+    animation: queueOpsFadeIn 0.2s ease-out forwards;
   }
-  @keyframes queueOpsFadeInUp {
+  @keyframes queueOpsFadeIn {
     from {
       opacity: 0;
-      transform: translate(-50%, 10px);
     }
     to {
       opacity: 0.95;
-      transform: translate(-50%, 0);
     }
   }
 
