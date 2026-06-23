@@ -89,7 +89,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (changedProperties.has("_searchTerm") || this._searchTerm) {
       this._applySearchFilter();
     }
-
   }
 
   _supportsFeature(stateObj, featureBit) {
@@ -965,7 +964,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     return html`
       <div class="config-section" style="margin-top: 0; margin-bottom: 12px;">
-
         <div
           class="form-row"
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;"
@@ -1052,7 +1050,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   : this._renderActiveTab()}
             </div>
           `}
-
     `;
   }
 
@@ -1495,7 +1492,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       `;
   }
 
-
   _applySearchFilter() {
     if (!this.shadowRoot) return;
     const term = (this._searchTerm || "").toLowerCase().trim();
@@ -1631,7 +1627,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
       `;
     }
-
 
     switch (this._activeTab) {
       case "entities":
@@ -1892,12 +1887,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">${localize("editor.subtitles.close_search_on_play")}</div>
         </div>
 
-
         <div
           data-search-keys="always_collapsed expand_on_search pin_search_headers"
           class="form-row form-row-multi-column"
         >
-
           <div
             style="${this._config.entities?.length === 1 &&
             this._config.always_collapsed === true &&
@@ -2150,7 +2143,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           data-search-keys="match_theme alternate_progress_bar"
           class="form-row form-row-multi-column"
         >
-
           <div>
             <ha-switch
               id="match-theme-toggle"
@@ -2210,7 +2202,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           data-search-keys="alternate_progress_bar always_collapsed display_timestamps"
           class="form-row form-row-multi-column"
         >
-
           <div
             title=${this._config.alternate_progress_bar || this._config.always_collapsed
               ? localize("editor.subtitles.not_available_alt_collapsed")
@@ -2517,7 +2508,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           data-search-keys="collapse_on_idle always_collapsed hide_menu_player pin_search_headers expand_on_search"
           class="form-row form-row-multi-column"
         >
-
           <div>
             <ha-switch
               id="collapse-on-idle-toggle"
@@ -2574,12 +2564,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             `
           : html`
-
               <div
                 data-search-keys="always_collapsed expand_on_search"
                 class="form-row form-row-multi-column"
               >
-
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <ha-switch
                     id="always-collapsed-toggle"
@@ -3603,12 +3591,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
                 ${typeof action.service === "string" && action.service.startsWith("script.")
                   ? html`
-
                       <div
                         data-search-keys="script_variable"
                         class="form-row form-row-multi-column"
                       >
-
                         <div>
                           <ha-switch
                             id="script-variable-toggle"
