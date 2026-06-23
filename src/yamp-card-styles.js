@@ -3505,6 +3505,25 @@ export const yampCardStyles = css`
     overflow-y: visible;
   }
 
+  .queue-sortable-container.is-card-layout {
+    display: grid;
+    grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .queue-sortable-container.is-card-layout .queue-drag-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .queue-sortable-container.is-card-layout .yamp-search-result.search-result-card {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .yamp-search-result.search-result-card {
     flex-direction: column;
     padding: 8px;

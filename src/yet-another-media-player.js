@@ -3215,6 +3215,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _applyQueueDragVisuals(dragIdx, dragItemHeight, newTargetIdx) {
     const container = this.renderRoot.querySelector(".queue-sortable-container");
     if (!container) return;
+    const isCard = container.classList.contains("is-card-layout");
 
     const wrappers = container.querySelectorAll(".queue-drag-wrapper");
 
@@ -3226,25 +3227,41 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (idx === dragIdx) {
         w.style.opacity = "0";
         w.style.pointerEvents = "none";
+        if (isCard) w.style.order = newTargetIdx !== null ? newTargetIdx : idx;
         continue;
       }
 
-      // Shift rows to open a gap at the drop target
-      if (newTargetIdx === null) {
+      if (isCard) {
+        // In grid mode, we use CSS order for layout shifting
         w.style.transform = "";
-      } else if (dragIdx < newTargetIdx) {
-        // Dragging downward: items between (dragIdx, newTargetIdx] shift up
-        if (idx > dragIdx && idx <= newTargetIdx) {
-          w.style.transform = `translateY(${-dragItemHeight}px)`;
-        } else {
-          w.style.transform = "";
+        let order = idx;
+        if (newTargetIdx !== null) {
+          if (dragIdx < newTargetIdx && idx > dragIdx && idx <= newTargetIdx) {
+            order = idx - 1;
+          } else if (dragIdx > newTargetIdx && idx >= newTargetIdx && idx < dragIdx) {
+            order = idx + 1;
+          }
         }
+        w.style.order = order;
       } else {
-        // Dragging upward: items between [newTargetIdx, dragIdx) shift down
-        if (idx >= newTargetIdx && idx < dragIdx) {
-          w.style.transform = `translateY(${dragItemHeight}px)`;
-        } else {
+        // In list mode, shift rows vertically to open a gap at the drop target
+        w.style.order = "";
+        if (newTargetIdx === null) {
           w.style.transform = "";
+        } else if (dragIdx < newTargetIdx) {
+          // Dragging downward: items between (dragIdx, newTargetIdx] shift up
+          if (idx > dragIdx && idx <= newTargetIdx) {
+            w.style.transform = `translateY(${-dragItemHeight}px)`;
+          } else {
+            w.style.transform = "";
+          }
+        } else {
+          // Dragging upward: items between [newTargetIdx, dragIdx) shift down
+          if (idx >= newTargetIdx && idx < dragIdx) {
+            w.style.transform = `translateY(${dragItemHeight}px)`;
+          } else {
+            w.style.transform = "";
+          }
         }
       }
     }
@@ -3263,6 +3280,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       w.style.padding = "";
       w.style.opacity = "";
       w.style.pointerEvents = "";
+      w.style.order = "";
     }
   }
 
@@ -3293,15 +3311,18 @@ class YetAnotherMediaPlayerCard extends LitElement {
     e.stopPropagation();
 
     const startY = e.clientY;
+    const startX = e.clientX;
     let holdTimer = null;
     let isDragging = false;
     let floatingClone = null;
     let cloneOffsetY = 0;
+    let cloneOffsetX = 0;
 
     let scrollContainer = null;
     let scrollSpeed = 0;
     let scrollAnimationFrame = null;
     let lastClientY = startY;
+    let lastClientX = startX;
     let currentDropTargetIdx = null;
 
     // Use a long-press delay on touch, threshold-move on mouse
@@ -3311,7 +3332,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     // Apply inline transforms to physically shift rows apart, creating a gap
     let dragItemHeight = 0;
 
-    const updateDropTarget = (clientY) => {
+    const updateDropTarget = (clientX, clientY) => {
       const container = this.renderRoot.querySelector(".queue-sortable-container");
       if (!container) return;
 
@@ -3326,8 +3347,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         if (isNaN(idx) || idx === dragIdx) continue;
 
         const rect = el.getBoundingClientRect();
+        const midX = rect.left + rect.width / 2;
         const midY = rect.top + rect.height / 2;
-        const dist = Math.abs(clientY - midY);
+        const distX = clientX - midX;
+        const distY = clientY - midY;
+        const dist = Math.sqrt(distX * distX + distY * distY);
         if (dist < closestDist) {
           closestDist = dist;
           closestIdx = idx;
@@ -3345,7 +3369,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (!isDragging || !scrollContainer) return;
       if (scrollSpeed !== 0) {
         scrollContainer.scrollTop += scrollSpeed;
-        updateDropTarget(lastClientY);
+        updateDropTarget(lastClientX, lastClientY);
       }
       scrollAnimationFrame = requestAnimationFrame(scrollLoop);
     };
@@ -3378,6 +3402,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (itemEl) {
         const rect = itemEl.getBoundingClientRect();
         cloneOffsetY = startY - rect.top;
+        cloneOffsetX = startX - rect.left;
 
         floatingClone = itemEl.cloneNode(true);
         floatingClone.classList.add("queue-drag-clone");
@@ -3431,10 +3456,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
       moveEvt.preventDefault();
       lastClientY = moveEvt.clientY;
+      lastClientX = moveEvt.clientX;
 
       // Move the floating clone to follow the pointer
       if (floatingClone) {
         floatingClone.style.top = `${lastClientY - cloneOffsetY}px`;
+        floatingClone.style.left = `${lastClientX - cloneOffsetX}px`;
       }
 
       // Calculate scroll speed based on pointer position relative to scroll container
@@ -3453,7 +3480,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
         }
       }
 
-      updateDropTarget(lastClientY);
+      updateDropTarget(lastClientX, lastClientY);
     };
 
     const onPointerUp = (upEvt) => {
@@ -9151,7 +9178,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
         if (isQueueDragAndDrop) {
           return html`
-            <div class="queue-sortable-container"
+            <div class="queue-sortable-container ${isCard ? 'is-card-layout' : ''}"
               @pointerdown=${(e) => this._onQueueDragStart(e)}
             >
               ${currentResults.map((item, idx) => html`
