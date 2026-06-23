@@ -959,6 +959,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div style="position: relative;">
             <ha-selector
+              .required=${false}
               .hass=${this.hass}
               .selector=${{ text: { type: "search" } }}
               .value=${this._searchTerm || ""}
