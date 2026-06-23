@@ -9,10 +9,6 @@ class YampSortable extends LitElement {
       disabled: { type: Boolean },
       handleSelector: { type: String },
       draggableSelector: { type: String },
-      delay: { type: Number },
-      delayOnTouchOnly: { type: Boolean },
-      filter: { type: String },
-      preventOnFilter: { type: Boolean },
     };
   }
 
@@ -21,10 +17,6 @@ class YampSortable extends LitElement {
     this.disabled = false;
     this.handleSelector = ".handle";
     this.draggableSelector = ".sortable-item";
-    this.delay = 0;
-    this.delayOnTouchOnly = false;
-    this.filter = "";
-    this.preventOnFilter = true;
     this._sortable = null;
     this._captureClickFn = null;
     this._captureClickTimeout = null;
@@ -74,10 +66,6 @@ class YampSortable extends LitElement {
       animation: 150,
       draggable: this.draggableSelector,
       handle: this.handleSelector || undefined,
-      delay: this.delay,
-      delayOnTouchOnly: this.delayOnTouchOnly,
-      filter: this.filter || undefined,
-      preventOnFilter: this.preventOnFilter,
       // Mobile-specific options to fix ghost issues
       fallbackTolerance: 3,
       fallbackOnBody: true,
@@ -96,7 +84,7 @@ class YampSortable extends LitElement {
     // Stop drag-start events from bubbling to prevent Home Assistant dashboard from dragging the card
     this._stopBubble = (e) => {
       // If the target is interactive, let it bubble so clicks work
-      if (e.target.closest && e.target.closest(".queue-controls, button, ha-icon, ha-svg-icon")) {
+      if (e.target.closest && e.target.closest("button, ha-icon, ha-svg-icon")) {
         return;
       }
       e.stopPropagation();

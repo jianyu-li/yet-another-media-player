@@ -34,7 +34,8 @@ import {
   getMusicAssistantState,
   getSearchResultClickTitle,
   isMusicAssistantEntity,
-  getArtworkUrl
+  getArtworkUrl,
+  isValidArtworkUrl
 } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
@@ -4675,7 +4676,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let { url, sizePercentage, objectFit } = res;
 
     // Validate artwork URL to prevent proxy errors
-    if (url && !this._isValidArtworkUrl(url)) {
+    if (url && !isValidArtworkUrl(url)) {
       url = null;
     }
 
@@ -4705,27 +4706,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
-  // Validate artwork URL to prevent proxy errors
-  _isValidArtworkUrl(url) {
-    if (!url || typeof url !== 'string') return false;
 
-    // Check for obviously invalid URLs
-    if (url.includes('undefined') || url.includes('null') || url.trim() === '') return false;
-
-    // Skip validation for data URLs and base64 images
-    if (url.startsWith('data:')) return true;
-
-    // Skip validation for localhost and relative URLs
-    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) return true;
-
-    // Check for valid URL format
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  }
 
   // Extract dominant color from image
   async _extractDominantColor(imgUrl) {
@@ -8362,7 +8343,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
           : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : '350px'};`;
       })()}">
-                ${collapsed && artworkUrl && collapsedArtworkSize > 0 && this._isValidArtworkUrl(artworkUrl) ? html`
+                ${collapsed && artworkUrl && collapsedArtworkSize > 0 && isValidArtworkUrl(artworkUrl) ? html`
                   <div
                     class="collapsed-artwork-container"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
@@ -8600,7 +8581,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${(() => {
             // Use the same entity resolution as the main card
             const artwork = selectedArt;
-            return artwork?.url && this._isValidArtworkUrl(artwork.url) ? html`
+            return artwork?.url && isValidArtworkUrl(artwork.url) ? html`
                       <img src="${artwork.url}" alt="${localize('common.album_art')}" class="persistent-artwork" onerror="this.style.display='none'">
                     ` : html`
                       <div class="persistent-artwork-placeholder">
@@ -9166,7 +9147,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
           onRemove: (it) => this._removeQueueItem(it.queue_item_id),
           isMusicAssistant: this._isMusicAssistantEntity(),
-          isValidArtwork: (url) => this._isValidArtworkUrl(url),
+          isValidArtwork: (url) => isValidArtworkUrl(url),
           getClickTitle: (it) => this._getSearchResultClickTitle(it)
         });
 

@@ -535,12 +535,35 @@ export function getArtworkUrl(
   }
 
   // Validate artwork URL to prevent proxy errors (e.g. containing undefined/null)
-  if (
-    artworkUrl &&
-    (artworkUrl.includes("undefined") || artworkUrl.includes("null") || artworkUrl.trim() === "")
-  ) {
+  if (artworkUrl && !isValidArtworkUrl(artworkUrl)) {
     artworkUrl = null;
   }
 
   return { url: artworkUrl, sizePercentage, objectFit };
+}
+
+/**
+ * Validate artwork URL to prevent proxy errors
+ * @param {string} url - Artwork URL to validate
+ * @returns {boolean} True if valid
+ */
+export function isValidArtworkUrl(url) {
+  if (!url || typeof url !== "string") return false;
+
+  // Check for obviously invalid URLs
+  if (url.includes("undefined") || url.includes("null") || url.trim() === "") return false;
+
+  // Skip validation for data URLs and base64 images
+  if (url.startsWith("data:")) return true;
+
+  // Skip validation for localhost and relative URLs
+  if (url.startsWith("/") || url.startsWith("./") || url.startsWith("../")) return true;
+
+  // Check for valid URL format
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
