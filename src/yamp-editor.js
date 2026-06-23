@@ -598,37 +598,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
         /* reduced padding for entity selection subrows */
         .entity-row {
-          padding-top: 4px;
-          padding-bottom: 4px;
+          padding: 6px;
         }
-        .search-input-wrapper {
-          position: relative;
-          flex: 1;
-        }
-        .search-input-clear {
-          position: absolute;
-          right: 12px;
-          top: 50%;
-          transform: translateY(-10%);
-          background: none;
-          border: none;
-          color: var(--secondary-text-color, #888);
-          cursor: pointer;
-          padding: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 2;
-        }
-        .search-input-clear:hover {
-          color: var(--primary-text-color, #fff);
-        }
-        .search-input-clear ha-icon {
-          width: 18px;
-          height: 18px;
-        }
-
-
         /* visually isolate grouped controls */
         .config-section,
         .entity-group,
@@ -986,25 +957,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               ${localize(`editor.templates.${currentTemplate}.description`)}
             </div>
           </div>
-          <div class="search-input-wrapper">
+          <div>
             <ha-selector
               .hass=${this.hass}
               .selector=${{ text: { type: "search" } }}
               .value=${this._searchTerm || ""}
-              .required=${false}
               @value-changed=${(e) => {
                 this._searchTerm = e.detail.value;
               }}
               label="${localize("editor.search_placeholder") || "Search configuration options..."}"
             ></ha-selector>
-            ${this._searchTerm ? html`
-              <button
-                class="search-input-clear"
-                @click=${() => { this._searchTerm = ""; }}
-                title="${localize('common.clear') || 'Clear'}">
-                <ha-icon icon="mdi:close"></ha-icon>
-              </button>
-            ` : ""}
           </div>
         </div>
       </div>
