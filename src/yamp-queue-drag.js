@@ -147,7 +147,9 @@ export const QueueDragMixin = (superClass) =>
         if (!container) return;
 
         // Use yamp-search-result content divs for stable bounding rects
-        const itemElements = container.querySelectorAll(".queue-drag-wrapper > .yamp-search-result");
+        const itemElements = container.querySelectorAll(
+          ".queue-drag-wrapper > .yamp-search-result"
+        );
         let closestIdx = null;
         let closestDist = Infinity;
 

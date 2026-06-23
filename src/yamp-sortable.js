@@ -85,7 +85,6 @@ class YampSortable extends LitElement {
         return;
       }
       e.stopPropagation();
-      this._disableDraggableAncestor();
     };
     container.addEventListener("mousedown", this._stopBubble);
     container.addEventListener("touchstart", this._stopBubble, { passive: true });
@@ -117,8 +116,6 @@ class YampSortable extends LitElement {
       evt.item.placeholder.replaceWith(evt.item);
       delete evt.item.placeholder;
     }
-
-
 
     this.dispatchEvent(
       new CustomEvent("drag-end", {
@@ -157,8 +154,6 @@ class YampSortable extends LitElement {
   }
 
   _destroySortable() {
-
-
     if (!this._sortable) return;
     this._sortable.destroy();
     this._sortable = null;
@@ -176,8 +171,6 @@ class YampSortable extends LitElement {
     // Clean up any remaining ghost elements
     this._cleanupGhostElements();
   }
-
-
 }
 
 customElements.define("yamp-sortable", YampSortable);
