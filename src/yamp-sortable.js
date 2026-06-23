@@ -18,9 +18,6 @@ class YampSortable extends LitElement {
     this.handleSelector = ".handle";
     this.draggableSelector = ".sortable-item";
     this._sortable = null;
-    this._captureClickFn = null;
-    this._captureClickTimeout = null;
-    this._restoreDraggableFn = null;
   }
 
   createRenderRoot() {
@@ -121,37 +118,7 @@ class YampSortable extends LitElement {
       delete evt.item.placeholder;
     }
 
-    // Capture the next click event on the window to prevent accidental clicks after drag
-    const dragEndTime = Date.now();
-    if (this._captureClickFn) {
-      window.removeEventListener("click", this._captureClickFn, true);
-    }
-    if (this._captureClickTimeout) {
-      clearTimeout(this._captureClickTimeout);
-    }
 
-    this._captureClickFn = (e) => {
-      const elapsed = Date.now() - dragEndTime;
-      if (elapsed < 200) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
-      window.removeEventListener("click", this._captureClickFn, true);
-      this._captureClickFn = null;
-      if (this._captureClickTimeout) {
-        clearTimeout(this._captureClickTimeout);
-        this._captureClickTimeout = null;
-      }
-    };
-    window.addEventListener("click", this._captureClickFn, true);
-    // Remove the listener after a safety timeout in case no click is fired
-    this._captureClickTimeout = setTimeout(() => {
-      if (this._captureClickFn) {
-        window.removeEventListener("click", this._captureClickFn, true);
-        this._captureClickFn = null;
-      }
-      this._captureClickTimeout = null;
-    }, 2000);
 
     this.dispatchEvent(
       new CustomEvent("drag-end", {
@@ -190,17 +157,7 @@ class YampSortable extends LitElement {
   }
 
   _destroySortable() {
-    if (this._captureClickTimeout) {
-      clearTimeout(this._captureClickTimeout);
-      this._captureClickTimeout = null;
-    }
-    if (this._captureClickFn) {
-      window.removeEventListener("click", this._captureClickFn, true);
-      this._captureClickFn = null;
-    }
-    if (this._restoreDraggableFn) {
-      this._restoreDraggableFn();
-    }
+
 
     if (!this._sortable) return;
     this._sortable.destroy();
@@ -220,35 +177,7 @@ class YampSortable extends LitElement {
     this._cleanupGhostElements();
   }
 
-  _disableDraggableAncestor() {
-    if (this._draggableAncestor) return;
 
-    let parent = this;
-    while (parent) {
-      if (parent.getAttribute && parent.getAttribute("draggable") === "true") {
-        this._draggableAncestor = parent;
-        parent.setAttribute("draggable", "false");
-        break;
-      }
-      parent = parent.parentElement || (parent.getRootNode && parent.getRootNode().host);
-    }
-
-    if (this._draggableAncestor) {
-      this._restoreDraggableFn = () => {
-        if (this._draggableAncestor) {
-          this._draggableAncestor.setAttribute("draggable", "true");
-          this._draggableAncestor = null;
-        }
-        window.removeEventListener("mouseup", this._restoreDraggableFn);
-        window.removeEventListener("touchend", this._restoreDraggableFn);
-        window.removeEventListener("pointerup", this._restoreDraggableFn);
-        this._restoreDraggableFn = null;
-      };
-      window.addEventListener("mouseup", this._restoreDraggableFn);
-      window.addEventListener("touchend", this._restoreDraggableFn);
-      window.addEventListener("pointerup", this._restoreDraggableFn);
-    }
-  }
 }
 
 customElements.define("yamp-sortable", YampSortable);
