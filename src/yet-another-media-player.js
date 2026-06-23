@@ -478,6 +478,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _showEntityOptions: { state: true },
     _showGrouping: { state: true },
     _showTransferQueue: { state: true },
+    _queueOpsTotal: { state: true },
+    _queueOpsCompleted: { state: true },
     _showResolvedEntities: { state: true },
     _showSearchInSheet: { state: true },
     _addToPlaylistTarget: { state: true },
@@ -2929,7 +2931,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
       clearTimeout(this._queueOpsTimeout);
       this._queueOpsTimeout = null;
     }
-    this.requestUpdate();
 
     this._queueOperationPromise = this._queueOperationPromise.then(async () => {
       try {
@@ -2940,7 +2941,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
         this._refreshQueue();
       } finally {
         this._queueOpsCompleted++;
-        this.requestUpdate();
 
         if (this._queueOpsCompleted === this._queueOpsTotal) {
           if (this._queueOpsTimeout) clearTimeout(this._queueOpsTimeout);
@@ -2949,7 +2949,6 @@ class YetAnotherMediaPlayerCard extends LitElement {
               this._queueOpsTotal = 0;
               this._queueOpsCompleted = 0;
               this._queueOpsTimeout = null;
-              this.requestUpdate();
             }
           }, 1500);
         }
@@ -3494,17 +3493,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
       if (isDragging) {
         // Prevent next click event on window to avoid accidental play/activation
         const dragEndTime = Date.now();
-        const captureClick = (clickEvt) => {
+        if (this._dragClickCaptureFn) {
+          window.removeEventListener("click", this._dragClickCaptureFn, true);
+        }
+        if (this._dragClickCaptureTimeout) {
+          clearTimeout(this._dragClickCaptureTimeout);
+        }
+
+        this._dragClickCaptureFn = (clickEvt) => {
           const elapsed = Date.now() - dragEndTime;
           if (elapsed < 200) {
             clickEvt.stopPropagation();
             clickEvt.preventDefault();
           }
-          window.removeEventListener("click", captureClick, true);
+          window.removeEventListener("click", this._dragClickCaptureFn, true);
+          this._dragClickCaptureFn = null;
         };
-        window.addEventListener("click", captureClick, true);
-        setTimeout(() => {
-          window.removeEventListener("click", captureClick, true);
+        window.addEventListener("click", this._dragClickCaptureFn, true);
+        this._dragClickCaptureTimeout = setTimeout(() => {
+          if (this._dragClickCaptureFn) {
+            window.removeEventListener("click", this._dragClickCaptureFn, true);
+            this._dragClickCaptureFn = null;
+          }
         }, 1000);
 
         this._clearQueueDragVisuals();
@@ -9774,6 +9784,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._idleTimeout) {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
+    }
+    if (this._dragClickCaptureTimeout) {
+      clearTimeout(this._dragClickCaptureTimeout);
+      this._dragClickCaptureTimeout = null;
+    }
+    if (this._dragClickCaptureFn) {
+      window.removeEventListener("click", this._dragClickCaptureFn, true);
+      this._dragClickCaptureFn = null;
     }
     // Unsubscribe from queue update events
     this._unsubscribeFromQueueUpdates();

@@ -574,7 +574,11 @@ export function renderSearchResultItem({
               ${isCard && !isRadio(item) && !hideActions
                 ? html`
                     <div
-                      class="card-menu-button ${upcomingFilterActive && massQueueAvailable && queueControlsStyle === 'drag_handle' ? 'queue-drag-handle' : ''}"
+                      class="card-menu-button ${upcomingFilterActive &&
+                      massQueueAvailable &&
+                      queueControlsStyle === "drag_handle"
+                        ? "queue-drag-handle"
+                        : ""}"
                       @click=${(e) => {
                         e.preventDefault();
                         e.stopPropagation();
