@@ -957,7 +957,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               ${localize(`editor.templates.${currentTemplate}.description`)}
             </div>
           </div>
-          <div>
+          <div style="position: relative;">
             <ha-selector
               .hass=${this.hass}
               .selector=${{ text: { type: "search" } }}
@@ -967,6 +967,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               }}
               label="${localize("editor.search_placeholder") || "Search configuration options..."}"
             ></ha-selector>
+            ${this._searchTerm
+              ? html`
+                  <ha-icon
+                    icon="mdi:close"
+                    @click=${() => {
+                      this._searchTerm = "";
+                    }}
+                    style="position: absolute; right: 12px; top: 28px; transform: translateY(-50%); cursor: pointer; color: var(--secondary-text-color);"
+                  ></ha-icon>
+                `
+              : nothing}
           </div>
         </div>
       </div>
