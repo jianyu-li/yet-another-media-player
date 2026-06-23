@@ -34,6 +34,7 @@ export default {
       artwork: "Grafika",
       actions: "Akcie",
     },
+    search_placeholder: "Vyhľadať možnosti konfigurácie...",
     placeholders: {
       search: "Hľadať hudbu...",
     },

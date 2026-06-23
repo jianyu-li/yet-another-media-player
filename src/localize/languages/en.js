@@ -34,6 +34,7 @@ export default {
       artwork: "Artwork",
       actions: "Actions",
     },
+    search_placeholder: "Search configuration options...",
     template_label: "Card Template",
     templates: {
       custom: {

@@ -35,6 +35,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._activeTab = "entities";
     this._entityEditorIndex = null;
     this._actionEditorIndex = null;
+    this._tempEntityIndex = null;
+    this._tempActionIndex = null;
 
     this._yamlDraft = "";
     this._parsedYaml = null;
@@ -48,6 +50,32 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   firstUpdated() {
     this._serviceItems = this._getServiceItems();
+    this.addEventListener("value-changed", (e) => this._captureEditorIndex(e), true);
+    this.addEventListener("change", (e) => this._captureEditorIndex(e), true);
+    this.addEventListener("click", (e) => this._captureEditorIndex(e), true);
+  }
+
+  _captureEditorIndex(e) {
+    const path = e.composedPath();
+    const entityGroup = path.find((el) => el.classList?.contains?.("entity-group"));
+    if (entityGroup) {
+      const idx = Number(entityGroup.getAttribute("data-index"));
+      if (Number.isInteger(idx)) {
+        this._tempEntityIndex = idx;
+        return;
+      }
+    }
+    this._tempEntityIndex = null;
+
+    const actionGroup = path.find((el) => el.classList?.contains?.("action-group"));
+    if (actionGroup) {
+      const idx = Number(actionGroup.getAttribute("data-index"));
+      if (Number.isInteger(idx)) {
+        this._tempActionIndex = idx;
+        return;
+      }
+    }
+    this._tempActionIndex = null;
   }
 
   updated(changedProperties) {
@@ -56,6 +84,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       if (this.hass?.services !== oldHass?.services) {
         this._serviceItems = this._getServiceItems();
       }
+    }
+
+    if (changedProperties.has("_searchTerm") || this._searchTerm) {
+      this._applySearchFilter();
     }
   }
 
@@ -449,7 +481,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _updateEntityProperty(key, value) {
     const entities = [...(this._config.entities ?? [])];
-    const idx = this._entityEditorIndex;
+    const idx = this._tempEntityIndex !== null ? this._tempEntityIndex : this._entityEditorIndex;
     if (entities[idx]) {
       entities[idx] = { ...entities[idx], [key]: value };
       this._updateConfig("entities", entities);
@@ -458,7 +490,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _updateActionProperty(key, value) {
     const actions = [...(this._config.actions ?? [])];
-    const idx = this._actionEditorIndex;
+    const idx = this._tempActionIndex !== null ? this._tempActionIndex : this._actionEditorIndex;
     if (actions[idx]) {
       // Enforce single trigger per gesture (Tap, Hold, Double Tap)
       if (key === "card_trigger" && value && value !== "none") {
@@ -932,56 +964,92 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     return html`
       <div class="config-section" style="margin-top: 0; margin-bottom: 12px;">
-        <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            label=${localize("editor.template_label")}
-            .selector=${{
-              select: {
-                mode: "dropdown",
-                options: Object.keys(TEMPLATE_CONFIGS).map((key) => ({
-                  value: key,
-                  label: localize(`editor.templates.${key}.label`),
-                })),
-              },
-            }}
-            .value=${currentTemplate}
-            @value-changed=${(e) => this._updateConfig("template", e.detail.value)}
-          ></ha-selector>
-          <div class="config-subtitle small" style="margin-top: 8px;">
-            ${localize(`editor.templates.${currentTemplate}.description`)}
+        <div
+          class="form-row"
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;"
+        >
+          <div>
+            <ha-selector
+              .hass=${this.hass}
+              label=${localize("editor.template_label")}
+              .selector=${{
+                select: {
+                  mode: "dropdown",
+                  options: Object.keys(TEMPLATE_CONFIGS).map((key) => ({
+                    value: key,
+                    label: localize(`editor.templates.${key}.label`),
+                  })),
+                },
+              }}
+              .value=${currentTemplate}
+              @value-changed=${(e) => this._updateConfig("template", e.detail.value)}
+            ></ha-selector>
+            <div class="config-subtitle small" style="margin-top: 8px;">
+              ${localize(`editor.templates.${currentTemplate}.description`)}
+            </div>
+          </div>
+          <div style="position: relative;">
+            <ha-selector
+              .required=${false}
+              .hass=${this.hass}
+              .selector=${{ text: { type: "search" } }}
+              .value=${this._searchTerm || ""}
+              @value-changed=${(e) => {
+                this._searchTerm = e.detail.value;
+              }}
+              label="${localize("editor.search_placeholder") || "Search configuration options..."}"
+            ></ha-selector>
+            ${this._searchTerm
+              ? html`
+                  <ha-icon
+                    icon="mdi:close"
+                    @click=${() => {
+                      this._searchTerm = "";
+                    }}
+                    style="position: absolute; right: 12px; top: 28px; transform: translateY(-50%); cursor: pointer; color: var(--secondary-text-color);"
+                  ></ha-icon>
+                `
+              : nothing}
           </div>
         </div>
       </div>
-      <div class="tabs">
-        ${["entities", "behavior", "look_and_feel", "artwork", "actions"].map((key) => {
-          const name = localize(`editor.tabs.${key}`);
-          return html`
-            <button
-              class="tab"
-              ${this._activeTab === key ? "selected" : ""}
-              @click=${() => {
-                this._activeTab = key;
-                // Exit any sub-editor when switching tabs
-                this._entityEditorIndex = null;
-                this._actionEditorIndex = null;
-                this._useTemplate = null;
-                this._useVolTemplate = null;
-              }}
-              ?selected=${this._activeTab === key}
-            >
-              ${name}
-            </button>
-          `;
-        })}
-      </div>
-      <div class="tab-content">
-        ${editingEntity
-          ? this._renderEntityEditor(this._config.entities?.[this._entityEditorIndex])
-          : editingAction
-            ? this._renderActionEditor(this._config.actions?.[this._actionEditorIndex])
-            : this._renderActiveTab()}
-      </div>
+      ${this._searchTerm && !editingEntity && !editingAction
+        ? this._renderActiveTab()
+        : html`
+            ${this._searchTerm
+              ? nothing
+              : html`
+                  <div class="tabs">
+                    ${["entities", "behavior", "look_and_feel", "artwork", "actions"].map((key) => {
+                      const name = localize(`editor.tabs.${key}`);
+                      return html`
+                        <button
+                          class="tab"
+                          ${this._activeTab === key ? "selected" : ""}
+                          @click=${() => {
+                            this._activeTab = key;
+                            // Exit any sub-editor when switching tabs
+                            this._entityEditorIndex = null;
+                            this._actionEditorIndex = null;
+                            this._useTemplate = null;
+                            this._useVolTemplate = null;
+                          }}
+                          ?selected=${this._activeTab === key}
+                        >
+                          ${name}
+                        </button>
+                      `;
+                    })}
+                  </div>
+                `}
+            <div class="tab-content">
+              ${editingEntity
+                ? this._renderEntityEditor(this._config.entities?.[this._entityEditorIndex])
+                : editingAction
+                  ? this._renderActionEditor(this._config.actions?.[this._actionEditorIndex])
+                  : this._renderActiveTab()}
+            </div>
+          `}
     `;
   }
 
@@ -1424,7 +1492,142 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       `;
   }
 
+  _applySearchFilter() {
+    if (!this.shadowRoot) return;
+    const term = (this._searchTerm || "").toLowerCase().trim();
+
+    const container = this.shadowRoot.querySelector(".search-results, .tab-content");
+    if (!container) return;
+
+    const isSubEditor = this._entityEditorIndex !== null || this._actionEditorIndex !== null;
+
+    const ENTITY_SUB_EDITOR_KEYS = [
+      "name",
+      "hidden controls",
+      "music assistant entity",
+      "ma entity",
+      "ma template",
+      "hidden search filter chips",
+      "hidden chips",
+      "prefer music assistant metadata",
+      "prefer ma metadata",
+      "disable auto select",
+      "group volume",
+      "volume entity follows active entity",
+      "volume entity",
+      "sync power",
+    ];
+
+    const ACTION_SUB_EDITOR_KEYS = [
+      "name",
+      "icon",
+      "in menu",
+      "card trigger",
+      "action type",
+      "menu item",
+      "navigation path",
+      "navigation new tab",
+      "sync entity helper",
+      "sync entity type",
+      "service",
+      "script variable",
+    ];
+
+    const filterRow = (row) => {
+      let text = row.textContent.toLowerCase();
+
+      // If we are in the main editor and filtering entity/action rows,
+      // also match if the search term matches any option inside their sub-editors
+      if (!isSubEditor) {
+        if (row.classList.contains("entity-row-inner")) {
+          const hasSubEditorMatch = ENTITY_SUB_EDITOR_KEYS.some((key) => key.includes(term));
+          if (hasSubEditorMatch) {
+            row.style.display = "";
+            return true;
+          }
+        } else if (row.classList.contains("action-row-inner")) {
+          const hasSubEditorMatch = ACTION_SUB_EDITOR_KEYS.some((key) => key.includes(term));
+          if (hasSubEditorMatch) {
+            row.style.display = "";
+            return true;
+          }
+        }
+      }
+
+      // Include the config property name itself in the searchable text
+      // (e.g., 'idle_timeout_ms' -> 'idle timeout ms')
+      const searchKeys = row.getAttribute("data-search-keys");
+      if (searchKeys) {
+        text += " " + searchKeys.toLowerCase().replace(/_/g, " ");
+      }
+
+      // Dynamically include dropdown/selector options if present
+      const selectors = row.querySelectorAll("ha-selector");
+      selectors.forEach((sel) => {
+        const options = sel.selector?.select?.options;
+        if (Array.isArray(options) && options.length <= 15) {
+          options.forEach((opt) => {
+            if (opt.label) text += " " + String(opt.label).toLowerCase();
+            if (opt.value) text += " " + String(opt.value).toLowerCase();
+          });
+        }
+      });
+
+      const match = text.includes(term);
+      row.style.display = match ? "" : "none";
+      return match;
+    };
+
+    if (isSubEditor) {
+      // Sub-editor: rows are flat, filter them directly
+      const rows = container.querySelectorAll(
+        ".form-row, .artwork-row, .entity-row-inner, .action-row-inner"
+      );
+      rows.forEach(filterRow);
+    } else {
+      // Main tabs search: filter sections and their nested rows
+      const sections = container.querySelectorAll(".config-section, .entity-group, .action-group");
+      sections.forEach((section) => {
+        let sectionHasMatch = false;
+        const rows = section.querySelectorAll(
+          ".form-row, .artwork-row, .entity-row-inner, .action-row-inner"
+        );
+        rows.forEach((row) => {
+          if (filterRow(row)) {
+            sectionHasMatch = true;
+          }
+        });
+        section.style.display = sectionHasMatch ? "" : "none";
+      });
+    }
+  }
+
   _renderActiveTab() {
+    if (this._searchTerm) {
+      const entities = this._config?.entities ?? [];
+      const actions = this._config?.actions ?? [];
+
+      return html`
+        <div class="search-results is-searching" style="padding-top: 4px;">
+          ${this._renderBehaviorTab()} ${this._renderVisualTab()} ${this._renderArtworkTab()}
+          ${entities.map(
+            (ent, idx) => html`
+              <div class="entity-group" data-index="${idx}">
+                ${this._renderEntityEditor(ent, idx, true)}
+              </div>
+            `
+          )}
+          ${actions.map(
+            (act, idx) => html`
+              <div class="action-group config-section" data-index="${idx}">
+                ${this._renderActionEditor(act, idx, true)}
+              </div>
+            `
+          )}
+        </div>
+      `;
+    }
+
     switch (this._activeTab) {
       case "entities":
         return this._renderEntitiesTab();
@@ -1684,7 +1887,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">${localize("editor.subtitles.close_search_on_play")}</div>
         </div>
 
-        <div class="form-row form-row-multi-column">
+        <div
+          data-search-keys="always_collapsed expand_on_search pin_search_headers"
+          class="form-row form-row-multi-column"
+        >
           <div
             style="${this._config.entities?.length === 1 &&
             this._config.always_collapsed === true &&
@@ -1946,7 +2152,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${localize("editor.sections.look_and_feel.theme_layout.description")}
           </div>
         </div>
-        <div class="form-row form-row-multi-column">
+
+        <div
+          data-search-keys="match_theme alternate_progress_bar"
+          class="form-row form-row-multi-column"
+        >
           <div>
             <ha-switch
               id="match-theme-toggle"
@@ -2001,7 +2211,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             @value-changed=${(e) => this._updateConfig("appearance", e.detail.value)}
           ></ha-selector>
         </div>
-        <div class="form-row form-row-multi-column">
+
+        <div
+          data-search-keys="alternate_progress_bar always_collapsed display_timestamps"
+          class="form-row form-row-multi-column"
+        >
           <div
             title=${this._config.alternate_progress_bar || this._config.always_collapsed
               ? localize("editor.subtitles.not_available_alt_collapsed")
@@ -2327,7 +2541,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${localize("editor.sections.look_and_feel.collapsed_idle.description")}
           </div>
         </div>
-        <div class="form-row form-row-multi-column">
+
+        <div
+          data-search-keys="collapse_on_idle always_collapsed hide_menu_player pin_search_headers expand_on_search"
+          class="form-row form-row-multi-column"
+        >
           <div>
             <ha-switch
               id="collapse-on-idle-toggle"
@@ -2384,7 +2602,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             `
           : html`
-              <div class="form-row form-row-multi-column">
+              <div
+                data-search-keys="always_collapsed expand_on_search"
+                class="form-row form-row-multi-column"
+              >
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <ha-switch
                     id="always-collapsed-toggle"
@@ -2561,7 +2782,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     `;
   }
 
-  _renderEntityEditor(entity) {
+  _renderEntityEditor(entity, idx = this._entityEditorIndex, isSearch = false) {
     const stateObj = this.hass?.states?.[entity?.entity_id];
     let showGroupVolume = this._isGroupCapable(stateObj);
     if (!showGroupVolume && entity?.music_assistant_entity) {
@@ -2577,15 +2798,35 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     }
 
     return html`
-        <div class="entity-editor-header">
-          <ha-icon
-            class="icon-button"
-            icon="mdi:chevron-left"
-            title="${localize("common.back")}"
-            @click=${this._onBackFromEntityEditor}>
-          </ha-icon>
-          <div class="entity-editor-title">${localize("editor.titles.edit_entity")}</div>
-        </div>
+        ${
+          isSearch
+            ? html`
+                <div
+                  class="entity-group-header section-header"
+                  style="padding-top: 16px; border-top: 1px solid var(--divider-color);"
+                >
+                  <div
+                    class="entity-group-title section-title"
+                    style="color: var(--custom-accent, var(--accent-color, #ff9800));"
+                  >
+                    ${entity?.name || this._entityValueRenderer(entity?.entity_id) || "Entity"}
+                    (${entity?.entity_id || "No ID"})
+                  </div>
+                </div>
+              `
+            : html`
+                <div class="entity-editor-header">
+                  <ha-icon
+                    class="icon-button"
+                    icon="mdi:chevron-left"
+                    title="${localize("common.back")}"
+                    @click=${this._onBackFromEntityEditor}
+                  >
+                  </ha-icon>
+                  <div class="entity-editor-title">${localize("editor.titles.edit_entity")}</div>
+                </div>
+              `
+        }
 
         <div class="form-row">
           <ha-selector
@@ -2921,18 +3162,37 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       `;
   }
 
-  _renderActionEditor(action) {
+  _renderActionEditor(action, idx = this._actionEditorIndex, isSearch = false) {
     const actionMode = this._actionMode ?? this._deriveActionMode(action);
 
     return html`
-        <div class="action-editor-header">
-          <ha-icon
-            class="icon-button"
-            icon="mdi:chevron-left"
-            @click=${this._onBackFromActionEditor}>
-          </ha-icon>
-          <div class="action-editor-title">${localize("editor.titles.edit_action")}</div>
-        </div>
+        ${
+          isSearch
+            ? html`
+                <div
+                  class="action-group-header section-header"
+                  style="padding-top: 16px; border-top: 1px solid var(--divider-color);"
+                >
+                  <div
+                    class="action-group-title section-title"
+                    style="color: var(--custom-accent, var(--accent-color, #ff9800));"
+                  >
+                    Action: ${action?.name || `Action #${idx + 1}`}
+                  </div>
+                </div>
+              `
+            : html`
+                <div class="action-editor-header">
+                  <ha-icon
+                    class="icon-button"
+                    icon="mdi:chevron-left"
+                    @click=${this._onBackFromActionEditor}
+                  >
+                  </ha-icon>
+                  <div class="action-editor-title">${localize("editor.titles.edit_action")}</div>
+                </div>
+              `
+        }
 
         <div class="form-row">
           <ha-selector
@@ -3369,7 +3629,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
                 ${typeof action.service === "string" && action.service.startsWith("script.")
                   ? html`
-                      <div class="form-row form-row-multi-column">
+                      <div
+                        data-search-keys="script_variable"
+                        class="form-row form-row-multi-column"
+                      >
                         <div>
                           <ha-switch
                             id="script-variable-toggle"
