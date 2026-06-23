@@ -34,6 +34,7 @@ export default {
       artwork: "Artwork",
       actions: "Acties",
     },
+    search_placeholder: "Configuratieopties zoeken...",
     placeholders: {
       search: "Zoek muziek...",
     },
