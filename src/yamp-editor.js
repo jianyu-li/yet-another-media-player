@@ -27,7 +27,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       _actionMode: { type: String },
       _templateModes: { type: Object },
       _serviceItems: { type: Array },
-      _searchTerm: { type: String },
     };
   }
 
@@ -86,9 +85,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         this._serviceItems = this._getServiceItems();
       }
     }
+
     if (changedProperties.has("_searchTerm") || this._searchTerm) {
       this._applySearchFilter();
     }
+
   }
 
   _supportsFeature(stateObj, featureBit) {
@@ -964,6 +965,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     return html`
       <div class="config-section" style="margin-top: 0; margin-bottom: 12px;">
+
         <div
           class="form-row"
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;"
@@ -1050,6 +1052,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   : this._renderActiveTab()}
             </div>
           `}
+
     `;
   }
 
@@ -1074,7 +1077,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <div class="section-description">${localize("editor.sections.artwork.general.description")}</div>
           </div>
 
-          <div data-search-keys="artwork_object_fit artwork_position" class="form-row form-row-multi-column">
+          <div class="form-row form-row-multi-column">
             <div class="grow-children">
               <ha-selector
                 .hass=${this.hass}
@@ -1132,7 +1135,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               ></ha-selector>
             </div>
           </div>
-          <div data-search-keys="extend_artwork" class="form-row form-row-multi-column">
+          <div class="form-row form-row-multi-column">
             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
               <ha-switch
                 id="extend-artwork-toggle"
@@ -1145,7 +1148,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             </div>
           </div>
-          <div data-search-keys="blurred_artwork always_collapsed artwork_object_fit" class="form-row form-row-multi-column">
+          <div class="form-row form-row-multi-column">
             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
               <ha-switch
                 id="blurred-artwork-toggle"
@@ -1158,7 +1161,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             </div>
           </div>
-          <div data-search-keys="hide_collapsed_artwork" class="form-row form-row-multi-column">
+          <div class="form-row form-row-multi-column">
             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
               <ha-switch
                 id="hide-collapsed-artwork-toggle"
@@ -1171,7 +1174,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             </div>
           </div>
-          <div data-search-keys="artwork_hostname idle_image" class="form-row">
+          <div class="form-row">
             <ha-selector
               .hass=${this.hass}
               class="full-width"
@@ -1192,7 +1195,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ${
             this._isTemplateMode("idle_image", this._config.idle_image)
               ? html`
-                  <div data-search-keys="idle_image" class="form-row">
+                  <div class="form-row">
                     <div class="editor-field-wrapper">
                       <div class="grow-children">
                         <ha-code-editor
@@ -1214,7 +1217,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   </div>
                 `
               : html`
-                  <div data-search-keys="idle_image" class="form-row form-row-multi-column">
+                  <div class="form-row form-row-multi-column">
                     <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
                       <ha-switch
                         id="idle-image-url-toggle"
@@ -1270,7 +1273,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   </div>
                 `
           }
-          <div data-search-keys="idle_image show_idle_artwork_when_not_playing" class="form-row form-row-multi-column" style="${!this._config.idle_image ? "opacity: 0.4; pointer-events: none;" : ""}">
+          <div class="form-row form-row-multi-column" style="${!this._config.idle_image ? "opacity: 0.4; pointer-events: none;" : ""}">
             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
               <ha-switch
                 id="show-idle-artwork-toggle"
@@ -1492,6 +1495,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       `;
   }
 
+
   _applySearchFilter() {
     if (!this.shadowRoot) return;
     const term = (this._searchTerm || "").toLowerCase().trim();
@@ -1628,6 +1632,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       `;
     }
 
+
     switch (this._activeTab) {
       case "entities":
         return this._renderEntitiesTab();
@@ -1710,7 +1715,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   _renderBehaviorTab() {
     return html`
       <div class="config-section">
-        <div data-search-keys="card_type" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -1741,7 +1746,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${localize("editor.sections.behavior.idle_chips.description")}
           </div>
         </div>
-        <div data-search-keys="idle_timeout_ms" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
@@ -1761,7 +1766,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
           ></ha-icon>
         </div>
-        <div data-search-keys="show_chip_row" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -1781,7 +1786,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
           <div class="config-subtitle">${localize("editor.subtitles.show_chip_row")}</div>
         </div>
-        <div data-search-keys="dim_chips_on_idle" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="dim-chips-on-idle-toggle"
@@ -1803,7 +1808,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${localize("editor.sections.behavior.interactions_search.description")}
           </div>
         </div>
-        <div data-search-keys="always_show_quick_group" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="always-show-quick-group-toggle"
@@ -1816,7 +1821,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.always_show_group")}</div>
         </div>
-        <div data-search-keys="hold_to_pin" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="hold-to-pin-toggle"
@@ -1827,7 +1832,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.hold_to_pin")}</div>
         </div>
-        <div data-search-keys="show_volume_overlay" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="show-volume-overlay-toggle"
@@ -1840,7 +1845,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.show_volume_overlay")}</div>
         </div>
-        <div data-search-keys="disable_autofocus" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               .checked=${this._config.disable_autofocus ?? false}
@@ -1850,7 +1855,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.disable_autofocus")}</div>
         </div>
-        <div data-search-keys="default_search_favorites" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="default-search-favorites-toggle"
@@ -1864,7 +1869,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
         </div>
 
-        <div data-search-keys="keep_filters_on_search" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               .checked=${this._config.keep_filters_on_search ?? false}
@@ -1875,7 +1880,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">${localize("editor.subtitles.search_within_filter")}</div>
         </div>
 
-        <div data-search-keys="dismiss_search_on_play" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="dismiss-search-on-play-toggle"
@@ -1887,10 +1892,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">${localize("editor.subtitles.close_search_on_play")}</div>
         </div>
 
+
         <div
           data-search-keys="always_collapsed expand_on_search pin_search_headers"
           class="form-row form-row-multi-column"
         >
+
           <div
             style="${this._config.entities?.length === 1 &&
             this._config.always_collapsed === true &&
@@ -1916,7 +1923,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">${localize("editor.subtitles.pin_search_headers")}</div>
         </div>
 
-        <div data-search-keys="hide_search_headers_on_idle" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="hide-search-headers-on-idle-toggle"
@@ -1930,7 +1937,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
         </div>
 
-        <div data-search-keys="disable_mass_queue" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="disable-mass-queue-toggle"
@@ -1941,7 +1948,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.disable_mass")}</div>
         </div>
-        <div data-search-keys="search_results_limit" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div class="grow-children number-input-with-note">
             <ha-selector
               .selector=${{ number: { min: 0, max: 1000, step: 1, mode: "box" } }}
@@ -1960,7 +1967,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-icon>
         </div>
 
-        <div data-search-keys="default_search_filter" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -1985,7 +1992,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
-        <div data-search-keys="search_results_sort" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -2029,7 +2036,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${localize("editor.sections.behavior.lyrics.description")}
           </div>
         </div>
-        <div data-search-keys="always_show_lyrics" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="always-show-lyrics-toggle"
@@ -2042,7 +2049,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.always_show_lyrics")}</div>
         </div>
-        <div data-search-keys="lyrics_mode lyrics_source" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -2078,7 +2085,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
           <div class="config-subtitle">${localize("editor.subtitles.lyrics_source")}</div>
         </div>
-        <div data-search-keys="lyrics_pre_roll volume_mode" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
@@ -2106,7 +2113,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const renderVolumeStep =
       this._config.volume_mode === "stepper"
         ? html`
-            <div data-search-keys="volume_step" class="form-row form-row-multi-column">
+            <div class="form-row form-row-multi-column">
               <div class="grow-children">
                 <ha-selector
                   .hass=${this.hass}
@@ -2138,10 +2145,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${localize("editor.sections.look_and_feel.theme_layout.description")}
           </div>
         </div>
+
         <div
           data-search-keys="match_theme alternate_progress_bar"
           class="form-row form-row-multi-column"
         >
+
           <div>
             <ha-switch
               id="match-theme-toggle"
@@ -2159,7 +2168,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <span>${localize("editor.labels.alt_progress")}</span>
           </div>
         </div>
-        <div data-search-keys="progress_bar_height" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <ha-selector
               .hass=${this.hass}
@@ -2178,7 +2187,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             @click=${() => this._updateConfig("progress_bar_height", 6)}
           ></ha-icon>
         </div>
-        <div data-search-keys="appearance" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -2196,10 +2205,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             @value-changed=${(e) => this._updateConfig("appearance", e.detail.value)}
           ></ha-selector>
         </div>
+
         <div
           data-search-keys="alternate_progress_bar always_collapsed display_timestamps"
           class="form-row form-row-multi-column"
         >
+
           <div
             title=${this._config.alternate_progress_bar || this._config.always_collapsed
               ? localize("editor.subtitles.not_available_alt_collapsed")
@@ -2214,7 +2225,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <span>${localize("editor.labels.display_timestamps")}</span>
           </div>
         </div>
-        <div data-search-keys="card_height" class="form-row">
+        <div class="form-row">
           <div class="editor-field-wrapper">
             ${this._isTemplateMode("card_height", this._config.card_height)
               ? html`
@@ -2281,7 +2292,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 `}
           </div>
         </div>
-        <div data-search-keys="search_view" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -2305,7 +2316,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
         ${this._config.search_view === "card" || this._config.search_view === "card_minimal"
           ? html`
-              <div data-search-keys="search_card_columns" class="form-row">
+              <div class="form-row">
                 <ha-selector
                   .hass=${this.hass}
                   .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
@@ -2328,7 +2339,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${localize("editor.sections.look_and_feel.controls_typography.description")}
           </div>
         </div>
-        <div data-search-keys="control_layout swap_pause_for_stop" class="form-row">
+        <div class="form-row">
           <div class="editor-field-wrapper">
             ${this._isTemplateMode("control_layout", this._config.control_layout)
               ? html`
@@ -2399,7 +2410,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.swap_pause_stop")}</div>
         </div>
-        <div data-search-keys="adaptive_controls" class="form-row">
+        <div class="form-row">
           <div>
             <ha-switch
               id="adaptive-controls-toggle"
@@ -2410,7 +2421,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.adaptive_controls")}</div>
         </div>
-        <div data-search-keys="hide_active_entity_label" class="form-row">
+        <div class="form-row">
           <div>
             <ha-switch
               id="hide-active-entity-label-toggle"
@@ -2421,7 +2432,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.hide_menu_player")}</div>
         </div>
-        <div data-search-keys="hide_active_entity_label_on_idle" class="form-row">
+        <div class="form-row">
           <div>
             <ha-switch
               id="hide-active-entity-label-on-idle-toggle"
@@ -2452,7 +2463,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ></ha-selector>
           </div>
         </div>
-        <div data-search-keys="details_alignment" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -2471,7 +2482,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             @value-changed=${(e) => this._updateConfig("details_alignment", e.detail.value)}
           ></ha-selector>
         </div>
-        <div data-search-keys="volume_mode" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -2501,10 +2512,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${localize("editor.sections.look_and_feel.collapsed_idle.description")}
           </div>
         </div>
+
         <div
           data-search-keys="collapse_on_idle always_collapsed hide_menu_player pin_search_headers expand_on_search"
           class="form-row form-row-multi-column"
         >
+
           <div>
             <ha-switch
               id="collapse-on-idle-toggle"
@@ -2533,7 +2546,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
         ${this._isTemplateMode("always_collapsed", this._config.always_collapsed)
           ? html`
-              <div data-search-keys="always_collapsed" class="form-row">
+              <div class="form-row">
                 <div class="editor-field-wrapper">
                   <div class="grow-children">
                     <ha-code-editor
@@ -2561,10 +2574,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             `
           : html`
+
               <div
                 data-search-keys="always_collapsed expand_on_search"
                 class="form-row form-row-multi-column"
               >
+
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <ha-switch
                     id="always-collapsed-toggle"
@@ -2597,7 +2612,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <div class="config-subtitle">${localize("editor.subtitles.collapse_expand")}</div>
         </div>
-        <div data-search-keys="idle_screen" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -2797,7 +2812,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
-        <div data-search-keys="name" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             class="full-width"
@@ -2808,7 +2823,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
-        <div data-search-keys="hidden_controls" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             .selector=${{
@@ -2836,7 +2851,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
  
 
-        <div data-search-keys="music_assistant_entity" class="form-row">
+        <div class="form-row">
           <div class="editor-field-wrapper">
             ${
               this._isTemplateMode("music_assistant_entity", entity?.music_assistant_entity)
@@ -2914,7 +2929,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           const showHiddenFilterChips = mainIsMA || maIsMA;
           if (!showHiddenFilterChips) return nothing;
           return html`
-            <div data-search-keys="hidden_filter_chips" class="form-row">
+            <div class="form-row">
               <ha-selector
                 .hass=${this.hass}
                 .selector=${{
@@ -2944,7 +2959,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           `;
         })()}
 
-        <div data-search-keys="prefer_ma_metadata" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="prefer-ma-metadata-toggle"
@@ -2957,7 +2972,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">${localize("editor.subtitles.prefer_ma_metadata")}</div>
         </div>
 
-        <div data-search-keys="disable_auto_select" class="form-row">
+        <div class="form-row">
           <ha-switch
             id="disable-auto-select-toggle"
             .checked=${entity?.disable_auto_select ?? false}
@@ -2970,7 +2985,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         ${
           showGroupVolume
             ? html`
-                <div data-search-keys="group_volume" class="form-row">
+                <div class="form-row">
                   <ha-switch
                     id="group-volume-toggle"
                     .checked=${entity?.group_volume ?? true}
@@ -2982,7 +2997,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             : nothing
         }
 
-        <div data-search-keys="follow_active_volume" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div>
             <ha-switch
               id="follow-active-toggle"
@@ -2996,7 +3011,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         ${
           !(entity?.follow_active_volume ?? false)
             ? html`
-                <div data-search-keys="volume_entity sync_power" class="form-row">
+                <div class="form-row">
                   <div class="editor-field-wrapper">
                     ${this._isTemplateMode("volume_entity", entity?.volume_entity)
                       ? html`
@@ -3092,7 +3107,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           entity.volume_entity !== entity.entity_id &&
           !(entity?.follow_active_volume ?? false)
             ? html`
-                <div data-search-keys="sync_power" class="form-row form-row-multi-column">
+                <div class="form-row form-row-multi-column">
                   <div>
                     <ha-switch
                       id="sync-power-toggle"
@@ -3153,7 +3168,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               `
         }
 
-        <div data-search-keys="name" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             class="full-width"
@@ -3164,7 +3179,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
-        <div data-search-keys="icon" class="form-row">
+        <div class="form-row">
           <ha-icon-picker
             label="${localize("editor.fields.icon")}"
             .hass=${this.hass}
@@ -3173,7 +3188,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-icon-picker>
         </div>
  
-        <div data-search-keys="in_menu card_trigger" class="form-row form-row-multi-column">
+        <div class="form-row form-row-multi-column">
           <div class="grow-children">
             <div class="editor-field-wrapper">
               ${
@@ -3296,7 +3311,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             : nothing
         }
 
-        <div data-search-keys="menu_item navigation_path navigation_new_tab action service service_data script_variable in_menu card_trigger sync_entity_type" class="form-row">
+        <div class="form-row">
           <ha-selector
             .hass=${this.hass}
             label="${localize("editor.fields.action_type")}"
@@ -3407,7 +3422,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         ${
           actionMode === "menu"
             ? html`
-                <div data-search-keys="menu_item" class="form-row">
+                <div class="form-row">
                   <ha-selector
                     .hass=${this.hass}
                     label="${localize("editor.fields.menu_item")}"
@@ -3437,7 +3452,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         ${
           actionMode === "navigate"
             ? html`
-                <div data-search-keys="navigation_path action" class="form-row">
+                <div class="form-row">
                   <div class="editor-field-wrapper">
                     ${this._isTemplateMode("navigation_path", action?.navigation_path)
                       ? html`
@@ -3495,7 +3510,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         `}
                   </div>
                 </div>
-                <div data-search-keys="navigation_new_tab" class="form-row form-row-multi-column">
+                <div class="form-row form-row-multi-column">
                   <div>
                     <ha-switch
                       id="navigation-new-tab-toggle"
@@ -3518,7 +3533,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         ${
           actionMode === "sync_selected_entity" || actionMode === "select_entity"
             ? html`
-                <div data-search-keys="sync_entity_helper" class="form-row">
+                <div class="form-row">
                   <ha-selector
                     .hass=${this.hass}
                     .selector=${{ entity: { domain: "input_text" } }}
@@ -3533,7 +3548,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       : localize("editor.subtitles.selected_entity_helper")}
                   </div>
                 </div>
-                <div data-search-keys="sync_entity_type" class="form-row">
+                <div class="form-row">
                   <ha-selector
                     .hass=${this.hass}
                     label="${localize("editor.fields.sync_entity_type")}"
@@ -3570,7 +3585,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         ${
           actionMode === "service"
             ? html`
-                <div data-search-keys="service" class="form-row">
+                <div class="form-row">
                   <ha-selector
                     .hass=${this.hass}
                     .selector=${{
@@ -3588,10 +3603,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
                 ${typeof action.service === "string" && action.service.startsWith("script.")
                   ? html`
+
                       <div
                         data-search-keys="script_variable"
                         class="form-row form-row-multi-column"
                       >
+
                         <div>
                           <ha-switch
                             id="script-variable-toggle"
