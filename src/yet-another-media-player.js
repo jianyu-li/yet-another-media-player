@@ -3222,13 +3222,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
       const idx = parseInt(w.dataset.queueIdx, 10);
       if (isNaN(idx)) continue;
 
-      // Ghost: collapse the dragged item
+      // Ghost: hide the dragged item but maintain its layout space to prevent shifting siblings
       if (idx === dragIdx) {
-        w.style.maxHeight = "0";
-        w.style.overflow = "hidden";
-        w.style.margin = "0";
-        w.style.padding = "0";
         w.style.opacity = "0";
+        w.style.pointerEvents = "none";
         continue;
       }
 
@@ -3265,6 +3262,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
       w.style.margin = "";
       w.style.padding = "";
       w.style.opacity = "";
+      w.style.pointerEvents = "";
     }
   }
 
