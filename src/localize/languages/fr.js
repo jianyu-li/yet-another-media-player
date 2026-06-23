@@ -34,6 +34,7 @@ export default {
       artwork: "Illustrations",
       actions: "Actions",
     },
+    search_placeholder: "Rechercher des options de configuration...",
     placeholders: {
       search: "Rechercher de la musique...",
     },
