@@ -534,5 +534,13 @@ export function getArtworkUrl(
     artworkUrl = cleanHost + cleanUrl;
   }
 
+  // Validate artwork URL to prevent proxy errors (e.g. containing undefined/null)
+  if (
+    artworkUrl &&
+    (artworkUrl.includes("undefined") || artworkUrl.includes("null") || artworkUrl.trim() === "")
+  ) {
+    artworkUrl = null;
+  }
+
   return { url: artworkUrl, sizePercentage, objectFit };
 }

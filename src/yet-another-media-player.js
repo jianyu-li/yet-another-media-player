@@ -4684,14 +4684,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
   _isValidArtworkUrl(url) {
     if (!url || typeof url !== 'string') return false;
 
+    // Check for obviously invalid URLs
+    if (url.includes('undefined') || url.includes('null') || url.trim() === '') return false;
+
     // Skip validation for data URLs and base64 images
     if (url.startsWith('data:')) return true;
 
     // Skip validation for localhost and relative URLs
     if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) return true;
-
-    // Check for obviously invalid URLs
-    if (url.includes('undefined') || url.includes('null') || url.trim() === '') return false;
 
     // Check for valid URL format
     try {
