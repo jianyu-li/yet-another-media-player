@@ -2837,35 +2837,40 @@ export const yampCardStyles = css`
 
   .entity-options-search-buttons {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     margin-left: 7px;
     align-items: center;
   }
 
   .entity-options-search-play,
-  .entity-options-search-queue {
-    min-width: 34px;
-    font-size: 1.13em;
+  .entity-options-search-queue,
+  .queue-btn {
+    min-width: 36px;
+    height: 36px;
     border: none;
     background: transparent;
     color: var(--yamp-overlay-text);
-    border-radius: 10px;
-    padding: 6px 10px;
+    border-radius: 8px;
+    padding: 0;
+    margin: 0;
     cursor: pointer;
     box-shadow: none;
-    transition:
-      background var(--transition-normal),
-      color var(--transition-normal);
-    text-shadow: none;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
   }
 
   .entity-options-search-play ha-icon,
-  .entity-options-search-queue ha-icon {
-    width: 16px;
-    height: 16px;
+  .entity-options-search-queue ha-icon,
+  .queue-btn ha-icon {
+    width: 24px;
+    height: 24px;
+    --mdc-icon-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   @media (hover: hover) {
@@ -2879,7 +2884,6 @@ export const yampCardStyles = css`
 
   .entity-options-search-queue {
     color: var(--yamp-overlay-text-secondary);
-    padding-right: 20px; /* Add right padding to prevent cutoff on mobile */
   }
 
   @media (hover: hover) {
@@ -2895,30 +2899,25 @@ export const yampCardStyles = css`
   /* Queue control buttons */
   .queue-controls {
     display: flex;
-    gap: 4px;
-    padding-right: 8px; /* Add padding to prevent cutoff on mobile */
-  }
-
-  .queue-btn {
-    min-width: 28px;
-    height: 28px;
-    font-size: 0.9em;
-    border: none;
-    background: transparent;
-    color: var(--yamp-overlay-text);
-    border-radius: 6px;
-    padding: 4px;
-    cursor: pointer;
-    box-shadow: none;
-    transition: all 0.2s ease;
-    display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 4px;
+    padding-right: 0;
   }
 
-  .queue-btn ha-icon {
-    width: 14px;
-    height: 14px;
+  .queue-drag-handle {
+    cursor: grab;
+    opacity: 0.6;
+  }
+
+  .queue-drag-handle:active {
+    cursor: grabbing;
+  }
+
+  @media (hover: hover) {
+    .queue-drag-handle:hover {
+      opacity: 1;
+      color: var(--custom-accent);
+    }
   }
 
   @media (hover: hover) {
@@ -3504,6 +3503,25 @@ export const yampCardStyles = css`
   .entity-options-sheet:not([data-pin-search-headers="true"]) .search-sheet-results,
   .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search-results {
     overflow-y: visible;
+  }
+
+  .queue-sortable-container.is-card-layout {
+    display: grid;
+    grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .queue-sortable-container.is-card-layout .queue-drag-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .queue-sortable-container.is-card-layout .yamp-search-result.search-result-card {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .yamp-search-result.search-result-card {
@@ -4323,5 +4341,42 @@ export const lyricsStyles = css`
   .yamp-card-inner.compact-collapsed .modern-button.small {
     width: 34px;
     height: 34px;
+  }
+
+  .queue-ops-progress {
+    background: var(--yamp-chip-bg, rgba(255, 255, 255, 0.15));
+    color: var(--search-text-secondary, #666);
+    border-radius: 10px;
+    padding: 3px 8px;
+    font-size: 10.5px;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    animation: queueOpsFadeIn 0.2s ease-out forwards;
+  }
+  @keyframes queueOpsFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.95;
+    }
+  }
+
+  /* Drag and drop upcoming queue styles */
+  .queue-drag-wrapper {
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+    overflow: visible;
+  }
+
+  .queue-drop-indicator {
+    display: none;
+  }
+
+  .queue-drag-clone {
+    border-radius: 12px;
+    overflow: hidden;
   }
 `;

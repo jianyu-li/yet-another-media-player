@@ -117,6 +117,8 @@ export default {
       swap_pause_stop: "Substituir pausa por stop no design moderno.",
       adaptive_controls: "Permitir que os botões se adaptem ao espaço.",
       hide_menu_player: "Ocultar nome da entidade quando no menu.",
+      hide_reorder_progress:
+        "Ocultar o indicador flutuante de progresso de reordenação da fila na parte inferior.",
       adaptive_text: "Escolher que textos se adaptam ao espaço.",
       collapse_expand:
         "Sempre contraído ativa modo mini. Expandir ao procurar expande temporariamente.",
@@ -174,6 +176,8 @@ export default {
         "Utilizar sempre a entidade Music Assistant emparelhada para o título da faixa, artista e arte, mesmo que a entidade primária esteja a ser reproduzida.",
       show_volume_overlay:
         "Exibe brevemente um indicador de volume grande sobre a arte quando o nível de volume muda.",
+      queue_controls_style:
+        "Escolha se deseja mostrar uma alça de arrastar ou botões de movimento individuais para itens da fila.",
     },
     titles: {
       edit_entity: "Editar entidade",
@@ -204,6 +208,7 @@ export default {
       hide_active_entity_on_idle: "Ocultar etiqueta de entidade ativa quando inativo",
       collapse_on_idle: "Contrair em repouso",
       hide_menu_player_toggle: "Ocultar leitor do menu",
+      hide_reorder_progress_toggle: "Ocultar progresso de reordenação",
       always_collapsed: "Sempre contraído",
       expand_on_search: "Expandir ao procurar",
       script_var: "Variável script (yamp_entity)",
@@ -273,6 +278,7 @@ export default {
       appearance: "Aparência",
       no_artwork_option: "Sem imagem",
       details_alignment: "Alinhamento de detalhes",
+      queue_controls_style: "Estilo de controles de fila",
     },
     action_types: {
       menu: "Abrir um item do menu",
@@ -312,6 +318,10 @@ export default {
       list: "Lista",
       card: "Cartão",
       card_minimal: "Cartão minimalista",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Alça de arrastar",
+      icons: "Botões de movimento",
     },
     card_type_options: {
       default: "Padrão",
@@ -393,6 +403,7 @@ export default {
     move_down: "Descer",
     move_next: "Passar para seguinte",
     remove: "Remover da fila",
+    drag_to_reorder: "Arrastar para reordenar",
     added: "Adicionado!",
     added_to_playlist: "Adicionado à playlist!",
     select_playlist: "Selecionar playlist para '{track}'",

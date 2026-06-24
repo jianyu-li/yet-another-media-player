@@ -127,6 +127,8 @@ export default {
         "Nahradiť tlačidlo pauzy tlačidlom zastavenia pri použití moderného rozloženia.",
       adaptive_controls: "Umožniť tlačidlám prehrávania meniť veľkosť podľa dostupného priestoru.",
       hide_menu_player: "Keď sú čipy v menu, skryť názov entity v spodnej časti karty.",
+      hide_reorder_progress:
+        "Skryť plávajúci indikátor priebehu preusporiadania frontu v spodnej časti.",
       adaptive_text:
         "Vyberte skupiny textu, ktoré sa majú škálovať podľa priestoru (nechajte prázdne pre vypnutie).",
       collapse_expand:
@@ -193,6 +195,8 @@ export default {
         "Vždy používajte spárovanú entitu Music Assistant pre názov skladby, interpreta a grafiku, aj keď sa prehráva primárna entita.",
       show_volume_overlay:
         "Pri zmene úrovne hlasitosti nakrátko zobrazí veľký ukazovateľ hlasitosti cez grafiku albumu.",
+      queue_controls_style:
+        "Vyberte, či sa má pre položky fronty zobraziť úchyt na ťahanie alebo jednotlivé tlačidlá pohybu.",
     },
     titles: {
       edit_entity: "Upraviť entitu",
@@ -223,6 +227,7 @@ export default {
       hide_active_entity_on_idle: "Skryť štítok aktívnej entity pri nečinnosti",
       collapse_on_idle: "Zbaliť pri nečinnosti",
       hide_menu_player_toggle: "Skryť prehrávač v menu",
+      hide_reorder_progress_toggle: "Skryť priebeh preusporiadania",
       always_collapsed: "Vždy zbalené",
       expand_on_search: "Rozbaliť pri hľadaní",
       script_var: "Premenná skriptu (yamp_entity)",
@@ -292,6 +297,7 @@ export default {
       appearance: "Vzhľad",
       no_artwork_option: "Žiadny obrázok",
       details_alignment: "Zarovnanie detailov",
+      queue_controls_style: "Štýl ovládacích prvkov fronty",
     },
     action_types: {
       menu: "Otvoriť položku menu karty",
@@ -331,6 +337,10 @@ export default {
       list: "Zoznam",
       card: "Karta",
       card_minimal: "Minimálna karta",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Úchyt na ťahanie",
+      icons: "Tlačidlá pohybu",
     },
     card_type_options: {
       default: "Predvolené",
@@ -412,6 +422,7 @@ export default {
     move_down: "Posunúť nadol",
     move_next: "Presunúť na nasledujúce",
     remove: "Odstrániť z fronty",
+    drag_to_reorder: "Potiahnite pre zmenu poradia",
     added: "Pridané do fronty!",
     added_to_playlist: "Pridané do playlistu!",
     select_playlist: "Vybrať playlist pre '{track}'",

@@ -13,6 +13,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 - **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
 - **Music Assistant Integration** — Full search and queue management
+- **Configuration Search** — Search the configuration editor to quickly find what you're looking for. 
 - **Lyrics** - Synced lyric support
 - **mass_queue Support** — Advanced queue controls and integrated Music Assistant lyrics with the optional [mass_queue](https://github.com/droans/mass_queue) integration
 - **Adaptive Visual Theming** — Customize artwork scaling with various fit modes and add custom artwork overrides
@@ -65,6 +66,7 @@ Below you will find a list of all configuration options.
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing ([Supports Templates](#template-support))                                          |
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
+| `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
@@ -101,6 +103,7 @@ Below you will find a list of all configuration options.
 | `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Templates](#template-support)) |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
 | `search_card_columns`      | number       | No           | `4`         | Number of columns for search results when `search_view` is set to `card` or `card_minimal` |
+| `queue_controls_style`     | choice       | No           | `drag_handle` | Style of queue controls: `drag_handle` replaces movement buttons with a single drag handle, `icons` shows classic up/down/next buttons |
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
 | `artwork_hostname`         | string       | No           | —           | Hostname URL (e.g., `http://192.168.1.50:8123`) prepended to relative artwork URLs; required when Casting to external devices |
@@ -126,6 +129,20 @@ Below you will find a list of all configuration options.
 | `card_trigger`             | choice       | No           | `none`      | Assign action to a card-level gesture: `none`, `tap`, `hold`, `double_tap`, `swipe_left`, or `swipe_right` (only for `hidden` actions) |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 | `sync_entity_helper`       | string       | No           | —           | `input_text` entity to sync the currently selected entity to (used with `action: sync_selected_entity`) |
+
+
+## Visual Editor Configuration Search
+To make configuring Yet Another Media Player as easy as possible, the card's visual editor includes a powerful search bar at the top of the interface. 
+
+### Finding Options Instantly
+Instead of clicking through multiple tabs and menus to locate a specific setting, you can simply type what you are looking for. The editor dynamically filters sections and fields in real time.
+
+### What Does It Search?
+The search goes beyond simple text labels. It scans:
+- **Field Labels and Subtitles**: The user-friendly names and descriptions shown in the editor.
+- **YAML Configuration Keys**: The exact under-the-hood key names (e.g., typing `idle_timeout_ms` will instantly display the "Idle Timeout" field).
+- **Selector/Dropdown Choices**: Specific options within dropdown menus (e.g., searching for `contain` or `cover` will filter for the artwork scaling selector, and searching for `podcast` will show default search filters).
+- **Sub-Editor Content (Entities & Actions)**: Searching for settings that live inside entity or action configurations (like `volume entity` or `card trigger`) will automatically highlight and surface the corresponding entity or action rows from the main editor screen, guiding you exactly where to go.
 
 
 # Entities
@@ -444,6 +461,16 @@ Once installed and configured, YAMP will automatically detect the integration an
 - Queue item removal
 
 These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
+
+#### Queue Drag-and-Drop Reordering
+
+When the `mass_queue` integration is active and you are viewing the upcoming queue list, you can drag and drop items to reorder them. 
+
+* **How it works (Optimized Paths)**: Home Assistant's underlying Music Assistant queue actions only allow moving items by one slot at a time (via `move_up` and `move_down`) or placing them immediately next in line (via `move_next`). To minimize server load and decrease latency, YAMP automatically calculates the most efficient route:
+  - If direct shifting up/down takes fewer calls, it triggers those sequentially.
+  - If placing the item at the "next" position (index 0) and then shifting it down takes fewer calls overall, it will perform a single `move_next` followed by sequential `move_down` calls.
+* **Layout Constraint**: Drag-and-drop reordering is only supported in the list view layout (`search_view: list`). It does not function in card views (`search_view: card` or `search_view: card_minimal`).  
+* **Latency Warning**: Even with this optimization, if you drag a track across a long queue, the card will execute multiple sequential calls in the background. If you immediately attempt to play the next track or perform another action right after a long drag, the server queue might not have fully caught up yet. Please allow a brief moment for the sequential updates to complete when making large drag displacements.
 
 ### Synced Lyrics (Music Assistant & LRCLIB)
 
@@ -1247,6 +1274,7 @@ collapse_on_idle: true
 always_collapsed: true
 expand_on_search: true
 hide_menu_player: false  
+hide_reorder_progress: false  
 idle_screen: search-next-up
 actions:
   - name: Transfer Queue

@@ -155,6 +155,8 @@ export default {
       adaptive_controls: "Let the playback buttons grow or shrink to fit the available space.",
       hide_menu_player:
         "When chips live in the menu, hide the entity label at the bottom of the card.",
+      hide_reorder_progress:
+        "Hide the floating queue re-ordering progress indicator at the bottom.",
       adaptive_text:
         "Choose which text groups should scale with available space (leave empty to disable adaptive text).",
       collapse_expand:
@@ -205,6 +207,8 @@ export default {
         "Specify how many columns to use in the card view. Artwork will scale automatically.",
       card_type:
         "Choose the card mode. 'Default' is the standard media player. 'Dedicated Search' makes the card a permanent search interface.",
+      queue_controls_style:
+        "Choose between a drag handle or classic movement buttons for the queue.",
       always_show_lyrics: "Automatically open the lyrics view when the page is refreshed.",
       lyrics_source:
         "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
@@ -248,6 +252,7 @@ export default {
       hide_active_entity_on_idle: "Hide Active Entity Label on Idle",
       collapse_on_idle: "Collapse on Idle",
       hide_menu_player_toggle: "Hide Menu Player",
+      hide_reorder_progress_toggle: "Hide Re-ordering Progress",
       always_collapsed: "Always Collapsed",
       expand_on_search: "Expand on Search",
       script_var: "Script Variable (yamp_entity)",
@@ -314,6 +319,7 @@ export default {
       search_view: "Search Result View",
       search_card_columns: "Card Columns",
       card_type: "Card Type",
+      queue_controls_style: "Queue Controls Style",
       appearance: "Appearance",
       no_artwork_option: "No Artwork",
       details_alignment: "Details Alignment",
@@ -361,6 +367,10 @@ export default {
       default: "Default",
       search: "Search",
       group_players: "Group Players",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Drag Handle",
+      icons: "Movement Buttons",
     },
     appearance_options: {
       automatic: "Automatic",
@@ -437,6 +447,7 @@ export default {
     move_down: "Move Down",
     move_next: "Move to Next",
     remove: "Remove from Queue",
+    drag_to_reorder: "Drag to reorder",
     added: "Added to queue!",
     added_to_playlist: "Added to playlist!",
     select_playlist: "Select Playlist for '{track}'",

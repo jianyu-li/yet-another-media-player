@@ -9,6 +9,7 @@ import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
+import { QueueDragMixin } from "./yamp-queue-drag.js";
 import { parseLrc } from "./lyrics-parser.js";
 import "./lyrics-view.js";
 import {
@@ -25,6 +26,7 @@ import {
 } from "./search-sheet.js";
 import "./yamp-editor.js";
 
+
 import {
   resolveTemplateAtActionTime,
   resolveStringTemplate,
@@ -33,7 +35,8 @@ import {
   getMusicAssistantState,
   getSearchResultClickTitle,
   isMusicAssistantEntity,
-  getArtworkUrl
+  getArtworkUrl,
+  isValidArtworkUrl
 } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
@@ -88,7 +91,7 @@ if (!window.customCards.some(card => card.type === "yet-another-media-player")) 
   });
 }
 
-class YetAnotherMediaPlayerCard extends LitElement {
+class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _handleChipPointerDown(e, idx) {
     this._chipGestureStartX = e.clientX;
@@ -476,6 +479,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
     _showEntityOptions: { state: true },
     _showGrouping: { state: true },
     _showTransferQueue: { state: true },
+    _queueOpsTotal: { state: true },
+    _queueOpsCompleted: { state: true },
     _showResolvedEntities: { state: true },
     _showSearchInSheet: { state: true },
     _addToPlaylistTarget: { state: true },
@@ -777,6 +782,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
     this._volumeOverlayMuted = false;
     this._internalVolumeChangeFlag = false;
     this._showVolumeOverlay = false;
+    this._queueOperationPromise = Promise.resolve();
+    this._queueOpsTotal = 0;
+    this._queueOpsCompleted = 0;
+    this._queueOpsTimeout = null;
   }
 
   // Subscribe to a template and update properties reactively
@@ -1976,7 +1985,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
     return ALLOWED_MEDIA_TYPES.filter(c => !hiddenSet.has(c));
   }
 
-  async _playMediaFromSearch(item) {
+  async _playMediaFromSearch(item, event) {
+    if (this._isDragging) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      return;
+    }
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     this._searchError = "";
@@ -2906,6 +2922,41 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Queue reordering methods
+  _enqueueQueueOperation(operationFn) {
+    if (this._queueOpsTotal === this._queueOpsCompleted) {
+      this._queueOpsTotal = 0;
+      this._queueOpsCompleted = 0;
+    }
+    this._queueOpsTotal++;
+    if (this._queueOpsTimeout) {
+      clearTimeout(this._queueOpsTimeout);
+      this._queueOpsTimeout = null;
+    }
+
+    this._queueOperationPromise = this._queueOperationPromise.then(async () => {
+      try {
+        await operationFn();
+        this._invalidateUpcomingCache();
+      } catch (error) {
+        console.error("yamp: Queue operation failed:", error);
+        this._refreshQueue();
+      } finally {
+        this._queueOpsCompleted++;
+
+        if (this._queueOpsCompleted === this._queueOpsTotal) {
+          if (this._queueOpsTimeout) clearTimeout(this._queueOpsTimeout);
+          this._queueOpsTimeout = setTimeout(() => {
+            if (this._queueOpsCompleted === this._queueOpsTotal) {
+              this._queueOpsTotal = 0;
+              this._queueOpsCompleted = 0;
+              this._queueOpsTimeout = null;
+            }
+          }, 1500);
+        }
+      }
+    });
+  }
+
   async _moveQueueItemUp(queueItemId) {
     try {
       // Get the Music Assistant entity for the current chip
@@ -2919,12 +2970,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately (like companion card does)
       this._moveQueueItemInUI(queueItemId, 'up');
 
-      // Then call the service
-      await this.hass.callService("mass_queue", "move_queue_item_up", {
-        entity: maEntityId,
-        queue_item_id: queueItemId
+      this._enqueueQueueOperation(async () => {
+        await this.hass.callService("mass_queue", "move_queue_item_up", {
+          entity: maEntityId,
+          queue_item_id: queueItemId
+        });
       });
-      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2944,12 +2995,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately
       this._moveQueueItemInUI(queueItemId, 'down');
 
-      // Then call the service
-      await this.hass.callService("mass_queue", "move_queue_item_down", {
-        entity: maEntityId,
-        queue_item_id: queueItemId
+      this._enqueueQueueOperation(async () => {
+        await this.hass.callService("mass_queue", "move_queue_item_down", {
+          entity: maEntityId,
+          queue_item_id: queueItemId
+        });
       });
-      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2969,12 +3020,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately
       this._moveQueueItemInUI(queueItemId, 'next');
 
-      // Then call the service
-      await this.hass.callService("mass_queue", "move_queue_item_next", {
-        entity: maEntityId,
-        queue_item_id: queueItemId
+      this._enqueueQueueOperation(async () => {
+        await this.hass.callService("mass_queue", "move_queue_item_next", {
+          entity: maEntityId,
+          queue_item_id: queueItemId
+        });
       });
-      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -2994,12 +3045,12 @@ class YetAnotherMediaPlayerCard extends LitElement {
       // Update UI immediately
       this._removeQueueItemFromUI(queueItemId);
 
-      // Then call the service
-      await this.hass.callService("mass_queue", "remove_queue_item", {
-        entity: maEntityId,
-        queue_item_id: queueItemId
+      this._enqueueQueueOperation(async () => {
+        await this.hass.callService("mass_queue", "remove_queue_item", {
+          entity: maEntityId,
+          queue_item_id: queueItemId
+        });
       });
-      this._invalidateUpcomingCache();
     } catch (error) {
       // Revert UI change on error
       this._refreshQueue();
@@ -3040,10 +3091,86 @@ class YetAnotherMediaPlayerCard extends LitElement {
         return;
     }
 
-    if (newIndex === itemIndex) return;
+    this._moveQueueItemInUIByIndex(itemIndex, newIndex);
+  }
 
-    // Move item in array (like companion card's moveQueueItem)
-    const movedItem = currentResults.splice(itemIndex, 1)[0];
+  async _onQueueItemMoved(e) {
+    const { oldIndex, newIndex } = e.detail;
+    if (oldIndex === newIndex) return;
+
+    const currentResults = this._getDisplaySearchResults();
+    if (!currentResults || oldIndex < 0 || oldIndex >= currentResults.length || newIndex < 0 || newIndex >= currentResults.length) {
+      return;
+    }
+
+    const draggedItem = currentResults[oldIndex];
+    const queueItemId = draggedItem?.queue_item_id;
+    if (!queueItemId) {
+      console.error("yamp: No queue_item_id found on dragged item", draggedItem);
+      return;
+    }
+
+    try {
+      // Get the Music Assistant entity for the current chip
+      const maState = this._getMusicAssistantState();
+      const maEntityId = maState?.entity_id;
+
+      if (!maEntityId) {
+        throw new Error('No Music Assistant entity found');
+      }
+
+      // Update UI immediately for a seamless feel
+      this._moveQueueItemInUIByIndex(oldIndex, newIndex);
+
+      this._enqueueQueueOperation(async () => {
+        // Perform backend move using the most efficient path of service calls
+        const costDirect = Math.abs(newIndex - oldIndex);
+        const costViaNext = 1 + newIndex;
+
+        if (costViaNext < costDirect) {
+          // Strategy B: Move to next (index 0), then move down sequentially
+          await this.hass.callService("mass_queue", "move_queue_item_next", {
+            entity: maEntityId,
+            queue_item_id: queueItemId
+          });
+          for (let i = 0; i < newIndex; i++) {
+            await this.hass.callService("mass_queue", "move_queue_item_down", {
+              entity: maEntityId,
+              queue_item_id: queueItemId
+            });
+          }
+        } else {
+          // Strategy A: Direct moves up or down sequentially
+          const serviceName = newIndex < oldIndex ? "move_queue_item_up" : "move_queue_item_down";
+          for (let i = 0; i < costDirect; i++) {
+            await this.hass.callService("mass_queue", serviceName, {
+              entity: maEntityId,
+              queue_item_id: queueItemId
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error("yamp: Failed to move queue item via drag and drop:", error);
+      // Revert UI change on error
+      this._refreshQueue();
+    }
+  }
+
+  _moveQueueItemInUIByIndex(oldIndex, newIndex) {
+    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
+    const currentResults = this._searchResultsByType[cacheKey];
+
+    if (!Array.isArray(currentResults)) {
+      return;
+    }
+
+    if (oldIndex < 0 || oldIndex >= currentResults.length || newIndex < 0 || newIndex >= currentResults.length) {
+      return;
+    }
+
+    // Move item in array
+    const movedItem = currentResults.splice(oldIndex, 1)[0];
     currentResults.splice(newIndex, 0, movedItem);
 
     // Update the active search results too
@@ -3066,8 +3193,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
     // Trigger UI update
     this.requestUpdate();
-
   }
+
 
   // Advance the queue in UI immediately (e.g. on track skip)
   _advanceQueueInUI(queueItemId = null, isManual = false) {
@@ -3546,6 +3673,13 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
   // Handle clicks on search result titles
   async _handleSearchResultClick(item, event) {
+    if (this._isDragging) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      return;
+    }
     if (!this._isClickableSearchResult(item)) return;
 
     // If this is a touch device and we have a touch event, ignore the click
@@ -4147,7 +4281,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     let { url, sizePercentage, objectFit } = res;
 
     // Validate artwork URL to prevent proxy errors
-    if (url && !this._isValidArtworkUrl(url)) {
+    if (url && !isValidArtworkUrl(url)) {
       url = null;
     }
 
@@ -4177,27 +4311,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
     }
   }
 
-  // Validate artwork URL to prevent proxy errors
-  _isValidArtworkUrl(url) {
-    if (!url || typeof url !== 'string') return false;
 
-    // Skip validation for data URLs and base64 images
-    if (url.startsWith('data:')) return true;
-
-    // Skip validation for localhost and relative URLs
-    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) return true;
-
-    // Check for obviously invalid URLs
-    if (url.includes('undefined') || url.includes('null') || url.trim() === '') return false;
-
-    // Check for valid URL format
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  }
 
   // Extract dominant color from image
   async _extractDominantColor(imgUrl) {
@@ -7834,7 +7948,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
           : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : '350px'};`;
       })()}">
-                ${collapsed && artworkUrl && collapsedArtworkSize > 0 && this._isValidArtworkUrl(artworkUrl) ? html`
+                ${collapsed && artworkUrl && collapsedArtworkSize > 0 && isValidArtworkUrl(artworkUrl) ? html`
                   <div
                     class="collapsed-artwork-container"
                     @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
@@ -8072,7 +8186,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   ${(() => {
             // Use the same entity resolution as the main card
             const artwork = selectedArt;
-            return artwork?.url && this._isValidArtworkUrl(artwork.url) ? html`
+            return artwork?.url && isValidArtworkUrl(artwork.url) ? html`
                       <img src="${artwork.url}" alt="${localize('common.album_art')}" class="persistent-artwork" onerror="this.style.display='none'">
                     ` : html`
                       <div class="persistent-artwork-placeholder">
@@ -8081,7 +8195,7 @@ class YetAnotherMediaPlayerCard extends LitElement {
                     `;
           })()}
                 </div>
-                <div class="persistent-controls-buttons">
+                <div class="persistent-controls-buttons" style="position: relative;">
                   <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="${localize('card.media_controls.previous')}">
                     <ha-icon icon="mdi:skip-previous"></ha-icon>
                   </button>
@@ -8091,6 +8205,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
                   <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="${localize('card.media_controls.next')}">
                     <ha-icon icon="mdi:skip-next"></ha-icon>
                   </button>
+                  ${!this.config.hide_reorder_progress && !this.config.hide_menu_player && this._queueOpsTotal > 0 ? html`
+                    <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+                      Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
+                    </div>
+                  ` : nothing}
                 </div>
                 ${(() => {
             const idx = this._selectedIndex;
@@ -8127,6 +8246,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
         massQueueAvailable: this._massQueueAvailable
       }) : nothing
       }
+          ${!shouldShowPersistentControls && !this.config.hide_reorder_progress && !this.config.hide_menu_player && this._queueOpsTotal > 0 ? html`
+            <div class="queue-ops-progress" style="position: absolute !important; bottom: 12px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+              Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
+            </div>
+          ` : ""}
           </div>
     </ha-card>
   `;
@@ -8617,7 +8741,8 @@ class YetAnotherMediaPlayerCard extends LitElement {
           recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
           recommendationsFilterActive: !!this._recommendationsFilterActive,
           searchMediaClassFilter: this._searchMediaClassFilter,
-          onPlay: (it) => this._playMediaFromSearch(it),
+          queueControlsStyle: this.config.queue_controls_style || "drag_handle",
+          onPlay: (it, e) => this._playMediaFromSearch(it, e),
           onResultClick: (it, e) => this._handleSearchResultClick(it, e),
           onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
           onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
@@ -8627,12 +8752,28 @@ class YetAnotherMediaPlayerCard extends LitElement {
           onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
           onRemove: (it) => this._removeQueueItem(it.queue_item_id),
           isMusicAssistant: this._isMusicAssistantEntity(),
-          isValidArtwork: (url) => this._isValidArtworkUrl(url),
+          isValidArtwork: (url) => isValidArtworkUrl(url),
           getClickTitle: (it) => this._getSearchResultClickTitle(it)
         });
 
         if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
           return html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`;
+        }
+
+        const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
+
+        if (isQueueDragAndDrop) {
+          return html`
+            <div class="queue-sortable-container ${isCard ? 'is-card-layout' : ''}"
+              @pointerdown=${(e) => this._onQueueDragStart(e)}
+            >
+              ${currentResults.map((item, idx) => html`
+                <div class="queue-drag-wrapper" data-queue-idx="${idx}">
+                  ${renderItemFn(item)}
+                </div>
+              `)}
+            </div>
+          `;
         }
 
         if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
@@ -8650,10 +8791,10 @@ class YetAnotherMediaPlayerCard extends LitElement {
 
         return isCard
           ? virtualize({
-            items: paddedResults,
-            renderItem: renderItemFn,
-            layout: this._cachedSearchGridLayout,
-            scroller: pinSearchHeaders
+             items: paddedResults,
+             renderItem: renderItemFn,
+             layout: this._cachedSearchGridLayout,
+             scroller: pinSearchHeaders
           })
           : virtualize({ items: paddedResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
       })()}
@@ -9232,9 +9373,20 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   disconnectedCallback() {
+    if (this._activeDragCleanup) {
+      this._activeDragCleanup();
+    }
     if (this._idleTimeout) {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
+    }
+    if (this._dragClickCaptureTimeout) {
+      clearTimeout(this._dragClickCaptureTimeout);
+      this._dragClickCaptureTimeout = null;
+    }
+    if (this._dragClickCaptureFn) {
+      window.removeEventListener("click", this._dragClickCaptureFn, true);
+      this._dragClickCaptureFn = null;
     }
     // Unsubscribe from queue update events
     this._unsubscribeFromQueueUpdates();
@@ -9292,6 +9444,11 @@ class YetAnotherMediaPlayerCard extends LitElement {
     if (this._transferQueueAutoCloseTimer) {
       clearTimeout(this._transferQueueAutoCloseTimer);
       this._transferQueueAutoCloseTimer = null;
+    }
+
+    if (this._queueOpsTimeout) {
+      clearTimeout(this._queueOpsTimeout);
+      this._queueOpsTimeout = null;
     }
 
     this._latestSearchToken = 0;
@@ -9380,7 +9537,14 @@ class YetAnotherMediaPlayerCard extends LitElement {
   }
 
   // Entity options overlay handlers
-  _closeEntityOptions() {
+  _closeEntityOptions(e) {
+    if (this._isDragging) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      return;
+    }
     // In dedicated search mode, don't close the entity options / search
     if (this._cardType === "search") {
       // Just close any sub-menus that might be open

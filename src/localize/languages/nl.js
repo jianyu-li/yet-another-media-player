@@ -132,6 +132,8 @@ export default {
         "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
       hide_menu_player:
         "Wanneer chips in het menu staan, verberg dan het entiteitslabel onderaan de kaart.",
+      hide_reorder_progress:
+        "Verberg de zwevende voortgangsindicator voor het opnieuw sorteren van de wachtrij onderaan.",
       adaptive_text:
         "Kies welke tekstgroepen moeten schalen met de beschikbare ruimte (laat leeg om adaptieve tekst uit te schakelen).",
       collapse_expand:
@@ -200,6 +202,8 @@ export default {
         "Gebruik altijd de gekoppelde Music Assistant-entiteit voor de tracktitel, artiest en artwork, zelfs als de primaire entiteit wordt afgespeeld.",
       show_volume_overlay:
         "Geef kort een grote volume-indicator weer over het artwork wanneer het volumeniveau verandert.",
+      queue_controls_style:
+        "Kies of u een sleephandgreep of individuele bewegingsknoppen wilt weergeven voor wachtrij-items.",
     },
     titles: {
       edit_entity: "Entiteit Bewerken",
@@ -230,6 +234,7 @@ export default {
       hide_active_entity_on_idle: "Actieve entiteitslabel verbergen bij inactiviteit",
       collapse_on_idle: "Inklappen bij inactiviteit",
       hide_menu_player_toggle: "Menu-speler Verbergen",
+      hide_reorder_progress_toggle: "Wachtrijsortering Verbergen",
       always_collapsed: "Altijd Ingeklapt",
       expand_on_search: "Uitklappen bij Zoeken",
       script_var: "Script Variabele (yamp_entity)",
@@ -299,6 +304,7 @@ export default {
       appearance: "Uiterlijk",
       no_artwork_option: "Geen afbeelding",
       details_alignment: "Details uitlijning",
+      queue_controls_style: "Wachtrijbesturingsstijl",
     },
     action_types: {
       menu: "Open een kaartmenu-item",
@@ -338,6 +344,10 @@ export default {
       list: "Lijst",
       card: "Kaart",
       card_minimal: "Minimale kaart",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Sleephandgreep",
+      icons: "Bewegingsknoppen",
     },
     card_type_options: {
       default: "Standaard",
@@ -419,6 +429,7 @@ export default {
     move_down: "Omlaag verplaatsen",
     move_next: "Als volgende afspelen",
     remove: "Verwijderen uit wachtrij",
+    drag_to_reorder: "Sleep om te herordenen",
     added: "Toegevoegd aan wachtrij!",
     added_to_playlist: "Toegevoegd aan afspeellijst!",
     select_playlist: "Selecteer afspeellijst voor '{track}'",

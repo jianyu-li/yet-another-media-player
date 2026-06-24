@@ -128,6 +128,8 @@ export default {
       swap_pause_stop: "Pause-Taste durch Stop-Taste im modernen Layout ersetzen.",
       adaptive_controls: "Wiedergabetasten an verfügbaren Platz anpassen.",
       hide_menu_player: "Entitäts-Label unten ausblenden, wenn Chips im Menü sind.",
+      hide_reorder_progress:
+        "Die schwebende Fortschrittsanzeige für die Warteschlangen-Neusortierung unten ausblenden.",
       adaptive_text:
         "Textgruppen wählen, die mit dem Platz skalieren (leer lassen zum Deaktivieren).",
       collapse_expand:
@@ -190,6 +192,8 @@ export default {
         "Verwenden Sie immer die gekoppelte Music Assistant-Entität für Titel, Künstler und Artwork, auch wenn die primäre Entität gerade spielt.",
       show_volume_overlay:
         "Zeige kurz eine große Lautstärkeanzeige über dem Cover an, wenn sich die Lautstärke ändert.",
+      queue_controls_style:
+        "Wählen Sie, ob ein Ziehgriff oder einzelne Bewegungstasten für Warteschlangenelemente angezeigt werden sollen.",
     },
     titles: {
       edit_entity: "Entität bearbeiten",
@@ -220,6 +224,7 @@ export default {
       hide_active_entity_on_idle: "Aktive Entitätsbeschriftung im Leerlauf ausblenden",
       collapse_on_idle: "Bei Leerlauf einklappen",
       hide_menu_player_toggle: "Menü-Player ausblenden",
+      hide_reorder_progress_toggle: "Neusortierungs-Fortschritt ausblenden",
       always_collapsed: "Immer eingeklappt",
       expand_on_search: "Bei Suche ausklappen",
       script_var: "Skript-Variable (yamp_entity)",
@@ -289,6 +294,7 @@ export default {
       appearance: "Erscheinungsbild",
       no_artwork_option: "Kein Artwork",
       details_alignment: "Detail-Ausrichtung",
+      queue_controls_style: "Warteschlangen-Steuerungsstil",
     },
     action_types: {
       menu: "Kartenmenüpunkt öffnen",
@@ -328,6 +334,10 @@ export default {
       list: "Liste",
       card: "Karte",
       card_minimal: "Minimal-Karte",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Ziehgriff",
+      icons: "Bewegungstasten",
     },
     card_type_options: {
       default: "Standard",
@@ -409,6 +419,7 @@ export default {
     move_down: "Nach unten",
     move_next: "Als Nächstes verschieben",
     remove: "Aus Warteschlange entfernen",
+    drag_to_reorder: "Ziehen zum Sortieren",
     added: "Zur Warteschlange hinzugefügt!",
     added_to_playlist: "Zur Playlist hinzugefügt!",
     select_playlist: "Playlist für '{track}' auswählen",

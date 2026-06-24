@@ -121,6 +121,8 @@ export default {
       swap_pause_stop: "Zamenjaj gumb pavze z gumbom zaustavitve med uporabo moderne postavitve.",
       adaptive_controls: "Prilagodi velikost gumbov glede na prostor.",
       hide_menu_player: "Skrij oznako entitete v meniju.",
+      hide_reorder_progress:
+        "Skrij lebdeči indikator napredka prerazvrščanja čakalne vrste na dnu.",
       adaptive_text: "Izberi skupine besedila za prilagajanje velikosti.",
       collapse_expand: "Vedno skrčeno ustvari mini predvajalnik.",
       idle_screen: "Izberi zaslon, prikazan v mirovanju.",
@@ -173,6 +175,8 @@ export default {
         "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta.",
       show_volume_overlay:
         "Ob spremembi glasnosti za kratek čas prikaže velik indikator glasnosti čez naslovnico.",
+      queue_controls_style:
+        "Izberite, ali želite prikazati ročaj za vlečenje ali posamezne gumbe za premikanje elementov čakalne vrste.",
     },
     titles: {
       edit_entity: "Uredi entiteto",
@@ -203,6 +207,7 @@ export default {
       hide_active_entity_on_idle: "Skrij oznako aktivne entitete ob mirovanju",
       collapse_on_idle: "Skrči v mirovanju",
       hide_menu_player_toggle: "Skrij predvajalnik v meniju",
+      hide_reorder_progress_toggle: "Skrij napredek prerazvrščanja",
       always_collapsed: "Vedno skrčeno",
       expand_on_search: "Razširi ob iskanju",
       script_var: "Skriptna spremenljivka",
@@ -272,6 +277,7 @@ export default {
       appearance: "Videz",
       no_artwork_option: "Brez grafike",
       details_alignment: "Poravnava podrobnosti",
+      queue_controls_style: "Slog kontrol čakalne vrste",
     },
     action_types: {
       menu: "Odpri element menija kartice",
@@ -311,6 +317,10 @@ export default {
       list: "Seznam",
       card: "Kartica",
       card_minimal: "Minimalna kartica",
+    },
+    queue_controls_style_options: {
+      drag_handle: "Ročaj za vlečenje",
+      icons: "Gumbi za premikanje",
     },
     card_type_options: {
       default: "Privzeto",
@@ -392,6 +402,7 @@ export default {
     move_down: "Premakni dol",
     move_next: "Premakni na naslednje",
     remove: "Odstrani iz čakalne vrste",
+    drag_to_reorder: "Povlecite za prerazvrstitev",
     added: "Dodano v čakalno vrsto!",
     added_to_playlist: "Dodano na seznam predvajanja!",
     select_playlist: "Izberite seznam predvajanja za '{track}'",
