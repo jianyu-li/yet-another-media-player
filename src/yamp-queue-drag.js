@@ -135,6 +135,9 @@ export const QueueDragMixin = (superClass) =>
       let lastClientX = startX;
       let currentDropTargetIdx = null;
 
+      let cachedPositions = null;
+      let startScrollTop = 0;
+
       // Use a long-press delay on touch, threshold-move on mouse
       const isTouchLike = e.pointerType === "touch" || e.pointerType === "pen";
       const holdDelay = isTouchLike ? 300 : null;
@@ -143,30 +146,24 @@ export const QueueDragMixin = (superClass) =>
       let dragItemHeight = 0;
 
       const updateDropTarget = (clientX, clientY) => {
-        const container = this.renderRoot.querySelector(".queue-sortable-container");
-        if (!container) return;
+        if (!cachedPositions) return;
 
-        // Use yamp-search-result content divs for stable bounding rects
-        const itemElements = container.querySelectorAll(
-          ".queue-drag-wrapper > .yamp-search-result"
-        );
+        const scrollDiff = scrollContainer ? scrollContainer.scrollTop - startScrollTop : 0;
         let closestIdx = null;
         let closestDist = Infinity;
 
-        for (const el of itemElements) {
-          const wrapperEl = el.parentElement;
-          const idx = parseInt(wrapperEl.dataset.queueIdx, 10);
-          if (isNaN(idx) || idx === dragIdx) continue;
+        for (const pos of cachedPositions) {
+          if (pos.idx === dragIdx) continue;
 
-          const rect = el.getBoundingClientRect();
-          const midX = rect.left + rect.width / 2;
-          const midY = rect.top + rect.height / 2;
-          const distX = clientX - midX;
-          const distY = clientY - midY;
+          // Adjust original static position by how much we've scrolled since drag started
+          const adjustedMidY = pos.midY - scrollDiff;
+          const distX = clientX - pos.midX;
+          const distY = clientY - adjustedMidY;
           const dist = Math.sqrt(distX * distX + distY * distY);
+          
           if (dist < closestDist) {
             closestDist = dist;
-            closestIdx = idx;
+            closestIdx = pos.idx;
           }
         }
 
@@ -203,6 +200,25 @@ export const QueueDragMixin = (superClass) =>
           scrollContainer = this._findScrollParent(container);
           if (scrollContainer) {
             scrollAnimationFrame = requestAnimationFrame(scrollLoop);
+            startScrollTop = scrollContainer.scrollTop;
+          }
+
+          // Cache original static positions to prevent flickering on layout shifts
+          const itemElements = container.querySelectorAll(
+            ".queue-drag-wrapper > .yamp-search-result"
+          );
+          cachedPositions = [];
+          for (const el of itemElements) {
+            const wrapperEl = el.parentElement;
+            const idx = parseInt(wrapperEl.dataset.queueIdx, 10);
+            if (!isNaN(idx)) {
+              const rect = el.getBoundingClientRect();
+              cachedPositions.push({
+                idx,
+                midX: rect.left + rect.width / 2,
+                midY: rect.top + rect.height / 2,
+              });
+            }
           }
         }
 
