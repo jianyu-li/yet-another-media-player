@@ -13,6 +13,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 - **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
 - **Music Assistant Integration** — Full search and queue management
+- **Configuration Search** — Search the configuration editor to quickly find what you're looking for. 
 - **Lyrics** - Synced lyric support
 - **mass_queue Support** — Advanced queue controls and integrated Music Assistant lyrics with the optional [mass_queue](https://github.com/droans/mass_queue) integration
 - **Adaptive Visual Theming** — Customize artwork scaling with various fit modes and add custom artwork overrides
@@ -128,6 +129,20 @@ Below you will find a list of all configuration options.
 | `card_trigger`             | choice       | No           | `none`      | Assign action to a card-level gesture: `none`, `tap`, `hold`, `double_tap`, `swipe_left`, or `swipe_right` (only for `hidden` actions) |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 | `sync_entity_helper`       | string       | No           | —           | `input_text` entity to sync the currently selected entity to (used with `action: sync_selected_entity`) |
+
+
+## Visual Editor Configuration Search
+To make configuring Yet Another Media Player as easy as possible, the card's visual editor includes a powerful search bar at the top of the interface. 
+
+### Finding Options Instantly
+Instead of clicking through multiple tabs and menus to locate a specific setting, you can simply type what you are looking for. The editor dynamically filters sections and fields in real time.
+
+### What Does It Search?
+The search goes beyond simple text labels. It scans:
+- **Field Labels and Subtitles**: The user-friendly names and descriptions shown in the editor.
+- **YAML Configuration Keys**: The exact under-the-hood key names (e.g., typing `idle_timeout_ms` will instantly display the "Idle Timeout" field).
+- **Selector/Dropdown Choices**: Specific options within dropdown menus (e.g., searching for `contain` or `cover` will filter for the artwork scaling selector, and searching for `podcast` will show default search filters).
+- **Sub-Editor Content (Entities & Actions)**: Searching for settings that live inside entity or action configurations (like `volume entity` or `card trigger`) will automatically highlight and surface the corresponding entity or action rows from the main editor screen, guiding you exactly where to go.
 
 
 # Entities
