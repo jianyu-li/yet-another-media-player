@@ -160,7 +160,7 @@ export const QueueDragMixin = (superClass) =>
           const distX = clientX - pos.midX;
           const distY = clientY - adjustedMidY;
           const dist = Math.sqrt(distX * distX + distY * distY);
-          
+
           if (dist < closestDist) {
             closestDist = dist;
             closestIdx = pos.idx;
