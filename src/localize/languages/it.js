@@ -364,6 +364,7 @@ export default {
       show_lyrics: "Mostra testi",
       hide_lyrics: "Nascondi testi",
       transfer_queue: "Trasferisci coda",
+      main_menu: "Menu Principale",
       group_players: "Raggruppa",
       select_entity: "Seleziona",
       transfer_to: "Trasferisci a",

@@ -391,6 +391,7 @@ export default {
       show_lyrics: "Songtekst weergeven",
       hide_lyrics: "Songtekst verbergen",
       transfer_queue: "Wachtrij Overdragen",
+      main_menu: "Hoofdmenu",
       group_players: "Spelers Groeperen",
       select_entity: "Selecteer Entiteit voor Meer Info",
       transfer_to: "Wachtrij Overdragen Naar",

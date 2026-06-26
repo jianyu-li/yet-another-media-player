@@ -384,6 +384,7 @@ export default {
       show_lyrics: "Zobraziť text piesne",
       hide_lyrics: "Skryť text piesne",
       transfer_queue: "Presunúť frontu",
+      main_menu: "Hlavné menu",
       group_players: "Zoskupiť prehrávače",
       select_entity: "Vyberte entitu pre viac info",
       transfer_to: "Presunúť frontu do",

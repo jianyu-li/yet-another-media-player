@@ -365,6 +365,7 @@ export default {
       show_lyrics: "Mostrar letras",
       hide_lyrics: "Ocultar letras",
       transfer_queue: "Transferir fila",
+      main_menu: "Menu Principal",
       group_players: "Agrupar",
       select_entity: "Selecionar",
       transfer_to: "Transferir para",

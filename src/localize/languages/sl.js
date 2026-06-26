@@ -364,6 +364,7 @@ export default {
       show_lyrics: "Pokaži besedilo",
       hide_lyrics: "Skrij besedilo",
       transfer_queue: "Prenesi čakalno vrsto",
+      main_menu: "Glavni meni",
       group_players: "Združi predvajalnike",
       select_entity: "Izberi entiteto za več informacij",
       transfer_to: "Prenesi čakalno vrsto na",

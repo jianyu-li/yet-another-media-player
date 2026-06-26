@@ -381,6 +381,7 @@ export default {
       show_lyrics: "Songtext anzeigen",
       hide_lyrics: "Songtext ausblenden",
       transfer_queue: "Warteschlange übertragen",
+      main_menu: "Hauptmenü",
       group_players: "Player gruppieren",
       select_entity: "Entität für mehr Info wählen",
       transfer_to: "Warteschlange übertragen zu",
