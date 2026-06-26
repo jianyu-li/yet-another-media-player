@@ -363,17 +363,30 @@ export const QueueDragMixin = (superClass) =>
 
         // Calculate scroll speed based on pointer position relative to scroll container
         if (scrollContainer) {
-          const scrollRect = scrollContainer.getBoundingClientRect();
-          const topDiff = lastClientY - scrollRect.top;
-          const bottomDiff = scrollRect.bottom - lastClientY;
-          const threshold = 60;
+          let hoveringDropZone = false;
+          if (dropZoneEl) {
+            const rect = dropZoneEl.getBoundingClientRect();
+            if (lastClientY >= rect.top && lastClientY <= rect.bottom &&
+                lastClientX >= rect.left && lastClientX <= rect.right) {
+              hoveringDropZone = true;
+            }
+          }
 
-          if (topDiff < threshold && topDiff > -50) {
-            scrollSpeed = -Math.max(2, (threshold - topDiff) * 0.3);
-          } else if (bottomDiff < threshold && bottomDiff > -50) {
-            scrollSpeed = Math.max(2, (threshold - bottomDiff) * 0.3);
-          } else {
+          if (hoveringDropZone) {
             scrollSpeed = 0;
+          } else {
+            const scrollRect = scrollContainer.getBoundingClientRect();
+            const topDiff = lastClientY - scrollRect.top;
+            const bottomDiff = scrollRect.bottom - lastClientY;
+            const threshold = 60;
+
+            if (topDiff < threshold && topDiff > -50) {
+              scrollSpeed = -Math.max(2, (threshold - topDiff) * 0.3);
+            } else if (bottomDiff < threshold && bottomDiff > -50) {
+              scrollSpeed = Math.max(2, (threshold - bottomDiff) * 0.3);
+            } else {
+              scrollSpeed = 0;
+            }
           }
         }
 
