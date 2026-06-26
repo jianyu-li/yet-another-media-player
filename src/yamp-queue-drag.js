@@ -134,6 +134,10 @@ export const QueueDragMixin = (superClass) =>
       let scrollSpeed = 0;
       let scrollAnimationFrame = null;
       let dropZoneEl = null;
+      let dropZoneRect = null;
+      let dropZoneContentEl = null;
+      let dropZoneIconEl = null;
+      let isHoveringDropZone = false;
       let lastClientY = startY;
       let lastClientX = startX;
       let currentDropTargetIdx = null;
@@ -153,17 +157,14 @@ export const QueueDragMixin = (superClass) =>
 
         // Check if hovering over Play Next dropzone
         if (dropZoneEl) {
-          const rect = dropZoneEl.getBoundingClientRect();
-          if (clientY >= rect.top && clientY <= rect.bottom && clientX >= rect.left && clientX <= rect.right) {
+          if (isHoveringDropZone) {
             if (!dropZoneEl._isActive) {
               dropZoneEl._isActive = true;
               dropZoneEl.style.background = "rgba(76, 175, 80, 0.4)";
               dropZoneEl.style.borderColor = "#4caf50";
               dropZoneEl.style.borderStyle = "solid";
-              const contentEl = dropZoneEl.querySelector(".dropzone-content");
-              if (contentEl) contentEl.style.color = "#4caf50";
-              const iconEl = dropZoneEl.querySelector("ha-icon");
-              if (iconEl) iconEl.style.color = "#4caf50";
+              if (dropZoneContentEl) dropZoneContentEl.style.color = "#4caf50";
+              if (dropZoneIconEl) dropZoneIconEl.style.color = "#4caf50";
             }
             if (currentDropTargetIdx !== 0) {
               currentDropTargetIdx = 0;
@@ -176,10 +177,8 @@ export const QueueDragMixin = (superClass) =>
             dropZoneEl.style.background = "var(--ha-card-background, var(--card-background-color, #1c1c1c))";
             dropZoneEl.style.borderColor = "var(--custom-accent, var(--accent-color, #ff9800))";
             dropZoneEl.style.borderStyle = "dashed";
-            const contentEl = dropZoneEl.querySelector(".dropzone-content");
-            if (contentEl) contentEl.style.color = "";
-            const iconEl = dropZoneEl.querySelector("ha-icon");
-            if (iconEl) iconEl.style.color = "";
+            if (dropZoneContentEl) dropZoneContentEl.style.color = "";
+            if (dropZoneIconEl) dropZoneIconEl.style.color = "";
           }
         }
 
@@ -289,6 +288,9 @@ export const QueueDragMixin = (superClass) =>
             opacity: 0.95;
           `;
           this.renderRoot.appendChild(dropZoneEl);
+          dropZoneRect = dropZoneEl.getBoundingClientRect();
+          dropZoneContentEl = dropZoneEl.querySelector(".dropzone-content");
+          dropZoneIconEl = dropZoneEl.querySelector("ha-icon");
         }
 
         // Apply ghost class on the dragged item immediately via DOM
@@ -355,6 +357,14 @@ export const QueueDragMixin = (superClass) =>
         lastClientY = moveEvt.clientY;
         lastClientX = moveEvt.clientX;
 
+        isHoveringDropZone = false;
+        if (dropZoneRect) {
+          if (lastClientY >= dropZoneRect.top && lastClientY <= dropZoneRect.bottom &&
+              lastClientX >= dropZoneRect.left && lastClientX <= dropZoneRect.right) {
+            isHoveringDropZone = true;
+          }
+        }
+
         // Move the floating clone to follow the pointer
         if (floatingClone) {
           floatingClone.style.top = `${lastClientY - cloneOffsetY}px`;
@@ -363,16 +373,7 @@ export const QueueDragMixin = (superClass) =>
 
         // Calculate scroll speed based on pointer position relative to scroll container
         if (scrollContainer) {
-          let hoveringDropZone = false;
-          if (dropZoneEl) {
-            const rect = dropZoneEl.getBoundingClientRect();
-            if (lastClientY >= rect.top && lastClientY <= rect.bottom &&
-                lastClientX >= rect.left && lastClientX <= rect.right) {
-              hoveringDropZone = true;
-            }
-          }
-
-          if (hoveringDropZone) {
+          if (isHoveringDropZone) {
             scrollSpeed = 0;
           } else {
             const scrollRect = scrollContainer.getBoundingClientRect();
@@ -506,6 +507,9 @@ export const QueueDragMixin = (superClass) =>
           dropZoneEl.remove();
         }
         dropZoneEl = null;
+        dropZoneRect = null;
+        dropZoneContentEl = null;
+        dropZoneIconEl = null;
 
         this._activeDragCleanup = null;
       };
