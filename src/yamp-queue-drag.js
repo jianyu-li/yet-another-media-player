@@ -274,7 +274,7 @@ export const QueueDragMixin = (superClass) =>
             top: ${hostRect.top}px;
             left: ${hostRect.left}px;
             width: ${hostRect.width}px;
-            height: ${wrapperRect.height}px;
+            height: 56px;
             z-index: 99998;
             pointer-events: auto;
             box-sizing: border-box;
