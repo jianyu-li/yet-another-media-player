@@ -4392,7 +4392,8 @@ export const lyricsStyles = css`
   }
 
   .queue-play-next-dropzone.is-active {
-    background: var(--custom-accent, var(--accent-color, rgba(255, 152, 0, 0.3))) !important;
+    background: var(--yamp-success-bg-medium, rgba(76, 175, 80, 0.4)) !important;
+    border-color: var(--yamp-success-color, #4caf50) !important;
     border-style: solid !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   }
@@ -4410,6 +4411,10 @@ export const lyricsStyles = css`
   }
 
   .queue-play-next-dropzone.is-active ha-icon {
-    color: var(--primary-text-color);
+    color: var(--yamp-success-color, #4caf50);
+  }
+
+  .queue-play-next-dropzone.is-active .dropzone-content {
+    color: var(--yamp-success-color, #4caf50);
   }
 `;

@@ -153,15 +153,31 @@ export const QueueDragMixin = (superClass) =>
         if (dropZoneEl) {
           const rect = dropZoneEl.getBoundingClientRect();
           if (clientY >= rect.top && clientY <= rect.bottom && clientX >= rect.left && clientX <= rect.right) {
-            dropZoneEl.classList.add("is-active");
+            if (!dropZoneEl._isActive) {
+              dropZoneEl._isActive = true;
+              dropZoneEl.style.background = "rgba(76, 175, 80, 0.4)";
+              dropZoneEl.style.borderColor = "#4caf50";
+              dropZoneEl.style.borderStyle = "solid";
+              const contentEl = dropZoneEl.querySelector(".dropzone-content");
+              if (contentEl) contentEl.style.color = "#4caf50";
+              const iconEl = dropZoneEl.querySelector("ha-icon");
+              if (iconEl) iconEl.style.color = "#4caf50";
+            }
             if (currentDropTargetIdx !== 0) {
               currentDropTargetIdx = 0;
               this._queueDropTargetIdx = 0;
               this._applyQueueDragVisuals(dragIdx, dragItemHeight, 0);
             }
             return; // Skip finding closest row
-          } else {
-            dropZoneEl.classList.remove("is-active");
+          } else if (dropZoneEl._isActive) {
+            dropZoneEl._isActive = false;
+            dropZoneEl.style.background = "var(--ha-card-background, var(--card-background-color, #1c1c1c))";
+            dropZoneEl.style.borderColor = "var(--custom-accent, var(--accent-color, #ff9800))";
+            dropZoneEl.style.borderStyle = "dashed";
+            const contentEl = dropZoneEl.querySelector(".dropzone-content");
+            if (contentEl) contentEl.style.color = "";
+            const iconEl = dropZoneEl.querySelector("ha-icon");
+            if (iconEl) iconEl.style.color = "";
           }
         }
 
