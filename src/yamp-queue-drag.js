@@ -2,6 +2,8 @@
  * Mixin to handle custom pointer-event logic for dragging and dropping items in the Mass Queue.
  * Extracts the complex pointer math and visual DOM manipulations out of the main component.
  */
+import { localize } from "./localize/localize.js";
+
 export const QueueDragMixin = (superClass) =>
   class extends superClass {
     _findScrollParent(el) {
@@ -260,7 +262,7 @@ export const QueueDragMixin = (superClass) =>
           dropZoneEl.innerHTML = `
             <div class="dropzone-content">
               <ha-icon icon="mdi:playlist-play"></ha-icon>
-              <span>Play Next</span>
+              <span>${localize("search.play_next")}</span>
             </div>
           `;
 
