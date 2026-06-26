@@ -268,12 +268,13 @@ export const QueueDragMixin = (superClass) =>
           // Use the same proven pattern as the floating clone:
           // all positioning inline, position:fixed, appended to renderRoot
           const hostRect = this.getBoundingClientRect();
+          const dropZoneHeight = Math.max(56, Math.round(hostRect.height * 0.10));
           dropZoneEl.style.cssText = `
             position: fixed;
             top: ${hostRect.top}px;
             left: ${hostRect.left}px;
             width: ${hostRect.width}px;
-            height: 56px;
+            height: ${dropZoneHeight}px;
             z-index: 99998;
             pointer-events: auto;
             box-sizing: border-box;
@@ -360,7 +361,7 @@ export const QueueDragMixin = (superClass) =>
         isHoveringDropZone = false;
         if (dropZoneRect) {
           if (lastClientY >= dropZoneRect.top && lastClientY <= dropZoneRect.bottom &&
-              lastClientX >= dropZoneRect.left && lastClientX <= dropZoneRect.right) {
+            lastClientX >= dropZoneRect.left && lastClientX <= dropZoneRect.right) {
             isHoveringDropZone = true;
           }
         }
@@ -501,7 +502,7 @@ export const QueueDragMixin = (superClass) =>
           floatingClone.remove();
         }
         floatingClone = null;
-        
+
         // Remove the dropzone
         if (dropZoneEl && dropZoneEl.parentNode) {
           dropZoneEl.remove();
