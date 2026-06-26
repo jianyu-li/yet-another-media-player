@@ -6437,6 +6437,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this._showEntityOptions = true;
           this._openTransferQueue();
           break;
+        case "main-menu":
+          this._showGrouping = false;
+          this._showSourceList = false;
+          this._showSearchInSheet = false;
+          this._showResolvedEntities = false;
+          this._showTransferQueue = false;
+          await this._openEntityOptions();
+          break;
         default:
           // Do nothing for unknown menu_item
           break;
@@ -6710,13 +6718,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (action.menu_item) {
       if (iconOnly) return "";
       const menuLabels = {
-        "search": "Search",
-        "search-recently-played": "Recently Played",
-        "search-next-up": "Next Up",
-        "source": "Source",
-        "more-info": "More Info",
-        "group-players": "Group Players",
-        "transfer-queue": "Transfer Queue",
+        "search": localize("card.menu.search"),
+        "search-recently-played": localize("search.recently_played"),
+        "search-next-up": localize("search.next_up"),
+        "source": localize("card.menu.source"),
+        "more-info": localize("card.menu.more_info"),
+        "group-players": localize("card.menu.group_players"),
+        "transfer-queue": localize("card.menu.transfer_queue"),
+        "main-menu": localize("card.menu.main_menu"),
       };
       return menuLabels[action.menu_item] ?? action.menu_item;
     }

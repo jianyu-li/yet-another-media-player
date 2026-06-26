@@ -409,6 +409,7 @@ export default {
       show_lyrics: "Show Lyrics",
       hide_lyrics: "Hide Lyrics",
       transfer_queue: "Transfer Queue",
+      main_menu: "Main Menu",
       group_players: "Group Players",
       select_entity: "Select Entity for More Info",
       transfer_to: "Transfer Queue To",

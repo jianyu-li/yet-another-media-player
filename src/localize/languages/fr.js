@@ -371,6 +371,7 @@ export default {
       show_lyrics: "Afficher les paroles",
       hide_lyrics: "Masquer les paroles",
       transfer_queue: "Transférer la file",
+      main_menu: "Menu Principal",
       group_players: "Grouper les lecteurs",
       select_entity: "Choisir pour plus d'infos",
       transfer_to: "Transférer vers",
