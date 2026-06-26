@@ -2,6 +2,8 @@
  * Mixin to handle custom pointer-event logic for dragging and dropping items in the Mass Queue.
  * Extracts the complex pointer math and visual DOM manipulations out of the main component.
  */
+import { localize } from "./localize/localize.js";
+
 export const QueueDragMixin = (superClass) =>
   class extends superClass {
     _findScrollParent(el) {
@@ -131,6 +133,11 @@ export const QueueDragMixin = (superClass) =>
       let scrollContainer = null;
       let scrollSpeed = 0;
       let scrollAnimationFrame = null;
+      let dropZoneEl = null;
+      let dropZoneRect = null;
+      let dropZoneContentEl = null;
+      let dropZoneIconEl = null;
+      let isHoveringDropZone = false;
       let lastClientY = startY;
       let lastClientX = startX;
       let currentDropTargetIdx = null;
@@ -147,6 +154,33 @@ export const QueueDragMixin = (superClass) =>
 
       const updateDropTarget = (clientX, clientY) => {
         if (!cachedPositions) return;
+
+        // Check if hovering over Play Next dropzone
+        if (dropZoneEl) {
+          if (isHoveringDropZone) {
+            if (!dropZoneEl._isActive) {
+              dropZoneEl._isActive = true;
+              dropZoneEl.style.background = "rgba(76, 175, 80, 0.4)";
+              dropZoneEl.style.borderColor = "#4caf50";
+              dropZoneEl.style.borderStyle = "solid";
+              if (dropZoneContentEl) dropZoneContentEl.style.color = "#4caf50";
+              if (dropZoneIconEl) dropZoneIconEl.style.color = "#4caf50";
+            }
+            if (currentDropTargetIdx !== 0) {
+              currentDropTargetIdx = 0;
+              this._queueDropTargetIdx = 0;
+              this._applyQueueDragVisuals(dragIdx, dragItemHeight, 0);
+            }
+            return; // Skip finding closest row
+          } else if (dropZoneEl._isActive) {
+            dropZoneEl._isActive = false;
+            dropZoneEl.style.background = "var(--ha-card-background, var(--card-background-color, #1c1c1c))";
+            dropZoneEl.style.borderColor = "var(--custom-accent, var(--accent-color, #ff9800))";
+            dropZoneEl.style.borderStyle = "dashed";
+            if (dropZoneContentEl) dropZoneContentEl.style.color = "";
+            if (dropZoneIconEl) dropZoneIconEl.style.color = "";
+          }
+        }
 
         const scrollDiff = scrollContainer ? scrollContainer.scrollTop - startScrollTop : 0;
         let closestIdx = null;
@@ -220,6 +254,44 @@ export const QueueDragMixin = (superClass) =>
               });
             }
           }
+
+          // Create the Play Next dropzone — fixed overlay at the top of the card
+          dropZoneEl = document.createElement("div");
+          dropZoneEl.className = "queue-play-next-dropzone";
+          dropZoneEl.innerHTML = `
+            <div class="dropzone-content">
+              <ha-icon icon="mdi:playlist-play"></ha-icon>
+              <span>${localize("search.play_next")}</span>
+            </div>
+          `;
+
+          // Use the same proven pattern as the floating clone:
+          // all positioning inline, position:fixed, appended to renderRoot
+          const hostRect = this.getBoundingClientRect();
+          const dropZoneHeight = Math.max(56, Math.round(hostRect.height * 0.10));
+          dropZoneEl.style.cssText = `
+            position: fixed;
+            top: ${hostRect.top}px;
+            left: ${hostRect.left}px;
+            width: ${hostRect.width}px;
+            height: ${dropZoneHeight}px;
+            z-index: 99998;
+            pointer-events: auto;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px dashed var(--custom-accent, var(--accent-color, #ff9800));
+            border-radius: var(--border-radius, 16px) var(--border-radius, 16px) 0 0;
+            opacity: 0.95;
+          `;
+          this.renderRoot.appendChild(dropZoneEl);
+          dropZoneRect = dropZoneEl.getBoundingClientRect();
+          dropZoneContentEl = dropZoneEl.querySelector(".dropzone-content");
+          dropZoneIconEl = dropZoneEl.querySelector("ha-icon");
         }
 
         // Apply ghost class on the dragged item immediately via DOM
@@ -286,6 +358,14 @@ export const QueueDragMixin = (superClass) =>
         lastClientY = moveEvt.clientY;
         lastClientX = moveEvt.clientX;
 
+        isHoveringDropZone = false;
+        if (dropZoneRect) {
+          if (lastClientY >= dropZoneRect.top && lastClientY <= dropZoneRect.bottom &&
+            lastClientX >= dropZoneRect.left && lastClientX <= dropZoneRect.right) {
+            isHoveringDropZone = true;
+          }
+        }
+
         // Move the floating clone to follow the pointer
         if (floatingClone) {
           floatingClone.style.top = `${lastClientY - cloneOffsetY}px`;
@@ -294,17 +374,21 @@ export const QueueDragMixin = (superClass) =>
 
         // Calculate scroll speed based on pointer position relative to scroll container
         if (scrollContainer) {
-          const scrollRect = scrollContainer.getBoundingClientRect();
-          const topDiff = lastClientY - scrollRect.top;
-          const bottomDiff = scrollRect.bottom - lastClientY;
-          const threshold = 60;
-
-          if (topDiff < threshold && topDiff > -50) {
-            scrollSpeed = -Math.max(2, (threshold - topDiff) * 0.3);
-          } else if (bottomDiff < threshold && bottomDiff > -50) {
-            scrollSpeed = Math.max(2, (threshold - bottomDiff) * 0.3);
-          } else {
+          if (isHoveringDropZone) {
             scrollSpeed = 0;
+          } else {
+            const scrollRect = scrollContainer.getBoundingClientRect();
+            const topDiff = lastClientY - scrollRect.top;
+            const bottomDiff = scrollRect.bottom - lastClientY;
+            const threshold = 60;
+
+            if (topDiff < threshold && topDiff > -50) {
+              scrollSpeed = -Math.max(2, (threshold - topDiff) * 0.3);
+            } else if (bottomDiff < threshold && bottomDiff > -50) {
+              scrollSpeed = Math.max(2, (threshold - bottomDiff) * 0.3);
+            } else {
+              scrollSpeed = 0;
+            }
           }
         }
 
@@ -418,6 +502,16 @@ export const QueueDragMixin = (superClass) =>
           floatingClone.remove();
         }
         floatingClone = null;
+
+        // Remove the dropzone
+        if (dropZoneEl && dropZoneEl.parentNode) {
+          dropZoneEl.remove();
+        }
+        dropZoneEl = null;
+        dropZoneRect = null;
+        dropZoneContentEl = null;
+        dropZoneIconEl = null;
+
         this._activeDragCleanup = null;
       };
 
