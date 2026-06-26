@@ -131,6 +131,7 @@ export const QueueDragMixin = (superClass) =>
       let scrollContainer = null;
       let scrollSpeed = 0;
       let scrollAnimationFrame = null;
+      let dropZoneEl = null;
       let lastClientY = startY;
       let lastClientX = startX;
       let currentDropTargetIdx = null;
@@ -147,6 +148,22 @@ export const QueueDragMixin = (superClass) =>
 
       const updateDropTarget = (clientX, clientY) => {
         if (!cachedPositions) return;
+
+        // Check if hovering over Play Next dropzone
+        if (dropZoneEl) {
+          const rect = dropZoneEl.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom && clientX >= rect.left && clientX <= rect.right) {
+            dropZoneEl.classList.add("is-active");
+            if (currentDropTargetIdx !== 0) {
+              currentDropTargetIdx = 0;
+              this._queueDropTargetIdx = 0;
+              this._applyQueueDragVisuals(dragIdx, dragItemHeight, 0);
+            }
+            return; // Skip finding closest row
+          } else {
+            dropZoneEl.classList.remove("is-active");
+          }
+        }
 
         const scrollDiff = scrollContainer ? scrollContainer.scrollTop - startScrollTop : 0;
         let closestIdx = null;
@@ -220,6 +237,40 @@ export const QueueDragMixin = (superClass) =>
               });
             }
           }
+
+          // Create the Play Next dropzone — fixed overlay at the top of the card
+          dropZoneEl = document.createElement("div");
+          dropZoneEl.className = "queue-play-next-dropzone";
+          dropZoneEl.innerHTML = `
+            <div class="dropzone-content">
+              <ha-icon icon="mdi:playlist-play"></ha-icon>
+              <span>Play Next</span>
+            </div>
+          `;
+
+          // Use the same proven pattern as the floating clone:
+          // all positioning inline, position:fixed, appended to renderRoot
+          const hostRect = this.getBoundingClientRect();
+          dropZoneEl.style.cssText = `
+            position: fixed;
+            top: ${hostRect.top}px;
+            left: ${hostRect.left}px;
+            width: ${hostRect.width}px;
+            height: ${wrapperRect.height}px;
+            z-index: 99998;
+            pointer-events: auto;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px dashed var(--custom-accent, var(--accent-color, #ff9800));
+            border-radius: var(--border-radius, 16px) var(--border-radius, 16px) 0 0;
+            opacity: 0.95;
+          `;
+          this.renderRoot.appendChild(dropZoneEl);
         }
 
         // Apply ghost class on the dragged item immediately via DOM
@@ -418,6 +469,13 @@ export const QueueDragMixin = (superClass) =>
           floatingClone.remove();
         }
         floatingClone = null;
+        
+        // Remove the dropzone
+        if (dropZoneEl && dropZoneEl.parentNode) {
+          dropZoneEl.remove();
+        }
+        dropZoneEl = null;
+
         this._activeDragCleanup = null;
       };
 
