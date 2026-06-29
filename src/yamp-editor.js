@@ -1,7 +1,7 @@
 // import { LitElement, html, css, nothing } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 // import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
 import { LitElement, html, css, nothing } from "lit";
-import yaml from "js-yaml";
+import * as yaml from "js-yaml";
 import { localize } from "./localize/localize.js";
 
 import { SUPPORT_GROUPING, TEMPLATE_CONFIGS } from "./constants.js";
@@ -3712,11 +3712,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               this._yamlDraft = e.detail.value;
                               this._yamlModified = true;
                               try {
-                                const parsed = yaml.load(this._yamlDraft);
-                                if (parsed && typeof parsed === "object") {
+                                if (this._yamlDraft.trim() === "") {
                                   this._yamlError = null;
                                 } else {
-                                  this._yamlError = "Invalid YAML";
+                                  const parsed = yaml.load(this._yamlDraft);
+                                  if (parsed && typeof parsed === "object") {
+                                    this._yamlError = null;
+                                  } else {
+                                    this._yamlError = "Invalid YAML";
+                                  }
                                 }
                               } catch (err) {
                                 this._yamlError = err.message;
@@ -3886,6 +3890,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _saveYamlEditor() {
     try {
+      if (this._yamlDraft.trim() === "") {
+        this._updateActionProperty("service_data", {});
+        this._yamlDraft = "";
+        this._yamlError = null;
+        this._parsedYaml = {};
+        return;
+      }
       const parsed = yaml.load(this._yamlDraft);
 
       if (!parsed || typeof parsed !== "object") {
