@@ -2856,7 +2856,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 ? html`
                   <div class="grow-children">
                     <div class=${
-                      this._yamlError && (entity?.hidden_controls ?? "").trim() !== ""
+                      this._yamlError && typeof entity?.hidden_controls === 'string' && entity.hidden_controls.trim() !== ""
                         ? "code-editor-wrapper error"
                         : "code-editor-wrapper"
                     } style="width: 100%;">
@@ -2866,7 +2866,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         .hass=${this.hass}
                         mode="jinja2"
                         autocomplete-entities
-                        .value=${entity?.hidden_controls ?? ""}
+                        .value=${typeof entity?.hidden_controls === 'string' ? entity.hidden_controls : ""}
                         @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
                       ></ha-code-editor>
                       <div class="help-text">
