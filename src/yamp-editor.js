@@ -1030,13 +1030,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 class="tab"
                                 ${this._activeTab === key ? "selected" : ""}
                                 @click=${() => {
-                                this._activeTab = key;
-                                // Exit any sub-editor when switching tabs
-                                this._entityEditorIndex = null;
-                                this._actionEditorIndex = null;
-                                this._useTemplate = null;
-                                this._useVolTemplate = null;
-                              }}
+                                  this._activeTab = key;
+                                  // Exit any sub-editor when switching tabs
+                                  this._entityEditorIndex = null;
+                                  this._actionEditorIndex = null;
+                                  this._useTemplate = null;
+                                  this._useVolTemplate = null;
+                                }}
                                 ?selected=${this._activeTab === key}
                               >
                                 ${name}
@@ -1202,7 +1202,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               ? html`
                   <div class="form-row">
                     <div class="editor-field-wrapper">
-                      <div class="grow-children">
+                      <div class="grow-children" style="flex-direction: column;">
+                        <span class="form-label"
+                          >${localize("editor.fields.idle_image_entity")}</span
+                        >
                         <ha-code-editor
                           lint
                           .hass=${this.hass}
@@ -1359,7 +1362,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               ${
                                 this._isTemplateMode(`artwork_image_url_${idx}`, rule.image_url)
                                   ? html`
-                                      <div class="grow-children">
+                                      <div class="grow-children" style="flex-direction: column;">
+                                        <span class="form-label"
+                                          >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url")}</span
+                                        >
                                         <ha-code-editor
                                           lint
                                           .hass=${this.hass}
@@ -2274,7 +2280,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${
               this._isTemplateMode("card_height", this._config.card_height)
                 ? html`
-                    <div class="grow-children">
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label">${localize("editor.fields.card_height")}</span>
                       <ha-code-editor
                         lint
                         .hass=${this.hass}
@@ -2418,7 +2425,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${
               this._isTemplateMode("control_layout", this._config.control_layout)
                 ? html`
-                    <div class="grow-children">
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label">${localize("editor.fields.control_layout")}</span>
                       <ha-code-editor
                         lint
                         .hass=${this.hass}
@@ -2630,7 +2638,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ? html`
                 <div class="form-row">
                   <div class="editor-field-wrapper">
-                    <div class="grow-children">
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label">${localize("editor.labels.always_collapsed")}</span>
                       <ha-code-editor
                         lint
                         .hass=${this.hass}
@@ -2933,6 +2942,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         }
                         style="width: 100%;"
                       >
+                        <span class="form-label">${localize("editor.fields.hidden_controls")}</span>
                         <ha-code-editor
                           lint
                           id="hidden-controls-template-editor"
@@ -3003,6 +3013,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         ? "code-editor-wrapper error"
                         : "code-editor-wrapper"
                     } style="width: 100%;">
+                      <span class="form-label">${localize("editor.fields.ma_template")}</span>
                       <ha-code-editor lint
                         id="ma-template-editor"
                         label="${localize("editor.fields.ma_template")}"
@@ -3168,6 +3179,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 }
                                 style="width: 100%;"
                               >
+                                <span class="form-label"
+                                  >${localize("editor.fields.vol_template")}</span
+                                >
                                 <ha-code-editor
                                   lint
                                   id="vol-template-editor"
@@ -3342,7 +3356,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               ${
                 this._isTemplateMode("in_menu", action?.in_menu)
                   ? html`
-                      <div class="grow-children">
+                      <div class="grow-children" style="flex-direction: column;">
+                        <span class="form-label">${localize("editor.fields.placement")}</span>
                         <ha-code-editor
                           lint
                           .hass=${this.hass}
@@ -3614,7 +3629,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     ${
                       this._isTemplateMode("navigation_path", action?.navigation_path)
                         ? html`
-                            <div class="grow-children">
+                            <div class="grow-children" style="flex-direction: column;">
+                              <span class="form-label">${localize("editor.fields.nav_path")}</span>
                               <ha-code-editor
                                 lint
                                 .hass=${this.hass}
@@ -3837,6 +3853,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 : "code-editor-wrapper"
                             }
                           >
+                            <span class="form-label"
+                              >${localize("editor.fields.service_data")}</span
+                            >
                             <ha-code-editor
                               lint
                               id="service-data-editor"
