@@ -2368,7 +2368,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             ${localize("editor.sections.look_and_feel.controls_typography.description")}
           </div>
         </div>
-        <div class="form-row">
+        <div class="form-row" data-search-keys="classic modern">
           <div class="editor-field-wrapper">
             ${this._isTemplateMode("control_layout", this._config.control_layout)
               ? html`
@@ -2849,7 +2849,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
-        <div class="form-row">
+        <div class="form-row" data-search-keys="previous play_pause stop next shuffle repeat favorite power">
           <div class="editor-field-wrapper">
             ${
               this._isTemplateMode("hidden_controls", entity?.hidden_controls)
