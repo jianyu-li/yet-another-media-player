@@ -100,77 +100,87 @@ export function renderControlsRow({
     return html`
       <div class=${rowClass} style=${rowStyle}>
         <div class="controls-left">
-          ${showShuffleButton
-            ? html`
-                <button
-                  class="modern-button small${shuffleActive ? " active" : ""}"
-                  @click=${() => onControlClick("shuffle")}
-                  title="${localize("card.media_controls.shuffle")}"
-                >
-                  <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
-                </button>
-              `
-            : nothing}
-          ${showPrevious
-            ? html`
-                <button
-                  class="modern-button medium"
-                  @click=${() => onControlClick("prev")}
-                  title="${localize("card.media_controls.previous")}"
-                >
-                  <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
-                </button>
-              `
-            : nothing}
+          ${
+            showShuffleButton
+              ? html`
+                  <button
+                    class="modern-button small${shuffleActive ? " active" : ""}"
+                    @click=${() => onControlClick("shuffle")}
+                    title="${localize("card.media_controls.shuffle")}"
+                  >
+                    <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
+                  </button>
+                `
+              : nothing
+          }
+          ${
+            showPrevious
+              ? html`
+                  <button
+                    class="modern-button medium"
+                    @click=${() => onControlClick("prev")}
+                    title="${localize("card.media_controls.previous")}"
+                  >
+                    <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+                  </button>
+                `
+              : nothing
+          }
         </div>
 
         <div class="controls-center">
-          ${showPlayPause
-            ? html`
-                <button
-                  class="modern-button primary${isPlayingState ? " active" : ""}"
-                  @click=${() => onControlClick(primaryUsesStop ? "stop" : "play_pause")}
-                  title="${primaryUsesStop
-                    ? localize("card.media_controls.stop")
-                    : localize("card.media_controls.play_pause") || "Play/Pause"}"
-                >
-                  <ha-icon
-                    .icon=${primaryUsesStop
-                      ? "mdi:stop"
-                      : isPlayingState
-                        ? "mdi:pause"
-                        : "mdi:play"}
-                  ></ha-icon>
-                </button>
-              `
-            : nothing}
+          ${
+            showPlayPause
+              ? html`
+                  <button
+                    class="modern-button primary${isPlayingState ? " active" : ""}"
+                    @click=${() => onControlClick(primaryUsesStop ? "stop" : "play_pause")}
+                    title="${
+                    primaryUsesStop
+                      ? localize("card.media_controls.stop")
+                      : localize("card.media_controls.play_pause") || "Play/Pause"
+                  }"
+                  >
+                    <ha-icon
+                      .icon=${
+                      primaryUsesStop ? "mdi:stop" : isPlayingState ? "mdi:pause" : "mdi:play"
+                    }
+                    ></ha-icon>
+                  </button>
+                `
+              : nothing
+          }
         </div>
 
         <div class="controls-right">
-          ${showNext
-            ? html`
-                <button
-                  class="modern-button medium"
-                  @click=${() => onControlClick("next")}
-                  title="${localize("card.media_controls.next")}"
-                >
-                  <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
-                </button>
-              `
-            : nothing}
-          ${showRepeatButton
-            ? html`
-                <button
-                  class="modern-button small${repeatActive ? " active" : ""}"
-                  @click=${() => onControlClick("repeat")}
-                  title="${localize("card.media_controls.repeat")}"
-                >
-                  <ha-icon
-                    .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}
-                  ></ha-icon>
-                </button>
-              `
-            : nothing}
+          ${
+            showNext
+              ? html`
+                  <button
+                    class="modern-button medium"
+                    @click=${() => onControlClick("next")}
+                    title="${localize("card.media_controls.next")}"
+                  >
+                    <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+                  </button>
+                `
+              : nothing
+          }
+          ${
+            showRepeatButton
+              ? html`
+                  <button
+                    class="modern-button small${repeatActive ? " active" : ""}"
+                    @click=${() => onControlClick("repeat")}
+                    title="${localize("card.media_controls.repeat")}"
+                  >
+                    <ha-icon
+                      .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}
+                    ></ha-icon>
+                  </button>
+                `
+              : nothing
+          }
         </div>
       </div>
     `;
@@ -178,96 +188,112 @@ export function renderControlsRow({
 
   return html`
     <div class=${rowClass} style=${rowStyle}>
-      ${showPrevious
-        ? html`
-            <button
-              class="button"
-              @click=${() => onControlClick("prev")}
-              title="${localize("card.media_controls.previous")}"
-            >
-              <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
-            </button>
-          `
-        : nothing}
-      ${showPlayPause
-        ? html`
-            <button
-              class="button"
-              @click=${() => onControlClick("play_pause")}
-              title="${localize("card.media_controls.play_pause")}"
-            >
-              <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
-            </button>
-          `
-        : nothing}
-      ${showStopButton
-        ? html`
-            <button
-              class="button"
-              @click=${() => onControlClick("stop")}
-              title="${localize("card.media_controls.stop")}"
-            >
-              <ha-icon .icon=${"mdi:stop"}></ha-icon>
-            </button>
-          `
-        : nothing}
-      ${showNext
-        ? html`
-            <button
-              class="button"
-              @click=${() => onControlClick("next")}
-              title="${localize("card.media_controls.next")}"
-            >
-              <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
-            </button>
-          `
-        : nothing}
-      ${showShuffleButton
-        ? html`
-            <button
-              class="button${shuffleActive ? " active" : ""}"
-              @click=${() => onControlClick("shuffle")}
-              title="${localize("card.media_controls.shuffle")}"
-            >
-              <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
-            </button>
-          `
-        : nothing}
-      ${showRepeatButton
-        ? html`
-            <button
-              class="button${repeatActive ? " active" : ""}"
-              @click=${() => onControlClick("repeat")}
-              title="${localize("card.media_controls.repeat")}"
-            >
-              <ha-icon
-                .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}
-              ></ha-icon>
-            </button>
-          `
-        : nothing}
-      ${showFavoriteButton
-        ? html`
-            <button
-              class="button${favoriteActive ? " active" : ""}"
-              @click=${() => onControlClick("favorite")}
-              title="${localize("common.favorite")}"
-            >
-              <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
-            </button>
-          `
-        : nothing}
-      ${showPowerButton
-        ? html`
-            <button
-              class="button${stateObj.state !== "off" ? " active" : ""}"
-              @click=${() => onControlClick("power")}
-              title="${localize("common.power")}"
-            >
-              <ha-icon .icon=${"mdi:power"}></ha-icon>
-            </button>
-          `
-        : nothing}
+      ${
+        showPrevious
+          ? html`
+              <button
+                class="button"
+                @click=${() => onControlClick("prev")}
+                title="${localize("card.media_controls.previous")}"
+              >
+                <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+              </button>
+            `
+          : nothing
+      }
+      ${
+        showPlayPause
+          ? html`
+              <button
+                class="button"
+                @click=${() => onControlClick("play_pause")}
+                title="${localize("card.media_controls.play_pause")}"
+              >
+                <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
+              </button>
+            `
+          : nothing
+      }
+      ${
+        showStopButton
+          ? html`
+              <button
+                class="button"
+                @click=${() => onControlClick("stop")}
+                title="${localize("card.media_controls.stop")}"
+              >
+                <ha-icon .icon=${"mdi:stop"}></ha-icon>
+              </button>
+            `
+          : nothing
+      }
+      ${
+        showNext
+          ? html`
+              <button
+                class="button"
+                @click=${() => onControlClick("next")}
+                title="${localize("card.media_controls.next")}"
+              >
+                <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+              </button>
+            `
+          : nothing
+      }
+      ${
+        showShuffleButton
+          ? html`
+              <button
+                class="button${shuffleActive ? " active" : ""}"
+                @click=${() => onControlClick("shuffle")}
+                title="${localize("card.media_controls.shuffle")}"
+              >
+                <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
+              </button>
+            `
+          : nothing
+      }
+      ${
+        showRepeatButton
+          ? html`
+              <button
+                class="button${repeatActive ? " active" : ""}"
+                @click=${() => onControlClick("repeat")}
+                title="${localize("card.media_controls.repeat")}"
+              >
+                <ha-icon
+                  .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}
+                ></ha-icon>
+              </button>
+            `
+          : nothing
+      }
+      ${
+        showFavoriteButton
+          ? html`
+              <button
+                class="button${favoriteActive ? " active" : ""}"
+                @click=${() => onControlClick("favorite")}
+                title="${localize("common.favorite")}"
+              >
+                <ha-icon .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}></ha-icon>
+              </button>
+            `
+          : nothing
+      }
+      ${
+        showPowerButton
+          ? html`
+              <button
+                class="button${stateObj.state !== "off" ? " active" : ""}"
+                @click=${() => onControlClick("power")}
+                title="${localize("common.power")}"
+              >
+                <ha-icon .icon=${"mdi:power"}></ha-icon>
+              </button>
+            `
+          : nothing
+      }
     </div>
   `;
 }
