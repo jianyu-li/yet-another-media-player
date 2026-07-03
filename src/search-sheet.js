@@ -215,54 +215,54 @@ export function renderSearchResultActions({
           ? html`
               <div class="queue-controls">
                 ${
-                queueControlsStyle === "drag_handle"
-                  ? html`
-                      <div
-                        class="queue-btn queue-drag-handle"
-                        title="${localize("search.drag_to_reorder")}"
-                      >
-                        <ha-icon icon="mdi:drag"></ha-icon>
-                      </div>
-                    `
-                  : html`
-                      <button
-                        class="queue-btn queue-btn-up"
-                        @click=${(e) => {
-                        e.stopPropagation();
-                        onMoveUp(item);
-                      }}
-                        title="${localize("search.move_up")}"
-                      >
-                        <ha-icon icon="mdi:chevron-up"></ha-icon>
-                      </button>
-                      <button
-                        class="queue-btn queue-btn-down"
-                        @click=${(e) => {
-                        e.stopPropagation();
-                        onMoveDown(item);
-                      }}
-                        title="${localize("search.move_down")}"
-                      >
-                        <ha-icon icon="mdi:chevron-down"></ha-icon>
-                      </button>
-                      <button
-                        class="queue-btn queue-btn-next"
-                        @click=${(e) => {
-                        e.stopPropagation();
-                        onMoveNext(item);
-                      }}
-                        title="${localize("search.move_next")}"
-                      >
-                        <ha-icon icon="mdi:playlist-play"></ha-icon>
-                      </button>
-                    `
-              }
+                  queueControlsStyle === "drag_handle"
+                    ? html`
+                        <div
+                          class="queue-btn queue-drag-handle"
+                          title="${localize("search.drag_to_reorder")}"
+                        >
+                          <ha-icon icon="mdi:drag"></ha-icon>
+                        </div>
+                      `
+                    : html`
+                        <button
+                          class="queue-btn queue-btn-up"
+                          @click=${(e) => {
+                          e.stopPropagation();
+                          onMoveUp(item);
+                        }}
+                          title="${localize("search.move_up")}"
+                        >
+                          <ha-icon icon="mdi:chevron-up"></ha-icon>
+                        </button>
+                        <button
+                          class="queue-btn queue-btn-down"
+                          @click=${(e) => {
+                          e.stopPropagation();
+                          onMoveDown(item);
+                        }}
+                          title="${localize("search.move_down")}"
+                        >
+                          <ha-icon icon="mdi:chevron-down"></ha-icon>
+                        </button>
+                        <button
+                          class="queue-btn queue-btn-next"
+                          @click=${(e) => {
+                          e.stopPropagation();
+                          onMoveNext(item);
+                        }}
+                          title="${localize("search.move_next")}"
+                        >
+                          <ha-icon icon="mdi:playlist-play"></ha-icon>
+                        </button>
+                      `
+                }
                 <button
                   class="queue-btn queue-btn-remove"
                   @click=${(e) => {
-                  e.stopPropagation();
-                  onRemove(item);
-                }}
+                    e.stopPropagation();
+                    onRemove(item);
+                  }}
                   title="${localize("search.remove")}"
                 >
                   <ha-icon icon="mdi:close"></ha-icon>
@@ -287,10 +287,10 @@ export function renderSearchResultActions({
               <button
                 class="${queueClass}"
                 @click=${(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onOptionsToggle(item);
-              }}
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onOptionsToggle(item);
+                }}
                 title="${localize("common.more_options")}"
               >
                 <ha-icon icon="mdi:dots-vertical"></ha-icon>
@@ -332,10 +332,10 @@ export function renderSearchResultSlideOut({
               <button
                 class="slide-out-button"
                 @click=${(e) => {
-                e.stopPropagation();
-                onMoveUp(item);
-                onOptionsToggle(null);
-              }}
+                  e.stopPropagation();
+                  onMoveUp(item);
+                  onOptionsToggle(null);
+                }}
                 title="${localize("search.move_up")}"
               >
                 ${localize("search.move_up")}
@@ -343,10 +343,10 @@ export function renderSearchResultSlideOut({
               <button
                 class="slide-out-button"
                 @click=${(e) => {
-                e.stopPropagation();
-                onMoveDown(item);
-                onOptionsToggle(null);
-              }}
+                  e.stopPropagation();
+                  onMoveDown(item);
+                  onOptionsToggle(null);
+                }}
                 title="${localize("search.move_down")}"
               >
                 ${localize("search.move_down")}
@@ -354,10 +354,10 @@ export function renderSearchResultSlideOut({
               <button
                 class="slide-out-button"
                 @click=${(e) => {
-                e.stopPropagation();
-                onMoveNext(item);
-                onOptionsToggle(null);
-              }}
+                  e.stopPropagation();
+                  onMoveNext(item);
+                  onOptionsToggle(null);
+                }}
                 title="${localize("search.move_next")}"
               >
                 ${localize("search.move_next")}
@@ -365,10 +365,10 @@ export function renderSearchResultSlideOut({
               <button
                 class="slide-out-button"
                 @click=${(e) => {
-                e.stopPropagation();
-                onRemove(item);
-                onOptionsToggle(null);
-              }}
+                  e.stopPropagation();
+                  onRemove(item);
+                  onOptionsToggle(null);
+                }}
                 title="${localize("search.remove")}"
               >
                 ${localize("search.remove")}
@@ -378,69 +378,69 @@ export function renderSearchResultSlideOut({
               <button
                 class="slide-out-button"
                 @click=${(e) => {
-                e.stopPropagation();
-                onPlayOption(item, "replace");
-              }}
+                  e.stopPropagation();
+                  onPlayOption(item, "replace");
+                }}
                 title="${localize("search.labels.replace")}"
               >
                 ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-remove"></ha-icon>`}${localize(
-                "search.labels.replace"
-              )}
+                  "search.labels.replace"
+                )}
               </button>
               <button
                 class="slide-out-button"
                 @click=${(e) => {
-                e.stopPropagation();
-                onPlayOption(item, "next");
-              }}
+                  e.stopPropagation();
+                  onPlayOption(item, "next");
+                }}
                 title="${localize("search.labels.next")}"
               >
                 ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-play"></ha-icon>`}${localize(
-                "search.labels.next"
-              )}
+                  "search.labels.next"
+                )}
               </button>
               <button
                 class="slide-out-button"
                 @click=${(e) => {
-                e.stopPropagation();
-                onPlayOption(item, "replace_next");
-              }}
+                  e.stopPropagation();
+                  onPlayOption(item, "replace_next");
+                }}
                 title="${localize("search.labels.replace_next")}"
               >
                 ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-music"></ha-icon>`}${localize(
-                "search.labels.replace_next"
-              )}
+                  "search.labels.replace_next"
+                )}
               </button>
               <button
                 class="slide-out-button"
                 @click=${(e) => {
-                e.stopPropagation();
-                onPlayOption(item, "add");
-              }}
+                  e.stopPropagation();
+                  onPlayOption(item, "add");
+                }}
                 title="${localize("search.labels.add")}"
               >
                 ${isCard ? nothing : html`<ha-icon icon="mdi:playlist-plus"></ha-icon>`}${localize(
-                "search.labels.add"
-              )}
+                  "search.labels.add"
+                )}
               </button>
               ${
-              isTrack(item) && massQueueAvailable
-                ? html`
-                    <button
-                      class="slide-out-button"
-                      @click=${(e) => {
-                      e.stopPropagation();
-                      onPlayOption(item, "add_to_playlist");
-                    }}
-                      title="${localize("search.labels.add_to_playlist")}"
-                    >
-                      ${isCard ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize(
-                      "search.labels.add_to_playlist"
-                    )}
-                    </button>
-                  `
-                : nothing
-            }
+                isTrack(item) && massQueueAvailable
+                  ? html`
+                      <button
+                        class="slide-out-button"
+                        @click=${(e) => {
+                        e.stopPropagation();
+                        onPlayOption(item, "add_to_playlist");
+                      }}
+                        title="${localize("search.labels.add_to_playlist")}"
+                      >
+                        ${isCard ? nothing : html`<ha-icon icon="mdi:plus"></ha-icon>`}${localize(
+                        "search.labels.add_to_playlist"
+                      )}
+                      </button>
+                    `
+                  : nothing
+              }
             `
       }
       <div
@@ -560,11 +560,11 @@ export function renderSearchResultItem({
                   class="yamp-search-result-title ${isClickable ? "clickable-search-result" : ""}"
                   @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
                   @click=${(e) => {
-                  if (isClickable || isSelectionFlow) {
-                    e.stopPropagation();
-                    onResultClick && onResultClick(item, e);
-                  }
-                }}
+                    if (isClickable || isSelectionFlow) {
+                      e.stopPropagation();
+                      onResultClick && onResultClick(item, e);
+                    }
+                  }}
                   title=${getClickTitle(item)}
                 >
                   ${item.title}
@@ -573,41 +573,41 @@ export function renderSearchResultItem({
                   class="yamp-search-result-subtitle ${isClickable ? "clickable-search-result" : ""}"
                   @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
                   @click=${(e) => {
-                  if (isClickable || isSelectionFlow) {
-                    e.stopPropagation();
-                    onResultClick && onResultClick(item, e);
-                  }
-                }}
+                    if (isClickable || isSelectionFlow) {
+                      e.stopPropagation();
+                      onResultClick && onResultClick(item, e);
+                    }
+                  }}
                 >
                   ${getSearchResultSubtitle(item, {
-                  searchMediaClassFilter,
-                  recentlyPlayedFilterActive,
-                  upcomingFilterActive,
-                  recommendationsFilterActive,
-                })}
+                    searchMediaClassFilter,
+                    recentlyPlayedFilterActive,
+                    upcomingFilterActive,
+                    recommendationsFilterActive,
+                  })}
                 </span>
                 ${
-                isCard && !isRadio(item) && !hideActions
-                  ? html`
-                      <div
-                        class="card-menu-button ${
-                        upcomingFilterActive &&
-                        massQueueAvailable &&
-                        queueControlsStyle === "drag_handle"
-                          ? "queue-drag-handle"
-                          : ""
-                      }"
-                        @click=${(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onOptionsToggle(item);
-                      }}
-                      >
-                        <ha-icon icon="mdi:dots-vertical"></ha-icon>
-                      </div>
-                    `
-                  : nothing
-              }
+                  isCard && !isRadio(item) && !hideActions
+                    ? html`
+                        <div
+                          class="card-menu-button ${
+                          upcomingFilterActive &&
+                          massQueueAvailable &&
+                          queueControlsStyle === "drag_handle"
+                            ? "queue-drag-handle"
+                            : ""
+                        }"
+                          @click=${(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onOptionsToggle(item);
+                        }}
+                        >
+                          <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                        </div>
+                      `
+                    : nothing
+                }
               </div>
             `
           : nothing
@@ -679,10 +679,10 @@ export function renderSearchResultItem({
                 <span>✅</span>
                 <span
                   >${
-                  successSearchRowType === "playlist"
-                    ? localize("search.added_to_playlist")
-                    : localize("search.added")
-                }</span
+                    successSearchRowType === "playlist"
+                      ? localize("search.added_to_playlist")
+                      : localize("search.added")
+                  }</span
                 >
               </div>
             `

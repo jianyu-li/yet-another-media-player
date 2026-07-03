@@ -74,9 +74,9 @@ export function renderChip({
               <span
                 class="chip-pin-inside"
                 @click=${(e) => {
-                e.stopPropagation();
-                onPinClick(idx, e);
-              }}
+                  e.stopPropagation();
+                  onPinClick(idx, e);
+                }}
                 title="${localize("common.unpin")}"
               >
                 <ha-icon .icon=${"mdi:pin"}></ha-icon>
@@ -143,21 +143,21 @@ export function renderGroupChip({
                 style="cursor:pointer;${artStyle}"
                 onerror="this.style.display='none'"
                 @click=${(e) => {
-                e.stopPropagation();
-                if (onIconClick) {
-                  onIconClick(idx, e);
-                }
-              }}
+                  e.stopPropagation();
+                  if (onIconClick) {
+                    onIconClick(idx, e);
+                  }
+                }}
               />`
             : html`<ha-icon
                 .icon=${icon}
                 style="font-size:28px;cursor:pointer;"
                 @click=${(e) => {
-                e.stopPropagation();
-                if (onIconClick) {
-                  onIconClick(idx, e);
-                }
-              }}
+                  e.stopPropagation();
+                  if (onIconClick) {
+                    onIconClick(idx, e);
+                  }
+                }}
               ></ha-icon>`
         }
       </span>
@@ -184,9 +184,9 @@ export function renderGroupChip({
               <span
                 class="chip-pin-inside"
                 @click=${(e) => {
-                e.stopPropagation();
-                onPinClick(idx, e);
-              }}
+                  e.stopPropagation();
+                  onPinClick(idx, e);
+                }}
                 title="${localize("common.unpin")}"
               >
                 <ha-icon .icon=${"mdi:pin"}></ha-icon>

@@ -136,15 +136,15 @@ export function renderControlsRow({
                     class="modern-button primary${isPlayingState ? " active" : ""}"
                     @click=${() => onControlClick(primaryUsesStop ? "stop" : "play_pause")}
                     title="${
-                    primaryUsesStop
-                      ? localize("card.media_controls.stop")
-                      : localize("card.media_controls.play_pause") || "Play/Pause"
-                  }"
+                      primaryUsesStop
+                        ? localize("card.media_controls.stop")
+                        : localize("card.media_controls.play_pause") || "Play/Pause"
+                    }"
                   >
                     <ha-icon
                       .icon=${
-                      primaryUsesStop ? "mdi:stop" : isPlayingState ? "mdi:pause" : "mdi:play"
-                    }
+                        primaryUsesStop ? "mdi:stop" : isPlayingState ? "mdi:pause" : "mdi:play"
+                      }
                     ></ha-icon>
                   </button>
                 `
