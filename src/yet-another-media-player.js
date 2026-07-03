@@ -761,6 +761,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._actionInMenuResolveCache = {}; // { [idx]: { value: string, ts: number } }
     this._alwaysCollapsedTemplateValue = {}; // { card: { template: string, resolved: string } }
     this._alwaysCollapsedResolveCache = {}; // { card: { value: string, ts: number } }
+    this._hiddenControlsTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
+    this._hiddenControlsResolveCache = {}; // { [idx]: { value: string, ts: number } }
     this._lastActionEntityId = null;
     // Cache resolved Volume entity per index (template or static)
     this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
@@ -813,6 +815,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       currentCache = this._alwaysCollapsedTemplateValue[idx];
       templateVals = this._alwaysCollapsedTemplateValue;
       cache = this._alwaysCollapsedResolveCache;
+    } else if (type === 'hidden_controls') {
+      currentCache = this._hiddenControlsTemplateValues[idx];
+      templateVals = this._hiddenControlsTemplateValues;
+      cache = this._hiddenControlsResolveCache;
     } else if (type === 'control_layout') {
       currentCache = this._controlLayoutTemplateValue[idx];
       templateVals = this._controlLayoutTemplateValue;
@@ -858,7 +864,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
         if (type === 'ma' || type === 'vol') {
           isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'hidden_controls') {
           isValid = true; // Any string result is valid
         }
 
@@ -874,7 +880,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             cache[idx] = { id: resolved, ts: Date.now() };
             shouldUpdate = true;
           }
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'hidden_controls') {
           const currentCached = cache[idx]?.value;
           if (isValid && currentCached !== resolved) {
             cache[idx] = { value: resolved, ts: Date.now() };
@@ -917,44 +923,68 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  async _ensureResolvedTemplateForIndex(idx, typeKey, rawValue, cacheObj, templateValsObj, options = {}) {
+    const { allowObject = false, cacheStaticString = false } = options;
+
+    if (!rawValue || (typeof rawValue !== 'string' && !(allowObject && typeof rawValue === 'object'))) {
+      delete cacheObj[idx];
+      this._unsubscribeFromTemplate(idx, typeKey);
+      if (templateValsObj[idx]) delete templateValsObj[idx];
+      return;
+    }
+
+    if (typeof rawValue === 'string') {
+      const isJsTemplate = rawValue.trim().startsWith('[[[');
+      if (isJsTemplate) {
+        this._unsubscribeFromTemplate(idx, typeKey);
+        if (templateValsObj[idx]) delete templateValsObj[idx];
+        
+        const resolvedValue = this._evaluateJsTemplate(rawValue);
+        
+        const currentCached = allowObject ? cacheObj[idx]?.value : cacheObj[idx]?.id;
+        const changed = allowObject 
+          ? JSON.stringify(currentCached) !== JSON.stringify(resolvedValue) 
+          : currentCached !== resolvedValue;
+
+        if (changed) {
+          if (allowObject) {
+            cacheObj[idx] = { value: resolvedValue, ts: Date.now() };
+          } else {
+            cacheObj[idx] = { id: resolvedValue, ts: Date.now() };
+          }
+          this.requestUpdate();
+        }
+        return;
+      }
+
+      const looksTemplate = rawValue.includes('{{') || rawValue.includes('{%');
+      if (!looksTemplate) {
+        this._unsubscribeFromTemplate(idx, typeKey);
+        if (templateValsObj[idx]) delete templateValsObj[idx];
+        
+        if (cacheStaticString) {
+          cacheObj[idx] = { id: rawValue, ts: Date.now() };
+        } else {
+          delete cacheObj[idx];
+        }
+        return;
+      }
+
+      // Setup subscription for reactivity
+      this._subscribeToTemplate(idx, typeKey, rawValue);
+    } else if (allowObject && typeof rawValue === 'object') {
+       // It's a raw array/object, not a string template. Clear template caches.
+       delete cacheObj[idx];
+       this._unsubscribeFromTemplate(idx, typeKey);
+       if (templateValsObj[idx]) delete templateValsObj[idx];
+    }
+  }
+
   // Resolve and cache the MA entity for a given chip index (template or static)
   async _ensureResolvedMaForIndex(idx) {
     const obj = this.entityObjs?.[idx];
     if (!obj) return;
-    const raw = obj.music_assistant_entity;
-    if (!raw || typeof raw !== 'string') {
-      // Clear cache if no MA or not a string
-      delete this._maResolveCache[idx];
-      this._unsubscribeFromTemplate(idx, 'ma');
-      if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
-      return;
-    }
-    const isJsTemplate = raw.trim().startsWith('[[[');
-    if (isJsTemplate) {
-      this._unsubscribeFromTemplate(idx, 'ma');
-      if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
-      
-      const resolvedValue = this._evaluateJsTemplate(raw);
-      if (this._maResolveCache[idx]?.id !== resolvedValue) {
-        this._maResolveCache[idx] = { id: resolvedValue, ts: Date.now() };
-        this.requestUpdate();
-      }
-      return;
-    }
-
-    const looksTemplate = raw.includes('{{') || raw.includes('{%');
-    const now = Date.now();
-
-    if (!looksTemplate) {
-      // Static MA — always cache for consistency
-      this._unsubscribeFromTemplate(idx, 'ma');
-      if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
-      this._maResolveCache[idx] = { id: raw, ts: now };
-      return;
-    }
-
-    // Setup subscription for reactivity instead of polling via API
-    this._subscribeToTemplate(idx, 'ma', raw);
+    return this._ensureResolvedTemplateForIndex(idx, 'ma', obj.music_assistant_entity, this._maResolveCache, this._maTemplateValues, { cacheStaticString: true });
   }
 
   // Resolve and cache the Volume entity for a given chip index (template or static)
@@ -971,41 +1001,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
 
-    const raw = obj.volume_entity;
-    if (!raw || typeof raw !== 'string') {
-      // Clear cache if no volume entity or not a string
-      delete this._volResolveCache[idx];
-      this._unsubscribeFromTemplate(idx, 'vol');
-      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
-      return;
-    }
-    const isJsTemplate = raw.trim().startsWith('[[[');
-    if (isJsTemplate) {
-      this._unsubscribeFromTemplate(idx, 'vol');
-      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
-      
-      const resolvedValue = this._evaluateJsTemplate(raw);
-      if (this._volResolveCache[idx]?.id !== resolvedValue) {
-        this._volResolveCache[idx] = { id: resolvedValue, ts: Date.now() };
-        this.requestUpdate();
-      }
-      return;
-    }
-
-    const looksTemplate = raw.includes('{{') || raw.includes('{%');
-    const now = Date.now();
-
-    if (!looksTemplate) {
-      // Static volume entity — always cache for consistency
-      this._unsubscribeFromTemplate(idx, 'vol');
-      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
-      this._volResolveCache[idx] = { id: raw, ts: now };
-      return;
-    }
-
-    // Setup subscription for reactivity
-    this._subscribeToTemplate(idx, 'vol', raw);
+    return this._ensureResolvedTemplateForIndex(idx, 'vol', obj.volume_entity, this._volResolveCache, this._volTemplateValues, { cacheStaticString: true });
   }
+
+  // Resolve and cache the hidden_controls array for a given chip index
+  async _ensureResolvedHiddenControlsForIndex(idx) {
+    const obj = this.entityObjs?.[idx];
+    if (!obj) return;
+    return this._ensureResolvedTemplateForIndex(idx, 'hidden_controls', obj.hidden_controls, this._hiddenControlsResolveCache, this._hiddenControlsTemplateValues, { allowObject: true });
+  }
+
   _evaluateJsTemplate(templateStr) {
     if (typeof templateStr !== "string") return templateStr;
 
@@ -1027,15 +1032,22 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const state_attr = (entity, attr) => states[entity]?.attributes?.[attr];
 
       // Compile and execute in context
+      const context = this._getTemplateContext();
       if (!this._compiledJsTemplates) this._compiledJsTemplates = {};
       if (!this._compiledJsTemplates[code]) {
         const body = code.includes("return") ? code : `return (${code});`;
         this._compiledJsTemplates[code] = new Function(
           "hass", "states", "user", "is_state", "state_attr",
+          "current", "is_idle", "is_playing", "is_search", "is_grouping",
+          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open",
           body
         );
       }
-      return this._compiledJsTemplates[code](hass, states, user, is_state, state_attr);
+      return this._compiledJsTemplates[code](
+        hass, states, user, is_state, state_attr,
+        context.current, context.is_idle, context.is_playing, context.is_search, context.is_grouping,
+        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open
+      );
     } catch (err) {
       console.warn("yamp: failed to evaluate JS template:", templateStr, err);
       return undefined;
@@ -1110,6 +1122,31 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         checkIdx++;
       }
     }
+  }
+
+  _syncEntityTemplateSubscriptions(typeKey, currentContext) {
+    if (!this.hass || !this.entityObjs) return;
+
+    const contextKeyName = `_lastEntity_${typeKey}ContextKey`;
+    const isContextChanged = this[contextKeyName] !== currentContext;
+    if (!isContextChanged) return;
+
+    this[contextKeyName] = currentContext;
+
+    this.entityObjs.forEach((_, idx) => {
+      // Force cache clearing for Jinja templates so they re-subscribe with new context
+      if (this._templateSubscriptions[`${idx}_${typeKey}`]) {
+        this._unsubscribeFromTemplate(idx, typeKey);
+      }
+      
+      if (typeKey === 'ma') {
+        this._ensureResolvedMaForIndex(idx);
+      } else if (typeKey === 'vol') {
+        this._ensureResolvedVolForIndex(idx);
+      } else if (typeKey === 'hidden_controls') {
+        this._ensureResolvedHiddenControlsForIndex(idx);
+      }
+    });
   }
 
   // Get the resolved playback entity id for a chip index, preferring cache
@@ -3464,6 +3501,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           }
           this._ensureResolvedMaForIndex(targetIdx);
           this._ensureResolvedVolForIndex(targetIdx);
+          this._ensureResolvedHiddenControlsForIndex(targetIdx);
         }
       }
       await this._updateTransferQueueAvailability({ refresh: true });
@@ -4774,20 +4812,34 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   // Get hidden controls configuration for the current entity
   _getHiddenControlsForCurrentEntity() {
     const currentEntityObj = this.entityObjs[this._selectedIndex];
+    let rawHiddenControls = currentEntityObj?.hidden_controls;
 
-    if (!currentEntityObj?.hidden_controls) {
+    const cached = this._hiddenControlsResolveCache?.[this._selectedIndex]?.value;
+    if (cached !== undefined) {
+      rawHiddenControls = cached;
+    }
+
+    if (!rawHiddenControls) {
       return {};
+    }
+
+    if (typeof rawHiddenControls === 'string') {
+      try {
+        rawHiddenControls = JSON.parse(rawHiddenControls.replace(/'/g, '"'));
+      } catch (e) {
+        rawHiddenControls = rawHiddenControls.split(',').map(s => s.trim());
+      }
     }
 
     // Convert array format to object format for compatibility
     const hiddenControls = {};
-    if (Array.isArray(currentEntityObj.hidden_controls)) {
-      currentEntityObj.hidden_controls.forEach(control => {
+    if (Array.isArray(rawHiddenControls)) {
+      rawHiddenControls.forEach(control => {
         hiddenControls[control] = true;
       });
-    } else if (typeof currentEntityObj.hidden_controls === 'object') {
+    } else if (typeof rawHiddenControls === 'object') {
       // Handle object format as well
-      Object.assign(hiddenControls, currentEntityObj.hidden_controls);
+      Object.assign(hiddenControls, rawHiddenControls);
     }
 
     return hiddenControls;
@@ -5893,6 +5945,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
     this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
+    this._syncEntityTemplateSubscriptions('ma', currentContext);
+    this._syncEntityTemplateSubscriptions('vol', currentContext);
+    this._syncEntityTemplateSubscriptions('hidden_controls', currentContext);
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
@@ -6064,6 +6119,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       // Warm the resolved MA/Volume caches for the selected chip
       this._ensureResolvedMaForIndex(this._selectedIndex);
       this._ensureResolvedVolForIndex(this._selectedIndex);
+      this._ensureResolvedHiddenControlsForIndex(this._selectedIndex);
 
       // Sync selected entity to helper if configured
       this._updateSelectedEntityHelper();
@@ -9613,6 +9669,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Resolve all templates before opening the menu so feature checking works correctly
     for (let i = 0; i < this.entityObjs.length; i++) {
       await this._ensureResolvedMaForIndex(i);
+      await this._ensureResolvedVolForIndex(i);
+      await this._ensureResolvedHiddenControlsForIndex(i);
     }
 
     await this._updateTransferQueueAvailability({ refresh: true });

@@ -2850,29 +2850,66 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
 
         <div class="form-row">
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{
-              select: {
-                mode: "dropdown",
-                multiple: true,
-                options: [
-                  { value: "previous", label: "Previous Track" },
-                  { value: "play_pause", label: "Play/Pause" },
-                  { value: "stop", label: "Stop" },
-                  { value: "next", label: "Next Track" },
-                  { value: "shuffle", label: "Shuffle" },
-                  { value: "repeat", label: "Repeat" },
-                  { value: "favorite", label: "Favorite" },
-                  { value: "power", label: "Power" },
-                ],
-              },
-            }}
-            .value=${Array.isArray(entity?.hidden_controls) ? entity.hidden_controls : []}
-            label="${localize("editor.fields.hidden_controls")}"
-            helper="${localize("editor.subtitles.hide_controls")}"
-            @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
-          ></ha-selector>
+          <div class="editor-field-wrapper">
+            ${
+              this._isTemplateMode("hidden_controls", entity?.hidden_controls)
+                ? html`
+                  <div class="grow-children">
+                    <div class=${
+                      this._yamlError && typeof entity?.hidden_controls === 'string' && entity.hidden_controls.trim() !== ""
+                        ? "code-editor-wrapper error"
+                        : "code-editor-wrapper"
+                    } style="width: 100%;">
+                      <ha-code-editor lint
+                        id="hidden-controls-template-editor"
+                        label="${localize("editor.fields.hidden_controls")}"
+                        .hass=${this.hass}
+                        mode="jinja2"
+                        autocomplete-entities
+                        .value=${typeof entity?.hidden_controls === 'string' ? entity.hidden_controls : ""}
+                        @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
+                      ></ha-code-editor>
+                      <div class="help-text">
+                        ${localize("editor.subtitles.hide_controls")}
+                      </div>
+                    </div>
+                  </div>
+                `
+                : html`
+                  <ha-selector
+                    .hass=${this.hass}
+                    .selector=${{
+                      select: {
+                        mode: "dropdown",
+                        multiple: true,
+                        options: [
+                          { value: "previous", label: "Previous Track" },
+                          { value: "play_pause", label: "Play/Pause" },
+                          { value: "stop", label: "Stop" },
+                          { value: "next", label: "Next Track" },
+                          { value: "shuffle", label: "Shuffle" },
+                          { value: "repeat", label: "Repeat" },
+                          { value: "favorite", label: "Favorite" },
+                          { value: "power", label: "Power" },
+                        ],
+                      },
+                    }}
+                    .value=${(() => {
+                      let val = entity?.hidden_controls;
+                      if (typeof val === 'string') {
+                        try { val = JSON.parse(val.replace(/'/g, '"')); }
+                        catch (e) { val = val.split(',').map(s => s.trim()).filter(s => s !== ""); }
+                      }
+                      return Array.isArray(val) ? val : [];
+                    })()}
+                    label="${localize("editor.fields.hidden_controls")}"
+                    helper="${localize("editor.subtitles.hide_controls")}"
+                    @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}
+                  ></ha-selector>
+                `
+            }
+            ${this._renderTemplateToggle("hidden_controls", entity?.hidden_controls, (v) => this._updateEntityProperty("hidden_controls", v))}
+          </div>
         </div>
 
  

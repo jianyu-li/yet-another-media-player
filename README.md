@@ -57,7 +57,7 @@ Below you will find a list of all configuration options.
 | `prefer_ma_metadata`       | boolean      | No           | `false`     | Prioritize the Music Assistant entity for artwork and metadata resolution regardless of which device is playing |
 | `group_volume`             | boolean      | No           | `true`      | Isolate this entity's volume from group volume changes and vice versa (see [Group Volume Override](#group-volume-override-per-entity)) |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
-| `hidden_controls`          | array        | No           | `[]`        | Array of control names to hide for this specific entity         |
+| `hidden_controls`          | array/template| No           | `[]`        | Array of control names to hide for this specific entity (Supports Templates) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 | `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
 |                                                                                                 |
@@ -325,7 +325,7 @@ entities:
 
 ### Hidden Controls Configuration
 
-You can hide specific media player controls on a per-entity basis using the `hidden_controls` option. This is useful when you want to simplify the interface for certain entities or hide controls that aren't needed.
+You can hide specific media player controls on a per-entity basis using the `hidden_controls` option. This is useful when you want to simplify the interface for certain entities or hide controls that aren't needed. **This field also supports templates (Jinja2 and JavaScript) for dynamic control visibility.**
 
 **Important**: The entity must still support the control for it to be visible in the first place. Hidden controls only hide controls that would normally be displayed based on the entity's capabilities.
 
@@ -358,6 +358,23 @@ entities:
 In this example:
 - The Living Room entity will hide the favorite, shuffle, and repeat buttons
 - The Kitchen entity will hide only the power button
+
+#### Template Example
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    hidden_controls: >
+      [[[
+        if (states['sensor.timers_going'] && parseInt(states['sensor.timers_going'].state) > 0) {
+          // Hide unnecessary controls while a timer is active
+          return ['stop', 'shuffle', 'repeat', 'favorite', 'power'];
+        }
+        // Show all controls otherwise
+        return [];
+      ]]]
+```
 - All other controls will remain visible (if supported by the entity)
 
 
