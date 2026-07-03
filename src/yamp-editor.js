@@ -1573,6 +1573,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
       });
 
+      // Also grab text from label attributes of nested components
+      const labeledElements = row.querySelectorAll("[label]");
+      labeledElements.forEach((el) => {
+        const label = el.getAttribute("label");
+        if (label) text += " " + String(label).toLowerCase();
+      });
+
       const match = text.includes(term);
       row.style.display = match ? "" : "none";
       return match;
