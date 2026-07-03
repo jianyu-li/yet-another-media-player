@@ -942,12 +942,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const resolvedValue = this._evaluateJsTemplate(rawValue);
         
         const currentCached = allowObject ? cacheObj[idx]?.value : cacheObj[idx]?.id;
-        let changed = false;
-        if (allowObject) {
-          changed = JSON.stringify(currentCached) !== JSON.stringify(resolvedValue);
-        } else {
-          changed = currentCached !== resolvedValue;
-        }
+        const changed = allowObject 
+          ? JSON.stringify(currentCached) !== JSON.stringify(resolvedValue) 
+          : currentCached !== resolvedValue;
 
         if (changed) {
           if (allowObject) {
