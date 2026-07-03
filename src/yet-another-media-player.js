@@ -1035,15 +1035,22 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const state_attr = (entity, attr) => states[entity]?.attributes?.[attr];
 
       // Compile and execute in context
+      const context = this._getTemplateContext();
       if (!this._compiledJsTemplates) this._compiledJsTemplates = {};
       if (!this._compiledJsTemplates[code]) {
         const body = code.includes("return") ? code : `return (${code});`;
         this._compiledJsTemplates[code] = new Function(
           "hass", "states", "user", "is_state", "state_attr",
+          "current", "is_idle", "is_playing", "is_search", "is_grouping",
+          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open",
           body
         );
       }
-      return this._compiledJsTemplates[code](hass, states, user, is_state, state_attr);
+      return this._compiledJsTemplates[code](
+        hass, states, user, is_state, state_attr,
+        context.current, context.is_idle, context.is_playing, context.is_search, context.is_grouping,
+        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open
+      );
     } catch (err) {
       console.warn("yamp: failed to evaluate JS template:", templateStr, err);
       return undefined;
@@ -1118,6 +1125,31 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         checkIdx++;
       }
     }
+  }
+
+  _syncEntityTemplateSubscriptions(typeKey, currentContext) {
+    if (!this.hass || !this.entityObjs) return;
+
+    const contextKeyName = `_lastEntity_${typeKey}ContextKey`;
+    const isContextChanged = this[contextKeyName] !== currentContext;
+    if (!isContextChanged) return;
+
+    this[contextKeyName] = currentContext;
+
+    this.entityObjs.forEach((_, idx) => {
+      // Force cache clearing for Jinja templates so they re-subscribe with new context
+      if (this._templateSubscriptions[`${idx}_${typeKey}`]) {
+        this._unsubscribeFromTemplate(idx, typeKey);
+      }
+      
+      if (typeKey === 'ma') {
+        this._ensureResolvedMaForIndex(idx);
+      } else if (typeKey === 'vol') {
+        this._ensureResolvedVolForIndex(idx);
+      } else if (typeKey === 'hidden_controls') {
+        this._ensureResolvedHiddenControlsForIndex(idx);
+      }
+    });
   }
 
   // Get the resolved playback entity id for a chip index, preferring cache
@@ -5916,6 +5948,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
     this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
+    this._syncEntityTemplateSubscriptions('ma', currentContext);
+    this._syncEntityTemplateSubscriptions('vol', currentContext);
+    this._syncEntityTemplateSubscriptions('hidden_controls', currentContext);
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
