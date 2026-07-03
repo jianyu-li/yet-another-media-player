@@ -2894,7 +2894,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         ],
                       },
                     }}
-                    .value=${Array.isArray(entity?.hidden_controls) ? entity.hidden_controls : []}
+                    .value=${(() => {
+                      let val = entity?.hidden_controls;
+                      if (typeof val === 'string') {
+                        try { val = JSON.parse(val.replace(/'/g, '"')); }
+                        catch (e) { val = val.split(',').map(s => s.trim()).filter(s => s !== ""); }
+                      }
+                      return Array.isArray(val) ? val : [];
+                    })()}
                     label="${localize("editor.fields.hidden_controls")}"
                     helper="${localize("editor.subtitles.hide_controls")}"
                     @value-changed=${(e) => this._updateEntityProperty("hidden_controls", e.detail.value)}

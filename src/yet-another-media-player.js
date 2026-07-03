@@ -923,44 +923,71 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  async _ensureResolvedTemplateForIndex(idx, typeKey, rawValue, cacheObj, templateValsObj, options = {}) {
+    const { allowObject = false, cacheStaticString = false } = options;
+
+    if (!rawValue || (typeof rawValue !== 'string' && !(allowObject && typeof rawValue === 'object'))) {
+      delete cacheObj[idx];
+      this._unsubscribeFromTemplate(idx, typeKey);
+      if (templateValsObj[idx]) delete templateValsObj[idx];
+      return;
+    }
+
+    if (typeof rawValue === 'string') {
+      const isJsTemplate = rawValue.trim().startsWith('[[[');
+      if (isJsTemplate) {
+        this._unsubscribeFromTemplate(idx, typeKey);
+        if (templateValsObj[idx]) delete templateValsObj[idx];
+        
+        const resolvedValue = this._evaluateJsTemplate(rawValue);
+        
+        const currentCached = allowObject ? cacheObj[idx]?.value : cacheObj[idx]?.id;
+        let changed = false;
+        if (allowObject) {
+          changed = JSON.stringify(currentCached) !== JSON.stringify(resolvedValue);
+        } else {
+          changed = currentCached !== resolvedValue;
+        }
+
+        if (changed) {
+          if (allowObject) {
+            cacheObj[idx] = { value: resolvedValue, ts: Date.now() };
+          } else {
+            cacheObj[idx] = { id: resolvedValue, ts: Date.now() };
+          }
+          this.requestUpdate();
+        }
+        return;
+      }
+
+      const looksTemplate = rawValue.includes('{{') || rawValue.includes('{%');
+      if (!looksTemplate) {
+        this._unsubscribeFromTemplate(idx, typeKey);
+        if (templateValsObj[idx]) delete templateValsObj[idx];
+        
+        if (cacheStaticString) {
+          cacheObj[idx] = { id: rawValue, ts: Date.now() };
+        } else {
+          delete cacheObj[idx];
+        }
+        return;
+      }
+
+      // Setup subscription for reactivity
+      this._subscribeToTemplate(idx, typeKey, rawValue);
+    } else if (allowObject && typeof rawValue === 'object') {
+       // It's a raw array/object, not a string template. Clear template caches.
+       delete cacheObj[idx];
+       this._unsubscribeFromTemplate(idx, typeKey);
+       if (templateValsObj[idx]) delete templateValsObj[idx];
+    }
+  }
+
   // Resolve and cache the MA entity for a given chip index (template or static)
   async _ensureResolvedMaForIndex(idx) {
     const obj = this.entityObjs?.[idx];
     if (!obj) return;
-    const raw = obj.music_assistant_entity;
-    if (!raw || typeof raw !== 'string') {
-      // Clear cache if no MA or not a string
-      delete this._maResolveCache[idx];
-      this._unsubscribeFromTemplate(idx, 'ma');
-      if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
-      return;
-    }
-    const isJsTemplate = raw.trim().startsWith('[[[');
-    if (isJsTemplate) {
-      this._unsubscribeFromTemplate(idx, 'ma');
-      if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
-      
-      const resolvedValue = this._evaluateJsTemplate(raw);
-      if (this._maResolveCache[idx]?.id !== resolvedValue) {
-        this._maResolveCache[idx] = { id: resolvedValue, ts: Date.now() };
-        this.requestUpdate();
-      }
-      return;
-    }
-
-    const looksTemplate = raw.includes('{{') || raw.includes('{%');
-    const now = Date.now();
-
-    if (!looksTemplate) {
-      // Static MA — always cache for consistency
-      this._unsubscribeFromTemplate(idx, 'ma');
-      if (this._maTemplateValues[idx]) delete this._maTemplateValues[idx];
-      this._maResolveCache[idx] = { id: raw, ts: now };
-      return;
-    }
-
-    // Setup subscription for reactivity instead of polling via API
-    this._subscribeToTemplate(idx, 'ma', raw);
+    return this._ensureResolvedTemplateForIndex(idx, 'ma', obj.music_assistant_entity, this._maResolveCache, this._maTemplateValues, { cacheStaticString: true });
   }
 
   // Resolve and cache the Volume entity for a given chip index (template or static)
@@ -977,79 +1004,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
 
-    const raw = obj.volume_entity;
-    if (!raw || typeof raw !== 'string') {
-      // Clear cache if no volume entity or not a string
-      delete this._volResolveCache[idx];
-      this._unsubscribeFromTemplate(idx, 'vol');
-      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
-      return;
-    }
-    const isJsTemplate = raw.trim().startsWith('[[[');
-    if (isJsTemplate) {
-      this._unsubscribeFromTemplate(idx, 'vol');
-      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
-      
-      const resolvedValue = this._evaluateJsTemplate(raw);
-      if (this._volResolveCache[idx]?.id !== resolvedValue) {
-        this._volResolveCache[idx] = { id: resolvedValue, ts: Date.now() };
-        this.requestUpdate();
-      }
-      return;
-    }
-
-    const looksTemplate = raw.includes('{{') || raw.includes('{%');
-    const now = Date.now();
-
-    if (!looksTemplate) {
-      // Static volume entity — always cache for consistency
-      this._unsubscribeFromTemplate(idx, 'vol');
-      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
-      this._volResolveCache[idx] = { id: raw, ts: now };
-      return;
-    }
-
-    // Setup subscription for reactivity
-    this._subscribeToTemplate(idx, 'vol', raw);
+    return this._ensureResolvedTemplateForIndex(idx, 'vol', obj.volume_entity, this._volResolveCache, this._volTemplateValues, { cacheStaticString: true });
   }
 
   // Resolve and cache the hidden_controls array for a given chip index
   async _ensureResolvedHiddenControlsForIndex(idx) {
     const obj = this.entityObjs?.[idx];
     if (!obj) return;
-
-    const raw = obj.hidden_controls;
-    if (!raw || (typeof raw !== 'string' && !Array.isArray(raw))) {
-      delete this._hiddenControlsResolveCache[idx];
-      this._unsubscribeFromTemplate(idx, 'hidden_controls');
-      if (this._hiddenControlsTemplateValues[idx]) delete this._hiddenControlsTemplateValues[idx];
-      return;
-    }
-
-    if (typeof raw === 'string') {
-      const isJsTemplate = raw.trim().startsWith('[[[');
-      if (isJsTemplate) {
-        this._unsubscribeFromTemplate(idx, 'hidden_controls');
-        if (this._hiddenControlsTemplateValues[idx]) delete this._hiddenControlsTemplateValues[idx];
-        
-        const resolvedValue = this._evaluateJsTemplate(raw);
-        if (JSON.stringify(this._hiddenControlsResolveCache[idx]?.value) !== JSON.stringify(resolvedValue)) {
-          this._hiddenControlsResolveCache[idx] = { value: resolvedValue, ts: Date.now() };
-          this.requestUpdate();
-        }
-        return;
-      }
-
-      const looksTemplate = raw.includes('{{') || raw.includes('{%');
-      if (!looksTemplate) {
-        this._unsubscribeFromTemplate(idx, 'hidden_controls');
-        if (this._hiddenControlsTemplateValues[idx]) delete this._hiddenControlsTemplateValues[idx];
-        return;
-      }
-
-      // Setup subscription for reactivity
-      this._subscribeToTemplate(idx, 'hidden_controls', raw);
-    }
+    return this._ensureResolvedTemplateForIndex(idx, 'hidden_controls', obj.hidden_controls, this._hiddenControlsResolveCache, this._hiddenControlsTemplateValues, { allowObject: true });
   }
 
   _evaluateJsTemplate(templateStr) {
