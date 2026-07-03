@@ -40,14 +40,16 @@ export function renderChip({
       style="display:flex;align-items:center;justify-content:space-between;position:relative;"
     >
       <span class="chip-icon">
-        ${art
-          ? html`<img
-              class="chip-mini-art"
-              src="${art}"
-              style="${artStyle}"
-              onerror="this.style.display='none'"
-            />`
-          : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`}
+        ${
+          art
+            ? html`<img
+                class="chip-mini-art"
+                src="${art}"
+                style="${artStyle}"
+                onerror="this.style.display='none'"
+              />`
+            : html`<ha-icon .icon=${icon} style="font-size:28px;"></ha-icon>`
+        }
       </span>
       <span
         class="chip-label"
@@ -55,29 +57,33 @@ export function renderChip({
       >
         ${name}
       </span>
-      ${playing
-        ? html`
-            <span class="chip-playing-indicator">
-              <span class="bar"></span>
-              <span class="bar"></span>
-              <span class="bar"></span>
-            </span>
-          `
-        : nothing}
-      ${pinned
-        ? html`
-            <span
-              class="chip-pin-inside"
-              @click=${(e) => {
-                e.stopPropagation();
-                onPinClick(idx, e);
-              }}
-              title="${localize("common.unpin")}"
-            >
-              <ha-icon .icon=${"mdi:pin"}></ha-icon>
-            </span>
-          `
-        : html`<span class="chip-pin-spacer"></span>`}
+      ${
+        playing
+          ? html`
+              <span class="chip-playing-indicator">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+              </span>
+            `
+          : nothing
+      }
+      ${
+        pinned
+          ? html`
+              <span
+                class="chip-pin-inside"
+                @click=${(e) => {
+                  e.stopPropagation();
+                  onPinClick(idx, e);
+                }}
+                title="${localize("common.unpin")}"
+              >
+                <ha-icon .icon=${"mdi:pin"}></ha-icon>
+              </span>
+            `
+          : html`<span class="chip-pin-spacer"></span>`
+      }
       ${renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick })}
     </button>
   `;
@@ -129,29 +135,31 @@ export function renderGroupChip({
           }
         }}
       >
-        ${art
-          ? html`<img
-              class="chip-mini-art"
-              src="${art}"
-              style="cursor:pointer;${artStyle}"
-              onerror="this.style.display='none'"
-              @click=${(e) => {
-                e.stopPropagation();
-                if (onIconClick) {
-                  onIconClick(idx, e);
-                }
-              }}
-            />`
-          : html`<ha-icon
-              .icon=${icon}
-              style="font-size:28px;cursor:pointer;"
-              @click=${(e) => {
-                e.stopPropagation();
-                if (onIconClick) {
-                  onIconClick(idx, e);
-                }
-              }}
-            ></ha-icon>`}
+        ${
+          art
+            ? html`<img
+                class="chip-mini-art"
+                src="${art}"
+                style="cursor:pointer;${artStyle}"
+                onerror="this.style.display='none'"
+                @click=${(e) => {
+                  e.stopPropagation();
+                  if (onIconClick) {
+                    onIconClick(idx, e);
+                  }
+                }}
+              />`
+            : html`<ha-icon
+                .icon=${icon}
+                style="font-size:28px;cursor:pointer;"
+                @click=${(e) => {
+                  e.stopPropagation();
+                  if (onIconClick) {
+                    onIconClick(idx, e);
+                  }
+                }}
+              ></ha-icon>`
+        }
       </span>
       <span
         class="chip-label"
@@ -159,29 +167,33 @@ export function renderGroupChip({
       >
         ${groupName}
       </span>
-      ${playing
-        ? html`
-            <span class="chip-playing-indicator">
-              <span class="bar"></span>
-              <span class="bar"></span>
-              <span class="bar"></span>
-            </span>
-          `
-        : nothing}
-      ${pinned
-        ? html`
-            <span
-              class="chip-pin-inside"
-              @click=${(e) => {
-                e.stopPropagation();
-                onPinClick(idx, e);
-              }}
-              title="${localize("common.unpin")}"
-            >
-              <ha-icon .icon=${"mdi:pin"}></ha-icon>
-            </span>
-          `
-        : html`<span class="chip-pin-spacer"></span>`}
+      ${
+        playing
+          ? html`
+              <span class="chip-playing-indicator">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+              </span>
+            `
+          : nothing
+      }
+      ${
+        pinned
+          ? html`
+              <span
+                class="chip-pin-inside"
+                @click=${(e) => {
+                  e.stopPropagation();
+                  onPinClick(idx, e);
+                }}
+                title="${localize("common.unpin")}"
+              >
+                <ha-icon .icon=${"mdi:pin"}></ha-icon>
+              </span>
+            `
+          : html`<span class="chip-pin-spacer"></span>`
+      }
       ${renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick })}
     </button>
   `;
@@ -204,11 +216,9 @@ export function renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClic
         if (onQuickGroupClick && !isBusy && !isPrimary) onQuickGroupClick(idx, e);
       }}
       title=${title}
-      style="${isPrimary
-        ? "cursor:default;opacity:0.7;"
-        : isBusy
-          ? "opacity:0.5;cursor:not-allowed;"
-          : ""}"
+      style="${
+        isPrimary ? "cursor:default;opacity:0.7;" : isBusy ? "opacity:0.5;cursor:not-allowed;" : ""
+      }"
     >
       <ha-icon .icon=${icon}></ha-icon>
     </span>

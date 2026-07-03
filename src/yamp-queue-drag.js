@@ -174,7 +174,8 @@ export const QueueDragMixin = (superClass) =>
             return; // Skip finding closest row
           } else if (dropZoneEl._isActive) {
             dropZoneEl._isActive = false;
-            dropZoneEl.style.background = "var(--ha-card-background, var(--card-background-color, #1c1c1c))";
+            dropZoneEl.style.background =
+              "var(--ha-card-background, var(--card-background-color, #1c1c1c))";
             dropZoneEl.style.borderColor = "var(--custom-accent, var(--accent-color, #ff9800))";
             dropZoneEl.style.borderStyle = "dashed";
             if (dropZoneContentEl) dropZoneContentEl.style.color = "";
@@ -268,7 +269,7 @@ export const QueueDragMixin = (superClass) =>
           // Use the same proven pattern as the floating clone:
           // all positioning inline, position:fixed, appended to renderRoot
           const hostRect = this.getBoundingClientRect();
-          const dropZoneHeight = Math.max(56, Math.round(hostRect.height * 0.10));
+          const dropZoneHeight = Math.max(56, Math.round(hostRect.height * 0.1));
           dropZoneEl.style.cssText = `
             position: fixed;
             top: ${hostRect.top}px;
@@ -360,8 +361,12 @@ export const QueueDragMixin = (superClass) =>
 
         isHoveringDropZone = false;
         if (dropZoneRect) {
-          if (lastClientY >= dropZoneRect.top && lastClientY <= dropZoneRect.bottom &&
-            lastClientX >= dropZoneRect.left && lastClientX <= dropZoneRect.right) {
+          if (
+            lastClientY >= dropZoneRect.top &&
+            lastClientY <= dropZoneRect.bottom &&
+            lastClientX >= dropZoneRect.left &&
+            lastClientX <= dropZoneRect.right
+          ) {
             isHoveringDropZone = true;
           }
         }

@@ -39,8 +39,9 @@ export function renderProgressBar({
     return html`
       <div
         class="collapsed-progress-bar"
-        style="width: ${progress *
-        100}%; background: ${barColor}; height: ${activeHeight}px; ${dynamicStyles} ${style}"
+        style="width: ${
+          progress * 100
+        }%; background: ${barColor}; height: ${activeHeight}px; ${dynamicStyles} ${style}"
       ></div>
     `;
   }
@@ -57,14 +58,16 @@ export function renderProgressBar({
           style="width: ${progress * 100}%; background: ${barColor};"
         ></div>
       </div>
-      ${displayTimestamps
-        ? html`
-            <div class="timestamps-container">
-              <span>${formatTime(currentTime)}</span>
-              <span>-${formatTime(Math.max(0, duration - currentTime))}</span>
-            </div>
-          `
-        : nothing}
+      ${
+        displayTimestamps
+          ? html`
+              <div class="timestamps-container">
+                <span>${formatTime(currentTime)}</span>
+                <span>-${formatTime(Math.max(0, duration - currentTime))}</span>
+              </div>
+            `
+          : nothing
+      }
     </div>
   `;
 }

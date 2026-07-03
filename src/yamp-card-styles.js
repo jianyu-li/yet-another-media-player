@@ -4382,13 +4382,22 @@ export const lyricsStyles = css`
 
   /* Positioning is set inline in yamp-queue-drag.js */
   .queue-play-next-dropzone {
-    transition: background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      background 0.2s ease,
+      border 0.2s ease,
+      box-shadow 0.2s ease;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
-  
+
   @keyframes dropzoneFadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .queue-play-next-dropzone .dropzone-content {

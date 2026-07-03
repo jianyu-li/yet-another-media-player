@@ -942,9 +942,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const resolvedValue = this._evaluateJsTemplate(rawValue);
         
         const currentCached = allowObject ? cacheObj[idx]?.value : cacheObj[idx]?.id;
-        const changed = allowObject 
-          ? JSON.stringify(currentCached) !== JSON.stringify(resolvedValue) 
-          : currentCached !== resolvedValue;
+        
+        let changed;
+        if (typeof resolvedValue === 'object' && resolvedValue !== null) {
+          changed = JSON.stringify(currentCached) !== JSON.stringify(resolvedValue);
+        } else if (Number.isNaN(resolvedValue) && Number.isNaN(currentCached)) {
+          changed = false;
+        } else {
+          changed = currentCached !== resolvedValue;
+        }
 
         if (changed) {
           if (allowObject) {
@@ -1089,7 +1095,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (hasJsTemplate) {
         this._unsubscribeFromTemplate(idx, type);
         const resolvedValue = this._evaluateJsTemplate(raw);
-        if (cache[idx]?.value !== resolvedValue) {
+        
+        const currentValue = cache[idx]?.value;
+        let isChanged;
+        if (typeof resolvedValue === 'object' && resolvedValue !== null) {
+          isChanged = JSON.stringify(currentValue) !== JSON.stringify(resolvedValue);
+        } else if (Number.isNaN(resolvedValue) && Number.isNaN(currentValue)) {
+          isChanged = false;
+        } else {
+          isChanged = currentValue !== resolvedValue;
+        }
+
+        if (isChanged) {
           cache[idx] = { value: resolvedValue, ts: Date.now() };
           this.requestUpdate();
         }
