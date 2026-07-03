@@ -943,7 +943,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         
         const currentCached = allowObject ? cacheObj[idx]?.value : cacheObj[idx]?.id;
         
-        let changed = false;
+        let changed;
         if (typeof resolvedValue === 'object' && resolvedValue !== null) {
           changed = JSON.stringify(currentCached) !== JSON.stringify(resolvedValue);
         } else if (Number.isNaN(resolvedValue) && Number.isNaN(currentCached)) {
@@ -1097,7 +1097,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const resolvedValue = this._evaluateJsTemplate(raw);
         
         const currentValue = cache[idx]?.value;
-        let isChanged = false;
+        let isChanged;
         if (typeof resolvedValue === 'object' && resolvedValue !== null) {
           isChanged = JSON.stringify(currentValue) !== JSON.stringify(resolvedValue);
         } else if (Number.isNaN(resolvedValue) && Number.isNaN(currentValue)) {
