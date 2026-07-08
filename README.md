@@ -248,10 +248,28 @@ entities:
     name: Kitchen
     follow_active_volume: true
   - entity_id: media_player.office_homepod
-    name: Office
-    music_assistant_entity: media_player.office_homepod_2
-    group_volume: false  # Office volume will not change when Kitchen volume is adjusted
+    group_volume: false
 ```
+
+### Volume Mode & Step Overrides (Per-Entity)
+
+You can override the global `volume_mode` and `volume_step` settings for specific entities using `entity_volume_mode` and `entity_volume_step`.
+
+- `entity_volume_mode`: Can be set to `slider`, `stepper`, or `hidden`. If omitted, it falls back to the global `volume_mode`.
+- `entity_volume_step`: The step size for the stepper (e.g., `0.05`). This is only applicable when the entity's effective volume mode is `stepper`. If omitted, it falls back to the global `volume_step`.
+
+```yaml
+type: custom:yet-another-media-player
+volume_mode: slider
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    entity_volume_mode: stepper
+    entity_volume_step: 0.1
+  - entity_id: media_player.office_homepod
+    name: Office
+```
+
 
 
 ### Group Players
