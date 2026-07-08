@@ -60,6 +60,8 @@ Below you will find a list of all configuration options.
 | `hidden_controls`          | array/template| No           | `[]`        | Array of control names to hide for this specific entity (Supports Templates) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 | `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
+| `entity_volume_mode`       | choice       | No           | —           | Override global `volume_mode` for this entity (`slider`, `stepper`, `hidden`) |
+| `entity_volume_step`       | number       | No           | —           | Override global `volume_step` for this entity when its volume mode is `stepper` |
 |                                                                                                 |
 | **Behavior**               |              |              |             |                                                                                                 |
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
