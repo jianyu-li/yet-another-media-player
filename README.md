@@ -60,6 +60,8 @@ Below you will find a list of all configuration options.
 | `hidden_controls`          | array/template| No           | `[]`        | Array of control names to hide for this specific entity (Supports Templates) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 | `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
+| `entity_volume_mode`       | choice       | No           | —           | Override global `volume_mode` for this entity (`slider`, `stepper`, `hidden`) |
+| `entity_volume_step`       | number       | No           | —           | Override global `volume_step` for this entity when its volume mode is `stepper` |
 |                                                                                                 |
 | **Behavior**               |              |              |             |                                                                                                 |
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
@@ -248,10 +250,28 @@ entities:
     name: Kitchen
     follow_active_volume: true
   - entity_id: media_player.office_homepod
-    name: Office
-    music_assistant_entity: media_player.office_homepod_2
-    group_volume: false  # Office volume will not change when Kitchen volume is adjusted
+    group_volume: false
 ```
+
+### Volume Mode & Step Overrides (Per-Entity)
+
+You can override the global `volume_mode` and `volume_step` settings for specific entities using `entity_volume_mode` and `entity_volume_step`.
+
+- `entity_volume_mode`: Can be set to `slider`, `stepper`, or `hidden`. If omitted, it falls back to the global `volume_mode`.
+- `entity_volume_step`: The step size for the stepper (e.g., `0.05`). This is only applicable when the entity's effective volume mode is `stepper`. If omitted, it falls back to the global `volume_step`.
+
+```yaml
+type: custom:yet-another-media-player
+volume_mode: slider
+entities:
+  - entity_id: media_player.kitchen_homepod
+    name: Kitchen
+    entity_volume_mode: stepper
+    entity_volume_step: 0.1
+  - entity_id: media_player.office_homepod
+    name: Office
+```
+
 
 
 ### Group Players
