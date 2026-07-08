@@ -4542,6 +4542,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
     this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
+    this._volumeMode = config.volume_mode ?? "slider";
     if (config.always_show_lyrics === true) {
       this._lyricsActive = true;
     }
@@ -4576,6 +4577,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
       }
 
+      const entity_volume_mode = typeof e === "string" ? undefined : e.entity_volume_mode;
+      const entity_volume_step = typeof e === "string" ? undefined : e.entity_volume_step;
+
       return {
         entity_id,
         name,
@@ -4587,7 +4591,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
         disable_auto_select: this._isAutoSelectDisabled(index),
         prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
-        ...(typeof group_volume !== "undefined" ? { group_volume } : {})
+        ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
+        ...(entity_volume_mode ? { entity_volume_mode } : {}),
+        ...(typeof entity_volume_step === "number" ? { entity_volume_step } : {})
       };
     });
   }
@@ -4731,6 +4737,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   // Legacy methods for backward compatibility
   _getVolumeEntity(idx) {
     return this._getEntityForPurpose(idx, 'volume_control');
+  }
+
+  // Returns the effective volume mode for the active entity, preferring per-entity override
+  _getEffectiveVolumeMode() {
+    const obj = this.entityObjs?.[this._selectedIndex];
+    return obj?.entity_volume_mode || this._volumeMode;
+  }
+
+  // Returns the effective volume step for the active entity, preferring per-entity override
+  _getEffectiveVolumeStep() {
+    const obj = this.entityObjs?.[this._selectedIndex];
+    return typeof obj?.entity_volume_step === "number" ? obj.entity_volume_step : this._volumeStep;
   }
 
   // Resolve a grouping member ID to its configured entity index (synchronous and cache-based)
@@ -7088,7 +7106,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
       // Use configurable step size
-      const step = this._volumeStep * direction;
+      const step = this._getEffectiveVolumeStep() * direction;
       // Deduplicate resolved volume targets to prevent redundant service calls
       const seen = new Set();
       for (const t of targets) {
@@ -7113,7 +7131,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     } else {
       // Not grouped, set directly
       let current = Number(stateObj.attributes.volume_level || 0);
-      current += this._volumeStep * direction;
+      current += this._getEffectiveVolumeStep() * direction;
       current = Math.max(0, Math.min(1, current));
       // Round to 4 decimal places to prevent floating point precision errors
       current = Math.round(current * 10000) / 10000;
@@ -7811,7 +7829,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Volume
     const vol = Number(this.currentVolumeStateObj?.attributes.volume_level || 0);
-    const showSlider = this.config.volume_mode !== "stepper";
+    const showSlider = this._getEffectiveVolumeMode() !== "stepper";
 
     // Collapse artwork/details on idle if configured and/or always_collapsed
     // If expand on search is enabled and search is open, force expanded state
@@ -7968,7 +7986,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const isVolumeHidden =
       shouldHideVolumeControls ||
-      this.config.volume_mode === "hidden" ||
+      this._getEffectiveVolumeMode() === "hidden" ||
       (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
 
     const hasMoreInfoMenu = (!this._showEntityOptions && !isCompactVolume);
@@ -8303,7 +8321,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
             const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
 
-            if (this.config.volume_mode === "hidden") return nothing;
+            if (this._getEffectiveVolumeMode() === "hidden") return nothing;
 
             return html`
                     <div class="persistent-volume-stepper">
@@ -8471,7 +8489,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const artistScale = isCompact ? 0.85 : Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
 
     const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
-    const hideVolume = config.volume_mode === "hidden" || isCompactVolume || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
+    const hideVolume = this._getEffectiveVolumeMode() === "hidden" || isCompactVolume || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
     const artworkClearance = hideVolume ? 54 : 100;
 
     if (collapsedExtraSpace !== 0 || isCompact) {

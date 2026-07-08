@@ -13,6 +13,21 @@ const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
 ]);
 const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map((opt) => opt.value);
 
+const VOLUME_MODE_SELECTOR = Object.freeze({
+  select: {
+    mode: "dropdown",
+    options: [
+      { value: "slider", label: "Slider" },
+      { value: "stepper", label: "Stepper" },
+      { value: "hidden", label: "Hidden" },
+    ],
+  },
+});
+
+const VOLUME_STEP_SELECTOR = Object.freeze({
+  number: { min: 0.01, max: 1, step: 0.01, unit_of_measurement: "", mode: "box" },
+});
+
 export class YetAnotherMediaPlayerEditor extends LitElement {
   static get properties() {
     return {
@@ -2160,31 +2175,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _renderVisualTab() {
-    const renderVolumeStep =
-      this._config.volume_mode === "stepper"
-        ? html`
-            <div class="form-row form-row-multi-column">
-              <div class="grow-children">
-                <ha-selector
-                  .hass=${this.hass}
-                  .selector=${{
-                    number: { min: 0.01, max: 1, step: 0.01, unit_of_measurement: "", mode: "box" },
-                  }}
-                  .value=${this._config.volume_step ?? 0.05}
-                  label="${localize("editor.fields.vol_step")}"
-                  @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
-                ></ha-selector>
-              </div>
-              <ha-icon
-                class="icon-button"
-                icon="mdi:restore"
-                title="${localize("common.reset_default")}"
-                @click=${() => this._updateConfig("volume_step", 0.05)}
-              ></ha-icon>
-            </div>
-          `
-        : nothing;
-
     return html`
       <div class="config-section">
         <div class="section-header">
@@ -2369,22 +2359,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             @value-changed=${(e) => this._updateConfig("search_view", e.detail.value)}
           ></ha-selector>
         </div>
-        ${
-          this._config.search_view === "card" || this._config.search_view === "card_minimal"
-            ? html`
-                <div class="form-row">
-                  <ha-selector
-                    .hass=${this.hass}
-                    .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
-                    .value=${this._config.search_card_columns ?? 4}
-                    label="${localize("editor.fields.search_card_columns")}"
-                    helper="${localize("editor.subtitles.search_card_columns")}"
-                    @value-changed=${(e) => this._updateConfig("search_card_columns", e.detail.value)}
-                  ></ha-selector>
-                </div>
-              `
-            : nothing
-        }
+        <div class="form-row">
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
+            .value=${this._config.search_card_columns ?? 4}
+            .disabled=${this._config.search_view !== "card" && this._config.search_view !== "card_minimal"}
+            label="${localize("editor.fields.search_card_columns")}"
+            helper="${localize("editor.subtitles.search_card_columns")}"
+            @value-changed=${(e) => this._updateConfig("search_card_columns", e.detail.value)}
+          ></ha-selector>
+        </div>
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
@@ -2571,22 +2556,32 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
-            .selector=${{
-              select: {
-                mode: "dropdown",
-                options: [
-                  { value: "slider", label: "Slider" },
-                  { value: "stepper", label: "Stepper" },
-                  { value: "hidden", label: "Hidden" },
-                ],
-              },
-            }}
+            .selector=${VOLUME_MODE_SELECTOR}
             .value=${this._config.volume_mode ?? "slider"}
             label="${localize("editor.fields.volume_mode")}"
             @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
           ></ha-selector>
         </div>
-        ${renderVolumeStep}
+        ${html`
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${VOLUME_STEP_SELECTOR}
+                .value=${this._config.volume_step ?? 0.05}
+                .disabled=${this._config.volume_mode !== "stepper"}
+                label="${localize("editor.fields.vol_step")}"
+                @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
+              ></ha-selector>
+            </div>
+            <ha-icon
+              class="icon-button"
+              icon="mdi:restore"
+              title="${localize("common.reset_default")}"
+              @click=${() => this._updateConfig("volume_step", 0.05)}
+            ></ha-icon>
+          </div>
+        `}
       </div>
 
       <div class="config-section">
@@ -2860,19 +2855,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _renderEntityEditor(entity, idx = this._entityEditorIndex, isSearch = false) {
-    const stateObj = this.hass?.states?.[entity?.entity_id];
-    let showGroupVolume = this._isGroupCapable(stateObj);
-    if (!showGroupVolume && entity?.music_assistant_entity) {
-      const mae = entity.music_assistant_entity;
-      if (this._looksLikeTemplate(mae)) {
-        showGroupVolume = true;
-      } else {
-        const maStateObj = this.hass?.states?.[mae];
-        if (maStateObj && this._isGroupCapable(maStateObj)) {
-          showGroupVolume = true;
-        }
-      }
+    if (typeof entity === "string") {
+      entity = { entity_id: entity };
     }
+    const canSyncPower =
+      entity?.volume_entity &&
+      entity.volume_entity !== entity.entity_id &&
+      !(entity?.follow_active_volume ?? false);
+
 
     return html`
         ${
@@ -3136,20 +3126,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="config-subtitle">${localize("editor.subtitles.disable_auto_select")}</div>
         </div>
 
-        ${
-          showGroupVolume
-            ? html`
-                <div class="form-row">
-                  <ha-switch
-                    id="group-volume-toggle"
-                    .checked=${entity?.group_volume ?? true}
-                    @change=${(e) => this._updateEntityProperty("group_volume", e.target.checked)}
-                  ></ha-switch>
-                  <label for="group-volume-toggle">Group Volume</label>
-                </div>
-              `
-            : nothing
-        }
+        <div class="form-row">
+          <ha-switch
+            id="group-volume-toggle"
+            .checked=${entity?.group_volume ?? true}
+            .disabled=${!entity?.music_assistant_entity}
+            @change=${(e) => this._updateEntityProperty("group_volume", e.target.checked)}
+          ></ha-switch>
+          <label for="group-volume-toggle">Group Volume</label>
+        </div>
 
         <div class="form-row form-row-multi-column">
           <div>
@@ -3264,24 +3249,79 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             : nothing
         }
 
-        ${
-          entity?.volume_entity &&
-          entity.volume_entity !== entity.entity_id &&
-          !(entity?.follow_active_volume ?? false)
-            ? html`
-                <div class="form-row form-row-multi-column">
-                  <div>
-                    <ha-switch
-                      id="sync-power-toggle"
-                      .checked=${entity?.sync_power ?? false}
-                      @change=${(e) => this._updateEntityProperty("sync_power", e.target.checked)}
-                    ></ha-switch>
-                    <label for="sync-power-toggle">Sync Power</label>
-                  </div>
-                </div>
-              `
-            : nothing
-        }
+        ${html`
+          <div class="form-row form-row-multi-column">
+            <div>
+              <ha-switch
+                id="sync-power-toggle"
+                .checked=${entity?.sync_power ?? false}
+                .disabled=${!canSyncPower}
+                @change=${(e) => this._updateEntityProperty("sync_power", e.target.checked)}
+              ></ha-switch>
+              <label for="sync-power-toggle">Sync Power</label>
+            </div>
+          </div>
+        `}
+        ${html`
+          <div class="form-row form-row-multi-column">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${VOLUME_MODE_SELECTOR}
+                .value=${entity?.entity_volume_mode ?? this._config.volume_mode ?? "slider"}
+                label="${localize("editor.fields.volume_mode")}"
+                @value-changed=${(e) => {
+                  const val = e.detail.value;
+                  this._updateEntityProperty("entity_volume_mode", val || undefined);
+                  if (val !== "stepper") {
+                    this._updateEntityProperty("entity_volume_step", undefined);
+                  }
+                }}
+              ></ha-selector>
+            </div>
+            ${
+              entity?.entity_volume_mode
+                ? html`
+                    <ha-icon
+                      class="icon-button"
+                      icon="mdi:restore"
+                      title="${localize("common.reset_default")}"
+                      @click=${() => {
+                              this._updateEntityProperty("entity_volume_mode", undefined);
+                              this._updateEntityProperty("entity_volume_step", undefined);
+                            }}
+                    ></ha-icon>
+                  `
+                : nothing
+            }
+          </div>
+          ${html`
+            <div class="form-row form-row-multi-column">
+              <div class="grow-children">
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${VOLUME_STEP_SELECTOR}
+                  .value=${entity?.entity_volume_step ?? this._config.volume_step ?? 0.05}
+                  .disabled=${(entity?.entity_volume_mode ?? this._config.volume_mode ?? "slider") !== "stepper"}
+                  label="${localize("editor.fields.vol_step")}"
+                  @value-changed=${(e) => this._updateEntityProperty("entity_volume_step", e.detail.value)}
+                ></ha-selector>
+              </div>
+              ${
+                      entity?.entity_volume_step !== undefined
+                        ? html`
+                            <ha-icon
+                              class="icon-button"
+                              icon="mdi:restore"
+                              title="${localize("common.reset_default")}"
+                              @click=${() => this._updateEntityProperty("entity_volume_step", undefined)}
+                            ></ha-icon>
+                          `
+                        : nothing
+                    }
+            </div>
+          `}
+        `}
 
         ${
           entity?.follow_active_volume
