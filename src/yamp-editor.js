@@ -2863,7 +2863,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       entity.volume_entity !== entity.entity_id &&
       !(entity?.follow_active_volume ?? false);
 
-
     return html`
         ${
           isSearch
@@ -3287,9 +3286,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       icon="mdi:restore"
                       title="${localize("common.reset_default")}"
                       @click=${() => {
-                              this._updateEntityProperty("entity_volume_mode", undefined);
-                              this._updateEntityProperty("entity_volume_step", undefined);
-                            }}
+                        this._updateEntityProperty("entity_volume_mode", undefined);
+                        this._updateEntityProperty("entity_volume_step", undefined);
+                      }}
                     ></ha-icon>
                   `
                 : nothing
@@ -3308,17 +3307,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 ></ha-selector>
               </div>
               ${
-                      entity?.entity_volume_step !== undefined
-                        ? html`
-                            <ha-icon
-                              class="icon-button"
-                              icon="mdi:restore"
-                              title="${localize("common.reset_default")}"
-                              @click=${() => this._updateEntityProperty("entity_volume_step", undefined)}
-                            ></ha-icon>
-                          `
-                        : nothing
-                    }
+                entity?.entity_volume_step !== undefined
+                  ? html`
+                      <ha-icon
+                        class="icon-button"
+                        icon="mdi:restore"
+                        title="${localize("common.reset_default")}"
+                        @click=${() => this._updateEntityProperty("entity_volume_step", undefined)}
+                      ></ha-icon>
+                    `
+                  : nothing
+              }
             </div>
           `}
         `}
@@ -3808,7 +3807,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     .selector=${{
                       select: {
                         mode: "dropdown",
-                        filterable: true,
+                        custom_value: true,
                         options: this._serviceItems || [],
                       },
                     }}
