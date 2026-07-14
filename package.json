@@ -15,10 +15,10 @@
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "esbuild": "^0.28.1",
-    "eslint": "^10.5.0",
+    "eslint": "^10.7.0",
     "eslint-plugin-lit": "^2.3.1",
     "globals": "^17.6.0",
-    "prettier": "^3.9.4",
+    "prettier": "^3.9.5",
     "rollup": "^4.62.0",
     "rollup-plugin-esbuild": "^6.2.1"
   },
