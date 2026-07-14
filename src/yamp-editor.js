@@ -290,6 +290,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return s.includes("{{") || s.includes("{%") || (s.startsWith("[[[") && s.endsWith("]]]"));
   }
 
+  _isTemplateValue(val) {
+    return this._looksLikeTemplate(val);
+  }
+
   _isTemplateMode(key, currentValue) {
     if (this._templateModes?.[key] !== undefined) {
       return this._templateModes[key];
@@ -2251,7 +2255,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         >
           <div
             title=${
-              this._config.alternate_progress_bar || this._config.always_collapsed
+              this._config.alternate_progress_bar ||
+              (!this._isTemplateValue(this._config.always_collapsed) &&
+                this._config.always_collapsed)
                 ? localize("editor.subtitles.not_available_alt_collapsed")
                 : ""
             }
@@ -2260,7 +2266,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               id="display-timestamps-toggle"
               .checked=${this._config.display_timestamps ?? false}
               @change=${(e) => this._updateConfig("display_timestamps", e.target.checked)}
-              .disabled=${this._config.alternate_progress_bar || this._config.always_collapsed}
+              .disabled=${this._config.alternate_progress_bar || (!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed)}
             ></ha-switch>
             <span>${localize("editor.labels.display_timestamps")}</span>
           </div>
@@ -2463,8 +2469,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
         <div
           class="form-row"
-          style="${(this._config.control_layout ?? "classic") === "modern" ? "" : "opacity: 0.5;"}"
+          style="${this._isTemplateValue(this._config.control_layout) || (this._config.control_layout ?? "classic") === "modern" ? "" : "opacity: 0.5;"}"
           title="${
+            this._isTemplateValue(this._config.control_layout) ||
             (this._config.control_layout ?? "classic") === "modern"
               ? ""
               : localize("editor.subtitles.only_available_modern")
@@ -2475,7 +2482,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-switch
               .checked=${this._config.swap_pause_for_stop ?? false}
               @change=${(e) => this._updateConfig("swap_pause_for_stop", e.target.checked)}
-              .disabled=${(this._config.control_layout ?? "classic") !== "modern"}
+              .disabled=${!this._isTemplateValue(this._config.control_layout) && (this._config.control_layout ?? "classic") !== "modern"}
             ></ha-switch>
             <span>${localize("editor.labels.swap_pause_stop")}</span>
           </div>
@@ -2607,9 +2614,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <span>${localize("editor.labels.collapse_on_idle")}</span>
           </div>
           <div
-            style="${!this._config.always_collapsed ? "" : "opacity: 0.5;"}"
+            style="${this._isTemplateValue(this._config.always_collapsed) || !this._config.always_collapsed ? "" : "opacity: 0.5;"}"
             title="${
-              !this._config.always_collapsed
+              this._isTemplateValue(this._config.always_collapsed) || !this._config.always_collapsed
                 ? ""
                 : localize("editor.subtitles.not_available_collapsed")
             }"
@@ -2619,7 +2626,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               .checked=${this._config.hide_menu_player ?? false}
               @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
               .disabled=${
-                !!this._config.always_collapsed ||
+                (!this._isTemplateValue(this._config.always_collapsed) &&
+                  !!this._config.always_collapsed) ||
                 (this._config.always_collapsed === true &&
                   this._config.pin_search_headers === true &&
                   this._config.expand_on_search === true)
@@ -3484,7 +3492,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-selector
               .hass=${this.hass}
               label="${localize("editor.fields.card_trigger")}"
-              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || action?.in_menu !== "hidden"}
+              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || (!this._isTemplateValue(action?.in_menu) && action?.in_menu !== "hidden")}
               .selector=${{
                 select: {
                   mode: "dropdown",
