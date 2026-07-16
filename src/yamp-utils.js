@@ -387,7 +387,6 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
           }
 
           const actualRatio = options.aspectRatioCache ? options.aspectRatioCache[cacheKey] : undefined;
-          console.log("[YAMP] Aspect Ratio Matcher:", { expected, cacheKey, actualRatio, cacheObj: options.aspectRatioCache });
           if (actualRatio === undefined || actualRatio === null) return false;
 
           let targetRatio = parseFloat(expected);

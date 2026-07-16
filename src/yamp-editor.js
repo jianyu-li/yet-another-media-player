@@ -96,6 +96,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       if (this.hass?.services !== oldHass?.services) {
         this._serviceItems = this._getServiceItems();
       }
+      this._fetchAspectRatios();
     }
 
     if (changedProperties.has("_searchTerm") || this._searchTerm) {
@@ -359,6 +360,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _fetchAspectRatios() {
     if (!this.hass || !this._config) return;
+    
+    const needsRatios = (this._artworkOverrides || []).some(rule => rule.match_type === "aspect_ratio");
+    if (!needsRatios) return;
+    
     let entities = [];
     if (this._config.entity) entities.push(this._config.entity);
     if (this._config.entities && Array.isArray(this._config.entities)) {
@@ -1518,12 +1523,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                     </option>
                                                     ${entities.map((entId) => {
                                                       const stateObj = this.hass.states[entId];
+                                                      const hasPic = stateObj?.attributes?.entity_picture || stateObj?.attributes?.entity_picture_local || stateObj?.attributes?.album_art;
                                                       const name =
                                                         stateObj?.attributes?.friendly_name ||
                                                         entId;
                                                       const ratio = this._entityRatios && this._entityRatios[entId];
                                                       const ratioText = this._formatRatio(ratio);
-                                                      return html`<option value="${entId}">
+                                                      return html`<option value="${entId}" ?disabled=${!hasPic}>
                                                         ${name}${ratioText}
                                                       </option>`;
                                                     })}
