@@ -125,6 +125,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       "app_name",
       "media_content_type",
       "entity_id",
+      "aspect_ratio",
     ];
 
     return overrides.map((item) => {
@@ -180,11 +181,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   _serializeArtworkOverride(rule) {
     if (!rule) return null;
     const image = (rule.image_url ?? "").trim();
-    if (!image) return null;
-
     const objectFit = rule.object_fit === "default" ? undefined : rule.object_fit;
 
     if (rule.match_type === "missing_art") {
+      if (!image) return null;
       return {
         missing_art_url: image,
         ...(rule.size_percentage !== undefined
@@ -198,7 +198,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (!value) return null;
 
     return {
-      image_url: image,
+      ...(image ? { image_url: image } : {}),
       [rule.match_type]: value,
       ...(rule.size_percentage !== undefined
         ? { size_percentage: Number(rule.size_percentage) }
@@ -447,9 +447,45 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._writeArtworkOverrides(list);
   }
 
+  _setCurrentAspectRatioForMatch(index, entityId) {
+    if (!this._config || !this.hass) return;
+    
+    // Fallback to first configured entity if none provided
+    if (!entityId) {
+      entityId = this._config.entity || (this._config.entities && (this._config.entities[0]?.entity_id || this._config.entities[0]));
+    }
+    
+    if (!entityId || !this.hass.states[entityId]) return;
+    
+    const state = this.hass.states[entityId];
+    const attrs = state.attributes || {};
+    const url = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
+    if (!url) return;
+    
+    let trimmed = url.trim();
+    if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+      trimmed = trimmed.slice(1, -1).trim();
+    }
+    const urlMatch = trimmed.match(/^url\((.*)\)$/i);
+    if (urlMatch && urlMatch[1]) {
+      trimmed = urlMatch[1].trim();
+      if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+        trimmed = trimmed.slice(1, -1).trim();
+      }
+    }
+    
+    const img = new window.Image();
+    img.src = trimmed;
+    img.onload = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        const ratio = (img.naturalWidth / img.naturalHeight).toFixed(2);
+        this._onArtworkMatchValueChange(index, ratio);
+      }
+    };
+  }
+
   _onArtworkMatchValueChange(index, value) {
-    const list = [...(this._artworkOverrides ?? [])];
-    if (!list[index]) return;
+    const list = [...(this._artworkOverrides || [])];
     list[index] = { ...list[index], match_value: value };
     this._writeArtworkOverrides(list);
   }
@@ -1079,6 +1115,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       { value: "app_name", label: "App Name" },
       { value: "media_content_type", label: "Content Type" },
       { value: "entity_id", label: "Entity ID" },
+      { value: "aspect_ratio", label: "Aspect Ratio" },
       { value: "missing_art", label: "Missing Artwork" },
     ];
 
@@ -1353,17 +1390,88 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                         allow-custom-value
                                       ></ha-generic-picker>
                                     `
-                                  : html`
-                                      <ha-selector
-                                        .hass=${this.hass}
-                                        class="full-width"
-                                        .selector=${{ text: {} }}
-                                        label="${localize("editor.fields.match_value")}"
-                                        .value=${rule.match_value ?? ""}
-                                        @value-changed=${(e) =>
-                                          this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                      ></ha-selector>
-                                    `
+                                    : rule.match_type === "aspect_ratio"
+                                      ? html`
+                                          <div style="display: flex; flex-direction: column; width: 100%;">
+                                            <div style="display: flex; width: 100%;">
+                                              <ha-selector
+                                                .hass=${this.hass}
+                                                style="flex: 1;"
+                                                .selector=${{ text: {} }}
+                                                label="${localize("editor.fields.match_value")}"
+                                                .value=${rule.match_value ?? ""}
+                                                @value-changed=${(e) =>
+                                                  this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                              ></ha-selector>
+                                              ${(() => {
+                                                const entities = [];
+                                                if (this._config?.entity) entities.push(this._config.entity);
+                                                if (this._config?.entities && Array.isArray(this._config.entities)) {
+                                                  for (const e of this._config.entities) {
+                                                    const id = typeof e === "string" ? e : (e.entity || e.entity_id);
+                                                    if (id && !entities.includes(id)) entities.push(id);
+                                                  }
+                                                }
+                                                if (entities.length <= 1) {
+                                                  return html`
+                                                    <ha-icon-button
+                                                      style="margin-left: 8px;"
+                                                      title="get current"
+                                                      @click=${() => this._setCurrentAspectRatioForMatch(idx)}
+                                                    >
+                                                      <ha-icon icon="mdi:target"></ha-icon>
+                                                    </ha-icon-button>
+                                                  `;
+                                                }
+                                                return nothing;
+                                              })()}
+                                            </div>
+                                            ${(() => {
+                                              const entities = [];
+                                              if (this._config?.entity) entities.push(this._config.entity);
+                                              if (this._config?.entities && Array.isArray(this._config.entities)) {
+                                                for (const e of this._config.entities) {
+                                                  const id = typeof e === "string" ? e : (e.entity || e.entity_id);
+                                                  if (id && !entities.includes(id)) entities.push(id);
+                                                }
+                                              }
+                                              if (entities.length > 1) {
+                                                return html`
+                                                  <select
+                                                    style="width: 100%; padding: 8px 16px; border-radius: 0 0 4px 4px; border: 1px solid var(--divider-color, #ccc); border-top: none; background: var(--secondary-background-color, #f5f5f5); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-top: -8px; position: relative; z-index: 1;"
+                                                    @change=${(e) => {
+                                                      const selectedEntity = e.target.value;
+                                                      if (selectedEntity) {
+                                                        this._setCurrentAspectRatioForMatch(idx, selectedEntity);
+                                                        e.target.selectedIndex = 0;
+                                                      }
+                                                    }}
+                                                  >
+                                                    <option value="" disabled selected>Get current ratio from...</option>
+                                                    ${entities.map((ent) => {
+                                                      const stateObj = this.hass.states[ent];
+                                                      const hasPic = stateObj?.attributes?.entity_picture || stateObj?.attributes?.entity_picture_local || stateObj?.attributes?.album_art;
+                                                      const name = stateObj?.attributes?.friendly_name || ent;
+                                                      return html`<option value=${ent} ?disabled=${!hasPic}>${name}</option>`;
+                                                    })}
+                                                  </select>
+                                                `;
+                                              }
+                                              return nothing;
+                                            })()}
+                                          </div>
+                                        `
+                                      : html`
+                                        <ha-selector
+                                          .hass=${this.hass}
+                                          class="full-width"
+                                          .selector=${{ text: {} }}
+                                          label="${localize("editor.fields.match_value")}"
+                                          .value=${rule.match_value ?? ""}
+                                          @value-changed=${(e) =>
+                                            this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                        ></ha-selector>
+                                      `
                             }
                             <div class="editor-field-wrapper">
                               ${
@@ -1371,7 +1479,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                   ? html`
                                       <div class="grow-children" style="flex-direction: column;">
                                         <span class="form-label"
-                                          >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url")}</span
+                                          >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replace("*", "")}</span
                                         >
                                         <ha-code-editor
                                           lint

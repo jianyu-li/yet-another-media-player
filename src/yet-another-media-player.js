@@ -560,6 +560,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._shouldDropdownOpenUp = false;
     this._collapsedArtDominantColor = "#444";
     this._lastArtworkUrl = null;
+    this._aspectRatioCache = {};
     this._addToPlaylistTarget = null;
     // Timer for progress updates
     this._progressTimer = null;
@@ -4323,11 +4324,24 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Get artwork URL from entity state, supporting entity_picture_local
   _getArtworkUrl(state) {
+    if (state?.attributes) {
+      const attrs = state.attributes;
+      const baseArtworkUrl =
+        this._normalizeImageSourceValue(attrs.entity_picture_local) ||
+        this._normalizeImageSourceValue(attrs.entity_picture) ||
+        this._normalizeImageSourceValue(attrs.album_art);
+      
+      if (baseArtworkUrl) {
+        this._calculateAspectRatio(baseArtworkUrl);
+      }
+    }
+
     const res = getArtworkUrl(state, {
       hostname: this.config?.artwork_hostname || '',
       overrides: Array.isArray(this.config?.media_artwork_overrides) ? this.config.media_artwork_overrides : [],
       fallbackArtwork: this.config?.fallback_artwork,
       artworkObjectFit: this._artworkObjectFit,
+      aspectRatioCache: this._aspectRatioCache,
       resolveOverrideSource: (override, sourceValue, type, stateObj) =>
         this._getResolvedArtworkOverrideSource(override, sourceValue, type, stateObj)
     });
@@ -4386,6 +4400,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       };
       img.onerror = function () { resolve("#888"); };
     });
+  }
+
+  _calculateAspectRatio(url) {
+    if (!url || typeof url !== "string") return;
+    if (this._aspectRatioCache[url] !== undefined) return;
+    this._aspectRatioCache[url] = null; // Mark as loading to prevent duplicate requests
+    const img = new window.Image();
+    img.src = url;
+    img.onload = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        this._aspectRatioCache[url] = img.naturalWidth / img.naturalHeight;
+        this.requestUpdate();
+      }
+    };
+    img.onerror = () => {
+      this._aspectRatioCache[url] = null; // Cache failure so we don't retry endlessly
+    };
   }
 
   _normalizeAdaptiveTextTargets(config) {
@@ -8001,7 +8032,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lastVolumeRendered = !volumeRowWillCollapse;
 
     return html`
-        <ha-card class="yamp-card" style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
+        <ha-card class="yamp-card" 
+          style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
             data-artwork-fit="${activeArtworkFit}"

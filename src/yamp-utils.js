@@ -351,9 +351,10 @@ export function getSearchResultClickTitle(item) {
  * @param {Object} state - Home Assistant state object
  * @param {Array} overrides - Media artwork overrides configuration
  * @param {Function} [resolveOverrideSource] - Callback for template override resolution
+ * @param {Object} [options] - Additional options like aspectRatioCache
  * @returns {Object|null} Resolved artwork override details, or null if none resolved
  */
-function _findArtworkOverride(state, overrides, resolveOverrideSource) {
+function _findArtworkOverride(state, overrides, resolveOverrideSource, options = {}) {
   if (!overrides || !Array.isArray(overrides) || !overrides.length) return null;
 
   const attrs = state.attributes;
@@ -363,7 +364,45 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource) {
     overrides.find((override) =>
       ARTWORK_OVERRIDE_MATCH_KEYS.some((key) => {
         const expected = override[key];
-        if (expected === undefined) return false;
+        if (expected === undefined || expected === null || expected === "") return false;
+        
+        if (key === "aspect_ratio") {
+          const originalArtworkUrl = getValidArtworkAttr(attrs, "entity_picture_local") ||
+                                     getValidArtworkAttr(attrs, "entity_picture") ||
+                                     getValidArtworkAttr(attrs, "album_art") || null;
+          // Normalize url since cache keys might be normalized, but here we might just have the raw string.
+          // In yet-another-media-player.js we normalized it. But let's check exact match.
+          // Actually, we can check the cache directly.
+          if (!originalArtworkUrl) return false;
+          // Remove wrapping quotes/url() for cache lookup to match what _getArtworkUrl does
+          let cacheKey = originalArtworkUrl.trim();
+          const quoted = (cacheKey.startsWith("'") && cacheKey.endsWith("'")) || (cacheKey.startsWith('"') && cacheKey.endsWith('"'));
+          if (quoted && cacheKey.length >= 2) cacheKey = cacheKey.slice(1, -1).trim();
+          const urlMatch = cacheKey.match(/^url\((.*)\)$/i);
+          if (urlMatch && urlMatch[1] !== undefined) {
+            cacheKey = urlMatch[1].trim();
+            if ((cacheKey.startsWith("'") && cacheKey.endsWith("'")) || (cacheKey.startsWith('"') && cacheKey.endsWith('"'))) {
+              cacheKey = cacheKey.slice(1, -1).trim();
+            }
+          }
+
+          const actualRatio = options.aspectRatioCache ? options.aspectRatioCache[cacheKey] : undefined;
+          console.log("[YAMP] Aspect Ratio Matcher:", { expected, cacheKey, actualRatio, cacheObj: options.aspectRatioCache });
+          if (actualRatio === undefined || actualRatio === null) return false;
+
+          let targetRatio = parseFloat(expected);
+          if (typeof expected === "string" && expected.includes(":")) {
+            const parts = expected.split(":");
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]) && parseFloat(parts[1]) !== 0) {
+              targetRatio = parseFloat(parts[0]) / parseFloat(parts[1]);
+            }
+          }
+
+          if (isNaN(targetRatio)) return false;
+          // Allow 0.1 tolerance (e.g., 16:9 is 1.77, 16:10 is 1.6 - if users aren't exact, or pixel rounding)
+          return Math.abs(actualRatio - targetRatio) <= 0.1;
+        }
+
         const value =
           key === "entity_id" ? entityId : key === "entity_state" ? state?.state : attrs[key];
         if (expected === "*") return true;
@@ -422,6 +461,11 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource) {
   } else if (override?.missing_art_url && !hasExistingArtwork) {
     overrideSource = override.missing_art_url;
     overrideType = "missing";
+  } else if (override && hasExistingArtwork) {
+    overrideSource =
+      getValidArtworkAttr(attrs, "entity_picture_local") ||
+      getValidArtworkAttr(attrs, "entity_picture") ||
+      getValidArtworkAttr(attrs, "album_art");
   }
 
   if (!override && !hasExistingArtwork) {
@@ -471,6 +515,7 @@ export function getArtworkUrl(
     fallbackArtwork = null,
     artworkObjectFit = null,
     resolveOverrideSource = null,
+    aspectRatioCache = {},
   } = {}
 ) {
   if (!state || !state.attributes) return null;
@@ -486,7 +531,9 @@ export function getArtworkUrl(
   }
 
   // Check for media artwork overrides first
-  const resolvedOverride = _findArtworkOverride(state, overrides, resolveOverrideSource);
+  const resolvedOverride = _findArtworkOverride(state, overrides, resolveOverrideSource, {
+    aspectRatioCache: aspectRatioCache || {},
+  });
   if (resolvedOverride) {
     artworkUrl = resolvedOverride.url;
     sizePercentage = resolvedOverride.sizePercentage;

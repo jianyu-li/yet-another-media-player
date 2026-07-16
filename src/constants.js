@@ -15,6 +15,7 @@ export const SUPPORT_GROUPING = 524288;
 export const SUPPORT_REPEAT_SET = 262144;
 
 export const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
+  "aspect_ratio",
   "media_title",
   "media_artist",
   "media_album_name",

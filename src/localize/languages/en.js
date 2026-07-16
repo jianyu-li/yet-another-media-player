@@ -274,7 +274,7 @@ export default {
       artwork_fit: "Artwork Fit",
       artwork_position: "Artwork Position",
       artwork_hostname: "Artwork Hostname",
-      match_field: "Match Field",
+      match_field: "Match Type",
       match_value: "Match Value",
       size_percent: "Size (%)",
       object_fit: "Object Fit",
