@@ -351,7 +351,70 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       ...config,
       entities: normalizedEntities,
     };
+    this._actionEditorIndex = null;
+    this._entityEditorIndex = null;
     this._artworkOverrides = this._normalizeArtworkOverrides(config.media_artwork_overrides);
+    this._fetchAspectRatios();
+  }
+
+  _fetchAspectRatios() {
+    if (!this.hass || !this._config) return;
+    let entities = [];
+    if (this._config.entity) entities.push(this._config.entity);
+    if (this._config.entities && Array.isArray(this._config.entities)) {
+      entities = [...entities, ...this._config.entities.map(e => (typeof e === 'string' ? e : e.entity_id))];
+    }
+    entities = [...new Set(entities)].filter(e => e);
+    
+    if (!this._entityRatios) this._entityRatios = {};
+    
+    entities.forEach(entityId => {
+      if (this._entityRatios[entityId] !== undefined) return;
+      const state = this.hass.states[entityId];
+      if (!state) return;
+      
+      const attrs = state.attributes || {};
+      const url = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
+      if (!url) return;
+      
+      let trimmed = url.trim();
+      if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+        trimmed = trimmed.slice(1, -1).trim();
+      }
+      const urlMatch = trimmed.match(/^url\((.*)\)$/i);
+      if (urlMatch && urlMatch[1]) {
+        trimmed = urlMatch[1].trim();
+        if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+          trimmed = trimmed.slice(1, -1).trim();
+        }
+      }
+      
+      this._entityRatios[entityId] = "loading";
+      const img = new window.Image();
+      img.src = trimmed;
+      img.onload = () => {
+        if (img.naturalWidth && img.naturalHeight) {
+          this._entityRatios[entityId] = (img.naturalWidth / img.naturalHeight).toFixed(2);
+          this.requestUpdate();
+        } else {
+          this._entityRatios[entityId] = null;
+        }
+      };
+      img.onerror = () => {
+        this._entityRatios[entityId] = null;
+      };
+    });
+  }
+
+  _formatRatio(ratio) {
+    if (!ratio || ratio === "loading") return "";
+    const r = parseFloat(ratio);
+    if (isNaN(r)) return ` (${ratio})`;
+    if (Math.abs(r - 1.77) <= 0.05 || Math.abs(r - 1.78) <= 0.05) return " (16:9)";
+    if (Math.abs(r - 1.33) <= 0.05) return " (4:3)";
+    if (Math.abs(r - 1.0) <= 0.05) return " (1:1)";
+    if (Math.abs(r - 2.33) <= 0.05 || Math.abs(r - 2.35) <= 0.05) return " (21:9)";
+    return ` (${ratio})`;
   }
 
   _updateConfig(key, value) {
@@ -1363,6 +1426,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             <ha-selector
                               .hass=${this.hass}
                               label="${localize("editor.fields.match_field")}"
+                              .required=${true}
                               .selector=${{ select: { mode: "dropdown", options: matchOptions } }}
                               .value=${rule.match_type ?? "media_title"}
                               @value-changed=${(e) =>
@@ -1382,6 +1446,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                         .hass=${this.hass}
                                         .value=${rule.match_value ?? ""}
                                         .label=${localize("editor.fields.match_entity")}
+                                        .required=${true}
                                         .valueRenderer=${(v) => this._entityValueRenderer(v)}
                                         .rowRenderer=${(item) => this._entityRowRenderer(item)}
                                         .getItems=${this._getEntityItems(["media_player"])}
@@ -1399,6 +1464,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                 style="flex: 1;"
                                                 .selector=${{ text: {} }}
                                                 label="${localize("editor.fields.match_value")}"
+                                                .required=${true}
                                                 .value=${rule.match_value ?? ""}
                                                 @value-changed=${(e) =>
                                                   this._onArtworkMatchValueChange(idx, e.detail.value)}
@@ -1438,7 +1504,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                               if (entities.length > 1) {
                                                 return html`
                                                   <select
-                                                    style="width: 100%; padding: 8px 16px; border-radius: 0 0 4px 4px; border: 1px solid var(--divider-color, #ccc); border-top: none; background: var(--secondary-background-color, #f5f5f5); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-top: -8px; position: relative; z-index: 1;"
+                                                    style="width: 100%; padding: 8px 16px; border-radius: 0 0 4px 4px; border: 1px solid var(--divider-color, #ccc); border-top: none; background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-top: -8px; margin-bottom: 24px; position: relative; z-index: 2;"
                                                     @change=${(e) => {
                                                       const selectedEntity = e.target.value;
                                                       if (selectedEntity) {
@@ -1447,12 +1513,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                       }
                                                     }}
                                                   >
-                                                    <option value="" disabled selected>Get current ratio from...</option>
-                                                    ${entities.map((ent) => {
-                                                      const stateObj = this.hass.states[ent];
-                                                      const hasPic = stateObj?.attributes?.entity_picture || stateObj?.attributes?.entity_picture_local || stateObj?.attributes?.album_art;
-                                                      const name = stateObj?.attributes?.friendly_name || ent;
-                                                      return html`<option value=${ent} ?disabled=${!hasPic}>${name}</option>`;
+                                                    <option value="" disabled selected>
+                                                      Get current ratio from...
+                                                    </option>
+                                                    ${entities.map((entId) => {
+                                                      const stateObj = this.hass.states[entId];
+                                                      const name =
+                                                        stateObj?.attributes?.friendly_name ||
+                                                        entId;
+                                                      const ratio = this._entityRatios && this._entityRatios[entId];
+                                                      const ratioText = this._formatRatio(ratio);
+                                                      return html`<option value="${entId}">
+                                                        ${name}${ratioText}
+                                                      </option>`;
                                                     })}
                                                   </select>
                                                 `;
@@ -1467,6 +1540,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                           class="full-width"
                                           .selector=${{ text: {} }}
                                           label="${localize("editor.fields.match_value")}"
+                                          .required=${true}
                                           .value=${rule.match_value ?? ""}
                                           @value-changed=${(e) =>
                                             this._onArtworkMatchValueChange(idx, e.detail.value)}
@@ -1515,6 +1589,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                               ? localize("editor.fields.fallback_image_url")
                                               : localize("editor.fields.image_url")
                                           }
+                                          .required=${false}
                                           .value=${rule.image_url ?? ""}
                                           @value-changed=${(e) =>
                                             this._onArtworkImageUrlChange(idx, e.detail.value)}
@@ -1539,6 +1614,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                   .hass=${this.hass}
                                   class="full-width"
                                   label="${localize("editor.fields.size_percent")}"
+                                  .required=${false}
                                   .selector=${{ number: { min: 1, max: 100, mode: "box" } }}
                                   .value=${rule.size_percentage ?? ""}
                                   @value-changed=${(e) =>
@@ -1549,6 +1625,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 <ha-selector
                                   .hass=${this.hass}
                                   label="${localize("editor.fields.object_fit")}"
+                                  .required=${false}
                                   .selector=${{
                                     select: {
                                       mode: "dropdown",
