@@ -51,9 +51,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._tempEntityIndex = null;
     this._tempActionIndex = null;
 
-    this._yamlDraft = "";
-    this._parsedYaml = null;
-    this._yamlError = false;
+    this._yamlDraft = undefined;
+    this._yamlError = null;
     this._yamlConfig = {};
     this._serviceItems = [];
     this._templateModes = {};
@@ -796,19 +795,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         .action-row-actions {
           padding-top: 2px;
         }
-        .service-data-editor-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding-bottom: 4px;
-        }
-        .service-data-editor-title {
-          font-weight: 500;
-        }
-        .service-data-editor-actions {
-          display: flex;
-          gap: 8px;
-        }
+
+
         .code-editor-wrapper.error {
           border: 1px solid color: var(--error-color, red);
           border-radius: 4px;
@@ -3853,49 +3841,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
                           ${localize("editor.subtitles.entity_current_hint")}
                         </div>
-                        <div class="help-text">
-                          <ha-icon icon="mdi:information-outline"></ha-icon>
-                          ${localize("editor.subtitles.service_data_note")}
-                        </div>
                         <div class="form-row">
-                          <div class="service-data-editor-header">
-                            <div class="service-data-editor-title">
-                              ${localize("editor.titles.service_data")}
-                            </div>
-                            <div class="service-data-editor-actions">
-                              <ha-icon
-                                class="icon-button ${
-                                  !this._yamlModified ? "icon-button-disabled" : ""
-                                }"
-                                icon="mdi:content-save"
-                                title="${localize("editor.fields.save_service_data")}"
-                                @click=${this._saveYamlEditor}
-                              ></ha-icon>
-                              <ha-icon
-                                class="icon-button ${
-                                  !this._yamlModified ? "icon-button-disabled" : ""
-                                }"
-                                icon="mdi:backup-restore"
-                                title="${localize("editor.fields.revert_service_data")}"
-                                @click=${this._revertYamlEditor}
-                              ></ha-icon>
-                              <ha-icon
-                                class="icon-button ${
-                                  this._yamlError ||
-                                  this._yamlDraftUsesCurrentEntity() ||
-                                  !action?.service
-                                    ? "icon-button-disabled"
-                                    : ""
-                                }"
-                                icon="mdi:play-circle-outline"
-                                title="${localize("editor.fields.test_action")}"
-                                @click=${this._testServiceCall}
-                              ></ha-icon>
-                            </div>
-                          </div>
+
                           <div
                             class=${
-                              this._yamlError && this._yamlDraft.trim() !== ""
+                              this._yamlError && this._yamlDraft?.trim() !== ""
                                 ? "code-editor-wrapper error"
                                 : "code-editor-wrapper"
                             }
@@ -3911,20 +3861,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               autocomplete-icons
                               .hass=${this.hass}
                               mode="yaml"
-                              .value=${action?.service_data ? yaml.dump(action.service_data) : ""}
+                              .value=${this._yamlDraft !== undefined ? this._yamlDraft : action?.service_data ? yaml.dump(action.service_data) : ""}
                               @value-changed=${(e) => {
-                                /* the yaml will be parsed in real time to detect errors, but we will defer 
-updating the config until the save button above the editor is clicked.
-*/
+                                if (this._yamlDraft === e.detail.value) return;
                                 this._yamlDraft = e.detail.value;
-                                this._yamlModified = true;
                                 try {
                                   if (this._yamlDraft.trim() === "") {
                                     this._yamlError = null;
+                                    this._updateActionProperty("service_data", {});
                                   } else {
                                     const parsed = yaml.load(this._yamlDraft);
                                     if (parsed && typeof parsed === "object") {
                                       this._yamlError = null;
+                                      this._updateActionProperty("service_data", parsed);
                                     } else {
                                       this._yamlError = "Invalid YAML";
                                     }
@@ -3935,7 +3884,7 @@ updating the config until the save button above the editor is clicked.
                               }}
                             ></ha-code-editor>
                             ${
-                              this._yamlError && this._yamlDraft.trim() !== ""
+                              this._yamlError && this._yamlDraft?.trim() !== ""
                                 ? html`<div class="yaml-error-message">${this._yamlError}</div>`
                                 : nothing
                             }
@@ -4031,6 +3980,8 @@ updating the config until the save button above the editor is clicked.
   _onEditAction(index) {
     this._actionEditorIndex = index;
     this._templateModes = {};
+    this._yamlDraft = undefined;
+    this._yamlError = null;
     const action = this._config.actions?.[index];
     this._actionMode = this._deriveActionMode(action);
     // If mode is service and no service is set yet, initialize to empty string
@@ -4096,87 +4047,6 @@ updating the config until the save button above the editor is clicked.
     delete newAction.placement;
     actions[index] = newAction;
     this._updateConfig("actions", actions);
-  }
-
-  _saveYamlEditor() {
-    try {
-      if (this._yamlDraft.trim() === "") {
-        this._updateActionProperty("service_data", {});
-        this._yamlDraft = "";
-        this._yamlError = null;
-        this._parsedYaml = {};
-        return;
-      }
-      const parsed = yaml.load(this._yamlDraft);
-
-      if (!parsed || typeof parsed !== "object") {
-        this._yamlError = "YAML is not a valid object.";
-        return;
-      }
-
-      this._updateActionProperty("service_data", parsed);
-      this._yamlDraft = yaml.dump(parsed);
-      this._yamlError = null;
-      this._parsedYaml = parsed;
-    } catch (err) {
-      this._yamlError = err.message;
-    }
-  }
-
-  _revertYamlEditor() {
-    const editor = this.shadowRoot.querySelector("#service-data-editor");
-    const currentAction = this._config.actions?.[this._actionEditorIndex];
-
-    if (!editor || !currentAction) return;
-
-    const yamlText = currentAction.service_data ? yaml.dump(currentAction.service_data) : "";
-    editor.value = yamlText;
-
-    this._yamlDraft = yamlText;
-    this._yamlError = null;
-    this._yamlModified = false;
-  }
-
-  _yamlDraftUsesCurrentEntity() {
-    if (!this._yamlDraft) return false;
-    const regex = /^\s*entity_id\s*:\s*current\s*$/m;
-    let result = regex.test(this._yamlDraft);
-    return result;
-  }
-
-  async _testServiceCall() {
-    if (this._yamlError || !this._yamlDraft?.trim()) {
-      return;
-    }
-
-    let serviceData;
-    try {
-      serviceData = yaml.load(this._yamlDraft);
-      if (typeof serviceData !== "object" || serviceData === null) {
-        console.error("yamp: Service data must be a valid object.");
-        return;
-      }
-    } catch (e) {
-      this._yamlError = e.message;
-      return;
-    }
-
-    const action = this._config.actions?.[this._actionEditorIndex];
-    const service = action?.service;
-    if (!service || !this.hass) {
-      return;
-    }
-
-    const [domain, serviceName] = service.split(".");
-    if (!domain || !serviceName) {
-      return;
-    }
-
-    try {
-      await this.hass.callService(domain, serviceName, serviceData);
-    } catch (err) {
-      console.error("yamp: Failed to call service:", err);
-    }
   }
 
   _onToggleChanged(e) {
