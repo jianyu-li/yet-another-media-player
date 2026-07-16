@@ -4336,7 +4336,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (!res) return null;
 
-    let { url, sizePercentage, objectFit } = res;
+    let { url, sizePercentage, objectFit, objectPosition } = res;
 
     // Validate artwork URL to prevent proxy errors
     if (url && !isValidArtworkUrl(url)) {
@@ -4347,7 +4347,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       objectFit = this._artworkObjectFit;
     }
 
-    return { url, sizePercentage, objectFit };
+    if (!objectPosition) {
+      objectPosition = this.config?.artwork_position || "top center";
+    }
+
+    return { url, sizePercentage, objectFit, objectPosition };
   }
 
   _getBackgroundSizeForFit(fit) {
@@ -7953,6 +7957,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     let artworkUrl = null;
     let artworkSizePercentage = null;
     let artworkObjectFit = this._artworkObjectFit;
+    let artworkObjectPosition = undefined;
     if (!this._isIdle && !forceIdleImage) {
       // Use the unified entity resolution system for artwork
       const artwork = selectedArt;
@@ -7960,6 +7965,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       artworkSizePercentage = artwork?.sizePercentage;
       if (artwork?.objectFit) {
         artworkObjectFit = artwork.objectFit;
+      }
+      if (artwork?.objectPosition) {
+        artworkObjectPosition = artwork.objectPosition;
       }
 
     }
@@ -8010,7 +8018,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
-    let artworkPos = this.config.artwork_position || "top center";
+    let artworkPos = (typeof artworkObjectPosition !== 'undefined' ? artworkObjectPosition : null) || this.config.artwork_position || "top center";
     if (artworkFullBleed) {
       // Offset artwork away from edges to account for the chip row / controls that overlay the artwork
       if (artworkPos === "top center" || artworkPos === "center top") artworkPos = "center 50px";

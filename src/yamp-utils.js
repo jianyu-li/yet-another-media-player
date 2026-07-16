@@ -500,6 +500,7 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
         url: resolvedOverride,
         sizePercentage: override?.size_percentage,
         objectFit: override?.object_fit ?? null,
+        objectPosition: override?.object_position ?? null,
       };
     }
   }
@@ -547,10 +548,13 @@ export function getArtworkUrl(
   const resolvedOverride = _findArtworkOverride(state, overrides, resolveOverrideSource, {
     aspectRatioCache: aspectRatioCache || {},
   });
+  let objectPosition = null;
+
   if (resolvedOverride) {
     artworkUrl = resolvedOverride.url;
     sizePercentage = resolvedOverride.sizePercentage;
     objectFit = resolvedOverride.objectFit;
+    objectPosition = resolvedOverride.objectPosition;
   }
 
   // If no override found, use standard artwork
@@ -584,7 +588,7 @@ export function getArtworkUrl(
 
   artworkUrl = applyHostnameToUrl(artworkUrl, hostname);
 
-  return { url: artworkUrl, sizePercentage, objectFit };
+  return { url: artworkUrl, sizePercentage, objectFit, objectPosition };
 }
 
 /**

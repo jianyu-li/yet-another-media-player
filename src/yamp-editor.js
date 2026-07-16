@@ -175,6 +175,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         image_url: item.image_url ?? "",
         size_percentage: sizePercentage,
         object_fit: item.object_fit,
+        object_position: item.object_position,
       };
     });
   }
@@ -192,6 +193,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ? { size_percentage: Number(rule.size_percentage) }
           : {}),
         ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
+        ...(rule.object_position !== undefined && rule.object_position !== "default"
+          ? { object_position: rule.object_position }
+          : {}),
       };
     }
 
@@ -205,6 +209,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         ? { size_percentage: Number(rule.size_percentage) }
         : {}),
       ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
+      ...(rule.object_position !== undefined && rule.object_position !== "default"
+        ? { object_position: rule.object_position }
+        : {}),
     };
   }
 
@@ -1729,6 +1736,30 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                   .value=${rule.object_fit || "default"}
                                   @value-changed=${(e) =>
                                     this._onArtworkObjectFitChange(idx, e.detail.value)}
+                                ></ha-selector>
+                              </div>
+                              <div class="grow-children" style="flex:1.5;">
+                                <ha-selector
+                                  .hass=${this.hass}
+                                  label="${localize("editor.fields.artwork_position")}"
+                                  .required=${false}
+                                  .selector=${{
+                                    select: {
+                                      mode: "dropdown",
+                                      options: [
+                                        { value: "default", label: "Global" },
+                                        { value: "top center", label: "Top" },
+                                        { value: "center center", label: "Center" },
+                                        { value: "bottom center", label: "Bottom" },
+                                      ],
+                                    },
+                                  }}
+                                  .value=${rule.object_position || "default"}
+                                  @value-changed=${(e) => {
+                                    const newList = [...this._artworkOverrides];
+                                    newList[idx] = { ...newList[idx], object_position: e.detail.value };
+                                    this._writeArtworkOverrides(newList);
+                                  }}
                                 ></ha-selector>
                               </div>
                             </div>
