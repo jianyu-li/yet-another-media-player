@@ -365,34 +365,48 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
       ARTWORK_OVERRIDE_MATCH_KEYS.some((key) => {
         const expected = override[key];
         if (expected === undefined || expected === null || expected === "") return false;
-        
+
         if (key === "aspect_ratio") {
-          const originalArtworkUrl = getValidArtworkAttr(attrs, "entity_picture_local") ||
-                                     getValidArtworkAttr(attrs, "entity_picture") ||
-                                     getValidArtworkAttr(attrs, "album_art") || null;
+          const originalArtworkUrl =
+            getValidArtworkAttr(attrs, "entity_picture_local") ||
+            getValidArtworkAttr(attrs, "entity_picture") ||
+            getValidArtworkAttr(attrs, "album_art") ||
+            null;
           // Normalize url since cache keys might be normalized, but here we might just have the raw string.
           // In yet-another-media-player.js we normalized it. But let's check exact match.
           // Actually, we can check the cache directly.
           if (!originalArtworkUrl) return false;
           // Remove wrapping quotes/url() for cache lookup to match what _getArtworkUrl does
           let cacheKey = originalArtworkUrl.trim();
-          const quoted = (cacheKey.startsWith("'") && cacheKey.endsWith("'")) || (cacheKey.startsWith('"') && cacheKey.endsWith('"'));
+          const quoted =
+            (cacheKey.startsWith("'") && cacheKey.endsWith("'")) ||
+            (cacheKey.startsWith('"') && cacheKey.endsWith('"'));
           if (quoted && cacheKey.length >= 2) cacheKey = cacheKey.slice(1, -1).trim();
           const urlMatch = cacheKey.match(/^url\((.*)\)$/i);
           if (urlMatch && urlMatch[1] !== undefined) {
             cacheKey = urlMatch[1].trim();
-            if ((cacheKey.startsWith("'") && cacheKey.endsWith("'")) || (cacheKey.startsWith('"') && cacheKey.endsWith('"'))) {
+            if (
+              (cacheKey.startsWith("'") && cacheKey.endsWith("'")) ||
+              (cacheKey.startsWith('"') && cacheKey.endsWith('"'))
+            ) {
               cacheKey = cacheKey.slice(1, -1).trim();
             }
           }
 
-          const actualRatio = options.aspectRatioCache ? options.aspectRatioCache[cacheKey] : undefined;
+          const actualRatio = options.aspectRatioCache
+            ? options.aspectRatioCache[cacheKey]
+            : undefined;
           if (actualRatio === undefined || actualRatio === null) return false;
 
           let targetRatio = parseFloat(expected);
           if (typeof expected === "string" && expected.includes(":")) {
             const parts = expected.split(":");
-            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]) && parseFloat(parts[1]) !== 0) {
+            if (
+              parts.length === 2 &&
+              !isNaN(parts[0]) &&
+              !isNaN(parts[1]) &&
+              parseFloat(parts[1]) !== 0
+            ) {
               targetRatio = parseFloat(parts[0]) / parseFloat(parts[1]);
             }
           }

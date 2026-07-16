@@ -360,40 +360,51 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _fetchAspectRatios() {
     if (!this.hass || !this._config) return;
-    
-    const needsRatios = (this._artworkOverrides || []).some(rule => rule.match_type === "aspect_ratio");
+
+    const needsRatios = (this._artworkOverrides || []).some(
+      (rule) => rule.match_type === "aspect_ratio"
+    );
     if (!needsRatios) return;
-    
+
     let entities = [];
     if (this._config.entity) entities.push(this._config.entity);
     if (this._config.entities && Array.isArray(this._config.entities)) {
-      entities = [...entities, ...this._config.entities.map(e => (typeof e === 'string' ? e : e.entity_id))];
+      entities = [
+        ...entities,
+        ...this._config.entities.map((e) => (typeof e === "string" ? e : e.entity_id)),
+      ];
     }
-    entities = [...new Set(entities)].filter(e => e);
-    
+    entities = [...new Set(entities)].filter((e) => e);
+
     if (!this._entityRatios) this._entityRatios = {};
-    
-    entities.forEach(entityId => {
+
+    entities.forEach((entityId) => {
       if (this._entityRatios[entityId] !== undefined) return;
       const state = this.hass.states[entityId];
       if (!state) return;
-      
+
       const attrs = state.attributes || {};
       const url = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
       if (!url) return;
-      
+
       let trimmed = url.trim();
-      if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+      if (
+        (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+        (trimmed.startsWith('"') && trimmed.endsWith('"'))
+      ) {
         trimmed = trimmed.slice(1, -1).trim();
       }
       const urlMatch = trimmed.match(/^url\((.*)\)$/i);
       if (urlMatch && urlMatch[1]) {
         trimmed = urlMatch[1].trim();
-        if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+        if (
+          (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+          (trimmed.startsWith('"') && trimmed.endsWith('"'))
+        ) {
           trimmed = trimmed.slice(1, -1).trim();
         }
       }
-      
+
       this._entityRatios[entityId] = "loading";
       const img = new window.Image();
       img.src = trimmed;
@@ -517,31 +528,40 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _setCurrentAspectRatioForMatch(index, entityId) {
     if (!this._config || !this.hass) return;
-    
+
     // Fallback to first configured entity if none provided
     if (!entityId) {
-      entityId = this._config.entity || (this._config.entities && (this._config.entities[0]?.entity_id || this._config.entities[0]));
+      entityId =
+        this._config.entity ||
+        (this._config.entities &&
+          (this._config.entities[0]?.entity_id || this._config.entities[0]));
     }
-    
+
     if (!entityId || !this.hass.states[entityId]) return;
-    
+
     const state = this.hass.states[entityId];
     const attrs = state.attributes || {};
     const url = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
     if (!url) return;
-    
+
     let trimmed = url.trim();
-    if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+    if (
+      (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+      (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    ) {
       trimmed = trimmed.slice(1, -1).trim();
     }
     const urlMatch = trimmed.match(/^url\((.*)\)$/i);
     if (urlMatch && urlMatch[1]) {
       trimmed = urlMatch[1].trim();
-      if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+      if (
+        (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+        (trimmed.startsWith('"') && trimmed.endsWith('"'))
+      ) {
         trimmed = trimmed.slice(1, -1).trim();
       }
     }
-    
+
     const img = new window.Image();
     img.src = trimmed;
     img.onload = () => {
@@ -1460,27 +1480,97 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                         allow-custom-value
                                       ></ha-generic-picker>
                                     `
-                                    : rule.match_type === "aspect_ratio"
-                                      ? html`
-                                          <div style="display: flex; flex-direction: column; width: 100%;">
-                                            <div style="display: flex; width: 100%;">
-                                              <ha-selector
-                                                .hass=${this.hass}
-                                                style="flex: 1;"
-                                                .selector=${{ text: {} }}
-                                                label="${localize("editor.fields.match_value")}"
-                                                .required=${true}
-                                                .value=${rule.match_value ?? ""}
-                                                @value-changed=${(e) =>
-                                                  this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                              ></ha-selector>
-                                              ${(() => {
+                                  : rule.match_type === "aspect_ratio"
+                                    ? html`
+                                        <div
+                                          style="display: flex; flex-direction: column; width: 100%;"
+                                        >
+                                          ${(() => {
+                                              const entities = [];
+                                              if (this._config?.entity)
+                                                entities.push(this._config.entity);
+                                              if (
+                                                this._config?.entities &&
+                                                Array.isArray(this._config.entities)
+                                              ) {
+                                                for (const e of this._config.entities) {
+                                                  const id =
+                                                    typeof e === "string"
+                                                      ? e
+                                                      : e.entity || e.entity_id;
+                                                  if (id && !entities.includes(id))
+                                                    entities.push(id);
+                                                }
+                                              }
+                                              if (entities.length > 1) {
+                                                return html`
+                                                  <select
+                                                    style="width: 100%; padding: 8px 16px; border-radius: 4px; border: 1px solid var(--divider-color, #ccc); background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-bottom: 8px; outline: none;"
+                                                    @change=${(e) => {
+                                                      const selectedEntity = e.target.value;
+                                                      if (selectedEntity) {
+                                                        this._setCurrentAspectRatioForMatch(
+                                                          idx,
+                                                          selectedEntity
+                                                        );
+                                                        e.target.selectedIndex = 0;
+                                                      }
+                                                    }}
+                                                  >
+                                                    <option value="" disabled selected>
+                                                      Get current ratio from...
+                                                    </option>
+                                                    ${entities.map((entId) => {
+                                                      const stateObj = this.hass.states[entId];
+                                                      const hasPic =
+                                                        stateObj?.attributes?.entity_picture ||
+                                                        stateObj?.attributes
+                                                          ?.entity_picture_local ||
+                                                        stateObj?.attributes?.album_art;
+                                                      const name =
+                                                        stateObj?.attributes?.friendly_name ||
+                                                        entId;
+                                                      const ratio =
+                                                        this._entityRatios &&
+                                                        this._entityRatios[entId];
+                                                      const ratioText = this._formatRatio(ratio);
+                                                      return html`<option
+                                                        value="${entId}"
+                                                        ?disabled=${!hasPic}
+                                                      >
+                                                        ${name}${ratioText}
+                                                      </option>`;
+                                                    })}
+                                                  </select>
+                                                `;
+                                              }
+                                              return nothing;
+                                            })()}
+                                          <div style="display: flex; width: 100%;">
+                                            <ha-selector
+                                              .hass=${this.hass}
+                                              style="flex: 1;"
+                                              .selector=${{ text: {} }}
+                                              label="${localize("editor.fields.match_value")}"
+                                              .required=${true}
+                                              .value=${rule.match_value ?? ""}
+                                              @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                            ></ha-selector>
+                                            ${(() => {
                                                 const entities = [];
-                                                if (this._config?.entity) entities.push(this._config.entity);
-                                                if (this._config?.entities && Array.isArray(this._config.entities)) {
+                                                if (this._config?.entity)
+                                                  entities.push(this._config.entity);
+                                                if (
+                                                  this._config?.entities &&
+                                                  Array.isArray(this._config.entities)
+                                                ) {
                                                   for (const e of this._config.entities) {
-                                                    const id = typeof e === "string" ? e : (e.entity || e.entity_id);
-                                                    if (id && !entities.includes(id)) entities.push(id);
+                                                    const id =
+                                                      typeof e === "string"
+                                                        ? e
+                                                        : e.entity || e.entity_id;
+                                                    if (id && !entities.includes(id))
+                                                      entities.push(id);
                                                   }
                                                 }
                                                 if (entities.length <= 1) {
@@ -1496,51 +1586,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                 }
                                                 return nothing;
                                               })()}
-                                            </div>
-                                            ${(() => {
-                                              const entities = [];
-                                              if (this._config?.entity) entities.push(this._config.entity);
-                                              if (this._config?.entities && Array.isArray(this._config.entities)) {
-                                                for (const e of this._config.entities) {
-                                                  const id = typeof e === "string" ? e : (e.entity || e.entity_id);
-                                                  if (id && !entities.includes(id)) entities.push(id);
-                                                }
-                                              }
-                                              if (entities.length > 1) {
-                                                return html`
-                                                  <select
-                                                    style="width: 100%; padding: 8px 16px; border-radius: 0 0 4px 4px; border: 1px solid var(--divider-color, #ccc); border-top: none; background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-top: -8px; margin-bottom: 24px; position: relative; z-index: 2;"
-                                                    @change=${(e) => {
-                                                      const selectedEntity = e.target.value;
-                                                      if (selectedEntity) {
-                                                        this._setCurrentAspectRatioForMatch(idx, selectedEntity);
-                                                        e.target.selectedIndex = 0;
-                                                      }
-                                                    }}
-                                                  >
-                                                    <option value="" disabled selected>
-                                                      Get current ratio from...
-                                                    </option>
-                                                    ${entities.map((entId) => {
-                                                      const stateObj = this.hass.states[entId];
-                                                      const hasPic = stateObj?.attributes?.entity_picture || stateObj?.attributes?.entity_picture_local || stateObj?.attributes?.album_art;
-                                                      const name =
-                                                        stateObj?.attributes?.friendly_name ||
-                                                        entId;
-                                                      const ratio = this._entityRatios && this._entityRatios[entId];
-                                                      const ratioText = this._formatRatio(ratio);
-                                                      return html`<option value="${entId}" ?disabled=${!hasPic}>
-                                                        ${name}${ratioText}
-                                                      </option>`;
-                                                    })}
-                                                  </select>
-                                                `;
-                                              }
-                                              return nothing;
-                                            })()}
                                           </div>
-                                        `
-                                      : html`
+                                        </div>
+                                      `
+                                    : html`
                                         <ha-selector
                                           .hass=${this.hass}
                                           class="full-width"

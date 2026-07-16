@@ -36,8 +36,7 @@ import {
   getSearchResultClickTitle,
   isMusicAssistantEntity,
   getArtworkUrl,
-  isValidArtworkUrl,
-  applyHostnameToUrl
+  isValidArtworkUrl
 } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
@@ -460,6 +459,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return result;
   }
   static properties = {
+    _aspectRatioCache: { state: true },
     _quickGroupingMode: { state: true },
     hass: {},
     config: {},
@@ -4324,18 +4324,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Get artwork URL from entity state, supporting entity_picture_local
   _getArtworkUrl(state) {
-    if (state?.attributes) {
-      const attrs = state.attributes;
-      const baseArtworkUrl =
-        this._normalizeImageSourceValue(attrs.entity_picture_local) ||
-        this._normalizeImageSourceValue(attrs.entity_picture) ||
-        this._normalizeImageSourceValue(attrs.album_art);
-      
-      if (baseArtworkUrl) {
-        this._calculateAspectRatio(baseArtworkUrl);
-      }
-    }
-
     const res = getArtworkUrl(state, {
       hostname: this.config?.artwork_hostname || '',
       overrides: Array.isArray(this.config?.media_artwork_overrides) ? this.config.media_artwork_overrides : [],
@@ -4402,20 +4390,40 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     });
   }
 
+  _updateArtworkAspectRatios() {
+    if (!this.hass) return;
+    this.entityIds.forEach(entityId => {
+      const state = this.hass.states[entityId];
+      if (state?.attributes) {
+        const attrs = state.attributes;
+        const baseArtworkUrl =
+          this._normalizeImageSourceValue(attrs.entity_picture_local) ||
+          this._normalizeImageSourceValue(attrs.entity_picture) ||
+          this._normalizeImageSourceValue(attrs.album_art);
+        
+        if (baseArtworkUrl) {
+          this._calculateAspectRatio(baseArtworkUrl);
+        }
+      }
+    });
+  }
+
   _calculateAspectRatio(url) {
     if (!url || typeof url !== "string") return;
     if (this._aspectRatioCache[url] !== undefined) return;
-    this._aspectRatioCache[url] = null; // Mark as loading to prevent duplicate requests
+    this._aspectRatioCache = { ...this._aspectRatioCache, [url]: null };
     const img = new window.Image();
     img.src = url;
     img.onload = () => {
       if (img.naturalWidth && img.naturalHeight) {
-        this._aspectRatioCache[url] = img.naturalWidth / img.naturalHeight;
-        this.requestUpdate();
+        this._aspectRatioCache = { 
+          ...this._aspectRatioCache, 
+          [url]: img.naturalWidth / img.naturalHeight 
+        };
       }
     };
     img.onerror = () => {
-      this._aspectRatioCache[url] = null; // Cache failure so we don't retry endlessly
+      this._aspectRatioCache = { ...this._aspectRatioCache, [url]: null };
     };
   }
 
@@ -6017,6 +6025,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncEntityTemplateSubscriptions('hidden_controls', currentContext);
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
+    }
+    if (changedProps.has("hass") || changedProps.has("config")) {
+      this._updateArtworkAspectRatios();
     }
 
     if (this.hass && this._hasMassQueueIntegration === null && !this._checkingMassQueueIntegration) {

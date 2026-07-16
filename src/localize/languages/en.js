@@ -373,8 +373,8 @@ export default {
       dark: "Dark",
     },
     artwork_fit: {
-      default: "Default",
-      cover: "Cover (default)",
+      default: "Global",
+      cover: "Cover",
       contain: "Contain",
       fill: "Fill",
       "scale-down": "Scale Down",
