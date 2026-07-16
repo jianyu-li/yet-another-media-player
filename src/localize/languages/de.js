@@ -154,8 +154,6 @@ export default {
       no_artwork_overrides: "Keine Artwork-Überschreibungen konfiguriert.",
       entity_current_hint:
         "'entity_id: current' verwenden, um den aktuell ausgewählten Mediaplayer anzusteuern.",
-      service_data_note:
-        "Änderungen an den Servicedaten werden erst beim Klicken auf 'Servicedaten speichern' übernommen!",
       jinja_template_hint: "Jinja-Template eingeben, das eine entity_id ergibt.",
       jinja_template_vol_hint: "Jinja-Template eingeben, das eine Lautstärke-entity_id ergibt.",
       not_available_alt_collapsed:
@@ -259,14 +257,11 @@ export default {
       vol_step: "Lautstärke-Schritt (0.05 = 5%)",
       card_height: "Kartenhöhe (px)",
       control_layout: "Steuerungs-Layout",
-      save_service_data: "Servicedaten speichern",
       image_url: "Bild-URL",
       fallback_image_url: "Fallback Bild-URL",
       move_to_main: "Aktion in Haupt-Chips verschieben",
       move_to_menu: "Aktion ins Menü verschieben",
       delete_action: "Aktion löschen",
-      revert_service_data: "Auf gespeicherte Servicedaten zurücksetzen",
-      test_action: "Aktion testen",
       volume_mode: "Lautstärke-Modus",
       idle_screen: "Leerlauf-Bildschirm",
       name: "Name",

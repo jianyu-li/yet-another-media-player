@@ -181,9 +181,7 @@ export default {
       no_artwork_overrides:
         "No artwork overrides configured. Use the plus button below to add one.",
       entity_current_hint:
-        "Use 'entity_id: current' to target the card's currently selected media player entity. Note: The 'Test Action' button will be disabled when using this feature.",
-      service_data_note:
-        "Changes to the service data below are not committed to the config until the 'Save Service Data' button is clicked!",
+        "Use 'entity_id: current' to target the card's currently selected media player entity.",
       jinja_template_hint:
         "Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:",
       jinja_template_vol_hint:
@@ -287,14 +285,11 @@ export default {
       vol_step: "Volume Step (0.05 = 5%)",
       card_height: "Card Height (px)",
       control_layout: "Control Layout",
-      save_service_data: "Save Service Data",
       image_url: "Image URL",
       fallback_image_url: "Fallback Image URL",
       move_to_main: "Move action to main chips",
       move_to_menu: "Move action into menu",
       delete_action: "Delete Action",
-      revert_service_data: "Revert to Saved Service Data",
-      test_action: "Test Action",
       volume_mode: "Volume Mode",
       idle_screen: "Idle Screen",
       name: "Name",

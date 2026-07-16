@@ -161,9 +161,7 @@ export default {
       no_artwork_overrides:
         "Geen artwork overschrijvingen geconfigureerd. Gebruik de plusknop hieronder om er een toe te voegen.",
       entity_current_hint:
-        "Gebruik 'entity_id: current' om de momenteel geselecteerde mediaspeler op de kaart te targeten. Let op: de 'Test Actie' knop wordt uitgeschakeld bij gebruik van deze functie.",
-      service_data_note:
-        "Wijzigingen in de servicegegevens hieronder worden pas in de configuratie opgeslagen nadat op de knop 'Servicegegevens Opslaan' is geklikt!",
+        "Gebruik 'entity_id: current' om de momenteel geselecteerde mediaspeler op de kaart te targeten.",
       jinja_template_hint:
         "Voer een Jinja-sjabloon in dat resulteert in een enkele entity_id. Voorbeeld voor het wisselen van MA op basis van een bronselectie:",
       jinja_template_vol_hint:
@@ -269,14 +267,11 @@ export default {
       vol_step: "Volume Stap (0.05 = 5%)",
       card_height: "Kaarthoogte (px)",
       control_layout: "Knoppen Lay-out",
-      save_service_data: "Servicegegevens Opslaan",
       image_url: "Afbeelding URL",
       fallback_image_url: "Fallback Afbeelding URL",
       move_to_main: "Verplaats actie naar hoofdchips",
       move_to_menu: "Verplaats actie naar menu",
       delete_action: "Actie Verwijderen",
-      revert_service_data: "Terugzetten naar Opgeslagen Gegevens",
-      test_action: "Actie Testen",
       volume_mode: "Volume Modus",
       idle_screen: "Inactief Scherm",
       name: "Naam",

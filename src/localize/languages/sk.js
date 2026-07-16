@@ -155,9 +155,7 @@ export default {
       no_artwork_overrides:
         "Nie sú nastavené žiadne prepísania grafiky. Pridajte ich pomocou tlačidla plus.",
       entity_current_hint:
-        "Použite 'entity_id: current' na zacielenie aktuálne vybranej entity na karte. Poznámka: Tlačidlo 'Testovať akciu' bude v tomto prípade neaktívne.",
-      service_data_note:
-        "Zmeny v servisných údajoch sa neuložia, kým nekliknete na tlačidlo 'Uložiť servisné údaje'!",
+        "Použite 'entity_id: current' na zacielenie aktuálne vybranej entity na karte.",
       jinja_template_hint:
         "Zadajte Jinja šablónu, ktorá vráti jedno entity_id. Príklad prepínania MA na základe výberu zdroja:",
       jinja_template_vol_hint:
@@ -262,14 +260,11 @@ export default {
       vol_step: "Krok hlasitosti (0.05 = 5%)",
       card_height: "Výška karty (px)",
       control_layout: "Rozloženie ovládania",
-      save_service_data: "Uložiť servisné údaje",
       image_url: "URL obrázka",
       fallback_image_url: "Záložná URL obrázka",
       move_to_main: "Presunúť do hlavných čipov",
       move_to_menu: "Presunúť do menu",
       delete_action: "Vymazať akciu",
-      revert_service_data: "Vrátiť uložené servisné údaje",
-      test_action: "Testovať akciu",
       volume_mode: "Režim hlasitosti",
       idle_screen: "Obrazovka pri nečinnosti",
       name: "Názov",
