@@ -522,24 +522,33 @@ export function getArtworkUrl(
     }
   }
 
+  artworkUrl = applyHostnameToUrl(artworkUrl, hostname);
+
+  return { url: artworkUrl, sizePercentage, objectFit };
+}
+
+/**
+ * Applies a hostname prefix to a relative URL.
+ * @param {string} url - The artwork URL
+ * @param {string} hostname - The hostname to prepend
+ * @returns {string|null} The modified URL or null if invalid
+ */
+export function applyHostnameToUrl(url, hostname) {
+  let finalUrl = url;
+
   // Apply hostname prefix if configured and artwork URL is relative
-  if (
-    artworkUrl &&
-    hostname &&
-    !/^https?:\/\//i.test(artworkUrl) &&
-    !artworkUrl.startsWith("data:")
-  ) {
+  if (finalUrl && hostname && !/^https?:\/\//i.test(finalUrl) && !finalUrl.startsWith("data:")) {
     const cleanHost = hostname.endsWith("/") ? hostname.slice(0, -1) : hostname;
-    const cleanUrl = artworkUrl.startsWith("/") ? artworkUrl : `/${artworkUrl}`;
-    artworkUrl = cleanHost + cleanUrl;
+    const cleanUrl = finalUrl.startsWith("/") ? finalUrl : `/${finalUrl}`;
+    finalUrl = cleanHost + cleanUrl;
   }
 
   // Validate artwork URL to prevent proxy errors (e.g. containing undefined/null)
-  if (artworkUrl && !isValidArtworkUrl(artworkUrl)) {
-    artworkUrl = null;
+  if (finalUrl && !isValidArtworkUrl(finalUrl)) {
+    return null;
   }
 
-  return { url: artworkUrl, sizePercentage, objectFit };
+  return finalUrl;
 }
 
 /**

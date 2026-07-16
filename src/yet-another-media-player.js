@@ -36,7 +36,8 @@ import {
   getSearchResultClickTitle,
   isMusicAssistantEntity,
   getArtworkUrl,
-  isValidArtworkUrl
+  isValidArtworkUrl,
+  applyHostnameToUrl
 } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
@@ -8853,7 +8854,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           onRemove: (it) => this._removeQueueItem(it.queue_item_id),
           isMusicAssistant: this._isMusicAssistantEntity(),
           isValidArtwork: (url) => isValidArtworkUrl(url),
-          getClickTitle: (it) => this._getSearchResultClickTitle(it)
+          getClickTitle: (it) => this._getSearchResultClickTitle(it),
+          artworkHostname: this.config?.artwork_hostname || ""
         });
 
         if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {

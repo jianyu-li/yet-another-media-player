@@ -1,5 +1,5 @@
 import { html, nothing } from "lit";
-import { isMusicAssistantEntity } from "./yamp-utils.js";
+import { isMusicAssistantEntity, applyHostnameToUrl } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
 const playOptions = [
@@ -484,6 +484,7 @@ export function renderSearchResultItem({
   isMusicAssistant = false,
   isValidArtwork = (url) => !!url,
   getClickTitle = (item) => "",
+  artworkHostname = "",
 }) {
   if (!item) {
     return html`<div class="yamp-search-result placeholder"></div>`;
@@ -519,7 +520,7 @@ export function renderSearchResultItem({
             ? html`
                 <img
                   class="yamp-search-result-thumb"
-                  src=${item.thumbnail}
+                  src=${applyHostnameToUrl(item.thumbnail, artworkHostname)}
                   alt=${item.title}
                   onerror="this.style.display='none'"
                 />

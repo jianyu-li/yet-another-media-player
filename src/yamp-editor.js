@@ -3842,7 +3842,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           ${localize("editor.subtitles.entity_current_hint")}
                         </div>
                         <div class="form-row">
-
                           <div
                             class=${
                               this._yamlError && this._yamlDraft?.trim() !== ""
