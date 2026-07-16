@@ -348,7 +348,7 @@ export default {
       dark: "Tmavý",
     },
     artwork_fit: {
-      default: "Predvolené",
+      default: "Globálne",
       cover: "Obal (predvolené)",
       contain: "Prispôsobiť",
       fill: "Vyplniť",

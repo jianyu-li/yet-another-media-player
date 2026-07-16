@@ -329,7 +329,7 @@ export default {
       dark: "Temno",
     },
     artwork_fit: {
-      default: "Privzeto",
+      default: "Globalno",
       cover: "Ovitek (privzeto)",
       contain: "Prilagodi",
       fill: "Zapolni",

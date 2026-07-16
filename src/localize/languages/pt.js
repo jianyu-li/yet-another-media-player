@@ -330,7 +330,7 @@ export default {
       dark: "Escuro",
     },
     artwork_fit: {
-      default: "Padrão",
+      default: "Global",
       cover: "Capa (padrão)",
       contain: "Conter",
       fill: "Preencher",

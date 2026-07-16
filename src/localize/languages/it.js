@@ -329,7 +329,7 @@ export default {
       dark: "Scuro",
     },
     artwork_fit: {
-      default: "Predefinito",
+      default: "Globale",
       cover: "Copertina (predefinito)",
       contain: "Contieni",
       fill: "Riempi",

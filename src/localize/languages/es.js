@@ -330,7 +330,7 @@ export default {
       dark: "Oscuro",
     },
     artwork_fit: {
-      default: "Por defecto",
+      default: "Global",
       cover: "Portada (por defecto)",
       contain: "Contener",
       fill: "Rellenar",

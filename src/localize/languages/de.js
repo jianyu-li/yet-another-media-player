@@ -345,7 +345,7 @@ export default {
       dark: "Dunkel",
     },
     artwork_fit: {
-      default: "Standard",
+      default: "Global",
       cover: "Cover (Standard)",
       contain: "Einpassen",
       fill: "Füllen",

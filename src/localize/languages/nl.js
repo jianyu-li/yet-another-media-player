@@ -355,7 +355,7 @@ export default {
       dark: "Donker",
     },
     artwork_fit: {
-      default: "Standaard",
+      default: "Globaal",
       cover: "Cover (standaard)",
       contain: "Bevatten",
       fill: "Vullen",
