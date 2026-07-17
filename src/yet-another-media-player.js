@@ -6801,11 +6801,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  /**
+   * Cancel gesture handling.
+   */
   _onTapAreaPointerCancel(e) {
     this._gestureActive = false;
     clearTimeout(this._gestureHoldTimer);
   }
 
+  /**
+   * Delegators for idle-only gesture area (details text container).
+   */
   _onIdleTapAreaPointerDown(e) { if (this._isIdle) this._onTapAreaPointerDown(e); }
   _onIdleTapAreaPointerMove(e) { if (this._isIdle) this._onTapAreaPointerMove(e); }
   _onIdleTapAreaPointerUp(e) { if (this._isIdle) this._onTapAreaPointerUp(e); }
@@ -6827,7 +6833,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    */
   _showGestureFeedback(type, clientX, clientY) {
     // Find the gesture feedback container in the shadow DOM
-    const tapArea = this._gestureTapArea || this.shadowRoot?.querySelector('.card-artwork-spacer') || this.shadowRoot?.querySelector('.collapsed-artwork-container');
+    const tapArea = this._gestureTapArea || this.shadowRoot?.querySelector('.card-artwork-spacer') || this.shadowRoot?.querySelector('.collapsed-artwork-container') || this.shadowRoot?.querySelector('.media-artwork-placeholder');
     if (!tapArea) return;
 
     // Get the bounding rect of the tap area to calculate relative position
@@ -8084,7 +8090,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           >
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!(dimIdleFrame || isAlternateFit || (this._isIdle)) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!(dimIdleFrame || isAlternateFit || this._isIdle) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
               <div class="media-artwork-placeholder"
@@ -8130,7 +8136,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || isAlternateFit || (this._isIdle)) ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!(dimIdleFrame || isAlternateFit || this._isIdle) ? html`<div class="card-lower-fade"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -8140,10 +8146,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 ${collapsed && artworkUrl && collapsedArtworkSize > 0 && isValidArtworkUrl(artworkUrl) ? html`
                   <div
                     class="collapsed-artwork-container"
-                    @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
-                    @pointermove=${(e) => this._onTapAreaPointerMove(e)}
-                    @pointerup=${(e) => this._onTapAreaPointerUp(e)}
-                    @pointercancel=${() => { this._gestureActive = false; clearTimeout(this._gestureHoldTimer); }}
+                    @pointerdown=${this._onTapAreaPointerDown}
+                    @pointermove=${this._onTapAreaPointerMove}
+                    @pointerup=${this._onTapAreaPointerUp}
+                    @pointercancel=${this._onTapAreaPointerCancel}
                     style="${[
           `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
           collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '',
@@ -8215,7 +8221,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             detailStyleParts.push('justify-content: flex-end');
           }
           const gestureStyles = this._getGestureStyles(this._isIdle);
-          if (gestureStyles) {
+          if (gestureStyles && !this._showEntityOptions) {
             detailStyleParts.push(gestureStyles);
           }
           return detailStyleParts.join(';');

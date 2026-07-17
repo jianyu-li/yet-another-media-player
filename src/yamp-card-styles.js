@@ -1847,7 +1847,6 @@ export const yampCardStyles = css`
     justify-content: center;
     width: clamp(96px, 50%, 184px);
     aspect-ratio: 1;
-    pointer-events: none;
   }
 
   .media-artwork-placeholder svg {
