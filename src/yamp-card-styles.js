@@ -1837,7 +1837,11 @@ export const yampCardStyles = css`
 
   /* Media artwork placeholder */
   .media-artwork-placeholder {
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     display: flex;
     align-items: center;
     justify-content: center;

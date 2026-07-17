@@ -8068,6 +8068,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
               ${!(dimIdleFrame || isAlternateFit) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
+            ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
+              <div class="media-artwork-placeholder">
+                <svg
+                  viewBox="0 0 184 184"
+                  style="${this.config.match_theme === true ? 'color:#fff;' : 'color: var(--custom-accent, #ff9800);'}"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"></rect>
+                  <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"></rect>
+                  <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"></rect>
+                  <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"></rect>
+                </svg>
+              </div>
+            ` : nothing}
             ${chipsHiddenInline
         ? html`${this._renderInlineActionRow(rowActions)}${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}`
         : html`${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}${this._renderInlineActionRow(rowActions)}`}
@@ -8142,19 +8155,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                         />
                       </div>
                     ` : nothing}
-                    ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
-                      <div class="media-artwork-placeholder">
-                        <svg
-                          viewBox="0 0 184 184"
-                          style="${this.config.match_theme === true ? 'color:#fff;' : 'color: var(--custom-accent, #ff9800);'}"
-                          xmlns="http://www.w3.org/2000/svg">
-                          <rect x="36" y="86" width="22" height="62" rx="8" fill="currentColor"></rect>
-                          <rect x="68" y="58" width="22" height="90" rx="8" fill="currentColor"></rect>
-                          <rect x="100" y="34" width="22" height="114" rx="8" fill="currentColor"></rect>
-                          <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"></rect>
-                        </svg>
-                      </div>
-                    ` : nothing}
+
 
                     ${(this._lyricsActive && !this._isIdle) ? html`
                       <yamp-lyrics-view
