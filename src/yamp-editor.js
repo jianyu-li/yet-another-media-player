@@ -1671,7 +1671,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               class="form-row-multi-column"
                               style="gap:12px; flex-wrap:wrap; align-items:flex-start;"
                             >
-                              <div class="grow-children" style="flex:1;">
+                              <div class="grow-children" style="flex:1; min-width: 100px;">
                                 <ha-selector
                                   .hass=${this.hass}
                                   class="full-width"
@@ -1683,7 +1683,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     this._onArtworkSizePercentageChange(idx, e.detail.value)}
                                 ></ha-selector>
                               </div>
-                              <div class="grow-children" style="flex:1.5;">
+                              <div class="grow-children" style="flex:1.5; min-width: 120px;">
                                 <ha-selector
                                   .hass=${this.hass}
                                   label="${localize("editor.fields.object_fit")}"
@@ -1738,7 +1738,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     this._onArtworkObjectFitChange(idx, e.detail.value)}
                                 ></ha-selector>
                               </div>
-                              <div class="grow-children" style="flex:1.5;">
+                              <div class="grow-children" style="flex:1.5; min-width: 120px;">
                                 <ha-selector
                                   .hass=${this.hass}
                                   label="${localize("editor.fields.artwork_position")}"
