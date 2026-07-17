@@ -1621,7 +1621,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                   ? html`
                                       <div class="grow-children" style="flex-direction: column;">
                                         <span class="form-label"
-                                          >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replace("*", "")}</span
+                                          >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replaceAll("*", "")}</span
                                         >
                                         <ha-code-editor
                                           lint
