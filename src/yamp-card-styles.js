@@ -1837,13 +1837,16 @@ export const yampCardStyles = css`
 
   /* Media artwork placeholder */
   .media-artwork-placeholder {
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     display: flex;
     align-items: center;
     justify-content: center;
     width: clamp(96px, 50%, 184px);
     aspect-ratio: 1;
-    pointer-events: none;
   }
 
   .media-artwork-placeholder svg {
@@ -1851,6 +1854,7 @@ export const yampCardStyles = css`
     height: 100%;
     display: block;
     opacity: 0.85;
+    pointer-events: none;
   }
 
   /* Collapsed artwork */
