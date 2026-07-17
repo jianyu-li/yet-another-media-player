@@ -6801,6 +6801,24 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  _onTapAreaPointerCancel(e) {
+    this._gestureActive = false;
+    clearTimeout(this._gestureHoldTimer);
+  }
+
+  _onIdleTapAreaPointerDown(e) { if (this._isIdle) this._onTapAreaPointerDown(e); }
+  _onIdleTapAreaPointerMove(e) { if (this._isIdle) this._onTapAreaPointerMove(e); }
+  _onIdleTapAreaPointerUp(e) { if (this._isIdle) this._onTapAreaPointerUp(e); }
+  _onIdleTapAreaPointerCancel(e) { if (this._isIdle) this._onTapAreaPointerCancel(e); }
+
+  _hasGestureTriggers() {
+    return !!(this._cardTriggers?.tap || this._cardTriggers?.hold || this._cardTriggers?.double_tap || this._cardTriggers?.swipe_left || this._cardTriggers?.swipe_right);
+  }
+
+  _getGestureStyles(condition = true) {
+    return (condition && this._hasGestureTriggers()) ? 'cursor:pointer; pointer-events:auto;' : '';
+  }
+
   /**
    * Show visual feedback for card trigger gestures
    * @param {string} type - 'tap' | 'double_tap' | 'hold' | 'swipe_left' | 'swipe_right'
@@ -8069,7 +8087,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               ${!(dimIdleFrame || isAlternateFit || (this._isIdle)) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
-              <div class="media-artwork-placeholder">
+              <div class="media-artwork-placeholder"
+                @pointerdown=${this._onTapAreaPointerDown}
+                @pointermove=${this._onTapAreaPointerMove}
+                @pointerup=${this._onTapAreaPointerUp}
+                @pointercancel=${this._onTapAreaPointerCancel}
+                style="${this._getGestureStyles()}"
+              >
                 <svg
                   viewBox="0 0 184 184"
                   style="${this.config.match_theme === true ? 'color:#fff;' : 'color: var(--custom-accent, #ff9800);'}"
@@ -8124,7 +8148,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
           collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '',
           isCompact && collapsed ? 'top: -2px; height: auto !important; overflow: visible !important;' : '',
-          (this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right) ? 'cursor:pointer; pointer-events:auto;' : ''
+          this._getGestureStyles()
         ].filter(Boolean).join('; ')}"
                   >
                     <img
@@ -8140,11 +8164,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 ` : nothing}
                 ${this._lastSpacerRendered ? html`
                   <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
-                    @pointerdown=${(e) => this._onTapAreaPointerDown(e)}
-                    @pointermove=${(e) => this._onTapAreaPointerMove(e)}
-                    @pointerup=${(e) => this._onTapAreaPointerUp(e)}
-                    @pointercancel=${() => { this._gestureActive = false; clearTimeout(this._gestureHoldTimer); }}
-                    style="${(this._cardTriggers.tap || this._cardTriggers.hold || this._cardTriggers.double_tap || this._cardTriggers.swipe_left || this._cardTriggers.swipe_right) ? 'cursor:pointer; pointer-events:auto;' : ''}"
+                    @pointerdown=${this._onTapAreaPointerDown}
+                    @pointermove=${this._onTapAreaPointerMove}
+                    @pointerup=${this._onTapAreaPointerUp}
+                    @pointercancel=${this._onTapAreaPointerCancel}
+                    style="${this._getGestureStyles()}"
                   >
                     ${useInsetArtwork && artworkUrl ? html`
                       <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none; box-sizing: border-box; padding: 0 5px;">
@@ -8173,7 +8197,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                   </div>
                 ` : nothing}
                 ${this.config.details_alignment !== 'none' ? html`
-                  <div class="details" style="${isCompact && collapsed ? 'margin-top: -12px; padding-bottom: 2px; min-height: 0; gap: 1px;' : ''} ${(() => {
+                  <div class="details" 
+                    @pointerdown=${this._onIdleTapAreaPointerDown}
+                    @pointermove=${this._onIdleTapAreaPointerMove}
+                    @pointerup=${this._onIdleTapAreaPointerUp}
+                    @pointercancel=${this._onIdleTapAreaPointerCancel}
+                    style="${isCompact && collapsed ? 'margin-top: -12px; padding-bottom: 2px; min-height: 0; gap: 1px;' : ''} ${(() => {
           const detailStyleParts = [];
           if (this._showEntityOptions) {
             detailStyleParts.push('opacity:0');
@@ -8184,6 +8213,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           if (!this._lastSpacerRendered) {
             detailStyleParts.push('flex: 1');
             detailStyleParts.push('justify-content: flex-end');
+          }
+          const gestureStyles = this._getGestureStyles(this._isIdle);
+          if (gestureStyles) {
+            detailStyleParts.push(gestureStyles);
           }
           return detailStyleParts.join(';');
         })()}">
