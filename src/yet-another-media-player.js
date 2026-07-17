@@ -523,7 +523,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (resolved !== undefined && resolved !== null && resolved !== "") {
         // If JS template evaluated to boolean, handle it
         if (typeof resolved === 'boolean') return resolved;
-        
+
         const lower = String(resolved).trim().toLowerCase();
         return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
       }
@@ -941,11 +941,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (isJsTemplate) {
         this._unsubscribeFromTemplate(idx, typeKey);
         if (templateValsObj[idx]) delete templateValsObj[idx];
-        
+
         const resolvedValue = this._evaluateJsTemplate(rawValue);
-        
+
         const currentCached = allowObject ? cacheObj[idx]?.value : cacheObj[idx]?.id;
-        
+
         let changed;
         if (typeof resolvedValue === 'object' && resolvedValue !== null) {
           changed = JSON.stringify(currentCached) !== JSON.stringify(resolvedValue);
@@ -970,7 +970,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (!looksTemplate) {
         this._unsubscribeFromTemplate(idx, typeKey);
         if (templateValsObj[idx]) delete templateValsObj[idx];
-        
+
         if (cacheStaticString) {
           cacheObj[idx] = { id: rawValue, ts: Date.now() };
         } else {
@@ -982,10 +982,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       // Setup subscription for reactivity
       this._subscribeToTemplate(idx, typeKey, rawValue);
     } else if (allowObject && typeof rawValue === 'object') {
-       // It's a raw array/object, not a string template. Clear template caches.
-       delete cacheObj[idx];
-       this._unsubscribeFromTemplate(idx, typeKey);
-       if (templateValsObj[idx]) delete templateValsObj[idx];
+      // It's a raw array/object, not a string template. Clear template caches.
+      delete cacheObj[idx];
+      this._unsubscribeFromTemplate(idx, typeKey);
+      if (templateValsObj[idx]) delete templateValsObj[idx];
     }
   }
 
@@ -1098,7 +1098,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (hasJsTemplate) {
         this._unsubscribeFromTemplate(idx, type);
         const resolvedValue = this._evaluateJsTemplate(raw);
-        
+
         const currentValue = cache[idx]?.value;
         let isChanged;
         if (typeof resolvedValue === 'object' && resolvedValue !== null) {
@@ -1158,7 +1158,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (this._templateSubscriptions[`${idx}_${typeKey}`]) {
         this._unsubscribeFromTemplate(idx, typeKey);
       }
-      
+
       if (typeKey === 'ma') {
         this._ensureResolvedMaForIndex(idx);
       } else if (typeKey === 'vol') {
@@ -4114,16 +4114,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _calculateDetailsScale(width, height, fallbackScale = 1) {
     const targetSet = this._adaptiveTextTargets;
     if (!targetSet?.has("details")) return 1;
-    
+
     // Width is the primary driver of text size because text expands horizontally.
     const widthFactor = width / 360;
     const desiredScale = Math.min(3.25, Math.max(1, widthFactor * 0.85 + 0.15));
-    
+
     // Height acts as a physical constraint so the scaled text doesn't push the layout out of bounds.
     // We compute baseline height requirements dynamically based on what is rendered:
     const isSpacerRendered = this._lastSpacerRendered !== false;
     const isVolumeRendered = this._lastVolumeRendered !== false;
-    
+
     // Exact baseline calculation:
     // Padding: 32px (16px top/bottom on card-lower-content)
     // Controls: 56px
@@ -4142,20 +4142,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const maxHeightScale = Math.max(1, 1 + (height - baselineNeeded) / scaleCost);
     const maxScaleByHeight = Math.min(3.25, maxHeightScale);
-    
+
     // The base scale must satisfy BOTH physical dimensions (width and height)
     let baseScale = Math.min(desiredScale, maxScaleByHeight);
-    
+
     if (!isSpacerRendered) {
       // If spacer is missing, allow text to grow up to the height constraint to fill the void
       baseScale = maxScaleByHeight;
     }
-    
+
     const titleLength = this._lastTitleLength || 0;
     const lengthClamp = titleLength > 0
       ? Math.max(0.62, Math.min(1, 30 / Math.min(titleLength, 72)))
       : 1;
-      
+
     // Apply length clamp
     const clampedScale = 1 + (baseScale - 1) * lengthClamp;
     return Math.max(1, clampedScale);
@@ -4405,7 +4405,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           getValidArtworkAttr(attrs, "entity_picture_local") ||
           getValidArtworkAttr(attrs, "entity_picture") ||
           getValidArtworkAttr(attrs, "album_art");
-        
+
         if (baseArtworkUrl) {
           this._calculateAspectRatio(this._normalizeImageSourceValue(baseArtworkUrl));
         }
@@ -4416,7 +4416,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _calculateAspectRatio(url) {
     if (!url || typeof url !== "string") return;
     if (this._aspectRatioCache[url] !== undefined) return;
-    
+
     this._aspectRatioCache[url] = null;
     const img = new window.Image();
     img.src = url;
@@ -4680,7 +4680,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _resolveEntity(entityTemplate, fallbackEntityId, idx, cacheType = 'ma') {
     if (!entityTemplate) return null;
 
-    if (typeof entityTemplate === 'string' && 
+    if (typeof entityTemplate === 'string' &&
       (entityTemplate.includes('{{') || entityTemplate.includes('{%') || entityTemplate.trim().startsWith('[[['))) {
       // For templates, use cached resolved entity
       const cache = cacheType === 'vol' ? this._volResolveCache : this._maResolveCache;
@@ -7563,7 +7563,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Action placement logic
     const getPlacement = (act, actIdx) => {
       if (act?.placement) return act.placement;
-      
+
       let inMenuVal = act?.in_menu;
       if (typeof inMenuVal === "string" && (inMenuVal.includes("{{") || inMenuVal.includes("{%") || inMenuVal.trim().startsWith("[[["))) {
         const cached = this._actionInMenuResolveCache?.[actIdx]?.value;
@@ -7584,7 +7584,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           }
         }
       }
-      
+
       if (typeof inMenuVal === "string") inMenuVal = inMenuVal.trim();
       if (inMenuVal === "true") inMenuVal = true;
       if (inMenuVal === "false") inMenuVal = false;
@@ -7703,7 +7703,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
-    
+
     // --- Priority rule for entity selection ---
     // Keep the currently‑selected entity (even if paused)
     // unless some other entity is *playing*.
@@ -7946,7 +7946,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const shouldShowPersistentControls = this.config.hide_menu_player === true
       ? false
       : (!collapsed || meetsPersistentHeight);
-    
+
     // Adjust offsets for compact layout
     const isCompact = hasCustomCardHeight && customCardHeight < 280;
     const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
@@ -8066,7 +8066,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           >
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!(dimIdleFrame || isAlternateFit) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!(dimIdleFrame || isAlternateFit || (this._isIdle)) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
               <div class="media-artwork-placeholder">
@@ -8106,7 +8106,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || isAlternateFit) ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!(dimIdleFrame || isAlternateFit || (this._isIdle)) ? html`<div class="card-lower-fade"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -8945,10 +8945,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
         return isCard
           ? virtualize({
-             items: paddedResults,
-             renderItem: renderItemFn,
-             layout: this._cachedSearchGridLayout,
-             scroller: pinSearchHeaders
+            items: paddedResults,
+            renderItem: renderItemFn,
+            layout: this._cachedSearchGridLayout,
+            scroller: pinSearchHeaders
           })
           : virtualize({ items: paddedResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
       })()}
