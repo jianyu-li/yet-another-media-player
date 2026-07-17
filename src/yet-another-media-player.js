@@ -6701,7 +6701,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       el.tagName === 'HA-ICON' ||
       el.tagName === 'INPUT' ||
       (el.classList && el.classList.contains('clickable-artist')) ||
-      (el.classList && el.classList.contains('details'))
+      (el.classList && el.classList.contains('details') && !this._isIdle)
     );
     if (isInteractive) return;
 

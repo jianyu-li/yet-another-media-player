@@ -1855,6 +1855,7 @@ export const yampCardStyles = css`
     height: 100%;
     display: block;
     opacity: 0.85;
+    pointer-events: none;
   }
 
   /* Collapsed artwork */
