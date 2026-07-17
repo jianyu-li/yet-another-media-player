@@ -357,6 +357,12 @@ export default {
       "scaled-contain-alternate": "Škálované prispôsobenie alternatívne",
       none: "Žiadne",
     },
+    artwork_position: {
+      default: "Globálne",
+      top: "Hore",
+      center: "Stred",
+      bottom: "Dole",
+    },
   },
   card: {
     sections: {

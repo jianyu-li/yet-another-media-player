@@ -36,7 +36,8 @@ import {
   getSearchResultClickTitle,
   isMusicAssistantEntity,
   getArtworkUrl,
-  isValidArtworkUrl
+  isValidArtworkUrl,
+  getValidArtworkAttr
 } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
@@ -4401,12 +4402,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (state?.attributes) {
         const attrs = state.attributes;
         const baseArtworkUrl =
-          this._normalizeImageSourceValue(attrs.entity_picture_local) ||
-          this._normalizeImageSourceValue(attrs.entity_picture) ||
-          this._normalizeImageSourceValue(attrs.album_art);
+          getValidArtworkAttr(attrs, "entity_picture_local") ||
+          getValidArtworkAttr(attrs, "entity_picture") ||
+          getValidArtworkAttr(attrs, "album_art");
         
         if (baseArtworkUrl) {
-          this._calculateAspectRatio(baseArtworkUrl);
+          this._calculateAspectRatio(this._normalizeImageSourceValue(baseArtworkUrl));
         }
       }
     });
@@ -4415,19 +4416,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _calculateAspectRatio(url) {
     if (!url || typeof url !== "string") return;
     if (this._aspectRatioCache[url] !== undefined) return;
-    this._aspectRatioCache = { ...this._aspectRatioCache, [url]: null };
+    
+    this._aspectRatioCache[url] = null;
     const img = new window.Image();
     img.src = url;
     img.onload = () => {
       if (img.naturalWidth && img.naturalHeight) {
-        this._aspectRatioCache = { 
-          ...this._aspectRatioCache, 
-          [url]: img.naturalWidth / img.naturalHeight 
-        };
+        this._aspectRatioCache[url] = img.naturalWidth / img.naturalHeight;
+        this.requestUpdate();
       }
     };
     img.onerror = () => {
-      this._aspectRatioCache = { ...this._aspectRatioCache, [url]: null };
+      this._aspectRatioCache[url] = null;
     };
   }
 

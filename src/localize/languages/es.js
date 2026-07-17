@@ -339,6 +339,12 @@ export default {
       "scaled-contain-alternate": "Contenido escalado alternativo",
       none: "Ninguno",
     },
+    artwork_position: {
+      default: "Global",
+      top: "Arriba",
+      center: "Centro",
+      bottom: "Abajo",
+    },
   },
   card: {
     sections: {

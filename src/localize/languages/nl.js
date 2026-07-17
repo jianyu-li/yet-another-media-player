@@ -364,6 +364,12 @@ export default {
       "scaled-contain-alternate": "Geschaalde contain alternatief",
       none: "Geen",
     },
+    artwork_position: {
+      default: "Globaal",
+      top: "Boven",
+      center: "Midden",
+      bottom: "Onder",
+    },
   },
   card: {
     sections: {

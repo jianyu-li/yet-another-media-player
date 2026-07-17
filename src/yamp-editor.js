@@ -1262,9 +1262,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   select: {
                     mode: "dropdown",
                     options: [
-                      { value: "top center", label: "Top (default)" },
-                      { value: "center center", label: "Center" },
-                      { value: "bottom center", label: "Bottom" },
+                      {
+                        value: "top center",
+                        label: (localize("editor.artwork_position.top") || "Top") + " (default)",
+                      },
+                      {
+                        value: "center center",
+                        label: localize("editor.artwork_position.center") || "Center",
+                      },
+                      {
+                        value: "bottom center",
+                        label: localize("editor.artwork_position.bottom") || "Bottom",
+                      },
                     ],
                   },
                 }}
@@ -1493,6 +1502,74 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                           style="display: flex; flex-direction: column; width: 100%;"
                                         >
                                           ${(() => {
+                                            const entities = [];
+                                            if (this._config?.entity)
+                                              entities.push(this._config.entity);
+                                            if (
+                                              this._config?.entities &&
+                                              Array.isArray(this._config.entities)
+                                            ) {
+                                              for (const e of this._config.entities) {
+                                                const id =
+                                                  typeof e === "string"
+                                                    ? e
+                                                    : e.entity || e.entity_id;
+                                                if (id && !entities.includes(id)) entities.push(id);
+                                              }
+                                            }
+                                            if (entities.length > 1) {
+                                              return html`
+                                                <select
+                                                  style="width: 100%; padding: 8px 16px; border-radius: 4px; border: 1px solid var(--divider-color, #ccc); background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-bottom: 8px; outline: none;"
+                                                  @change=${(e) => {
+                                                    const selectedEntity = e.target.value;
+                                                    if (selectedEntity) {
+                                                      this._setCurrentAspectRatioForMatch(
+                                                        idx,
+                                                        selectedEntity
+                                                      );
+                                                      e.target.selectedIndex = 0;
+                                                    }
+                                                  }}
+                                                >
+                                                  <option value="" disabled selected>
+                                                    Get current ratio from...
+                                                  </option>
+                                                  ${entities.map((entId) => {
+                                                    const stateObj = this.hass.states[entId];
+                                                    const hasPic =
+                                                      stateObj?.attributes?.entity_picture ||
+                                                      stateObj?.attributes?.entity_picture_local ||
+                                                      stateObj?.attributes?.album_art;
+                                                    const name =
+                                                      stateObj?.attributes?.friendly_name || entId;
+                                                    const ratio =
+                                                      this._entityRatios &&
+                                                      this._entityRatios[entId];
+                                                    const ratioText = this._formatRatio(ratio);
+                                                    return html`<option
+                                                      value="${entId}"
+                                                      ?disabled=${!hasPic}
+                                                    >
+                                                      ${name}${ratioText}
+                                                    </option>`;
+                                                  })}
+                                                </select>
+                                              `;
+                                            }
+                                            return nothing;
+                                          })()}
+                                          <div style="display: flex; width: 100%;">
+                                            <ha-selector
+                                              .hass=${this.hass}
+                                              style="flex: 1;"
+                                              .selector=${{ text: {} }}
+                                              label="${localize("editor.fields.match_value")}"
+                                              .required=${true}
+                                              .value=${rule.match_value ?? ""}
+                                              @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                            ></ha-selector>
+                                            ${(() => {
                                               const entities = [];
                                               if (this._config?.entity)
                                                 entities.push(this._config.entity);
@@ -1509,90 +1586,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                     entities.push(id);
                                                 }
                                               }
-                                              if (entities.length > 1) {
+                                              if (entities.length <= 1) {
                                                 return html`
-                                                  <select
-                                                    style="width: 100%; padding: 8px 16px; border-radius: 4px; border: 1px solid var(--divider-color, #ccc); background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-bottom: 8px; outline: none;"
-                                                    @change=${(e) => {
-                                                      const selectedEntity = e.target.value;
-                                                      if (selectedEntity) {
-                                                        this._setCurrentAspectRatioForMatch(
-                                                          idx,
-                                                          selectedEntity
-                                                        );
-                                                        e.target.selectedIndex = 0;
-                                                      }
-                                                    }}
+                                                  <ha-icon-button
+                                                    style="margin-left: 8px;"
+                                                    title="get current"
+                                                    @click=${() => this._setCurrentAspectRatioForMatch(idx)}
                                                   >
-                                                    <option value="" disabled selected>
-                                                      Get current ratio from...
-                                                    </option>
-                                                    ${entities.map((entId) => {
-                                                      const stateObj = this.hass.states[entId];
-                                                      const hasPic =
-                                                        stateObj?.attributes?.entity_picture ||
-                                                        stateObj?.attributes
-                                                          ?.entity_picture_local ||
-                                                        stateObj?.attributes?.album_art;
-                                                      const name =
-                                                        stateObj?.attributes?.friendly_name ||
-                                                        entId;
-                                                      const ratio =
-                                                        this._entityRatios &&
-                                                        this._entityRatios[entId];
-                                                      const ratioText = this._formatRatio(ratio);
-                                                      return html`<option
-                                                        value="${entId}"
-                                                        ?disabled=${!hasPic}
-                                                      >
-                                                        ${name}${ratioText}
-                                                      </option>`;
-                                                    })}
-                                                  </select>
+                                                    <ha-icon icon="mdi:target"></ha-icon>
+                                                  </ha-icon-button>
                                                 `;
                                               }
                                               return nothing;
                                             })()}
-                                          <div style="display: flex; width: 100%;">
-                                            <ha-selector
-                                              .hass=${this.hass}
-                                              style="flex: 1;"
-                                              .selector=${{ text: {} }}
-                                              label="${localize("editor.fields.match_value")}"
-                                              .required=${true}
-                                              .value=${rule.match_value ?? ""}
-                                              @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                            ></ha-selector>
-                                            ${(() => {
-                                                const entities = [];
-                                                if (this._config?.entity)
-                                                  entities.push(this._config.entity);
-                                                if (
-                                                  this._config?.entities &&
-                                                  Array.isArray(this._config.entities)
-                                                ) {
-                                                  for (const e of this._config.entities) {
-                                                    const id =
-                                                      typeof e === "string"
-                                                        ? e
-                                                        : e.entity || e.entity_id;
-                                                    if (id && !entities.includes(id))
-                                                      entities.push(id);
-                                                  }
-                                                }
-                                                if (entities.length <= 1) {
-                                                  return html`
-                                                    <ha-icon-button
-                                                      style="margin-left: 8px;"
-                                                      title="get current"
-                                                      @click=${() => this._setCurrentAspectRatioForMatch(idx)}
-                                                    >
-                                                      <ha-icon icon="mdi:target"></ha-icon>
-                                                    </ha-icon-button>
-                                                  `;
-                                                }
-                                                return nothing;
-                                              })()}
                                           </div>
                                         </div>
                                       `
@@ -1747,17 +1753,35 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     select: {
                                       mode: "dropdown",
                                       options: [
-                                        { value: "default", label: "Global" },
-                                        { value: "top center", label: "Top" },
-                                        { value: "center center", label: "Center" },
-                                        { value: "bottom center", label: "Bottom" },
+                                        {
+                                          value: "default",
+                                          label:
+                                            localize("editor.artwork_position.default") || "Global",
+                                        },
+                                        {
+                                          value: "top center",
+                                          label: localize("editor.artwork_position.top") || "Top",
+                                        },
+                                        {
+                                          value: "center center",
+                                          label:
+                                            localize("editor.artwork_position.center") || "Center",
+                                        },
+                                        {
+                                          value: "bottom center",
+                                          label:
+                                            localize("editor.artwork_position.bottom") || "Bottom",
+                                        },
                                       ],
                                     },
                                   }}
                                   .value=${rule.object_position || "default"}
                                   @value-changed=${(e) => {
                                     const newList = [...this._artworkOverrides];
-                                    newList[idx] = { ...newList[idx], object_position: e.detail.value };
+                                    newList[idx] = {
+                                      ...newList[idx],
+                                      object_position: e.detail.value,
+                                    };
                                     this._writeArtworkOverrides(newList);
                                   }}
                                 ></ha-selector>

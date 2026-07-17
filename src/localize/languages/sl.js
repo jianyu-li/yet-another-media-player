@@ -338,6 +338,12 @@ export default {
       "scaled-contain-alternate": "Pomanjšano prilagodi alternativno",
       none: "Brez",
     },
+    artwork_position: {
+      default: "Globalno",
+      top: "Zgoraj",
+      center: "Sredina",
+      bottom: "Spodaj",
+    },
   },
   card: {
     sections: {

@@ -354,6 +354,12 @@ export default {
       "scaled-contain-alternate": "Skaliertes Einpassen (Alternativ)",
       none: "Keine",
     },
+    artwork_position: {
+      default: "Global",
+      top: "Oben",
+      center: "Mitte",
+      bottom: "Unten",
+    },
   },
   card: {
     sections: {
