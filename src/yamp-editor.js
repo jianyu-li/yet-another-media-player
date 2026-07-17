@@ -96,6 +96,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       if (this.hass?.services !== oldHass?.services) {
         this._serviceItems = this._getServiceItems();
       }
+      this._fetchAspectRatios();
     }
 
     if (changedProperties.has("_searchTerm") || this._searchTerm) {
@@ -125,6 +126,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       "app_name",
       "media_content_type",
       "entity_id",
+      "aspect_ratio",
     ];
 
     return overrides.map((item) => {
@@ -173,6 +175,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         image_url: item.image_url ?? "",
         size_percentage: sizePercentage,
         object_fit: item.object_fit,
+        object_position: item.object_position,
       };
     });
   }
@@ -180,17 +183,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   _serializeArtworkOverride(rule) {
     if (!rule) return null;
     const image = (rule.image_url ?? "").trim();
-    if (!image) return null;
-
     const objectFit = rule.object_fit === "default" ? undefined : rule.object_fit;
 
     if (rule.match_type === "missing_art") {
+      if (!image) return null;
       return {
         missing_art_url: image,
         ...(rule.size_percentage !== undefined
           ? { size_percentage: Number(rule.size_percentage) }
           : {}),
         ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
+        ...(rule.object_position !== undefined && rule.object_position !== "default"
+          ? { object_position: rule.object_position }
+          : {}),
       };
     }
 
@@ -198,12 +203,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (!value) return null;
 
     return {
-      image_url: image,
+      ...(image ? { image_url: image } : {}),
       [rule.match_type]: value,
       ...(rule.size_percentage !== undefined
         ? { size_percentage: Number(rule.size_percentage) }
         : {}),
       ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
+      ...(rule.object_position !== undefined && rule.object_position !== "default"
+        ? { object_position: rule.object_position }
+        : {}),
     };
   }
 
@@ -351,7 +359,85 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       ...config,
       entities: normalizedEntities,
     };
+    this._actionEditorIndex = null;
+    this._entityEditorIndex = null;
     this._artworkOverrides = this._normalizeArtworkOverrides(config.media_artwork_overrides);
+    this._fetchAspectRatios();
+  }
+
+  _fetchAspectRatios() {
+    if (!this.hass || !this._config) return;
+
+    const needsRatios = (this._artworkOverrides || []).some(
+      (rule) => rule.match_type === "aspect_ratio"
+    );
+    if (!needsRatios) return;
+
+    let entities = [];
+    if (this._config.entity) entities.push(this._config.entity);
+    if (this._config.entities && Array.isArray(this._config.entities)) {
+      entities = [
+        ...entities,
+        ...this._config.entities.map((e) => (typeof e === "string" ? e : e.entity_id)),
+      ];
+    }
+    entities = [...new Set(entities)].filter((e) => e);
+
+    if (!this._entityRatios) this._entityRatios = {};
+
+    entities.forEach((entityId) => {
+      if (this._entityRatios[entityId] !== undefined) return;
+      const state = this.hass.states[entityId];
+      if (!state) return;
+
+      const attrs = state.attributes || {};
+      const url = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
+      if (!url) return;
+
+      let trimmed = url.trim();
+      if (
+        (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+        (trimmed.startsWith('"') && trimmed.endsWith('"'))
+      ) {
+        trimmed = trimmed.slice(1, -1).trim();
+      }
+      const urlMatch = trimmed.match(/^url\((.*)\)$/i);
+      if (urlMatch && urlMatch[1]) {
+        trimmed = urlMatch[1].trim();
+        if (
+          (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+          (trimmed.startsWith('"') && trimmed.endsWith('"'))
+        ) {
+          trimmed = trimmed.slice(1, -1).trim();
+        }
+      }
+
+      this._entityRatios[entityId] = "loading";
+      const img = new window.Image();
+      img.src = trimmed;
+      img.onload = () => {
+        if (img.naturalWidth && img.naturalHeight) {
+          this._entityRatios[entityId] = (img.naturalWidth / img.naturalHeight).toFixed(2);
+          this.requestUpdate();
+        } else {
+          this._entityRatios[entityId] = null;
+        }
+      };
+      img.onerror = () => {
+        this._entityRatios[entityId] = null;
+      };
+    });
+  }
+
+  _formatRatio(ratio) {
+    if (!ratio || ratio === "loading") return "";
+    const r = parseFloat(ratio);
+    if (isNaN(r)) return ` (${ratio})`;
+    if (Math.abs(r - 1.77) <= 0.05 || Math.abs(r - 1.78) <= 0.05) return " (16:9)";
+    if (Math.abs(r - 1.33) <= 0.05) return " (4:3)";
+    if (Math.abs(r - 1.0) <= 0.05) return " (1:1)";
+    if (Math.abs(r - 2.33) <= 0.05 || Math.abs(r - 2.35) <= 0.05) return " (21:9)";
+    return ` (${ratio})`;
   }
 
   _updateConfig(key, value) {
@@ -447,9 +533,54 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._writeArtworkOverrides(list);
   }
 
+  _setCurrentAspectRatioForMatch(index, entityId) {
+    if (!this._config || !this.hass) return;
+
+    // Fallback to first configured entity if none provided
+    if (!entityId) {
+      entityId =
+        this._config.entity ||
+        (this._config.entities &&
+          (this._config.entities[0]?.entity_id || this._config.entities[0]));
+    }
+
+    if (!entityId || !this.hass.states[entityId]) return;
+
+    const state = this.hass.states[entityId];
+    const attrs = state.attributes || {};
+    const url = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
+    if (!url) return;
+
+    let trimmed = url.trim();
+    if (
+      (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+      (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    ) {
+      trimmed = trimmed.slice(1, -1).trim();
+    }
+    const urlMatch = trimmed.match(/^url\((.*)\)$/i);
+    if (urlMatch && urlMatch[1]) {
+      trimmed = urlMatch[1].trim();
+      if (
+        (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+        (trimmed.startsWith('"') && trimmed.endsWith('"'))
+      ) {
+        trimmed = trimmed.slice(1, -1).trim();
+      }
+    }
+
+    const img = new window.Image();
+    img.src = trimmed;
+    img.onload = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        const ratio = (img.naturalWidth / img.naturalHeight).toFixed(2);
+        this._onArtworkMatchValueChange(index, ratio);
+      }
+    };
+  }
+
   _onArtworkMatchValueChange(index, value) {
-    const list = [...(this._artworkOverrides ?? [])];
-    if (!list[index]) return;
+    const list = [...(this._artworkOverrides || [])];
     list[index] = { ...list[index], match_value: value };
     this._writeArtworkOverrides(list);
   }
@@ -1079,6 +1210,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       { value: "app_name", label: "App Name" },
       { value: "media_content_type", label: "Content Type" },
       { value: "entity_id", label: "Entity ID" },
+      { value: "aspect_ratio", label: "Aspect Ratio" },
       { value: "missing_art", label: "Missing Artwork" },
     ];
 
@@ -1130,9 +1262,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   select: {
                     mode: "dropdown",
                     options: [
-                      { value: "top center", label: "Top (default)" },
-                      { value: "center center", label: "Center" },
-                      { value: "bottom center", label: "Bottom" },
+                      {
+                        value: "top center",
+                        label: (localize("editor.artwork_position.top") || "Top") + " (default)",
+                      },
+                      {
+                        value: "center center",
+                        label: localize("editor.artwork_position.center") || "Center",
+                      },
+                      {
+                        value: "bottom center",
+                        label: localize("editor.artwork_position.bottom") || "Bottom",
+                      },
                     ],
                   },
                 }}
@@ -1326,6 +1467,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             <ha-selector
                               .hass=${this.hass}
                               label="${localize("editor.fields.match_field")}"
+                              .required=${true}
                               .selector=${{ select: { mode: "dropdown", options: matchOptions } }}
                               .value=${rule.match_type ?? "media_title"}
                               @value-changed=${(e) =>
@@ -1345,6 +1487,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                         .hass=${this.hass}
                                         .value=${rule.match_value ?? ""}
                                         .label=${localize("editor.fields.match_entity")}
+                                        .required=${true}
                                         .valueRenderer=${(v) => this._entityValueRenderer(v)}
                                         .rowRenderer=${(item) => this._entityRowRenderer(item)}
                                         .getItems=${this._getEntityItems(["media_player"])}
@@ -1353,17 +1496,124 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                         allow-custom-value
                                       ></ha-generic-picker>
                                     `
-                                  : html`
-                                      <ha-selector
-                                        .hass=${this.hass}
-                                        class="full-width"
-                                        .selector=${{ text: {} }}
-                                        label="${localize("editor.fields.match_value")}"
-                                        .value=${rule.match_value ?? ""}
-                                        @value-changed=${(e) =>
-                                          this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                      ></ha-selector>
-                                    `
+                                  : rule.match_type === "aspect_ratio"
+                                    ? html`
+                                        <div
+                                          style="display: flex; flex-direction: column; width: 100%;"
+                                        >
+                                          ${(() => {
+                                            const entities = [];
+                                            if (this._config?.entity)
+                                              entities.push(this._config.entity);
+                                            if (
+                                              this._config?.entities &&
+                                              Array.isArray(this._config.entities)
+                                            ) {
+                                              for (const e of this._config.entities) {
+                                                const id =
+                                                  typeof e === "string"
+                                                    ? e
+                                                    : e.entity || e.entity_id;
+                                                if (id && !entities.includes(id)) entities.push(id);
+                                              }
+                                            }
+                                            if (entities.length > 1) {
+                                              return html`
+                                                <select
+                                                  style="width: 100%; padding: 8px 16px; border-radius: 4px; border: 1px solid var(--divider-color, #ccc); background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-bottom: 8px; outline: none;"
+                                                  @change=${(e) => {
+                                                    const selectedEntity = e.target.value;
+                                                    if (selectedEntity) {
+                                                      this._setCurrentAspectRatioForMatch(
+                                                        idx,
+                                                        selectedEntity
+                                                      );
+                                                      e.target.selectedIndex = 0;
+                                                    }
+                                                  }}
+                                                >
+                                                  <option value="" disabled selected>
+                                                    Get current ratio from...
+                                                  </option>
+                                                  ${entities.map((entId) => {
+                                                    const stateObj = this.hass.states[entId];
+                                                    const hasPic =
+                                                      stateObj?.attributes?.entity_picture ||
+                                                      stateObj?.attributes?.entity_picture_local ||
+                                                      stateObj?.attributes?.album_art;
+                                                    const name =
+                                                      stateObj?.attributes?.friendly_name || entId;
+                                                    const ratio =
+                                                      this._entityRatios &&
+                                                      this._entityRatios[entId];
+                                                    const ratioText = this._formatRatio(ratio);
+                                                    return html`<option
+                                                      value="${entId}"
+                                                      ?disabled=${!hasPic}
+                                                    >
+                                                      ${name}${ratioText}
+                                                    </option>`;
+                                                  })}
+                                                </select>
+                                              `;
+                                            }
+                                            return nothing;
+                                          })()}
+                                          <div style="display: flex; width: 100%;">
+                                            <ha-selector
+                                              .hass=${this.hass}
+                                              style="flex: 1;"
+                                              .selector=${{ text: {} }}
+                                              label="${localize("editor.fields.match_value")}"
+                                              .required=${true}
+                                              .value=${rule.match_value ?? ""}
+                                              @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                            ></ha-selector>
+                                            ${(() => {
+                                              const entities = [];
+                                              if (this._config?.entity)
+                                                entities.push(this._config.entity);
+                                              if (
+                                                this._config?.entities &&
+                                                Array.isArray(this._config.entities)
+                                              ) {
+                                                for (const e of this._config.entities) {
+                                                  const id =
+                                                    typeof e === "string"
+                                                      ? e
+                                                      : e.entity || e.entity_id;
+                                                  if (id && !entities.includes(id))
+                                                    entities.push(id);
+                                                }
+                                              }
+                                              if (entities.length <= 1) {
+                                                return html`
+                                                  <ha-icon-button
+                                                    style="margin-left: 8px;"
+                                                    title="get current"
+                                                    @click=${() => this._setCurrentAspectRatioForMatch(idx)}
+                                                  >
+                                                    <ha-icon icon="mdi:target"></ha-icon>
+                                                  </ha-icon-button>
+                                                `;
+                                              }
+                                              return nothing;
+                                            })()}
+                                          </div>
+                                        </div>
+                                      `
+                                    : html`
+                                        <ha-selector
+                                          .hass=${this.hass}
+                                          class="full-width"
+                                          .selector=${{ text: {} }}
+                                          label="${localize("editor.fields.match_value")}"
+                                          .required=${true}
+                                          .value=${rule.match_value ?? ""}
+                                          @value-changed=${(e) =>
+                                            this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                        ></ha-selector>
+                                      `
                             }
                             <div class="editor-field-wrapper">
                               ${
@@ -1371,7 +1621,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                   ? html`
                                       <div class="grow-children" style="flex-direction: column;">
                                         <span class="form-label"
-                                          >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url")}</span
+                                          >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replaceAll("*", "")}</span
                                         >
                                         <ha-code-editor
                                           lint
@@ -1407,6 +1657,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                               ? localize("editor.fields.fallback_image_url")
                                               : localize("editor.fields.image_url")
                                           }
+                                          .required=${false}
                                           .value=${rule.image_url ?? ""}
                                           @value-changed=${(e) =>
                                             this._onArtworkImageUrlChange(idx, e.detail.value)}
@@ -1426,21 +1677,23 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               class="form-row-multi-column"
                               style="gap:12px; flex-wrap:wrap; align-items:flex-start;"
                             >
-                              <div class="grow-children" style="flex:1;">
+                              <div class="grow-children" style="flex:1; min-width: 100px;">
                                 <ha-selector
                                   .hass=${this.hass}
                                   class="full-width"
                                   label="${localize("editor.fields.size_percent")}"
+                                  .required=${false}
                                   .selector=${{ number: { min: 1, max: 100, mode: "box" } }}
                                   .value=${rule.size_percentage ?? ""}
                                   @value-changed=${(e) =>
                                     this._onArtworkSizePercentageChange(idx, e.detail.value)}
                                 ></ha-selector>
                               </div>
-                              <div class="grow-children" style="flex:1.5;">
+                              <div class="grow-children" style="flex:1.5; min-width: 120px;">
                                 <ha-selector
                                   .hass=${this.hass}
                                   label="${localize("editor.fields.object_fit")}"
+                                  .required=${false}
                                   .selector=${{
                                     select: {
                                       mode: "dropdown",
@@ -1489,6 +1742,48 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                   .value=${rule.object_fit || "default"}
                                   @value-changed=${(e) =>
                                     this._onArtworkObjectFitChange(idx, e.detail.value)}
+                                ></ha-selector>
+                              </div>
+                              <div class="grow-children" style="flex:1.5; min-width: 120px;">
+                                <ha-selector
+                                  .hass=${this.hass}
+                                  label="${localize("editor.fields.artwork_position")}"
+                                  .required=${false}
+                                  .selector=${{
+                                    select: {
+                                      mode: "dropdown",
+                                      options: [
+                                        {
+                                          value: "default",
+                                          label:
+                                            localize("editor.artwork_position.default") || "Global",
+                                        },
+                                        {
+                                          value: "top center",
+                                          label: localize("editor.artwork_position.top") || "Top",
+                                        },
+                                        {
+                                          value: "center center",
+                                          label:
+                                            localize("editor.artwork_position.center") || "Center",
+                                        },
+                                        {
+                                          value: "bottom center",
+                                          label:
+                                            localize("editor.artwork_position.bottom") || "Bottom",
+                                        },
+                                      ],
+                                    },
+                                  }}
+                                  .value=${rule.object_position || "default"}
+                                  @value-changed=${(e) => {
+                                    const newList = [...this._artworkOverrides];
+                                    newList[idx] = {
+                                      ...newList[idx],
+                                      object_position: e.detail.value,
+                                    };
+                                    this._writeArtworkOverrides(newList);
+                                  }}
                                 ></ha-selector>
                               </div>
                             </div>

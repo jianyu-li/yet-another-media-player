@@ -329,7 +329,7 @@ export default {
       dark: "Scuro",
     },
     artwork_fit: {
-      default: "Predefinito",
+      default: "Globale",
       cover: "Copertina (predefinito)",
       contain: "Contieni",
       fill: "Riempi",
@@ -337,6 +337,12 @@ export default {
       "scaled-contain": "Contieni scalato",
       "scaled-contain-alternate": "Contieni scalato alternativo",
       none: "Nessuno",
+    },
+    artwork_position: {
+      default: "Globale",
+      top: "In alto",
+      center: "Centro",
+      bottom: "In basso",
     },
   },
   card: {

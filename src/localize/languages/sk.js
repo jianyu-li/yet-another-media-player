@@ -348,7 +348,7 @@ export default {
       dark: "Tmavý",
     },
     artwork_fit: {
-      default: "Predvolené",
+      default: "Globálne",
       cover: "Obal (predvolené)",
       contain: "Prispôsobiť",
       fill: "Vyplniť",
@@ -356,6 +356,12 @@ export default {
       "scaled-contain": "Škálované prispôsobenie",
       "scaled-contain-alternate": "Škálované prispôsobenie alternatívne",
       none: "Žiadne",
+    },
+    artwork_position: {
+      default: "Globálne",
+      top: "Hore",
+      center: "Stred",
+      bottom: "Dole",
     },
   },
   card: {

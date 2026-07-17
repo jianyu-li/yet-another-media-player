@@ -329,7 +329,7 @@ export default {
       dark: "Temno",
     },
     artwork_fit: {
-      default: "Privzeto",
+      default: "Globalno",
       cover: "Ovitek (privzeto)",
       contain: "Prilagodi",
       fill: "Zapolni",
@@ -337,6 +337,12 @@ export default {
       "scaled-contain": "Pomanjšano prilagodi",
       "scaled-contain-alternate": "Pomanjšano prilagodi alternativno",
       none: "Brez",
+    },
+    artwork_position: {
+      default: "Globalno",
+      top: "Zgoraj",
+      center: "Sredina",
+      bottom: "Spodaj",
     },
   },
   card: {

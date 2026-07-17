@@ -345,7 +345,7 @@ export default {
       dark: "Dunkel",
     },
     artwork_fit: {
-      default: "Standard",
+      default: "Global",
       cover: "Cover (Standard)",
       contain: "Einpassen",
       fill: "Füllen",
@@ -353,6 +353,12 @@ export default {
       "scaled-contain": "Skaliertes Einpassen",
       "scaled-contain-alternate": "Skaliertes Einpassen (Alternativ)",
       none: "Keine",
+    },
+    artwork_position: {
+      default: "Global",
+      top: "Oben",
+      center: "Mitte",
+      bottom: "Unten",
     },
   },
   card: {

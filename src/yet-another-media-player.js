@@ -37,7 +37,7 @@ import {
   isMusicAssistantEntity,
   getArtworkUrl,
   isValidArtworkUrl,
-  applyHostnameToUrl
+  getValidArtworkAttr
 } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
@@ -460,6 +460,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return result;
   }
   static properties = {
+    _aspectRatioCache: { state: true },
     _quickGroupingMode: { state: true },
     hass: {},
     config: {},
@@ -560,6 +561,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._shouldDropdownOpenUp = false;
     this._collapsedArtDominantColor = "#444";
     this._lastArtworkUrl = null;
+    this._aspectRatioCache = {};
     this._addToPlaylistTarget = null;
     // Timer for progress updates
     this._progressTimer = null;
@@ -4328,13 +4330,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       overrides: Array.isArray(this.config?.media_artwork_overrides) ? this.config.media_artwork_overrides : [],
       fallbackArtwork: this.config?.fallback_artwork,
       artworkObjectFit: this._artworkObjectFit,
+      aspectRatioCache: this._aspectRatioCache,
       resolveOverrideSource: (override, sourceValue, type, stateObj) =>
         this._getResolvedArtworkOverrideSource(override, sourceValue, type, stateObj)
     });
 
     if (!res) return null;
 
-    let { url, sizePercentage, objectFit } = res;
+    let { url, sizePercentage, objectFit, objectPosition } = res;
 
     // Validate artwork URL to prevent proxy errors
     if (url && !isValidArtworkUrl(url)) {
@@ -4345,7 +4348,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       objectFit = this._artworkObjectFit;
     }
 
-    return { url, sizePercentage, objectFit };
+    if (!objectPosition) {
+      objectPosition = this.config?.artwork_position || "top center";
+    }
+
+    return { url, sizePercentage, objectFit, objectPosition };
   }
 
   _getBackgroundSizeForFit(fit) {
@@ -4386,6 +4393,42 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       };
       img.onerror = function () { resolve("#888"); };
     });
+  }
+
+  _updateArtworkAspectRatios() {
+    if (!this.hass) return;
+    this.entityIds.forEach(entityId => {
+      const state = this.hass.states[entityId];
+      if (state?.attributes) {
+        const attrs = state.attributes;
+        const baseArtworkUrl =
+          getValidArtworkAttr(attrs, "entity_picture_local") ||
+          getValidArtworkAttr(attrs, "entity_picture") ||
+          getValidArtworkAttr(attrs, "album_art");
+        
+        if (baseArtworkUrl) {
+          this._calculateAspectRatio(this._normalizeImageSourceValue(baseArtworkUrl));
+        }
+      }
+    });
+  }
+
+  _calculateAspectRatio(url) {
+    if (!url || typeof url !== "string") return;
+    if (this._aspectRatioCache[url] !== undefined) return;
+    
+    this._aspectRatioCache[url] = null;
+    const img = new window.Image();
+    img.src = url;
+    img.onload = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        this._aspectRatioCache[url] = img.naturalWidth / img.naturalHeight;
+        this.requestUpdate();
+      }
+    };
+    img.onerror = () => {
+      this._aspectRatioCache[url] = null;
+    };
   }
 
   _normalizeAdaptiveTextTargets(config) {
@@ -5986,6 +6029,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncEntityTemplateSubscriptions('hidden_controls', currentContext);
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
+    }
+    if (changedProps.has("hass") || changedProps.has("config")) {
+      this._updateArtworkAspectRatios();
     }
 
     if (this.hass && this._hasMassQueueIntegration === null && !this._checkingMassQueueIntegration) {
@@ -7911,6 +7957,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     let artworkUrl = null;
     let artworkSizePercentage = null;
     let artworkObjectFit = this._artworkObjectFit;
+    let artworkObjectPosition = undefined;
     if (!this._isIdle && !forceIdleImage) {
       // Use the unified entity resolution system for artwork
       const artwork = selectedArt;
@@ -7918,6 +7965,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       artworkSizePercentage = artwork?.sizePercentage;
       if (artwork?.objectFit) {
         artworkObjectFit = artwork.objectFit;
+      }
+      if (artwork?.objectPosition) {
+        artworkObjectPosition = artwork.objectPosition;
       }
 
     }
@@ -7968,7 +8018,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
-    let artworkPos = this.config.artwork_position || "top center";
+    let artworkPos = (typeof artworkObjectPosition !== 'undefined' ? artworkObjectPosition : null) || this.config.artwork_position || "top center";
     if (artworkFullBleed) {
       // Offset artwork away from edges to account for the chip row / controls that overlay the artwork
       if (artworkPos === "top center" || artworkPos === "center top") artworkPos = "center 50px";
@@ -8001,7 +8051,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lastVolumeRendered = !volumeRowWillCollapse;
 
     return html`
-        <ha-card class="yamp-card" style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
+        <ha-card class="yamp-card" 
+          style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
             data-artwork-fit="${activeArtworkFit}"

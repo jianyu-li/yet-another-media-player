@@ -355,7 +355,7 @@ export default {
       dark: "Donker",
     },
     artwork_fit: {
-      default: "Standaard",
+      default: "Globaal",
       cover: "Cover (standaard)",
       contain: "Bevatten",
       fill: "Vullen",
@@ -363,6 +363,12 @@ export default {
       "scaled-contain": "Geschaalde contain",
       "scaled-contain-alternate": "Geschaalde contain alternatief",
       none: "Geen",
+    },
+    artwork_position: {
+      default: "Globaal",
+      top: "Boven",
+      center: "Midden",
+      bottom: "Onder",
     },
   },
   card: {

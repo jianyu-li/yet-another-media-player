@@ -336,7 +336,7 @@ export default {
       dark: "Sombre",
     },
     artwork_fit: {
-      default: "Par défaut",
+      default: "Global",
       cover: "Couverture (par défaut)",
       contain: "Contenir",
       fill: "Remplir",
@@ -344,6 +344,12 @@ export default {
       "scaled-contain": "Contenir mis à l'échelle",
       "scaled-contain-alternate": "Contenir mis à l'échelle alternatif",
       none: "Aucun",
+    },
+    artwork_position: {
+      default: "Global",
+      top: "Haut",
+      center: "Centre",
+      bottom: "Bas",
     },
   },
   card: {
