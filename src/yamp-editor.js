@@ -1523,7 +1523,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                           .rowRenderer=${(item) => this._entityRowRenderer(item)}
                                           .getItems=${this._getEntityItems(["media_player"])}
                                           @value-changed=${(e) =>
-                                          this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                            this._onArtworkMatchValueChange(idx, e.detail.value)}
                                           allow-custom-value
                                         ></ha-generic-picker>
                                       `
@@ -1533,26 +1533,27 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                             style="display: flex; flex-direction: column; width: 100%;"
                                           >
                                             ${(() => {
-                                            const entities = [];
-                                            if (this._config?.entity)
-                                              entities.push(this._config.entity);
-                                            if (
-                                              this._config?.entities &&
-                                              Array.isArray(this._config.entities)
-                                            ) {
-                                              for (const e of this._config.entities) {
-                                                const id =
-                                                  typeof e === "string"
-                                                    ? e
-                                                    : e.entity || e.entity_id;
-                                                if (id && !entities.includes(id)) entities.push(id);
+                                              const entities = [];
+                                              if (this._config?.entity)
+                                                entities.push(this._config.entity);
+                                              if (
+                                                this._config?.entities &&
+                                                Array.isArray(this._config.entities)
+                                              ) {
+                                                for (const e of this._config.entities) {
+                                                  const id =
+                                                    typeof e === "string"
+                                                      ? e
+                                                      : e.entity || e.entity_id;
+                                                  if (id && !entities.includes(id))
+                                                    entities.push(id);
+                                                }
                                               }
-                                            }
-                                            if (entities.length > 1) {
-                                              return html`
-                                                <select
-                                                  style="width: 100%; padding: 8px 16px; border-radius: 4px; border: 1px solid var(--divider-color, #ccc); background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-bottom: 8px; outline: none;"
-                                                  @change=${(e) => {
+                                              if (entities.length > 1) {
+                                                return html`
+                                                  <select
+                                                    style="width: 100%; padding: 8px 16px; border-radius: 4px; border: 1px solid var(--divider-color, #ccc); background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-bottom: 8px; outline: none;"
+                                                    @change=${(e) => {
                                                     const selectedEntity = e.target.value;
                                                     if (selectedEntity) {
                                                       this._setCurrentAspectRatioForMatch(
@@ -1562,11 +1563,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                       e.target.selectedIndex = 0;
                                                     }
                                                   }}
-                                                >
-                                                  <option value="" disabled selected>
-                                                    Get current ratio from...
-                                                  </option>
-                                                  ${entities.map((entId) => {
+                                                  >
+                                                    <option value="" disabled selected>
+                                                      Get current ratio from...
+                                                    </option>
+                                                    ${entities.map((entId) => {
                                                     const stateObj = this.hass.states[entId];
                                                     const hasPic =
                                                       stateObj?.attributes?.entity_picture ||
@@ -1585,11 +1586,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                       ${name}${ratioText}
                                                     </option>`;
                                                   })}
-                                                </select>
-                                              `;
-                                            }
-                                            return nothing;
-                                          })()}
+                                                  </select>
+                                                `;
+                                              }
+                                              return nothing;
+                                            })()}
                                             <div style="display: flex; width: 100%;">
                                               <ha-selector
                                                 .hass=${this.hass}
@@ -1601,35 +1602,35 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                 @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
                                               ></ha-selector>
                                               ${(() => {
-                                              const entities = [];
-                                              if (this._config?.entity)
-                                                entities.push(this._config.entity);
-                                              if (
-                                                this._config?.entities &&
-                                                Array.isArray(this._config.entities)
-                                              ) {
-                                                for (const e of this._config.entities) {
-                                                  const id =
-                                                    typeof e === "string"
-                                                      ? e
-                                                      : e.entity || e.entity_id;
-                                                  if (id && !entities.includes(id))
-                                                    entities.push(id);
+                                                const entities = [];
+                                                if (this._config?.entity)
+                                                  entities.push(this._config.entity);
+                                                if (
+                                                  this._config?.entities &&
+                                                  Array.isArray(this._config.entities)
+                                                ) {
+                                                  for (const e of this._config.entities) {
+                                                    const id =
+                                                      typeof e === "string"
+                                                        ? e
+                                                        : e.entity || e.entity_id;
+                                                    if (id && !entities.includes(id))
+                                                      entities.push(id);
+                                                  }
                                                 }
-                                              }
-                                              if (entities.length <= 1) {
-                                                return html`
-                                                  <ha-icon-button
-                                                    style="margin-left: 8px;"
-                                                    title="get current"
-                                                    @click=${() => this._setCurrentAspectRatioForMatch(idx)}
-                                                  >
-                                                    <ha-icon icon="mdi:target"></ha-icon>
-                                                  </ha-icon-button>
-                                                `;
-                                              }
-                                              return nothing;
-                                            })()}
+                                                if (entities.length <= 1) {
+                                                  return html`
+                                                    <ha-icon-button
+                                                      style="margin-left: 8px;"
+                                                      title="get current"
+                                                      @click=${() => this._setCurrentAspectRatioForMatch(idx)}
+                                                    >
+                                                      <ha-icon icon="mdi:target"></ha-icon>
+                                                    </ha-icon-button>
+                                                  `;
+                                                }
+                                                return nothing;
+                                              })()}
                                             </div>
                                           </div>
                                         `
@@ -1642,7 +1643,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                             .required=${true}
                                             .value=${rule.match_value ?? ""}
                                             @value-changed=${(e) =>
-                                            this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                              this._onArtworkMatchValueChange(idx, e.detail.value)}
                                           ></ha-selector>
                                         `
                             }
@@ -1652,64 +1653,67 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 : html`
                                     <div class="editor-field-wrapper">
                                       ${
-                                    this._isTemplateMode(`artwork_image_url_${idx}`, rule.image_url)
-                                      ? html`
-                                          <div
-                                            class="grow-children"
-                                            style="flex-direction: column;"
-                                          >
-                                            <span class="form-label"
-                                              >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replaceAll("*", "")}</span
-                                            >
-                                            <ha-code-editor
-                                              lint
-                                              .hass=${this.hass}
-                                              mode="jinja2"
-                                              autocomplete-entities
-                                              label=${
+                                        this._isTemplateMode(
+                                          `artwork_image_url_${idx}`,
+                                          rule.image_url
+                                        )
+                                          ? html`
+                                              <div
+                                                class="grow-children"
+                                                style="flex-direction: column;"
+                                              >
+                                                <span class="form-label"
+                                                  >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replaceAll("*", "")}</span
+                                                >
+                                                <ha-code-editor
+                                                  lint
+                                                  .hass=${this.hass}
+                                                  mode="jinja2"
+                                                  autocomplete-entities
+                                                  label=${
                                                 rule.match_type === "missing_art"
                                                   ? localize("editor.fields.fallback_image_url")
                                                   : localize("editor.fields.image_url")
                                               }
-                                              .value=${rule.image_url ?? ""}
-                                              @value-changed=${(e) =>
+                                                  .value=${rule.image_url ?? ""}
+                                                  @value-changed=${(e) =>
                                                 this._onArtworkImageUrlChange(idx, e.detail.value)}
-                                            ></ha-code-editor>
-                                          </div>
-                                          <div class="field-actions">
-                                            ${this._renderTemplateToggle(
+                                                ></ha-code-editor>
+                                              </div>
+                                              <div class="field-actions">
+                                                ${this._renderTemplateToggle(
                                               `artwork_image_url_${idx}`,
                                               rule.image_url,
                                               (v) => this._onArtworkImageUrlChange(idx, v)
                                             )}
-                                          </div>
-                                        `
-                                      : html`
-                                          <div class="grow-children">
-                                            <ha-selector
-                                              .hass=${this.hass}
-                                              class="full-width"
-                                              .selector=${{ text: {} }}
-                                              label=${
+                                              </div>
+                                            `
+                                          : html`
+                                              <div class="grow-children">
+                                                <ha-selector
+                                                  .hass=${this.hass}
+                                                  class="full-width"
+                                                  .selector=${{ text: {} }}
+                                                  label=${
                                                 rule.match_type === "missing_art"
                                                   ? localize("editor.fields.fallback_image_url")
                                                   : localize("editor.fields.image_url")
                                               }
-                                              .required=${false}
-                                              .value=${rule.image_url ?? ""}
-                                              @value-changed=${(e) =>
+                                                  .required=${false}
+                                                  .value=${rule.image_url ?? ""}
+                                                  @value-changed=${(e) =>
                                                 this._onArtworkImageUrlChange(idx, e.detail.value)}
-                                            ></ha-selector>
-                                          </div>
-                                          <div class="field-actions">
-                                            ${this._renderTemplateToggle(
+                                                ></ha-selector>
+                                              </div>
+                                              <div class="field-actions">
+                                                ${this._renderTemplateToggle(
                                               `artwork_image_url_${idx}`,
                                               rule.image_url,
                                               (v) => this._onArtworkImageUrlChange(idx, v)
                                             )}
-                                          </div>
-                                        `
-                                  }
+                                              </div>
+                                            `
+                                      }
                                     </div>
                                   `
                             }
