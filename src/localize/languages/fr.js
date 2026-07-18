@@ -145,8 +145,9 @@ export default {
       artwork_extend: "Étendre l'illustration sous les lignes de jetons.",
       artwork_extend_label: "Étendre l'illustration",
       no_artwork_overrides: "Aucun remplacement d'illustration configuré.",
-      missing_art_match: "Applies when the selected media provides no artwork.",
-      idle_image_match: "Applies when the player is idle and an idle image is displaying.",
+      missing_art_match: "S'applique lorsque le média sélectionné ne fournit aucune illustration.",
+      idle_image_match:
+        "S'applique lorsque le lecteur est en veille et qu'une image de veille est affichée.",
       entity_current_hint: "Utilisez 'entity_id: current' pour cibler le lecteur actuel.",
       jinja_template_hint: "Entrez un modèle Jinja qui renvoie un entity_id.",
       jinja_template_vol_hint: "Modèle pour l'entité de volume.",
@@ -250,7 +251,7 @@ export default {
       vol_step: "Pas du volume",
       card_height: "Hauteur (px)",
       control_layout: "Mise en page",
-      idle_image: "Idle Image",
+      idle_image: "Image de veille",
 
       image_url: "URL image",
       fallback_image_url: "URL de secours",
