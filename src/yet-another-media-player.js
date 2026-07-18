@@ -4324,13 +4324,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Get artwork URL from entity state, supporting entity_picture_local
-  _getArtworkUrl(state) {
+  _getArtworkUrl(state, forceIdleImage = false) {
+    const isIdleImageActive = (this._isIdle || forceIdleImage) && !!this.config?.idle_image;
     const res = getArtworkUrl(state, {
       hostname: this.config?.artwork_hostname || '',
       overrides: Array.isArray(this.config?.media_artwork_overrides) ? this.config.media_artwork_overrides : [],
       fallbackArtwork: this.config?.fallback_artwork,
       artworkObjectFit: this._artworkObjectFit,
       aspectRatioCache: this._aspectRatioCache,
+      isIdleImageActive,
       resolveOverrideSource: (override, sourceValue, type, stateObj) =>
         this._getResolvedArtworkOverrideSource(override, sourceValue, type, stateObj)
     });
@@ -7805,9 +7807,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isPlaying = this._idleTimeoutMs === 0 ? this._isEntityPlaying(playbackStateObj) : (!this._isIdle && this._isEntityPlaying(playbackStateObj));
     // Artwork keeps using the visible main entity's artwork when available; fallback to playback entity if main has none
     const mainState = this.currentStateObj;
-    const metadataArtwork = this._getArtworkUrl(metadataStateObj);
-    const playbackArtwork = this._getArtworkUrl(playbackStateObj);
-    const mainArtwork = this._getArtworkUrl(mainState);
+    const metadataArtwork = this._getArtworkUrl(metadataStateObj, forceIdleImage);
+    const playbackArtwork = this._getArtworkUrl(playbackStateObj, forceIdleImage);
+    const mainArtwork = this._getArtworkUrl(mainState, forceIdleImage);
 
     const displayTitle = metadataStateObj?.attributes?.media_title || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
 
@@ -7994,6 +7996,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         artworkObjectPosition = artwork.objectPosition;
       }
 
+    } else {
+      // Even if idle, we apply layout properties from selectedArt, 
+      // because _getArtworkUrl correctly finds idle_image overrides for us.
+      if (selectedArt?.objectFit) {
+        artworkObjectFit = selectedArt.objectFit;
+      }
+      if (selectedArt?.objectPosition) {
+        artworkObjectPosition = selectedArt.objectPosition;
+      }
+      if (selectedArt?.sizePercentage !== undefined) {
+        artworkSizePercentage = selectedArt.sizePercentage;
+      }
     }
 
     showCollapsedPlaceholder = collapsed && !artworkUrl && !idleImageUrl && effectiveExtraSpace >= 40;
@@ -8605,10 +8619,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _updateHostArtworkStyles(host, playbackStateObj, forceIdleImage) {
     const metadataStateObj = this.metadataStateObj;
-    const metadataArtwork = this._getArtworkUrl(metadataStateObj);
-    const playbackArtwork = this._getArtworkUrl(playbackStateObj);
+    const metadataArtwork = this._getArtworkUrl(metadataStateObj, forceIdleImage);
+    const playbackArtwork = this._getArtworkUrl(playbackStateObj, forceIdleImage);
     const mainState = this.currentStateObj;
-    const mainArtwork = this._getArtworkUrl(mainState);
+    const mainArtwork = this._getArtworkUrl(mainState, forceIdleImage);
 
     const displayTitle = metadataStateObj?.attributes?.media_title || playbackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
 
@@ -8621,10 +8635,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     let artworkObjectFit = this._artworkObjectFit;
-    if (!this._isIdle && !forceIdleImage) {
-      if (selectedArt?.objectFit) {
-        artworkObjectFit = selectedArt.objectFit;
-      }
+    if (selectedArt?.objectFit) {
+      artworkObjectFit = selectedArt.objectFit;
     }
 
     const activeArtworkFit = artworkObjectFit || "cover";

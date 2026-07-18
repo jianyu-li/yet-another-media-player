@@ -152,6 +152,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         };
       }
 
+      if (item.idle_image === true || item.idle_image_url !== undefined) {
+        return {
+          match_type: "idle_image",
+          match_value: "",
+          image_url: item.idle_image_url ?? item.image_url ?? "",
+          size_percentage: sizePercentage,
+          object_fit: item.object_fit,
+        };
+      }
+
       let matchType = "media_title";
       let matchValue = "";
 
@@ -199,6 +209,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       };
     }
 
+    if (rule.match_type === "idle_image") {
+      return {
+        idle_image: true,
+        ...(image ? { idle_image_url: image } : {}),
+        ...(rule.size_percentage !== undefined
+          ? { size_percentage: Number(rule.size_percentage) }
+          : {}),
+        ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
+        ...(rule.object_position !== undefined && rule.object_position !== "default"
+          ? { object_position: rule.object_position }
+          : {}),
+      };
+    }
     const value = (rule.match_value ?? "").trim();
     if (!value) return null;
 
@@ -526,7 +549,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
     const updated = { ...list[index], match_type: newType };
-    if (newType === "missing_art") {
+    if (newType === "missing_art" || newType === "idle_image") {
       updated.match_value = "";
     }
     list[index] = updated;
@@ -1212,6 +1235,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       { value: "entity_id", label: "Entity ID" },
       { value: "aspect_ratio", label: "Aspect Ratio" },
       { value: "missing_art", label: "Missing Artwork" },
+      { value: "idle_image", label: localize("editor.fields.idle_image") || "Idle Image" },
     ];
 
     return html`
@@ -1480,28 +1504,35 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                       Applies when the selected media provides no artwork.
                                     </div>
                                   `
-                                : rule.match_type === "entity_id"
+                                : rule.match_type === "idle_image"
                                   ? html`
-                                      <ha-generic-picker
-                                        class="full-width"
-                                        .hass=${this.hass}
-                                        .value=${rule.match_value ?? ""}
-                                        .label=${localize("editor.fields.match_entity")}
-                                        .required=${true}
-                                        .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                                        .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                                        .getItems=${this._getEntityItems(["media_player"])}
-                                        @value-changed=${(e) =>
-                                          this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                        allow-custom-value
-                                      ></ha-generic-picker>
+                                      <div class="config-subtitle small">
+                                        Applies when the player is idle and an idle image is
+                                        displaying.
+                                      </div>
                                     `
-                                  : rule.match_type === "aspect_ratio"
+                                  : rule.match_type === "entity_id"
                                     ? html`
-                                        <div
-                                          style="display: flex; flex-direction: column; width: 100%;"
-                                        >
-                                          ${(() => {
+                                        <ha-generic-picker
+                                          class="full-width"
+                                          .hass=${this.hass}
+                                          .value=${rule.match_value ?? ""}
+                                          .label=${localize("editor.fields.match_entity")}
+                                          .required=${true}
+                                          .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                                          .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                                          .getItems=${this._getEntityItems(["media_player"])}
+                                          @value-changed=${(e) =>
+                                          this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                          allow-custom-value
+                                        ></ha-generic-picker>
+                                      `
+                                    : rule.match_type === "aspect_ratio"
+                                      ? html`
+                                          <div
+                                            style="display: flex; flex-direction: column; width: 100%;"
+                                          >
+                                            ${(() => {
                                             const entities = [];
                                             if (this._config?.entity)
                                               entities.push(this._config.entity);
@@ -1559,17 +1590,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                             }
                                             return nothing;
                                           })()}
-                                          <div style="display: flex; width: 100%;">
-                                            <ha-selector
-                                              .hass=${this.hass}
-                                              style="flex: 1;"
-                                              .selector=${{ text: {} }}
-                                              label="${localize("editor.fields.match_value")}"
-                                              .required=${true}
-                                              .value=${rule.match_value ?? ""}
-                                              @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                            ></ha-selector>
-                                            ${(() => {
+                                            <div style="display: flex; width: 100%;">
+                                              <ha-selector
+                                                .hass=${this.hass}
+                                                style="flex: 1;"
+                                                .selector=${{ text: {} }}
+                                                label="${localize("editor.fields.match_value")}"
+                                                .required=${true}
+                                                .value=${rule.match_value ?? ""}
+                                                @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                              ></ha-selector>
+                                              ${(() => {
                                               const entities = [];
                                               if (this._config?.entity)
                                                 entities.push(this._config.entity);
@@ -1599,80 +1630,89 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                               }
                                               return nothing;
                                             })()}
+                                            </div>
                                           </div>
-                                        </div>
-                                      `
-                                    : html`
-                                        <ha-selector
-                                          .hass=${this.hass}
-                                          class="full-width"
-                                          .selector=${{ text: {} }}
-                                          label="${localize("editor.fields.match_value")}"
-                                          .required=${true}
-                                          .value=${rule.match_value ?? ""}
-                                          @value-changed=${(e) =>
+                                        `
+                                      : html`
+                                          <ha-selector
+                                            .hass=${this.hass}
+                                            class="full-width"
+                                            .selector=${{ text: {} }}
+                                            label="${localize("editor.fields.match_value")}"
+                                            .required=${true}
+                                            .value=${rule.match_value ?? ""}
+                                            @value-changed=${(e) =>
                                             this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                        ></ha-selector>
-                                      `
+                                          ></ha-selector>
+                                        `
                             }
-                            <div class="editor-field-wrapper">
-                              ${
-                                this._isTemplateMode(`artwork_image_url_${idx}`, rule.image_url)
-                                  ? html`
-                                      <div class="grow-children" style="flex-direction: column;">
-                                        <span class="form-label"
-                                          >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replaceAll("*", "")}</span
-                                        >
-                                        <ha-code-editor
-                                          lint
-                                          .hass=${this.hass}
-                                          mode="jinja2"
-                                          autocomplete-entities
-                                          label=${
-                                            rule.match_type === "missing_art"
-                                              ? localize("editor.fields.fallback_image_url")
-                                              : localize("editor.fields.image_url")
-                                          }
-                                          .value=${rule.image_url ?? ""}
-                                          @value-changed=${(e) =>
-                                            this._onArtworkImageUrlChange(idx, e.detail.value)}
-                                        ></ha-code-editor>
-                                      </div>
-                                      <div class="field-actions">
-                                        ${this._renderTemplateToggle(
-                                          `artwork_image_url_${idx}`,
-                                          rule.image_url,
-                                          (v) => this._onArtworkImageUrlChange(idx, v)
-                                        )}
-                                      </div>
-                                    `
-                                  : html`
-                                      <div class="grow-children">
-                                        <ha-selector
-                                          .hass=${this.hass}
-                                          class="full-width"
-                                          .selector=${{ text: {} }}
-                                          label=${
-                                            rule.match_type === "missing_art"
-                                              ? localize("editor.fields.fallback_image_url")
-                                              : localize("editor.fields.image_url")
-                                          }
-                                          .required=${false}
-                                          .value=${rule.image_url ?? ""}
-                                          @value-changed=${(e) =>
-                                            this._onArtworkImageUrlChange(idx, e.detail.value)}
-                                        ></ha-selector>
-                                      </div>
-                                      <div class="field-actions">
-                                        ${this._renderTemplateToggle(
-                                          `artwork_image_url_${idx}`,
-                                          rule.image_url,
-                                          (v) => this._onArtworkImageUrlChange(idx, v)
-                                        )}
-                                      </div>
-                                    `
-                              }
-                            </div>
+                            ${
+                              rule.match_type === "idle_image"
+                                ? nothing
+                                : html`
+                                    <div class="editor-field-wrapper">
+                                      ${
+                                    this._isTemplateMode(`artwork_image_url_${idx}`, rule.image_url)
+                                      ? html`
+                                          <div
+                                            class="grow-children"
+                                            style="flex-direction: column;"
+                                          >
+                                            <span class="form-label"
+                                              >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replaceAll("*", "")}</span
+                                            >
+                                            <ha-code-editor
+                                              lint
+                                              .hass=${this.hass}
+                                              mode="jinja2"
+                                              autocomplete-entities
+                                              label=${
+                                                rule.match_type === "missing_art"
+                                                  ? localize("editor.fields.fallback_image_url")
+                                                  : localize("editor.fields.image_url")
+                                              }
+                                              .value=${rule.image_url ?? ""}
+                                              @value-changed=${(e) =>
+                                                this._onArtworkImageUrlChange(idx, e.detail.value)}
+                                            ></ha-code-editor>
+                                          </div>
+                                          <div class="field-actions">
+                                            ${this._renderTemplateToggle(
+                                              `artwork_image_url_${idx}`,
+                                              rule.image_url,
+                                              (v) => this._onArtworkImageUrlChange(idx, v)
+                                            )}
+                                          </div>
+                                        `
+                                      : html`
+                                          <div class="grow-children">
+                                            <ha-selector
+                                              .hass=${this.hass}
+                                              class="full-width"
+                                              .selector=${{ text: {} }}
+                                              label=${
+                                                rule.match_type === "missing_art"
+                                                  ? localize("editor.fields.fallback_image_url")
+                                                  : localize("editor.fields.image_url")
+                                              }
+                                              .required=${false}
+                                              .value=${rule.image_url ?? ""}
+                                              @value-changed=${(e) =>
+                                                this._onArtworkImageUrlChange(idx, e.detail.value)}
+                                            ></ha-selector>
+                                          </div>
+                                          <div class="field-actions">
+                                            ${this._renderTemplateToggle(
+                                              `artwork_image_url_${idx}`,
+                                              rule.image_url,
+                                              (v) => this._onArtworkImageUrlChange(idx, v)
+                                            )}
+                                          </div>
+                                        `
+                                  }
+                                    </div>
+                                  `
+                            }
                             <div
                               class="form-row-multi-column"
                               style="gap:12px; flex-wrap:wrap; align-items:flex-start;"

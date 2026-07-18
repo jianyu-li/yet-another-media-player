@@ -285,6 +285,7 @@ export default {
       vol_step: "Volume Step (0.05 = 5%)",
       card_height: "Card Height (px)",
       control_layout: "Control Layout",
+      idle_image: "Idle Image",
       image_url: "Image URL",
       fallback_image_url: "Fallback Image URL",
       move_to_main: "Move action to main chips",

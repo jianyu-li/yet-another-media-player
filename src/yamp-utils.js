@@ -474,6 +474,9 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
   } else if (override?.missing_art_url && !hasExistingArtwork) {
     overrideSource = override.missing_art_url;
     overrideType = "missing";
+  } else if (override?.idle_image_url && options.isIdleImageActive) {
+    overrideSource = override.idle_image_url;
+    overrideType = "idle";
   } else if (override && hasExistingArtwork) {
     overrideSource =
       getValidArtworkAttr(attrs, "entity_picture_local") ||
@@ -490,19 +493,32 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
     }
   }
 
-  if (override && overrideSource) {
-    const resolvedOverride =
-      typeof resolveOverrideSource === "function"
-        ? resolveOverrideSource(override, overrideSource, overrideType, state)
-        : overrideSource;
-    if (resolvedOverride) {
-      return {
-        url: resolvedOverride,
-        sizePercentage: override?.size_percentage,
-        objectFit: override?.object_fit ?? null,
-        objectPosition: override?.object_position ?? null,
-      };
+  if (!override && options.isIdleImageActive) {
+    const idleOverride = overrides.find(
+      (item) => item?.idle_image === true || item?.idle_image_url !== undefined
+    );
+    if (idleOverride) {
+      override = idleOverride;
+      overrideSource = idleOverride.idle_image_url || idleOverride.image_url;
+      overrideType = "idle";
     }
+  }
+
+  if (override) {
+    let resolvedOverride = null;
+    if (overrideSource) {
+      resolvedOverride =
+        typeof resolveOverrideSource === "function"
+          ? resolveOverrideSource(override, overrideSource, overrideType, state)
+          : overrideSource;
+    }
+
+    return {
+      url: resolvedOverride,
+      sizePercentage: override?.size_percentage,
+      objectFit: override?.object_fit ?? null,
+      objectPosition: override?.object_position ?? null,
+    };
   }
 
   return null;
@@ -530,6 +546,7 @@ export function getArtworkUrl(
     artworkObjectFit = null,
     resolveOverrideSource = null,
     aspectRatioCache = {},
+    isIdleImageActive = false,
   } = {}
 ) {
   if (!state || !state.attributes) return null;
@@ -547,6 +564,7 @@ export function getArtworkUrl(
   // Check for media artwork overrides first
   const resolvedOverride = _findArtworkOverride(state, overrides, resolveOverrideSource, {
     aspectRatioCache: aspectRatioCache || {},
+    isIdleImageActive,
   });
   let objectPosition = null;
 
