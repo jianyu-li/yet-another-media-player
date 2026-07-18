@@ -138,6 +138,8 @@ export default {
       artwork_extend: "Estendi copertina sotto i chip.",
       artwork_extend_label: "Estendi copertina",
       no_artwork_overrides: "Nessun override copertina configurato.",
+      missing_art_match: "Applies when the selected media provides no artwork.",
+      idle_image_match: "Applies when the player is idle and an idle image is displaying.",
       entity_current_hint: "Usa 'entity_id: current' per il lettore attuale.",
       jinja_template_hint: "Modello Jinja per entity_id.",
       jinja_template_vol_hint: "Modello per entità volume.",
@@ -241,6 +243,8 @@ export default {
       vol_step: "Passo volume",
       card_height: "Altezza (px)",
       control_layout: "Design",
+      idle_image: "Idle Image",
+
       image_url: "URL immagine",
       fallback_image_url: "URL fallback",
       move_to_main: "Sposta in chip principali",

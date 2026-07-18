@@ -154,6 +154,8 @@ export default {
       artwork_extend_label: "Rozšíriť grafiku",
       no_artwork_overrides:
         "Nie sú nastavené žiadne prepísania grafiky. Pridajte ich pomocou tlačidla plus.",
+      missing_art_match: "Applies when the selected media provides no artwork.",
+      idle_image_match: "Applies when the player is idle and an idle image is displaying.",
       entity_current_hint:
         "Použite 'entity_id: current' na zacielenie aktuálne vybranej entity na karte.",
       jinja_template_hint:
@@ -260,6 +262,8 @@ export default {
       vol_step: "Krok hlasitosti (0.05 = 5%)",
       card_height: "Výška karty (px)",
       control_layout: "Rozloženie ovládania",
+      idle_image: "Idle Image",
+
       image_url: "URL obrázka",
       fallback_image_url: "Záložná URL obrázka",
       move_to_main: "Presunúť do hlavných čipov",

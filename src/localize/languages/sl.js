@@ -141,6 +141,8 @@ export default {
       artwork_extend: "Razširi ozadje grafike pod čipe.",
       artwork_extend_label: "Razširi grafiko",
       no_artwork_overrides: "Ni nastavljenih prepisov grafike.",
+      missing_art_match: "Applies when the selected media provides no artwork.",
+      idle_image_match: "Applies when the player is idle and an idle image is displaying.",
       entity_current_hint: "Uporabi entity_id: current za trenutno izbrano entiteto.",
       jinja_template_hint: "Vnesite Jinja predlogo, ki vrne en entity_id.",
       jinja_template_vol_hint: "Vnesite Jinja predlogo za entiteto glasnosti.",
@@ -241,6 +243,8 @@ export default {
       vol_step: "Korak glasnosti (0.05 = 5 %)",
       card_height: "Višina kartice (px)",
       control_layout: "Postavitev kontrolnikov",
+      idle_image: "Idle Image",
+
       image_url: "URL slike",
       fallback_image_url: "Rezervni URL slike",
       move_to_main: "Premakni dejanje na glavno vrstico",

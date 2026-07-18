@@ -1501,14 +1501,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               rule.match_type === "missing_art"
                                 ? html`
                                     <div class="config-subtitle small">
-                                      Applies when the selected media provides no artwork.
+                                      ${localize("editor.descriptions.missing_art_match")}
                                     </div>
                                   `
                                 : rule.match_type === "idle_image"
                                   ? html`
                                       <div class="config-subtitle small">
-                                        Applies when the player is idle and an idle image is
-                                        displaying.
+                                        ${localize("editor.descriptions.idle_image_match")}
                                       </div>
                                     `
                                   : rule.match_type === "entity_id"
@@ -1554,38 +1553,40 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                   <select
                                                     style="width: 100%; padding: 8px 16px; border-radius: 4px; border: 1px solid var(--divider-color, #ccc); background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-bottom: 8px; outline: none;"
                                                     @change=${(e) => {
-                                                    const selectedEntity = e.target.value;
-                                                    if (selectedEntity) {
-                                                      this._setCurrentAspectRatioForMatch(
-                                                        idx,
-                                                        selectedEntity
-                                                      );
-                                                      e.target.selectedIndex = 0;
-                                                    }
-                                                  }}
+                                                      const selectedEntity = e.target.value;
+                                                      if (selectedEntity) {
+                                                        this._setCurrentAspectRatioForMatch(
+                                                          idx,
+                                                          selectedEntity
+                                                        );
+                                                        e.target.selectedIndex = 0;
+                                                      }
+                                                    }}
                                                   >
                                                     <option value="" disabled selected>
                                                       Get current ratio from...
                                                     </option>
                                                     ${entities.map((entId) => {
-                                                    const stateObj = this.hass.states[entId];
-                                                    const hasPic =
-                                                      stateObj?.attributes?.entity_picture ||
-                                                      stateObj?.attributes?.entity_picture_local ||
-                                                      stateObj?.attributes?.album_art;
-                                                    const name =
-                                                      stateObj?.attributes?.friendly_name || entId;
-                                                    const ratio =
-                                                      this._entityRatios &&
-                                                      this._entityRatios[entId];
-                                                    const ratioText = this._formatRatio(ratio);
-                                                    return html`<option
-                                                      value="${entId}"
-                                                      ?disabled=${!hasPic}
-                                                    >
-                                                      ${name}${ratioText}
-                                                    </option>`;
-                                                  })}
+                                                      const stateObj = this.hass.states[entId];
+                                                      const hasPic =
+                                                        stateObj?.attributes?.entity_picture ||
+                                                        stateObj?.attributes
+                                                          ?.entity_picture_local ||
+                                                        stateObj?.attributes?.album_art;
+                                                      const name =
+                                                        stateObj?.attributes?.friendly_name ||
+                                                        entId;
+                                                      const ratio =
+                                                        this._entityRatios &&
+                                                        this._entityRatios[entId];
+                                                      const ratioText = this._formatRatio(ratio);
+                                                      return html`<option
+                                                        value="${entId}"
+                                                        ?disabled=${!hasPic}
+                                                      >
+                                                        ${name}${ratioText}
+                                                      </option>`;
+                                                    })}
                                                   </select>
                                                 `;
                                               }
@@ -1671,21 +1672,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                   mode="jinja2"
                                                   autocomplete-entities
                                                   label=${
-                                                rule.match_type === "missing_art"
-                                                  ? localize("editor.fields.fallback_image_url")
-                                                  : localize("editor.fields.image_url")
-                                              }
+                                                    rule.match_type === "missing_art"
+                                                      ? localize("editor.fields.fallback_image_url")
+                                                      : localize("editor.fields.image_url")
+                                                  }
                                                   .value=${rule.image_url ?? ""}
                                                   @value-changed=${(e) =>
-                                                this._onArtworkImageUrlChange(idx, e.detail.value)}
+                                                    this._onArtworkImageUrlChange(
+                                                      idx,
+                                                      e.detail.value
+                                                    )}
                                                 ></ha-code-editor>
                                               </div>
                                               <div class="field-actions">
                                                 ${this._renderTemplateToggle(
-                                              `artwork_image_url_${idx}`,
-                                              rule.image_url,
-                                              (v) => this._onArtworkImageUrlChange(idx, v)
-                                            )}
+                                                  `artwork_image_url_${idx}`,
+                                                  rule.image_url,
+                                                  (v) => this._onArtworkImageUrlChange(idx, v)
+                                                )}
                                               </div>
                                             `
                                           : html`
@@ -1695,22 +1699,25 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                   class="full-width"
                                                   .selector=${{ text: {} }}
                                                   label=${
-                                                rule.match_type === "missing_art"
-                                                  ? localize("editor.fields.fallback_image_url")
-                                                  : localize("editor.fields.image_url")
-                                              }
+                                                    rule.match_type === "missing_art"
+                                                      ? localize("editor.fields.fallback_image_url")
+                                                      : localize("editor.fields.image_url")
+                                                  }
                                                   .required=${false}
                                                   .value=${rule.image_url ?? ""}
                                                   @value-changed=${(e) =>
-                                                this._onArtworkImageUrlChange(idx, e.detail.value)}
+                                                    this._onArtworkImageUrlChange(
+                                                      idx,
+                                                      e.detail.value
+                                                    )}
                                                 ></ha-selector>
                                               </div>
                                               <div class="field-actions">
                                                 ${this._renderTemplateToggle(
-                                              `artwork_image_url_${idx}`,
-                                              rule.image_url,
-                                              (v) => this._onArtworkImageUrlChange(idx, v)
-                                            )}
+                                                  `artwork_image_url_${idx}`,
+                                                  rule.image_url,
+                                                  (v) => this._onArtworkImageUrlChange(idx, v)
+                                                )}
                                               </div>
                                             `
                                       }

@@ -138,6 +138,8 @@ export default {
       artwork_extend: "Estender capa sob os chips.",
       artwork_extend_label: "Estender capa",
       no_artwork_overrides: "Sem substituições de capa configuradas.",
+      missing_art_match: "Applies when the selected media provides no artwork.",
+      idle_image_match: "Applies when the player is idle and an idle image is displaying.",
       entity_current_hint: "Use 'entity_id: current' para o leitor atual.",
       jinja_template_hint: "Modelo Jinja para entity_id.",
       jinja_template_vol_hint: "Modelo para entidade volume.",
@@ -242,6 +244,8 @@ export default {
       vol_step: "Passo de volume",
       card_height: "Altura (px)",
       control_layout: "Design",
+      idle_image: "Idle Image",
+
       image_url: "URL imagem",
       fallback_image_url: "URL de reserva",
       move_to_main: "Mover para chips principais",
