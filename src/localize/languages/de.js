@@ -152,6 +152,9 @@ export default {
       artwork_extend: "Artwork-Hintergrund unter die Chip- und Aktionsleisten erweitern.",
       artwork_extend_label: "Artwork erweitern",
       no_artwork_overrides: "Keine Artwork-Überschreibungen konfiguriert.",
+      missing_art_match: "Wird angewendet, wenn die ausgewählten Medien kein Cover haben.",
+      idle_image_match:
+        "Wird angewendet, wenn der Player inaktiv ist und ein Ruhebild angezeigt wird.",
       entity_current_hint:
         "'entity_id: current' verwenden, um den aktuell ausgewählten Mediaplayer anzusteuern.",
       jinja_template_hint: "Jinja-Template eingeben, das eine entity_id ergibt.",
@@ -257,6 +260,8 @@ export default {
       vol_step: "Lautstärke-Schritt (0.05 = 5%)",
       card_height: "Kartenhöhe (px)",
       control_layout: "Steuerungs-Layout",
+      idle_image: "Ruhebild",
+
       image_url: "Bild-URL",
       fallback_image_url: "Fallback Bild-URL",
       move_to_main: "Aktion in Haupt-Chips verschieben",

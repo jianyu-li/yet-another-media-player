@@ -139,6 +139,9 @@ export default {
       artwork_extend: "Extender portada bajo los chips.",
       artwork_extend_label: "Extender portada",
       no_artwork_overrides: "Sin reemplazos de portada configurados.",
+      missing_art_match: "Se aplica cuando el medio seleccionado no proporciona carátula.",
+      idle_image_match:
+        "Se aplica cuando el reproductor está inactivo y se muestra una imagen de reposo.",
       entity_current_hint: "Use 'entity_id: current' para el reproductor actual.",
       jinja_template_hint: "Plantilla Jinja para entity_id.",
       jinja_template_vol_hint: "Plantilla para entidad de volumen.",
@@ -242,6 +245,8 @@ export default {
       vol_step: "Paso de volumen",
       card_height: "Altura (px)",
       control_layout: "Diseño",
+      idle_image: "Imagen de reposo",
+
       image_url: "URL imagen",
       fallback_image_url: "URL de respaldo",
       move_to_main: "Mover a chips principales",

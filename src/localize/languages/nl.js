@@ -160,6 +160,10 @@ export default {
       artwork_extend_label: "Artwork uitbreiden",
       no_artwork_overrides:
         "Geen artwork overschrijvingen geconfigureerd. Gebruik de plusknop hieronder om er een toe te voegen.",
+      missing_art_match:
+        "Is van toepassing wanneer de geselecteerde media geen hoesafbeelding biedt.",
+      idle_image_match:
+        "Is van toepassing wanneer de speler inactief is en er een rustafbeelding wordt weergegeven.",
       entity_current_hint:
         "Gebruik 'entity_id: current' om de momenteel geselecteerde mediaspeler op de kaart te targeten.",
       jinja_template_hint:
@@ -267,6 +271,8 @@ export default {
       vol_step: "Volume Stap (0.05 = 5%)",
       card_height: "Kaarthoogte (px)",
       control_layout: "Knoppen Lay-out",
+      idle_image: "Rustafbeelding",
+
       image_url: "Afbeelding URL",
       fallback_image_url: "Fallback Afbeelding URL",
       move_to_main: "Verplaats actie naar hoofdchips",

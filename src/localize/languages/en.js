@@ -180,6 +180,8 @@ export default {
       artwork_extend_label: "Extend artwork",
       no_artwork_overrides:
         "No artwork overrides configured. Use the plus button below to add one.",
+      missing_art_match: "Applies when the selected media provides no artwork.",
+      idle_image_match: "Applies when the player is idle and an idle image is displaying.",
       entity_current_hint:
         "Use 'entity_id: current' to target the card's currently selected media player entity.",
       jinja_template_hint:
@@ -285,6 +287,7 @@ export default {
       vol_step: "Volume Step (0.05 = 5%)",
       card_height: "Card Height (px)",
       control_layout: "Control Layout",
+      idle_image: "Idle Image",
       image_url: "Image URL",
       fallback_image_url: "Fallback Image URL",
       move_to_main: "Move action to main chips",

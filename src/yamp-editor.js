@@ -152,6 +152,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         };
       }
 
+      if (item.idle_image === true || item.idle_image_url !== undefined) {
+        return {
+          match_type: "idle_image",
+          match_value: "",
+          image_url: item.idle_image_url ?? item.image_url ?? "",
+          size_percentage: sizePercentage,
+          object_fit: item.object_fit,
+        };
+      }
+
       let matchType = "media_title";
       let matchValue = "";
 
@@ -199,6 +209,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       };
     }
 
+    if (rule.match_type === "idle_image") {
+      return {
+        idle_image: true,
+        ...(image ? { idle_image_url: image } : {}),
+        ...(rule.size_percentage !== undefined
+          ? { size_percentage: Number(rule.size_percentage) }
+          : {}),
+        ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
+        ...(rule.object_position !== undefined && rule.object_position !== "default"
+          ? { object_position: rule.object_position }
+          : {}),
+      };
+    }
     const value = (rule.match_value ?? "").trim();
     if (!value) return null;
 
@@ -526,7 +549,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const list = [...(this._artworkOverrides ?? [])];
     if (!list[index]) return;
     const updated = { ...list[index], match_type: newType };
-    if (newType === "missing_art") {
+    if (newType === "missing_art" || newType === "idle_image") {
       updated.match_value = "";
     }
     list[index] = updated;
@@ -1212,6 +1235,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       { value: "entity_id", label: "Entity ID" },
       { value: "aspect_ratio", label: "Aspect Ratio" },
       { value: "missing_art", label: "Missing Artwork" },
+      { value: "idle_image", label: localize("editor.fields.idle_image") || "Idle Image" },
     ];
 
     return html`
@@ -1477,98 +1501,36 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               rule.match_type === "missing_art"
                                 ? html`
                                     <div class="config-subtitle small">
-                                      Applies when the selected media provides no artwork.
+                                      ${localize("editor.descriptions.missing_art_match")}
                                     </div>
                                   `
-                                : rule.match_type === "entity_id"
+                                : rule.match_type === "idle_image"
                                   ? html`
-                                      <ha-generic-picker
-                                        class="full-width"
-                                        .hass=${this.hass}
-                                        .value=${rule.match_value ?? ""}
-                                        .label=${localize("editor.fields.match_entity")}
-                                        .required=${true}
-                                        .valueRenderer=${(v) => this._entityValueRenderer(v)}
-                                        .rowRenderer=${(item) => this._entityRowRenderer(item)}
-                                        .getItems=${this._getEntityItems(["media_player"])}
-                                        @value-changed=${(e) =>
-                                          this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                        allow-custom-value
-                                      ></ha-generic-picker>
+                                      <div class="config-subtitle small">
+                                        ${localize("editor.descriptions.idle_image_match")}
+                                      </div>
                                     `
-                                  : rule.match_type === "aspect_ratio"
+                                  : rule.match_type === "entity_id"
                                     ? html`
-                                        <div
-                                          style="display: flex; flex-direction: column; width: 100%;"
-                                        >
-                                          ${(() => {
-                                            const entities = [];
-                                            if (this._config?.entity)
-                                              entities.push(this._config.entity);
-                                            if (
-                                              this._config?.entities &&
-                                              Array.isArray(this._config.entities)
-                                            ) {
-                                              for (const e of this._config.entities) {
-                                                const id =
-                                                  typeof e === "string"
-                                                    ? e
-                                                    : e.entity || e.entity_id;
-                                                if (id && !entities.includes(id)) entities.push(id);
-                                              }
-                                            }
-                                            if (entities.length > 1) {
-                                              return html`
-                                                <select
-                                                  style="width: 100%; padding: 8px 16px; border-radius: 4px; border: 1px solid var(--divider-color, #ccc); background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-bottom: 8px; outline: none;"
-                                                  @change=${(e) => {
-                                                    const selectedEntity = e.target.value;
-                                                    if (selectedEntity) {
-                                                      this._setCurrentAspectRatioForMatch(
-                                                        idx,
-                                                        selectedEntity
-                                                      );
-                                                      e.target.selectedIndex = 0;
-                                                    }
-                                                  }}
-                                                >
-                                                  <option value="" disabled selected>
-                                                    Get current ratio from...
-                                                  </option>
-                                                  ${entities.map((entId) => {
-                                                    const stateObj = this.hass.states[entId];
-                                                    const hasPic =
-                                                      stateObj?.attributes?.entity_picture ||
-                                                      stateObj?.attributes?.entity_picture_local ||
-                                                      stateObj?.attributes?.album_art;
-                                                    const name =
-                                                      stateObj?.attributes?.friendly_name || entId;
-                                                    const ratio =
-                                                      this._entityRatios &&
-                                                      this._entityRatios[entId];
-                                                    const ratioText = this._formatRatio(ratio);
-                                                    return html`<option
-                                                      value="${entId}"
-                                                      ?disabled=${!hasPic}
-                                                    >
-                                                      ${name}${ratioText}
-                                                    </option>`;
-                                                  })}
-                                                </select>
-                                              `;
-                                            }
-                                            return nothing;
-                                          })()}
-                                          <div style="display: flex; width: 100%;">
-                                            <ha-selector
-                                              .hass=${this.hass}
-                                              style="flex: 1;"
-                                              .selector=${{ text: {} }}
-                                              label="${localize("editor.fields.match_value")}"
-                                              .required=${true}
-                                              .value=${rule.match_value ?? ""}
-                                              @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                            ></ha-selector>
+                                        <ha-generic-picker
+                                          class="full-width"
+                                          .hass=${this.hass}
+                                          .value=${rule.match_value ?? ""}
+                                          .label=${localize("editor.fields.match_entity")}
+                                          .required=${true}
+                                          .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                                          .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                                          .getItems=${this._getEntityItems(["media_player"])}
+                                          @value-changed=${(e) =>
+                                            this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                          allow-custom-value
+                                        ></ha-generic-picker>
+                                      `
+                                    : rule.match_type === "aspect_ratio"
+                                      ? html`
+                                          <div
+                                            style="display: flex; flex-direction: column; width: 100%;"
+                                          >
                                             ${(() => {
                                               const entities = [];
                                               if (this._config?.entity)
@@ -1586,93 +1548,182 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                     entities.push(id);
                                                 }
                                               }
-                                              if (entities.length <= 1) {
+                                              if (entities.length > 1) {
                                                 return html`
-                                                  <ha-icon-button
-                                                    style="margin-left: 8px;"
-                                                    title="get current"
-                                                    @click=${() => this._setCurrentAspectRatioForMatch(idx)}
+                                                  <select
+                                                    style="width: 100%; padding: 8px 16px; border-radius: 4px; border: 1px solid var(--divider-color, #ccc); background: var(--mdc-text-field-fill-color, var(--secondary-background-color, rgba(127,127,127,0.05))); color: var(--primary-text-color, #000); font-family: inherit; font-size: 14px; margin-bottom: 8px; outline: none;"
+                                                    @change=${(e) => {
+                                                      const selectedEntity = e.target.value;
+                                                      if (selectedEntity) {
+                                                        this._setCurrentAspectRatioForMatch(
+                                                          idx,
+                                                          selectedEntity
+                                                        );
+                                                        e.target.selectedIndex = 0;
+                                                      }
+                                                    }}
                                                   >
-                                                    <ha-icon icon="mdi:target"></ha-icon>
-                                                  </ha-icon-button>
+                                                    <option value="" disabled selected>
+                                                      Get current ratio from...
+                                                    </option>
+                                                    ${entities.map((entId) => {
+                                                      const stateObj = this.hass.states[entId];
+                                                      const hasPic =
+                                                        stateObj?.attributes?.entity_picture ||
+                                                        stateObj?.attributes
+                                                          ?.entity_picture_local ||
+                                                        stateObj?.attributes?.album_art;
+                                                      const name =
+                                                        stateObj?.attributes?.friendly_name ||
+                                                        entId;
+                                                      const ratio =
+                                                        this._entityRatios &&
+                                                        this._entityRatios[entId];
+                                                      const ratioText = this._formatRatio(ratio);
+                                                      return html`<option
+                                                        value="${entId}"
+                                                        ?disabled=${!hasPic}
+                                                      >
+                                                        ${name}${ratioText}
+                                                      </option>`;
+                                                    })}
+                                                  </select>
                                                 `;
                                               }
                                               return nothing;
                                             })()}
+                                            <div style="display: flex; width: 100%;">
+                                              <ha-selector
+                                                .hass=${this.hass}
+                                                style="flex: 1;"
+                                                .selector=${{ text: {} }}
+                                                label="${localize("editor.fields.match_value")}"
+                                                .required=${true}
+                                                .value=${rule.match_value ?? ""}
+                                                @value-changed=${(e) => this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                              ></ha-selector>
+                                              ${(() => {
+                                                const entities = [];
+                                                if (this._config?.entity)
+                                                  entities.push(this._config.entity);
+                                                if (
+                                                  this._config?.entities &&
+                                                  Array.isArray(this._config.entities)
+                                                ) {
+                                                  for (const e of this._config.entities) {
+                                                    const id =
+                                                      typeof e === "string"
+                                                        ? e
+                                                        : e.entity || e.entity_id;
+                                                    if (id && !entities.includes(id))
+                                                      entities.push(id);
+                                                  }
+                                                }
+                                                if (entities.length <= 1) {
+                                                  return html`
+                                                    <ha-icon-button
+                                                      style="margin-left: 8px;"
+                                                      title="get current"
+                                                      @click=${() => this._setCurrentAspectRatioForMatch(idx)}
+                                                    >
+                                                      <ha-icon icon="mdi:target"></ha-icon>
+                                                    </ha-icon-button>
+                                                  `;
+                                                }
+                                                return nothing;
+                                              })()}
+                                            </div>
                                           </div>
-                                        </div>
-                                      `
-                                    : html`
-                                        <ha-selector
-                                          .hass=${this.hass}
-                                          class="full-width"
-                                          .selector=${{ text: {} }}
-                                          label="${localize("editor.fields.match_value")}"
-                                          .required=${true}
-                                          .value=${rule.match_value ?? ""}
-                                          @value-changed=${(e) =>
-                                            this._onArtworkMatchValueChange(idx, e.detail.value)}
-                                        ></ha-selector>
-                                      `
+                                        `
+                                      : html`
+                                          <ha-selector
+                                            .hass=${this.hass}
+                                            class="full-width"
+                                            .selector=${{ text: {} }}
+                                            label="${localize("editor.fields.match_value")}"
+                                            .required=${true}
+                                            .value=${rule.match_value ?? ""}
+                                            @value-changed=${(e) =>
+                                              this._onArtworkMatchValueChange(idx, e.detail.value)}
+                                          ></ha-selector>
+                                        `
                             }
-                            <div class="editor-field-wrapper">
-                              ${
-                                this._isTemplateMode(`artwork_image_url_${idx}`, rule.image_url)
-                                  ? html`
-                                      <div class="grow-children" style="flex-direction: column;">
-                                        <span class="form-label"
-                                          >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replaceAll("*", "")}</span
-                                        >
-                                        <ha-code-editor
-                                          lint
-                                          .hass=${this.hass}
-                                          mode="jinja2"
-                                          autocomplete-entities
-                                          label=${
-                                            rule.match_type === "missing_art"
-                                              ? localize("editor.fields.fallback_image_url")
-                                              : localize("editor.fields.image_url")
-                                          }
-                                          .value=${rule.image_url ?? ""}
-                                          @value-changed=${(e) =>
-                                            this._onArtworkImageUrlChange(idx, e.detail.value)}
-                                        ></ha-code-editor>
-                                      </div>
-                                      <div class="field-actions">
-                                        ${this._renderTemplateToggle(
+                            ${
+                              rule.match_type === "idle_image"
+                                ? nothing
+                                : html`
+                                    <div class="editor-field-wrapper">
+                                      ${
+                                        this._isTemplateMode(
                                           `artwork_image_url_${idx}`,
-                                          rule.image_url,
-                                          (v) => this._onArtworkImageUrlChange(idx, v)
-                                        )}
-                                      </div>
-                                    `
-                                  : html`
-                                      <div class="grow-children">
-                                        <ha-selector
-                                          .hass=${this.hass}
-                                          class="full-width"
-                                          .selector=${{ text: {} }}
-                                          label=${
-                                            rule.match_type === "missing_art"
-                                              ? localize("editor.fields.fallback_image_url")
-                                              : localize("editor.fields.image_url")
-                                          }
-                                          .required=${false}
-                                          .value=${rule.image_url ?? ""}
-                                          @value-changed=${(e) =>
-                                            this._onArtworkImageUrlChange(idx, e.detail.value)}
-                                        ></ha-selector>
-                                      </div>
-                                      <div class="field-actions">
-                                        ${this._renderTemplateToggle(
-                                          `artwork_image_url_${idx}`,
-                                          rule.image_url,
-                                          (v) => this._onArtworkImageUrlChange(idx, v)
-                                        )}
-                                      </div>
-                                    `
-                              }
-                            </div>
+                                          rule.image_url
+                                        )
+                                          ? html`
+                                              <div
+                                                class="grow-children"
+                                                style="flex-direction: column;"
+                                              >
+                                                <span class="form-label"
+                                                  >${rule.match_type === "missing_art" ? localize("editor.fields.fallback_image_url") : localize("editor.fields.image_url").replaceAll("*", "")}</span
+                                                >
+                                                <ha-code-editor
+                                                  lint
+                                                  .hass=${this.hass}
+                                                  mode="jinja2"
+                                                  autocomplete-entities
+                                                  label=${
+                                                    rule.match_type === "missing_art"
+                                                      ? localize("editor.fields.fallback_image_url")
+                                                      : localize("editor.fields.image_url")
+                                                  }
+                                                  .value=${rule.image_url ?? ""}
+                                                  @value-changed=${(e) =>
+                                                    this._onArtworkImageUrlChange(
+                                                      idx,
+                                                      e.detail.value
+                                                    )}
+                                                ></ha-code-editor>
+                                              </div>
+                                              <div class="field-actions">
+                                                ${this._renderTemplateToggle(
+                                                  `artwork_image_url_${idx}`,
+                                                  rule.image_url,
+                                                  (v) => this._onArtworkImageUrlChange(idx, v)
+                                                )}
+                                              </div>
+                                            `
+                                          : html`
+                                              <div class="grow-children">
+                                                <ha-selector
+                                                  .hass=${this.hass}
+                                                  class="full-width"
+                                                  .selector=${{ text: {} }}
+                                                  label=${
+                                                    rule.match_type === "missing_art"
+                                                      ? localize("editor.fields.fallback_image_url")
+                                                      : localize("editor.fields.image_url")
+                                                  }
+                                                  .required=${false}
+                                                  .value=${rule.image_url ?? ""}
+                                                  @value-changed=${(e) =>
+                                                    this._onArtworkImageUrlChange(
+                                                      idx,
+                                                      e.detail.value
+                                                    )}
+                                                ></ha-selector>
+                                              </div>
+                                              <div class="field-actions">
+                                                ${this._renderTemplateToggle(
+                                                  `artwork_image_url_${idx}`,
+                                                  rule.image_url,
+                                                  (v) => this._onArtworkImageUrlChange(idx, v)
+                                                )}
+                                              </div>
+                                            `
+                                      }
+                                    </div>
+                                  `
+                            }
                             <div
                               class="form-row-multi-column"
                               style="gap:12px; flex-wrap:wrap; align-items:flex-start;"
