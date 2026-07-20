@@ -1,3 +1,4 @@
+/* global __VERSION__ */
 import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { virtualize } from "@lit-labs/virtualizer/virtualize.js";
@@ -91,6 +92,12 @@ if (!window.customCards.some(card => card.type === "yet-another-media-player")) 
     },
   });
 }
+
+console.info(
+  `%c YET-ANOTHER-MEDIA-PLAYER %c ${__VERSION__} `,
+  "color: white; background: #ff9800; font-weight: bold; border-radius: 4px 0 0 4px; padding: 1px 5px;",
+  "color: #ff9800; background: white; font-weight: bold; border-radius: 0 4px 4px 0; padding: 1px 5px; border: 1px solid #ff9800; border-left: none;"
+);
 
 class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
