@@ -1,3 +1,4 @@
+/* global __VERSION__ */
 import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { virtualize } from "@lit-labs/virtualizer/virtualize.js";
@@ -5970,7 +5971,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     try {
       const headers = {
-        "User-Agent": "yet-another-media-player (https://github.com/jianyu-li/yet-another-media-player)"
+        "User-Agent": `yet-another-media-player/${__VERSION__} (https://github.com/jianyu-li/yet-another-media-player)`
       };
 
       // 1. Try precise get first
