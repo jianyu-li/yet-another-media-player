@@ -1,6 +1,10 @@
+import { readFileSync } from 'fs';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import esbuild from 'rollup-plugin-esbuild';
+
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+
 export default {
   input: 'src/yet-another-media-player.js',
   output: {
@@ -22,6 +26,9 @@ export default {
       minify: true,
       loaders: {
         '.js': 'js'
+      },
+      define: {
+        __VERSION__: JSON.stringify(pkg.version),
       }
     }),
   ],

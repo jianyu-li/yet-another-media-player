@@ -5970,7 +5970,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     try {
       const headers = {
-        "User-Agent": "yet-another-media-player (https://github.com/jianyu-li/yet-another-media-player)"
+        "User-Agent": `yet-another-media-player/${__VERSION__} (https://github.com/jianyu-li/yet-another-media-player)`
       };
 
       // 1. Try precise get first
