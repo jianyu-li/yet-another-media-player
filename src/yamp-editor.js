@@ -50,6 +50,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._actionEditorIndex = null;
     this._tempEntityIndex = null;
     this._tempActionIndex = null;
+    this._isInternalUpdate = false;
 
     this._yamlDraft = undefined;
     this._yamlError = null;
@@ -382,8 +383,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       ...config,
       entities: normalizedEntities,
     };
-    this._actionEditorIndex = null;
-    this._entityEditorIndex = null;
+    if (this._isInternalUpdate) {
+      this._isInternalUpdate = false;
+    } else {
+      this._actionEditorIndex = null;
+      this._entityEditorIndex = null;
+    }
     this._artworkOverrides = this._normalizeArtworkOverrides(config.media_artwork_overrides);
     this._fetchAspectRatios();
   }
@@ -474,6 +479,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     const newConfig = { ...this._config, [key]: value };
     this._config = newConfig;
+    this._isInternalUpdate = true;
     this.dispatchEvent(
       new CustomEvent("config-changed", {
         detail: { config: newYaml },
@@ -516,6 +522,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       entities: this._config.entities, // preserve normalized entities
     };
 
+    this._isInternalUpdate = true;
     this.dispatchEvent(
       new CustomEvent("config-changed", {
         detail: { config: newYaml },
@@ -658,6 +665,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     }
   }
 
+  _updateEntityProperties(properties) {
+    const entities = [...(this._config.entities ?? [])];
+    const idx = this._tempEntityIndex !== null ? this._tempEntityIndex : this._entityEditorIndex;
+    if (entities[idx]) {
+      entities[idx] = { ...entities[idx], ...properties };
+      this._updateConfig("entities", entities);
+    }
+  }
+
   _updateActionProperty(key, value) {
     const actions = [...(this._config.actions ?? [])];
     const idx = this._tempActionIndex !== null ? this._tempActionIndex : this._actionEditorIndex;
@@ -675,6 +691,31 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
       // If we're setting in_menu, remove the legacy placement property
       if (key === "in_menu") {
+        delete newAction.placement;
+      }
+
+      actions[idx] = newAction;
+      this._updateConfig("actions", actions);
+    }
+  }
+
+  _updateActionProperties(properties) {
+    const actions = [...(this._config.actions ?? [])];
+    const idx = this._tempActionIndex !== null ? this._tempActionIndex : this._actionEditorIndex;
+    if (actions[idx]) {
+      // Enforce single trigger per gesture (Tap, Hold, Double Tap)
+      if (properties.card_trigger && properties.card_trigger !== "none") {
+        actions.forEach((act, i) => {
+          if (i !== idx && act.card_trigger === properties.card_trigger) {
+            actions[i] = { ...act, card_trigger: "none" };
+          }
+        });
+      }
+
+      const newAction = { ...actions[idx], ...properties };
+
+      // If we're setting in_menu, remove the legacy placement property
+      if ("in_menu" in properties) {
         delete newAction.placement;
       }
 
@@ -3528,7 +3569,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 {% else %}
   media_player.office_homepod
 {% endif %}</pre>
-                                  >
                                 </div>
                               </div>
                             </div>
@@ -3537,10 +3577,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 "volume_entity",
                                 entity?.volume_entity,
                                 (v) => {
-                                  this._updateEntityProperty("volume_entity", v);
+                                  const updates = { volume_entity: v };
                                   if (!v) {
-                                    this._updateEntityProperty("sync_power", false);
+                                    updates.sync_power = false;
                                   }
+                                  this._updateEntityProperties(updates);
                                 }
                               )}
                             </div>
@@ -3560,12 +3601,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 .getItems=${this._getEntityItems(["media_player", "remote"])}
                                 @value-changed=${(e) => {
                                   const value = e.detail.value;
-                                  this._updateEntityProperty("volume_entity", value);
+                                  const updates = { volume_entity: value };
 
                                   if (!value || value === entity.entity_id) {
                                     // sync_power is meaningless in these cases
-                                    this._updateEntityProperty("sync_power", false);
+                                    updates.sync_power = false;
                                   }
+                                  this._updateEntityProperties(updates);
                                 }}
                                 allow-custom-value
                               ></ha-generic-picker>
@@ -3575,10 +3617,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 "volume_entity",
                                 entity?.volume_entity,
                                 (v) => {
-                                  this._updateEntityProperty("volume_entity", v);
+                                  const updates = { volume_entity: v };
                                   if (!v) {
-                                    this._updateEntityProperty("sync_power", false);
+                                    updates.sync_power = false;
                                   }
+                                  this._updateEntityProperties(updates);
                                 }
                               )}
                             </div>
@@ -3613,28 +3656,25 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 label="${localize("editor.fields.volume_mode")}"
                 @value-changed=${(e) => {
                   const val = e.detail.value;
-                  this._updateEntityProperty("entity_volume_mode", val || undefined);
+                  const updates = { entity_volume_mode: val || undefined };
                   if (val !== "stepper") {
-                    this._updateEntityProperty("entity_volume_step", undefined);
+                    updates.entity_volume_step = undefined;
                   }
+                  this._updateEntityProperties(updates);
                 }}
               ></ha-selector>
             </div>
-            ${
-              entity?.entity_volume_mode
-                ? html`
-                    <ha-icon
-                      class="icon-button"
-                      icon="mdi:restore"
-                      title="${localize("common.reset_default")}"
-                      @click=${() => {
-                        this._updateEntityProperty("entity_volume_mode", undefined);
-                        this._updateEntityProperty("entity_volume_step", undefined);
-                      }}
-                    ></ha-icon>
-                  `
-                : nothing
-            }
+            <ha-icon
+              class="icon-button ${!entity?.entity_volume_mode ? "icon-button-disabled" : ""}"
+              icon="mdi:restore"
+              title="${localize("common.reset_default")}"
+              @click=${() => {
+                this._updateEntityProperties({
+                  entity_volume_mode: undefined,
+                  entity_volume_step: undefined,
+                });
+              }}
+            ></ha-icon>
           </div>
           ${html`
             <div class="form-row form-row-multi-column">
@@ -3648,18 +3688,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   @value-changed=${(e) => this._updateEntityProperty("entity_volume_step", e.detail.value)}
                 ></ha-selector>
               </div>
-              ${
-                entity?.entity_volume_step !== undefined
-                  ? html`
-                      <ha-icon
-                        class="icon-button"
-                        icon="mdi:restore"
-                        title="${localize("common.reset_default")}"
-                        @click=${() => this._updateEntityProperty("entity_volume_step", undefined)}
-                      ></ha-icon>
-                    `
-                  : nothing
-              }
+              <ha-icon
+                class="icon-button ${entity?.entity_volume_step === undefined ? "icon-button-disabled" : ""}"
+                icon="mdi:restore"
+                title="${localize("common.reset_default")}"
+                @click=${() => this._updateEntityProperty("entity_volume_step", undefined)}
+              ></ha-icon>
             </div>
           `}
         `}
