@@ -1,4 +1,3 @@
-/* global __VERSION__ */
 import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { virtualize } from "@lit-labs/virtualizer/virtualize.js";
