@@ -10075,6 +10075,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           box-sizing: border-box !important;
           -webkit-tap-highlight-color: transparent !important;
         }
+        .dpad-btn:not(.dpad-center) {
+          -webkit-mask-image: radial-gradient(closest-side circle at 50% 50%, transparent 47%, black 49%) !important;
+          mask-image: radial-gradient(closest-side circle at 50% 50%, transparent 47%, black 49%) !important;
+        }
         .dpad-btn:hover {
           background: rgba(255, 255, 255, 0.16) !important;
           color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
@@ -10089,31 +10093,39 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
         .dpad-btn.dpad-up {
           top: 0 !important;
-          left: 25% !important;
-          width: 50% !important;
-          height: 35% !important;
-          border-radius: 100px 100px 0 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(0 0, 100% 0, 50% 50%) !important;
+          align-items: flex-start !important;
+          padding-top: 12% !important;
         }
         .dpad-btn.dpad-down {
-          bottom: 0 !important;
-          left: 25% !important;
-          width: 50% !important;
-          height: 35% !important;
-          border-radius: 0 0 100px 100px !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(100% 100%, 0 100%, 50% 50%) !important;
+          align-items: flex-end !important;
+          padding-bottom: 12% !important;
         }
         .dpad-btn.dpad-left {
-          top: 25% !important;
+          top: 0 !important;
           left: 0 !important;
-          width: 35% !important;
-          height: 50% !important;
-          border-radius: 100px 0 0 100px !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(0 100%, 0 0, 50% 50%) !important;
+          justify-content: flex-start !important;
+          padding-left: 12% !important;
         }
         .dpad-btn.dpad-right {
-          top: 25% !important;
-          right: 0 !important;
-          width: 35% !important;
-          height: 50% !important;
-          border-radius: 0 100px 100px 0 !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(100% 0, 100% 100%, 50% 50%) !important;
+          justify-content: flex-end !important;
+          padding-right: 12% !important;
         }
         .dpad-btn.dpad-center {
           top: 28% !important;
@@ -10224,7 +10236,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             </button>
           ` : nothing}
           ${!hiddenButtons.includes('power') ? html`
-            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('power')} title="${localize('card.remote.power')}">
+            <button class="remote-control-btn" @click=${() => this._onControlClick('power')} title="${localize('card.remote.power')}">
               <ha-icon icon="mdi:power"></ha-icon>
             </button>
           ` : nothing}
