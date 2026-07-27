@@ -4644,6 +4644,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         follow_active_volume,
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
+        hide_remote_buttons: typeof e === "string" ? undefined : e.hide_remote_buttons,
         disable_auto_select: this._isAutoSelectDisabled(index),
         prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
         ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
@@ -5229,9 +5230,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         
         ${this._renderGroupingMenuOption()}
         
-        <button class="entity-options-item" @click=${() => this._openRemoteControl()}>
-          ${localize('card.menu.remote_controls')}
-        </button>
+        ${this._hasRemoteControlSupport() ? html`
+          <button class="entity-options-item" @click=${() => this._openRemoteControl()}>
+            ${localize('card.menu.remote_controls')}
+          </button>
+        ` : nothing}
         
         ${!this._alwaysCollapsed ? html`
           <button class="entity-options-item" @click=${() => {
@@ -9874,6 +9877,29 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Remote Controls Overlay Helper Methods
+  _hasRemoteControlSupport() {
+    const idx = this._selectedIndex;
+    const obj = (this.entityObjs || [])[idx];
+
+    if (obj?.remote_entity === false) return false;
+    if (obj?.remote_entity) return true;
+
+    const currentId = this.currentEntityId;
+    if (!currentId) return false;
+
+    if (currentId.startsWith("remote.")) return true;
+
+    if (currentId.startsWith("media_player.")) {
+      const name = currentId.replace("media_player.", "");
+      const candidate = `remote.${name}`;
+      if (this.hass?.states?.[candidate]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   _getRemoteControlEntity() {
     const idx = this._selectedIndex;
     const obj = (this.entityObjs || [])[idx];
@@ -9975,7 +10001,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this.requestUpdate();
   }
 
+  _getHiddenRemoteButtons() {
+    const idx = this._selectedIndex;
+    const obj = (this.entityObjs || [])[idx];
+    let raw = obj?.hide_remote_buttons ?? this.config.hide_remote_buttons;
+    
+    if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.includes("[[["))) {
+       raw = resolveStringTemplateSync(this.hass, raw);
+    }
+    
+    if (typeof raw === "string") {
+      try {
+        raw = JSON.parse(raw.replace(/'/g, '"'));
+      } catch (e) {
+        raw = raw.split(",").map(s => s.trim()).filter(s => s !== "");
+      }
+    }
+    return Array.isArray(raw) ? raw : [];
+  }
+
   _renderRemoteControlSheet() {
+    const hiddenButtons = this._getHiddenRemoteButtons();
+
     return html`
       <style>
         .remote-control-container {
@@ -10161,20 +10208,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
         <!-- Navigation Row -->
         <div class="remote-control-row">
-          <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('back')} title="${localize('card.remote.back')}">
-            <ha-icon icon="mdi:arrow-left"></ha-icon>
-          </button>
-          <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('menu')} title="${localize('card.remote.menu')}">
-            <ha-icon icon="mdi:menu"></ha-icon>
-          </button>
-          <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('home')} title="${localize('card.remote.home')}">
-            <ha-icon icon="mdi:home"></ha-icon>
-          </button>
-          <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('power')} title="${localize('card.remote.power')}">
-            <ha-icon icon="mdi:power"></ha-icon>
-          </button>
-        </div>
-
+          ${!hiddenButtons.includes('back') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('back')} title="${localize('card.remote.back')}">
+              <ha-icon icon="mdi:arrow-left"></ha-icon>
+            </button>
+          ` : nothing}
+          ${!hiddenButtons.includes('menu') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('menu')} title="${localize('card.remote.menu')}">
+              <ha-icon icon="mdi:menu"></ha-icon>
+            </button>
+          ` : nothing}
+          ${!hiddenButtons.includes('home') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('home')} title="${localize('card.remote.home')}">
+              <ha-icon icon="mdi:home"></ha-icon>
+            </button>
+          ` : nothing}
+          ${!hiddenButtons.includes('power') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('power')} title="${localize('card.remote.power')}">
+              <ha-icon icon="mdi:power"></ha-icon>
+            </button>
+          ` : nothing}
         </div>
       </div>
     `;

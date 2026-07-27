@@ -162,7 +162,8 @@ export default {
       collapse_expand:
         "Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.",
       idle_screen: "Choose which screen to display automatically when the card becomes idle.",
-      hide_controls: "Select which controls to hide for this entity (all are shown by default)",
+      hide_controls: "Select buttons to hide from the persistent playback controls row.",
+      hide_remote_buttons: "Select buttons to hide from the Remote Control overlay.",
       hide_search_chips: "Hide specific search filter chips for this entity",
       hide_active_entity_on_idle:
         "Hide the entity label at the bottom of the card only when the player is idle.",
@@ -297,6 +298,7 @@ export default {
       idle_screen: "Idle Screen",
       name: "Name",
       hidden_controls: "Hidden Controls",
+      hide_remote_buttons: "Hidden Remote Buttons",
       ma_template: "Music Assistant Entity Template (Jinja)",
       hidden_chips: "Hidden Search Filter Chips",
       vol_template: "Volume Entity Template (Jinja)",
