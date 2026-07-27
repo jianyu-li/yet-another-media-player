@@ -735,6 +735,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const navPath = typeof action.navigation_path === "string" ? action.navigation_path.trim() : "";
     if (action.action === "navigate" || navPath) return "navigate";
     if (action.action === "toggle_lyrics") return "toggle_lyrics";
+    if (action.action === "remote_control") return "remote_control";
     return "service";
   }
 
@@ -3922,6 +3923,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     value: "toggle_lyrics",
                     label: localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay",
                   },
+                  {
+                    value: "remote_control",
+                    label:
+                      localize("editor.action_types.remote_control") ||
+                      "Open Remote Controls Overlay",
+                  },
                 ],
               },
             }}
@@ -3988,14 +3995,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 this._updateActionProperty("navigation_path", undefined);
                 this._updateActionProperty("navigation_new_tab", undefined);
                 this._updateActionProperty("action", mode);
-              } else if (mode === "toggle_lyrics") {
+              } else if (mode === "toggle_lyrics" || mode === "remote_control") {
                 this._updateActionProperty("menu_item", undefined);
                 this._updateActionProperty("service", undefined);
                 this._updateActionProperty("service_data", undefined);
                 this._updateActionProperty("script_variable", undefined);
                 this._updateActionProperty("navigation_path", undefined);
                 this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", "toggle_lyrics");
+                this._updateActionProperty("action", mode);
               }
             }}
           ></ha-selector>
