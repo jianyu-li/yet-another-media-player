@@ -4387,20 +4387,40 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
 
+  // Check if a URL points to an external origin (not the current HA instance)
+  _isExternalImageUrl(url) {
+    return (
+      /^https?:\/\//i.test(url) &&
+      window.location?.origin &&
+      !url.startsWith(window.location.origin)
+    );
+  }
+
   // Extract dominant color from image
   async _extractDominantColor(imgUrl) {
     return new Promise((resolve) => {
+      if (!imgUrl || typeof imgUrl !== "string") {
+        resolve("#888");
+        return;
+      }
       const img = new window.Image();
-      img.crossOrigin = "Anonymous";
+      // Only set crossOrigin for external URLs to prevent CORS credential stripping on relative HA proxy paths
+      if (this._isExternalImageUrl(imgUrl)) {
+        img.crossOrigin = "Anonymous";
+      }
       img.src = imgUrl;
       img.onload = function () {
-        const canvas = document.createElement("canvas");
-        canvas.width = 1;
-        canvas.height = 1;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, 1, 1);
-        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-        resolve(`rgb(${r},${g},${b})`);
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = 1;
+          canvas.height = 1;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, 1, 1);
+          const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+          resolve(`rgb(${r},${g},${b})`);
+        } catch (e) {
+          resolve("#888");
+        }
       };
       img.onerror = function () { resolve("#888"); };
     });
@@ -4430,6 +4450,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     this._aspectRatioCache[url] = null;
     const img = new window.Image();
+    if (this._isExternalImageUrl(url)) {
+      img.crossOrigin = "Anonymous";
+    }
     img.src = url;
     img.onload = () => {
       if (img.naturalWidth && img.naturalHeight) {
