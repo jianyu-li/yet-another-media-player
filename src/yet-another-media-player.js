@@ -1807,7 +1807,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (this._addToPlaylistTarget && mediaType === 'playlist' && this._massQueueAvailable) {
         this._initialFavoritesLoaded = false;
         try {
-          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
           if (mqConfigEntryId) {
             // Fetch a generous amount so we don't truncate before filtering
             const apiData = { limit: PLAYLIST_FETCH_LIMIT };
@@ -1824,7 +1824,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               domain: "mass_queue",
               service: "send_command",
               service_data: {
-                config_entry_id: mqConfigEntryId,
+                ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
                 command: "music/playlists/library_items",
                 data: apiData
               },
@@ -3768,17 +3768,22 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this.requestUpdate();
 
       try {
-        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
         if (mqConfigEntryId) {
           const playlistId = item.item_id || item.media_content_id?.split('/').pop();
-          await this.hass.callService("mass_queue", "send_command", {
+          const servicePayload = {
             command: "music/playlists/add_playlist_tracks",
             data: {
               db_playlist_id: playlistId,
               uris: [this._addToPlaylistTarget.media_content_id]
-            },
-            config_entry_id: mqConfigEntryId
-          });
+            }
+          };
+          if (mqConfigEntryId && mqConfigEntryId !== "auto") {
+            servicePayload.config_entry_id = mqConfigEntryId;
+          }
+          await this.hass.callService("mass_queue", "send_command", servicePayload);
 
           this._showSearchSuccessToast(item.media_content_id, 'playlist');
         }
@@ -3947,7 +3952,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             domain: "mass_queue",
             service: serviceName,
             service_data: {
-              config_entry_id: configEntryId,
+              ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
               uri: uri
             },
             return_response: true,
@@ -5940,7 +5945,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     try {
-      const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+      const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
       if (!mqConfigEntryId) return [];
 
       const trackUri = activeState.attributes.media_content_id;
@@ -5953,7 +5960,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         service_data: {
           command: "music/item_by_uri",
           data: { uri: trackUri },
-          config_entry_id: mqConfigEntryId
+          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
         },
         return_response: true
       };
@@ -5971,7 +5978,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         service_data: {
           command: "metadata/get_track_lyrics",
           data: { track: validTrack },
-          config_entry_id: mqConfigEntryId
+          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
         },
         return_response: true
       };
