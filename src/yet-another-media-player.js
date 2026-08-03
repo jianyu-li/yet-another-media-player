@@ -1805,7 +1805,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (this._addToPlaylistTarget && mediaType === 'playlist' && this._massQueueAvailable) {
         this._initialFavoritesLoaded = false;
         try {
-          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, this.config.entity);
           if (mqConfigEntryId) {
             // Fetch a generous amount so we don't truncate before filtering
             const apiData = { limit: PLAYLIST_FETCH_LIMIT };
@@ -3766,7 +3766,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this.requestUpdate();
 
       try {
-        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, this.config.entity);
         if (mqConfigEntryId) {
           const playlistId = item.item_id || item.media_content_id?.split('/').pop();
           const servicePayload = {
@@ -5934,7 +5934,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     try {
-      const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+      const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, this.config.entity);
       if (!mqConfigEntryId) return [];
 
       const trackUri = activeState.attributes.media_content_id;
@@ -5965,7 +5965,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         service_data: {
           command: "metadata/get_track_lyrics",
           data: { track: validTrack },
-          config_entry_id: mqConfigEntryId
+          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
         },
         return_response: true
       };

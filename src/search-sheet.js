@@ -80,6 +80,33 @@ const MUSIC_ASSISTANT_CONFIG_TTL_MS = 30000;
 let cachedMusicAssistantEntryId = null;
 let cachedMusicAssistantEntryTs = 0;
 
+function _resolveIntegrationId(hass, targetEntityId, platforms) {
+  let resolvedId = null;
+  if (hass.entities && typeof hass.entities === "object") {
+    const entities = Object.values(hass.entities);
+    if (targetEntityId && hass.entities[targetEntityId] && hass.entities[targetEntityId].device_id) {
+      const deviceId = hass.entities[targetEntityId].device_id;
+      if (hass.devices && hass.devices[deviceId] && hass.devices[deviceId].config_entries && hass.devices[deviceId].config_entries.length > 0) {
+        resolvedId = hass.devices[deviceId].config_entries[0];
+      }
+    }
+    if (!resolvedId) {
+      const entity = entities.find((e) => e && platforms.includes(e.platform));
+      if (entity) {
+        if (entity.config_entry_id) {
+          resolvedId = entity.config_entry_id;
+        } else if (entity.device_id && hass.devices && hass.devices[entity.device_id]) {
+          const device = hass.devices[entity.device_id];
+          if (device.config_entries && device.config_entries.length > 0) {
+            resolvedId = device.config_entries[0];
+          }
+        }
+      }
+    }
+  }
+  return resolvedId;
+}
+
 export async function getMusicAssistantConfigEntryId(hass, targetEntityId = null) {
   if (!hass) return null;
   const now = Date.now();
@@ -98,31 +125,7 @@ export async function getMusicAssistantConfigEntryId(hass, targetEntityId = null
       return null;
     }
 
-    let resolvedId = null;
-    if (hass.entities && typeof hass.entities === "object") {
-      const entities = Object.values(hass.entities);
-      if (targetEntityId && hass.entities[targetEntityId] && hass.entities[targetEntityId].device_id) {
-        const deviceId = hass.entities[targetEntityId].device_id;
-        if (hass.devices && hass.devices[deviceId] && hass.devices[deviceId].config_entries && hass.devices[deviceId].config_entries.length > 0) {
-          resolvedId = hass.devices[deviceId].config_entries[0];
-        }
-      }
-      if (!resolvedId) {
-        const maEntity = entities.find(
-          (e) => e && (e.platform === "music_assistant" || e.platform === "mass")
-        );
-        if (maEntity) {
-          if (maEntity.config_entry_id) {
-            resolvedId = maEntity.config_entry_id;
-          } else if (maEntity.device_id && hass.devices && hass.devices[maEntity.device_id]) {
-            const device = hass.devices[maEntity.device_id];
-            if (device.config_entries && device.config_entries.length > 0) {
-              resolvedId = device.config_entries[0];
-            }
-          }
-        }
-      }
-    }
+    const resolvedId = _resolveIntegrationId(hass, targetEntityId, ["music_assistant", "mass"]);
 
     cachedMusicAssistantEntryId = resolvedId || "auto";
     cachedMusicAssistantEntryTs = now;
@@ -152,31 +155,7 @@ export async function getMassQueueConfigEntryId(hass, targetEntityId = null) {
       return null;
     }
 
-    let resolvedId = null;
-    if (hass.entities && typeof hass.entities === "object") {
-      const entities = Object.values(hass.entities);
-      if (targetEntityId && hass.entities[targetEntityId] && hass.entities[targetEntityId].device_id) {
-        const deviceId = hass.entities[targetEntityId].device_id;
-        if (hass.devices && hass.devices[deviceId] && hass.devices[deviceId].config_entries && hass.devices[deviceId].config_entries.length > 0) {
-          resolvedId = hass.devices[deviceId].config_entries[0];
-        }
-      }
-      if (!resolvedId) {
-        const mqEntity = entities.find(
-          (e) => e && e.platform === "mass_queue"
-        );
-        if (mqEntity) {
-          if (mqEntity.config_entry_id) {
-            resolvedId = mqEntity.config_entry_id;
-          } else if (mqEntity.device_id && hass.devices && hass.devices[mqEntity.device_id]) {
-            const device = hass.devices[mqEntity.device_id];
-            if (device.config_entries && device.config_entries.length > 0) {
-              resolvedId = device.config_entries[0];
-            }
-          }
-        }
-      }
-    }
+    const resolvedId = _resolveIntegrationId(hass, targetEntityId, ["mass_queue"]);
 
     cachedMassQueueEntryId = resolvedId || "auto";
     cachedMassQueueEntryTs = now;
