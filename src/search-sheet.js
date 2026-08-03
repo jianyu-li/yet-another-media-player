@@ -80,7 +80,7 @@ const MUSIC_ASSISTANT_CONFIG_TTL_MS = 30000;
 let cachedMusicAssistantEntryId = null;
 let cachedMusicAssistantEntryTs = 0;
 
-export async function getMusicAssistantConfigEntryId(hass) {
+export async function getMusicAssistantConfigEntryId(hass, targetEntityId = null) {
   if (!hass) return null;
   const now = Date.now();
   if (
@@ -101,11 +101,26 @@ export async function getMusicAssistantConfigEntryId(hass) {
     let resolvedId = null;
     if (hass.entities && typeof hass.entities === "object") {
       const entities = Object.values(hass.entities);
-      const maEntity = entities.find(
-        (e) => e && e.platform === "music_assistant" && e.config_entry_id
-      );
-      if (maEntity) {
-        resolvedId = maEntity.config_entry_id;
+      if (targetEntityId && hass.entities[targetEntityId] && hass.entities[targetEntityId].device_id) {
+        const deviceId = hass.entities[targetEntityId].device_id;
+        if (hass.devices && hass.devices[deviceId] && hass.devices[deviceId].config_entries && hass.devices[deviceId].config_entries.length > 0) {
+          resolvedId = hass.devices[deviceId].config_entries[0];
+        }
+      }
+      if (!resolvedId) {
+        const maEntity = entities.find(
+          (e) => e && (e.platform === "music_assistant" || e.platform === "mass")
+        );
+        if (maEntity) {
+          if (maEntity.config_entry_id) {
+            resolvedId = maEntity.config_entry_id;
+          } else if (maEntity.device_id && hass.devices && hass.devices[maEntity.device_id]) {
+            const device = hass.devices[maEntity.device_id];
+            if (device.config_entries && device.config_entries.length > 0) {
+              resolvedId = device.config_entries[0];
+            }
+          }
+        }
       }
     }
 
@@ -122,7 +137,7 @@ export async function getMusicAssistantConfigEntryId(hass) {
 let cachedMassQueueEntryId = null;
 let cachedMassQueueEntryTs = 0;
 
-export async function getMassQueueConfigEntryId(hass) {
+export async function getMassQueueConfigEntryId(hass, targetEntityId = null) {
   if (!hass) return null;
   const now = Date.now();
   if (cachedMassQueueEntryId && now - cachedMassQueueEntryTs < MUSIC_ASSISTANT_CONFIG_TTL_MS) {
@@ -140,11 +155,26 @@ export async function getMassQueueConfigEntryId(hass) {
     let resolvedId = null;
     if (hass.entities && typeof hass.entities === "object") {
       const entities = Object.values(hass.entities);
-      const mqEntity = entities.find(
-        (e) => e && e.platform === "mass_queue" && e.config_entry_id
-      );
-      if (mqEntity) {
-        resolvedId = mqEntity.config_entry_id;
+      if (targetEntityId && hass.entities[targetEntityId] && hass.entities[targetEntityId].device_id) {
+        const deviceId = hass.entities[targetEntityId].device_id;
+        if (hass.devices && hass.devices[deviceId] && hass.devices[deviceId].config_entries && hass.devices[deviceId].config_entries.length > 0) {
+          resolvedId = hass.devices[deviceId].config_entries[0];
+        }
+      }
+      if (!resolvedId) {
+        const mqEntity = entities.find(
+          (e) => e && e.platform === "mass_queue"
+        );
+        if (mqEntity) {
+          if (mqEntity.config_entry_id) {
+            resolvedId = mqEntity.config_entry_id;
+          } else if (mqEntity.device_id && hass.devices && hass.devices[mqEntity.device_id]) {
+            const device = hass.devices[mqEntity.device_id];
+            if (device.config_entries && device.config_entries.length > 0) {
+              resolvedId = device.config_entries[0];
+            }
+          }
+        }
       }
     }
 
@@ -779,7 +809,7 @@ export async function searchMedia(
   searchParams = {},
   searchResultsLimit = 20
 ) {
-  const configEntryId = await getMusicAssistantConfigEntryId(hass);
+  const configEntryId = await getMusicAssistantConfigEntryId(hass, entityId);
   // Try Music Assistant search if we have a config entry
   if (configEntryId) {
     try {
@@ -956,7 +986,7 @@ export async function getRecentlyPlayed(
   searchResultsLimit = 20,
   options = {}
 ) {
-  const configEntryId = await getMusicAssistantConfigEntryId(hass);
+  const configEntryId = await getMusicAssistantConfigEntryId(hass, entityId);
   if (!configEntryId) {
     return { results: [], usedMusicAssistant: false };
   }
@@ -1017,7 +1047,7 @@ export async function getFavorites(
   searchResultsLimit = 20,
   options = {}
 ) {
-  const configEntryId = await getMusicAssistantConfigEntryId(hass);
+  const configEntryId = await getMusicAssistantConfigEntryId(hass, entityId);
   if (!configEntryId) {
     return { results: [], usedMusicAssistant: false };
   }
@@ -1134,7 +1164,7 @@ export async function isTrackFavorited(
   }
 
   try {
-    const configEntryId = await getMusicAssistantConfigEntryId(hass);
+    const configEntryId = await getMusicAssistantConfigEntryId(hass, entityId);
     if (!configEntryId) {
       return false;
     }
