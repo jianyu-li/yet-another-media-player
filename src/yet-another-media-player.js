@@ -1822,7 +1822,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               domain: "mass_queue",
               service: "send_command",
               service_data: {
-                config_entry_id: mqConfigEntryId,
+                ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
                 command: "music/playlists/library_items",
                 data: apiData
               },
@@ -3769,14 +3769,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
         if (mqConfigEntryId) {
           const playlistId = item.item_id || item.media_content_id?.split('/').pop();
-          await this.hass.callService("mass_queue", "send_command", {
+          const servicePayload = {
             command: "music/playlists/add_playlist_tracks",
             data: {
               db_playlist_id: playlistId,
               uris: [this._addToPlaylistTarget.media_content_id]
-            },
-            config_entry_id: mqConfigEntryId
-          });
+            }
+          };
+          if (mqConfigEntryId && mqConfigEntryId !== "auto") {
+            servicePayload.config_entry_id = mqConfigEntryId;
+          }
+          await this.hass.callService("mass_queue", "send_command", servicePayload);
 
           this._showSearchSuccessToast(item.media_content_id, 'playlist');
         }
@@ -3945,7 +3948,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             domain: "mass_queue",
             service: serviceName,
             service_data: {
-              config_entry_id: configEntryId,
+              ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
               uri: uri
             },
             return_response: true,
@@ -5944,7 +5947,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         service_data: {
           command: "music/item_by_uri",
           data: { uri: trackUri },
-          config_entry_id: mqConfigEntryId
+          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
         },
         return_response: true
       };

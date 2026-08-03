@@ -81,6 +81,7 @@ let cachedMusicAssistantEntryId = null;
 let cachedMusicAssistantEntryTs = 0;
 
 export async function getMusicAssistantConfigEntryId(hass) {
+  if (!hass) return null;
   const now = Date.now();
   if (
     cachedMusicAssistantEntryId &&
@@ -89,15 +90,29 @@ export async function getMusicAssistantConfigEntryId(hass) {
     return cachedMusicAssistantEntryId;
   }
   try {
-    const entries = await hass.callApi("GET", "config/config_entries/entry");
-    const maEntry = entries.find(
-      (entry) => entry.domain === "music_assistant" && entry.state === "loaded"
-    );
-    cachedMusicAssistantEntryId = maEntry?.entry_id || null;
+    const services = hass.services || {};
+    const hasMaService = Boolean(services.music_assistant);
+    if (!hasMaService) {
+      cachedMusicAssistantEntryId = null;
+      cachedMusicAssistantEntryTs = now;
+      return null;
+    }
+
+    let resolvedId = null;
+    if (hass.entities && typeof hass.entities === "object") {
+      const entities = Object.values(hass.entities);
+      const maEntity = entities.find(
+        (e) => e && e.platform === "music_assistant" && e.config_entry_id
+      );
+      if (maEntity) {
+        resolvedId = maEntity.config_entry_id;
+      }
+    }
+
+    cachedMusicAssistantEntryId = resolvedId || "auto";
     cachedMusicAssistantEntryTs = now;
     return cachedMusicAssistantEntryId;
   } catch (error) {
-    console.error("yamp: Failed to resolve Music Assistant config entry", error);
     cachedMusicAssistantEntryId = null;
     cachedMusicAssistantEntryTs = now;
     return null;
@@ -108,20 +123,35 @@ let cachedMassQueueEntryId = null;
 let cachedMassQueueEntryTs = 0;
 
 export async function getMassQueueConfigEntryId(hass) {
+  if (!hass) return null;
   const now = Date.now();
   if (cachedMassQueueEntryId && now - cachedMassQueueEntryTs < MUSIC_ASSISTANT_CONFIG_TTL_MS) {
     return cachedMassQueueEntryId;
   }
   try {
-    const entries = await hass.callApi("GET", "config/config_entries/entry");
-    const mqEntry = entries.find(
-      (entry) => entry.domain === "mass_queue" && entry.state === "loaded"
-    );
-    cachedMassQueueEntryId = mqEntry?.entry_id || null;
+    const services = hass.services || {};
+    const hasMqService = Boolean(services.mass_queue);
+    if (!hasMqService) {
+      cachedMassQueueEntryId = null;
+      cachedMassQueueEntryTs = now;
+      return null;
+    }
+
+    let resolvedId = null;
+    if (hass.entities && typeof hass.entities === "object") {
+      const entities = Object.values(hass.entities);
+      const mqEntity = entities.find(
+        (e) => e && e.platform === "mass_queue" && e.config_entry_id
+      );
+      if (mqEntity) {
+        resolvedId = mqEntity.config_entry_id;
+      }
+    }
+
+    cachedMassQueueEntryId = resolvedId || "auto";
     cachedMassQueueEntryTs = now;
     return cachedMassQueueEntryId;
   } catch (error) {
-    console.error("yamp: Failed to resolve mass_queue config entry", error);
     cachedMassQueueEntryId = null;
     cachedMassQueueEntryTs = now;
     return null;
@@ -765,7 +795,7 @@ export async function searchMedia(
                 domain: "music_assistant",
                 service: "get_library",
                 service_data: {
-                  config_entry_id: configEntryId,
+                  ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
                   media_type: mt,
                   favorite: true,
                   search: query,
@@ -817,7 +847,7 @@ export async function searchMedia(
             domain: "music_assistant",
             service: "get_library",
             service_data: {
-              config_entry_id: configEntryId,
+              ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
               media_type: mediaType,
               // favorite param omitted to get ALL items
             },
@@ -853,7 +883,7 @@ export async function searchMedia(
 
       const serviceData = {
         name: query,
-        config_entry_id: configEntryId,
+        ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
       };
       const searchLimit = resolveLimitValue(searchResultsLimit, {
         cap: mediaType === "all" ? 8 : undefined,
@@ -937,7 +967,7 @@ export async function getRecentlyPlayed(
       domain: "music_assistant",
       service: "get_library",
       service_data: {
-        config_entry_id: configEntryId,
+        ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
         media_type: mt,
         order_by: "last_played_desc",
       },
@@ -999,7 +1029,7 @@ export async function getFavorites(
       domain: "music_assistant",
       service: "get_library",
       service_data: {
-        config_entry_id: configEntryId,
+        ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
         media_type: type,
         favorite: true,
       },
@@ -1129,7 +1159,7 @@ export async function isTrackFavorited(
       try {
         const serviceData = {
           name: trackName || artistName,
-          config_entry_id: configEntryId,
+          ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
           media_type: "track",
         };
         const searchLimit = resolveLimitValue(searchResultsLimit);
@@ -1184,7 +1214,7 @@ export async function isTrackFavorited(
             domain: "music_assistant",
             service: "get_library",
             service_data: {
-              config_entry_id: configEntryId,
+              ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
               media_type: "track",
               favorite: true,
               search: trackName.trim(),
