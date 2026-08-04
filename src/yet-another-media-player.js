@@ -8168,7 +8168,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       shouldHideVolumeControls ||
       isVolumeHiddenByConfig;
 
-    const hasMoreInfoMenu = (!this._showEntityOptions && !isCompactVolume);
     const hasRightPlaceholder = this._controlLayout === "modern";
     const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
 

@@ -1,14 +1,12 @@
 import { html, nothing } from "lit";
 import { localize } from "./localize/localize.js";
 import {
-  SUPPORT_PAUSE,
   SUPPORT_PREVIOUS_TRACK,
   SUPPORT_NEXT_TRACK,
   SUPPORT_SHUFFLE,
   SUPPORT_REPEAT_SET,
   SUPPORT_TURN_ON,
   SUPPORT_TURN_OFF,
-  SUPPORT_PLAY,
 } from "./constants.js";
 
 export function renderControlsRow({
@@ -320,10 +318,18 @@ export function countMainControls(
     stateObj.state === "unavailable";
 
   let count = 0;
-  if (!hiddenControls.previous && (supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) || isIdleOrInactiveState)) count++;
+  if (
+    !hiddenControls.previous &&
+    (supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) || isIdleOrInactiveState)
+  )
+    count++;
   if (!hiddenControls.play_pause) count++; // play/pause button always present if row exists
   if (normalizedLayout !== "modern" && !hiddenControls.stop && showStop) count++;
-  if (!hiddenControls.next && (supportsFeature(stateObj, SUPPORT_NEXT_TRACK) || isIdleOrInactiveState)) count++;
+  if (
+    !hiddenControls.next &&
+    (supportsFeature(stateObj, SUPPORT_NEXT_TRACK) || isIdleOrInactiveState)
+  )
+    count++;
   if (!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
   if (!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
   if (normalizedLayout !== "modern" && !hiddenControls.favorite && showFavorite) count++; // favorite button

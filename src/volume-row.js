@@ -41,10 +41,7 @@ export function renderVolumeRow({
   const shouldCollapse =
     typeof collapseRow === "boolean"
       ? collapseRow
-      : hideVolume &&
-        moreInfoMenu === nothing &&
-        !hasLeadingControl &&
-        !showRightPlaceholder;
+      : hideVolume && moreInfoMenu === nothing && !hasLeadingControl && !showRightPlaceholder;
 
   return html`
     <div
