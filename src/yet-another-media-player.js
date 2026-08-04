@@ -4258,8 +4258,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * template updates.
    */
   _setIdleState(idle) {
-    if (this._isIdle === idle) return;
-    this._isIdle = idle;
+    const targetIdle = this._idleTimeoutMs === 0 ? false : idle;
+    if (this._isIdle === targetIdle) return;
+    this._isIdle = targetIdle;
     if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
   }
   _ensureArtworkOverrideIndexMap() {
@@ -4628,7 +4629,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Handle card_height templates (similar to idle_image)
     // card_height now uses websocket template subscriptions
     // Set idle timeout ms
-    this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
+    let parsedIdle = 60000;
+    if (config.idle_timeout_ms !== undefined && config.idle_timeout_ms !== null && config.idle_timeout_ms !== "") {
+      const parsed = Number(config.idle_timeout_ms);
+      if (!isNaN(parsed)) parsedIdle = Math.max(0, parsed);
+    }
+    this._idleTimeoutMs = parsedIdle;
     if (this._idleTimeoutMs === 0) {
       if (this._idleTimeout) {
         clearTimeout(this._idleTimeout);
@@ -4786,7 +4792,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (this._isEntityPlaying(mainState) && this._lastPlayingEntityIdByChip?.[idx] === mainId) {
         return resolve(mainId);
       }
-      return resolve(linger.entityId);
+      // Only resolve to linger entity if it actually exists in HA
+      if (this.hass?.states?.[linger.entityId]) {
+        return resolve(linger.entityId);
+      }
     }
     // Clear expired linger
     if (linger && linger.until <= now) {
@@ -4808,7 +4817,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // When neither is playing, check if one was recently controlled for this specific chip
     const lastPlayingForChip = this._lastPlayingEntityIdByChip?.[idx];
-    if (lastPlayingForChip === maId) return resolve(maId);
+    if (lastPlayingForChip === maId && maState) return resolve(maId);
     if (lastPlayingForChip === mainId) return resolve(mainId);
 
     // Default to Music Assistant entity if configured, otherwise main entity
@@ -4827,8 +4836,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return resolve(maId);
       }
 
-      // Default to MA if both are candidate or no stickiness applies
-      return resolve(maId);
+      // Default to MA if it actually exists in HA, otherwise fall back to main entity
+      return resolve(maState ? maId : mainId);
     } else {
       return resolve(mainId);
     }
@@ -7794,8 +7803,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
     const dimIdleFrame = !!idleImageUrl;
-    const hideControlsNow = this._isIdle;
-    const shouldDimIdle = this._isIdle;
+    const hideControlsNow = this._idleTimeoutMs === 0 ? false : this._isIdle;
+    const shouldDimIdle = this._idleTimeoutMs === 0 ? false : this._isIdle;
     // Calculate useInsetArtwork early for artworkFullBleed unification
     // Note: collapsed and _alwaysCollapsed will be defined/checked later, so we can't use them here.
     // We'll set useInsetArtwork again later with full collapsed context for rendering.
@@ -8149,16 +8158,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
 
+    const isVolumeHiddenByConfig =
+      hideControlsNow ||
+      this._getEffectiveVolumeMode() === "hidden" ||
+      isCompactVolume ||
+      (hasCustomCardHeight && customCardHeight < 260 && collapsed);
+
     const isVolumeHidden =
       shouldHideVolumeControls ||
-      this._getEffectiveVolumeMode() === "hidden" ||
-      (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
+      isVolumeHiddenByConfig;
 
-    const hasMoreInfoMenu = (!this._showEntityOptions && !isCompactVolume);
     const hasRightPlaceholder = this._controlLayout === "modern";
     const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
 
-    const volumeRowWillCollapse = isVolumeHidden && !hasMoreInfoMenu && !hasLeadingControl && !hasRightPlaceholder;
+    const volumeRowWillCollapse = isVolumeHiddenByConfig && !isCompactVolume && !hasLeadingControl && !hasRightPlaceholder;
 
     const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details");
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
@@ -8425,6 +8438,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         showRightPlaceholder: this._controlLayout === "modern",
         rightSlotTemplate: shouldHideVolumeControls ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
         hideVolume: isVolumeHidden,
+        collapseRow: volumeRowWillCollapse,
         moreInfoMenu: (!this._showEntityOptions && !isCompactVolume) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
@@ -8433,8 +8447,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           </div>
         ` : nothing,
       })}
-            ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel && !(this._hideActiveEntityLabelOnIdle && this._isIdle) ? html`
-              <div class="in-menu-active-label">${activeChipName}</div>
+            ${showChipsInMenu && !this._hideActiveEntityLabel && !(this._hideActiveEntityLabelOnIdle && this._isIdle) ? html`
+              <div class="in-menu-active-label" style="${this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">${activeChipName}</div>
             ` : nothing}
           </div>
         </div>
@@ -9208,7 +9222,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             this._idleTimeout = null;
           }
 
-          if (!isAnyUnrestrictedPlaying) {
+          if (!isAnyUnrestrictedPlaying && this._idleTimeoutMs > 0) {
             // Bypass grace period if we just switched away from the only thing keeping the card awake (a playing disabled entity)
             this._setIdleState(true);
             this._idleScreenApplied = false;
