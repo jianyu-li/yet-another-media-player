@@ -332,6 +332,8 @@ export default {
       default: "Por defecto",
       search: "Buscar",
       group_players: "Agrupar",
+      up_next: "A continuación",
+      remote_control: "Control remoto",
     },
     appearance_options: {
       automatic: "Automático",
@@ -379,6 +381,8 @@ export default {
       transfer_queue: "Transferir cola",
       main_menu: "Menú Principal",
       group_players: "Agrupar",
+      up_next: "A continuación",
+      remote_control: "Control remoto",
       select_entity: "Seleccionar",
       transfer_to: "Transferir a",
       no_players: "Sin reproductores MA.",

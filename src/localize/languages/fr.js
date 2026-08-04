@@ -337,6 +337,8 @@ export default {
       default: "Par défaut",
       search: "Rechercher",
       group_players: "Grouper les lecteurs",
+      up_next: "À suivre",
+      remote_control: "Télécommande",
     },
     appearance_options: {
       automatic: "Automatique",
@@ -384,6 +386,8 @@ export default {
       transfer_queue: "Transférer la file",
       main_menu: "Menu Principal",
       group_players: "Grouper les lecteurs",
+      up_next: "À suivre",
+      remote_control: "Télécommande",
       select_entity: "Choisir pour plus d'infos",
       transfer_to: "Transférer vers",
       no_players: "Aucun lecteur MA disponible.",

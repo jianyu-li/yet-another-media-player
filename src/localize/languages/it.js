@@ -330,6 +330,8 @@ export default {
       default: "Predefinito",
       search: "Cerca",
       group_players: "Raggruppa i lettori",
+      up_next: "In coda",
+      remote_control: "Telecomando",
     },
     appearance_options: {
       automatic: "Automatico",
@@ -377,6 +379,8 @@ export default {
       transfer_queue: "Trasferisci coda",
       main_menu: "Menu Principale",
       group_players: "Raggruppa",
+      up_next: "In coda",
+      remote_control: "Telecomando",
       select_entity: "Seleziona",
       transfer_to: "Trasferisci a",
       no_players: "Senza lettori MA.",

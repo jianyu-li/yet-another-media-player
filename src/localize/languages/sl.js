@@ -329,6 +329,8 @@ export default {
       default: "Privzeto",
       search: "Iskanje",
       group_players: "Zoskupi predvajalnike",
+      up_next: "Sledi",
+      remote_control: "Daljinski upravljalnik",
     },
     appearance_options: {
       automatic: "Samodejno",
@@ -376,6 +378,8 @@ export default {
       transfer_queue: "Prenesi čakalno vrsto",
       main_menu: "Glavni meni",
       group_players: "Združi predvajalnike",
+      up_next: "Sledi",
+      remote_control: "Daljinski upravljalnik",
       select_entity: "Izberi entiteto za več informacij",
       transfer_to: "Prenesi čakalno vrsto na",
       no_players: "Ni drugih razpoložljivih predvajalnikov Music Assistant.",

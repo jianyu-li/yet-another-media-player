@@ -2130,7 +2130,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     label: localize("editor.card_type_options.group_players"),
                   },
                   { value: "up_next", label: localize("editor.card_type_options.up_next") },
-                  { value: "remote_control", label: localize("editor.card_type_options.remote_control") },
+                  {
+                    value: "remote_control",
+                    label: localize("editor.card_type_options.remote_control"),
+                  },
                 ],
               },
             }}

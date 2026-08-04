@@ -345,6 +345,8 @@ export default {
       default: "Standard",
       search: "Suche",
       group_players: "Player gruppieren",
+      up_next: "Als Nächstes",
+      remote_control: "Fernbedienung",
     },
     appearance_options: {
       automatic: "Automatisch",
@@ -392,6 +394,8 @@ export default {
       transfer_queue: "Warteschlange übertragen",
       main_menu: "Hauptmenü",
       group_players: "Player gruppieren",
+      up_next: "Als Nächstes",
+      remote_control: "Fernbedienung",
       select_entity: "Entität für mehr Info wählen",
       transfer_to: "Warteschlange übertragen zu",
       no_players: "Keine anderen Music Assistant Player verfügbar.",
