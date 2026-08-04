@@ -487,6 +487,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _radioModeActive: { state: true },
     _showEntityOptions: { state: true },
     _showGrouping: { state: true },
+    _showRemoteControl: { state: true },
     _showTransferQueue: { state: true },
     _queueOpsTotal: { state: true },
     _queueOpsCompleted: { state: true },
@@ -590,6 +591,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._showSourceList = false;
     // Overlay state for transfer queue sheet
     this._showTransferQueue = false;
+    this._showRemoteControl = false;
     this._cardHeightTemplateValue = {};
     this._cardHeightResolveCache = {};
     this._lastCardHeightContextKey = null;
@@ -4670,6 +4672,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         follow_active_volume,
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
+        hide_remote_buttons: typeof e === "string" ? undefined : e.hide_remote_buttons,
         disable_auto_select: this._isAutoSelectDisabled(index),
         prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
         ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
@@ -5254,6 +5257,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         ` : nothing}
         
         ${this._renderGroupingMenuOption()}
+        
+        ${this._hasRemoteControlSupport() ? html`
+          <button class="entity-options-item" @click=${() => this._openRemoteControl()}>
+            ${localize('card.menu.remote_controls')}
+          </button>
+        ` : nothing}
         
         ${!this._alwaysCollapsed ? html`
           <button class="entity-options-item" @click=${() => {
@@ -6657,6 +6666,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._lyricsActive = !this._lyricsActive;
       // No explicit fetch call here - updated() will handle it lazily if appropriate
       this.requestUpdate();
+      return;
+    }
+
+    if (action.action === "remote_control") {
+      this._openRemoteControl();
       return;
     }
 
@@ -8414,7 +8428,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 </div>
               </div>
             ` : nothing}
-              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) :
+              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue && !this._showRemoteControl) ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) :
+          this._showRemoteControl ? this._renderRemoteControlSheet() :
           this._showGrouping ? this._renderGroupingSheet() :
             this._showTransferQueue ? this._renderTransferQueueSheet() :
               this._showResolvedEntities ? this._renderResolvedEntitiesSheet() :
@@ -9831,6 +9846,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._showSourceList = false;
         this._showSearchInSheet = false;
         this._showResolvedEntities = false;
+        this._showRemoteControl = false;
         this._searchInputAutoFocused = false;
         this._searchHierarchy = [];
         this._searchBreadcrumb = "";
@@ -9888,6 +9904,375 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     this._lastGroupingMasterId = masterId;
     this.requestUpdate();
+  }
+
+  // Remote Controls Overlay Helper Methods
+  _hasRemoteControlSupport() {
+    const idx = this._selectedIndex;
+    const obj = (this.entityObjs || [])[idx];
+
+    if (obj?.remote_entity === false) return false;
+    if (obj?.remote_entity) return true;
+
+    const currentId = this.currentEntityId;
+    if (!currentId) return false;
+
+    if (currentId.startsWith("remote.")) return true;
+
+    if (currentId.startsWith("media_player.")) {
+      const name = currentId.replace("media_player.", "");
+      const candidate = `remote.${name}`;
+      if (this.hass?.states?.[candidate]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  _getRemoteControlEntity() {
+    const idx = this._selectedIndex;
+    const obj = (this.entityObjs || [])[idx];
+
+    if (obj?.remote_entity) {
+      const resolved = resolveStringTemplateSync(this.hass, obj.remote_entity);
+      if (resolved && typeof resolved === "string") return resolved;
+    }
+
+    const currentId = this.currentEntityId;
+    if (!currentId) return null;
+
+    if (currentId.startsWith("remote.")) return currentId;
+
+    if (currentId.startsWith("media_player.")) {
+      const name = currentId.replace("media_player.", "");
+      const candidate = `remote.${name}`;
+      if (this.hass?.states?.[candidate]) {
+        return candidate;
+      }
+    }
+
+    return currentId;
+  }
+
+  _sendRemoteCommand(command) {
+    const targetEntity = this._getRemoteControlEntity();
+    if (!targetEntity) return;
+
+    if (targetEntity.startsWith("remote.")) {
+      this.hass.callService("remote", "send_command", {
+        entity_id: targetEntity,
+        command: command
+      });
+      return;
+    }
+
+    switch (command) {
+      case "up":
+      case "down":
+      case "left":
+      case "right":
+      case "select":
+      case "back":
+      case "menu":
+      case "home":
+        this.hass.callService("remote", "send_command", {
+          entity_id: targetEntity,
+          command: command
+        });
+        break;
+      case "play_pause":
+        this.hass.callService("media_player", "media_play_pause", { entity_id: targetEntity });
+        break;
+      case "previous":
+      case "rewind":
+        this.hass.callService("media_player", "media_previous_track", { entity_id: targetEntity });
+        break;
+      case "next":
+      case "fast_forward":
+        this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
+        break;
+      case "volume_up":
+        this.hass.callService("media_player", "volume_up", { entity_id: targetEntity });
+        break;
+      case "volume_down":
+        this.hass.callService("media_player", "volume_down", { entity_id: targetEntity });
+        break;
+      case "mute":
+        this.hass.callService("media_player", "volume_mute", {
+          entity_id: targetEntity,
+          is_volume_muted: !(this.currentVolumeStateObj?.attributes?.is_volume_muted)
+        });
+        break;
+      case "power":
+        this.hass.callService("media_player", "toggle", { entity_id: targetEntity });
+        break;
+      default:
+        this.hass.callService("remote", "send_command", {
+          entity_id: targetEntity,
+          command: command
+        });
+    }
+  }
+
+  _openRemoteControl() {
+    this._showEntityOptions = true;
+    this._showRemoteControl = true;
+    this._showGrouping = false;
+    this._showSourceList = false;
+    this._showTransferQueue = false;
+    this._showSearchInSheet = false;
+    this._showResolvedEntities = false;
+    this.requestUpdate();
+  }
+
+  _closeRemoteControl() {
+    this._showRemoteControl = false;
+    this.requestUpdate();
+  }
+
+  _getHiddenRemoteButtons() {
+    const idx = this._selectedIndex;
+    const obj = (this.entityObjs || [])[idx];
+    let raw = obj?.hide_remote_buttons ?? this.config.hide_remote_buttons;
+    
+    if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.includes("[[["))) {
+       raw = resolveStringTemplateSync(this.hass, raw);
+    }
+    
+    if (typeof raw === "string") {
+      try {
+        raw = JSON.parse(raw.replace(/'/g, '"'));
+      } catch (e) {
+        raw = raw.split(",").map(s => s.trim()).filter(s => s !== "");
+      }
+    }
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  _renderRemoteControlSheet() {
+    const hiddenButtons = this._getHiddenRemoteButtons();
+
+    return html`
+      <style>
+        .remote-control-container {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: flex-start !important;
+          padding: 12px 16px 24px 16px !important;
+          gap: 16px !important;
+          box-sizing: border-box !important;
+          width: 100% !important;
+          flex: 1 !important;
+          margin: 0 auto !important;
+        }
+        .remote-dpad-wrapper {
+          position: relative !important;
+          width: 200px !important;
+          height: 200px !important;
+          flex-shrink: 0 !important;
+          margin: 4px auto 12px auto !important;
+        }
+        .remote-dpad-cross {
+          position: relative !important;
+          width: 100% !important;
+          height: 100% !important;
+          border-radius: 50% !important;
+          background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.08)) !important;
+          border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.18)) !important;
+          backdrop-filter: blur(14px) !important;
+          -webkit-backdrop-filter: blur(14px) !important;
+          box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25) !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+        }
+        .dpad-btn {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          position: absolute !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          background: transparent !important;
+          border: none !important;
+          color: var(--yamp-overlay-text, var(--primary-text-color, #fff)) !important;
+          cursor: pointer !important;
+          transition: background 0.15s ease, transform 0.1s ease, color 0.15s ease !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          outline: none !important;
+          box-sizing: border-box !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+        .dpad-btn:not(.dpad-center) {
+          -webkit-mask-image: radial-gradient(closest-side circle at 50% 50%, transparent 47%, black 49%) !important;
+          mask-image: radial-gradient(closest-side circle at 50% 50%, transparent 47%, black 49%) !important;
+        }
+        .dpad-btn:hover {
+          background: rgba(255, 255, 255, 0.16) !important;
+          color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+        }
+        .dpad-btn:active {
+          background: rgba(255, 255, 255, 0.28) !important;
+          transform: scale(0.92) !important;
+        }
+        .dpad-btn ha-icon {
+          --mdc-icon-size: 28px !important;
+          pointer-events: none !important;
+        }
+        .dpad-btn.dpad-up {
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(0 0, 100% 0, 50% 50%) !important;
+          align-items: flex-start !important;
+          padding-top: 12% !important;
+        }
+        .dpad-btn.dpad-down {
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(100% 100%, 0 100%, 50% 50%) !important;
+          align-items: flex-end !important;
+          padding-bottom: 12% !important;
+        }
+        .dpad-btn.dpad-left {
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(0 100%, 0 0, 50% 50%) !important;
+          justify-content: flex-start !important;
+          padding-left: 12% !important;
+        }
+        .dpad-btn.dpad-right {
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(100% 0, 100% 100%, 50% 50%) !important;
+          justify-content: flex-end !important;
+          padding-right: 12% !important;
+        }
+        .dpad-btn.dpad-center {
+          top: 28% !important;
+          left: 28% !important;
+          width: 44% !important;
+          height: 44% !important;
+          border-radius: 50% !important;
+          background: rgba(255, 255, 255, 0.12) !important;
+          border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.25)) !important;
+          font-weight: 600 !important;
+          font-size: 0.88rem !important;
+          letter-spacing: 0.03em !important;
+          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+          z-index: 3 !important;
+        }
+        .dpad-btn.dpad-center:hover {
+          background: rgba(255, 255, 255, 0.25) !important;
+          color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+        }
+        .remote-control-row {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-around !important;
+          gap: 12px !important;
+          width: 100% !important;
+          max-width: 320px !important;
+          margin: 0 auto !important;
+        }
+        .remote-control-btn {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          display: flex !important;
+          flex: 1 !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: center !important;
+          height: 48px !important;
+          max-width: 72px !important;
+          border-radius: 14px !important;
+          background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.08)) !important;
+          border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.15)) !important;
+          color: var(--yamp-overlay-text, var(--primary-text-color, #fff)) !important;
+          cursor: pointer !important;
+          transition: all 0.15s ease !important;
+          outline: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+        .remote-control-btn:hover {
+          background: rgba(255, 255, 255, 0.18) !important;
+          border-color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+          color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+          transform: translateY(-1px) !important;
+        }
+        .remote-control-btn:active {
+          transform: scale(0.93) !important;
+        }
+        .remote-control-btn ha-icon {
+          --mdc-icon-size: 22px !important;
+          pointer-events: none !important;
+        }
+      </style>
+      <div class="entity-options-header">
+        <button class="entity-options-item close-item" @click=${() => this._closeRemoteControl()}>
+          ${localize('common.back')}
+        </button>
+      </div>
+      <div class="entity-options-divider"></div>
+      <div class="entity-options-scroll remote-control-container">
+        <!-- D-Pad Directional Pad -->
+        <div class="remote-dpad-wrapper">
+          <div class="remote-dpad-cross">
+            <button class="dpad-btn dpad-up" @click=${() => this._sendRemoteCommand('up')} title="${localize('card.remote.up')}">
+              <ha-icon icon="mdi:chevron-up"></ha-icon>
+            </button>
+            <button class="dpad-btn dpad-down" @click=${() => this._sendRemoteCommand('down')} title="${localize('card.remote.down')}">
+              <ha-icon icon="mdi:chevron-down"></ha-icon>
+            </button>
+            <button class="dpad-btn dpad-left" @click=${() => this._sendRemoteCommand('left')} title="${localize('card.remote.left')}">
+              <ha-icon icon="mdi:chevron-left"></ha-icon>
+            </button>
+            <button class="dpad-btn dpad-right" @click=${() => this._sendRemoteCommand('right')} title="${localize('card.remote.right')}">
+              <ha-icon icon="mdi:chevron-right"></ha-icon>
+            </button>
+            <button class="dpad-btn dpad-center" @click=${() => this._sendRemoteCommand('select')} title="${localize('card.remote.select')}">
+              ${localize('card.remote.select')}
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation Row -->
+        <div class="remote-control-row">
+          ${!hiddenButtons.includes('back') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('back')} title="${localize('card.remote.back')}">
+              <ha-icon icon="mdi:arrow-left"></ha-icon>
+            </button>
+          ` : nothing}
+          ${!hiddenButtons.includes('menu') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('menu')} title="${localize('card.remote.menu')}">
+              <ha-icon icon="mdi:menu"></ha-icon>
+            </button>
+          ` : nothing}
+          ${!hiddenButtons.includes('home') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('home')} title="${localize('card.remote.home')}">
+              <ha-icon icon="mdi:home"></ha-icon>
+            </button>
+          ` : nothing}
+          ${!hiddenButtons.includes('power') ? html`
+            <button class="remote-control-btn" @click=${() => this._onControlClick('power')} title="${localize('card.remote.power')}">
+              <ha-icon icon="mdi:power"></ha-icon>
+            </button>
+          ` : nothing}
+        </div>
+      </div>
+    `;
   }
 
   // Source List Helper Methods

@@ -58,6 +58,7 @@ Below you will find a list of all configuration options.
 | `group_volume`             | boolean      | No           | `true`      | Isolate this entity's volume from group volume changes and vice versa (see [Group Volume Override](#group-volume-override-per-entity)) |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array/template| No           | `[]`        | Array of control names to hide for this specific entity (Supports Templates) |
+| `hidden_remote_buttons`    | array/template| No           | `[]`        | Array of remote button names to hide for this specific entity's remote overlay (Supports Templates) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 | `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
 | `entity_volume_mode`       | choice       | No           | —           | Override global `volume_mode` for this entity (`slider`, `stepper`, `hidden`) |
@@ -396,6 +397,32 @@ entities:
       ]]]
 ```
 - All other controls will remain visible (if supported by the entity)
+
+### Hidden Remote Buttons Configuration
+
+You can hide specific remote control buttons on a per-entity basis using the `hidden_remote_buttons` option. This is useful when you want to simplify the interface for certain entities or hide buttons that aren't needed. **This field also supports templates (Jinja2 and JavaScript) for dynamic control visibility.**
+
+#### Available Control Names
+- `up` - Up directional button
+- `down` - Down directional button
+- `left` - Left directional button
+- `right` - Right directional button
+- `select` - Center select/ok button
+- `back` - Back/return button
+- `home` - Home button
+- `menu` - Menu button
+- `power` - Power button
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+    hidden_remote_buttons:
+      - power
+      - menu
+```
 
 
 # Behavior

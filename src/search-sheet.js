@@ -84,9 +84,18 @@ function _resolveIntegrationId(hass, targetEntityId, platforms) {
   let resolvedId = null;
   if (hass.entities && typeof hass.entities === "object") {
     const entities = Object.values(hass.entities);
-    if (targetEntityId && hass.entities[targetEntityId] && hass.entities[targetEntityId].device_id) {
+    if (
+      targetEntityId &&
+      hass.entities[targetEntityId] &&
+      hass.entities[targetEntityId].device_id
+    ) {
       const deviceId = hass.entities[targetEntityId].device_id;
-      if (hass.devices && hass.devices[deviceId] && hass.devices[deviceId].config_entries && hass.devices[deviceId].config_entries.length > 0) {
+      if (
+        hass.devices &&
+        hass.devices[deviceId] &&
+        hass.devices[deviceId].config_entries &&
+        hass.devices[deviceId].config_entries.length > 0
+      ) {
         resolvedId = hass.devices[deviceId].config_entries[0];
       }
     }
@@ -804,7 +813,8 @@ export async function searchMedia(
                 domain: "music_assistant",
                 service: "get_library",
                 service_data: {
-                  ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
+                  ...(configEntryId &&
+                    configEntryId !== "auto" && { config_entry_id: configEntryId }),
                   media_type: mt,
                   favorite: true,
                   search: query,

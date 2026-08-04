@@ -4415,4 +4415,180 @@ export const lyricsStyles = css`
   .queue-play-next-dropzone ha-icon {
     color: var(--custom-accent, var(--accent-color, #ff9800));
   }
+
+  /* Remote Control Overlay Sheet */
+  .entity-options-sheet .remote-control-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 12px 16px 24px 16px !important;
+    gap: 16px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    flex: 1 !important;
+    margin: 0 auto !important;
+  }
+
+  .entity-options-sheet .remote-dpad-wrapper {
+    position: relative !important;
+    width: 200px !important;
+    height: 200px !important;
+    flex-shrink: 0 !important;
+    margin: 4px auto 12px auto !important;
+  }
+
+  .entity-options-sheet .remote-dpad-cross {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.08)) !important;
+    border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.18)) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    box-shadow:
+      inset 0 2px 6px rgba(0, 0, 0, 0.3),
+      0 6px 18px rgba(0, 0, 0, 0.25) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .entity-options-sheet .dpad-btn {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    position: absolute !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--yamp-overlay-text, var(--primary-text-color, #fff)) !important;
+    cursor: pointer !important;
+    transition:
+      background 0.15s ease,
+      transform 0.1s ease,
+      color 0.15s ease !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .entity-options-sheet .dpad-btn:hover {
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+  }
+
+  .entity-options-sheet .dpad-btn:active {
+    background: rgba(255, 255, 255, 0.28) !important;
+    transform: scale(0.92) !important;
+  }
+
+  .entity-options-sheet .dpad-btn ha-icon {
+    --mdc-icon-size: 28px !important;
+    pointer-events: none !important;
+  }
+
+  .entity-options-sheet .dpad-btn.dpad-up {
+    top: 0 !important;
+    left: 25% !important;
+    width: 50% !important;
+    height: 35% !important;
+    border-radius: 100px 100px 0 0 !important;
+  }
+
+  .entity-options-sheet .dpad-btn.dpad-down {
+    bottom: 0 !important;
+    left: 25% !important;
+    width: 50% !important;
+    height: 35% !important;
+    border-radius: 0 0 100px 100px !important;
+  }
+
+  .entity-options-sheet .dpad-btn.dpad-left {
+    top: 25% !important;
+    left: 0 !important;
+    width: 35% !important;
+    height: 50% !important;
+    border-radius: 100px 0 0 100px !important;
+  }
+
+  .entity-options-sheet .dpad-btn.dpad-right {
+    top: 25% !important;
+    right: 0 !important;
+    width: 35% !important;
+    height: 50% !important;
+    border-radius: 0 100px 100px 0 !important;
+  }
+
+  .entity-options-sheet .dpad-btn.dpad-center {
+    top: 28% !important;
+    left: 28% !important;
+    width: 44% !important;
+    height: 44% !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.25)) !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    letter-spacing: 0.03em !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+    z-index: 3 !important;
+  }
+
+  .entity-options-sheet .dpad-btn.dpad-center:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+  }
+
+  .entity-options-sheet .remote-control-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+  }
+
+  .entity-options-sheet .remote-control-btn {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: flex !important;
+    flex: 1 !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 48px !important;
+    max-width: 72px !important;
+    border-radius: 14px !important;
+    background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.08)) !important;
+    border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.15)) !important;
+    color: var(--yamp-overlay-text, var(--primary-text-color, #fff)) !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    outline: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .entity-options-sheet .remote-control-btn:hover {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border-color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+    color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .entity-options-sheet .remote-control-btn:active {
+    transform: scale(0.93) !important;
+  }
+
+  .entity-options-sheet .remote-control-btn ha-icon {
+    --mdc-icon-size: 22px !important;
+    pointer-events: none !important;
+  }
 `;

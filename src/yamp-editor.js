@@ -735,6 +735,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const navPath = typeof action.navigation_path === "string" ? action.navigation_path.trim() : "";
     if (action.action === "navigate" || navPath) return "navigate";
     if (action.action === "toggle_lyrics") return "toggle_lyrics";
+    if (action.action === "remote_control") return "remote_control";
     return "service";
   }
 
@@ -3372,6 +3373,80 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
         </div>
 
+        <div class="form-row" data-search-keys="hide_remote_buttons back menu home power">
+          <div class="editor-field-wrapper">
+            ${
+              this._isTemplateMode("hide_remote_buttons", entity?.hide_remote_buttons)
+                ? html`
+                    <div class="grow-children">
+                      <div
+                        class=${
+                          this._yamlError &&
+                          typeof entity?.hide_remote_buttons === "string" &&
+                          entity.hide_remote_buttons.trim() !== ""
+                            ? "code-editor-wrapper error"
+                            : "code-editor-wrapper"
+                        }
+                        style="width: 100%;"
+                      >
+                        <span class="form-label"
+                          >${localize("editor.fields.hide_remote_buttons")}</span
+                        >
+                        <ha-code-editor
+                          lint
+                          id="hidden-remote-buttons-template-editor"
+                          label="${localize("editor.fields.hide_remote_buttons")}"
+                          .hass=${this.hass}
+                          mode="jinja2"
+                          autocomplete-entities
+                          .value=${typeof entity?.hide_remote_buttons === "string" ? entity.hide_remote_buttons : ""}
+                          @value-changed=${(e) => this._updateEntityProperty("hide_remote_buttons", e.detail.value)}
+                        ></ha-code-editor>
+                        <div class="help-text">
+                          ${localize("editor.subtitles.hide_remote_buttons")}
+                        </div>
+                      </div>
+                    </div>
+                  `
+                : html`
+                    <ha-selector
+                      .hass=${this.hass}
+                      .selector=${{
+                        select: {
+                          mode: "dropdown",
+                          multiple: true,
+                          options: [
+                            { value: "back", label: "Back" },
+                            { value: "menu", label: "Menu" },
+                            { value: "home", label: "Home" },
+                            { value: "power", label: "Power" },
+                          ],
+                        },
+                      }}
+                      .value=${(() => {
+                        let val = entity?.hide_remote_buttons;
+                        if (typeof val === "string") {
+                          try {
+                            val = JSON.parse(val.replace(/'/g, '"'));
+                          } catch (e) {
+                            val = val
+                              .split(",")
+                              .map((s) => s.trim())
+                              .filter((s) => s !== "");
+                          }
+                        }
+                        return Array.isArray(val) ? val : [];
+                      })()}
+                      label="${localize("editor.fields.hide_remote_buttons")}"
+                      helper="${localize("editor.subtitles.hide_remote_buttons")}"
+                      @value-changed=${(e) => this._updateEntityProperty("hide_remote_buttons", e.detail.value)}
+                    ></ha-selector>
+                  `
+            }
+            ${this._renderTemplateToggle("hide_remote_buttons", entity?.hide_remote_buttons, (v) => this._updateEntityProperty("hide_remote_buttons", v))}
+          </div>
+        </div>
+
  
 
         <div class="form-row">
@@ -3922,6 +3997,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     value: "toggle_lyrics",
                     label: localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay",
                   },
+                  {
+                    value: "remote_control",
+                    label:
+                      localize("editor.action_types.remote_control") ||
+                      "Open Remote Controls Overlay",
+                  },
                 ],
               },
             }}
@@ -3988,14 +4069,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                 this._updateActionProperty("navigation_path", undefined);
                 this._updateActionProperty("navigation_new_tab", undefined);
                 this._updateActionProperty("action", mode);
-              } else if (mode === "toggle_lyrics") {
+              } else if (mode === "toggle_lyrics" || mode === "remote_control") {
                 this._updateActionProperty("menu_item", undefined);
                 this._updateActionProperty("service", undefined);
                 this._updateActionProperty("service_data", undefined);
                 this._updateActionProperty("script_variable", undefined);
                 this._updateActionProperty("navigation_path", undefined);
                 this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", "toggle_lyrics");
+                this._updateActionProperty("action", mode);
               }
             }}
           ></ha-selector>

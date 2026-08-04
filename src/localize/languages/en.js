@@ -162,7 +162,8 @@ export default {
       collapse_expand:
         "Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.",
       idle_screen: "Choose which screen to display automatically when the card becomes idle.",
-      hide_controls: "Select which controls to hide for this entity (all are shown by default)",
+      hide_controls: "Select buttons to hide from the persistent playback controls row.",
+      hide_remote_buttons: "Select buttons to hide from the Remote Control overlay.",
       hide_search_chips: "Hide specific search filter chips for this entity",
       hide_active_entity_on_idle:
         "Hide the entity label at the bottom of the card only when the player is idle.",
@@ -297,6 +298,7 @@ export default {
       idle_screen: "Idle Screen",
       name: "Name",
       hidden_controls: "Hidden Controls",
+      hide_remote_buttons: "Hidden Remote Buttons",
       ma_template: "Music Assistant Entity Template (Jinja)",
       hidden_chips: "Hidden Search Filter Chips",
       vol_template: "Volume Entity Template (Jinja)",
@@ -331,6 +333,7 @@ export default {
       sync_selected_entity: "Sync Selected Entity",
       select_entity: "Select Entity from Helper",
       toggle_lyrics: "Toggle Lyrics Overlay",
+      remote_control: "Open Remote Controls Overlay",
     },
     action_helpers: {
       sync_selected_entity: "Sync Selected Entity →",
@@ -410,6 +413,7 @@ export default {
       more_info: "More Info",
       search: "Search",
       source: "Source",
+      remote_controls: "Remote Control",
       show_lyrics: "Show Lyrics",
       hide_lyrics: "Hide Lyrics",
       transfer_queue: "Transfer Queue",
@@ -418,6 +422,18 @@ export default {
       select_entity: "Select Entity for More Info",
       transfer_to: "Transfer Queue To",
       no_players: "No other Music Assistant players available.",
+    },
+    remote: {
+      title: "Remote Control",
+      up: "Up",
+      down: "Down",
+      left: "Left",
+      right: "Right",
+      select: "Select",
+      back: "Back",
+      menu: "Menu",
+      home: "Home",
+      power: "Power",
     },
     grouping: {
       title: "Group Players",
