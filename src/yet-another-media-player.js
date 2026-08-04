@@ -6090,6 +6090,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('hidden_controls', currentContext);
+    if (changedProps.has("_selectedIndex")) {
+      this._lastMediaTitle = null;
+      this._searchResultsByType = {};
+      if (this._upcomingFilterActive) {
+        this._searchResults = [];
+        this._refreshQueue({ delayMs: 50 });
+      }
+    }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
@@ -6124,9 +6132,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           const currentState = this.hass.states[metadataEntityId];
           const currentMediaTitle = currentState?.attributes?.media_title;
           if (currentMediaTitle && currentMediaTitle !== this._lastMediaTitle) {
+            const isEntitySwitch = changedProps.has("_selectedIndex");
             this._lastMediaTitle = currentMediaTitle;
             // Shift UI immediately if we're looking at the queue and haven't already
-            if (this._upcomingFilterActive) {
+            if (this._upcomingFilterActive && !isEntitySwitch) {
               // Check if we already advanced the UI manually (indicated by _latestManualShiftTime)
               const now = Date.now();
               // Increase tolerance to 4s to handle slow HA updates
