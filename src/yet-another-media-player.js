@@ -717,6 +717,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
       if (this._cardType === "remote_control") {
         // Dedicated remote control mode
+        this._showEntityOptions = true;
         this._showRemoteControl = true;
         this._setIdleState(false);
         this.requestUpdate();
@@ -10249,12 +10250,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           pointer-events: none !important;
         }
       </style>
-      <div class="entity-options-header">
-        <button class="entity-options-item close-item" @click=${() => this._closeRemoteControl()}>
-          ${localize('common.back')}
-        </button>
-      </div>
-      <div class="entity-options-divider"></div>
+      ${this._cardType !== 'remote_control' ? html`
+        <div class="entity-options-header">
+          <button class="entity-options-item close-item" @click=${() => this._closeRemoteControl()}>
+            ${localize('common.back')}
+          </button>
+        </div>
+        <div class="entity-options-divider"></div>
+      ` : nothing}
       <div class="entity-options-scroll remote-control-container">
         <!-- D-Pad Directional Pad -->
         <div class="remote-dpad-wrapper">
