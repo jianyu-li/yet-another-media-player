@@ -125,6 +125,8 @@ export default {
         "Siempre contraído activa el modo mini. Expandir al buscar expande temporalmente.",
       idle_screen: "Elegir pantalla a mostrar en reposo.",
       hide_controls: "Seleccionar controles a ocultar.",
+      hide_remote_buttons:
+        "Seleccione botones para ocultar de la superposición del mando a distancia.",
       hide_search_chips: "Ocultar chips de filtro de búsqueda.",
       hide_active_entity_on_idle:
         "Oculta la etiqueta de la entidad en la parte inferior de la tarjeta solo cuando el reproductor está inactivo.",
@@ -256,6 +258,7 @@ export default {
       idle_screen: "Pantalla reposo",
       name: "Nombre",
       hidden_controls: "Controles ocultos",
+      hide_remote_buttons: "Botones del mando a distancia ocultos",
       ma_template: "Plantilla MA (Jinja)",
       hidden_chips: "Chips ocultos",
       vol_template: "Plantilla Volumen (Jinja)",

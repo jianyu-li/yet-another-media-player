@@ -271,6 +271,7 @@ export default {
       idle_screen: "Leerlauf-Bildschirm",
       name: "Name",
       hidden_controls: "Ausgeblendete Steuerungen",
+      hide_remote_buttons: "Ausgeblendete Fernbedienungstasten",
       ma_template: "Music Assistant Entitäts-Template (Jinja)",
       hidden_chips: "Ausgeblendete Suchfilter-Chips",
       vol_template: "Lautstärke-Entitäts-Template (Jinja)",

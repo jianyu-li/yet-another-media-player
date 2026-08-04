@@ -273,6 +273,7 @@ export default {
       idle_screen: "Obrazovka pri nečinnosti",
       name: "Názov",
       hidden_controls: "Skryté ovládacie prvky",
+      hide_remote_buttons: "Skryté tlačidlá diaľkového ovládania",
       ma_template: "Jinja šablóna pre Music Assistant",
       hidden_chips: "Skryté čipy filtrov hľadania",
       vol_template: "Jinja šablóna pre hlasitosť",

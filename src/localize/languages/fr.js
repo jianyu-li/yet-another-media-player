@@ -131,6 +131,7 @@ export default {
         "Toujours réduit crée un mini lecteur. Agrandir à la Recherche agrandit temporairement.",
       idle_screen: "Choisir l'écran à afficher automatiquement en veille.",
       hide_controls: "Sélectionner les commandes à masquer pour cette entité.",
+      hide_remote_buttons: "Sélectionnez les boutons à masquer de la télécommande.",
       hide_search_chips: "Masquer des jetons de filtrage spécifiques.",
       hide_active_entity_on_idle:
         "Masque l'étiquette de l'entité au bas de la carte uniquement lorsque le lecteur est en veille.",
@@ -262,6 +263,7 @@ export default {
       idle_screen: "Écran de veille",
       name: "Nom",
       hidden_controls: "Commandes masquées",
+      hide_remote_buttons: "Boutons de télécommande masqués",
       ma_template: "Modèle MA (Jinja)",
       hidden_chips: "Jetons masqués",
       vol_template: "Modèle Volume (Jinja)",

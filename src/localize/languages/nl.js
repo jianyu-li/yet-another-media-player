@@ -282,6 +282,7 @@ export default {
       idle_screen: "Inactief Scherm",
       name: "Naam",
       hidden_controls: "Verborgen Knoppen",
+      hide_remote_buttons: "Verborgen afstandsbediening knoppen",
       ma_template: "Music Assistant Entiteit Sjabloon (Jinja)",
       hidden_chips: "Verborgen Zoekfilterchips",
       vol_template: "Volume Entiteit Sjabloon (Jinja)",

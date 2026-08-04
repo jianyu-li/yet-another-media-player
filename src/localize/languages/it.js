@@ -124,6 +124,7 @@ export default {
         "Sempre contratto attiva il modo mini. Espandi alla ricerca espande temporaneamente.",
       idle_screen: "Scegli schermata da mostrare in riposo.",
       hide_controls: "Seleziona controlli da nascondere.",
+      hide_remote_buttons: "Seleziona i pulsanti da nascondere dal telecomando.",
       hide_search_chips: "Nascondi chip di filtro ricerca.",
       hide_active_entity_on_idle:
         "Nasconde l'etichetta dell'entità in fondo alla scheda solo quando il lettore è inattivo.",
@@ -255,6 +256,7 @@ export default {
       idle_screen: "Schermo riposo",
       name: "Nome",
       hidden_controls: "Controlli nascosti",
+      hide_remote_buttons: "Pulsanti del telecomando nascosti",
       ma_template: "Modello MA (Jinja)",
       hidden_chips: "Chip nascosti",
       vol_template: "Modello Volume (Jinja)",
