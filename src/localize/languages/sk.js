@@ -347,6 +347,8 @@ export default {
       default: "Predvolené",
       search: "Hľadať",
       group_players: "Zoskupiť prehrávače",
+      up_next: "Nasleduje",
+      remote_control: "Diaľkové ovládanie",
     },
     appearance_options: {
       automatic: "Automaticky",
@@ -394,6 +396,8 @@ export default {
       transfer_queue: "Presunúť frontu",
       main_menu: "Hlavné menu",
       group_players: "Zoskupiť prehrávače",
+      up_next: "Nasleduje",
+      remote_control: "Diaľkové ovládanie",
       select_entity: "Vyberte entitu pre viac info",
       transfer_to: "Presunúť frontu do",
       no_players: "Žiadne iné prehrávače Music Assistant nie sú k dispozícii.",

@@ -368,6 +368,8 @@ export default {
       default: "Default",
       search: "Search",
       group_players: "Group Players",
+      up_next: "Up Next",
+      remote_control: "Remote Control",
     },
     queue_controls_style_options: {
       drag_handle: "Drag Handle",

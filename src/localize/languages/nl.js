@@ -356,6 +356,8 @@ export default {
       default: "Standaard",
       search: "Zoeken",
       group_players: "Spelers groeperen",
+      up_next: "Hierna",
+      remote_control: "Afstandsbediening",
     },
     appearance_options: {
       automatic: "Automatisch",
@@ -403,6 +405,8 @@ export default {
       transfer_queue: "Wachtrij Overdragen",
       main_menu: "Hoofdmenu",
       group_players: "Spelers Groeperen",
+      up_next: "Hierna",
+      remote_control: "Afstandsbediening",
       select_entity: "Selecteer Entiteit voor Meer Info",
       transfer_to: "Wachtrij Overdragen Naar",
       no_players: "Geen andere Music Assistant spelers beschikbaar.",

@@ -331,6 +331,8 @@ export default {
       default: "Padrão",
       search: "Procurar",
       group_players: "Agrupar",
+      up_next: "A seguir",
+      remote_control: "Controle Remoto",
     },
     appearance_options: {
       automatic: "Automático",
@@ -378,6 +380,8 @@ export default {
       transfer_queue: "Transferir fila",
       main_menu: "Menu Principal",
       group_players: "Agrupar",
+      up_next: "A seguir",
+      remote_control: "Controle Remoto",
       select_entity: "Selecionar",
       transfer_to: "Transferir para",
       no_players: "Sem leitores MA.",

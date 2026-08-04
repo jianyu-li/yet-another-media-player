@@ -707,6 +707,22 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this.requestUpdate();
         return;
       }
+      if (this._cardType === "up_next") {
+        // Dedicated up next mode: auto-open search filtered to up next
+        this._showEntityOptions = true;
+        this._setIdleState(false);
+        this._showSearchSheetInOptions("next-up");
+        this.requestUpdate();
+        return;
+      }
+      if (this._cardType === "remote_control") {
+        // Dedicated remote control mode
+        this._showEntityOptions = true;
+        this._showRemoteControl = true;
+        this._setIdleState(false);
+        this.requestUpdate();
+        return;
+      }
       if (this._cardType === "group_players") {
         // Dedicated group players mode: auto-open grouping as the primary view
         this._showEntityOptions = true;
@@ -1534,7 +1550,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _hideSearchSheetInOptions() {
     // In dedicated search mode, never close the search
-    if (this._cardType === "search") return;
+    if (this._cardType === "search" || this._cardType === "up_next") return;
     this._showSearchInSheet = false;
     this._searchError = "";
     this._searchResults = [];
@@ -5542,7 +5558,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
       return html`
         <div class="entity-options-header">
-          ${this._cardType !== "group_players" ? html`
+          ${this._cardType !== "group_players" && this._cardType !== "remote_control" ? html`
             <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
               ${localize('common.back')}
             </button>
@@ -5570,7 +5586,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     return html`
       <div class="entity-options-header grouping-header group-list-header">
-        ${this._cardType !== "group_players" ? html`
+        ${this._cardType !== "group_players" && this._cardType !== "remote_control" ? html`
           <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
             ${localize('common.back')}
           </button>
@@ -6075,6 +6091,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('hidden_controls', currentContext);
+    if (changedProps.has("_selectedIndex")) {
+      this._lastMediaTitle = null;
+      this._searchResultsByType = {};
+      if (this._upcomingFilterActive) {
+        this._searchResults = [];
+        this._refreshQueue({ delayMs: 50 });
+      }
+    }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
@@ -6109,9 +6133,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           const currentState = this.hass.states[metadataEntityId];
           const currentMediaTitle = currentState?.attributes?.media_title;
           if (currentMediaTitle && currentMediaTitle !== this._lastMediaTitle) {
+            const isEntitySwitch = changedProps.has("_selectedIndex");
             this._lastMediaTitle = currentMediaTitle;
             // Shift UI immediately if we're looking at the queue and haven't already
-            if (this._upcomingFilterActive) {
+            if (this._upcomingFilterActive && !isEntitySwitch) {
               // Check if we already advanced the UI manually (indicated by _latestManualShiftTime)
               const now = Date.now();
               // Increase tolerance to 4s to handle slow HA updates
@@ -8430,11 +8455,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             ` : nothing}
               ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue && !this._showRemoteControl) ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) :
           this._showRemoteControl ? this._renderRemoteControlSheet() :
-          this._showGrouping ? this._renderGroupingSheet() :
-            this._showTransferQueue ? this._renderTransferQueueSheet() :
-              this._showResolvedEntities ? this._renderResolvedEntitiesSheet() :
-                this._showSearchInSheet ? this._renderSearchInOptions(showSearchHeaders, effectivePinHeaders) :
-                  this._renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters)}
+            this._showGrouping ? this._renderGroupingSheet() :
+              this._showTransferQueue ? this._renderTransferQueueSheet() :
+                this._showResolvedEntities ? this._renderResolvedEntitiesSheet() :
+                  this._showSearchInSheet ? this._renderSearchInOptions(showSearchHeaders, effectivePinHeaders) :
+                    this._renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters)}
               </div>
             </div>
             <!-- Persistent Media Controls Section - Outside Scrollable Area -->
@@ -8722,6 +8747,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return html`
       <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
         <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
+          ${this._cardType !== 'up_next' ? html`
           <button
             class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
             style="
@@ -8737,8 +8763,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               opacity: ${this._searchAttempted ? '1' : '0.5'};
             "
             @click=${this._searchAttempted ? () => {
-        this._toggleFavoritesFilter();
-      } : () => { }}
+          this._toggleFavoritesFilter();
+        } : () => { }}
             title="${localize('search.favorites')}"
           >
             <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
@@ -8763,8 +8789,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               opacity: ${this._searchAttempted ? '1' : '0.5'};
             "
             @click=${this._searchAttempted ? () => {
-        this._toggleRecentlyPlayedFilter();
-      } : () => { }}
+          this._toggleRecentlyPlayedFilter();
+        } : () => { }}
             title="${localize('search.recently_played')}"
           >
             <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
@@ -8790,8 +8816,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 opacity: ${this._searchAttempted ? '1' : '0.5'};
               "
               @click=${this._searchAttempted ? () => {
-          this._toggleUpcomingFilter();
-        } : () => { }}
+            this._toggleUpcomingFilter();
+          } : () => { }}
               title="${localize('search.next_up')}"
             >
               <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
@@ -8817,8 +8843,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                   opacity: ${this._searchAttempted ? '1' : '0.5'};
                 "
                 @click=${this._searchAttempted ? () => {
-            this._toggleRecommendationsFilter();
-          } : () => { }}
+              this._toggleRecommendationsFilter();
+            } : () => { }}
                 title="${localize('search.recommendations')}"
               >
                 <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:creation' : 'mdi:creation-outline'}></ha-icon>
@@ -8858,8 +8884,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
             </button>
           ` : nothing}
+          ` : nothing}
           ${this._shouldShowSearchResultsCount() ? html`
-            <span class="search-results-count">
+            <span class="search-results-count" style="${this._cardType === 'up_next' ? 'padding-top: 15px; display: inline-block;' : ''}">
               ${this._getSearchResultsCountLabel()}
             </span>
           ` : nothing}
@@ -8870,7 +8897,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _renderSearchInOptions(showSearchHeaders, pinSearchHeaders = false) {
     return html`
-      <div class="entity-options-search" style="margin-top:12px;">
+      <div class="entity-options-search" style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
         ${this._searchHierarchy.length > 0 ? html`
             <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
               ${localize('common.back')}
@@ -8887,9 +8914,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 </button>
               ` : nothing}
             </div>
-          ` : (showSearchHeaders ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
+          ` : (showSearchHeaders && this._cardType !== 'up_next' ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
       }
-        ${showSearchHeaders ? html`
+        ${showSearchHeaders && this._cardType !== 'up_next' ? html`
           <div class="entity-options-search-row">
             <div class="search-input-wrapper">
               <input
@@ -8926,7 +8953,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               ?disabled=${this._searchLoading}>
               <ha-icon icon="mdi:magnify"></ha-icon>
             </button>
-            ${this._cardType !== "search" ? html`
+            ${this._cardType !== "search" && this._cardType !== "up_next" ? html`
             <button
               class="entity-options-item icon-only"
               style="min-width:48px; padding: 0;"
@@ -8939,7 +8966,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           </div>
         ` : nothing}
         <!--FILTER CHIPS-->
-        ${showSearchHeaders ? (() => {
+        ${showSearchHeaders && this._cardType !== 'up_next' ? (() => {
         const classes = this._getVisibleSearchFilterClasses();
         const filter = this._searchMediaClassFilter || "all";
 
@@ -9217,7 +9244,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _handleIdleTimeoutCallback() {
     // In search card mode: reset drill-down instead of going idle
-    if (this._cardType === "search") {
+    if (this._cardType === "search" || this._cardType === "up_next") {
       this._idleTimeout = null;
       if (this._searchHierarchy.length > 0) {
         this._searchHierarchy = [];
@@ -9760,7 +9787,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   // Helper method for immediate dismissals with animation
   _dismissWithAnimation() {
     // In dedicated search mode, don't dismiss the search — just close other menus
-    if (this._cardType === "search") {
+    if (this._cardType === "search" || this._cardType === "up_next") {
       this._showGrouping = false;
       this._showSourceList = false;
       this._showResolvedEntities = false;
@@ -9803,7 +9830,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
     // In dedicated search mode, don't close the entity options / search
-    if (this._cardType === "search") {
+    if (this._cardType === "search" || this._cardType === "up_next") {
       // Just close any sub-menus that might be open
       this._showGrouping = false;
       this._showSourceList = false;
@@ -9846,7 +9873,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._showSourceList = false;
         this._showSearchInSheet = false;
         this._showResolvedEntities = false;
-        this._showRemoteControl = false;
+        if (this._cardType !== "remote_control") {
+          this._showRemoteControl = false;
+        }
         this._searchInputAutoFocused = false;
         this._searchHierarchy = [];
         this._searchBreadcrumb = "";
@@ -10027,6 +10056,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _closeRemoteControl() {
+    if (this._cardType === "remote_control") return;
     this._showRemoteControl = false;
     this.requestUpdate();
   }
@@ -10035,11 +10065,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const idx = this._selectedIndex;
     const obj = (this.entityObjs || [])[idx];
     let raw = obj?.hide_remote_buttons ?? this.config.hide_remote_buttons;
-    
+
     if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.includes("[[["))) {
-       raw = resolveStringTemplateSync(this.hass, raw);
+      raw = resolveStringTemplateSync(this.hass, raw);
     }
-    
+
     if (typeof raw === "string") {
       try {
         raw = JSON.parse(raw.replace(/'/g, '"'));
@@ -10220,12 +10250,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           pointer-events: none !important;
         }
       </style>
-      <div class="entity-options-header">
-        <button class="entity-options-item close-item" @click=${() => this._closeRemoteControl()}>
-          ${localize('common.back')}
-        </button>
-      </div>
-      <div class="entity-options-divider"></div>
+      ${this._cardType !== 'remote_control' ? html`
+        <div class="entity-options-header">
+          <button class="entity-options-item close-item" @click=${() => this._closeRemoteControl()}>
+            ${localize('common.back')}
+          </button>
+        </div>
+        <div class="entity-options-divider"></div>
+      ` : nothing}
       <div class="entity-options-scroll remote-control-container">
         <!-- D-Pad Directional Pad -->
         <div class="remote-dpad-wrapper">

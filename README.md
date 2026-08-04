@@ -49,7 +49,7 @@ Below you will find a list of all configuration options.
 |----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
 | **Entities**               |              |              |             |                                                                                                 |
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
-| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for the standard player, `search` for a dedicated search card, or `group_players` for a dedicated group management card |
+| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for standard player, `search` for search card, `group_players` for group management, `up_next` for upcoming queue, or `remote_control` for remote pad |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Templates](#template-support)) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
@@ -585,6 +585,14 @@ Set `card_type: group_players` to lock YAMP to the group players menu.
 **Dedicated Mode Behavior:**
 - **Permanent View**: The Group Players menu is always visible as the primary view.
 - **Auto-Sync**: Quickly join or unjoin players and adjust individual volumes from a single, persistent screen.
+
+### Dedicated Up Next Mode
+
+Set `card_type: up_next` to turn YAMP into a permanent upcoming tracks queue card.
+
+### Dedicated Remote Control Mode
+
+Set `card_type: remote_control` to lock YAMP to the remote control pad.
 
 # Look and Feel
 
