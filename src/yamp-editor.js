@@ -3956,25 +3956,27 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             select: {
                               mode: "dropdown",
                               options: [
-                                { value: "chip", label: localize("editor.placements.chip") },
-                                { value: "menu", label: localize("editor.placements.menu") },
-                                { value: "hidden", label: localize("editor.placements.hidden") },
+                                { value: "chip", label: localize("editor.placements.chip") || "Action Chip" },
+                                { value: "menu", label: localize("editor.placements.menu") || "In Menu" },
+                                { value: "hidden", label: localize("editor.placements.hidden") || "Hidden (Artwork Tap)" },
+                                { value: "bottom_1", label: localize("editor.placements.bottom_1") || "Bottom 1 (Left)" },
+                                { value: "bottom_2", label: localize("editor.placements.bottom_2") || "Bottom 2 (Mute)" },
+                                { value: "bottom_3", label: localize("editor.placements.bottom_3") || "Bottom 3 (Right)" },
                               ],
                             },
                           }}
                           .value=${
-                            action?.in_menu === "hidden"
-                              ? "hidden"
-                              : action?.in_menu
-                                ? "menu"
-                                : "chip"
+                            action?.placement !== undefined
+                              ? action.placement
+                              : action?.in_menu === "hidden"
+                                ? "hidden"
+                                : action?.in_menu
+                                  ? "menu"
+                                  : "chip"
                           }
                           @value-changed=${(e) => {
                             const val = e.detail.value;
-                            let inMenu = false;
-                            if (val === "menu") inMenu = true;
-                            else if (val === "hidden") inMenu = "hidden";
-                            const updates = { in_menu: inMenu };
+                            const updates = { placement: val };
                             if (val !== "hidden") {
                               updates.card_trigger = "none";
                             }
@@ -3984,10 +3986,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       </div>
                       <div class="field-actions">
                         ${this._renderTemplateToggle(
-                          "in_menu",
-                          action?.in_menu,
+                          "placement",
+                          action?.placement !== undefined ? action.placement : action?.in_menu,
                           (v) => {
-                            const updates = { in_menu: v };
+                            const updates = { placement: v };
                             if (v !== "hidden") {
                               updates.card_trigger = "none";
                             }
@@ -4004,7 +4006,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-selector
               .hass=${this.hass}
               label="${localize("editor.fields.card_trigger")}"
-              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || (!this._isTemplateValue(action?.in_menu) && action?.in_menu !== "hidden")}
+              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || (!this._isTemplateValue(action?.placement !== undefined ? action?.placement : action?.in_menu) && (action?.placement !== undefined ? action?.placement : action?.in_menu) !== "hidden")}
               .selector=${{
                 select: {
                   mode: "dropdown",
@@ -4481,7 +4483,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _getActionHelperText(act) {
     const inMenuVal = act?.in_menu;
-    const placement = inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip";
+    const placement = act?.placement !== undefined ? act.placement : (inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip");
     const trigger = act?.card_trigger;
     let placementText = "";
     if (placement === "menu") placementText = " \u2022 In Menu";
@@ -4489,11 +4491,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       if (act?.action !== "sync_selected_entity" && act?.action !== "select_entity") {
         if (!trigger || trigger === "none") {
           placementText = ` \u2022 ${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`;
-        } else {
-          placementText = ` \u2022 ${localize("editor.placements.hidden")}`;
         }
+      } else {
+        placementText = ` \u2022 ${localize("editor.placements.hidden")}`;
       }
-    }
+    } else if (placement === "bottom_1") placementText = " \u2022 Bottom 1 (Left)";
+    else if (placement === "bottom_2") placementText = " \u2022 Bottom 2 (Mute)";
+    else if (placement === "bottom_3") placementText = " \u2022 Bottom 3 (Right)";
+    
+    let subActionText = "";
+    if (act?.action === "sync_selected_entity") subActionText = ` \u2022 ${localize("editor.action_types.sync_selected_entity")}`;
     let triggerText = "";
     if (trigger && trigger !== "none") {
       triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;

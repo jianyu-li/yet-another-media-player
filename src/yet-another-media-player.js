@@ -7747,8 +7747,32 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const powerSupported = !currentHiddenControls.power && (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON));
     const showModernPowerButton = this._controlLayout === "modern" && powerSupported;
     const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
+    const bottom1Action = visibleActions.find(({ action, idx }) => getPlacement(action, idx) === "bottom_1");
+    const bottom2Action = visibleActions.find(({ action, idx }) => getPlacement(action, idx) === "bottom_2");
+    const bottom3Action = visibleActions.find(({ action, idx }) => getPlacement(action, idx) === "bottom_3");
+
+    const renderCustomBottomAction = ({ action, idx }) => {
+      if (!action) return nothing;
+      const label = this._getActionLabel(action);
+      let iconColor = action.icon_color || "";
+      if (typeof iconColor === "string" && (iconColor.includes("{{") || iconColor.includes("{%") || iconColor.trim().startsWith("[[["))) {
+        iconColor = resolveStringTemplateSync(this.hass, iconColor, this._getTemplateContext()) || "";
+      }
+      return html`
+        <button
+          class="volume-icon-btn favorite-volume-btn custom-bottom-action"
+          @click=${(e) => { e.stopPropagation(); this._onActionChipClick(idx); }}
+          title="${label}"
+        >
+          <ha-icon style=${iconColor ? `color: ${iconColor};` : nothing} .icon=${action.icon || "mdi:rhombus-outline"}></ha-icon>
+        </button>
+      `;
+    };
+
     let leadingVolumeControl = nothing;
-    if (showModernPowerButton) {
+    if (bottom1Action) {
+      leadingVolumeControl = renderCustomBottomAction(bottom1Action);
+    } else if (showModernPowerButton) {
       leadingVolumeControl = html`
           <button
             class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
@@ -7769,7 +7793,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           </button>
         `;
     }
-    const rightSlotTemplate = showModernFavoriteButton ? html`
+
+    let rightSlotTemplate = nothing;
+    if (bottom3Action) {
+      rightSlotTemplate = renderCustomBottomAction(bottom3Action);
+    } else if (showModernFavoriteButton) {
+      rightSlotTemplate = html`
         <button
           class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
           @click=${() => this._onControlClick("favorite")}
@@ -7780,7 +7809,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}
           ></ha-icon>
         </button>
-      ` : nothing;
+      `;
+    }
+
+    let muteSlotTemplate = nothing;
+    if (bottom2Action) {
+      muteSlotTemplate = renderCustomBottomAction(bottom2Action);
+    }
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -8454,6 +8489,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         reserveLeadingControlSpace: this._controlLayout === "modern",
         showRightPlaceholder: this._controlLayout === "modern",
         rightSlotTemplate: shouldHideVolumeControls ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
+        muteSlotTemplate: shouldHideVolumeControls ? (muteSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${muteSlotTemplate}</div>` : nothing) : muteSlotTemplate,
         hideVolume: isVolumeHidden,
         collapseRow: volumeRowWillCollapse,
         moreInfoMenu: (!this._showEntityOptions && !isCompactVolume) ? html`
