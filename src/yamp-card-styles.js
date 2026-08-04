@@ -4415,5 +4415,4 @@ export const lyricsStyles = css`
   .queue-play-next-dropzone ha-icon {
     color: var(--custom-accent, var(--accent-color, #ff9800));
   }
-
 `;
