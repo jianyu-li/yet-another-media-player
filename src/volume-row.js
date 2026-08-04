@@ -20,6 +20,7 @@ export function renderVolumeRow({
   showRightPlaceholder = false,
   rightSlotTemplate = nothing,
   hideVolume = false,
+  collapseRow = undefined,
   isDragging = false,
   dragVol = 0,
 }) {
@@ -37,14 +38,18 @@ export function renderVolumeRow({
     return "mdi:volume-high";
   };
 
+  const shouldCollapse =
+    typeof collapseRow === "boolean"
+      ? collapseRow
+      : hideVolume &&
+        moreInfoMenu === nothing &&
+        !hasLeadingControl &&
+        !showRightPlaceholder;
+
   return html`
     <div
       class="volume-row ${showSlider && !isRemoteVolumeEntity ? "has-slider" : ""}"
-      style="${
-        hideVolume && moreInfoMenu === nothing && !hasLeadingControl && !showRightPlaceholder
-          ? "display: none !important;"
-          : ""
-      }"
+      style="${shouldCollapse ? "display: none !important;" : ""}"
     >
       <div class="volume-left">
         ${

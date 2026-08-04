@@ -32,14 +32,17 @@ export function renderControlsRow({
   // documentation in the "Available Control Names" section should be updated.
 
   const normalizedLayout = controlLayout === "modern" ? "modern" : "classic";
+  const isIdleOrInactiveState = !stateObj || stateObj.state !== "playing";
 
-  let showPrevious = !hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK);
-  let showPlayPause =
-    !hiddenControls.play_pause &&
-    (supportsFeature(stateObj, SUPPORT_PAUSE) || supportsFeature(stateObj, SUPPORT_PLAY));
+  let showPrevious =
+    !hiddenControls.previous &&
+    (supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) || isIdleOrInactiveState);
+  let showPlayPause = !hiddenControls.play_pause;
   const canShowStop = !hiddenControls.stop && showStop;
   let showStopButton = canShowStop;
-  let showNext = !hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK);
+  let showNext =
+    !hiddenControls.next &&
+    (supportsFeature(stateObj, SUPPORT_NEXT_TRACK) || isIdleOrInactiveState);
   let showShuffleButton = !hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE);
   let showRepeatButton = !hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET);
   let showFavoriteButton = !hiddenControls.favorite && showFavorite;
@@ -308,12 +311,19 @@ export function countMainControls(
   controlLayout = "classic"
 ) {
   const normalizedLayout = controlLayout === "modern" ? "modern" : "classic";
+  const isIdleOrInactiveState =
+    !stateObj ||
+    stateObj.state === "idle" ||
+    stateObj.state === "paused" ||
+    stateObj.state === "off" ||
+    stateObj.state === "standby" ||
+    stateObj.state === "unavailable";
 
   let count = 0;
-  if (!hiddenControls.previous && supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK)) count++;
+  if (!hiddenControls.previous && (supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) || isIdleOrInactiveState)) count++;
   if (!hiddenControls.play_pause) count++; // play/pause button always present if row exists
   if (normalizedLayout !== "modern" && !hiddenControls.stop && showStop) count++;
-  if (!hiddenControls.next && supportsFeature(stateObj, SUPPORT_NEXT_TRACK)) count++;
+  if (!hiddenControls.next && (supportsFeature(stateObj, SUPPORT_NEXT_TRACK) || isIdleOrInactiveState)) count++;
   if (!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
   if (!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
   if (normalizedLayout !== "modern" && !hiddenControls.favorite && showFavorite) count++; // favorite button
