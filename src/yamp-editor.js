@@ -657,12 +657,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _updateEntityProperty(key, value) {
-    const entities = [...(this._config.entities ?? [])];
-    const idx = this._tempEntityIndex !== null ? this._tempEntityIndex : this._entityEditorIndex;
-    if (entities[idx]) {
-      entities[idx] = { ...entities[idx], [key]: value };
-      this._updateConfig("entities", entities);
-    }
+    this._updateEntityProperties({ [key]: value });
   }
 
   _updateEntityProperties(properties) {
@@ -675,28 +670,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _updateActionProperty(key, value) {
-    const actions = [...(this._config.actions ?? [])];
-    const idx = this._tempActionIndex !== null ? this._tempActionIndex : this._actionEditorIndex;
-    if (actions[idx]) {
-      // Enforce single trigger per gesture (Tap, Hold, Double Tap)
-      if (key === "card_trigger" && value && value !== "none") {
-        actions.forEach((act, i) => {
-          if (i !== idx && act.card_trigger === value) {
-            actions[i] = { ...act, card_trigger: "none" };
-          }
-        });
-      }
-
-      const newAction = { ...actions[idx], [key]: value };
-
-      // If we're setting in_menu, remove the legacy placement property
-      if (key === "in_menu") {
-        delete newAction.placement;
-      }
-
-      actions[idx] = newAction;
-      this._updateConfig("actions", actions);
-    }
+    this._updateActionProperties({ [key]: value });
   }
 
   _updateActionProperties(properties) {
@@ -3868,10 +3842,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           "in_menu",
                           action?.in_menu,
                           (v) => {
-                            this._updateActionProperty("in_menu", v);
+                            const updates = { in_menu: v };
                             if (v !== "hidden") {
-                              this._updateActionProperty("card_trigger", "none");
+                              updates.card_trigger = "none";
                             }
+                            this._updateActionProperties(updates);
                           },
                           actionMode === "sync_selected_entity" || actionMode === "select_entity"
                         )}
@@ -3907,10 +3882,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             let inMenu = false;
                             if (val === "menu") inMenu = true;
                             else if (val === "hidden") inMenu = "hidden";
-                            this._updateActionProperty("in_menu", inMenu);
+                            const updates = { in_menu: inMenu };
                             if (val !== "hidden") {
-                              this._updateActionProperty("card_trigger", "none");
+                              updates.card_trigger = "none";
                             }
+                            this._updateActionProperties(updates);
                           }}
                         ></ha-selector>
                       </div>
@@ -3919,10 +3895,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           "in_menu",
                           action?.in_menu,
                           (v) => {
-                            this._updateActionProperty("in_menu", v);
+                            const updates = { in_menu: v };
                             if (v !== "hidden") {
-                              this._updateActionProperty("card_trigger", "none");
+                              updates.card_trigger = "none";
                             }
+                            this._updateActionProperties(updates);
                           },
                           actionMode === "sync_selected_entity" || actionMode === "select_entity"
                         )}
@@ -4011,72 +3988,89 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               const mode = e.detail.value;
               this._actionMode = mode;
               if (mode === "service") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", undefined);
-                // Initialize service to empty string so Service Data editor renders immediately
+                const updates = {
+                  menu_item: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: undefined,
+                };
                 if (!this._config.actions?.[this._actionEditorIndex]?.service) {
-                  this._updateActionProperty("service", "");
+                  updates.service = "";
                 }
+                this._updateActionProperties(updates);
               } else if (mode === "menu") {
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", undefined);
+                this._updateActionProperties({
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: undefined,
+                });
               } else if (mode === "navigate") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("action", "navigate");
+                const updates = {
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  action: "navigate",
+                };
                 if (!action?.navigation_path) {
-                  this._updateActionProperty("navigation_path", "");
+                  updates.navigation_path = "";
                 }
+                this._updateActionProperties(updates);
               } else if (mode === "sync_selected_entity") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", "sync_selected_entity");
-                this._updateActionProperty("in_menu", "hidden");
-                this._updateActionProperty("card_trigger", "none");
+                const updates = {
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: "sync_selected_entity",
+                  in_menu: "hidden",
+                  card_trigger: "none",
+                };
                 if (!action?.sync_entity_type) {
-                  this._updateActionProperty("sync_entity_type", "yamp_entity");
+                  updates.sync_entity_type = "yamp_entity";
                 }
+                this._updateActionProperties(updates);
               } else if (mode === "select_entity") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", "select_entity");
-                this._updateActionProperty("in_menu", "hidden");
-                this._updateActionProperty("card_trigger", "none");
+                const updates = {
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: "select_entity",
+                  in_menu: "hidden",
+                  card_trigger: "none",
+                };
                 if (!action?.sync_entity_type) {
-                  this._updateActionProperty("sync_entity_type", "yamp_entity");
+                  updates.sync_entity_type = "yamp_entity";
                 }
+                this._updateActionProperties(updates);
               } else if (mode === "prev_entity" || mode === "next_entity") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", mode);
+                this._updateActionProperties({
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: mode,
+                });
               } else if (mode === "toggle_lyrics" || mode === "remote_control") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", mode);
+                this._updateActionProperties({
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: mode,
+                });
               }
             }}
           ></ha-selector>
@@ -4135,8 +4129,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 label="${localize("editor.fields.nav_path")}"
                                 .value=${action?.navigation_path ?? ""}
                                 @value-changed=${(e) => {
-                                  this._updateActionProperty("navigation_path", e.detail.value);
-                                  this._updateActionProperty("action", "navigate");
+                                  this._updateActionProperties({
+                                    navigation_path: e.detail.value,
+                                    action: "navigate",
+                                  });
                                 }}
                               ></ha-code-editor>
                             </div>
@@ -4145,8 +4141,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 "navigation_path",
                                 action?.navigation_path,
                                 (v) => {
-                                  this._updateActionProperty("navigation_path", v);
-                                  this._updateActionProperty("action", "navigate");
+                                  this._updateActionProperties({
+                                    navigation_path: v,
+                                    action: "navigate",
+                                  });
                                 }
                               )}
                             </div>
@@ -4162,8 +4160,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 )} (/lovelace/music or #popup)"
                                 .value=${action?.navigation_path ?? ""}
                                 @value-changed=${(e) => {
-                                  this._updateActionProperty("navigation_path", e.detail.value);
-                                  this._updateActionProperty("action", "navigate");
+                                  this._updateActionProperties({
+                                    navigation_path: e.detail.value,
+                                    action: "navigate",
+                                  });
                                 }}
                               ></ha-selector>
                             </div>
@@ -4172,8 +4172,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 "navigation_path",
                                 action?.navigation_path,
                                 (v) => {
-                                  this._updateActionProperty("navigation_path", v);
-                                  this._updateActionProperty("action", "navigate");
+                                  this._updateActionProperties({
+                                    navigation_path: v,
+                                    action: "navigate",
+                                  });
                                 }
                               )}
                             </div>
