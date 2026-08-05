@@ -189,6 +189,8 @@ export default {
         "Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:",
       jinja_template_vol_hint:
         "Enter a Jinja template that resolves to an entity_id (e.g. media_player.office_homepod or remote.soundbar). Example switching volume entity based on a boolean:",
+      jinja_template_remote_hint:
+        "Enter a Jinja template that resolves to a remote entity_id (e.g. remote.living_room_tv):",
       not_available_alt_collapsed:
         "Not available with Alternate Progress Bar or Always Collapsed mode",
       not_available_collapsed: "Not available when Always Collapsed is enabled",
@@ -312,6 +314,8 @@ export default {
       match_entity: "Match Entity",
       ma_entity: "Music Assistant Entity",
       vol_entity: "Volume Entity",
+      remote_entity: "Remote Entity",
+      remote_template: "Remote Entity Template (Jinja)",
       selected_entity_helper: "Selected Entity Helper",
       sync_entity_type: "Sync Entity Type",
       placement: "Placement",

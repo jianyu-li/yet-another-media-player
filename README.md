@@ -52,6 +52,7 @@ Below you will find a list of all configuration options.
 | `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for standard player, `search` for search card, `group_players` for group management, `up_next` for upcoming queue, or `remote_control` for remote pad |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Templates](#template-support)) |
+| `remote_entity`            | string       | No           | —           | Explicit remote entity for remote controls overlay ([Supports Templates](#template-support)) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
 | `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping ([Supports Templates](#template-support)) |
 | `prefer_ma_metadata`       | boolean      | No           | `false`     | Prioritize the Music Assistant entity for artwork and metadata resolution regardless of which device is playing |

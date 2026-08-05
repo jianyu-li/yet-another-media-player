@@ -3687,6 +3687,93 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             : nothing
         }
 
+        ${
+          entity
+            ? html`
+                <div class="form-row" data-search-keys="remote_entity">
+                  <div class="editor-field-wrapper">
+                    ${
+                      this._isTemplateMode("remote_entity", entity?.remote_entity)
+                        ? html`
+                            <div class="grow-children">
+                              <div
+                                class=${
+                                  this._yamlError && (entity?.remote_entity ?? "").trim() !== ""
+                                    ? "code-editor-wrapper error"
+                                    : "code-editor-wrapper"
+                                }
+                                style="width: 100%;"
+                              >
+                                <span class="form-label"
+                                  >${localize("editor.fields.remote_template")}</span
+                                >
+                                <ha-code-editor
+                                  lint
+                                  id="remote-template-editor"
+                                  label="${localize("editor.fields.remote_template")}"
+                                  .hass=${this.hass}
+                                  mode="jinja2"
+                                  autocomplete-entities
+                                  .value=${typeof entity?.remote_entity === "string" ? entity.remote_entity : ""}
+                                  @value-changed=${(e) =>
+                                    this._updateEntityProperty("remote_entity", e.detail.value)}
+                                ></ha-code-editor>
+                                <div class="help-text">
+                                  <ha-icon icon="mdi:information-outline"></ha-icon>
+                                  ${localize("editor.subtitles.jinja_template_remote_hint")}
+                                  <pre style="margin:6px 0; white-space:pre-wrap;">
+{% if is_state('input_boolean.living_room_tv','on') %}
+  remote.living_room_tv
+{% else %}
+  remote.bedroom_tv
+{% endif %}</pre>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="field-actions">
+                              ${this._renderTemplateToggle(
+                                "remote_entity",
+                                entity?.remote_entity,
+                                (v) => this._updateEntityProperty("remote_entity", v)
+                              )}
+                            </div>
+                          `
+                        : html`
+                            <div class="grow-children">
+                              <ha-generic-picker
+                                .hass=${this.hass}
+                                .value=${
+                                  this._isEntityId(entity?.remote_entity)
+                                    ? entity.remote_entity
+                                    : ""
+                                }
+                                .label=${localize("editor.fields.remote_entity")}
+                                .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                                .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                                .getItems=${this._getEntityItems(["remote"])}
+                                @value-changed=${(e) =>
+                                  this._updateEntityProperty(
+                                    "remote_entity",
+                                    e.detail.value || undefined
+                                  )}
+                                allow-custom-value
+                              ></ha-generic-picker>
+                            </div>
+                            <div class="field-actions">
+                              ${this._renderTemplateToggle(
+                                "remote_entity",
+                                entity?.remote_entity,
+                                (v) => this._updateEntityProperty("remote_entity", v)
+                              )}
+                            </div>
+                          `
+                    }
+                  </div>
+                </div>
+              `
+            : nothing
+        }
+
         ${html`
           <div class="form-row form-row-multi-column">
             <div>

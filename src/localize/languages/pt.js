@@ -145,6 +145,8 @@ export default {
       entity_current_hint: "Use 'entity_id: current' para o leitor atual.",
       jinja_template_hint: "Modelo Jinja para entity_id.",
       jinja_template_vol_hint: "Modelo para entidade volume.",
+      jinja_template_remote_hint:
+        "Modelo Jinja que resolve um entity_id de controlo remoto (ex. remote.sala_tv):",
       not_available_alt_collapsed: "Não disponível em modo contraído.",
       not_available_collapsed: "Não disponível se contraído.",
       only_available_collapsed: "Apenas disponível se contraído.",
@@ -271,6 +273,8 @@ export default {
       match_entity: "Entidade",
       ma_entity: "Entidade Music Assistant",
       vol_entity: "Entidade de volume",
+      remote_entity: "Entidade de controlo remoto",
+      remote_template: "Modelo de entidade remota (Jinja)",
       selected_entity_helper: "Helper de entidade selecionada",
       sync_entity_type: "Tipo de entidade a sincronizar",
       placement: "Posicionamento",

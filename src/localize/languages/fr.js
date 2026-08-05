@@ -152,6 +152,8 @@ export default {
       entity_current_hint: "Utilisez 'entity_id: current' pour cibler le lecteur actuel.",
       jinja_template_hint: "Entrez un modèle Jinja qui renvoie un entity_id.",
       jinja_template_vol_hint: "Modèle pour l'entité de volume.",
+      jinja_template_remote_hint:
+        "Modèle Jinja résolvant un entity_id de télécommande (ex. remote.salon_tv) :",
       not_available_alt_collapsed: "Non disponible en mode 'Toujours réduit'.",
       not_available_collapsed: "Non disponible si 'Toujours réduit' est activé.",
       only_available_collapsed: "Uniquement disponible si 'Toujours réduit' est activé.",
@@ -277,6 +279,8 @@ export default {
       match_entity: "Entité de correspondance",
       ma_entity: "Entité Music Assistant",
       vol_entity: "Entité de volume",
+      remote_entity: "Entité de télécommande",
+      remote_template: "Modèle d'entité de télécommande (Jinja)",
       selected_entity_helper: "Helper d'entité sélectionnée",
       sync_entity_type: "Type d'entité à synchroniser",
       placement: "Placement",
