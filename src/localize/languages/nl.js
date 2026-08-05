@@ -170,6 +170,8 @@ export default {
         "Voer een Jinja-sjabloon in dat resulteert in een enkele entity_id. Voorbeeld voor het wisselen van MA op basis van een bronselectie:",
       jinja_template_vol_hint:
         "Voer een Jinja-sjabloon in dat resulteert in een entity_id (bijv. media_player.kantoor). Voorbeeld voor het wisselen van volume-entiteit op basis van een boolean:",
+      jinja_template_remote_hint:
+        "Voer een Jinja-sjabloon in dat resulteert in een afstandsbediening entity_id (bijv. remote.woonkamer_tv):",
       not_available_alt_collapsed:
         "Niet beschikbaar met Alternatieve Voortgangsbalk of Altijd Ingeklapte modus",
       not_available_collapsed: "Niet beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
@@ -296,6 +298,8 @@ export default {
       match_entity: "Match Entiteit",
       ma_entity: "Music Assistant-entiteit",
       vol_entity: "Volume-entiteit",
+      remote_entity: "Afstandsbediening-entiteit",
+      remote_template: "Afstandsbediening entiteit template (Jinja)",
       selected_entity_helper: "Geselecteerde entiteitshelper",
       sync_entity_type: "Synchronisatie entiteitstype",
       placement: "Plaatsing",

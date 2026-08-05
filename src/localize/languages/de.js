@@ -159,6 +159,8 @@ export default {
         "'entity_id: current' verwenden, um den aktuell ausgewählten Mediaplayer anzusteuern.",
       jinja_template_hint: "Jinja-Template eingeben, das eine entity_id ergibt.",
       jinja_template_vol_hint: "Jinja-Template eingeben, das eine Lautstärke-entity_id ergibt.",
+      jinja_template_remote_hint:
+        "Jinja-Template eingeben, das eine Remote-entity_id ergibt (z.B. remote.wohnzimmer_tv):",
       not_available_alt_collapsed:
         "Nicht verfügbar mit alternativem Fortschrittsbalken oder im Modus 'Immer eingeklappt'.",
       not_available_collapsed: "Nicht verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
@@ -285,6 +287,8 @@ export default {
       match_entity: "Match-Entität",
       ma_entity: "Music Assistant Entität",
       vol_entity: "Lautstärke-Entität",
+      remote_entity: "Fernbedienungs-Entität",
+      remote_template: "Fernbedienungs-Entität Template (Jinja)",
       selected_entity_helper: "Ausgewählter Entitäts-Helper",
       sync_entity_type: "Synchronisierungs-Entitätstyp",
       placement: "Platzierung",

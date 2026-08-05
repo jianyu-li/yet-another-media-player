@@ -795,6 +795,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Cache resolved Volume entity per index (template or static)
     this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
     this._volResolveTtlMs = 7000; // Used for static caching now
+    this._remoteResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
+    this._remoteTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     // Track the last entity that was playing for better pause/resume behavior
     this._lastPlayingEntityId = null;
     // Control focus lock to prefer most-recently controlled entity in brief paused window
@@ -835,6 +837,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       currentCache = this._volTemplateValues[idx];
       templateVals = this._volTemplateValues;
       cache = this._volResolveCache;
+    } else if (type === 'remote') {
+      currentCache = this._remoteTemplateValues[idx];
+      templateVals = this._remoteTemplateValues;
+      cache = this._remoteResolveCache;
     } else if (type === 'action_in_menu') {
       currentCache = this._actionInMenuTemplateValues[idx];
       templateVals = this._actionInMenuTemplateValues;
@@ -890,7 +896,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const resolved = (msg.result || '').toString().trim();
         let isValid = false;
 
-        if (type === 'ma' || type === 'vol') {
+        if (type === 'ma' || type === 'vol' || type === 'remote') {
           isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
         } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'hidden_controls') {
           isValid = true; // Any string result is valid
@@ -902,7 +908,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           templateVals[idx].resolved = isValid ? resolved : null;
         }
 
-        if (type === 'ma' || type === 'vol') {
+        if (type === 'ma' || type === 'vol' || type === 'remote') {
           const currentCached = cache[idx]?.id;
           if (isValid && currentCached !== resolved) {
             cache[idx] = { id: resolved, ts: Date.now() };
@@ -1036,6 +1042,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     return this._ensureResolvedTemplateForIndex(idx, 'vol', obj.volume_entity, this._volResolveCache, this._volTemplateValues, { cacheStaticString: true });
+  }
+
+  async _ensureResolvedRemoteForIndex(idx) {
+    const obj = this.entityObjs?.[idx];
+    if (!obj) return;
+    return this._ensureResolvedTemplateForIndex(idx, 'remote', obj.remote_entity, this._remoteResolveCache, this._remoteTemplateValues, { cacheStaticString: true });
   }
 
   // Resolve and cache the hidden_controls array for a given chip index
@@ -1188,6 +1200,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._ensureResolvedMaForIndex(idx);
       } else if (typeKey === 'vol') {
         this._ensureResolvedVolForIndex(idx);
+      } else if (typeKey === 'remote') {
+        this._ensureResolvedRemoteForIndex(idx);
       } else if (typeKey === 'hidden_controls') {
         this._ensureResolvedHiddenControlsForIndex(idx);
       }
@@ -4659,6 +4673,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const entity_id = typeof e === "string" ? e : e.entity_id;
       const name = typeof e === "string" ? "" : (e.name || "");
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
+      const remote_entity = typeof e === "string" ? undefined : e.remote_entity;
       const music_assistant_entity = typeof e === "string" ? undefined : e.music_assistant_entity;
       const sync_power = typeof e === "string" ? false : !!e.sync_power;
       const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
@@ -4689,6 +4704,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         entity_id,
         name,
         volume_entity,
+        remote_entity,
         music_assistant_entity,
         sync_power,
         follow_active_volume,
@@ -4745,7 +4761,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (typeof entityTemplate === 'string' &&
       (entityTemplate.includes('{{') || entityTemplate.includes('{%') || entityTemplate.trim().startsWith('[[['))) {
       // For templates, use cached resolved entity
-      const cache = cacheType === 'vol' ? this._volResolveCache : this._maResolveCache;
+      const cache = cacheType === 'vol' ? this._volResolveCache : cacheType === 'remote' ? this._remoteResolveCache : this._maResolveCache;
       const cached = cache?.[idx]?.id;
       return cached || fallbackEntityId;
     }
@@ -6099,6 +6115,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
+    this._syncEntityTemplateSubscriptions('remote', currentContext);
     this._syncEntityTemplateSubscriptions('hidden_controls', currentContext);
     if (changedProps.has("_selectedIndex")) {
       this._lastMediaTitle = null;
@@ -9906,6 +9923,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     for (let i = 0; i < this.entityObjs.length; i++) {
       await this._ensureResolvedMaForIndex(i);
       await this._ensureResolvedVolForIndex(i);
+      await this._ensureResolvedRemoteForIndex(i);
       await this._ensureResolvedHiddenControlsForIndex(i);
     }
 
@@ -9955,7 +9973,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const obj = (this.entityObjs || [])[idx];
 
     if (obj?.remote_entity === false) return false;
-    if (obj?.remote_entity) return true;
+    if (obj?.remote_entity) {
+      const resolved = this._resolveEntity(obj.remote_entity, null, idx, 'remote') || resolveStringTemplateSync(this.hass, obj.remote_entity);
+      if (typeof resolved === "string" && resolved.trim() !== "") {
+        return true;
+      }
+    }
 
     const currentId = this.currentEntityId;
     if (!currentId) return false;
@@ -9978,8 +10001,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const obj = (this.entityObjs || [])[idx];
 
     if (obj?.remote_entity) {
-      const resolved = resolveStringTemplateSync(this.hass, obj.remote_entity);
-      if (resolved && typeof resolved === "string") return resolved;
+      const resolved = this._resolveEntity(obj.remote_entity, null, idx, 'remote') || resolveStringTemplateSync(this.hass, obj.remote_entity);
+      if (resolved && typeof resolved === "string" && resolved.trim() !== "") return resolved.trim();
     }
 
     const currentId = this.currentEntityId;

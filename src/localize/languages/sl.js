@@ -147,6 +147,8 @@ export default {
       entity_current_hint: "Uporabi entity_id: current za trenutno izbrano entiteto.",
       jinja_template_hint: "Vnesite Jinja predlogo, ki vrne en entity_id.",
       jinja_template_vol_hint: "Vnesite Jinja predlogo za entiteto glasnosti.",
+      jinja_template_remote_hint:
+        "Vnesite Jinja predlogo, ki vrne entity_id daljinskega upravljalnika (npr. remote.dnevna_soba_tv):",
       not_available_alt_collapsed: "Ni na voljo z alternativno vrstico napredka.",
       not_available_collapsed: "Ni na voljo v vedno skrčenem načinu.",
       only_available_collapsed: "Na voljo le v vedno skrčenem načinu.",
@@ -269,6 +271,8 @@ export default {
       match_entity: "Ujemajoča entiteta",
       ma_entity: "Entiteta Music Assistant",
       vol_entity: "Entiteta glasnosti",
+      remote_entity: "Entiteta daljinskega upravljalnika",
+      remote_template: "Predloga entitete daljinca (Jinja)",
       selected_entity_helper: "Pomočnik izbrane entitete",
       sync_entity_type: "Vrsta entitete za sinhronizacijo",
       placement: "Namestitev",

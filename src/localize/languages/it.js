@@ -145,6 +145,8 @@ export default {
       entity_current_hint: "Usa 'entity_id: current' per il lettore attuale.",
       jinja_template_hint: "Modello Jinja per entity_id.",
       jinja_template_vol_hint: "Modello per entità volume.",
+      jinja_template_remote_hint:
+        "Modello Jinja che restituisce un entity_id telecomando (es. remote.salotto_tv):",
       not_available_alt_collapsed: "Non disponibile in modo contratto.",
       not_available_collapsed: "Non disponibile se contratto.",
       only_available_collapsed: "Solo disponibile se contratto.",
@@ -270,6 +272,8 @@ export default {
       match_entity: "Entità",
       ma_entity: "Entità Music Assistant",
       vol_entity: "Entità di volume",
+      remote_entity: "Entità telecomando",
+      remote_template: "Template entità telecomando (Jinja)",
       selected_entity_helper: "Helper entità selezionata",
       sync_entity_type: "Tipo di entità da sincronizzare",
       placement: "Posizionamento",

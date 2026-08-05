@@ -162,6 +162,8 @@ export default {
         "Zadajte Jinja šablónu, ktorá vráti jedno entity_id. Príklad prepínania MA na základe výberu zdroja:",
       jinja_template_vol_hint:
         "Zadajte Jinja šablónu, ktorá vráti entity_id (napr. media_player.obyvacka). Príklad prepínania hlasitosti podľa stavu:",
+      jinja_template_remote_hint:
+        "Zadajte Jinja šablónu, ktorá vráti entity_id diaľkového ovládača (napr. remote.obyvacka_tv):",
       not_available_alt_collapsed:
         "Nedostupné s alternatívnym indikátorom priebehu alebo v režime Vždy zbalené.",
       not_available_collapsed: "Nedostupné, keď je zapnuté Vždy zbalené.",
@@ -287,6 +289,8 @@ export default {
       match_entity: "Entita pre zhodu",
       ma_entity: "Entita Music Assistant",
       vol_entity: "Entita hlasitosti",
+      remote_entity: "Entita diaľkového ovládača",
+      remote_template: "Šablóna entity diaľkového ovládača (Jinja)",
       selected_entity_helper: "Pomocník vybratej entity",
       sync_entity_type: "Typ entity na synchronizáciu",
       placement: "Umiestnenie",
