@@ -1,6 +1,6 @@
 {
   "name": "yet-another-media-player",
-  "version": "2026.9.0-beta.1",
+  "version": "2026.9.0-beta.2",
   "description": "Home Assistant media card for controlling multiple entities with customizable actions.",
   "main": "rollup.config.js",
   "type": "module",
