@@ -10020,8 +10020,27 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (obj?.remote_entity === false) return false;
 
+    if (obj?.remote_entity) {
+      const resolved = this._resolveEntity(obj.remote_entity, null, idx, 'remote') || resolveStringTemplateSync(this.hass, obj.remote_entity, this._getTemplateContext());
+      if (resolved && typeof resolved === "string" && resolved.trim() !== "") {
+        return true;
+      }
+    }
 
-    return !!this._getRemoteControlEntity();
+    const currentId = this.currentEntityId;
+    if (!currentId) return false;
+
+    if (currentId.startsWith("remote.")) return true;
+
+    if (currentId.startsWith("media_player.")) {
+      const name = currentId.replace("media_player.", "");
+      const candidate = `remote.${name}`;
+      if (this.hass?.states?.[candidate]) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   _getRemoteControlEntity() {
