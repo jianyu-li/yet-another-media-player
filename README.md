@@ -129,7 +129,7 @@ Below you will find a list of all configuration options.
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu` |
-| `in_menu`                  | choice       | No           | `false`     | Placement of the action: `false` (Action Chip), `true` (In Menu), or `hidden` (Hidden - only triggerable via card gestures) ([Supports Templates](#template-support)) |
+| `placement`                | choice       | No           | `chip`      | Placement of the action: `chip` (Action Chip), `menu` (In Menu), `hidden` (Hidden - only triggerable via gestures), `replace_search`, `replace_power`, `replace_mute`, or `replace_favorite` ([Supports Templates](#template-support)) |
 | `card_trigger`             | choice       | No           | `none`      | Assign action to a card-level gesture: `none`, `tap`, `hold`, `double_tap`, `swipe_left`, or `swipe_right` (only for `hidden` actions) |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 | `sync_entity_helper`       | string       | No           | —           | `input_text` entity to sync the currently selected entity to (used with `action: sync_selected_entity`) |

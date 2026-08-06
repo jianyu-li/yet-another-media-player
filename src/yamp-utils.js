@@ -658,3 +658,13 @@ export function isValidArtworkUrl(url) {
     return false;
   }
 }
+
+export function getActionPlacement(action, index) {
+  if (action?.placement !== undefined) {
+    return action.placement;
+  }
+  // Legacy fallback
+  if (action?.in_menu === "hidden") return "hidden";
+  if (action?.in_menu === true) return "menu";
+  return "chip";
+}

@@ -313,6 +313,10 @@ export default {
       chip: "Chip de acción",
       menu: "En el menú",
       hidden: "Oculto (Toque en el arte)",
+      replace_search: "Reemplazar Búsqueda",
+      replace_power: "Reemplazar Encendido",
+      replace_mute: "Reemplazar Silencio",
+      replace_favorite: "Reemplazar Favorito",
       not_triggerable: "No activable",
     },
     triggers: {

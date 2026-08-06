@@ -328,6 +328,10 @@ export default {
       chip: "Akčný čip",
       menu: "V menu",
       hidden: "Skryté (Ťuknutie na grafiku)",
+      replace_search: "Nahradiť Vyhľadávanie",
+      replace_power: "Nahradiť Napájanie",
+      replace_mute: "Nahradiť Stlmenie",
+      replace_favorite: "Nahradiť Obľúbené",
       not_triggerable: "Nespustiteľné",
     },
     triggers: {

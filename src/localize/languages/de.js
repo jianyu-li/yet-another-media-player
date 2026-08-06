@@ -326,6 +326,10 @@ export default {
       chip: "Aktions-Chip",
       menu: "Im Menü",
       hidden: "Ausgeblendet (Artwork-Tippen)",
+      replace_search: "Suche ersetzen",
+      replace_power: "Ein/Aus ersetzen",
+      replace_mute: "Stummschaltung ersetzen",
+      replace_favorite: "Favorit ersetzen",
       not_triggerable: "Nicht triggerbar",
     },
     triggers: {

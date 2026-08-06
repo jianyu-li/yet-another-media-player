@@ -311,6 +311,10 @@ export default {
       chip: "Chip d'azione",
       menu: "Nel menu",
       hidden: "Nascosto (Tocco sull'immagine)",
+      replace_search: "Sostituisci Ricerca",
+      replace_power: "Sostituisci Accensione",
+      replace_mute: "Sostituisci Muto",
+      replace_favorite: "Sostituisci Preferito",
       not_triggerable: "Non attivabile",
     },
     triggers: {

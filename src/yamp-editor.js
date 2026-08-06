@@ -3,7 +3,7 @@ import * as yaml from "js-yaml";
 import { localize } from "./localize/localize.js";
 
 import { SUPPORT_GROUPING, TEMPLATE_CONFIGS } from "./constants.js";
-import { isMusicAssistantEntity } from "./yamp-utils.js";
+import { isMusicAssistantEntity, getActionPlacement } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
@@ -688,9 +688,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
       const newAction = { ...actions[idx], ...properties };
 
-      // If we're setting in_menu, remove the legacy placement property
+      // If we're setting in_menu, remove the placement property
       if ("in_menu" in properties) {
         delete newAction.placement;
+      }
+
+      // If we're setting placement, remove the legacy in_menu property
+      if ("placement" in properties) {
+        delete newAction.in_menu;
       }
 
       actions[idx] = newAction;
@@ -3139,41 +3144,80 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         act?.action !== "sync_selected_entity" && act?.action !== "select_entity"
                           ? html`
                               <ha-icon
-                                class="icon-button icon-button-compact icon-button-toggle ${
-                                  act?.in_menu === "hidden"
-                                    ? "icon-button-disabled"
-                                    : act?.in_menu === true
-                                      ? "active"
-                                      : ""
-                                }"
-                                icon="${
-                                  act?.in_menu === true
-                                    ? "mdi:menu"
-                                    : act?.in_menu === "hidden"
-                                      ? act?.card_trigger && act.card_trigger !== "none"
-                                        ? "mdi:image-outline"
-                                        : "mdi:eye-off-outline"
-                                      : "mdi:view-grid-outline"
-                                }"
+                                class="icon-button icon-button-compact icon-button-toggle ${(() => {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "hidden") return "icon-button-disabled";
+                                  if (p === "menu" || p === true) return "active";
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
+                                    return "active";
+                                  return "";
+                                })()}"
+                                icon="${(() => {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "menu" || p === true) return "mdi:menu";
+                                  if (p === "hidden")
+                                    return act?.card_trigger && act.card_trigger !== "none"
+                                      ? "mdi:image-outline"
+                                      : "mdi:eye-off-outline";
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
+                                    return "mdi:dock-bottom";
+                                  return "mdi:view-grid-outline";
+                                })()}"
                                 title="${(() => {
-                                  const placementText =
-                                    act?.in_menu === "hidden"
-                                      ? act?.card_trigger && act.card_trigger !== "none"
-                                        ? localize("editor.placements.hidden")
-                                        : `${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`
-                                      : act?.in_menu
-                                        ? localize("editor.fields.move_to_main")
-                                        : localize("editor.fields.move_to_menu");
-                                  return placementText;
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "hidden")
+                                    return act?.card_trigger && act.card_trigger !== "none"
+                                      ? localize("editor.placements.hidden")
+                                      : `${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`;
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
+                                    return localize(`editor.placements.${p}`);
+                                  return p === "menu" || p === true
+                                    ? localize("editor.fields.move_to_main")
+                                    : localize("editor.fields.move_to_menu");
                                 })()}"
                                 role="button"
-                                aria-label="${
-                                  act?.in_menu === true
+                                aria-label="${(() => {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
+                                    return localize(`editor.placements.${p}`);
+                                  return p === "menu" || p === true
                                     ? localize("editor.fields.move_to_main")
-                                    : localize("editor.fields.move_to_menu")
-                                }"
+                                    : localize("editor.fields.move_to_menu");
+                                })()}"
                                 @click=${() => {
-                                  if (act?.in_menu !== "hidden") {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (
+                                    p !== "hidden" &&
+                                    p !== "replace_search" &&
+                                    p !== "replace_power" &&
+                                    p !== "replace_mute" &&
+                                    p !== "replace_favorite"
+                                  ) {
                                     this._toggleActionInMenu(idx);
                                   }
                                 }}
@@ -3856,7 +3900,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _renderActionEditor(action, idx = this._actionEditorIndex, isSearch = false) {
     const actionMode = this._actionMode ?? this._deriveActionMode(action);
-
+    const effectivePlacement = getActionPlacement(action, idx);
     return html`
         ${
           isSearch
@@ -3959,22 +4003,29 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 { value: "chip", label: localize("editor.placements.chip") },
                                 { value: "menu", label: localize("editor.placements.menu") },
                                 { value: "hidden", label: localize("editor.placements.hidden") },
+                                {
+                                  value: "replace_search",
+                                  label: localize("editor.placements.replace_search"),
+                                },
+                                {
+                                  value: "replace_power",
+                                  label: localize("editor.placements.replace_power"),
+                                },
+                                {
+                                  value: "replace_mute",
+                                  label: localize("editor.placements.replace_mute"),
+                                },
+                                {
+                                  value: "replace_favorite",
+                                  label: localize("editor.placements.replace_favorite"),
+                                },
                               ],
                             },
                           }}
-                          .value=${
-                            action?.in_menu === "hidden"
-                              ? "hidden"
-                              : action?.in_menu
-                                ? "menu"
-                                : "chip"
-                          }
+                          .value=${effectivePlacement}
                           @value-changed=${(e) => {
                             const val = e.detail.value;
-                            let inMenu = false;
-                            if (val === "menu") inMenu = true;
-                            else if (val === "hidden") inMenu = "hidden";
-                            const updates = { in_menu: inMenu };
+                            const updates = { placement: val };
                             if (val !== "hidden") {
                               updates.card_trigger = "none";
                             }
@@ -3984,10 +4035,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       </div>
                       <div class="field-actions">
                         ${this._renderTemplateToggle(
-                          "in_menu",
-                          action?.in_menu,
+                          "placement",
+                          effectivePlacement,
                           (v) => {
-                            const updates = { in_menu: v };
+                            const updates = { placement: v };
                             if (v !== "hidden") {
                               updates.card_trigger = "none";
                             }
@@ -4004,7 +4055,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-selector
               .hass=${this.hass}
               label="${localize("editor.fields.card_trigger")}"
-              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || (!this._isTemplateValue(action?.in_menu) && action?.in_menu !== "hidden")}
+              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || (!this._isTemplateValue(effectivePlacement) && effectivePlacement !== "hidden")}
               .selector=${{
                 select: {
                   mode: "dropdown",
@@ -4480,8 +4531,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _getActionHelperText(act) {
-    const inMenuVal = act?.in_menu;
-    const placement = inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip";
+    const placement = getActionPlacement(act);
     const trigger = act?.card_trigger;
     let placementText = "";
     if (placement === "menu") placementText = " \u2022 In Menu";
@@ -4493,7 +4543,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           placementText = ` \u2022 ${localize("editor.placements.hidden")}`;
         }
       }
-    }
+    } else if (placement === "replace_search")
+      placementText = ` \u2022 ${localize("editor.placements.replace_search")}`;
+    else if (placement === "replace_power")
+      placementText = ` \u2022 ${localize("editor.placements.replace_power")}`;
+    else if (placement === "replace_mute")
+      placementText = ` \u2022 ${localize("editor.placements.replace_mute")}`;
+    else if (placement === "replace_favorite")
+      placementText = ` \u2022 ${localize("editor.placements.replace_favorite")}`;
     let triggerText = "";
     if (trigger && trigger !== "none") {
       triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;

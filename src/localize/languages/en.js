@@ -353,6 +353,10 @@ export default {
       chip: "Action Chip",
       menu: "In Menu",
       hidden: "Hidden (Artwork Tap)",
+      replace_search: "Replace Search",
+      replace_power: "Replace Power",
+      replace_mute: "Replace Mute",
+      replace_favorite: "Replace Favorite",
       not_triggerable: "Not Triggerable",
     },
     triggers: {

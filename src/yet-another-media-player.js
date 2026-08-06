@@ -1,6 +1,7 @@
 /* global __VERSION__ */
 import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
+import { styleMap } from "lit/directives/style-map.js";
 import { virtualize } from "@lit-labs/virtualizer/virtualize.js";
 import { yampGrid } from "./yamp-grid-layout.js";
 
@@ -32,6 +33,7 @@ import {
   resolveTemplateAtActionTime,
   resolveStringTemplate,
   resolveStringTemplateSync,
+  getActionPlacement,
   findAssociatedButtonEntities,
   getMusicAssistantState,
   getSearchResultClickTitle,
@@ -6057,7 +6059,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     try {
       const headers = {
-        "User-Agent": `yet-another-media-player/${__VERSION__} (https://github.com/jianyu-li/yet-another-media-player)`
+        "Lrclib-Client": `yet-another-media-player/${__VERSION__} (https://github.com/jianyu-li/yet-another-media-player)`
       };
 
       // 1. Try precise get first
@@ -7681,18 +7683,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const chipsHiddenInline = showChipRow === "in_menu_on_idle" && this._isIdle && hasMultipleEntities;
     // Always reserve space in menu for chips when in_menu_on_idle, even when playing (to prevent menu jump)
     const reserveChipSpaceInMenu = showChipRow === "in_menu_on_idle" && hasMultipleEntities && !this._showSearchInSheet;
-    const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
+    const allActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
     // Filter out sync_selected_entity / select_entity actions entirely - they don't render as chips
-    const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity" && action?.action !== "select_entity");
+    const visibleActions = allActions.filter(({ action }) => action?.action !== "sync_selected_entity" && action?.action !== "select_entity");
 
     // Shared context for synchronous template fallback
     let actionTemplateFallbackContext = null;
 
     // Action placement logic
-    const getPlacement = (act, actIdx) => {
-      if (act?.placement) return act.placement;
-
-      let inMenuVal = act?.in_menu;
+    const localPlacement = (act, actIdx) => {
+      let inMenuVal = getActionPlacement(act, actIdx);
       if (typeof inMenuVal === "string" && (inMenuVal.includes("{{") || inMenuVal.includes("{%") || inMenuVal.trim().startsWith("[[["))) {
         const cached = this._actionInMenuResolveCache?.[actIdx]?.value;
         if (cached !== undefined) {
@@ -7713,15 +7713,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
       }
 
-      if (typeof inMenuVal === "string") inMenuVal = inMenuVal.trim();
-      if (inMenuVal === "true") inMenuVal = true;
-      if (inMenuVal === "false") inMenuVal = false;
-      if (inMenuVal === "hidden") return "hidden";
-      return inMenuVal === true ? "menu" : "chip";
+      if (typeof inMenuVal === "string") {
+        inMenuVal = inMenuVal.trim();
+        const validPlacements = ["chip", "menu", "hidden", "replace_search", "replace_power", "replace_mute", "replace_favorite"];
+        if (validPlacements.includes(inMenuVal)) return inMenuVal;
+        return inMenuVal;
+      }
+      if (inMenuVal === true) return "menu";
+      return "chip";
     };
 
-    const rowActions = visibleActions.filter(({ action, idx }) => getPlacement(action, idx) === "chip");
-    const menuOnlyActions = visibleActions.filter(({ action, idx }) => getPlacement(action, idx) === "menu");
+    const rowActions = visibleActions.filter(({ action, idx }) => localPlacement(action, idx) === "chip");
+    const menuOnlyActions = visibleActions.filter(({ action, idx }) => localPlacement(action, idx) === "menu");
 
     // Gesture trigger logic
     const tapAction = visibleActions.find(({ action }) => action?.card_trigger === "tap");
@@ -7747,9 +7750,35 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const powerSupported = !currentHiddenControls.power && (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON));
     const showModernPowerButton = this._controlLayout === "modern" && powerSupported;
     const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
+    const replaceSearchAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_search");
+    const replacePowerAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_power");
+    const replaceMuteAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_mute");
+    const replaceFavoriteAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_favorite");
+
+    const renderCustomBottomAction = ({ action, idx }) => {
+      if (!action) return nothing;
+      const label = this._getActionLabel(action);
+      let iconColor = action.icon_color || "";
+      if (typeof iconColor === "string" && (iconColor.includes("{{") || iconColor.includes("{%") || iconColor.trim().startsWith("[[["))) {
+        iconColor = resolveStringTemplateSync(this.hass, iconColor, this._getTemplateContext()) || "";
+      }
+      return html`
+        <button
+          class="volume-icon-btn favorite-volume-btn custom-bottom-action"
+          @click=${(e) => { e.stopPropagation(); this._onActionChipClick(idx); }}
+          title="${label}"
+        >
+          <ha-icon style=${styleMap({ color: iconColor || undefined })} .icon=${action.icon || "mdi:rhombus-outline"}></ha-icon>
+        </button>
+      `;
+    };
+
     let leadingVolumeControl = nothing;
     if (showModernPowerButton) {
-      leadingVolumeControl = html`
+      if (replacePowerAction) {
+        leadingVolumeControl = renderCustomBottomAction(replacePowerAction);
+      } else {
+        leadingVolumeControl = html`
           <button
             class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
             @click=${() => this._onControlClick("power")}
@@ -7758,8 +7787,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             <ha-icon .icon=${"mdi:power"}></ha-icon>
           </button>
         `;
+      }
     } else if (this._controlLayout === "modern") {
-      leadingVolumeControl = html`
+      if (replaceSearchAction) {
+        leadingVolumeControl = renderCustomBottomAction(replaceSearchAction);
+      } else {
+        leadingVolumeControl = html`
           <button
             class="volume-icon-btn favorite-volume-btn"
             @click=${() => this._openQuickSearchOverlay()}
@@ -7768,8 +7801,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             <ha-icon .icon=${"mdi:magnify"}></ha-icon>
           </button>
         `;
+      }
     }
-    const rightSlotTemplate = showModernFavoriteButton ? html`
+
+    let rightSlotTemplate = nothing;
+    if (replaceFavoriteAction) {
+      rightSlotTemplate = renderCustomBottomAction(replaceFavoriteAction);
+    } else if (showModernFavoriteButton) {
+      rightSlotTemplate = html`
         <button
           class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
           @click=${() => this._onControlClick("favorite")}
@@ -7780,7 +7819,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}
           ></ha-icon>
         </button>
-      ` : nothing;
+      `;
+    }
+
+    let muteSlotTemplate = nothing;
+    if (replaceMuteAction) {
+      muteSlotTemplate = renderCustomBottomAction(replaceMuteAction);
+    }
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -8454,6 +8499,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         reserveLeadingControlSpace: this._controlLayout === "modern",
         showRightPlaceholder: this._controlLayout === "modern",
         rightSlotTemplate: shouldHideVolumeControls ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
+        muteSlotTemplate: shouldHideVolumeControls ? (muteSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${muteSlotTemplate}</div>` : nothing) : muteSlotTemplate,
         hideVolume: isVolumeHidden,
         collapseRow: volumeRowWillCollapse,
         moreInfoMenu: (!this._showEntityOptions && !isCompactVolume) ? html`
@@ -8628,7 +8674,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     const playbackStateObj = (this.hass && this.hass.states && playbackEntityId) ? this.hass.states[playbackEntityId] : undefined;
     const isCurrentPlayingForIdle = playbackStateObj ? this._isEntityPlaying(playbackStateObj) : false;
-    const normalizedIdleImageInput = config.idle_image ? resolveStringTemplateSync(this.hass, config.idle_image) : null;
+    const normalizedIdleImageInput = config.idle_image ? resolveStringTemplateSync(this.hass, config.idle_image, this._getTemplateContext()) : null;
     const forceIdleImage = config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
 
     const isActuallyPlaying = this._isCurrentEntityPlaying();
@@ -9973,27 +10019,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const obj = (this.entityObjs || [])[idx];
 
     if (obj?.remote_entity === false) return false;
-    if (obj?.remote_entity) {
-      const resolved = this._resolveEntity(obj.remote_entity, null, idx, 'remote') || resolveStringTemplateSync(this.hass, obj.remote_entity);
-      if (typeof resolved === "string" && resolved.trim() !== "") {
-        return true;
-      }
-    }
 
-    const currentId = this.currentEntityId;
-    if (!currentId) return false;
 
-    if (currentId.startsWith("remote.")) return true;
-
-    if (currentId.startsWith("media_player.")) {
-      const name = currentId.replace("media_player.", "");
-      const candidate = `remote.${name}`;
-      if (this.hass?.states?.[candidate]) {
-        return true;
-      }
-    }
-
-    return false;
+    return !!this._getRemoteControlEntity();
   }
 
   _getRemoteControlEntity() {
@@ -10001,7 +10029,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const obj = (this.entityObjs || [])[idx];
 
     if (obj?.remote_entity) {
-      const resolved = this._resolveEntity(obj.remote_entity, null, idx, 'remote') || resolveStringTemplateSync(this.hass, obj.remote_entity);
+      const resolved = this._resolveEntity(obj.remote_entity, null, idx, 'remote') || resolveStringTemplateSync(this.hass, obj.remote_entity, this._getTemplateContext());
       if (resolved && typeof resolved === "string" && resolved.trim() !== "") return resolved.trim();
     }
 
@@ -10104,7 +10132,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     let raw = obj?.hide_remote_buttons ?? this.config.hide_remote_buttons;
 
     if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.includes("[[["))) {
-      raw = resolveStringTemplateSync(this.hass, raw);
+      raw = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
     }
 
     if (typeof raw === "string") {

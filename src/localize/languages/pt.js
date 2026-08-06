@@ -312,6 +312,10 @@ export default {
       chip: "Chip de ação",
       menu: "No menu",
       hidden: "Oculto (Toque no Artwork)",
+      replace_search: "Substituir Pesquisa",
+      replace_power: "Substituir Energia",
+      replace_mute: "Substituir Mudo",
+      replace_favorite: "Substituir Favorito",
       not_triggerable: "Não acionável",
     },
     triggers: {

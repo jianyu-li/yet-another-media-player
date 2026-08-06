@@ -318,6 +318,10 @@ export default {
       chip: "Puce d'action",
       menu: "Dans le menu",
       hidden: "Masqué (Appui sur l'image)",
+      replace_search: "Remplacer Recherche",
+      replace_power: "Remplacer Alimentation",
+      replace_mute: "Remplacer Muet",
+      replace_favorite: "Remplacer Favori",
       not_triggerable: "Non déclenchable",
     },
     triggers: {

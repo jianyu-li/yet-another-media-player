@@ -310,6 +310,10 @@ export default {
       chip: "Čip dejanja",
       menu: "V meniju",
       hidden: "Skrito (dotik grafike)",
+      replace_search: "Zamenjaj Iskanje",
+      replace_power: "Zamenjaj Vklop/Izklop",
+      replace_mute: "Zamenjaj Utišaj",
+      replace_favorite: "Zamenjaj Priljubljeno",
       not_triggerable: "Ni mogoče sprožiti",
     },
     triggers: {
