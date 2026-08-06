@@ -7715,8 +7715,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       if (typeof inMenuVal === "string") {
         inMenuVal = inMenuVal.trim();
-        if (inMenuVal === "true") return "menu";
-        if (inMenuVal === "false") return "chip";
+        const validPlacements = ["chip", "menu", "hidden", "replace_search", "replace_power", "replace_mute", "replace_favorite"];
+        if (validPlacements.includes(inMenuVal)) return inMenuVal;
         return inMenuVal;
       }
       if (inMenuVal === true) return "menu";
@@ -7750,9 +7750,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const powerSupported = !currentHiddenControls.power && (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON));
     const showModernPowerButton = this._controlLayout === "modern" && powerSupported;
     const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
-    const bottom1Action = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "bottom_1");
-    const bottom2Action = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "bottom_2");
-    const bottom3Action = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "bottom_3");
+    const replaceSearchAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_search");
+    const replacePowerAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_power");
+    const replaceMuteAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_mute");
+    const replaceFavoriteAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_favorite");
 
     const renderCustomBottomAction = ({ action, idx }) => {
       if (!action) return nothing;
@@ -7773,10 +7774,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     };
 
     let leadingVolumeControl = nothing;
-    if (bottom1Action) {
-      leadingVolumeControl = renderCustomBottomAction(bottom1Action);
-    } else if (showModernPowerButton) {
-      leadingVolumeControl = html`
+    if (showModernPowerButton) {
+      if (replacePowerAction) {
+        leadingVolumeControl = renderCustomBottomAction(replacePowerAction);
+      } else {
+        leadingVolumeControl = html`
           <button
             class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
             @click=${() => this._onControlClick("power")}
@@ -7785,8 +7787,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             <ha-icon .icon=${"mdi:power"}></ha-icon>
           </button>
         `;
+      }
     } else if (this._controlLayout === "modern") {
-      leadingVolumeControl = html`
+      if (replaceSearchAction) {
+        leadingVolumeControl = renderCustomBottomAction(replaceSearchAction);
+      } else {
+        leadingVolumeControl = html`
           <button
             class="volume-icon-btn favorite-volume-btn"
             @click=${() => this._openQuickSearchOverlay()}
@@ -7795,11 +7801,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             <ha-icon .icon=${"mdi:magnify"}></ha-icon>
           </button>
         `;
+      }
     }
 
     let rightSlotTemplate = nothing;
-    if (bottom3Action) {
-      rightSlotTemplate = renderCustomBottomAction(bottom3Action);
+    if (replaceFavoriteAction) {
+      rightSlotTemplate = renderCustomBottomAction(replaceFavoriteAction);
     } else if (showModernFavoriteButton) {
       rightSlotTemplate = html`
         <button
@@ -7816,8 +7823,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     let muteSlotTemplate = nothing;
-    if (bottom2Action) {
-      muteSlotTemplate = renderCustomBottomAction(bottom2Action);
+    if (replaceMuteAction) {
+      muteSlotTemplate = renderCustomBottomAction(replaceMuteAction);
     }
 
     // Collect unique, sorted first letters of source names

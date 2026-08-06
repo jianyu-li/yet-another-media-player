@@ -3149,7 +3149,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     act?.placement !== undefined ? act.placement : act?.in_menu;
                                   if (p === "hidden") return "icon-button-disabled";
                                   if (p === "menu" || p === true) return "active";
-                                  if (p === "bottom_1" || p === "bottom_2" || p === "bottom_3")
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
                                     return "active";
                                   return "";
                                 })()}"
@@ -3161,7 +3166,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     return act?.card_trigger && act.card_trigger !== "none"
                                       ? "mdi:image-outline"
                                       : "mdi:eye-off-outline";
-                                  if (p === "bottom_1" || p === "bottom_2" || p === "bottom_3")
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
                                     return "mdi:dock-bottom";
                                   return "mdi:view-grid-outline";
                                 })()}"
@@ -3172,7 +3182,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     return act?.card_trigger && act.card_trigger !== "none"
                                       ? localize("editor.placements.hidden")
                                       : `${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`;
-                                  if (p === "bottom_1" || p === "bottom_2" || p === "bottom_3")
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
                                     return localize(`editor.placements.${p}`);
                                   return p === "menu" || p === true
                                     ? localize("editor.fields.move_to_main")
@@ -3182,7 +3197,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 aria-label="${(() => {
                                   const p =
                                     act?.placement !== undefined ? act.placement : act?.in_menu;
-                                  if (p === "bottom_1" || p === "bottom_2" || p === "bottom_3")
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
                                     return localize(`editor.placements.${p}`);
                                   return p === "menu" || p === true
                                     ? localize("editor.fields.move_to_main")
@@ -3193,9 +3213,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     act?.placement !== undefined ? act.placement : act?.in_menu;
                                   if (
                                     p !== "hidden" &&
-                                    p !== "bottom_1" &&
-                                    p !== "bottom_2" &&
-                                    p !== "bottom_3"
+                                    p !== "replace_search" &&
+                                    p !== "replace_power" &&
+                                    p !== "replace_mute" &&
+                                    p !== "replace_favorite"
                                   ) {
                                     this._toggleActionInMenu(idx);
                                   }
@@ -3983,16 +4004,20 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 { value: "menu", label: localize("editor.placements.menu") },
                                 { value: "hidden", label: localize("editor.placements.hidden") },
                                 {
-                                  value: "bottom_1",
-                                  label: localize("editor.placements.bottom_1"),
+                                  value: "replace_search",
+                                  label: localize("editor.placements.replace_search"),
                                 },
                                 {
-                                  value: "bottom_2",
-                                  label: localize("editor.placements.bottom_2"),
+                                  value: "replace_power",
+                                  label: localize("editor.placements.replace_power"),
                                 },
                                 {
-                                  value: "bottom_3",
-                                  label: localize("editor.placements.bottom_3"),
+                                  value: "replace_mute",
+                                  label: localize("editor.placements.replace_mute"),
+                                },
+                                {
+                                  value: "replace_favorite",
+                                  label: localize("editor.placements.replace_favorite"),
                                 },
                               ],
                             },
@@ -4518,12 +4543,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           placementText = ` \u2022 ${localize("editor.placements.hidden")}`;
         }
       }
-    } else if (placement === "bottom_1")
-      placementText = ` \u2022 ${localize("editor.placements.bottom_1")}`;
-    else if (placement === "bottom_2")
-      placementText = ` \u2022 ${localize("editor.placements.bottom_2")}`;
-    else if (placement === "bottom_3")
-      placementText = ` \u2022 ${localize("editor.placements.bottom_3")}`;
+    } else if (placement === "replace_search")
+      placementText = ` \u2022 ${localize("editor.placements.replace_search")}`;
+    else if (placement === "replace_power")
+      placementText = ` \u2022 ${localize("editor.placements.replace_power")}`;
+    else if (placement === "replace_mute")
+      placementText = ` \u2022 ${localize("editor.placements.replace_mute")}`;
+    else if (placement === "replace_favorite")
+      placementText = ` \u2022 ${localize("editor.placements.replace_favorite")}`;
     let triggerText = "";
     if (trigger && trigger !== "none") {
       triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;

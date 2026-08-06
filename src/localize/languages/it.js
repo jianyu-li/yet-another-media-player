@@ -311,9 +311,10 @@ export default {
       chip: "Chip d'azione",
       menu: "Nel menu",
       hidden: "Nascosto (Tocco sull'immagine)",
-      bottom_1: "Inferiore 1 (Sinistra)",
-      bottom_2: "Inferiore 2 (Muto)",
-      bottom_3: "Inferiore 3 (Destra)",
+      replace_search: "Sostituisci Ricerca",
+      replace_power: "Sostituisci Accensione",
+      replace_mute: "Sostituisci Muto",
+      replace_favorite: "Sostituisci Preferito",
       not_triggerable: "Non attivabile",
     },
     triggers: {

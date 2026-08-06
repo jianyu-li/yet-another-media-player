@@ -337,9 +337,10 @@ export default {
       chip: "Actiechip",
       menu: "In menu",
       hidden: "Verborgen (Artwork-tik)",
-      bottom_1: "Onder 1 (Links)",
-      bottom_2: "Onder 2 (Dempen)",
-      bottom_3: "Onder 3 (Rechts)",
+      replace_search: "Vervang Zoeken",
+      replace_power: "Vervang Aan/Uit",
+      replace_mute: "Vervang Dempen",
+      replace_favorite: "Vervang Favoriet",
       not_triggerable: "Niet triggerbaar",
     },
     triggers: {
