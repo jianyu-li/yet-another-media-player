@@ -328,6 +328,9 @@ export default {
       chip: "Akčný čip",
       menu: "V menu",
       hidden: "Skryté (Ťuknutie na grafiku)",
+      bottom_1: "Spodok 1 (Vľavo)",
+      bottom_2: "Spodok 2 (Stlmiť)",
+      bottom_3: "Spodok 3 (Vpravo)",
       not_triggerable: "Nespustiteľné",
     },
     triggers: {

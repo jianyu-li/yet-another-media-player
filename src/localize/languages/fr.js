@@ -318,6 +318,9 @@ export default {
       chip: "Puce d'action",
       menu: "Dans le menu",
       hidden: "Masqué (Appui sur l'image)",
+      bottom_1: "Bas 1 (Gauche)",
+      bottom_2: "Bas 2 (Muet)",
+      bottom_3: "Bas 3 (Droite)",
       not_triggerable: "Non déclenchable",
     },
     triggers: {

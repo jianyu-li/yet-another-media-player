@@ -312,6 +312,9 @@ export default {
       chip: "Chip de ação",
       menu: "No menu",
       hidden: "Oculto (Toque no Artwork)",
+      bottom_1: "Inferior 1 (Esquerda)",
+      bottom_2: "Inferior 2 (Mudo)",
+      bottom_3: "Inferior 3 (Direita)",
       not_triggerable: "Não acionável",
     },
     triggers: {

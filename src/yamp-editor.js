@@ -3,7 +3,7 @@ import * as yaml from "js-yaml";
 import { localize } from "./localize/localize.js";
 
 import { SUPPORT_GROUPING, TEMPLATE_CONFIGS } from "./constants.js";
-import { isMusicAssistantEntity } from "./yamp-utils.js";
+import { isMusicAssistantEntity, getActionPlacement } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
@@ -688,9 +688,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
       const newAction = { ...actions[idx], ...properties };
 
-      // If we're setting in_menu, remove the legacy placement property
+      // If we're setting in_menu, remove the placement property
       if ("in_menu" in properties) {
         delete newAction.placement;
+      }
+
+      // If we're setting placement, remove the legacy in_menu property
+      if ("placement" in properties) {
+        delete newAction.in_menu;
       }
 
       actions[idx] = newAction;
@@ -3139,41 +3144,59 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         act?.action !== "sync_selected_entity" && act?.action !== "select_entity"
                           ? html`
                               <ha-icon
-                                class="icon-button icon-button-compact icon-button-toggle ${
-                                  act?.in_menu === "hidden"
-                                    ? "icon-button-disabled"
-                                    : act?.in_menu === true
-                                      ? "active"
-                                      : ""
-                                }"
-                                icon="${
-                                  act?.in_menu === true
-                                    ? "mdi:menu"
-                                    : act?.in_menu === "hidden"
-                                      ? act?.card_trigger && act.card_trigger !== "none"
-                                        ? "mdi:image-outline"
-                                        : "mdi:eye-off-outline"
-                                      : "mdi:view-grid-outline"
-                                }"
+                                class="icon-button icon-button-compact icon-button-toggle ${(() => {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "hidden") return "icon-button-disabled";
+                                  if (p === "menu" || p === true) return "active";
+                                  if (p === "bottom_1" || p === "bottom_2" || p === "bottom_3")
+                                    return "active";
+                                  return "";
+                                })()}"
+                                icon="${(() => {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "menu" || p === true) return "mdi:menu";
+                                  if (p === "hidden")
+                                    return act?.card_trigger && act.card_trigger !== "none"
+                                      ? "mdi:image-outline"
+                                      : "mdi:eye-off-outline";
+                                  if (p === "bottom_1" || p === "bottom_2" || p === "bottom_3")
+                                    return "mdi:dock-bottom";
+                                  return "mdi:view-grid-outline";
+                                })()}"
                                 title="${(() => {
-                                  const placementText =
-                                    act?.in_menu === "hidden"
-                                      ? act?.card_trigger && act.card_trigger !== "none"
-                                        ? localize("editor.placements.hidden")
-                                        : `${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`
-                                      : act?.in_menu
-                                        ? localize("editor.fields.move_to_main")
-                                        : localize("editor.fields.move_to_menu");
-                                  return placementText;
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "hidden")
+                                    return act?.card_trigger && act.card_trigger !== "none"
+                                      ? localize("editor.placements.hidden")
+                                      : `${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`;
+                                  if (p === "bottom_1" || p === "bottom_2" || p === "bottom_3")
+                                    return localize(`editor.placements.${p}`);
+                                  return p === "menu" || p === true
+                                    ? localize("editor.fields.move_to_main")
+                                    : localize("editor.fields.move_to_menu");
                                 })()}"
                                 role="button"
-                                aria-label="${
-                                  act?.in_menu === true
+                                aria-label="${(() => {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "bottom_1" || p === "bottom_2" || p === "bottom_3")
+                                    return localize(`editor.placements.${p}`);
+                                  return p === "menu" || p === true
                                     ? localize("editor.fields.move_to_main")
-                                    : localize("editor.fields.move_to_menu")
-                                }"
+                                    : localize("editor.fields.move_to_menu");
+                                })()}"
                                 @click=${() => {
-                                  if (act?.in_menu !== "hidden") {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (
+                                    p !== "hidden" &&
+                                    p !== "bottom_1" &&
+                                    p !== "bottom_2" &&
+                                    p !== "bottom_3"
+                                  ) {
                                     this._toggleActionInMenu(idx);
                                   }
                                 }}
@@ -3856,7 +3879,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _renderActionEditor(action, idx = this._actionEditorIndex, isSearch = false) {
     const actionMode = this._actionMode ?? this._deriveActionMode(action);
-
+    const effectivePlacement = getActionPlacement(action, idx);
     return html`
         ${
           isSearch
@@ -3956,24 +3979,25 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                             select: {
                               mode: "dropdown",
                               options: [
-                                { value: "chip", label: localize("editor.placements.chip") || "Action Chip" },
-                                { value: "menu", label: localize("editor.placements.menu") || "In Menu" },
-                                { value: "hidden", label: localize("editor.placements.hidden") || "Hidden (Artwork Tap)" },
-                                { value: "bottom_1", label: localize("editor.placements.bottom_1") || "Bottom 1 (Left)" },
-                                { value: "bottom_2", label: localize("editor.placements.bottom_2") || "Bottom 2 (Mute)" },
-                                { value: "bottom_3", label: localize("editor.placements.bottom_3") || "Bottom 3 (Right)" },
+                                { value: "chip", label: localize("editor.placements.chip") },
+                                { value: "menu", label: localize("editor.placements.menu") },
+                                { value: "hidden", label: localize("editor.placements.hidden") },
+                                {
+                                  value: "bottom_1",
+                                  label: localize("editor.placements.bottom_1"),
+                                },
+                                {
+                                  value: "bottom_2",
+                                  label: localize("editor.placements.bottom_2"),
+                                },
+                                {
+                                  value: "bottom_3",
+                                  label: localize("editor.placements.bottom_3"),
+                                },
                               ],
                             },
                           }}
-                          .value=${
-                            action?.placement !== undefined
-                              ? action.placement
-                              : action?.in_menu === "hidden"
-                                ? "hidden"
-                                : action?.in_menu
-                                  ? "menu"
-                                  : "chip"
-                          }
+                          .value=${effectivePlacement}
                           @value-changed=${(e) => {
                             const val = e.detail.value;
                             const updates = { placement: val };
@@ -3987,7 +4011,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       <div class="field-actions">
                         ${this._renderTemplateToggle(
                           "placement",
-                          action?.placement !== undefined ? action.placement : action?.in_menu,
+                          effectivePlacement,
                           (v) => {
                             const updates = { placement: v };
                             if (v !== "hidden") {
@@ -4006,7 +4030,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-selector
               .hass=${this.hass}
               label="${localize("editor.fields.card_trigger")}"
-              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || (!this._isTemplateValue(action?.placement !== undefined ? action?.placement : action?.in_menu) && (action?.placement !== undefined ? action?.placement : action?.in_menu) !== "hidden")}
+              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || (!this._isTemplateValue(effectivePlacement) && effectivePlacement !== "hidden")}
               .selector=${{
                 select: {
                   mode: "dropdown",
@@ -4482,8 +4506,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _getActionHelperText(act) {
-    const inMenuVal = act?.in_menu;
-    const placement = act?.placement !== undefined ? act.placement : (inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip");
+    const placement = getActionPlacement(act);
     const trigger = act?.card_trigger;
     let placementText = "";
     if (placement === "menu") placementText = " \u2022 In Menu";
@@ -4491,16 +4514,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       if (act?.action !== "sync_selected_entity" && act?.action !== "select_entity") {
         if (!trigger || trigger === "none") {
           placementText = ` \u2022 ${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`;
+        } else {
+          placementText = ` \u2022 ${localize("editor.placements.hidden")}`;
         }
-      } else {
-        placementText = ` \u2022 ${localize("editor.placements.hidden")}`;
       }
-    } else if (placement === "bottom_1") placementText = " \u2022 Bottom 1 (Left)";
-    else if (placement === "bottom_2") placementText = " \u2022 Bottom 2 (Mute)";
-    else if (placement === "bottom_3") placementText = " \u2022 Bottom 3 (Right)";
-    
-    let subActionText = "";
-    if (act?.action === "sync_selected_entity") subActionText = ` \u2022 ${localize("editor.action_types.sync_selected_entity")}`;
+    } else if (placement === "bottom_1")
+      placementText = ` \u2022 ${localize("editor.placements.bottom_1")}`;
+    else if (placement === "bottom_2")
+      placementText = ` \u2022 ${localize("editor.placements.bottom_2")}`;
+    else if (placement === "bottom_3")
+      placementText = ` \u2022 ${localize("editor.placements.bottom_3")}`;
     let triggerText = "";
     if (trigger && trigger !== "none") {
       triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;

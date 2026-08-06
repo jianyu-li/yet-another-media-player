@@ -64,19 +64,23 @@ export function renderVolumeRow({
               : ""
           }"
         >
-          ${muteSlotTemplate !== nothing ? muteSlotTemplate : html`
-            <button
-              class="volume-icon-btn"
-              @click=${onMuteToggle}
-              title=${
-                (supportsMute ? isMuted : vol === 0)
-                  ? localize("common.unmute")
-                  : localize("common.mute")
-              }
-            >
-              <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
-            </button>
-          `}
+          ${
+            muteSlotTemplate !== nothing
+              ? muteSlotTemplate
+              : html`
+                  <button
+                    class="volume-icon-btn"
+                    @click=${onMuteToggle}
+                    title=${
+                      (supportsMute ? isMuted : vol === 0)
+                        ? localize("common.unmute")
+                        : localize("common.mute")
+                    }
+                  >
+                    <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
+                  </button>
+                `
+          }
         </div>
       </div>
 

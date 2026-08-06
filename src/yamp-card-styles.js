@@ -1394,8 +1394,7 @@ export const yampCardStyles = css`
 
   .volume-icon-btn ha-icon {
     font-size: 1.2em;
-        --mdc-icon-size: 20px;
-
+    --mdc-icon-size: 20px;
     color: #fff;
   }
 

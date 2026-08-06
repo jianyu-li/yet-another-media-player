@@ -326,6 +326,9 @@ export default {
       chip: "Aktions-Chip",
       menu: "Im Menü",
       hidden: "Ausgeblendet (Artwork-Tippen)",
+      bottom_1: "Unten 1 (Links)",
+      bottom_2: "Unten 2 (Stumm)",
+      bottom_3: "Unten 3 (Rechts)",
       not_triggerable: "Nicht triggerbar",
     },
     triggers: {
