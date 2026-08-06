@@ -5854,7 +5854,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     this._lyricsError = false;
-    const configSource = this.config.lyrics_source || "mass_lrclib";
+    let configSource = this.config.lyrics_source || "mass_lrclib";
+
+    const isAdmin = this.hass?.user?.is_admin === true;
+    if (!isAdmin && configSource !== "lrclib") {
+      if (configSource === "mass") {
+        console.warn(`YAMP: ${this.localize('lyrics.admin_only_mass')}`);
+
+        const event = new Event("hass-notification", { bubbles: true, composed: true });
+        event.detail = { message: this.localize('lyrics.admin_only_mass') };
+        this.dispatchEvent(event);
+
+        this._fetchingLyrics = false;
+        this._lyricsError = true;
+        this.requestUpdate();
+        return;
+      } else {
+        console.log(`YAMP: ${this.localize('lyrics.fallback_to_lrclib_non_admin')}`);
+        configSource = "lrclib";
+      }
+    }
 
     const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     if (!activeState) {
