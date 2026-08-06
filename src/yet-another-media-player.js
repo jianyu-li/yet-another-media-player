@@ -10020,11 +10020,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (obj?.remote_entity === false) return false;
 
-
-    return !!this._getRemoteControlEntity();
+    return !!this._getRemoteControlEntity(true);
   }
 
-  _getRemoteControlEntity() {
+  _getRemoteControlEntity(strict = false) {
     const idx = this._selectedIndex;
     const obj = (this.entityObjs || [])[idx];
 
@@ -10046,7 +10045,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
 
-    return currentId;
+    return strict ? null : currentId;
   }
 
   _sendRemoteCommand(command) {
