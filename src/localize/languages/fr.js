@@ -375,6 +375,7 @@ export default {
       details: "Détails lecture",
       menu: "Menu & Recherche",
       action_chips: "Jetons d'action",
+      lyrics: "Paroles",
     },
     media_controls: {
       shuffle: "Aléatoire",
@@ -483,8 +484,10 @@ export default {
     none_found: "Aucune parole trouvée",
     not_available: "Paroles non disponibles",
     instrumental: "Piste instrumentale",
-    admin_only_mass: "La récupération des paroles via Music Assistant est réservée aux administrateurs. Il est recommandé de passer à lrclib dans la configuration de la carte.",
-    fallback_to_lrclib_non_admin: "Utilisateur non administrateur détecté. Utilisation de lrclib pour la récupération des paroles.",
+    admin_only_mass:
+      "La récupération des paroles via Music Assistant est réservée aux administrateurs. Il est recommandé de passer à lrclib dans la configuration de la carte.",
+    fallback_to_lrclib_non_admin:
+      "Utilisateur non administrateur détecté. Utilisation de lrclib pour la récupération des paroles.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Repli sur LRCLIB)",

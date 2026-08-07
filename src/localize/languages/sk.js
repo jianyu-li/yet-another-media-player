@@ -385,6 +385,7 @@ export default {
       details: "Detaily prehrávania",
       menu: "Menu a vyhľadávanie",
       action_chips: "Akčné čipy",
+      lyrics: "Texty piesní",
     },
     media_controls: {
       shuffle: "Náhodne",
@@ -493,8 +494,10 @@ export default {
     none_found: "Žiadny text piesne sa nenašiel",
     not_available: "Text piesne nie je k dispozícii",
     instrumental: "Inštrumentálna skladba",
-    admin_only_mass: "Získavanie textov piesní cez Music Assistant je dostupné len pre administrátorov. Odporúča sa prepnúť na lrclib v konfigurácii karty.",
-    fallback_to_lrclib_non_admin: "Zistený neadministrátorský používateľ. Prechod na lrclib pre získanie textov piesní.",
+    admin_only_mass:
+      "Získavanie textov piesní cez Music Assistant je dostupné len pre administrátorov. Odporúča sa prepnúť na lrclib v konfigurácii karty.",
+    fallback_to_lrclib_non_admin:
+      "Zistený neadministrátorský používateľ. Prechod na lrclib pre získanie textov piesní.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Záloha na LRCLIB)",

@@ -368,6 +368,7 @@ export default {
       details: "Dettagli riproduzione",
       menu: "Menu e Ricerca",
       action_chips: "Chip azione",
+      lyrics: "Testi",
     },
     media_controls: {
       shuffle: "Casuale",
@@ -476,8 +477,10 @@ export default {
     none_found: "Nessun testo trovato",
     not_available: "Testi non disponibili",
     instrumental: "Traccia strumentale",
-    admin_only_mass: "Il recupero dei testi tramite Music Assistant è riservato agli utenti amministratori. Si consiglia di passare a lrclib nella configurazione della scheda.",
-    fallback_to_lrclib_non_admin: "Rilevato utente non amministratore. Passaggio a lrclib per il recupero dei testi.",
+    admin_only_mass:
+      "Il recupero dei testi tramite Music Assistant è riservato agli utenti amministratori. Si consiglia di passare a lrclib nella configurazione della scheda.",
+    fallback_to_lrclib_non_admin:
+      "Rilevato utente non amministratore. Passaggio a lrclib per il recupero dei testi.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Fallback su LRCLIB)",

@@ -383,6 +383,7 @@ export default {
       details: "Details zur Wiedergabe",
       menu: "Menü & Suchblätter",
       action_chips: "Aktions-Chips",
+      lyrics: "Songtext",
     },
     media_controls: {
       shuffle: "Zufall",
@@ -491,8 +492,10 @@ export default {
     none_found: "Kein Songtext gefunden",
     not_available: "Songtext nicht verfügbar",
     instrumental: "Instrumental-Titel",
-    admin_only_mass: "Das Abrufen von Songtexten über Music Assistant ist nur für Administratoren verfügbar. Es wird empfohlen, in der Kartenkonfiguration auf lrclib zu wechseln.",
-    fallback_to_lrclib_non_admin: "Kein Administratorbenutzer erkannt. Rückgriff auf lrclib für den Abruf von Songtexten.",
+    admin_only_mass:
+      "Das Abrufen von Songtexten über Music Assistant ist nur für Administratoren verfügbar. Es wird empfohlen, in der Kartenkonfiguration auf lrclib zu wechseln.",
+    fallback_to_lrclib_non_admin:
+      "Kein Administratorbenutzer erkannt. Rückgriff auf lrclib für den Abruf von Songtexten.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Fallback zu LRCLIB)",

@@ -60,7 +60,7 @@ const PLAYLIST_FETCH_LIMIT = 500;
 const SUCCESS_MESSAGE_TIMEOUT_MS = 3000;
 const MAX_LYRICS_CACHE_SIZE = 30;
 
-const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
+const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips", "lyrics"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
 const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
   details: "--yamp-text-scale-details",
@@ -4092,6 +4092,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this.style.setProperty("--yamp-details-line-height", detailLineHeight.toFixed(2));
     const detailMaxLines = detailActive ? (safeDetailsScale >= 2 ? 3 : safeDetailsScale >= 1.3 ? 2 : 1) : 3;
     this.style.setProperty("--yamp-details-max-lines", detailMaxLines.toString());
+    const lyricsActive = !!targetSet?.has("lyrics");
+    this.style.setProperty("--yamp-text-scale-lyrics", lyricsActive ? safeDetailsScale.toFixed(2) : "1");
   }
 
   _updateAdaptiveTextObserverState() {
