@@ -501,7 +501,9 @@ export default {
     finding: "Songteksten zoeken...",
     none_found: "Geen songteksten gevonden",
     not_available: "Songtekst niet beschikbaar",
-    instrumental: "Instrumentaal nummer",
+    instrumental: "Instrumentale Track",
+    admin_only_mass: "Songteksten ophalen via Music Assistant is alleen voor beheerders. Het wordt aanbevolen om in de kaartconfiguratie over te schakelen naar lrclib.",
+    fallback_to_lrclib_non_admin: "Niet-beheerder gebruiker gedetecteerd. Terugvallen op lrclib voor het ophalen van songteksten.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Terugval naar LRCLIB)",

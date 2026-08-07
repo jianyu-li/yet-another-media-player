@@ -475,6 +475,8 @@ export default {
     none_found: "Besedila ni bilo mogoče najti",
     not_available: "Besedilo ni na voljo",
     instrumental: "Instrumentalna skladba",
+    admin_only_mass: "Pridobivanje besedil preko Music Assistant je na voljo samo administratorjem. Priporočljivo je, da v konfiguraciji kartice preklopite na lrclib.",
+    fallback_to_lrclib_non_admin: "Zaznan je ne-administratorski uporabnik. Preklop na lrclib za pridobivanje besedil.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Rezerva na LRCLIB)",

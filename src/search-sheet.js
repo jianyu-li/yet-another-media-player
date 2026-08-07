@@ -164,7 +164,23 @@ export async function getMassQueueConfigEntryId(hass, targetEntityId = null) {
       return null;
     }
 
-    const resolvedId = _resolveIntegrationId(hass, targetEntityId, ["mass_queue"]);
+    if (hass.user && hass.user.is_admin) {
+      try {
+        const configEntries = await hass.connection.sendMessagePromise({
+          type: "config_entries/get",
+          domain: "mass_queue",
+        });
+        if (configEntries && configEntries.length > 0) {
+          cachedMassQueueEntryId = configEntries[0].entry_id;
+          cachedMassQueueEntryTs = now;
+          return cachedMassQueueEntryId;
+        }
+      } catch (e) {
+        // Ignored: WebSocket call failed
+      }
+    }
+
+    const resolvedId = _resolveIntegrationId(hass, null, ["mass_queue"]);
 
     cachedMassQueueEntryId = resolvedId || "auto";
     cachedMassQueueEntryTs = now;
