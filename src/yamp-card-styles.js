@@ -1392,10 +1392,26 @@ export const yampCardStyles = css`
     }
   }
 
-  .volume-icon-btn ha-icon {
-    font-size: 1.2em;
-    --mdc-icon-size: 20px;
+  .volume-icon-btn ha-icon,
+  .custom-bottom-action ha-icon,
+  .vol-stepper .button ha-icon {
+    font-size: 22px;
+    --mdc-icon-size: 22px;
+    --ha-icon-size: 22px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #fff;
+  }
+
+  .custom-bottom-action ha-icon {
+    font-size: 19px;
+    --mdc-icon-size: 19px;
+    --ha-icon-size: 19px;
+    width: 19px;
+    height: 19px;
   }
 
   .volume-icon-btn.favorite-volume-btn {
@@ -1575,7 +1591,6 @@ export const yampCardStyles = css`
   .vol-stepper .button {
     min-width: 36px;
     min-height: 36px;
-    font-size: 1.5em;
     padding: 6px 0;
     border-radius: 50%;
     display: flex;
