@@ -385,6 +385,7 @@ export default {
       details: "Detaily prehrávania",
       menu: "Menu a vyhľadávanie",
       action_chips: "Akčné čipy",
+      lyrics: "Texty piesní",
     },
     media_controls: {
       shuffle: "Náhodne",

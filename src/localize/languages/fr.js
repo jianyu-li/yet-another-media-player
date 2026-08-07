@@ -375,6 +375,7 @@ export default {
       details: "Détails lecture",
       menu: "Menu & Recherche",
       action_chips: "Jetons d'action",
+      lyrics: "Paroles",
     },
     media_controls: {
       shuffle: "Aléatoire",

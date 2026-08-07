@@ -368,6 +368,7 @@ export default {
       details: "Dettagli riproduzione",
       menu: "Menu e Ricerca",
       action_chips: "Chip azione",
+      lyrics: "Testi",
     },
     media_controls: {
       shuffle: "Casuale",

@@ -410,6 +410,7 @@ export default {
       details: "Now Playing Details",
       menu: "Menu & Search Sheets",
       action_chips: "Action Chips",
+      lyrics: "Lyrics",
     },
     media_controls: {
       shuffle: "Shuffle",

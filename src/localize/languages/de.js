@@ -383,6 +383,7 @@ export default {
       details: "Details zur Wiedergabe",
       menu: "Menü & Suchblätter",
       action_chips: "Aktions-Chips",
+      lyrics: "Songtext",
     },
     media_controls: {
       shuffle: "Zufall",

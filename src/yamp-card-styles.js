@@ -4239,7 +4239,7 @@ export const lyricsStyles = css`
   }
 
   .lyric-line {
-    font-size: var(--yamp-lyrics-font-size, 1.6rem);
+    font-size: calc(var(--yamp-lyrics-font-size, 1.6rem) * var(--yamp-text-scale-lyrics, 1));
     font-weight: 700;
     line-height: 1.3;
     margin-bottom: 24px;
@@ -4258,7 +4258,7 @@ export const lyricsStyles = css`
     opacity: 1;
     filter: blur(0);
     color: var(--yamp-lyrics-active-color, inherit);
-    font-size: var(--yamp-lyrics-active-font-size, var(--yamp-lyrics-font-size, 1.6rem));
+    font-size: calc(var(--yamp-lyrics-active-font-size, var(--yamp-lyrics-font-size, 1.6rem)) * var(--yamp-text-scale-lyrics, 1));
     text-shadow: var(--yamp-overlay-text-shadow, none);
   }
 
@@ -4270,7 +4270,7 @@ export const lyricsStyles = css`
   }
 
   .lyric-line.unsynced {
-    font-size: var(--yamp-lyrics-unsynced-font-size, 1.1rem);
+    font-size: calc(var(--yamp-lyrics-unsynced-font-size, 1.1rem) * var(--yamp-text-scale-lyrics, 1));
     opacity: 0.8;
     margin-bottom: 12px;
     filter: none;

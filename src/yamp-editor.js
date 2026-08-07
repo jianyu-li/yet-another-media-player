@@ -10,6 +10,7 @@ const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
   { value: "details", label: localize("card.sections.details") },
   { value: "menu", label: localize("card.sections.menu") },
   { value: "action_chips", label: localize("card.sections.action_chips") },
+  { value: "lyrics", label: localize("card.sections.lyrics") },
 ]);
 const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map((opt) => opt.value);
 

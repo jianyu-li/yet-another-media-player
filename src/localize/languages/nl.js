@@ -394,6 +394,7 @@ export default {
       details: "Details van 'Nu Spelen'",
       menu: "Menu & Zoekschermen",
       action_chips: "Actie Chips",
+      lyrics: "Songtekst",
     },
     media_controls: {
       shuffle: "Shuffle",

@@ -370,6 +370,7 @@ export default {
       details: "Detalles de reproducción",
       menu: "Menú y Búsqueda",
       action_chips: "Chips de acción",
+      lyrics: "Letra",
     },
     media_controls: {
       shuffle: "Aleatorio",

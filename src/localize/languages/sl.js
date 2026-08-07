@@ -367,6 +367,7 @@ export default {
       details: "Podrobnosti predvajanja",
       menu: "Meni in iskanje",
       action_chips: "Čipi dejanj",
+      lyrics: "Besedilo",
     },
     media_controls: {
       shuffle: "Naključno",

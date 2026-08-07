@@ -369,6 +369,7 @@ export default {
       details: "Detalhes de reprodução",
       menu: "Menu e Procura",
       action_chips: "Chips de ação",
+      lyrics: "Letras",
     },
     media_controls: {
       shuffle: "Aleatório",
