@@ -478,8 +478,10 @@ export default {
     none_found: "Nenhuma letra encontrada",
     not_available: "Letra não disponível",
     instrumental: "Faixa Instrumental",
-    admin_only_mass: "A busca de letras pelo Music Assistant é apenas para usuários administradores. Recomenda-se mudar para lrclib na configuração do cartão.",
-    fallback_to_lrclib_non_admin: "Usuário não administrador detectado. Usando lrclib como alternativa para buscar as letras.",
+    admin_only_mass:
+      "A busca de letras pelo Music Assistant é apenas para usuários administradores. Recomenda-se mudar para lrclib na configuração do cartão.",
+    fallback_to_lrclib_non_admin:
+      "Usuário não administrador detectado. Usando lrclib como alternativa para buscar as letras.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Alternativa para LRCLIB)",

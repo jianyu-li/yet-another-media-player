@@ -517,8 +517,10 @@ export default {
     none_found: "No lyrics found",
     not_available: "Lyrics not available",
     instrumental: "Instrumental Track",
-    admin_only_mass: "Music Assistant lyrics fetch is for admin users only. It is recommended to switch to lrclib in the card configuration.",
-    fallback_to_lrclib_non_admin: "Non-admin user detected. Falling back to lrclib for lyrics fetch.",
+    admin_only_mass:
+      "Music Assistant lyrics fetch is for admin users only. It is recommended to switch to lrclib in the card configuration.",
+    fallback_to_lrclib_non_admin:
+      "Non-admin user detected. Falling back to lrclib for lyrics fetch.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Fallback to LRCLIB)",

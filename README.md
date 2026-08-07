@@ -770,6 +770,7 @@ adaptive_text_targets:
   - details        # now playing title/artist
   - menu           # menu + search sheets
   - action_chips   # action chips on the card
+  - lyrics         # lyrics font size
 ```
 
 ### Card Mod Examples
