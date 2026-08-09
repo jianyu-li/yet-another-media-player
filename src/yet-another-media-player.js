@@ -2958,11 +2958,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         },
         return_response: true,
       };
-      const configLimit = this._getSearchResultsLimit();
-      const normalizedLimit = Number.isFinite(limit) ? limit : configLimit;
-      const limitAfter = Math.max(normalizedLimit || 0, configLimit || 0);
+      const limitAfter = Number.isFinite(limit) ? Math.max(0, limit) : this._getSearchResultsLimit();
       if (limitAfter > 0) {
-        message.service_data.limit_after = limitAfter;  // Use config search_results_limit
+        message.service_data.limit_after = limitAfter;  // Keep for backwards compatibility
+        message.service_data.limit = limitAfter + 1;    // Account for 1 active item + limitAfter upcoming items
       }
 
       const response = await hass.connection.sendMessagePromise(message);
@@ -2990,8 +2989,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
 
       // Process the upcoming items like the companion card does
-      const itemsToRender = normalizedLimit > 0
-        ? upcomingItems.slice(0, normalizedLimit)
+      const itemsToRender = limitAfter > 0
+        ? upcomingItems.slice(0, limitAfter)
         : upcomingItems;
       const results = itemsToRender.map((item, index) => ({
         media_content_id: item.media_content_id || `queue_${index}`,
