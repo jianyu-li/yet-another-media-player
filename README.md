@@ -472,7 +472,7 @@ You can configure the maximum number of search results to display using the `sea
 - **Default**: 20 results
 - **Range**: 0-1000 results
 - **Music Assistant default**: Set to `0` to defer to Music Assistant’s built-in limits (not unlimited)
-- **Note**: Higher limits may increase load time and memory usage when rendering large result sets.
+- **Note**: Higher limits may increase load time and memory usage when rendering large result sets. Additionally, streaming providers may enforce rate limits on concurrent API requests if this is set too high.
 - **Scope**: Global setting that applies to all entities and search types
 
 #### Example Configuration
