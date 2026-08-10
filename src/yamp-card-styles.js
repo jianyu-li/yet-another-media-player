@@ -2315,6 +2315,7 @@ export const yampCardStyles = css`
     border-radius: var(--border-radius);
     box-shadow: none;
     width: 100%;
+    height: 100%;
     padding: 18px 8px 0px 8px;
     padding-top: clamp(12px, 6vh, 18px);
     display: flex;
@@ -3159,10 +3160,11 @@ export const yampCardStyles = css`
     flex-shrink: 0;
   }
 
-  .entity-options-sheet .entity-options-search {
+  .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: auto;
+    min-height: 100%;
   }
 
   .entity-options-sheet .entity-options-search-row,
@@ -3529,16 +3531,15 @@ export const yampCardStyles = css`
     ${HIDE_SCROLLBAR}
   }
 
-  .entity-options-sheet:not([data-pin-search-headers="true"]) .search-sheet-results,
-  .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search-results {
-    overflow-y: visible;
+  .queue-sortable-container {
+    padding-bottom: 24px;
   }
 
   .queue-sortable-container.is-card-layout {
     display: grid;
     grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
     gap: 12px;
-    padding: 12px;
+    padding: 12px 12px 24px 12px;
   }
 
   .queue-sortable-container.is-card-layout .queue-drag-wrapper {

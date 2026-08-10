@@ -1914,7 +1914,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       } else if (isUpcoming) {
         // Load upcoming queue items
         this._initialFavoritesLoaded = false;
-        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, this._getSearchResultsLimit());
+        const upcomingLimit = Math.min(250, this._getSearchResultsLimit());
+        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, upcomingLimit);
         this._lastSearchUsedServerFavorites = false;
       } else if (isRecommendations) {
         this._initialFavoritesLoaded = false;
@@ -2738,7 +2739,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Get next track from Music Assistant (limited by Music Assistant API)
-  async _getUpcomingQueue(hass, entityId, limit = 20) {
+  async _getUpcomingQueue(hass, entityId, limit = 250) {
     try {
       // Always check for mass_queue integration (don't cache this)
       const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
@@ -2940,15 +2941,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Get queue using mass_queue integration
-  async _getUpcomingQueueWithMassQueue(hass, entityId, limit = 20) {
+  async _getUpcomingQueueWithMassQueue(hass, entityId, limit = 250) {
     try {
-      // Get the currently playing track's media_content_id
-      const playerState = hass.states[entityId];
-      const currentTrackId = playerState?.attributes?.media_content_id;
-
       // Use limit_before and limit_after like the companion card does
-      // limit_before: 5 means get 5 items before the current track (to include current track)
-      // limit_after: limit means get up to 'limit' upcoming items
+      // limit_before: 0 means get items starting at the current track
       const message = {
         type: "call_service",
         domain: "mass_queue",
@@ -2959,11 +2955,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         },
         return_response: true,
       };
-      const limitAfter = Number.isFinite(limit) ? Math.max(0, limit) : this._getSearchResultsLimit();
-      if (limitAfter > 0) {
-        message.service_data.limit_after = limitAfter;  // Keep for backwards compatibility
-        message.service_data.limit = limitAfter + 1;    // Account for 1 active item + limitAfter upcoming items
-      }
+      const limitAfter = Number.isFinite(limit) && limit > 0 ? limit : 250;
+      message.service_data.limit_after = limitAfter;  // Keep for backwards compatibility
+      message.service_data.limit = limitAfter + 1;    // Account for 1 active item + limitAfter upcoming items
 
       const response = await hass.connection.sendMessagePromise(message);
       const queueItems = response?.response?.[entityId];
@@ -2972,16 +2966,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         throw new Error('Invalid response from mass_queue');
       }
 
-      // Find the currently playing track's index in the queue
-      // 1. Prioritize Music Assistant's native "active" or playback state (near-instant)
+      // With limit_before: 0, Music Assistant returns queue items starting at the currently active track (index 0).
+      // Find active item index, defaulting to index 0. Avoid matching duplicate media_content_id entries further down.
       let currentTrackIndex = queueItems.findIndex(item => item.active === true || item.state === 'playing');
-
-      // 2. Fallback to Home Assistant's media_content_id (slower sync)
-      if (currentTrackIndex === -1 && currentTrackId) {
-        currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
-      }
-
-      // 3. Last resort: since we requested limit_before: 0, the first item SHOULD be the one
       if (currentTrackIndex === -1 && queueItems.length > 0) {
         currentTrackIndex = 0;
       }
@@ -2990,22 +2977,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
 
       // Process the upcoming items like the companion card does
-      const itemsToRender = limitAfter > 0
-        ? upcomingItems.slice(0, limitAfter)
-        : upcomingItems;
+      const itemsToRender = upcomingItems;
       const results = itemsToRender.map((item, index) => ({
-        media_content_id: item.media_content_id || `queue_${index}`,
+        media_content_id: item.media_content_id || item.queue_item_id || `queue_${index}`,
         media_content_type: 'track',
         media_class: 'track',
-        title: item.media_title || 'Unknown Track',
-        artist: item.media_artist || 'Unknown Artist',
-        album: item.media_album_name || 'Unknown Album',
-        thumbnail: item.media_image || null,
-        duration: null,
+        title: item.media_title || item.name || 'Unknown Track',
+        artist: item.media_artist || item.artist || 'Unknown Artist',
+        album: item.media_album_name || item.album || 'Unknown Album',
+        thumbnail: item.media_image || item.image || null,
+        duration: item.duration || null,
         position: index + 1,
         queue_item_id: item.queue_item_id || null
       }));
-
 
       return {
         results,
