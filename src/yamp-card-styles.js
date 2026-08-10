@@ -3253,9 +3253,16 @@ export const yampCardStyles = css`
 
   /* Reserved space for persistent media controls when pinning is active */
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
-  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search,
-  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
-    margin-bottom: 80px;
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
+  .entity-options-sheet[data-pin-search-headers="true"] .search-sheet-results,
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
+    margin-bottom: 0px;
+    padding-bottom: 80px;
+    background: none;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
+    margin-bottom: 0px;
     padding-bottom: 0px;
     background: none;
   }
@@ -3277,6 +3284,12 @@ export const yampCardStyles = css`
   :host([data-hide-persistent-controls="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
     .group-list-scroll,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .search-sheet-results,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-search-results,
   :host([data-hide-menu-player="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
     .entity-options-scroll,
@@ -3285,8 +3298,15 @@ export const yampCardStyles = css`
     .entity-options-search,
   :host([data-hide-menu-player="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
-    .group-list-scroll {
+    .group-list-scroll,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .search-sheet-results,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-search-results {
     margin-bottom: 0px;
+    padding-bottom: 0px;
   }
   /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
 
