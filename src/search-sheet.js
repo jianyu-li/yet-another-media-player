@@ -1134,14 +1134,20 @@ export async function isTrackFavorited(
           service_data: {
             command: "music/item_by_uri",
             data: { uri: mediaContentId },
-            ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
+            ...(mqConfigEntryId &&
+              mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
           },
           return_response: true,
         };
         const trackRes = await hass.connection.sendMessagePromise(trackMsg);
         const item = trackRes?.response?.response || trackRes?.response || trackRes?.result;
         if (item && typeof item === "object") {
-          const fav = typeof item.favorite === "boolean" ? item.favorite : (typeof item.is_favorite === "boolean" ? item.is_favorite : null);
+          const fav =
+            typeof item.favorite === "boolean"
+              ? item.favorite
+              : typeof item.is_favorite === "boolean"
+                ? item.is_favorite
+                : null;
           if (fav !== null) {
             return fav;
           }
