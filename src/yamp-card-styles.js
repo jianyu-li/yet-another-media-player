@@ -4223,18 +4223,10 @@ export const lyricsStyles = css`
     z-index: ${Z_LAYERS.LYRICS_OVERLAY};
     overflow: hidden;
     pointer-events: auto;
-    backdrop-filter: ${BLUR_12};
-    -webkit-backdrop-filter: ${BLUR_12};
+    backdrop-filter: ${BLUR_5};
+    -webkit-backdrop-filter: ${BLUR_5};
+    background: var(--yamp-lyrics-bg, var(--yamp-overlay-bg));
     color: var(--yamp-lyrics-color, var(--primary-text-color, #fff));
-  }
-
-  :host([data-artwork-fit="scaled-contain-alternate"]) {
-    background: var(--yamp-lyrics-bg, var(--yamp-overlay-bg, rgba(0, 0, 0, 0.82)));
-  }
-
-  :host(:not([data-artwork-fit="scaled-contain-alternate"])) {
-    background: var(--yamp-lyrics-bg, var(--yamp-overlay-bg, rgba(0, 0, 0, 0.65)));
-    color: var(--primary-text-color, #fff);
   }
 
   .lyrics-scroll-container {
