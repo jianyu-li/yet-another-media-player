@@ -8323,7 +8323,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || this._isIdle) ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || this._lyricsActive) ? html`<div class="card-lower-fade"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed

@@ -1798,17 +1798,35 @@ export const yampCardStyles = css`
   .yamp-card-inner[data-lyrics-active="true"] .volume-icon-btn ha-icon,
   .yamp-card-inner[data-lyrics-active="true"] .radio-mode-button,
   .yamp-card-inner[data-lyrics-active="true"] .volume-slider-icon,
-  .yamp-card-inner[data-lyrics-active="true"] .timestamps-container {
+  .yamp-card-inner[data-lyrics-active="true"] .timestamps-container,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .details,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .title,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .artist,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .source-menu-btn,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .source-selected,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .controls-row,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .button,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .modern-button,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .vol-stepper span,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .vol-label,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .more-info-btn ha-icon,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .volume-icon-btn,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .volume-icon-btn ha-icon,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .radio-mode-button,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .volume-slider-icon,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .timestamps-container {
     color: var(--primary-text);
   }
 
-  .yamp-card-inner[data-lyrics-active="true"] .modern-button {
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .modern-button {
     background: color-mix(in srgb, var(--primary-text), transparent 85%);
     box-shadow: none; /* Cleaner look on card background */
   }
 
   /* Hamburger icon (span) uses !important in base styles, so we override it here */
-  .yamp-card-inner[data-lyrics-active="true"] .more-info-icon {
+  .yamp-card-inner[data-lyrics-active="true"] .more-info-icon,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .more-info-icon {
     color: var(--primary-text) !important;
   }
 
@@ -1816,7 +1834,11 @@ export const yampCardStyles = css`
   .yamp-card-inner[data-lyrics-active="true"] .button.active,
   .yamp-card-inner[data-lyrics-active="true"] .button.active ha-icon,
   .yamp-card-inner[data-lyrics-active="true"] .modern-button.active,
-  .yamp-card-inner[data-lyrics-active="true"] .modern-button.active ha-icon {
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button.active ha-icon,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .button.active,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .button.active ha-icon,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .modern-button.active,
+  .yamp-card-inner[data-artwork-fit^="scaled-contain"] .modern-button.active ha-icon {
     color: var(--custom-accent);
   }
 
