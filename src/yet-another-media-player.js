@@ -346,7 +346,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const artistName = maState.attributes?.media_artist;
 
 
-      const isFavorited = await isTrackFavorited(this.hass, mediaContentId, entityId, trackName, artistName, 200);
+      const limitToUse = Math.min(this._getSearchResultsLimit(), 10);
+      const isFavorited = await isTrackFavorited(this.hass, mediaContentId, entityId, trackName, artistName, limitToUse);
 
       // Initialize cache if needed
       if (!this._favoriteStatusCache) {
