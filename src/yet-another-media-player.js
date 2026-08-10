@@ -3632,6 +3632,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._queueRefreshTimer = setTimeout(() => {
         this._queueRefreshTimer = null;
 
+        if (!this._upcomingFilterActive) return;
+
         // Capture a new token to protect against stale results from entry/heartbeat fetches
         const searchToken = Date.now();
         this._latestSearchToken = searchToken;
