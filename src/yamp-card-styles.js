@@ -26,7 +26,7 @@ const HIDE_SCROLLBAR = css`
 
 const BLUR_5 = css`blur(5px)`;
 const BLUR_10 = css`blur(10px)`;
-const BLUR_12 = css`blur(12px)`;
+
 const BLUR_20 = css`blur(20px)`;
 
 const CHIP_ROW_MASK = css`linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%)`;
@@ -302,7 +302,12 @@ export const yampCardStyles = css`
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      color-mix(in srgb, var(--ha-card-background, var(--card-background-color, #000)) 40%, transparent) 55%,
+      color-mix(
+          in srgb,
+          var(--ha-card-background, var(--card-background-color, #000)) 40%,
+          transparent
+        )
+        55%,
       var(--ha-card-background, var(--card-background-color, #000)) 100%
     );
   }
@@ -1712,7 +1717,12 @@ export const yampCardStyles = css`
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      color-mix(in srgb, var(--ha-card-background, var(--card-background-color, #000)) 40%, transparent) 55%,
+      color-mix(
+          in srgb,
+          var(--ha-card-background, var(--card-background-color, #000)) 40%,
+          transparent
+        )
+        55%,
       var(--ha-card-background, var(--card-background-color, #000)) 100%
     );
   }
@@ -1841,7 +1851,6 @@ export const yampCardStyles = css`
   .yamp-card-inner[data-artwork-fit^="scaled-contain"] .modern-button.active ha-icon {
     color: var(--custom-accent);
   }
-
 
   .vol-stepper span {
     width: 42px;
@@ -4265,7 +4274,10 @@ export const lyricsStyles = css`
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     cursor: default;
     pointer-events: none;
-    color: var(--yamp-lyrics-inactive-color, var(--secondary-text-color, var(--primary-text-color, #fff)));
+    color: var(
+      --yamp-lyrics-inactive-color,
+      var(--secondary-text-color, var(--primary-text-color, #fff))
+    );
     width: 100%;
     max-width: 95%;
     filter: blur(1px);
@@ -4275,12 +4287,15 @@ export const lyricsStyles = css`
   .lyric-line.active {
     opacity: 1;
     filter: blur(0);
-    color: var(--yamp-lyrics-active-color, var(--yamp-primary-color, var(--custom-accent, var(--accent-color, #ffffff))));
+    color: var(
+      --yamp-lyrics-active-color,
+      var(--yamp-primary-color, var(--custom-accent, var(--accent-color, #ffffff)))
+    );
     font-size: calc(
       var(--yamp-lyrics-active-font-size, var(--yamp-lyrics-font-size, 1.6rem)) *
         var(--yamp-text-scale-lyrics, 1)
     );
-    text-shadow: var(--yamp-overlay-text-shadow, 0 2px 4px rgba(0,0,0,0.5));
+    text-shadow: var(--yamp-overlay-text-shadow, 0 2px 4px rgba(0, 0, 0, 0.5));
   }
 
   .lyric-line.scroll-mode {
