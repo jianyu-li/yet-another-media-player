@@ -298,6 +298,15 @@ export const yampCardStyles = css`
     transform: translateZ(0);
   }
 
+  .yamp-card-inner[data-lyrics-active="true"] .full-bleed-artwork-fade {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, var(--ha-card-background, var(--card-background-color, #000)) 40%, transparent) 55%,
+      var(--ha-card-background, var(--card-background-color, #000)) 100%
+    );
+  }
+
   /* Idle state dimming */
   .dim-idle .details,
   .dim-idle .controls-row,
@@ -397,7 +406,7 @@ export const yampCardStyles = css`
     min-height: 48px;
   }
 
-  .card-lower-content:has(yamp-lyrics-view) .card-artwork-spacer {
+  .yamp-card-inner[data-lyrics-active="true"] .card-artwork-spacer {
     min-height: 80px;
   }
 
@@ -1699,6 +1708,15 @@ export const yampCardStyles = css`
     );
   }
 
+  .yamp-card-inner[data-lyrics-active="true"] .card-lower-fade {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, var(--ha-card-background, var(--card-background-color, #000)) 40%, transparent) 55%,
+      var(--ha-card-background, var(--card-background-color, #000)) 100%
+    );
+  }
+
   .card-lower-content {
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_ELEMENT};
@@ -1765,22 +1783,22 @@ export const yampCardStyles = css`
   }
 
   /* Match Theme mode & Scaled Contain Alternate mode - use theme colors for high contrast in light/dark themes */
-  .card-lower-content:has(yamp-lyrics-view) .details,
-  .card-lower-content:has(yamp-lyrics-view) .title,
-  .card-lower-content:has(yamp-lyrics-view) .artist,
-  .card-lower-content:has(yamp-lyrics-view) .source-menu-btn,
-  .card-lower-content:has(yamp-lyrics-view) .source-selected,
-  .card-lower-content:has(yamp-lyrics-view) .controls-row,
-  .card-lower-content:has(yamp-lyrics-view) .button,
-  .card-lower-content:has(yamp-lyrics-view) .modern-button,
-  .card-lower-content:has(yamp-lyrics-view) .vol-stepper span,
-  .card-lower-content:has(yamp-lyrics-view) .vol-label,
-  .card-lower-content:has(yamp-lyrics-view) .more-info-btn ha-icon,
-  .card-lower-content:has(yamp-lyrics-view) .volume-icon-btn,
-  .card-lower-content:has(yamp-lyrics-view) .volume-icon-btn ha-icon,
-  .card-lower-content:has(yamp-lyrics-view) .radio-mode-button,
-  .card-lower-content:has(yamp-lyrics-view) .volume-slider-icon,
-  .card-lower-content:has(yamp-lyrics-view) .timestamps-container,
+  .yamp-card-inner[data-lyrics-active="true"] .details,
+  .yamp-card-inner[data-lyrics-active="true"] .title,
+  .yamp-card-inner[data-lyrics-active="true"] .artist,
+  .yamp-card-inner[data-lyrics-active="true"] .source-menu-btn,
+  .yamp-card-inner[data-lyrics-active="true"] .source-selected,
+  .yamp-card-inner[data-lyrics-active="true"] .controls-row,
+  .yamp-card-inner[data-lyrics-active="true"] .button,
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button,
+  .yamp-card-inner[data-lyrics-active="true"] .vol-stepper span,
+  .yamp-card-inner[data-lyrics-active="true"] .vol-label,
+  .yamp-card-inner[data-lyrics-active="true"] .more-info-btn ha-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .volume-icon-btn,
+  .yamp-card-inner[data-lyrics-active="true"] .volume-icon-btn ha-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .radio-mode-button,
+  .yamp-card-inner[data-lyrics-active="true"] .volume-slider-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .timestamps-container,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .details,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .title,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .artist,
@@ -1800,23 +1818,23 @@ export const yampCardStyles = css`
     color: var(--primary-text);
   }
 
-  .card-lower-content:has(yamp-lyrics-view) .modern-button,
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button {
     background: color-mix(in srgb, var(--primary-text), transparent 85%);
     box-shadow: none; /* Cleaner look on card background */
   }
 
   /* Hamburger icon (span) uses !important in base styles, so we override it here */
-  .card-lower-content:has(yamp-lyrics-view) .more-info-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .more-info-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-icon {
     color: var(--primary-text) !important;
   }
 
   /* Ensure active buttons still use the accent color */
-  .card-lower-content:has(yamp-lyrics-view) .button.active,
-  .card-lower-content:has(yamp-lyrics-view) .button.active ha-icon,
-  .card-lower-content:has(yamp-lyrics-view) .modern-button.active,
-  .card-lower-content:has(yamp-lyrics-view) .modern-button.active ha-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .button.active,
+  .yamp-card-inner[data-lyrics-active="true"] .button.active ha-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button.active,
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button.active ha-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button.active,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button.active ha-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button.active,

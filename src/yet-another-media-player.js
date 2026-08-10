@@ -8266,6 +8266,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
             data-artwork-fit="${activeArtworkFit}"
+            data-lyrics-active="${String(this._lyricsActive === true)}"
             class=${classMap({
       "yamp-card-inner": true,
       "compact-collapsed": isCompact && collapsed,
