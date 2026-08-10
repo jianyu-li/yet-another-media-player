@@ -3955,7 +3955,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="grow-children">
             <div class="editor-field-wrapper">
               ${
-                this._isTemplateMode("in_menu", action?.in_menu)
+                this._isTemplateMode("placement", effectivePlacement)
                   ? html`
                       <div class="grow-children" style="flex-direction: column;">
                         <span class="form-label">${localize("editor.fields.placement")}</span>
@@ -3966,20 +3966,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           autocomplete-entities
                           label="${localize("editor.fields.placement")}"
                           .value=${
-                            typeof action?.in_menu === "string"
-                              ? action.in_menu
-                              : String(!!action?.in_menu)
+                            typeof action?.placement === "string"
+                              ? action.placement
+                              : typeof action?.in_menu === "string"
+                                ? action.in_menu
+                                : typeof effectivePlacement === "string"
+                                  ? effectivePlacement
+                                  : ""
                           }
                           @value-changed=${(e) =>
-                            this._updateActionProperty("in_menu", e.detail.value)}
+                            this._updateActionProperty("placement", e.detail.value)}
                         ></ha-code-editor>
                       </div>
                       <div class="field-actions">
                         ${this._renderTemplateToggle(
-                          "in_menu",
-                          action?.in_menu,
+                          "placement",
+                          effectivePlacement,
                           (v) => {
-                            const updates = { in_menu: v };
+                            const updates = { placement: v };
                             if (v !== "hidden") {
                               updates.card_trigger = "none";
                             }
@@ -4076,7 +4080,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
         </div>
         ${
-          action?.in_menu === "hidden" &&
+          effectivePlacement === "hidden" &&
           (!action?.card_trigger || action?.card_trigger === "none") &&
           actionMode !== "sync_selected_entity" &&
           actionMode !== "select_entity"
