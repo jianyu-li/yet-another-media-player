@@ -8266,6 +8266,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
             data-artwork-fit="${activeArtworkFit}"
+            data-lyrics-active="${String(this._lyricsActive === true)}"
             class=${classMap({
       "yamp-card-inner": true,
       "compact-collapsed": isCompact && collapsed,
@@ -8276,7 +8277,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           >
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!(dimIdleFrame || isAlternateFit || this._isIdle) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!(dimIdleFrame || this._isIdle) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
               <div class="media-artwork-placeholder"
@@ -8322,7 +8323,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || isAlternateFit || this._isIdle) ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || this._lyricsActive) ? html`<div class="card-lower-fade"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -8375,13 +8376,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
                     ${(this._lyricsActive && !this._isIdle) ? html`
                       <yamp-lyrics-view
+                        data-match-theme="${String(this.config.match_theme === true)}"
                         data-artwork-fit="${activeArtworkFit}"
                         .hass=${this.hass}
                         .lyrics=${this._massLyrics}
                         .position=${pos}
                         .loading=${this._fetchingLyrics}
                         .error=${this._lyricsError}
-                        .activeThemeColor=${this.config.match_theme === true ? "var(--state-media_player-active-color, var(--primary-color, #ffffff))" : "var(--custom-accent, #ffffff)"}
+                        .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
                         .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
                         .preRoll=${this.config.lyrics_pre_roll ?? 0}
                       ></yamp-lyrics-view>
