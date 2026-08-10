@@ -1162,7 +1162,7 @@ export async function isTrackFavorited(
   entityId = null,
   trackName = null,
   artistName = null,
-  searchResultsLimit = 100
+  searchResultsLimit = 20
 ) {
   if (!mediaContentId) {
     return false;
@@ -1177,7 +1177,6 @@ export async function isTrackFavorited(
     // Use the provided entityId or try to find a Music Assistant entity
     let targetEntityId = entityId;
     if (!targetEntityId) {
-      // Try to find a Music Assistant entity
       const states = Object.values(hass.states);
       const maEntity = states.find(
         (state) => isMusicAssistantEntity(state) && state.entity_id.startsWith("media_player.")
@@ -1189,85 +1188,73 @@ export async function isTrackFavorited(
       }
     }
 
-    // First try: Direct MA search by title/artist and inspect item's own favorite flag
-    if (trackName || artistName) {
+    // Strategy 1: Direct targeted item lookup by URI via mass_queue integration (O(1) local DB lookup)
+    const mqConfigEntryId = await getMassQueueConfigEntryId(hass, targetEntityId);
+    if (mqConfigEntryId && mediaContentId.includes("://")) {
       try {
-        const serviceData = {
-          name: trackName || artistName,
-          ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
-          media_type: "track",
-        };
-        const searchLimit = resolveLimitValue(searchResultsLimit);
-        if (searchLimit !== undefined) {
-          serviceData.limit = searchLimit;
-        }
-        if (artistName) {
-          serviceData.artist = artistName;
-        }
-        const searchMsg = {
+        const trackMsg = {
           type: "call_service",
-          domain: "music_assistant",
-          service: "search",
-          service_data: serviceData,
+          domain: "mass_queue",
+          service: "send_command",
+          service_data: {
+            command: "music/item_by_uri",
+            data: { uri: mediaContentId },
+            ...(mqConfigEntryId &&
+              mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
+          },
           return_response: true,
         };
-        const searchRes = await hass.connection.sendMessagePromise(searchMsg);
-        const searchResponse = searchRes?.response;
-        let searchItems = [];
-        if (Array.isArray(searchResponse)) {
-          searchItems = searchResponse;
-        } else if (searchResponse && typeof searchResponse === "object") {
-          Object.values(searchResponse).forEach((val) => {
-            if (Array.isArray(val)) {
-              searchItems.push(...val);
-            }
-          });
-        }
-        if (searchItems.length) {
-          const idPart = (mediaContentId.split("/").pop() || "").trim();
-          const byUri = searchItems.find((it) => it?.uri === mediaContentId);
-          const byId =
-            !byUri && /^\d+$/.test(idPart)
-              ? searchItems.find(
-                  (it) => typeof it?.uri === "string" && it.uri.endsWith(`/${idPart}`)
-                )
-              : null;
-          const foundItem = byUri || byId || null;
-          if (foundItem && typeof foundItem.favorite === "boolean") {
-            return !!foundItem.favorite;
+        const trackRes = await hass.connection.sendMessagePromise(trackMsg);
+        const item = trackRes?.response?.response || trackRes?.response || trackRes?.result;
+        if (item && typeof item === "object") {
+          const fav =
+            typeof item.favorite === "boolean"
+              ? item.favorite
+              : typeof item.is_favorite === "boolean"
+                ? item.is_favorite
+                : null;
+          if (fav !== null) {
+            return fav;
           }
         }
       } catch (e) {
-        // Continue to next strategies
+        // Continue to fallback if mass_queue command fails
       }
+    }
 
-      // Second try: Precise search with track name only (faster and simpler)
-      if (trackName) {
-        try {
-          const message = {
-            type: "call_service",
-            domain: "music_assistant",
-            service: "get_library",
-            service_data: {
-              ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
-              media_type: "track",
-              favorite: true,
-              search: trackName.trim(),
-            },
-            return_response: true,
-          };
-          const trackSearchLimit = resolveLimitValue(searchResultsLimit);
-          if (trackSearchLimit !== undefined) {
-            message.service_data.limit = trackSearchLimit; // Use configurable limit
-          }
-          const response = await hass.connection.sendMessagePromise(message);
-          const favoriteTracks = response?.response?.items || [];
-          if (favoriteTracks.some((track) => track.uri === mediaContentId)) {
-            return true;
-          }
-        } catch (e) {
-          // Ignore error and return false
+    // Strategy 2: Targeted query to MA local library database (no external API calls)
+    if (trackName || mediaContentId) {
+      try {
+        const message = {
+          type: "call_service",
+          domain: "music_assistant",
+          service: "get_library",
+          service_data: {
+            ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
+            media_type: "track",
+            favorite: true,
+            ...(trackName && { search: trackName.trim() }),
+          },
+          return_response: true,
+        };
+        const appliedLimit = resolveLimitValue(searchResultsLimit, { cap: 10 });
+        if (appliedLimit !== undefined) {
+          message.service_data.limit = appliedLimit;
         }
+
+        const response = await hass.connection.sendMessagePromise(message);
+        const favoriteTracks = response?.response?.items || response?.response || [];
+        if (Array.isArray(favoriteTracks)) {
+          const idPart = (mediaContentId.split("/").pop() || "").trim();
+          return favoriteTracks.some(
+            (track) =>
+              track.uri === mediaContentId ||
+              (track.item_id && mediaContentId.endsWith(`/${track.item_id}`)) ||
+              (idPart && track.uri && track.uri.endsWith(`/${idPart}`))
+          );
+        }
+      } catch (e) {
+        // Ignore error
       }
     }
 
