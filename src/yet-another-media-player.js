@@ -8375,13 +8375,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
                     ${(this._lyricsActive && !this._isIdle) ? html`
                       <yamp-lyrics-view
+                        data-match-theme="${String(this.config.match_theme === true)}"
                         data-artwork-fit="${activeArtworkFit}"
                         .hass=${this.hass}
                         .lyrics=${this._massLyrics}
                         .position=${pos}
                         .loading=${this._fetchingLyrics}
                         .error=${this._lyricsError}
-                        .activeThemeColor=${this.config.match_theme === true ? "var(--state-media_player-active-color, var(--primary-color, #ffffff))" : "var(--custom-accent, #ffffff)"}
+                        .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
                         .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
                         .preRoll=${this.config.lyrics_pre_roll ?? 0}
                       ></yamp-lyrics-view>

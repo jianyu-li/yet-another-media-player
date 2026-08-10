@@ -17,7 +17,7 @@ export const Z_LAYERS = Object.freeze({
   VOLUME_OVERLAY: 3,
 });
 
-const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent, rgba(0,0,0,0.5) 10px, black 50px, black calc(100% - 50px), rgba(0,0,0,0.5) calc(100% - 10px), transparent)`;
+const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent 0px, black 30px, black calc(100% - 30px), transparent 100%)`;
 
 const HIDE_SCROLLBAR = css`
   scrollbar-width: none;
@@ -26,6 +26,7 @@ const HIDE_SCROLLBAR = css`
 
 const BLUR_5 = css`blur(5px)`;
 const BLUR_10 = css`blur(10px)`;
+const BLUR_12 = css`blur(12px)`;
 const BLUR_20 = css`blur(20px)`;
 
 const CHIP_ROW_MASK = css`linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%)`;
@@ -394,6 +395,10 @@ export const yampCardStyles = css`
 
   :host([data-has-custom-height="true"]) .card-artwork-spacer {
     min-height: 48px;
+  }
+
+  .card-lower-content:has(yamp-lyrics-view) .card-artwork-spacer {
+    min-height: 80px;
   }
 
   /* Media background */
@@ -942,6 +947,8 @@ export const yampCardStyles = css`
     min-height: calc(48px * var(--yamp-details-scale, 1));
     font-size: calc(1em * var(--yamp-details-scale, 1));
     flex-shrink: 0;
+    position: relative;
+    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
   }
 
   .details .title {
@@ -1074,6 +1081,8 @@ export const yampCardStyles = css`
     align-items: center;
     gap: 12px;
     padding: 4px 16px;
+    position: relative;
+    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
   }
 
   .controls-row.adaptive {
@@ -1253,6 +1262,8 @@ export const yampCardStyles = css`
     padding-left: 24px;
     padding-right: 24px;
     box-sizing: border-box;
+    position: relative;
+    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
   }
 
   .progress-bar {
@@ -1288,6 +1299,8 @@ export const yampCardStyles = css`
     grid-template-columns: minmax(min-content, 1fr) auto minmax(min-content, 1fr);
     align-items: center;
     padding: 10px 16px 14px 16px;
+    position: relative;
+    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
   }
 
   /* Remove flex:1 since we are using grid columns */
@@ -1751,7 +1764,23 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
-  /* Scaled Contain Alternate mode - use theme colors since background is transparent */
+  /* Match Theme mode & Scaled Contain Alternate mode - use theme colors for high contrast in light/dark themes */
+  .card-lower-content:has(yamp-lyrics-view) .details,
+  .card-lower-content:has(yamp-lyrics-view) .title,
+  .card-lower-content:has(yamp-lyrics-view) .artist,
+  .card-lower-content:has(yamp-lyrics-view) .source-menu-btn,
+  .card-lower-content:has(yamp-lyrics-view) .source-selected,
+  .card-lower-content:has(yamp-lyrics-view) .controls-row,
+  .card-lower-content:has(yamp-lyrics-view) .button,
+  .card-lower-content:has(yamp-lyrics-view) .modern-button,
+  .card-lower-content:has(yamp-lyrics-view) .vol-stepper span,
+  .card-lower-content:has(yamp-lyrics-view) .vol-label,
+  .card-lower-content:has(yamp-lyrics-view) .more-info-btn ha-icon,
+  .card-lower-content:has(yamp-lyrics-view) .volume-icon-btn,
+  .card-lower-content:has(yamp-lyrics-view) .volume-icon-btn ha-icon,
+  .card-lower-content:has(yamp-lyrics-view) .radio-mode-button,
+  .card-lower-content:has(yamp-lyrics-view) .volume-slider-icon,
+  .card-lower-content:has(yamp-lyrics-view) .timestamps-container,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .details,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .title,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .artist,
@@ -1771,17 +1800,23 @@ export const yampCardStyles = css`
     color: var(--primary-text);
   }
 
+  .card-lower-content:has(yamp-lyrics-view) .modern-button,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button {
     background: color-mix(in srgb, var(--primary-text), transparent 85%);
     box-shadow: none; /* Cleaner look on card background */
   }
 
   /* Hamburger icon (span) uses !important in base styles, so we override it here */
+  .card-lower-content:has(yamp-lyrics-view) .more-info-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-icon {
     color: var(--primary-text) !important;
   }
 
   /* Ensure active buttons still use the accent color */
+  .card-lower-content:has(yamp-lyrics-view) .button.active,
+  .card-lower-content:has(yamp-lyrics-view) .button.active ha-icon,
+  .card-lower-content:has(yamp-lyrics-view) .modern-button.active,
+  .card-lower-content:has(yamp-lyrics-view) .modern-button.active ha-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button.active,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button.active ha-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button.active,
@@ -4211,13 +4246,13 @@ export const lyricsStyles = css`
     top: 0;
     left: 0;
     right: 0;
-    bottom: -1px;
+    bottom: -600px;
     z-index: ${Z_LAYERS.LYRICS_OVERLAY};
     overflow: hidden;
     pointer-events: auto;
-    backdrop-filter: ${BLUR_5};
-    -webkit-backdrop-filter: ${BLUR_5};
-    color: var(--yamp-lyrics-color, var(--yamp-overlay-text, #fff));
+    backdrop-filter: ${BLUR_12};
+    -webkit-backdrop-filter: ${BLUR_12};
+    color: var(--yamp-lyrics-color, var(--primary-text-color, #fff));
   }
 
   :host([data-artwork-fit="scaled-contain-alternate"]) {
@@ -4225,21 +4260,24 @@ export const lyricsStyles = css`
   }
 
   :host(:not([data-artwork-fit="scaled-contain-alternate"])) {
-    background: var(--yamp-lyrics-bg, rgba(0, 0, 0, 0.3));
-    color: #fff;
-    mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
-    -webkit-mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
+    background: var(--yamp-lyrics-bg, var(--yamp-overlay-bg, rgba(0, 0, 0, 0.65)));
+    color: var(--primary-text-color, #fff);
   }
 
   .lyrics-scroll-container {
-    height: 100%;
-    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 600px;
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
     padding-left: 12px;
     padding-right: 12px;
     scroll-behavior: smooth;
+    mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
+    -webkit-mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
     ${HIDE_SCROLLBAR}
     display: flex;
     flex-direction: column;
@@ -4258,11 +4296,11 @@ export const lyricsStyles = css`
     font-weight: 700;
     line-height: 1.3;
     margin-bottom: 24px;
-    opacity: 0.3;
+    opacity: 0.4;
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     cursor: default;
     pointer-events: none;
-    color: inherit;
+    color: var(--yamp-lyrics-inactive-color, var(--secondary-text-color, var(--primary-text-color, #fff)));
     width: 100%;
     max-width: 95%;
     filter: blur(1px);
@@ -4272,12 +4310,12 @@ export const lyricsStyles = css`
   .lyric-line.active {
     opacity: 1;
     filter: blur(0);
-    color: var(--yamp-lyrics-active-color, inherit);
+    color: var(--yamp-lyrics-active-color, var(--yamp-primary-color, var(--custom-accent, var(--accent-color, #ffffff))));
     font-size: calc(
       var(--yamp-lyrics-active-font-size, var(--yamp-lyrics-font-size, 1.6rem)) *
         var(--yamp-text-scale-lyrics, 1)
     );
-    text-shadow: var(--yamp-overlay-text-shadow, none);
+    text-shadow: var(--yamp-overlay-text-shadow, 0 2px 4px rgba(0,0,0,0.5));
   }
 
   .lyric-line.scroll-mode {
