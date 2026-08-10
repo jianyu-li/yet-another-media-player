@@ -1433,14 +1433,6 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
-  .custom-bottom-action ha-icon {
-    font-size: 19px;
-    --mdc-icon-size: 19px;
-    --ha-icon-size: 19px;
-    width: 19px;
-    height: 19px;
-  }
-
   .volume-icon-btn.favorite-volume-btn {
     width: 36px;
     height: 36px;
