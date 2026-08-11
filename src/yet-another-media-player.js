@@ -2027,6 +2027,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     this._searchLoading = false;
     this.requestUpdate();
+    setTimeout(() => this._notifyResize(), 0);
   }
 
   async _playCurrentCollection() {
@@ -8537,7 +8538,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
-        <div class="entity-options-container entity-options-container-opening">
+        <div class="entity-options-container entity-options-container-opening" style="${this._showSearchInSheet ? 'height:100%;' : ''}">
           <div class="entity-options-sheet${(showChipsInMenu || reserveChipSpaceInMenu) ? ' chips-mode' : ''} entity-options-sheet-opening" 
                @click=${e => e.stopPropagation()}
                data-pin-search-headers="${effectivePinHeaders}">
