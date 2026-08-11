@@ -1914,7 +1914,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       } else if (isUpcoming) {
         // Load upcoming queue items
         this._initialFavoritesLoaded = false;
-        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, this._getSearchResultsLimit());
+        const upcomingLimit = Math.min(250, this._getSearchResultsLimit());
+        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, upcomingLimit);
         this._lastSearchUsedServerFavorites = false;
       } else if (isRecommendations) {
         this._initialFavoritesLoaded = false;
@@ -2026,6 +2027,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     this._searchLoading = false;
     this.requestUpdate();
+    setTimeout(() => this._notifyResize(), 0);
   }
 
   async _playCurrentCollection() {
@@ -2639,10 +2641,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Toggle upcoming queue filter
   async _toggleUpcomingFilter(forceState = null) {
-    const targetState = typeof forceState === "boolean"
-      ? forceState
-      : !this._upcomingFilterActive;
-    this._upcomingFilterActive = targetState;
+    if (!this.hass) return;
+
+    if (forceState !== null) {
+      this._upcomingFilterActive = forceState;
+    } else {
+      this._upcomingFilterActive = !this._upcomingFilterActive;
+    }
 
     // Make mutually exclusive with other filters
     if (this._upcomingFilterActive) {
@@ -2738,7 +2743,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Get next track from Music Assistant (limited by Music Assistant API)
-  async _getUpcomingQueue(hass, entityId, limit = 20) {
+  async _getUpcomingQueue(hass, entityId, limit = 250) {
     try {
       // Always check for mass_queue integration (don't cache this)
       const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
@@ -2940,30 +2945,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Get queue using mass_queue integration
-  async _getUpcomingQueueWithMassQueue(hass, entityId, limit = 20) {
+  async _getUpcomingQueueWithMassQueue(hass, entityId, limit = 250) {
     try {
       // Get the currently playing track's media_content_id
       const playerState = hass.states[entityId];
       const currentTrackId = playerState?.attributes?.media_content_id;
 
       // Use limit_before and limit_after like the companion card does
-      // limit_before: 5 means get 5 items before the current track (to include current track)
-      // limit_after: limit means get up to 'limit' upcoming items
       const message = {
         type: "call_service",
         domain: "mass_queue",
         service: "get_queue_items",
         service_data: {
           entity: entityId,
-          limit_before: 0  // Start list at the currently active item
+          limit_before: 5  // Request some history to avoid falsy zero bugs in backend
         },
         return_response: true,
       };
-      const limitAfter = Number.isFinite(limit) ? Math.max(0, limit) : this._getSearchResultsLimit();
-      if (limitAfter > 0) {
-        message.service_data.limit_after = limitAfter;  // Keep for backwards compatibility
-        message.service_data.limit = limitAfter + 1;    // Account for 1 active item + limitAfter upcoming items
-      }
+      const limitAfter = Number.isFinite(limit) && limit > 0 ? limit : 250;
+      message.service_data.limit_after = limitAfter;  // Keep for backwards compatibility
+      message.service_data.limit = limitAfter + 6;    // Account for 5 history + 1 active + limitAfter upcoming items
 
       const response = await hass.connection.sendMessagePromise(message);
       const queueItems = response?.response?.[entityId];
@@ -2972,16 +2973,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         throw new Error('Invalid response from mass_queue');
       }
 
-      // Find the currently playing track's index in the queue
-      // 1. Prioritize Music Assistant's native "active" or playback state (near-instant)
+      // Find active item index
       let currentTrackIndex = queueItems.findIndex(item => item.active === true || item.state === 'playing');
-
-      // 2. Fallback to Home Assistant's media_content_id (slower sync)
+      
+      // Fallback to Home Assistant's media_content_id (slower sync but reliable)
       if (currentTrackIndex === -1 && currentTrackId) {
-        currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
+        currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId || item.queue_item_id === currentTrackId);
       }
 
-      // 3. Last resort: since we requested limit_before: 0, the first item SHOULD be the one
+      // Default to 0 if all else fails
       if (currentTrackIndex === -1 && queueItems.length > 0) {
         currentTrackIndex = 0;
       }
@@ -2990,22 +2990,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
 
       // Process the upcoming items like the companion card does
-      const itemsToRender = limitAfter > 0
-        ? upcomingItems.slice(0, limitAfter)
-        : upcomingItems;
+      const itemsToRender = limitAfter > 0 ? upcomingItems.slice(0, limitAfter) : upcomingItems;
       const results = itemsToRender.map((item, index) => ({
-        media_content_id: item.media_content_id || `queue_${index}`,
+        media_content_id: item.media_content_id || item.queue_item_id || `queue_${index}`,
         media_content_type: 'track',
         media_class: 'track',
-        title: item.media_title || 'Unknown Track',
-        artist: item.media_artist || 'Unknown Artist',
-        album: item.media_album_name || 'Unknown Album',
-        thumbnail: item.media_image || null,
-        duration: null,
+        title: item.media_title || item.name || 'Unknown Track',
+        artist: item.media_artist || item.artist || 'Unknown Artist',
+        album: item.media_album_name || item.album || 'Unknown Album',
+        thumbnail: item.media_image || item.image || null,
+        duration: item.duration || null,
         position: index + 1,
         queue_item_id: item.queue_item_id || null
       }));
-
 
       return {
         results,
@@ -3647,6 +3644,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       this._queueRefreshTimer = setTimeout(() => {
         this._queueRefreshTimer = null;
+
+        if (!this._upcomingFilterActive) return;
 
         // Capture a new token to protect against stale results from entry/heartbeat fetches
         const searchToken = Date.now();
@@ -8542,7 +8541,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
-        <div class="entity-options-container entity-options-container-opening">
+        <div class="entity-options-container entity-options-container-opening" style="${this._showSearchInSheet ? 'height:100%;' : ''}">
           <div class="entity-options-sheet${(showChipsInMenu || reserveChipSpaceInMenu) ? ' chips-mode' : ''} entity-options-sheet-opening" 
                @click=${e => e.stopPropagation()}
                data-pin-search-headers="${effectivePinHeaders}">
@@ -9098,90 +9097,94 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         
         ${this._renderSearchSubFilters(showSearchHeaders)}
  
-        <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}" 
-             style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
-          ${(() => {
-        const currentResults = this._getDisplaySearchResults();
-        const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
-        const isMinimal = this.config.search_view === 'card_minimal';
-        const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
-        const paddedResults = [
-          ...currentResults,
-          ...Array.from({ length: Math.max(0, totalRows - currentResults.length) }, () => null)
-        ];
-        const renderItemFn = (item) => renderSearchResultItem({
-          item,
-          isCard,
-          isMinimal,
-          activeSearchRowMenuId: this._activeSearchRowMenuId,
-          loadingSearchRowMenuId: this._loadingSearchRowMenuId,
-          errorSearchRowMenuId: this._errorSearchRowMenuId,
-          successSearchRowMenuId: this._successSearchRowMenuId,
-          successSearchRowType: this._successSearchRowType,
-          isSelectionFlow: this._isSelectionFlow,
-          massQueueAvailable: this._massQueueAvailable,
-          upcomingFilterActive: !!this._upcomingFilterActive,
-          recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
-          recommendationsFilterActive: !!this._recommendationsFilterActive,
-          searchMediaClassFilter: this._searchMediaClassFilter,
-          queueControlsStyle: this.config.queue_controls_style || "drag_handle",
-          onPlay: (it, e) => this._playMediaFromSearch(it, e),
-          onResultClick: (it, e) => this._handleSearchResultClick(it, e),
-          onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
-          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-          onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
-          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-          onRemove: (it) => this._removeQueueItem(it.queue_item_id),
-          isMusicAssistant: this._isMusicAssistantEntity(),
-          isValidArtwork: (url) => isValidArtworkUrl(url),
-          getClickTitle: (it) => this._getSearchResultClickTitle(it),
-          artworkHostname: this.config?.artwork_hostname || ""
-        });
+        ${(() => {
+          const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
+          const currentResults = this._getDisplaySearchResults();
+          const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
+          const isMinimal = this.config.search_view === 'card_minimal';
+          const renderItemFn = (item) => renderSearchResultItem({
+            item,
+            isCard,
+            isMinimal,
+            activeSearchRowMenuId: this._activeSearchRowMenuId,
+            loadingSearchRowMenuId: this._loadingSearchRowMenuId,
+            errorSearchRowMenuId: this._errorSearchRowMenuId,
+            successSearchRowMenuId: this._successSearchRowMenuId,
+            successSearchRowType: this._successSearchRowType,
+            isSelectionFlow: this._isSelectionFlow,
+            massQueueAvailable: this._massQueueAvailable,
+            upcomingFilterActive: !!this._upcomingFilterActive,
+            recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
+            recommendationsFilterActive: !!this._recommendationsFilterActive,
+            searchMediaClassFilter: this._searchMediaClassFilter,
+            queueControlsStyle: this.config.queue_controls_style || "drag_handle",
+            onPlay: (it, e) => this._playMediaFromSearch(it, e),
+            onResultClick: (it, e) => this._handleSearchResultClick(it, e),
+            onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
+            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+            onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
+            onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+            onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+            onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+            onRemove: (it) => this._removeQueueItem(it.queue_item_id),
+            isMusicAssistant: this._isMusicAssistantEntity(),
+            isValidArtwork: (url) => isValidArtworkUrl(url),
+            getClickTitle: (it) => this._getSearchResultClickTitle(it),
+            artworkHostname: this.config?.artwork_hostname || ""
+          });
 
-        if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
-          return html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`;
-        }
+          if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
+            return html`
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}">
+                <div class="entity-options-search-empty">${localize('common.no_results')}</div>
+              </div>
+            `;
+          }
 
-        const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
-
-        if (isQueueDragAndDrop) {
-          return html`
-            <div class="queue-sortable-container ${isCard ? 'is-card-layout' : ''}"
-              @pointerdown=${(e) => this._onQueueDragStart(e)}
-            >
-              ${currentResults.map((item, idx) => html`
-                <div class="queue-drag-wrapper" data-queue-idx="${idx}">
-                  ${renderItemFn(item)}
+          if (isQueueDragAndDrop) {
+            return html`
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper"
+                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
+                <div class="queue-sortable-container ${isCard ? 'is-card-layout' : ''}"
+                  @pointerdown=${(e) => this._onQueueDragStart(e)}
+                >
+                  ${currentResults.map((item, idx) => html`
+                    <div class="queue-drag-wrapper" data-queue-idx="${idx}">
+                      ${renderItemFn(item)}
+                    </div>
+                  `)}
                 </div>
-              `)}
+              </div>
+            `;
+          }
+
+          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
+            this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
+            this._cachedSearchGridLayoutIsMinimal = isMinimal;
+            this._cachedSearchGridLayout = yampGrid({
+              columns: this._cachedSearchGridLayoutColumns,
+              gap: '12px',
+              padding: '12px',
+              itemSize: isMinimal
+                ? { width: 150, height: 150 }
+                : { width: 150, height: 244 }
+            });
+          }
+
+          return html`
+            <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper"
+                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
+              ${isCard
+                ? virtualize({
+                  items: currentResults,
+                  renderItem: renderItemFn,
+                  layout: this._cachedSearchGridLayout,
+                  scroller: pinSearchHeaders
+                })
+                : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: pinSearchHeaders })}
             </div>
           `;
-        }
-
-        if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
-          this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
-          this._cachedSearchGridLayoutIsMinimal = isMinimal;
-          this._cachedSearchGridLayout = yampGrid({
-            columns: this._cachedSearchGridLayoutColumns,
-            gap: '12px',
-            padding: '12px',
-            itemSize: isMinimal
-              ? { width: 150, height: 150 }
-              : { width: 150, height: 244 }
-          });
-        }
-
-        return isCard
-          ? virtualize({
-            items: paddedResults,
-            renderItem: renderItemFn,
-            layout: this._cachedSearchGridLayout,
-            scroller: pinSearchHeaders
-          })
-          : virtualize({ items: paddedResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
-      })()}
+        })()}
         </div>
       </div>
     `;

@@ -1433,14 +1433,6 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
-  .custom-bottom-action ha-icon {
-    font-size: 19px;
-    --mdc-icon-size: 19px;
-    --ha-icon-size: 19px;
-    width: 19px;
-    height: 19px;
-  }
-
   .volume-icon-btn.favorite-volume-btn {
     width: 36px;
     height: 36px;
@@ -2323,12 +2315,14 @@ export const yampCardStyles = css`
     border-radius: var(--border-radius);
     box-shadow: none;
     width: 100%;
+    height: 100%;
     padding: 18px 8px 0px 8px;
     padding-top: clamp(12px, 6vh, 18px);
     display: flex;
     flex-direction: column;
     align-items: stretch;
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
@@ -2694,7 +2688,7 @@ export const yampCardStyles = css`
 
   /* Search functionality */
   .entity-options-search {
-    padding: 0px 10px 80px 10px;
+    padding: 0px 10px 0px 10px;
   }
 
   .entity-options-search-row {
@@ -3167,10 +3161,10 @@ export const yampCardStyles = css`
     flex-shrink: 0;
   }
 
-  .entity-options-sheet .entity-options-search {
+  .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex-shrink: 0;
   }
 
   .entity-options-sheet .entity-options-search-row,
@@ -3252,6 +3246,8 @@ export const yampCardStyles = css`
   /* The scrollable area for all menus */
   .entity-options-scroll {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     min-height: 0;
     ${HIDE_SCROLLBAR}
@@ -3259,9 +3255,16 @@ export const yampCardStyles = css`
 
   /* Reserved space for persistent media controls when pinning is active */
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
-  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search,
-  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
-    margin-bottom: 80px;
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
+  .entity-options-sheet[data-pin-search-headers="true"] .search-sheet-results,
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
+    margin-bottom: 0px;
+    padding-bottom: 80px;
+    background: none;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
+    margin-bottom: 0px;
     padding-bottom: 0px;
     background: none;
   }
@@ -3273,7 +3276,6 @@ export const yampCardStyles = css`
     padding-bottom: 12px;
   }
 
-  /* Clean up legacy margin override rules since we now use padding on parent */
   :host([data-hide-persistent-controls="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
     .entity-options-scroll,
@@ -3283,6 +3285,12 @@ export const yampCardStyles = css`
   :host([data-hide-persistent-controls="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
     .group-list-scroll,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .search-sheet-results,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-search-results,
   :host([data-hide-menu-player="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
     .entity-options-scroll,
@@ -3291,8 +3299,31 @@ export const yampCardStyles = css`
     .entity-options-search,
   :host([data-hide-menu-player="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
-    .group-list-scroll {
+    .group-list-scroll,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .search-sheet-results,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-search-results {
     margin-bottom: 0px;
+    padding-bottom: 0px;
+  }
+
+  /* Remove bottom clearance for unpinned mode when persistent controls are hidden */
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet:not([data-pin-search-headers="true"])
+    .search-sheet-results,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet:not([data-pin-search-headers="true"])
+    .entity-options-search-results,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet:not([data-pin-search-headers="true"])
+    .search-sheet-results,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet:not([data-pin-search-headers="true"])
+    .entity-options-search-results {
+    padding-bottom: 0px;
   }
   /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
 
@@ -3540,13 +3571,20 @@ export const yampCardStyles = css`
   .entity-options-sheet:not([data-pin-search-headers="true"]) .search-sheet-results,
   .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search-results {
     overflow-y: visible;
+    padding-bottom: 80px;
+    flex: none;
+    min-height: auto;
+  }
+
+  .queue-sortable-container {
+    padding-bottom: 24px;
   }
 
   .queue-sortable-container.is-card-layout {
     display: grid;
     grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
     gap: 12px;
-    padding: 12px;
+    padding: 12px 12px 24px 12px;
   }
 
   .queue-sortable-container.is-card-layout .queue-drag-wrapper {
