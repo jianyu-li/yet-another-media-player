@@ -3164,6 +3164,7 @@ export const yampCardStyles = css`
   .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search {
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
   }
 
   .entity-options-sheet .entity-options-search-row,
@@ -3571,6 +3572,8 @@ export const yampCardStyles = css`
   .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search-results {
     overflow-y: visible;
     padding-bottom: 80px;
+    flex: none;
+    min-height: auto;
   }
 
   .queue-sortable-container {

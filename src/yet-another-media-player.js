@@ -2641,10 +2641,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Toggle upcoming queue filter
   async _toggleUpcomingFilter(forceState = null) {
-    const targetState = typeof forceState === "boolean"
-      ? forceState
-      : !this._upcomingFilterActive;
-    this._upcomingFilterActive = targetState;
+    if (!this.hass) return;
+
+    if (forceState !== null) {
+      this._upcomingFilterActive = forceState;
+    } else {
+      this._upcomingFilterActive = !this._upcomingFilterActive;
+    }
 
     // Make mutually exclusive with other filters
     if (this._upcomingFilterActive) {
@@ -9094,85 +9097,94 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         
         ${this._renderSearchSubFilters(showSearchHeaders)}
  
-        <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}" 
-             style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
-          ${(() => {
-        const currentResults = this._getDisplaySearchResults();
-        const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
-        const isMinimal = this.config.search_view === 'card_minimal';
-        const renderItemFn = (item) => renderSearchResultItem({
-          item,
-          isCard,
-          isMinimal,
-          activeSearchRowMenuId: this._activeSearchRowMenuId,
-          loadingSearchRowMenuId: this._loadingSearchRowMenuId,
-          errorSearchRowMenuId: this._errorSearchRowMenuId,
-          successSearchRowMenuId: this._successSearchRowMenuId,
-          successSearchRowType: this._successSearchRowType,
-          isSelectionFlow: this._isSelectionFlow,
-          massQueueAvailable: this._massQueueAvailable,
-          upcomingFilterActive: !!this._upcomingFilterActive,
-          recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
-          recommendationsFilterActive: !!this._recommendationsFilterActive,
-          searchMediaClassFilter: this._searchMediaClassFilter,
-          queueControlsStyle: this.config.queue_controls_style || "drag_handle",
-          onPlay: (it, e) => this._playMediaFromSearch(it, e),
-          onResultClick: (it, e) => this._handleSearchResultClick(it, e),
-          onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
-          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-          onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
-          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-          onRemove: (it) => this._removeQueueItem(it.queue_item_id),
-          isMusicAssistant: this._isMusicAssistantEntity(),
-          isValidArtwork: (url) => isValidArtworkUrl(url),
-          getClickTitle: (it) => this._getSearchResultClickTitle(it),
-          artworkHostname: this.config?.artwork_hostname || ""
-        });
+        ${(() => {
+          const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
+          const currentResults = this._getDisplaySearchResults();
+          const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
+          const isMinimal = this.config.search_view === 'card_minimal';
+          const renderItemFn = (item) => renderSearchResultItem({
+            item,
+            isCard,
+            isMinimal,
+            activeSearchRowMenuId: this._activeSearchRowMenuId,
+            loadingSearchRowMenuId: this._loadingSearchRowMenuId,
+            errorSearchRowMenuId: this._errorSearchRowMenuId,
+            successSearchRowMenuId: this._successSearchRowMenuId,
+            successSearchRowType: this._successSearchRowType,
+            isSelectionFlow: this._isSelectionFlow,
+            massQueueAvailable: this._massQueueAvailable,
+            upcomingFilterActive: !!this._upcomingFilterActive,
+            recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
+            recommendationsFilterActive: !!this._recommendationsFilterActive,
+            searchMediaClassFilter: this._searchMediaClassFilter,
+            queueControlsStyle: this.config.queue_controls_style || "drag_handle",
+            onPlay: (it, e) => this._playMediaFromSearch(it, e),
+            onResultClick: (it, e) => this._handleSearchResultClick(it, e),
+            onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
+            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+            onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
+            onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+            onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+            onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+            onRemove: (it) => this._removeQueueItem(it.queue_item_id),
+            isMusicAssistant: this._isMusicAssistantEntity(),
+            isValidArtwork: (url) => isValidArtworkUrl(url),
+            getClickTitle: (it) => this._getSearchResultClickTitle(it),
+            artworkHostname: this.config?.artwork_hostname || ""
+          });
 
-        if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
-          return html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`;
-        }
+          if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
+            return html`
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}">
+                <div class="entity-options-search-empty">${localize('common.no_results')}</div>
+              </div>
+            `;
+          }
 
-        const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
-
-        if (isQueueDragAndDrop) {
-          return html`
-            <div class="queue-sortable-container ${isCard ? 'is-card-layout' : ''}"
-              @pointerdown=${(e) => this._onQueueDragStart(e)}
-            >
-              ${currentResults.map((item, idx) => html`
-                <div class="queue-drag-wrapper" data-queue-idx="${idx}">
-                  ${renderItemFn(item)}
+          if (isQueueDragAndDrop) {
+            return html`
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper"
+                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
+                <div class="queue-sortable-container ${isCard ? 'is-card-layout' : ''}"
+                  @pointerdown=${(e) => this._onQueueDragStart(e)}
+                >
+                  ${currentResults.map((item, idx) => html`
+                    <div class="queue-drag-wrapper" data-queue-idx="${idx}">
+                      ${renderItemFn(item)}
+                    </div>
+                  `)}
                 </div>
-              `)}
+              </div>
+            `;
+          }
+
+          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
+            this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
+            this._cachedSearchGridLayoutIsMinimal = isMinimal;
+            this._cachedSearchGridLayout = yampGrid({
+              columns: this._cachedSearchGridLayoutColumns,
+              gap: '12px',
+              padding: '12px',
+              itemSize: isMinimal
+                ? { width: 150, height: 150 }
+                : { width: 150, height: 244 }
+            });
+          }
+
+          return html`
+            <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper"
+                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
+              ${isCard
+                ? virtualize({
+                  items: currentResults,
+                  renderItem: renderItemFn,
+                  layout: this._cachedSearchGridLayout,
+                  scroller: pinSearchHeaders
+                })
+                : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: pinSearchHeaders })}
             </div>
           `;
-        }
-
-        if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
-          this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
-          this._cachedSearchGridLayoutIsMinimal = isMinimal;
-          this._cachedSearchGridLayout = yampGrid({
-            columns: this._cachedSearchGridLayoutColumns,
-            gap: '12px',
-            padding: '12px',
-            itemSize: isMinimal
-              ? { width: 150, height: 150 }
-              : { width: 150, height: 244 }
-          });
-        }
-
-        return isCard
-          ? virtualize({
-            items: currentResults,
-            renderItem: renderItemFn,
-            layout: this._cachedSearchGridLayout,
-            scroller: pinSearchHeaders
-          })
-          : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
-      })()}
+        })()}
         </div>
       </div>
     `;
