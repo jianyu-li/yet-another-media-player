@@ -9099,11 +9099,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const currentResults = this._getDisplaySearchResults();
         const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
         const isMinimal = this.config.search_view === 'card_minimal';
-        const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
-        const paddedResults = [
-          ...currentResults,
-          ...Array.from({ length: Math.max(0, totalRows - currentResults.length) }, () => null)
-        ];
         const renderItemFn = (item) => renderSearchResultItem({
           item,
           isCard,
@@ -9170,12 +9165,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
         return isCard
           ? virtualize({
-            items: paddedResults,
+            items: currentResults,
             renderItem: renderItemFn,
             layout: this._cachedSearchGridLayout,
             scroller: pinSearchHeaders
           })
-          : virtualize({ items: paddedResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
+          : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
       })()}
         </div>
       </div>

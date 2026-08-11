@@ -3161,10 +3161,6 @@ export const yampCardStyles = css`
   }
 
   .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    min-height: 100%;
   }
 
   .entity-options-sheet .entity-options-search-row,
@@ -3246,6 +3242,8 @@ export const yampCardStyles = css`
   /* The scrollable area for all menus */
   .entity-options-scroll {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     min-height: 0;
     ${HIDE_SCROLLBAR}
@@ -3274,7 +3272,6 @@ export const yampCardStyles = css`
     padding-bottom: 12px;
   }
 
-  /* Clean up legacy margin override rules since we now use padding on parent */
   :host([data-hide-persistent-controls="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
     .entity-options-scroll,
