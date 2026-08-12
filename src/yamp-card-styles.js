@@ -316,6 +316,7 @@ export const yampCardStyles = css`
   .dim-idle .details,
   .dim-idle .controls-row,
   .dim-idle .volume-row,
+  .dim-idle .more-info-menu.volume-collapsed,
   .dim-idle:not(.no-chip-dim) .chip-row,
   .dim-idle:not(.no-chip-dim) .action-chip-row {
     opacity: 0.28;
