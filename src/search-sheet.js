@@ -567,7 +567,11 @@ export function renderSearchResultItem({
   if (isGridMode) {
     return html`
       <button
-        class="entity-options-item menu-action-item search-result-grid-mode nodrag no-drag ignore-drag ${item._justMoved ? "just-moved" : ""} ${isActive ? "menu-active" : ""}"
+        class="entity-options-item menu-action-item search-result-grid-mode ${
+          upcomingFilterActive && massQueueAvailable && queueControlsStyle === "drag_handle"
+            ? "queue-drag-handle"
+            : "nodrag no-drag ignore-drag"
+        } ${item._justMoved ? "just-moved" : ""} ${isActive ? "menu-active" : ""}"
         @click=${(e) => {
           if (!isSelectionFlow) {
             onPlay?.(item, e);
