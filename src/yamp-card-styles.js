@@ -337,7 +337,8 @@ export const yampCardStyles = css`
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
-  .dim-idle .more-info-menu {
+  .dim-idle .more-info-menu,
+  .more-info-menu.volume-collapsed {
     position: absolute;
     bottom: 14px;
     right: 12px;

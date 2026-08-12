@@ -8590,7 +8590,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         muteSlotTemplate: shouldHideVolumeControls ? (muteSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${muteSlotTemplate}</div>` : nothing) : muteSlotTemplate,
         hideVolume: isVolumeHidden,
         collapseRow: volumeRowWillCollapse,
-        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume) ? html`
+        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
               <span class="more-info-icon">&#9776;</span>
@@ -8598,6 +8598,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           </div>
         ` : nothing,
       })}
+            ${(volumeRowWillCollapse && !this._showEntityOptions && !isCompactVolume) ? html`
+              <div class="more-info-menu volume-collapsed">
+                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                  <span class="more-info-icon">&#9776;</span>
+                </button>
+              </div>
+            ` : nothing}
             ${showChipsInMenu && !this._hideActiveEntityLabel && !(this._hideActiveEntityLabelOnIdle && this._isIdle) ? html`
               <div class="in-menu-active-label" style="${this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">${activeChipName}</div>
             ` : nothing}
