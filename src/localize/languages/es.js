@@ -123,6 +123,8 @@ export default {
       adaptive_text: "Elegir qué textos se adaptan al espacio.",
       collapse_expand:
         "Siempre contraído activa el modo mini. Expandir al buscar expande temporalmente.",
+      disable_mini_menu:
+        "Vuelve a las listas estándar en lugar de usar los nuevos menús de cuadrícula mini en el modo 'Siempre contraído'.",
       idle_screen: "Elegir pantalla a mostrar en reposo.",
       hide_controls: "Seleccionar controles a ocultar.",
       hide_remote_buttons:
@@ -152,6 +154,7 @@ export default {
       not_available_alt_collapsed: "No disponible en modo contraído.",
       not_available_collapsed: "No disponible si está contraído.",
       only_available_collapsed: "Solo disponible si está contraído.",
+      only_available_mini_menu: "Solo disponible cuando 'Siempre contraído' es verdadero y 'Expandir en la búsqueda' es falso",
       only_available_modern: "Solo disponible con diseño Moderno.",
       image_url_helper: "Ingrese una URL directa a una imagen o una ruta de archivo local",
       selected_entity_helper:
@@ -216,6 +219,7 @@ export default {
       hide_menu_player_toggle: "Ocultar reproductor del menú",
       hide_reorder_progress_toggle: "Ocultar progreso de reordenación",
       always_collapsed: "Siempre contraído",
+      disable_mini_menu: "Desactivar menús de cuadrícula mini",
       expand_on_search: "Expandir al buscar",
       script_var: "Variable script (yamp_entity)",
       use_ma_template: "Usar plantilla MA",

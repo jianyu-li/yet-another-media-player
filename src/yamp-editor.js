@@ -3070,6 +3070,29 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <div class="config-subtitle">${localize("editor.subtitles.collapse_expand")}</div>
         </div>
+        <div
+          data-search-keys="disable_mini_menu"
+          class="form-row"
+          style="${this._config.always_collapsed === true && !this._config.expand_on_search ? "" : "opacity: 0.5;"}"
+          title="${
+            this._config.always_collapsed === true && !this._config.expand_on_search
+              ? ""
+              : localize("editor.subtitles.only_available_mini_menu")
+          }"
+        >
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <ha-switch
+              id="disable-mini-menu-toggle"
+              .checked=${this._config.disable_mini_menu === true}
+              @change=${(e) => this._updateConfig("disable_mini_menu", e.target.checked)}
+              .disabled=${!(this._config.always_collapsed === true && !this._config.expand_on_search)}
+            ></ha-switch>
+            <span>${localize("editor.labels.disable_mini_menu")}</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="config-subtitle">${localize("editor.subtitles.disable_mini_menu")}</div>
+        </div>
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}

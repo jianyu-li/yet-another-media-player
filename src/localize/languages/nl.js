@@ -138,6 +138,8 @@ export default {
         "Kies welke tekstgroepen moeten schalen met de beschikbare ruimte (laat leeg om adaptieve tekst uit te schakelen).",
       collapse_expand:
         "Altijd Ingeklapt creëert de mini-spelermodus. Uitklappen bij Zoeken klapt tijdelijk uit tijdens het zoeken.",
+      disable_mini_menu:
+        "Keer terug naar standaardlijsten in plaats van de nieuwe mini rastermenu's te gebruiken in de modus 'Altijd ingeklapt'.",
       idle_screen:
         "Kies welk scherm automatisch wordt weergegeven wanneer de kaart inactief wordt.",
       hide_controls:
@@ -176,6 +178,7 @@ export default {
         "Niet beschikbaar met Alternatieve Voortgangsbalk of Altijd Ingeklapte modus",
       not_available_collapsed: "Niet beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
       only_available_collapsed: "Alleen beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
+      only_available_mini_menu: "Alleen beschikbaar wanneer 'Altijd ingeklapt' waar is en 'Uitvouwen bij zoeken' onwaar is",
       only_available_modern: "Alleen beschikbaar met de Moderne lay-out",
       image_url_helper: "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
       selected_entity_helper:
@@ -240,6 +243,7 @@ export default {
       hide_menu_player_toggle: "Menu-speler Verbergen",
       hide_reorder_progress_toggle: "Wachtrijsortering Verbergen",
       always_collapsed: "Altijd Ingeklapt",
+      disable_mini_menu: "Mini rastermenu's uitschakelen",
       expand_on_search: "Uitklappen bij Zoeken",
       script_var: "Script Variabele (yamp_entity)",
       use_ma_template: "Sjabloon gebruiken voor Music Assistant Entiteit",

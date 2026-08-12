@@ -133,6 +133,8 @@ export default {
         "Vyberte skupiny textu, ktoré sa majú škálovať podľa priestoru (nechajte prázdne pre vypnutie).",
       collapse_expand:
         '"Vždy zbalené" vytvorí režim mini prehrávača. "Rozbaliť pri hľadaní" kartu dočasne rozbalí pri vyhľadávaní.',
+      disable_mini_menu:
+        "Návrat k štandardným zoznamom namiesto použitia nových mini mriežkových ponúk v režime 'Vždy zbalené'.",
       idle_screen: "Vyberte obrazovku, ktorá sa má automaticky zobraziť v režime nečinnosti.",
       hide_controls:
         "Vyberte ovládacie prvky, ktoré chcete pre túto entitu skryť (štandardne sú zobrazené všetky).",
@@ -168,6 +170,7 @@ export default {
         "Nedostupné s alternatívnym indikátorom priebehu alebo v režime Vždy zbalené.",
       not_available_collapsed: "Nedostupné, keď je zapnuté Vždy zbalené.",
       only_available_collapsed: "Dostupné len pri zapnutom režime Vždy zbalené.",
+      only_available_mini_menu: "K dispozícii iba vtedy, keď je 'Vždy zbalené' zapnuté a 'Rozbaliť pri vyhľadávaní' vypnuté",
       only_available_modern: "Dostupné len s moderným rozložením.",
       image_url_helper: "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
       selected_entity_helper:
@@ -231,6 +234,7 @@ export default {
       hide_menu_player_toggle: "Skryť prehrávač v menu",
       hide_reorder_progress_toggle: "Skryť priebeh preusporiadania",
       always_collapsed: "Vždy zbalené",
+      disable_mini_menu: "Vypnúť mini mriežkové ponuky",
       expand_on_search: "Rozbaliť pri hľadaní",
       script_var: "Premenná skriptu (yamp_entity)",
       use_ma_template: "Použiť šablónu pre Music Assistant",

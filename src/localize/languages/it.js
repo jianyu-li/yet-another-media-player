@@ -122,6 +122,8 @@ export default {
       adaptive_text: "Scegli quali testi si adattano allo spazio.",
       collapse_expand:
         "Sempre contratto attiva il modo mini. Espandi alla ricerca espande temporaneamente.",
+      disable_mini_menu:
+        "Torna agli elenchi standard invece di usare i nuovi mini menu a griglia in modalità 'Sempre compresso'.",
       idle_screen: "Scegli schermata da mostrare in riposo.",
       hide_controls: "Seleziona controlli da nascondere.",
       hide_remote_buttons: "Seleziona i pulsanti da nascondere dal telecomando.",
@@ -150,6 +152,7 @@ export default {
       not_available_alt_collapsed: "Non disponibile in modo contratto.",
       not_available_collapsed: "Non disponibile se contratto.",
       only_available_collapsed: "Solo disponibile se contratto.",
+      only_available_mini_menu: "Disponibile solo quando 'Sempre compresso' è vero ed 'Espandi in ricerca' è falso",
       only_available_modern: "Solo disponibile con layout Moderno.",
       image_url_helper: "Inserisci un URL diretto a un'immagine o un percorso file locale",
       selected_entity_helper:
@@ -214,6 +217,7 @@ export default {
       hide_menu_player_toggle: "Nascondi lettore menu",
       hide_reorder_progress_toggle: "Nascondi avanzamento riordinamento",
       always_collapsed: "Sempre contratto",
+      disable_mini_menu: "Disabilita i mini menu a griglia",
       expand_on_search: "Espandi alla ricerca",
       script_var: "Variabile script (yamp_entity)",
       use_ma_template: "Usa modello MA",

@@ -5271,7 +5271,27 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
   }
 
+  /** Whether the mini grid menu layout is active (always_collapsed + no expand_on_search + mini menus enabled). */
+  get _isGridMode() {
+    return this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+  }
+
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
+    const isGridMode = this._isGridMode;
+    const renderMenuItem = (label, icon, onClick) => {
+      if (isGridMode) {
+        return html`
+          <button class="entity-options-item menu-action-item" @click=${onClick}>
+            <ha-icon class="menu-action-icon" icon=${icon}></ha-icon>
+            <span class="menu-action-label">${label}</span>
+          </button>
+        `;
+      }
+      return html`
+        <button class="entity-options-item" @click=${onClick}>${label}</button>
+      `;
+    };
+
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
@@ -5279,37 +5299,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         </button>
         <div class="entity-options-divider"></div>
       </div>
-      <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} entity-options-scroll" style="display:flex; flex-direction:column;">
-        <button class="entity-options-item" @click=${() => {
-        const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
-        if (resolvedEntities.length === 1) {
-          this._openMoreInfoForEntity(resolvedEntities[0]);
-          this._showEntityOptions = false;
-        } else {
-          this._showResolvedEntities = true;
-        }
-        this.requestUpdate();
-      }}>${localize('card.menu.more_info')}</button>
-        <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>${localize('common.search')}</button>
+      <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} ${isGridMode ? 'grid-menu' : 'entity-options-scroll'}" style="${!isGridMode ? 'display:flex; flex-direction:column;' : ''}">
+        ${renderMenuItem(localize('card.menu.more_info'), 'mdi:information-outline', () => {
+          const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
+          if (resolvedEntities.length === 1) {
+            this._openMoreInfoForEntity(resolvedEntities[0]);
+            this._showEntityOptions = false;
+          } else {
+            this._showResolvedEntities = true;
+          }
+          this.requestUpdate();
+        })}
+        ${renderMenuItem(localize('common.search'), 'mdi:magnify', () => { this._showSearchSheetInOptions(); })}
 
-        ${Array.isArray(sourceList) && sourceList.length > 0 ? html`
-          <button class="entity-options-item" @click=${() => this._openSourceList()}>${localize('card.menu.source')}</button>
-        ` : nothing}
+        ${Array.isArray(sourceList) && sourceList.length > 0 ? renderMenuItem(localize('card.menu.source'), 'mdi:import', () => this._openSourceList()) : nothing}
         
-        ${this._canShowTransferQueueOption() ? html`
-          <button class="entity-options-item" @click=${() => this._openTransferQueue()}>${localize('card.menu.transfer_queue')}</button>
-        ` : nothing}
+        ${this._canShowTransferQueueOption() ? renderMenuItem(localize('card.menu.transfer_queue'), 'mdi:swap-horizontal', () => this._openTransferQueue()) : nothing}
         
-        ${this._renderGroupingMenuOption()}
+        ${this._renderGroupingMenuOption(isGridMode)}
         
-        ${this._hasRemoteControlSupport() ? html`
-          <button class="entity-options-item" @click=${() => this._openRemoteControl()}>
-            ${localize('card.menu.remote_controls')}
-          </button>
-        ` : nothing}
+        ${this._hasRemoteControlSupport() ? renderMenuItem(localize('card.menu.remote_controls'), 'mdi:remote', () => this._openRemoteControl()) : nothing}
         
-        ${!this._alwaysCollapsed ? html`
-          <button class="entity-options-item" @click=${() => {
+        ${!this._alwaysCollapsed ? renderMenuItem(localize(this._lyricsActive ? 'card.menu.hide_lyrics' : 'card.menu.show_lyrics'), 'mdi:script-text-outline', () => {
           this._lyricsActive = !this._lyricsActive;
           if (!this._lyricsActive) {
             this._lastLyricsTrackId = null;
@@ -5319,28 +5330,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           }
           this._showEntityOptions = false;
           this.requestUpdate();
-        }}>${localize(this._lyricsActive ? 'card.menu.hide_lyrics' : 'card.menu.show_lyrics')}</button>
-        ` : nothing}
-        
+        }) : nothing}
         
         ${menuOnlyActions.length ? html`
           ${menuOnlyActions.map(({ action, idx }) => {
-          const label = this._getActionLabel(action);
-          return html`
-              <button
-                class="entity-options-item menu-action-item"
-                @click=${() => this._onMenuActionClick(idx)}
-              >
-                ${action.icon ? html`
-                  <ha-icon
-                    class="menu-action-icon"
-                    .icon=${action.icon}
-                  ></ha-icon>
-                ` : nothing}
-                ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
-              </button>
-            `;
-        })}
+            const label = this._getActionLabel(action);
+            return html`
+                <button
+                  class="entity-options-item menu-action-item"
+                  @click=${() => this._onMenuActionClick(idx)}
+                >
+                  ${action.icon ? html`
+                    <ha-icon
+                      class="menu-action-icon"
+                      .icon=${action.icon}
+                    ></ha-icon>
+                  ` : nothing}
+                  ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
+                </button>
+              `;
+          })}
         ` : nothing}
       </div>
     `;
@@ -5469,7 +5478,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     `;
   }
 
-  _renderGroupingMenuOption() {
+  _renderGroupingMenuOption(isGridMode = false) {
     const totalEntities = this.entityIds.length;
     if (totalEntities <= 1) return nothing;
 
@@ -5488,6 +5497,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isFollower = groupKey !== currentId;
 
     if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
+      if (isGridMode) {
+        return html`
+          <button class="entity-options-item menu-action-item" @click=${() => this._openGrouping()}>
+            <ha-icon class="menu-action-icon" icon="mdi:speaker-multiple"></ha-icon>
+            <span class="menu-action-label">${localize('card.menu.group_players')}</span>
+          </button>
+        `;
+      }
       return html`
         <button class="entity-options-item" @click=${() => this._openGrouping()}>${localize('card.menu.group_players')}</button>
       `;
@@ -5552,6 +5569,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderGroupingSheet() {
+    const isGridMode = this._isGridMode;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
@@ -5636,109 +5654,132 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           ${groupedAny ? localize('card.grouping.ungroup_all') : localize('card.grouping.group_all')}
         </button>
       </div>
-      <div class="group-list-scroll">
+      <div class="group-list-scroll ${isGridMode ? 'grid-menu' : ''}">
         ${sortedGroupIds.length === 0 ? html`
           <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
             ${localize('card.grouping.no_players')}
           </div>
-        ` : sortedGroupIds.map(item => {
-      const id = item.id;
-      const actualGroupId = item.groupId;
-      const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
-      const grouped = filteredMembers.includes(actualGroupId);
-      const name = this.getChipName(id);
-      const isBusy = item.isBusy;
-      const busyLabel = item.busyLabel;
+        ` : html`
+          <div class="${isGridMode ? 'grid-menu-items' : ''}">
+            ${sortedGroupIds.map(item => {
+              const id = item.id;
+              const actualGroupId = item.groupId;
+              const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
+              const grouped = filteredMembers.includes(actualGroupId);
+              const name = this.getChipName(id);
+              const isBusy = item.isBusy;
+              const busyLabel = item.busyLabel;
 
-      const entityIdx = this.entityIds.indexOf(id);
-      const volumeEntity = this._getVolumeEntity(entityIdx);
-      const displayEntity = volumeEntity || actualGroupId;
-      const displayVolumeState = this.hass.states[displayEntity];
+              const entityIdx = this.entityIds.indexOf(id);
+              const volumeEntity = this._getVolumeEntity(entityIdx);
+              const displayEntity = volumeEntity || actualGroupId;
+              const displayVolumeState = this.hass.states[displayEntity];
 
-      const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
-      const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
-      const isPrimaryRow = id === masterId;
-      const showToggleButton = !isPrimaryRow;
-      const isCurrent = id === activeId;
+              const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
+              const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
+              const isPrimaryRow = id === masterId;
+              const showToggleButton = !isPrimaryRow;
+              const isCurrent = id === activeId;
+              const masterName = masterId ? this.getChipName(masterId) : localize('card.grouping.master');
 
-      let stateLabel = groupedAny
-        ? (isPrimaryRow ? localize('card.grouping.master') : (grouped ? localize('card.grouping.joined') : localize('card.grouping.available')))
-        : (isCurrent ? localize('card.grouping.current') : localize('card.grouping.available'));
+              let stateLabel = groupedAny
+                ? (isPrimaryRow ? localize('card.grouping.master') : (grouped ? localize('card.grouping.joined') : localize('card.grouping.available')))
+                : (isCurrent ? localize('card.grouping.current') : localize('card.grouping.available'));
 
-      if (isBusy) {
-        stateLabel = busyLabel || "Unavailable";
-      }
+              if (isBusy) {
+                stateLabel = busyLabel || "Unavailable";
+              }
+              
+              if (isGridMode) {
+                const isDisabled = isBusy || !showToggleButton;
+                const toggleTooltip = grouped 
+                  ? localize('card.grouping.unjoin_from').replace('{master}', masterName)
+                  : localize('card.grouping.join_with').replace('{master}', masterName);
+                
+                return html`
+                  <button class="entity-options-item menu-action-item group-toggle-btn ${(!showToggleButton || grouped) ? 'grid-active' : ''}" 
+                    ?disabled=${isDisabled}
+                    @click=${() => !isDisabled && this._toggleGroup(id)}
+                    title=${isBusy ? localize('card.grouping.unavailable') : (!showToggleButton ? stateLabel : toggleTooltip)}>
+                    <ha-icon class="menu-action-icon" icon=${isPrimaryRow ? "mdi:star" : (grouped ? "mdi:speaker-multiple" : "mdi:speaker")}></ha-icon>
+                    <span class="menu-action-label">${name}</span>
+                  </button>
+                `;
+              }
 
-      return html`
-            <div class="entity-options-item group-player-row" style="
-              display:flex;
-              align-items:center;
-              gap:6px;
-              padding: 12px 8px 4px 8px;
-              margin-bottom: 1px;
-              ${isBusy ? "opacity: 0.5;" : ""}
-            ">
-              <div style="flex:1; min-width:120px;">
-                <div style="text-align:left;">${name}</div>
-                <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
-              </div>
-              <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
-                ${isRemoteVol
-          ? html`
-                    <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
-                      <button @click=${() => this._onGroupVolumeStep(displayEntity, -1)} title="${localize('common.vol_down')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                        <ha-icon icon="mdi:minus"></ha-icon>
-                      </button>
-                      <button @click=${() => this._onGroupVolumeStep(displayEntity, 1)} title="${localize('common.vol_up')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                        <ha-icon icon="mdi:plus"></ha-icon>
-                      </button>
-                    </div>
-                  `
-          : html`
-                    <div class="volume-slider-container grouping-vol-slider-container" style="flex:1; padding: 0 4px; position: relative; display: flex; align-items: center;">
-                      <div class="volume-percentage-indicator ${this._volumeDraggingEntity === id ? 'visible' : ''}" style="left: calc(13px + ${this._dragVolume} * (100% - 26px))">
-                        ${Math.round(this._dragVolume * 100)}%
+              return html`
+                    <div class="entity-options-item group-player-row" style="
+                      display:flex;
+                      align-items:center;
+                      gap:6px;
+                      padding: 12px 8px 4px 8px;
+                      margin-bottom: 1px;
+                      ${isBusy ? "opacity: 0.5;" : ""}
+                    ">
+                      <div style="flex:1; min-width:120px;">
+                        <div style="text-align:left;">${name}</div>
+                        <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
                       </div>
-                      <input
-                        class="vol-slider"
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        .value=${volVal}
-                        @mousedown=${(e) => this._onVolumeDragStart(e, id)}
-                        @touchstart=${(e) => this._onVolumeDragStart(e, id)}
-                        @input=${(e) => this._onVolumeInput(e)}
-                        @mouseup=${(e) => this._onVolumeDragEnd(e)}
-                        @touchend=${(e) => this._onVolumeDragEnd(e)}
-                        @change=${e => this._onGroupVolumeChange(id, displayEntity, e)}
-                        title="${localize('common.volume')}"
-                        style="width:100%;max-width:260px;"
-                      />
+                      <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
+                        ${isRemoteVol
+                  ? html`
+                            <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
+                              <button @click=${() => this._onGroupVolumeStep(displayEntity, -1)} title="${localize('common.vol_down')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                                <ha-icon icon="mdi:minus"></ha-icon>
+                              </button>
+                              <button @click=${() => this._onGroupVolumeStep(displayEntity, 1)} title="${localize('common.vol_up')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                                <ha-icon icon="mdi:plus"></ha-icon>
+                              </button>
+                            </div>
+                          `
+                  : html`
+                            <div class="volume-slider-container grouping-vol-slider-container" style="flex:1; padding: 0 4px; position: relative; display: flex; align-items: center;">
+                              <div class="volume-percentage-indicator ${this._volumeDraggingEntity === id ? 'visible' : ''}" style="left: calc(13px + ${this._dragVolume} * (100% - 26px))">
+                                ${Math.round(this._dragVolume * 100)}%
+                              </div>
+                              <input
+                                class="vol-slider"
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                .value=${volVal}
+                                @mousedown=${(e) => this._onVolumeDragStart(e, id)}
+                                @touchstart=${(e) => this._onVolumeDragStart(e, id)}
+                                @input=${(e) => this._onVolumeInput(e)}
+                                @mouseup=${(e) => this._onVolumeDragEnd(e)}
+                                @touchend=${(e) => this._onVolumeDragEnd(e)}
+                                @change=${e => this._onGroupVolumeChange(id, displayEntity, e)}
+                                title="${localize('common.volume')}"
+                                style="width:100%;max-width:260px;"
+                              />
+                            </div>
+                          `
+                }
+                        <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
+                      </div>
+                      ${showToggleButton
+                  ? html`
+                            <button class="group-toggle-btn"
+                                    @click=${() => !isBusy && this._toggleGroup(id)}
+                                    title=${isBusy ? localize('card.grouping.unavailable') : (grouped ? localize('card.grouping.unjoin_from').replace('{master}', masterName) : localize('card.grouping.join_with').replace('{master}', masterName))}
+                                    style="margin-left:4px; ${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""}">
+                              <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
+                            </button>
+                          `
+                  : html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
+                }
                     </div>
-                  `
-        }
-                <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
-              </div>
-              ${showToggleButton
-          ? html`
-                    <button class="group-toggle-btn"
-                            @click=${() => !isBusy && this._toggleGroup(id)}
-                            title=${isBusy ? "Player is unavailable" : (grouped ? "Unjoin" : "Join")}
-                            style="margin-left:4px; ${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""}">
-                      <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
-                    </button>
-                  `
-          : html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
-        }
-            </div>
-          `;
-    })}
+                  `;
+            })}
+          </div>
+        `}
       </div>
     `;
   }
 
   _renderTransferQueueSheet() {
+    const isGridMode = this._isGridMode;
     const targets = this._getTransferQueueTargets();
     return html`
       <div class="entity-options-header">
@@ -5746,27 +5787,38 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           ${localize('common.back')}
         </button>
         <div class="entity-options-divider"></div>
-        <div class="entity-options-title" style="margin-bottom:12px;">${localize('card.menu.transfer_to')}</div>
+        ${!isGridMode ? html`<div class="entity-options-title" style="margin-bottom:12px;">${localize('card.menu.transfer_to')}</div>` : nothing}
       </div>
-      <div class="entity-options-scroll">
+      <div class="entity-options-scroll ${isGridMode ? 'grid-menu' : ''}">
         ${!targets.length ? html`
           <div style="padding: 12px; opacity: 0.75;">${localize('card.menu.no_players')}</div>
         ` : html`
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            ${targets.map(target => html`
-              <button
-                class="entity-options-item"
-                ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                @click=${() => this._transferQueueTo(target)}
-                style="display:flex;align-items:center;justify-content:flex-start;gap:12px;${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
-                <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
-                <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                  <div>${target.name}</div>
-                  <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
-                </div>
-                ${target.state ? html`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : nothing}
-              </button>
-            `)}
+          <div class="${isGridMode ? 'grid-menu-items' : 'transfer-queue-list'}">
+            ${targets.map(target => {
+              if (isGridMode) {
+                return html`
+                  <button class="entity-options-item menu-action-item" 
+                    ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
+                    @click=${() => this._transferQueueTo(target)}>
+                    <ha-icon class="menu-action-icon" .icon=${target.icon}></ha-icon>
+                    <span class="menu-action-label">${target.name}</span>
+                  </button>
+                `;
+              }
+              return html`
+                <button
+                  class="entity-options-item transfer-queue-item"
+                  ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
+                  @click=${() => this._transferQueueTo(target)}>
+                  <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
+                  <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                    <div>${target.name}</div>
+                    <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
+                  </div>
+                  ${target.state ? html`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : nothing}
+                </button>
+              `;
+            })}
           </div>
         `}
         ${this._transferQueueStatus ? html`
@@ -5787,6 +5839,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderResolvedEntitiesSheet() {
+    const isGridMode = this._isGridMode;
+
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => {
@@ -5797,8 +5851,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         </button>
         <div class="entity-options-divider"></div>
         <div class="entity-options-resolved-entities" style="margin-top:12px;">
-          <div class="entity-options-title">${localize('card.menu.select_entity')}</div>
-          <div class="entity-options-resolved-entities-list">
+          ${!isGridMode ? html`<div class="entity-options-title">${localize('card.menu.select_entity')}</div>` : nothing}
+          <div class="entity-options-resolved-entities-list ${isGridMode ? 'grid-menu' : ''}">
             ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
         const state = this.hass?.states?.[entityId];
         const name = state?.attributes?.friendly_name || entityId;
@@ -5820,6 +5874,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
             role = "Volume Entity";
           }
+        }
+
+        if (isGridMode) {
+          return html`
+            <button class="entity-options-item menu-action-item" @click=${() => {
+              this._openMoreInfoForEntity(entityId);
+              this._showEntityOptions = false;
+              this._showResolvedEntities = false;
+              this.requestUpdate();
+            }}>
+              <ha-icon class="menu-action-icon" .icon=${icon}></ha-icon>
+              <span class="menu-action-label">${isActive ? `${name} (Active)` : name}</span>
+            </button>
+          `;
         }
 
         return html`
@@ -8524,7 +8592,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         muteSlotTemplate: shouldHideVolumeControls ? (muteSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${muteSlotTemplate}</div>` : nothing) : muteSlotTemplate,
         hideVolume: isVolumeHidden,
         collapseRow: volumeRowWillCollapse,
-        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume) ? html`
+        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
               <span class="more-info-icon">&#9776;</span>
@@ -8532,6 +8600,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           </div>
         ` : nothing,
       })}
+            ${(volumeRowWillCollapse && !this._showEntityOptions && !isCompactVolume) ? html`
+              <div class="more-info-menu volume-collapsed">
+                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                  <span class="more-info-icon">&#9776;</span>
+                </button>
+              </div>
+            ` : nothing}
             ${showChipsInMenu && !this._hideActiveEntityLabel && !(this._hideActiveEntityLabelOnIdle && this._isIdle) ? html`
               <div class="in-menu-active-label" style="${this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">${activeChipName}</div>
             ` : nothing}
@@ -9102,10 +9177,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           const currentResults = this._getDisplaySearchResults();
           const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
           const isMinimal = this.config.search_view === 'card_minimal';
+          const isGridMode = this._isGridMode;
+          
           const renderItemFn = (item) => renderSearchResultItem({
             item,
             isCard,
             isMinimal,
+            isGridMode,
             activeSearchRowMenuId: this._activeSearchRowMenuId,
             loadingSearchRowMenuId: this._loadingSearchRowMenuId,
             errorSearchRowMenuId: this._errorSearchRowMenuId,
@@ -9143,9 +9221,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
           if (isQueueDragAndDrop) {
             return html`
-              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper"
-                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
-                <div class="queue-sortable-container ${isCard ? 'is-card-layout' : ''}"
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
+                <div class="queue-sortable-container ${(isCard || isGridMode) ? 'is-card-layout' : ''} ${isGridMode ? 'grid-mode' : ''}"
                   @pointerdown=${(e) => this._onQueueDragStart(e)}
                 >
                   ${currentResults.map((item, idx) => html`
@@ -9158,23 +9236,27 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             `;
           }
 
-          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
-            this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
+          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)) || this._cachedSearchGridLayoutIsMinimal !== isMinimal || this._cachedSearchGridLayoutIsGridMode !== isGridMode) {
+            const columns = isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4);
+            this._cachedSearchGridLayoutColumns = columns;
             this._cachedSearchGridLayoutIsMinimal = isMinimal;
+            this._cachedSearchGridLayoutIsGridMode = isGridMode;
             this._cachedSearchGridLayout = yampGrid({
-              columns: this._cachedSearchGridLayoutColumns,
-              gap: '12px',
-              padding: '12px',
-              itemSize: isMinimal
-                ? { width: 150, height: 150 }
-                : { width: 150, height: 244 }
+              columns: columns,
+              gap: isGridMode ? '0px' : '12px',
+              padding: isGridMode ? '0px' : '12px',
+              itemSize: isGridMode 
+                ? { width: 70, height: 85 } 
+                : (isMinimal
+                  ? { width: 150, height: 150 }
+                  : { width: 150, height: 244 })
             });
           }
 
           return html`
-            <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper"
-                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
-              ${isCard
+            <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
+              ${(isCard || isGridMode)
                 ? virtualize({
                   items: currentResults,
                   renderItem: renderItemFn,
@@ -9191,6 +9273,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters) {
+    const isGridMode = this._isGridMode;
+
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
@@ -9200,38 +9284,50 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       </div>
       <div class="entity-options-scroll source-list-centering-wrapper">
         <div class="source-list-sheet">
-          <div class="source-list-scroll">
-            ${sourceList.map(src => html`
-              <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
-            `)}
+          <div class="source-list-scroll ${isGridMode ? 'grid-menu' : ''}">
+            ${sourceList.map(src => {
+              if (isGridMode) {
+                return html`
+                  <button class="entity-options-item menu-action-item" @click=${() => this._selectSource(src)}>
+                    <ha-icon class="menu-action-icon" icon="mdi:login"></ha-icon>
+                    <span class="menu-action-label">${src}</span>
+                  </button>
+                `;
+              }
+              return html`
+                <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
+              `;
+            })}
           </div>
         </div>
       </div>
-      <div class="floating-source-index">
-        ${sourceLetters.map((letter, i) => {
-      const isAvailable = availableSourceFirstLetters.has(letter);
-      const hovered = this._hoveredSourceLetterIndex;
-      let scale = "";
-      if (isAvailable && hovered !== null && hovered !== undefined) {
-        const dist = Math.abs(hovered - i);
-        if (dist === 0) scale = "max";
-        else if (dist === 1) scale = "large";
-        else if (dist === 2) scale = "med";
-      }
-      return html`
-            <button
-              class="source-index-letter"
-              ?disabled=${!isAvailable}
-              data-scale=${scale}
-              @mouseenter=${isAvailable ? () => { this._hoveredSourceLetterIndex = i; this.requestUpdate(); } : nothing}
-              @mouseleave=${() => { this._hoveredSourceLetterIndex = null; this.requestUpdate(); }}
-              @click=${isAvailable ? () => this._scrollToSourceLetter(letter) : nothing}
-            >
-              ${letter}
-            </button>
-          `;
-    })}
-      </div>
+      ${!isGridMode ? html`
+        <div class="floating-source-index">
+          ${sourceLetters.map((letter, i) => {
+        const isAvailable = availableSourceFirstLetters.has(letter);
+        const hovered = this._hoveredSourceLetterIndex;
+        let scale = "";
+        if (isAvailable && hovered !== null && hovered !== undefined) {
+          const dist = Math.abs(hovered - i);
+          if (dist === 0) scale = "max";
+          else if (dist === 1) scale = "large";
+          else if (dist === 2) scale = "med";
+        }
+        return html`
+              <button
+                class="source-index-letter"
+                ?disabled=${!isAvailable}
+                data-scale=${scale}
+                @mouseenter=${isAvailable ? () => { this._hoveredSourceLetterIndex = i; this.requestUpdate(); } : nothing}
+                @mouseleave=${() => { this._hoveredSourceLetterIndex = null; this.requestUpdate(); }}
+                @click=${isAvailable ? () => this._scrollToSourceLetter(letter) : nothing}
+              >
+                ${letter}
+              </button>
+            `;
+      })}
+        </div>
+      ` : nothing}
     `;
   }
 

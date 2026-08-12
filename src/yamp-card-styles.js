@@ -316,6 +316,7 @@ export const yampCardStyles = css`
   .dim-idle .details,
   .dim-idle .controls-row,
   .dim-idle .volume-row,
+  .dim-idle .more-info-menu.volume-collapsed,
   .dim-idle:not(.no-chip-dim) .chip-row,
   .dim-idle:not(.no-chip-dim) .action-chip-row {
     opacity: 0.28;
@@ -337,7 +338,8 @@ export const yampCardStyles = css`
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
-  .dim-idle .more-info-menu {
+  .dim-idle .more-info-menu,
+  .more-info-menu.volume-collapsed {
     position: absolute;
     bottom: 14px;
     right: 12px;
@@ -2464,6 +2466,147 @@ export const yampCardStyles = css`
     text-align: center;
   }
 
+  .entity-options-item[disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .transfer-queue-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  /* Override entity-options-scroll display:flex (line ~3355) — !important needed because
+     .grid-menu appears earlier in source order than .entity-options-scroll */
+  .grid-menu {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr); /* MINI_GRID_COLUMNS */
+    gap: 0;
+    padding: 0;
+    margin: 8px 0;
+  }
+
+  .grid-menu .entity-options-item {
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 4px;
+    min-height: 64px;
+    gap: 6px;
+    font-size: 0.7em;
+  }
+
+  /* Remove right border on last column */
+  .grid-menu .entity-options-item:nth-child(5n) {
+    /* MINI_GRID_COLUMNS */
+    border-right: none;
+  }
+
+  .grid-menu .entity-options-item[disabled] {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .grid-menu .entity-options-item.grid-active {
+    color: var(--custom-accent);
+  }
+
+  /* Wrapper for grid-menu children — display:contents lets items participate in the grid directly */
+  .grid-menu-items {
+    display: contents;
+  }
+
+  /* Non-grid transfer queue layout */
+  .transfer-queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Give the icon a specific size in grid mode */
+  .grid-menu .menu-action-icon,
+  .grid-menu .entity-options-item > ha-icon {
+    --mdc-icon-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: inherit;
+    --mdc-icon-color: currentColor;
+    --icon-color: currentColor;
+  }
+
+  .grid-menu .menu-action-label,
+  .grid-menu .entity-options-item > span,
+  .search-result-grid-mode .menu-action-label {
+    line-height: 1.1;
+    text-align: center;
+    color: inherit;
+  }
+
+  .search-result-grid-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    padding: 12px 4px;
+    gap: 6px;
+    font-size: 0.7em;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+
+  /* Remove right border on last column */
+  .search-result-grid-mode:nth-child(5n) {
+    /* MINI_GRID_COLUMNS */
+    border-right: none;
+  }
+
+  .search-result-grid-mode .yamp-search-result-thumb,
+  .search-result-grid-mode .yamp-search-result-thumb-placeholder {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  .search-result-grid-mode .yamp-search-result-thumb-placeholder {
+    background-color: var(--yamp-surface-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-result-grid-mode .yamp-search-result-thumb-placeholder ha-icon {
+    --mdc-icon-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .search-result-grid-mode .menu-action-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    width: 100%;
+    word-break: break-word;
+  }
+
   .entity-options-item.menu-action-item {
     display: flex;
     align-items: center;
@@ -3351,7 +3494,7 @@ export const yampCardStyles = css`
     font-size: 1em;
     outline: none;
   }
-  .entity-options-resolved-entities .entity-options-item {
+  .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item {
     background: none;
     color: var(--yamp-overlay-text);
     border: none;
@@ -3370,14 +3513,14 @@ export const yampCardStyles = css`
   }
 
   @media (hover: hover) {
-    .entity-options-resolved-entities .entity-options-item:hover,
-    .entity-options-resolved-entities .entity-options-item:focus {
+    .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item:hover,
+    .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item:focus {
       color: var(--custom-accent);
       background: none;
     }
   }
 
-  .entity-options-resolved-entities .entity-options-item:last-child {
+  .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item:last-child {
     border-bottom: none;
   }
 
@@ -3585,6 +3728,17 @@ export const yampCardStyles = css`
     grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
     gap: 12px;
     padding: 12px 12px 24px 12px;
+  }
+
+  .queue-sortable-container.is-card-layout.grid-mode {
+    gap: 0;
+    padding: 0;
+  }
+
+  .queue-sortable-container.is-card-layout.grid-mode
+    > .queue-drag-wrapper:nth-child(5n) /* MINI_GRID_COLUMNS */
+    .search-result-grid-mode {
+    border-right: none;
   }
 
   .queue-sortable-container.is-card-layout .queue-drag-wrapper {

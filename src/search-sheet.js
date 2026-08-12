@@ -524,6 +524,7 @@ export function renderSearchResultItem({
   item,
   isCard,
   isMinimal,
+  isGridMode,
   activeSearchRowMenuId,
   loadingSearchRowMenuId,
   errorSearchRowMenuId,
@@ -562,6 +563,44 @@ export function renderSearchResultItem({
     item.media_content_id != null &&
     activeSearchRowMenuId === item.media_content_id;
   const hideActions = isSelectionFlow;
+
+  if (isGridMode) {
+    return html`
+      <button
+        class="entity-options-item menu-action-item search-result-grid-mode ${
+          upcomingFilterActive && massQueueAvailable && queueControlsStyle === "drag_handle"
+            ? "queue-drag-handle"
+            : "nodrag no-drag ignore-drag"
+        } ${item._justMoved ? "just-moved" : ""} ${isActive ? "menu-active" : ""}"
+        @click=${(e) => {
+          if (!isSelectionFlow) {
+            onPlay?.(item, e);
+          } else {
+            onResultClick?.(item, e);
+          }
+        }}
+        title=${getClickTitle(item) || item.title}
+      >
+        ${
+          item.thumbnail && isValidArtwork(item.thumbnail)
+            ? html`
+                <img
+                  class="yamp-search-result-thumb"
+                  src=${applyHostnameToUrl(item.thumbnail, artworkHostname)}
+                  alt=${item.title}
+                  onerror="this.style.display='none'"
+                />
+              `
+            : html`
+                <div class="yamp-search-result-thumb-placeholder">
+                  <ha-icon icon="mdi:music"></ha-icon>
+                </div>
+              `
+        }
+        <span class="menu-action-label">${item.title}</span>
+      </button>
+    `;
+  }
 
   return html`
     <div

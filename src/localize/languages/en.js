@@ -161,6 +161,8 @@ export default {
         "Choose which text groups should scale with available space (leave empty to disable adaptive text).",
       collapse_expand:
         "Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.",
+      disable_mini_menu:
+        "Revert to standard lists instead of using the new mini grid menus in Always Collapsed mode.",
       idle_screen: "Choose which screen to display automatically when the card becomes idle.",
       hide_controls: "Select buttons to hide from the persistent playback controls row.",
       hide_remote_buttons: "Select buttons to hide from the Remote Control overlay.",
@@ -195,6 +197,7 @@ export default {
         "Not available with Alternate Progress Bar or Always Collapsed mode",
       not_available_collapsed: "Not available when Always Collapsed is enabled",
       only_available_collapsed: "Only available when Always Collapsed is enabled",
+      only_available_mini_menu: "Only available when Always Collapsed is true and Expand on Search is false",
       only_available_modern: "Only available with Modern layout",
       image_url_helper: "Enter a direct URL to an image or a local file path",
       selected_entity_helper:
@@ -257,6 +260,7 @@ export default {
       hide_menu_player_toggle: "Hide Menu Player",
       hide_reorder_progress_toggle: "Hide Re-ordering Progress",
       always_collapsed: "Always Collapsed",
+      disable_mini_menu: "Disable mini grid menus",
       expand_on_search: "Expand on Search",
       script_var: "Script Variable (yamp_entity)",
       use_ma_template: "Use template for Music Assistant Entity",
