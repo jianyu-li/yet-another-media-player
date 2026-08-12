@@ -240,7 +240,7 @@ export const QueueDragMixin = (superClass) =>
 
           // Cache original static positions to prevent flickering on layout shifts
           const itemElements = container.querySelectorAll(
-            ".queue-drag-wrapper > .yamp-search-result"
+            ".queue-drag-wrapper > *:first-child"
           );
           cachedPositions = [];
           for (const el of itemElements) {
@@ -299,7 +299,7 @@ export const QueueDragMixin = (superClass) =>
         this._applyQueueDragVisuals(dragIdx, dragItemHeight, null);
 
         // Create a floating clone that follows the pointer
-        const itemEl = wrapper.querySelector(".yamp-search-result");
+        const itemEl = wrapper.firstElementChild;
         if (itemEl) {
           const rect = itemEl.getBoundingClientRect();
           cloneOffsetY = startY - rect.top;
