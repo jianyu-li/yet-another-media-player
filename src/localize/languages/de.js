@@ -134,6 +134,8 @@ export default {
         "Textgruppen wählen, die mit dem Platz skalieren (leer lassen zum Deaktivieren).",
       collapse_expand:
         "Immer eingeklappt aktiviert den Mini-Player-Modus. Bei Suche ausklappen aktiviert ihn temporär.",
+      disable_mini_menu:
+        "Kehrt zu Standardlisten zurück, anstatt die neuen Mini-Grid-Menüs im Modus 'Immer eingeklappt' zu verwenden.",
       idle_screen: "Wählen Sie, welcher Bildschirm im Leerlauf automatisch angezeigt wird.",
       hide_controls:
         "Wählen Sie Steuerelemente aus, die für diese Entität ausgeblendet werden sollen.",
@@ -229,6 +231,7 @@ export default {
       hide_menu_player_toggle: "Menü-Player ausblenden",
       hide_reorder_progress_toggle: "Neusortierungs-Fortschritt ausblenden",
       always_collapsed: "Immer eingeklappt",
+      disable_mini_menu: "Mini-Grid-Menüs deaktivieren",
       expand_on_search: "Bei Suche ausklappen",
       script_var: "Skript-Variable (yamp_entity)",
       use_ma_template: "Template für Music Assistant Entität verwenden",

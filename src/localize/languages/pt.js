@@ -122,6 +122,8 @@ export default {
       adaptive_text: "Escolher que textos se adaptam ao espaço.",
       collapse_expand:
         "Sempre contraído ativa modo mini. Expandir ao procurar expande temporariamente.",
+      disable_mini_menu:
+        "Reverter para listas padrão em vez de usar os novos mini menus em grade no modo 'Sempre recolhido'.",
       idle_screen: "Escolher ecrã a mostrar em repouso.",
       hide_controls: "Selecionar controlos a ocultar.",
       hide_remote_buttons: "Selecione botões para ocultar do controle remoto.",
@@ -215,6 +217,7 @@ export default {
       hide_menu_player_toggle: "Ocultar leitor do menu",
       hide_reorder_progress_toggle: "Ocultar progresso de reordenação",
       always_collapsed: "Sempre contraído",
+      disable_mini_menu: "Desativar mini menus em grade",
       expand_on_search: "Expandir ao procurar",
       script_var: "Variável script (yamp_entity)",
       use_ma_template: "Usar modelo MA",

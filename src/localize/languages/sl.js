@@ -125,6 +125,8 @@ export default {
         "Skrij lebdeči indikator napredka prerazvrščanja čakalne vrste na dnu.",
       adaptive_text: "Izberi skupine besedila za prilagajanje velikosti.",
       collapse_expand: "Vedno skrčeno ustvari mini predvajalnik.",
+      disable_mini_menu:
+        "Vrnite se na standardne sezname namesto uporabe novih mini mrežnih menijev v načinu 'Vedno strnjeno'.",
       idle_screen: "Izberi zaslon, prikazan v mirovanju.",
       hide_controls: "Izberi kontrolnike za skrivanje.",
       hide_remote_buttons: "Izberite gumbe za skrivanje na daljinskem upravljalniku.",
@@ -213,6 +215,7 @@ export default {
       hide_menu_player_toggle: "Skrij predvajalnik v meniju",
       hide_reorder_progress_toggle: "Skrij napredek prerazvrščanja",
       always_collapsed: "Vedno skrčeno",
+      disable_mini_menu: "Onemogoči mini mrežne menije",
       expand_on_search: "Razširi ob iskanju",
       script_var: "Skriptna spremenljivka",
       use_ma_template: "Uporabi predlogo za entiteto Music Assistant",

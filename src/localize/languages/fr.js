@@ -129,6 +129,8 @@ export default {
       adaptive_text: "Choisir quels textes doivent s'adapter à l'espace.",
       collapse_expand:
         "Toujours réduit crée un mini lecteur. Agrandir à la Recherche agrandit temporairement.",
+      disable_mini_menu:
+        "Revenir aux listes standards au lieu d'utiliser les nouveaux mini menus en grille en mode 'Toujours réduit'.",
       idle_screen: "Choisir l'écran à afficher automatiquement en veille.",
       hide_controls: "Sélectionner les commandes à masquer pour cette entité.",
       hide_remote_buttons: "Sélectionnez les boutons à masquer de la télécommande.",
@@ -221,6 +223,7 @@ export default {
       hide_menu_player_toggle: "Masquer le lecteur menu",
       hide_reorder_progress_toggle: "Masquer la progression de réorganisation",
       always_collapsed: "Toujours réduit",
+      disable_mini_menu: "Désactiver les mini menus en grille",
       expand_on_search: "Agrandir en recherche",
       script_var: "Variable script (yamp_entity)",
       use_ma_template: "Utiliser modèle MA",
