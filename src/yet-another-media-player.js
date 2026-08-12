@@ -5675,6 +5675,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               const isPrimaryRow = id === masterId;
               const showToggleButton = !isPrimaryRow;
               const isCurrent = id === activeId;
+              const masterName = masterId ? this.getChipName(masterId) : localize('card.grouping.master');
 
               let stateLabel = groupedAny
                 ? (isPrimaryRow ? localize('card.grouping.master') : (grouped ? localize('card.grouping.joined') : localize('card.grouping.available')))
@@ -5685,11 +5686,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               }
               
               if (isGridMode) {
+                const isDisabled = isBusy || !showToggleButton;
+                const toggleTooltip = grouped 
+                  ? localize('card.grouping.unjoin_from').replace('{master}', masterName)
+                  : localize('card.grouping.join_with').replace('{master}', masterName);
+                
                 return html`
                   <button class="entity-options-item menu-action-item group-toggle-btn" 
-                    @click=${() => !isBusy && showToggleButton && this._toggleGroup(id)}
-                    title=${isBusy ? "Player is unavailable" : (grouped ? "Unjoin" : "Join")}
-                    style="${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""} ${grouped ? "color: var(--custom-accent);" : ""}">
+                    ?disabled=${isDisabled}
+                    @click=${() => !isDisabled && this._toggleGroup(id)}
+                    title=${isBusy ? localize('card.grouping.unavailable') : (!showToggleButton ? stateLabel : toggleTooltip)}
+                    style="${isDisabled ? "cursor: default; opacity: 0.5;" : ""} ${(!showToggleButton || grouped) ? "color: var(--custom-accent);" : ""}">
                     <ha-icon class="menu-action-icon" icon=${isPrimaryRow ? "mdi:star" : (grouped ? "mdi:speaker-multiple" : "mdi:speaker")}></ha-icon>
                     <span class="menu-action-label">${name}</span>
                   </button>
@@ -5751,7 +5758,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                   ? html`
                             <button class="group-toggle-btn"
                                     @click=${() => !isBusy && this._toggleGroup(id)}
-                                    title=${isBusy ? "Player is unavailable" : (grouped ? "Unjoin" : "Join")}
+                                    title=${isBusy ? localize('card.grouping.unavailable') : (grouped ? localize('card.grouping.unjoin_from').replace('{master}', masterName) : localize('card.grouping.join_with').replace('{master}', masterName))}
                                     style="margin-left:4px; ${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""}">
                               <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
                             </button>
