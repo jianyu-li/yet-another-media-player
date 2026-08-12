@@ -239,9 +239,7 @@ export const QueueDragMixin = (superClass) =>
           }
 
           // Cache original static positions to prevent flickering on layout shifts
-          const itemElements = container.querySelectorAll(
-            ".queue-drag-wrapper > *:first-child"
-          );
+          const itemElements = container.querySelectorAll(".queue-drag-wrapper > *:first-child");
           cachedPositions = [];
           for (const el of itemElements) {
             const wrapperEl = el.parentElement;

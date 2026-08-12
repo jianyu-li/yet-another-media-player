@@ -2493,7 +2493,7 @@ export const yampCardStyles = css`
   .grid-menu .entity-options-item:nth-child(5n) {
     border-right: none !important;
   }
-  
+
   /* Give the icon a specific size in grid mode */
   .grid-menu .menu-action-icon,
   .grid-menu .entity-options-item > ha-icon {
@@ -2571,7 +2571,6 @@ export const yampCardStyles = css`
     width: 100%;
     word-break: break-word;
   }
-
 
   .entity-options-item.menu-action-item {
     display: flex;
@@ -3701,7 +3700,9 @@ export const yampCardStyles = css`
     padding: 0;
   }
 
-  .queue-sortable-container.is-card-layout.grid-mode > .queue-drag-wrapper:nth-child(5n) .search-result-grid-mode {
+  .queue-sortable-container.is-card-layout.grid-mode
+    > .queue-drag-wrapper:nth-child(5n)
+    .search-result-grid-mode {
     border-right: none !important;
   }
 
