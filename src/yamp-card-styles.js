@@ -2504,11 +2504,72 @@ export const yampCardStyles = css`
   }
 
   .grid-menu .menu-action-label,
-  .grid-menu .entity-options-item > span {
+  .grid-menu .entity-options-item > span,
+  .search-result-grid-mode .menu-action-label {
     line-height: 1.1;
     text-align: center;
     color: inherit;
   }
+
+  .search-result-grid-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--yamp-overlay-divider);
+    border-right: 1px solid var(--yamp-overlay-divider);
+    padding: 12px 4px;
+    gap: 6px;
+    font-size: 0.7em;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+
+  /* Target every 5th item by using column positioning via nth-of-type or nth-child.
+     Virtualizer absolutely positions things, but if the wrapper is 100% width, we can use the left position.
+     However, standard nth-child(5n) will work if the virtualizer doesn't omit elements. */
+  .search-result-grid-mode:nth-child(5n) {
+    border-right: none;
+  }
+
+  .search-result-grid-mode .yamp-search-result-thumb,
+  .search-result-grid-mode .yamp-search-result-thumb-placeholder {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  .search-result-grid-mode .yamp-search-result-thumb-placeholder {
+    background-color: var(--yamp-surface-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-result-grid-mode .yamp-search-result-thumb-placeholder ha-icon {
+    --mdc-icon-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .search-result-grid-mode .menu-action-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    width: 100%;
+    word-break: break-word;
+  }
+
 
   .entity-options-item.menu-action-item {
     display: flex;

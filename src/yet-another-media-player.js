@@ -9168,10 +9168,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           const currentResults = this._getDisplaySearchResults();
           const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
           const isMinimal = this.config.search_view === 'card_minimal';
+          const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet);
+          
           const renderItemFn = (item) => renderSearchResultItem({
             item,
             isCard,
             isMinimal,
+            isGridMode,
             activeSearchRowMenuId: this._activeSearchRowMenuId,
             loadingSearchRowMenuId: this._loadingSearchRowMenuId,
             errorSearchRowMenuId: this._errorSearchRowMenuId,
@@ -9224,23 +9227,27 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             `;
           }
 
-          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
-            this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
+          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (isGridMode ? 5 : (this.config.search_card_columns || 4)) || this._cachedSearchGridLayoutIsMinimal !== isMinimal || this._cachedSearchGridLayoutIsGridMode !== isGridMode) {
+            const columns = isGridMode ? 5 : (this.config.search_card_columns || 4);
+            this._cachedSearchGridLayoutColumns = columns;
             this._cachedSearchGridLayoutIsMinimal = isMinimal;
+            this._cachedSearchGridLayoutIsGridMode = isGridMode;
             this._cachedSearchGridLayout = yampGrid({
-              columns: this._cachedSearchGridLayoutColumns,
-              gap: '12px',
-              padding: '12px',
-              itemSize: isMinimal
-                ? { width: 150, height: 150 }
-                : { width: 150, height: 244 }
+              columns: columns,
+              gap: isGridMode ? '0px' : '12px',
+              padding: isGridMode ? '0px' : '12px',
+              itemSize: isGridMode 
+                ? { width: 70, height: 85 } 
+                : (isMinimal
+                  ? { width: 150, height: 150 }
+                  : { width: 150, height: 244 })
             });
           }
 
           return html`
-            <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper"
-                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
-              ${isCard
+            <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 : (this.config.search_card_columns || 4)};` : ''}">
+              ${(isCard || isGridMode)
                 ? virtualize({
                   items: currentResults,
                   renderItem: renderItemFn,
