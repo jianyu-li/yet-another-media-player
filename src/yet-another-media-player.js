@@ -5799,6 +5799,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderResolvedEntitiesSheet() {
+    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet);
+
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => {
@@ -5809,8 +5811,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         </button>
         <div class="entity-options-divider"></div>
         <div class="entity-options-resolved-entities" style="margin-top:12px;">
-          <div class="entity-options-title">${localize('card.menu.select_entity')}</div>
-          <div class="entity-options-resolved-entities-list">
+          ${!isGridMode ? html`<div class="entity-options-title">${localize('card.menu.select_entity')}</div>` : nothing}
+          <div class="entity-options-resolved-entities-list ${isGridMode ? 'grid-menu' : ''}">
             ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
         const state = this.hass?.states?.[entityId];
         const name = state?.attributes?.friendly_name || entityId;
@@ -5832,6 +5834,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
             role = "Volume Entity";
           }
+        }
+
+        if (isGridMode) {
+          return html`
+            <button class="entity-options-item menu-action-item" @click=${() => {
+              this._openMoreInfoForEntity(entityId);
+              this._showEntityOptions = false;
+              this._showResolvedEntities = false;
+              this.requestUpdate();
+            }}>
+              <ha-icon class="menu-action-icon" .icon=${icon}></ha-icon>
+              <span class="menu-action-label">${isActive ? `${name} (Active)` : name}</span>
+            </button>
+          `;
         }
 
         return html`

@@ -3397,7 +3397,7 @@ export const yampCardStyles = css`
     font-size: 1em;
     outline: none;
   }
-  .entity-options-resolved-entities .entity-options-item {
+  .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item {
     background: none;
     color: var(--yamp-overlay-text);
     border: none;
@@ -3416,14 +3416,14 @@ export const yampCardStyles = css`
   }
 
   @media (hover: hover) {
-    .entity-options-resolved-entities .entity-options-item:hover,
-    .entity-options-resolved-entities .entity-options-item:focus {
+    .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item:hover,
+    .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item:focus {
       color: var(--custom-accent);
       background: none;
     }
   }
 
-  .entity-options-resolved-entities .entity-options-item:last-child {
+  .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item:last-child {
     border-bottom: none;
   }
 
