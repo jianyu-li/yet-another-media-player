@@ -5271,8 +5271,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
   }
 
+  /** Whether the mini grid menu layout is active (always_collapsed + no expand_on_search + mini menus enabled). */
+  get _isGridMode() {
+    return this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+  }
+
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+    const isGridMode = this._isGridMode;
     const renderMenuItem = (label, icon, onClick) => {
       if (isGridMode) {
         return html`
@@ -5564,7 +5569,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderGroupingSheet() {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+    const isGridMode = this._isGridMode;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
@@ -5655,7 +5660,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             ${localize('card.grouping.no_players')}
           </div>
         ` : html`
-          <div style="${isGridMode ? 'display:contents;' : ''}">
+          <div class="${isGridMode ? 'grid-menu-items' : ''}">
             ${sortedGroupIds.map(item => {
               const id = item.id;
               const actualGroupId = item.groupId;
@@ -5692,11 +5697,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                   : localize('card.grouping.join_with').replace('{master}', masterName);
                 
                 return html`
-                  <button class="entity-options-item menu-action-item group-toggle-btn" 
+                  <button class="entity-options-item menu-action-item group-toggle-btn ${(!showToggleButton || grouped) ? 'grid-active' : ''}" 
                     ?disabled=${isDisabled}
                     @click=${() => !isDisabled && this._toggleGroup(id)}
-                    title=${isBusy ? localize('card.grouping.unavailable') : (!showToggleButton ? stateLabel : toggleTooltip)}
-                    style="${isDisabled ? "cursor: default; opacity: 0.5;" : ""} ${(!showToggleButton || grouped) ? "color: var(--custom-accent);" : ""}">
+                    title=${isBusy ? localize('card.grouping.unavailable') : (!showToggleButton ? stateLabel : toggleTooltip)}>
                     <ha-icon class="menu-action-icon" icon=${isPrimaryRow ? "mdi:star" : (grouped ? "mdi:speaker-multiple" : "mdi:speaker")}></ha-icon>
                     <span class="menu-action-label">${name}</span>
                   </button>
@@ -5775,7 +5779,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderTransferQueueSheet() {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+    const isGridMode = this._isGridMode;
     const targets = this._getTransferQueueTargets();
     return html`
       <div class="entity-options-header">
@@ -5789,14 +5793,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         ${!targets.length ? html`
           <div style="padding: 12px; opacity: 0.75;">${localize('card.menu.no_players')}</div>
         ` : html`
-          <div style="${isGridMode ? 'display:contents;' : 'display:flex;flex-direction:column;gap:8px;'}">
+          <div class="${isGridMode ? 'grid-menu-items' : 'transfer-queue-list'}">
             ${targets.map(target => {
               if (isGridMode) {
                 return html`
                   <button class="entity-options-item menu-action-item" 
                     ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                    @click=${() => this._transferQueueTo(target)}
-                    style="${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
+                    @click=${() => this._transferQueueTo(target)}>
                     <ha-icon class="menu-action-icon" .icon=${target.icon}></ha-icon>
                     <span class="menu-action-label">${target.name}</span>
                   </button>
@@ -5804,10 +5807,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               }
               return html`
                 <button
-                  class="entity-options-item"
+                  class="entity-options-item transfer-queue-item"
                   ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                  @click=${() => this._transferQueueTo(target)}
-                  style="display:flex;align-items:center;justify-content:flex-start;gap:12px;${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
+                  @click=${() => this._transferQueueTo(target)}>
                   <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;">
                     <div>${target.name}</div>
@@ -5837,7 +5839,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderResolvedEntitiesSheet() {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+    const isGridMode = this._isGridMode;
 
     return html`
       <div class="entity-options-header">
@@ -9175,7 +9177,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           const currentResults = this._getDisplaySearchResults();
           const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
           const isMinimal = this.config.search_view === 'card_minimal';
-          const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+          const isGridMode = this._isGridMode;
           
           const renderItemFn = (item) => renderSearchResultItem({
             item,
@@ -9220,7 +9222,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           if (isQueueDragAndDrop) {
             return html`
               <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
-                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 : (this.config.search_card_columns || 4)};` : ''}">
+                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
                 <div class="queue-sortable-container ${(isCard || isGridMode) ? 'is-card-layout' : ''} ${isGridMode ? 'grid-mode' : ''}"
                   @pointerdown=${(e) => this._onQueueDragStart(e)}
                 >
@@ -9234,8 +9236,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             `;
           }
 
-          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (isGridMode ? 5 : (this.config.search_card_columns || 4)) || this._cachedSearchGridLayoutIsMinimal !== isMinimal || this._cachedSearchGridLayoutIsGridMode !== isGridMode) {
-            const columns = isGridMode ? 5 : (this.config.search_card_columns || 4);
+          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)) || this._cachedSearchGridLayoutIsMinimal !== isMinimal || this._cachedSearchGridLayoutIsGridMode !== isGridMode) {
+            const columns = isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4);
             this._cachedSearchGridLayoutColumns = columns;
             this._cachedSearchGridLayoutIsMinimal = isMinimal;
             this._cachedSearchGridLayoutIsGridMode = isGridMode;
@@ -9253,7 +9255,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
           return html`
             <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
-                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 : (this.config.search_card_columns || 4)};` : ''}">
+                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
               ${(isCard || isGridMode)
                 ? virtualize({
                   items: currentResults,
@@ -9271,7 +9273,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters) {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+    const isGridMode = this._isGridMode;
 
     return html`
       <div class="entity-options-header">

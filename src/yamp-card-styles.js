@@ -2466,9 +2466,23 @@ export const yampCardStyles = css`
     text-align: center;
   }
 
+  .entity-options-item[disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .transfer-queue-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  /* Override entity-options-scroll display:flex (line ~3355) — !important needed because
+     .grid-menu appears earlier in source order than .entity-options-scroll */
   .grid-menu {
     display: grid !important;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, 1fr); /* MINI_GRID_COLUMNS */
     gap: 0;
     padding: 0;
     margin: 8px 0;
@@ -2477,8 +2491,8 @@ export const yampCardStyles = css`
   .grid-menu .entity-options-item {
     margin: 0;
     border-radius: 0;
-    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider)) !important;
-    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider)) !important;
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2489,9 +2503,31 @@ export const yampCardStyles = css`
     font-size: 0.7em;
   }
 
-  /* Remove right border on every 5th item */
+  /* Remove right border on last column */
   .grid-menu .entity-options-item:nth-child(5n) {
-    border-right: none !important;
+    /* MINI_GRID_COLUMNS */
+    border-right: none;
+  }
+
+  .grid-menu .entity-options-item[disabled] {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .grid-menu .entity-options-item.grid-active {
+    color: var(--custom-accent);
+  }
+
+  /* Wrapper for grid-menu children — display:contents lets items participate in the grid directly */
+  .grid-menu-items {
+    display: contents;
+  }
+
+  /* Non-grid transfer queue layout */
+  .transfer-queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   /* Give the icon a specific size in grid mode */
@@ -2520,8 +2556,8 @@ export const yampCardStyles = css`
     justify-content: center;
     margin: 0;
     border-radius: 0;
-    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider)) !important;
-    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider)) !important;
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider));
     padding: 12px 4px;
     gap: 6px;
     font-size: 0.7em;
@@ -2532,11 +2568,10 @@ export const yampCardStyles = css`
     box-sizing: border-box;
   }
 
-  /* Target every 5th item by using column positioning via nth-of-type or nth-child.
-     Virtualizer absolutely positions things, but if the wrapper is 100% width, we can use the left position.
-     However, standard nth-child(5n) will work if the virtualizer doesn't omit elements. */
+  /* Remove right border on last column */
   .search-result-grid-mode:nth-child(5n) {
-    border-right: none !important;
+    /* MINI_GRID_COLUMNS */
+    border-right: none;
   }
 
   .search-result-grid-mode .yamp-search-result-thumb,
@@ -3701,9 +3736,9 @@ export const yampCardStyles = css`
   }
 
   .queue-sortable-container.is-card-layout.grid-mode
-    > .queue-drag-wrapper:nth-child(5n)
+    > .queue-drag-wrapper:nth-child(5n) /* MINI_GRID_COLUMNS */
     .search-result-grid-mode {
-    border-right: none !important;
+    border-right: none;
   }
 
   .queue-sortable-container.is-card-layout .queue-drag-wrapper {
