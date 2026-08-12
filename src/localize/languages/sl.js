@@ -154,7 +154,8 @@ export default {
       not_available_alt_collapsed: "Ni na voljo z alternativno vrstico napredka.",
       not_available_collapsed: "Ni na voljo v vedno skrčenem načinu.",
       only_available_collapsed: "Na voljo le v vedno skrčenem načinu.",
-      only_available_mini_menu: "Na voljo samo, ko je 'Vedno strnjeno' omogočeno in 'Razširi ob iskanju' onemogočeno",
+      only_available_mini_menu:
+        "Na voljo samo, ko je 'Vedno strnjeno' omogočeno in 'Razširi ob iskanju' onemogočeno",
       only_available_modern: "Na voljo le v moderni postavitvi.",
       image_url_helper: "Vnesite neposredni URL do slike ali lokalno pot do datoteke",
       selected_entity_helper:

@@ -178,7 +178,8 @@ export default {
         "Niet beschikbaar met Alternatieve Voortgangsbalk of Altijd Ingeklapte modus",
       not_available_collapsed: "Niet beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
       only_available_collapsed: "Alleen beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
-      only_available_mini_menu: "Alleen beschikbaar wanneer 'Altijd ingeklapt' waar is en 'Uitvouwen bij zoeken' onwaar is",
+      only_available_mini_menu:
+        "Alleen beschikbaar wanneer 'Altijd ingeklapt' waar is en 'Uitvouwen bij zoeken' onwaar is",
       only_available_modern: "Alleen beschikbaar met de Moderne lay-out",
       image_url_helper: "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
       selected_entity_helper:

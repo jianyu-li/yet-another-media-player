@@ -170,7 +170,8 @@ export default {
         "Nedostupné s alternatívnym indikátorom priebehu alebo v režime Vždy zbalené.",
       not_available_collapsed: "Nedostupné, keď je zapnuté Vždy zbalené.",
       only_available_collapsed: "Dostupné len pri zapnutom režime Vždy zbalené.",
-      only_available_mini_menu: "K dispozícii iba vtedy, keď je 'Vždy zbalené' zapnuté a 'Rozbaliť pri vyhľadávaní' vypnuté",
+      only_available_mini_menu:
+        "K dispozícii iba vtedy, keď je 'Vždy zbalené' zapnuté a 'Rozbaliť pri vyhľadávaní' vypnuté",
       only_available_modern: "Dostupné len s moderným rozložením.",
       image_url_helper: "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
       selected_entity_helper:

@@ -152,7 +152,8 @@ export default {
       not_available_alt_collapsed: "Non disponibile in modo contratto.",
       not_available_collapsed: "Non disponibile se contratto.",
       only_available_collapsed: "Solo disponibile se contratto.",
-      only_available_mini_menu: "Disponibile solo quando 'Sempre compresso' è vero ed 'Espandi in ricerca' è falso",
+      only_available_mini_menu:
+        "Disponibile solo quando 'Sempre compresso' è vero ed 'Espandi in ricerca' è falso",
       only_available_modern: "Solo disponibile con layout Moderno.",
       image_url_helper: "Inserisci un URL diretto a un'immagine o un percorso file locale",
       selected_entity_helper:
