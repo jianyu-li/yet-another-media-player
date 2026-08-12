@@ -5272,7 +5272,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet);
+    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
     const renderMenuItem = (label, icon, onClick) => {
       if (isGridMode) {
         return html`
@@ -5564,7 +5564,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderGroupingSheet() {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet);
+    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
@@ -5775,7 +5775,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderTransferQueueSheet() {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet);
+    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
     const targets = this._getTransferQueueTargets();
     return html`
       <div class="entity-options-header">
@@ -5837,7 +5837,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderResolvedEntitiesSheet() {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet);
+    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
 
     return html`
       <div class="entity-options-header">
@@ -9168,7 +9168,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           const currentResults = this._getDisplaySearchResults();
           const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
           const isMinimal = this.config.search_view === 'card_minimal';
-          const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet);
+          const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
           
           const renderItemFn = (item) => renderSearchResultItem({
             item,
@@ -9264,7 +9264,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters) {
-    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet);
+    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
 
     return html`
       <div class="entity-options-header">
